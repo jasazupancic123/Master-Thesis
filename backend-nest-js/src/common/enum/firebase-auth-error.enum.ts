@@ -1,0 +1,15 @@
+export enum FirebaseAuthError {
+  EMAIL_ALREADY_EXISTS = 'auth/email-already-exists',
+  ID_TOKEN_EXPIRED = 'auth/id-token-expired',
+  INSUFFICIENT_PERMISSION = 'auth/insufficient-permission',
+  INTERNAL_ERROR = 'auth/internal-error',
+  INVALID_ARGUMENT = 'auth/invalid-argument',
+  INVALID_CLAIMS = 'auth/invalid-claims',
+  INVALID_EMAIL = 'auth/invalid-email',
+  INVALID_ID_TOKEN = 'auth/invalid-id-token',
+  INVALID_PASSWORD = 'auth/invalid-password',
+  OPERATION_NOT_ALLOWED = 'auth/operation-not-allowed',
+  TOO_MANY_REQUESTS = 'auth/too-many-requests',
+  UID_ALREADY_EXISTS = 'auth/uid-already-exists',
+  USER_NOT_FOUND = 'auth/user-not-found',
+}
