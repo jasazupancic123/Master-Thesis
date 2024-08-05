@@ -11,7 +11,10 @@ import { Diagnosis } from '../enum/diagnosis.enum';
 import { Muscle } from '../enum/muscle.enum';
 import { SportTask } from '../enum/sport-task.enum';
 import { Location } from '../enum/location.enum';
+import { Entity } from '../../common/decorator/entity.decorator';
+import { EXERCISE_COLLECTION } from '../../common/const/firestore.const';
 
+@Entity(EXERCISE_COLLECTION)
 export class ExerciseDto {
   @IsString()
   @ApiProperty()

@@ -10,16 +10,20 @@ import { ComponentModule } from './component/component.module';
 import { ExerciseModule } from './exercise/exercise.module';
 import { GroupModule } from './group/group.module';
 import { CycleModule } from './cycle/cycle.module';
+import { TrainingModule } from './training/training.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
+    CommonModule,
     ConfigModule.forRoot({ isGlobal: true, validationSchema }),
-    FirebaseModule,
+    FirebaseModule.forRoot({ credential: 'service-account.json' }),
     UserModule,
     ComponentModule,
     ExerciseModule,
     GroupModule,
-    CycleModule
+    CycleModule,
+    TrainingModule
   ],
   controllers: [AppController],
   providers: [AppService],

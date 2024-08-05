@@ -7,8 +7,12 @@ import { SwaggerSetup } from './common/setup/swagger.setup';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.enableCors()
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    transformOptions: { enableImplicitConversion: true, },
+  }));
 
   const logger = new Logger(bootstrap.name)
   const configService = app.get(ConfigService<Environment>)

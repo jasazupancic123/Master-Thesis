@@ -30,7 +30,7 @@ export default function TrainerPage(props: Props) {
 
   // cycles
   const [cycles, loading, error, refetch, setCycles] = useFetch<Cycle[]>(`/cycle/${group.id}`, {
-    populate: (data) => data.map(item => Firestore.populate(item)),
+    populate: (data) => data.map(item => Firestore.populateCycle(item)),
   });
 
   // create cycle
@@ -53,7 +53,7 @@ export default function TrainerPage(props: Props) {
     try {
       const cycle = await fetcher<Cycle>('/cycle', { method: 'POST', token, body });
       toast.success('Successfully created cycle');
-      setCycles([...cycles, Firestore.populate(cycle)]);
+      setCycles([...cycles, Firestore.populateCycle(cycle)]);
     } catch (e) {
       toast.error(e.message || 'Failed to create cycle');
     }

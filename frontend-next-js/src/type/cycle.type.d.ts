@@ -1,9 +1,11 @@
 import { Group } from '@/type/group.type';
 import { Dayjs } from 'dayjs';
+import { Training } from '@/type/training.type';
 
 export interface Week {
   date: Dayjs | null;
-  trainings: any[];
+  trainings: Training[];
+  isTrainingDay: boolean;
 }
 
 export interface Cycle {
@@ -16,6 +18,7 @@ export interface Cycle {
 
   // relations
   group?: Group;
+  trainings?: Training[];
 
   // virtual
   color?: string;

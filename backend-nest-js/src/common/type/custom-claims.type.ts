@@ -7,3 +7,7 @@ export type CustomClaims = DecodedIdToken & {
   level: SportLevel,
   groups: string[],
 };
+
+export interface CanAccess<T> {
+  canAccess(user: CustomClaims, item: T, ...args: any[]): boolean;
+}

@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
-interface MyModalProps {
+export interface MyModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   children: React.ReactNode;
@@ -39,14 +39,19 @@ export default function MyModal(props: MyModalProps) {
     width,
   } = props;
 
+  function handleClose() {
+    setIsOpen(false);
+    if (onCancel) onCancel();
+  }
+
   return (
     <>
       {isOpen && <Modal
         open={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={handleClose}
       >
         <Box sx={{ ...style, width }}>
-          {title && <Typography variant='h6'>
+          {title && <Typography variant="h6">
             {title}
           </Typography>}
 
@@ -57,10 +62,10 @@ export default function MyModal(props: MyModalProps) {
 
           <Box>
             {onConfirm && <Button onClick={onConfirm} color="primary">Confirm</Button>}
-            {onCancel && <Button onClick={onCancel} color="secondary">Cancel</Button>}
+            {onCancel && <Button onClick={handleClose} color="secondary">Cancel</Button>}
           </Box>
         </Box>
       </Modal>}
     </>
-  )
+  );
 }

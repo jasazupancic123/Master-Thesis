@@ -17,7 +17,7 @@ export class ComponentService {
     this.collection = firebaseService.collection(COMPONENT_COLLECTION);
   }
 
-  async findOne(id: string): Promise<ComponentDto> {
+  async findOneById(id: string): Promise<ComponentDto> {
     const component = await this.collection.doc(id).get();
     if (!component.exists)
       return null
@@ -25,9 +25,15 @@ export class ComponentService {
     return serializeToDto(ComponentDto, component.data());
   }
 
-  async findAll(): Promise<ComponentDto[]> {
-    const components = await this.collection.get();
-    return components.docs.map(doc => serializeToDto(ComponentDto, { id: doc.id, ...doc.data() }))
+  async findAll(filter?: { ids?: string[] }): Promise<ComponentDto[]> {
+    const data = await this.collection.get();
+    let components = data.docs;
+
+    if (filter)
+      if (filter.ids)
+        components = components.filter(({ id }) => filter.ids.includes(id))
+
+    return components.map(doc => serializeToDto(ComponentDto, { id: doc.id, ...doc.data() }))
   }
 
   tree(componentsFlat: ComponentDto[]): ComponentDto[] {

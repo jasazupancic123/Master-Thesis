@@ -4,7 +4,7 @@ import { PublicUserDto, UserDto } from './dto/user.dto';
 import { serializeToDto } from '../common/util/serialize';
 import { UpdateUserClaimsDto, UpdateUserDto } from './dto/update-user.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
-import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
+import { UserRecord } from 'firebase-admin/auth';
 import { CustomClaims } from '../common/type/custom-claims.type';
 
 @Injectable()

@@ -1,8 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { App, getApps, initializeApp } from 'firebase-admin/app';
-import { getAuth, UserRecord } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
+import { App } from 'firebase-admin/app';
+import { UserRecord } from 'firebase-admin/auth';
 import * as admin from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
 import { Environment } from '../config/environment-validation-schema';
@@ -14,6 +12,7 @@ import { Tree } from '../common/util/tree';
 import { ComponentDto } from '../component/dto/component.dto';
 import { CustomClaims } from '../common/type/custom-claims.type';
 import { isDev } from '../common/util/node-env';
+import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -24,42 +23,16 @@ export class FirebaseService implements OnApplicationBootstrap {
   public readonly firestore: admin.firestore.Firestore;
   public readonly storage: admin.storage.Storage;
 
-  constructor(private readonly configService: ConfigService<Environment>) {
-    this.logger = new Logger(FirebaseService.name);
-    const apps = getApps();
-    const config = {credential: admin.credential.cert('service-account.json')}
+  constructor(
+    @InjectFirebaseAdmin() private readonly firebaseAdmin: FirebaseClient,
+    private readonly configService: ConfigService<Environment>,
+  ) {
+    this.logger = new Logger(this.constructor.name);
 
-    this.logger.log(`Using Firestore Emulator: ${this.configService.get('FIRESTORE_EMULATOR_HOST')}`);
-    this.logger.log(`Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`);
-    this.logger.log(`Using Storage Emulator: ${this.configService.get('FIREBASE_STORAGE_EMULATOR_HOST')}`);
-    this.logger.log(`Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`);
-
-    this.app = !this.app && !apps.length ? initializeApp(config) : apps[0];
-    this.auth = getAuth(this.app);
-    this.firestore = getFirestore(this.app);
-    this.storage = getStorage(this.app);
-    this.firestore.settings({ ignoreUndefinedProperties: true })
-  }
-
-  async onApplicationBootstrap() {
-    // create admin user if not exists
-    const email = this.configService.get('FIREBASE_ADMIN_EMAIL');
-    const password = this.configService.get('FIREBASE_ADMIN_PASSWORD');
-    await this.createUser(email, password, UserRole.ADMIN);
-
-    if (isDev()) {
-      await this.createUser('manager@mail.com', 'password', UserRole.MANAGER);
-      await this.createUser('trainer@mail.com', 'password', UserRole.TRAINER);
-      await this.createUser('athlete@mail.com', 'password', UserRole.ATHLETE);
-    }
-
-    // import components if they do not exist
-    const components = await this.firestore.collection(COMPONENT_COLLECTION).get();
-    if (components.empty) {
-      await this.importComponents('data/components.json');
-      this.logger.log('Components imported');
-    } else
-      this.logger.log('Components collection already exists');
+    this.app = firebaseAdmin.app;
+    this.auth = firebaseAdmin.auth;
+    this.firestore = firebaseAdmin.firestore;
+    this.storage = firebaseAdmin.storage
   }
 
   collection(name: string) {
@@ -80,6 +53,32 @@ export class FirebaseService implements OnApplicationBootstrap {
 
   isAthlete(user: CustomClaims): boolean {
     return user.role?.includes(UserRole.ATHLETE) ?? false;
+  }
+
+  async onApplicationBootstrap() {
+    this.logger.debug(`Using Firestore Emulator: ${this.configService.get('FIRESTORE_EMULATOR_HOST')}`);
+    this.logger.debug(`Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`);
+    this.logger.debug(`Using Storage Emulator: ${this.configService.get('FIREBASE_STORAGE_EMULATOR_HOST')}`);
+    this.logger.debug(`Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`);
+
+    // create admin user if not exists
+    const email = this.configService.get('FIREBASE_ADMIN_EMAIL');
+    const password = this.configService.get('FIREBASE_ADMIN_PASSWORD');
+    await this.createUser(email, password, UserRole.ADMIN);
+
+    if (isDev()) {
+      await this.createUser('manager@mail.com', 'password', UserRole.MANAGER);
+      await this.createUser('trainer@mail.com', 'password', UserRole.TRAINER);
+      await this.createUser('athlete@mail.com', 'password', UserRole.ATHLETE);
+    }
+
+    // import components if they do not exist
+    const components = await this.firestore.collection(COMPONENT_COLLECTION).get();
+    if (components.empty) {
+      await this.importComponents('data/components.json');
+      this.logger.log('Components imported');
+    } else
+      this.logger.log('Components collection already exists');
   }
 
   private async createUser(email: string, password: string, role: UserRole) {
