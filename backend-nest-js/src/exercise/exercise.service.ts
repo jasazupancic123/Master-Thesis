@@ -10,6 +10,10 @@ import { EXERCISE_COLLECTION } from '../common/const/firestore.const';
 import { ComponentDto } from '../component/dto/component.dto';
 import { FilterExerciseDto } from './dto/filter-exercise.dto';
 import { CustomClaims } from '../common/type/custom-claims.type';
+import { SetGroupEntity } from '../training/entity/set-group.entity';
+import { firestore } from 'firebase-admin';
+import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
+import DocumentData = firestore.DocumentData;
 
 type ComponentLeaf = ComponentDto & { parents: ComponentDto[] }
 
@@ -71,48 +75,81 @@ export class ExerciseService {
    */
   async findAll(user: CustomClaims, filter?: FilterExerciseDto): Promise<ExerciseDto[]> {
     const exercises = await this.collection.get();
+    let filtered = exercises.docs
 
     // get exercises components
     const components = await this.componentService.findAll();
     const tree = this.componentService.tree(components);
     const leafs = this.componentService.leafs(tree);
 
-    // filter by id, name and global
-    const { name, componentIds } = filter || {}
-    const filtered = exercises.docs
-      .filter(doc => {
-        const data = doc.data()
+    // filter global exercises and exercises where user is owner
+    filtered = filtered.filter(doc => {
+      return doc.data().userId === user.uid || doc.data().global
+    });
+
+    // filter by provided filters
+    filtered = filtered.filter(doc => {
+        // filter by ids
+        if (filter.ids?.length && !filter.ids.includes(doc.id))
+          return false
 
         // filter by name
-        const dataName = (data.name as string).toLowerCase()
-        const filterName = name?.toLowerCase()
-        if (name && !dataName.includes(filterName)) return false
+        const name = (doc.data().name as string).toLowerCase()
+        if (filter.name && !name.includes(filter.name.toLowerCase()))
+          return false
 
-        // accepted
+        // accept all if no filters are provided
         return true
       })
-      .map(doc =>
-        serializeToDto(ExerciseDto, { id: doc.id, ...doc.data() }))
 
     // filter by components
-    if (componentIds.length) {
-      const filteredByComponents = this.filterByComponents(filtered, componentIds, leafs)
-      return this.map(filteredByComponents, { components: leafs })
-    }
+    if (filter.componentIds?.length)
+      filtered = this.filterByComponents(filtered, filter.componentIds, leafs)
 
     // TODO - if user is admin, return all exercises
     // TODO - if user is athlete, check all trainers he belongs to and get their exercises
     // TODO - if user is manager, get all trainers under him and get their exercises
 
-    return this.map(filtered, { components: leafs })
+    // limit
+    const limit = filter?.limit ? +filter.limit : 100
+    filtered = filtered.slice(0, limit)
+
+    // serialize
+    const serialized = filtered.map(doc => serializeToDto(ExerciseDto, {id: doc.id, ...doc.data()}))
+    return this.map(serialized, { components: leafs })
   }
 
   /**
    * Return only user's exercises
    */
-  async findOne(user: CustomClaims, exerciseId: string): Promise<ExerciseDto> {
+  async findOneById(user: CustomClaims, exerciseId: string): Promise<ExerciseDto> {
     const document = await this.collection.doc(exerciseId).get();
     return serializeToDto(ExerciseDto, {id: document.id, ...document.data()})
+  }
+
+  async findOneByIdOrFail(user: CustomClaims, exerciseId: string): Promise<ExerciseDto> {
+    const exercise = await this.findOneById(user, exerciseId);
+    if (!exercise)
+      throw new BadRequestException('Exercise does not exist')
+
+    return exercise
+  }
+
+  async isValidSetGroupExercise(user: CustomClaims, exercises: ExerciseDto[], set: SetGroupEntity): Promise<boolean> {
+    // check that exercise's leaf component id belongs to training's root component id
+    const components = await this.componentService.findAll();
+    const tree = this.componentService.tree(components);
+    const leafs = this.componentService.leafs(tree);
+
+    // check that parents of leaf are in training's root component ids
+    for (const exercise of exercises)
+      for (const componentId of exercise.componentIds) {
+        const leaf = leafs.find(leaf => leaf.id === componentId);
+        if (!leaf || !leaf.parents.some(parent => set.componentId === parent.id))
+          return false;
+      }
+
+    return true;
   }
 
   /**
@@ -129,7 +166,7 @@ export class ExerciseService {
       throw new UnauthorizedException('Only admin can create global exercises')
 
     // check if user is owner of exercise
-    const exercise = await this.findOne(user, exerciseId);
+    const exercise = await this.findOneById(user, exerciseId);
     if (!exercise || exercise.userId !== user.uid)
       throw new UnauthorizedException()
 
@@ -171,11 +208,11 @@ export class ExerciseService {
    * Filter provided exercises by provided components. Note - if you pass in a
    * root component, all children will also be checked in the filter
    */
-  private filterByComponents(exercises: ExerciseDto[], componentIds: string[], leafs: ComponentLeaf[]) {
-    const filtered: ExerciseDto[] = [];
+  private filterByComponents(exercises: QueryDocumentSnapshot<DocumentData, DocumentData>[], componentIds: string[], leafs: ComponentLeaf[]) {
+    const filtered: QueryDocumentSnapshot<DocumentData, DocumentData>[] = [];
 
     for (const exercise of exercises)
-      for (const exerciseComponentId of exercise.componentIds) {
+      for (const exerciseComponentId of exercise.data().componentIds) {
         const leaf = leafs.find(leaf => leaf.id === exerciseComponentId);
         if (!leaf) continue;
         const parentIds = [leaf.id, ...leaf.parents.map(({ id }) => id)];

@@ -2,7 +2,10 @@ import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { PublicUserDto } from '../../user/dto/user.dto';
+import { Entity } from '../../common/decorator/entity.decorator';
+import { GROUP_COLLECTION } from '../../common/const/firestore.const';
 
+@Entity(GROUP_COLLECTION)
 export class GroupDto {
   @IsString()
   @ApiProperty()

@@ -4,9 +4,9 @@ import { ComponentController } from './component.controller';
 import { FirebaseModule } from '../firebase/firebase.module';
 
 @Module({
+  imports: [FirebaseModule],
   controllers: [ComponentController],
   providers: [ComponentService],
-  imports: [FirebaseModule],
   exports: [ComponentService]
 })
 export class ComponentModule {}

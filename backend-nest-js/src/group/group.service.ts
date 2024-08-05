@@ -42,6 +42,7 @@ export class GroupService {
 
   async findOneById(user: CustomClaims, id: string): Promise<GroupDto> {
     const group = await this.collection.doc(id).get();
+
     if (!group.exists)
       return null;
 
@@ -95,8 +96,13 @@ export class GroupService {
     return serializeToDto(GroupDto, { id, ...data });
   }
 
-  private canView(user: CustomClaims, group: firestore.DocumentSnapshot): boolean {
-    return group.data().memberIds.includes(user.uid) || group.data().userId === user.uid
+  canView(user: CustomClaims, group: GroupDto): boolean;
+  canView(user: CustomClaims, group: firestore.DocumentSnapshot): boolean
+  canView(user: CustomClaims, group: GroupDto | firestore.DocumentSnapshot): boolean {
+    if (group instanceof GroupDto)
+      return group.memberIds.includes(user.uid) || group.userId === user.uid
+    else
+      return group.data().memberIds.includes(user.uid) || group.data().userId === user.uid
   }
 
   private serialize(document: firestore.DocumentSnapshot): GroupDto {

@@ -4,9 +4,9 @@ import { GroupController } from './group.controller';
 import { FirebaseModule } from '../firebase/firebase.module';
 
 @Module({
+  imports: [FirebaseModule],
   controllers: [GroupController],
   providers: [GroupService],
-  imports: [FirebaseModule],
   exports: [GroupService]
 })
 export class GroupModule {}

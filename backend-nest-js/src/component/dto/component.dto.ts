@@ -1,7 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Entity } from '../../common/decorator/entity.decorator';
+import { COMPONENT_COLLECTION } from '../../common/const/firestore.const';
 
+@Entity(COMPONENT_COLLECTION)
 export class ComponentDto {
   @IsString()
   @ApiProperty()

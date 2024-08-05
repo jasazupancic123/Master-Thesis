@@ -2,8 +2,7 @@
 
 import withAuth from '@/hoc/with-auth';
 import React, { useEffect, useState } from 'react';
-import Stack from '@mui/material/Stack';
-import { Chip, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 import { fetcher } from '@/util/fetcher';
 import type { Exercise } from '@/type/exercise.type';
 import Box from '@mui/material/Box';
@@ -51,7 +50,7 @@ function Page() {
       toast.success('Exercise added')
 
       const { id, rootComponentIds } = response
-      if (rootComponentIds.includes(component.id))
+      if (!component || component && rootComponentIds.includes(component.id))
         setExercises([...exercises, { ...item, id } as Exercise])
     } catch (e) {
       toast.error(e.message || 'An error occurred')
@@ -88,7 +87,7 @@ function Page() {
     async function fetchExercises() {
       const filter = {
         ...(search.name && { name: search.name }),
-        ...(component && { componentIds: [component.id].join(',') }),
+        ...(component && { componentIds: [component?.id].join(',') }),
       }
 
       const query = qs.stringify(filter)
@@ -113,9 +112,10 @@ function Page() {
     <>
       <Box display='flex' justifyContent='space-between' mb={2}>
         <ExerciseChips
+          noSelectionLabel='All'
           selected={component}
+          setSelected={(component) => setComponent(component as Component)}
           components={components.tree}
-          onClick={(component) => setComponent(component)}
         />
 
         <Box>
@@ -149,7 +149,7 @@ function Page() {
                 setExercise(exercise)
               }}
             >
-              <ExerciseCard {...exercise} />
+              <ExerciseCard exercise={exercise} />
             </Grid>
           ))}
       </Grid>

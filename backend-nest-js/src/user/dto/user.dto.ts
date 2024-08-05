@@ -4,6 +4,7 @@ import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SportLevel } from '../enum/sport-level.enum';
 import { PickType } from '@nestjs/mapped-types';
+import { Entity } from '../../common/decorator/entity.decorator';
 
 export class CustomClaimsDto {
   @IsEnum(UserRole, { each: true })
@@ -17,6 +18,7 @@ export class CustomClaimsDto {
   level: SportLevel
 }
 
+@Entity('user')
 export class UserDto {
   @IsString()
   @Expose()

@@ -5,26 +5,38 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a110cea5-83fa-4c21-a030-85b10323fced" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.firebaserc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/firebase.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/firestore.indexes.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/firestore.rules" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/storage.rules" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend-nest-js/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/backend-nest-js/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend-nest-js/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend-nest-js/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend-nest-js/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/backend-nest-js/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend-nest-js/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend-nest-js/src/app.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend-nest-js/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend-nest-js/src/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/erd.drawio" beforeDir="false" afterPath="$PROJECT_DIR$/docs/erd.drawio" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page-props.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page-props.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/trainer.page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/trainer.page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/trainer.page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/exercise-chips.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/exercise-chips.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/modal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/cycle.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/cycle.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/date.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/date.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/firebase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/firebase.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FormatOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/backend-nest-js/src/training/training.service.ts" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="OptimizeOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -41,14 +53,19 @@
     "Jest.FirebaseMiddleware.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "D:/projects/fitcode/frontend-next-js/src/type/props.type.d.ts",
+    "last_opened_file_path": "D:/projects/fitcode/frontend-next-js/src/app/cycles/[id]/day",
     "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.standard": "true",
+    "node.js.detected.package.stylelint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.standard": "",
+    "node.js.selected.package.stylelint": "",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs.jest.jest_package": "D:/projects/fitcode/backend-nest-js/node_modules/jest",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.general",
+    "rearrange.code.on.save": "true",
+    "settings.editor.selected.configurable": "settings.javascript.linters.eslint",
     "ts.external.directory.path": "D:\\projects\\fitcode\\backend-nest-js\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
@@ -64,18 +81,18 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles" />
-      <recent name="D:\projects\fitcode\firebase\functions" />
-      <recent name="D:\projects\fitcode\frontend-next-js\src\app\group" />
-      <recent name="D:\projects\fitcode\frontend-next-js\src\app\group\[id]" />
-      <recent name="D:\projects\fitcode" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]\day" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\training\service" />
+      <recent name="D:\projects\fitcode\env\frontend-next-js" />
+      <recent name="D:\projects\fitcode\env" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\projects\fitcode\backend-nest-js\src\common\service" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\firebase" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\training" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\training\service" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]" />
-      <recent name="D:\projects\fitcode\frontend-next-js\src\app\group" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\exercise" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\common" />
-      <recent name="D:\projects\fitcode\frontend-next-js\src\context" />
     </key>
     <key name="es6.move.members.recent.items">
       <recent name="D:\projects\fitcode\frontend-next-js\src\type\props.type.d.ts" />
@@ -132,7 +149,18 @@
       <workItem from="1721195825394" duration="7765000" />
       <workItem from="1721225804099" duration="2347000" />
       <workItem from="1721293066440" duration="14445000" />
-      <workItem from="1721367691647" duration="17220000" />
+      <workItem from="1721367691647" duration="17614000" />
+      <workItem from="1722075461887" duration="5455000" />
+      <workItem from="1722165824997" duration="15908000" />
+      <workItem from="1722186651684" duration="6171000" />
+      <workItem from="1722232759432" duration="22472000" />
+      <workItem from="1722340075729" duration="10796000" />
+      <workItem from="1722404054277" duration="25890000" />
+      <workItem from="1722491473864" duration="19209000" />
+      <workItem from="1722580193449" duration="11843000" />
+      <workItem from="1722668445684" duration="18999000" />
+      <workItem from="1722754678845" duration="28316000" />
+      <workItem from="1722838514839" duration="29613000" />
     </task>
     <servers />
   </component>
