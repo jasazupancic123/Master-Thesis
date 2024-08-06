@@ -128,7 +128,7 @@ export default function TrainingDay(props: Props) {
           setTrainings([...trainings]);
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e.message || 'Could not add exercises to set group');
     } finally {
       setSelected(prev => ({ ...prev, exercises: [] }));
@@ -190,11 +190,7 @@ export default function TrainingDay(props: Props) {
                             <Box>
                               {subgroup?.setExercises?.map((setExercise) => (
                                 <Box key={setExercise.id}>
-                                  <SetExerciseCard
-                                    setExercise={setExercise}
-                                    setSetExercise={(setExercise) => {
-                                    }}
-                                  />
+                                  <SetExerciseCard setExercise={setExercise} />
                                 </Box>
                               ))}
                             </Box>

@@ -46,11 +46,8 @@ export default function MyModal(props: MyModalProps) {
 
   return (
     <>
-      {isOpen && <Modal
-        open={isOpen}
-        onClose={handleClose}
-      >
-        <Box sx={{ ...style, width }}>
+      {isOpen && <Modal open={isOpen} onClose={handleClose}>
+        <Box sx={{ ...style, width, height: '100%' }}>
           {title && <Typography variant="h6">
             {title}
           </Typography>}
@@ -58,6 +55,7 @@ export default function MyModal(props: MyModalProps) {
           {children}
 
           <Divider sx={{ mt: 2, mb: 2 }} />
+
           {actions}
 
           <Box>

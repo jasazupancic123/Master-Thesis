@@ -5,21 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a110cea5-83fa-4c21-a030-85b10323fced" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/erd.drawio" beforeDir="false" afterPath="$PROJECT_DIR$/docs/erd.drawio" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page-props.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page-props.type.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/trainer.page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/trainer.page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/trainer.page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/exercise-chips.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/exercise-chips.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-modal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/modal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/cycle.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/cycle.type.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/date.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/date.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/firebase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/firebase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/constant/set-exercise.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/constant/set-exercise.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +46,7 @@
     "Jest.FirebaseMiddleware.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "D:/projects/fitcode/frontend-next-js/src/app/cycles/[id]/day",
+    "last_opened_file_path": "C:/Users/z.bedrac/Documents/projekti/fitcode",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.standard": "true",
     "node.js.detected.package.stylelint": "true",
@@ -66,7 +59,7 @@
     "nodejs_package_manager_path": "npm",
     "rearrange.code.on.save": "true",
     "settings.editor.selected.configurable": "settings.javascript.linters.eslint",
-    "ts.external.directory.path": "D:\\projects\\fitcode\\backend-nest-js\\node_modules\\typescript\\lib",
+    "ts.external.directory.path": "C:\\Users\\z.bedrac\\Documents\\projekti\\fitcode\\frontend-next-js\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -88,11 +81,11 @@
       <recent name="D:\projects\fitcode\env" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\exercise-info\entity" />
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\set\entity" />
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\exercise-info" />
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\set\service" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\common\service" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\firebase" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\training" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\training\service" />
-      <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]" />
     </key>
     <key name="es6.move.members.recent.items">
       <recent name="D:\projects\fitcode\frontend-next-js\src\type\props.type.d.ts" />
@@ -161,6 +154,9 @@
       <workItem from="1722668445684" duration="18999000" />
       <workItem from="1722754678845" duration="28316000" />
       <workItem from="1722838514839" duration="29613000" />
+      <workItem from="1722924244845" duration="793000" />
+      <workItem from="1722925311696" duration="745000" />
+      <workItem from="1722926261409" duration="18642000" />
     </task>
     <servers />
   </component>

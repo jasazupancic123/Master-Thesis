@@ -5,28 +5,17 @@ import { CycleModule } from '../cycle/cycle.module';
 import { ComponentModule } from '../component/component.module';
 import { ExerciseModule } from '../exercise/exercise.module';
 import { FirebaseModule } from '../firebase/firebase.module';
-import { SetSubgroupEntity } from './entity/set-subgroup.entity';
-import { SetExerciseEntity } from './entity/set-exercise.entity';
-import { SetExerciseService } from './service/set-exercise.service';
-import { ExerciseInfoService } from './service/exercise-info.service';
-import { ExerciseInfoEntity } from './entity/exercise-info.entity';
-import { SetGroupEntity } from './entity/set-group.entity';
-import { SetGroupService } from './service/set-group.service';
-import { SetSubgroupService } from './service/set-subgroup.service';
+import { ExerciseInfoService } from '../exercise-info/service/exercise-info.service';
+import { ExerciseInfoEntity } from '../exercise-info/entity/exercise-info.entity';
 import { TrainingEntity } from './entity/training.entity';
-import { SuperExerciseInfoEntity } from './entity/super-exercise-info.entity';
-import { SuperExerciseInfoService } from './service/super-exercise-info.service';
+import { SuperExerciseInfoEntity } from '../exercise-info/entity/super-exercise-info.entity';
+import { SuperExerciseInfoService } from '../exercise-info/service/super-exercise-info.service';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
     // @ts-ignore to ignore use of "new" keyword with classes
     FirebaseModule.forFeature([
-      // @ts-ignore
-      SetGroupEntity,
-      // @ts-ignore
-      SetSubgroupEntity,
-      // @ts-ignore
-      SetExerciseEntity,
       // @ts-ignore
       ExerciseInfoEntity,
       // @ts-ignore
@@ -36,12 +25,11 @@ import { SuperExerciseInfoService } from './service/super-exercise-info.service'
     ]),
     ComponentModule,
     ExerciseModule,
+    forwardRef(() => UserModule),
     forwardRef(() => CycleModule),
   ],
   providers: [
-    SetGroupService,
-    SetSubgroupService,
-    SetExerciseService,
+
     ExerciseInfoService,
     SuperExerciseInfoService,
     TrainingService,

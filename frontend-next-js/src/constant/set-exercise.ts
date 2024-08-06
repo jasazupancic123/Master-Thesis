@@ -1,74 +1,99 @@
 export interface SetExerciseOption {
   type: 'select' | 'string' | 'number',
   label: string,
-  values?: string[] | number[]
+  values?: string[];
+  format: (value: string) => string;
 }
 
-export const SET_OPTIONS: SetExerciseOption = {
+function getValues(length: number, hop: number = 1) {
+  const values = new Array(length).fill(0).map((_, i) => ((i + 1) * hop).toString());
+  return [''].concat(values);
+}
+
+const SET_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'sets',
-  values: new Array(10).fill(0).map((_, i) => (i + 1).toString()),
+  values: getValues(10),
+  format: (value) => value,
 };
 
-export const REP_OPTIONS: SetExerciseOption = {
+const REP_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'reps',
-  values: new Array(20).fill(0).map((_, i) => (i + 1).toString()),
+  values: getValues(20),
+  format: (value) => value,
 };
 
-export const DISTANCE_OPTIONS: SetExerciseOption = {
+const DISTANCE_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'distance',
-  values: new Array(36).fill(0).map((_, i) => `${(i + 1) * 5} m`),
+  values: getValues(36, 5),
+  format: (value) => `${value} m`,
 };
 
-export const TIME_OPTIONS: SetExerciseOption = {
+const TIME_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'time',
-  values: new Array(36).fill(0).map((_, i) => `${(i + 1) * 5} s`),
+  values: getValues(36, 5),
+  format: (value) => `${value} s`,
 };
 
-export const VO2_OPTIONS: SetExerciseOption = {
+const VO2_OPTIONS: SetExerciseOption = {
   type: 'string',
   label: 'vo2',
+  format: (value) => value,
 };
 
-export const RM_OPTIONS: SetExerciseOption = {
+const RM_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'rm',
-  values: new Array(15).fill(0).map((_, i) => `${(i + 1)} RM`),
+  values: getValues(15, 1),
+  format: (value) => `${value} RM`,
 };
 
-export const BW_OPTIONS: SetExerciseOption = {
+const BW_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'bw',
-  values: new Array(25).fill(0).map((_, i) => `${(i + 1) * 10} %`),
+  values: getValues(25, 10),
+  format: (value) => `${value} %`,
 };
 
-export const INT_OPTIONS: SetExerciseOption = {
+const INT_OPTIONS: SetExerciseOption = {
   type: 'number',
   label: 'int',
+  format: (value) => value,
 };
 
-export const KG_OPTIONS: SetExerciseOption = {
+const KG_OPTIONS: SetExerciseOption = {
   type: 'number',
   label: 'kg',
+  format: (value) => value,
 };
 
-export const TEMPO_OPTIONS: SetExerciseOption = {
+const TEMPO_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'tempo',
   values: ['0:0:0', '1:0:1', '2:0:1', '1:1:1', '1:2:1', '3:0:1'],
+  format: (value) => value,
 };
 
-export const EFFORT_OPTIONS: SetExerciseOption = {
+const EFFORT_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'effort',
   values: ['easy', 'moderate', 'hard', 'max'],
+  format: (value) => value,
 };
 
-export const REC_OPTIONS: SetExerciseOption = {
+const REC_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'rec',
-  values: new Array(36).fill(0).map((_, i) => `${(i + 1) * 5} s`),
+  values: getValues(36, 5),
+  format: (value) => `${value} s`,
 };
+
+export const SET_EXERCISE_SET = [SET_OPTIONS];
+export const SET_EXERCISE_SET_TYPE = [REP_OPTIONS, DISTANCE_OPTIONS, TIME_OPTIONS, VO2_OPTIONS];
+export const SET_EXERCISE_WORKLOAD = [RM_OPTIONS, BW_OPTIONS, INT_OPTIONS, KG_OPTIONS];
+export const SET_EXERCISE_EFFORT = [EFFORT_OPTIONS];
+export const SET_EXERCISE_TEMPO = [TEMPO_OPTIONS];
+export const SET_EXERCISE_RECOVERY = [REC_OPTIONS];

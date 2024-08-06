@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '../../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../../firebase/firestore.repository';
 import { SetGroupEntity } from '../entity/set-group.entity';
@@ -18,16 +18,12 @@ export class SetGroupService {
     return this.repository;
   }
 
-  async findOneById(id: string) {
-    /*// find training and cycle
-    const training = await this.findOneByIdOrFail(user, set.trainingId);
-    const cycle = await this.cycleService.findOneByIdOrFail(user, training.cycleId);
+  async findOneByIdOrFail(user: CustomClaims, id: string) {
+    const set = await this.repository.findOneById(id);
+    if (!set)
+      throw new NotFoundException('Set not found');
 
-    // check that user is owner of cycle
-    if (!this.cycleService.isOwner(user, cycle))
-      throw new UnauthorizedException('You are not authorized for this cycle');*/
-
-    return this.repository.findOneById(id);
+    return set;
   }
 
   async findAll(user: CustomClaims, filter: FindAllFilter) {

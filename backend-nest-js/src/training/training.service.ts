@@ -1,7 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
-import { FirebaseService } from '../firebase/firebase.service';
 import { CustomClaims } from '../common/type/custom-claims.type';
 import { TrainingFilterDto } from './dto/training-filter.dto';
 import { CycleService } from '../cycle/cycle.service';
@@ -9,19 +8,20 @@ import { firestore } from 'firebase-admin';
 import { TrainingEntity, TrainingRelations } from './entity/training.entity';
 import { ComponentService } from '../component/component.service';
 import { CycleDto } from '../cycle/dto/cycle.dto';
-import { SetGroupEntity } from './entity/set-group.entity';
+import { SetGroupEntity } from '../set/entity/set-group.entity';
 import { ExerciseService } from '../exercise/exercise.service';
 import { Wrapper } from '../common/type/wrapper.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { CommonService } from '../common/service/common.service';
-import { SetExerciseService } from './service/set-exercise.service';
-import { ExerciseInfoService } from './service/exercise-info.service';
-import { SetGroupService } from './service/set-group.service';
-import { SetSubgroupService } from './service/set-subgroup.service';
+import { SetExerciseService } from '../set/service/set-exercise.service';
+import { ExerciseInfoService } from '../exercise-info/service/exercise-info.service';
+import { SetGroupService } from '../set/service/set-group.service';
+import { SetSubgroupService } from '../set/service/set-subgroup.service';
 import { AddExerciseToSetSubgroupDto } from './dto/create-set-exercise.dto';
-import { SuperExerciseInfoService } from './service/super-exercise-info.service';
-import { SuperExerciseInfoEntity } from './entity/super-exercise-info.entity';
+import { SuperExerciseInfoService } from '../exercise-info/service/super-exercise-info.service';
+import { SuperExerciseInfoEntity } from '../exercise-info/entity/super-exercise-info.entity';
+import { UpdateSetExerciseDto } from './dto/update-set-exercise.dto';
 
 @Injectable()
 export class TrainingService {
@@ -29,7 +29,6 @@ export class TrainingService {
 
   constructor(
     private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
     @InjectRepository(TrainingEntity)
     private readonly repository: FirestoreRepository<TrainingEntity>,
     private readonly setGroupService: SetGroupService,
@@ -168,7 +167,7 @@ export class TrainingService {
     // create exercise info for each exercise for each user in cycle
     const exerciseInfos = await Promise.all(setExercises.map((setExercise, i) => {
       const superExerciseInfo = superExerciseInfos[i];
-      return this.exerciseInfoService.createManyForCycle(user, setExercise, cycle, superExerciseInfo);
+      return this.exerciseInfoService.createMany(cycle, setExercise, superExerciseInfo);
     }));
 
     return setExercises.map(setExercise => ({
@@ -202,6 +201,37 @@ export class TrainingService {
     });
 
     return await this.repository.findOneById(id);
+  }
+
+  async updateSetExercise(
+    user: CustomClaims,
+    setExerciseId: string,
+    data: UpdateSetExerciseDto,
+  ) {
+    this.logger.debug(`Updating set exercise: ${JSON.stringify(data)}`);
+
+    const { order, ...superExerciseInfoData } = data;
+
+    // check that user is owner of the cycle group of set exercise
+    const setExercise = await this.setExerciseService.findOneByIdOrFail(user, setExerciseId);
+    const setSubgroup = await this.setSubgroupService.findOneByIdOrFail(user, setExercise.setSubgroupId);
+    const setGroup = await this.setGroupService.findOneByIdOrFail(user, setSubgroup.setGroupId);
+    const training = await this.findOneByIdOrFail(user, setGroup.trainingId);
+    const cycle = await this.cycleService.findOneByIdOrFail(user, training.cycleId);
+    if (!this.cycleService.isOwner(user, cycle))
+      throw new UnauthorizedException('You are not authorized to update set exercise for this cycle');
+
+    // update set exercise order
+    await this.setExerciseService.getRepository().update(setExerciseId, { order });
+
+    // update super exercise info
+    const superExerciseInfo = await this.superExerciseInfoService.findOneBySetExerciseId(user, setExerciseId);
+    const updatedSuperExerciseInfo = await this.superExerciseInfoService.getRepository().update(superExerciseInfo.id, superExerciseInfoData);
+
+    // update all exercise infos for all users in cycle
+
+
+    return {};
   }
 
   async remove(user: CustomClaims, id: string) {

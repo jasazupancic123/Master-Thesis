@@ -71,8 +71,29 @@ export abstract class FirestoreRepository<T extends BaseEntity> implements CanVi
     return this.serialize(result);
   }
 
+  async updateMany(input: { id: string, data: Partial<T> }[]): Promise<T[]> {
+    const batch = this.firebase.firestore.batch();
+    const result: T[] = [];
+
+    for (const item of input) {
+      batch.update(this.collection.doc(item.id), item.data as any);
+      result.push({ id: item.id, ...item.data } as unknown as T);
+    }
+
+    await batch.commit();
+    return result;
+  }
+
   async delete(id: string): Promise<void> {
     await this.collection.doc(id).delete();
+  }
+
+  async deleteMany(ids: string[]): Promise<void> {
+    const batch = this.firebase.firestore.batch();
+    for (const id of ids)
+      batch.delete(this.collection.doc(id));
+
+    await batch.commit();
   }
 
   async findOneById(id: string): Promise<T | null> {

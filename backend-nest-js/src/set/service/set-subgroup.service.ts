@@ -22,6 +22,10 @@ export class SetSubgroupService {
     return this.repository.findOneById(id);
   }
 
+  async findOneByIdOrFail(user: CustomClaims, id: string) {
+    return this.repository.findOneByIdOrFail(id);
+  }
+
   async findAll(user: CustomClaims, filter: FindAllFilter) {
     const data = await this.repository.getCollection()
       .where('setGroupId', '==', filter.setGroupId)

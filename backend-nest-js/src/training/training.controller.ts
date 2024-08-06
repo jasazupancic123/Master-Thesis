@@ -9,6 +9,7 @@ import { CycleService } from '../cycle/cycle.service';
 import { Auth } from '../common/decorator/auth.decorator';
 import { CreateSetGroupDto } from './dto/create-set-group.dto';
 import { AddExerciseToSetSubgroupDto } from './dto/create-set-exercise.dto';
+import { UpdateSetExerciseDto } from './dto/update-set-exercise.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -16,6 +17,26 @@ export class TrainingController {
     private readonly cycleService: CycleService,
     private readonly trainingService: TrainingService,
   ) {
+  }
+
+  @Get()
+  async findAll(
+    @RequestUser() user: CustomClaims,
+    @Query() filter: TrainingFilterDto,
+  ) {
+    const cycle = await this.cycleService.findOneById(user, filter.cycleId);
+    if (!cycle)
+      return [];
+
+    return await this.trainingService.findAll(user, cycle, filter);
+  }
+
+  @Get(':id')
+  async findOne(
+    @RequestUser() user: CustomClaims,
+    @Param('id') id: string,
+  ) {
+    return await this.trainingService.findOneById(user, id);
   }
 
   @Post()
@@ -50,26 +71,6 @@ export class TrainingController {
     } as AddExerciseToSetSubgroupDto & { setSubgroupId: string });
   }
 
-  @Get()
-  async findAll(
-    @RequestUser() user: CustomClaims,
-    @Query() filter: TrainingFilterDto,
-  ) {
-    const cycle = await this.cycleService.findOneById(user, filter.cycleId);
-    if (!cycle)
-      return [];
-
-    return await this.trainingService.findAll(user, cycle, filter);
-  }
-
-  @Get(':id')
-  async findOne(
-    @RequestUser() user: CustomClaims,
-    @Param('id') id: string,
-  ) {
-    return await this.trainingService.findOneById(user, id);
-  }
-
   @Patch(':id')
   async update(
     @RequestUser() user: CustomClaims,
@@ -77,6 +78,15 @@ export class TrainingController {
     @Body() data: UpdateTrainingDto,
   ) {
     return await this.trainingService.update(user, id, data);
+  }
+
+  @Patch('set-exercise/:id')
+  async updateSetExercise(
+    @RequestUser() user: CustomClaims,
+    @Param('id') setExerciseId: string,
+    @Body() data: UpdateSetExerciseDto,
+  ) {
+    return await this.trainingService.updateSetExercise(user, setExerciseId, data);
   }
 
   @Delete(':id')

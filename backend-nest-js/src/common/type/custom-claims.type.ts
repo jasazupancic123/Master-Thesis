@@ -5,7 +5,7 @@ import { SportLevel } from '../../user/enum/sport-level.enum';
 export type CustomClaims = DecodedIdToken & {
   role: UserRole[],
   level: SportLevel,
-  groups: string[],
+  bodyweight: number,
 };
 
 export interface CanAccess<T> {
