@@ -1,14 +1,13 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '../../common/decorator/entity.decorator';
 import { SetExerciseEntity, SetExerciseRelations } from '../entity/set-exercise.entity';
 import { FirestoreRepository } from '../../firebase/firestore.repository';
 import { CustomClaims } from '../../common/type/custom-claims.type';
-import { ExerciseInfoService } from './exercise-info.service';
+import { ExerciseInfoService } from '../../exercise-info/service/exercise-info.service';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { CycleService } from '../../cycle/cycle.service';
-import { Wrapper } from '../../common/type/wrapper.type';
 import { ExerciseService } from '../../exercise/exercise.service';
-import { SuperExerciseInfoService } from './super-exercise-info.service';
+import { SuperExerciseInfoService } from '../../exercise-info/service/super-exercise-info.service';
+import { DateFilterDto } from '../../common/dto/date-filter.dto';
 
 @Injectable()
 export class SetExerciseService {
@@ -16,10 +15,9 @@ export class SetExerciseService {
     @InjectRepository(SetExerciseEntity)
     private readonly repository: FirestoreRepository<SetExerciseEntity>,
     private readonly firebaseService: FirebaseService,
-    private readonly exerciseInfoService: ExerciseInfoService,
     private readonly exerciseService: ExerciseService,
     private readonly superExerciseInfoService: SuperExerciseInfoService,
-    @Inject(forwardRef(() => CycleService)) private readonly cycleService: Wrapper<CycleService>,
+    private readonly exerciseInfoService: ExerciseInfoService,
   ) {
   }
 
@@ -32,12 +30,35 @@ export class SetExerciseService {
     return await this.populate(user, setExercise, ['exercise', 'exerciseInfo']);
   }
 
+  async findOneByIdOrFail(user: CustomClaims, id: string) {
+    const setExercise = await this.findOneById(user, id);
+    if (!setExercise)
+      throw new BadRequestException('Set exercise not found');
+
+    return setExercise;
+  }
+
   async findAll(user: CustomClaims, filter: FindAllFilter) {
     const items = await this
       .repository
       .getCollection()
       .where('setSubgroupId', 'in', filter.setSubgroupIds)
       .get();
+
+    return await Promise.all(items.docs.map(async (doc) => {
+      const item = this.repository.serialize(doc);
+      return this.populate(user, item, ['exercise', 'exerciseInfo', 'superExerciseInfo']);
+    }));
+  }
+
+  async findAllByExerciseId(user: CustomClaims, exerciseId: string, filter?: DateFilterDto) {
+    let query = this.repository.getCollection().where('exerciseId', '==', exerciseId);
+
+    const { from, to } = filter || {};
+    if (from) query = query.where('createdAt', '>=', from);
+    if (to) query = query.where('createdAt', '<=', to);
+
+    const items = await query.get();
 
     return await Promise.all(items.docs.map(async (doc) => {
       const item = this.repository.serialize(doc);

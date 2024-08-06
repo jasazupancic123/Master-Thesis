@@ -16,7 +16,7 @@ import { TrainingEntity } from '../training/entity/training.entity';
 
 @Injectable()
 export class CycleService {
-  private logger: Logger
+  private logger: Logger;
 
   constructor(
     private readonly firebaseService: FirebaseService,
@@ -52,7 +52,7 @@ export class CycleService {
     const cycles = await this.repository.getCollection().where('groupId', '==', groupId).get();
 
     return cycles.docs.map((cycle) => {
-      const item = this.repository.serialize(cycle)
+      const item = this.repository.serialize(cycle);
       return this.populate(item, { group });
     });
   }
@@ -60,7 +60,7 @@ export class CycleService {
   async findOneById(user: CustomClaims, id: string) {
     const cycle = await this.repository.findOneById(id);
     if (!cycle)
-      return null
+      return null;
 
     // check if cycle's group contains user
     const group = await this.groupService.findOneById(user, cycle.groupId);
@@ -87,7 +87,7 @@ export class CycleService {
 
     // check if current user is cycle's group owner
     if (!this.isOwner(user, cycle))
-      throw new UnauthorizedException()
+      throw new UnauthorizedException();
 
     const updated = await this.repository.update(id, {
       name,
@@ -105,7 +105,7 @@ export class CycleService {
 
     // check if current user is cycle's group owner
     if (!this.isOwner(user, cycle))
-      throw new UnauthorizedException()
+      throw new UnauthorizedException();
 
     await this.repository.delete(id);
   }
@@ -119,10 +119,10 @@ export class CycleService {
     relations: {
       group?: GroupDto,
       trainings?: TrainingEntity[]
-    } = {}
+    } = {},
   ): CycleDto {
     item.group = relations.group;
-    item.trainings = relations.trainings;
+    item.trainings = relations.trainings || [];
 
     let weeks: Week[][] = [];
     const start = dayjs(item.startDate);
@@ -137,8 +137,8 @@ export class CycleService {
       endDateWeekEnd = endDateWeekEnd.subtract(7, 'day');
     }
 
-    const totalDays = endDateWeekEnd.diff(startDateWeekStart, 'day') + 1
-    const totalWeeks = Math.ceil(totalDays / 7)
+    const totalDays = endDateWeekEnd.diff(startDateWeekStart, 'day') + 1;
+    const totalWeeks = Math.ceil(totalDays / 7);
 
     let date = startDateWeekStart;
     for (let i = 0; i < totalWeeks; i++) {
@@ -151,8 +151,8 @@ export class CycleService {
         week[day] = {
           date: date.toDate(),
           isTrainingDay: isDateBetween(date, start, end),
-          trainings: filtered
-        }
+          trainings: filtered,
+        };
 
         date = date.add(1, 'day');
       }

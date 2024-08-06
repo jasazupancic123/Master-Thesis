@@ -1,5 +1,5 @@
 import { BaseEntity } from '../../common/entity/base.entity';
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { Entity } from '../../common/decorator/entity.decorator';
@@ -24,4 +24,9 @@ export class ExerciseInfoEntity extends BaseEntity {
   @ApiProperty()
   @Expose()
   value: number; // kilograms
+
+  @IsBoolean()
+  @ApiProperty()
+  @Expose()
+  completed: boolean;
 }

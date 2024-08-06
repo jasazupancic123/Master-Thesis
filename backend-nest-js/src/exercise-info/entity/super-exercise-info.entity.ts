@@ -8,6 +8,8 @@ import { SetType } from '../enum/set-type.enum';
 import { WorkloadType } from '../enum/workload-type.enum';
 import { Effort } from '../enum/effort.enum';
 
+// NOTE - any values that are represented in % are NOT normalized between 0 and 1 (BW, INT, RM, ...)
+
 @Entity(SUPER_EXERCISE_INFO_COLLECTION)
 export class SuperExerciseInfoEntity extends BaseEntity {
   @IsString()

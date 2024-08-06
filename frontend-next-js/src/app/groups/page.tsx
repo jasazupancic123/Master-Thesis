@@ -1,6 +1,5 @@
-'use client'
+'use client';
 
-import { AppContextType, useAppContext } from '@/context/app-provider';
 import { useFetch } from '@/hook/use-fetch';
 import { User } from '@/type/user.type';
 import { UserRole } from '@/enum/user-role.enum';

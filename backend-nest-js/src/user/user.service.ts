@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
-import { PublicUserDto, UserDto } from './dto/user.dto';
+import { PublicUserDto } from './dto/user.dto';
 import { serializeToDto } from '../common/util/serialize';
 import { UpdateUserClaimsDto, UpdateUserDto } from './dto/update-user.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
@@ -29,32 +29,30 @@ export class UserService {
 
       // return true if no filter is applied
       return true;
-    })
+    });
 
-    // get only athletes if user is an athlete or trainer
-    if (this.firebaseService.isAthlete(user) || this.firebaseService.isTrainer(user))
-      filtered = filtered.filter(record => {
-        const claims = record.customClaims as CustomClaims;
-        return this.firebaseService.isAthlete(claims) || this.firebaseService.isTrainer(claims);
-      });
+    filtered = filtered.filter(record => {
+      const claims = record.customClaims as CustomClaims;
 
-    // get only trainers if user is a manager
-    if (this.firebaseService.isManager(user))
-      filtered = filtered.filter(record => {
-        const claims = record.customClaims as CustomClaims;
+      // return all users if user is an admin
+      if (this.firebaseService.isAdmin(user))
+        return true;
+
+      // return all trainers if user is a manager
+      if (this.firebaseService.isManager(user))
         return this.firebaseService.isTrainer(claims);
-      });
 
-    // return all data if user is an admin
-    if (this.firebaseService.isAdmin(user)) {
-      filtered = users;
-      classType = UserDto;
-    }
+      // return all athletes if user is a trainer
+      if (this.firebaseService.isTrainer(user))
+        return this.firebaseService.isAthlete(claims);
+
+      // return only current user if user is an athlete
+      if (this.firebaseService.isAthlete(user))
+        return record.uid === user.uid;
+    });
 
     // remove current user from the list
     filtered = filtered.filter(record => record.uid !== user.uid);
-
-    // serialize data
     return serializeToDto(classType, filtered);
   }
 
