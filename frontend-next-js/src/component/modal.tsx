@@ -13,6 +13,7 @@ export interface MyModalProps {
   onCancel?: () => void;
   onConfirm?: () => void;
   width?: number;
+  sx?: any;
 }
 
 const style = {
@@ -37,6 +38,7 @@ export default function MyModal(props: MyModalProps) {
     onCancel,
     onConfirm,
     width,
+    sx,
   } = props;
 
   function handleClose() {
@@ -46,8 +48,8 @@ export default function MyModal(props: MyModalProps) {
 
   return (
     <>
-      {isOpen && <Modal open={isOpen} onClose={handleClose}>
-        <Box sx={{ ...style, width, height: '100%' }}>
+      {isOpen && <Modal open={isOpen} onClose={handleClose} sx={sx}>
+        <Box sx={{ ...style, width }}>
           {title && <Typography variant="h6">
             {title}
           </Typography>}

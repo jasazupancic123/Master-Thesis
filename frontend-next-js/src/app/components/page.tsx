@@ -3,12 +3,11 @@
 import withAuth from '@/hoc/with-auth';
 import React, { useState } from 'react';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
-import { Component, ComponentWithParents } from '@/type/component.type';
+import { Component } from '@/type/component.type';
 import EditIcon from '@mui/icons-material/Edit';
 import { AuthContextType, useAuth } from '@/context/auth-provider';
 import { UserRole } from '@/enum/user-role.enum';
 import toast from 'react-hot-toast';
-import { fetcher } from '@/util/fetcher';
 import Button from '@mui/material/Button';
 import MyModal from '@/component/modal';
 import { TextField } from '@mui/material';
@@ -17,34 +16,35 @@ import Typography from '@mui/material/Typography';
 import Tree, { TreeItem } from '@/component/tree';
 import { AppContextType, useAppContext } from '@/context/app-provider';
 import SelectData from '@/component/select-data';
+import { FitcodeApi } from '@/util/api';
 
 function Page() {
   // app global context
-  const { token, components } = useAppContext() as AppContextType
+  const { token, components } = useAppContext() as AppContextType;
 
   // auth context
-  const {role} = useAuth() as AuthContextType
-  const isAdmin = role.includes(UserRole.ADMIN)
+  const { role } = useAuth() as AuthContextType;
+  const isAdmin = role.includes(UserRole.ADMIN);
 
   // component being modified
-  const [component, setComponent] = useState<Partial<Component>>({})
+  const [component, setComponent] = useState<Partial<Component>>({});
 
   // modal states
-  const [modal, setModal] = useState({ edit: false })
+  const [modal, setModal] = useState({ edit: false });
 
   // view state
-  const [isTreeView, setIsTreeView] = useState(false)
+  const [isTreeView, setIsTreeView] = useState(false);
 
   /**
    * Edit component
    */
   async function editComponent(id: string) {
     try {
-      await fetcher(`/component/${id}`, {method: 'PATCH', token, body: component})
-      toast.success('Successfully edited component')
-      setModal(prev => ({...prev, edit: false}))
+      await FitcodeApi.editComponent(id, token, component);
+      toast.success('Successfully edited component');
+      setModal(prev => ({ ...prev, edit: false }));
     } catch (e) {
-      toast.error('Failed to edit component')
+      toast.error('Failed to edit component');
     }
   }
 
@@ -64,17 +64,17 @@ function Page() {
       getActions: ({ id }) => {
         return [
           <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => {
-            setComponent(components.flat.find((component: Component) => component.id === id))
-            setModal(prev => ({...prev, edit: true}));
-          }} />
+            setComponent(components.flat.find((component: Component) => component.id === id));
+            setModal(prev => ({ ...prev, edit: true }));
+          }} />,
         ];
       },
     },
-  ]
+  ];
 
   return (
     <Box>
-      <Box display='flex' justifyContent='space-between'>
+      <Box display="flex" justifyContent="space-between">
         <Button color="secondary" onClick={() => setIsTreeView(!isTreeView)}>
           {isTreeView ? '📁 Show Table' : '🌳 Show Tree'}
         </Button>
@@ -104,11 +104,11 @@ function Page() {
           <Button onClick={() => setModal(prev => ({ ...prev, edit: false }))} color="secondary">Cancel</Button>
         </>}
       >
-        <Typography variant='h5'>Edit Component</Typography>
+        <Typography variant="h5">Edit Component</Typography>
 
         <Box
           component="form"
-          sx={{ '& > :not(style)': { m: 1, width: '25ch' }, }}
+          sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
           noValidate
           autoComplete="off"
           mt={2}
@@ -118,21 +118,21 @@ function Page() {
             label="Name"
             variant="outlined"
             value={component.name}
-            onChange={(e) => setComponent({...component, name: e.target.value})}
+            onChange={(e) => setComponent({ ...component, name: e.target.value })}
           />
 
           <SelectData<Component>
             data={components.tree}
-            dataKeyProp='id'
-            dataValueProp='name'
-            label='Parent'
+            dataKeyProp="id"
+            dataValueProp="name"
+            label="Parent"
             value={component.parentId || ''}
-            onChange={(parentId) => setComponent({...component, parentId})}
+            onChange={(parentId) => setComponent({ ...component, parentId })}
           />
         </Box>
       </MyModal>
     </Box>
-  )
+  );
 }
 
-export default withAuth(Page, [UserRole.ADMIN])
+export default withAuth(Page, [UserRole.ADMIN]);

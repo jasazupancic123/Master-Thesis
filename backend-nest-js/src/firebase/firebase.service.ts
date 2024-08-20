@@ -7,21 +7,21 @@ import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { SportLevel } from '../user/enum/sport-level.enum';
 import { readFile } from 'node:fs/promises';
-import { COMPONENT_COLLECTION } from '../common/const/firestore.const';
+import { COMPONENT_COLLECTION, EXERCISE_ATTRIBUTE_COLLECTION } from '../common/const/firestore.const';
 import { Tree } from '../common/util/tree';
 import { ComponentDto } from '../component/dto/component.dto';
 import { CustomClaims } from '../common/type/custom-claims.type';
 import { isDev } from '../common/util/node-env';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
+import { ExerciseAttribute } from '../exercise/entity/exercise-attribute.entity';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
-  private logger: Logger;
-
   public readonly app: App;
   public readonly auth: admin.auth.Auth;
   public readonly firestore: admin.firestore.Firestore;
   public readonly storage: admin.storage.Storage;
+  private logger: Logger;
 
   constructor(
     @InjectFirebaseAdmin() private readonly firebaseAdmin: FirebaseClient,
@@ -32,11 +32,15 @@ export class FirebaseService implements OnApplicationBootstrap {
     this.app = firebaseAdmin.app;
     this.auth = firebaseAdmin.auth;
     this.firestore = firebaseAdmin.firestore;
-    this.storage = firebaseAdmin.storage
+    this.storage = firebaseAdmin.storage;
   }
 
   collection(name: string) {
     return this.firestore.collection(name);
+  }
+
+  async findUserById(uid: string): Promise<CustomClaims> {
+    return await this.auth.getUser(uid) as unknown as CustomClaims;
   }
 
   isAdmin(user: CustomClaims): boolean {
@@ -70,22 +74,34 @@ export class FirebaseService implements OnApplicationBootstrap {
       await this.createUser('manager@mail.com', 'password', UserRole.MANAGER);
       await this.createUser('trainer@mail.com', 'password', UserRole.TRAINER);
       await this.createUser('athlete@mail.com', 'password', UserRole.ATHLETE);
-    }
+      await this.createUser('athlete1@mail.com', 'password', UserRole.ATHLETE);
+      await this.createUser('athlete2@mail.com', 'password', UserRole.ATHLETE);
+      await this.createUser('athlete3@mail.com', 'password', UserRole.ATHLETE);
+      await this.createUser('athlete4@mail.com', 'password', UserRole.ATHLETE);
 
-    // import components if they do not exist
-    const components = await this.firestore.collection(COMPONENT_COLLECTION).get();
-    if (components.empty) {
-      await this.importComponents('data/components.json');
-      this.logger.log('Components imported');
-    } else
-      this.logger.log('Components collection already exists');
+      // import components if they do not exist
+      const components = await this.firestore.collection(COMPONENT_COLLECTION).get();
+      if (components.empty) {
+        await this.importComponents('data/components.json');
+        this.logger.log('Components imported');
+      } else
+        this.logger.log('Components collection already exists');
+
+      // import exercise attributes if they do not exist
+      const attributes = await this.firestore.collection(EXERCISE_ATTRIBUTE_COLLECTION).get();
+      if (attributes.empty) {
+        await this.importExerciseAttributes('data/exercise-attributes.json');
+        this.logger.log('Exercise attributes imported');
+      } else
+        this.logger.log('Exercise attributes collection already exists');
+    }
   }
 
   private async createUser(email: string, password: string, role: UserRole) {
     let user: UserRecord;
 
     try {
-      user = await this.auth.getUserByEmail(email)
+      user = await this.auth.getUserByEmail(email);
     } catch (e) {
       user = await this.auth.createUser({ email, password });
       await new Promise((resolve) => setTimeout(resolve, 5000)); // wait for cloud function to add role and level
@@ -93,7 +109,7 @@ export class FirebaseService implements OnApplicationBootstrap {
       // update custom claims
       await this.auth.setCustomUserClaims(user.uid, {
         role: [role],
-        level: SportLevel.ADVANCED
+        level: SportLevel.ADVANCED,
       });
     }
 
@@ -108,6 +124,25 @@ export class FirebaseService implements OnApplicationBootstrap {
 
     Tree.forEach<ComponentDto, string>(parsed, 'children', async ({ name }, parent, result) => {
       const document = await collection.add({ name, parentId: result ?? null });
+      return document.id; // used in the next iteration as parent id
+    });
+  }
+
+  private async importExerciseAttributes(filename: string) {
+    const collection = this.firestore.collection(EXERCISE_ATTRIBUTE_COLLECTION);
+    const data = await readFile(filename, 'utf-8');
+    const parsed: ExerciseAttribute[] = JSON.parse(data);
+
+    await Tree.forEach<ExerciseAttribute, string>(parsed, 'subattributes', async (item, parent, result) => {
+      const document = await collection.add({
+        parentId: result ? result : parent?.id ? parent.id : null,
+        name: item.name,
+        field: item.field,
+        required: item.required ?? false,
+        type: item.type ?? 'string',
+        values: item.values ?? [],
+      });
+
       return document.id; // used in the next iteration as parent id
     });
   }

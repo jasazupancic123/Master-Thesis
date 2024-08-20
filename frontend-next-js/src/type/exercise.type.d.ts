@@ -19,3 +19,16 @@ export interface Exercise {
   sportTask?: string;
   location?: string;
 }
+
+export interface ExerciseAttribute {
+  id: string;
+  parentId?: string;
+  name: string;
+  field: string;
+  required?: boolean;
+  type: 'string' | 'number' | 'date' | 'boolean' | 'select';
+  description?: string;
+  unit?: string;
+  values?: string[];
+  subattributes?: ExerciseAttribute[];
+}

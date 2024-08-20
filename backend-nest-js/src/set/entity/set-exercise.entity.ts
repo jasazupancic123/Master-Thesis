@@ -1,7 +1,7 @@
 import { BaseEntity } from '../../common/entity/base.entity';
 import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ExerciseDto } from '../../exercise/dto/exercise.dto';
+import { ExerciseEntity } from '../../exercise/entity/exercise.entity';
 import { ExerciseInfoEntity } from '../../exercise-info/entity/exercise-info.entity';
 import { Expose } from 'class-transformer';
 import { Entity } from '../../common/decorator/entity.decorator';
@@ -29,9 +29,7 @@ export class SetExerciseEntity extends BaseEntity {
   order: number;
 
   // relations
-  exercise: ExerciseDto;
-  exerciseInfo: ExerciseInfoEntity[];
+  exercise: ExerciseEntity;
   superExerciseInfo: SuperExerciseInfoEntity;
+  exerciseInfo: ExerciseInfoEntity[];
 }
-
-export type SetExerciseRelations = Pick<SetExerciseEntity, 'exercise' | 'exerciseInfo' | 'superExerciseInfo'>;

@@ -5,42 +5,29 @@ import { CustomClaims } from '../common/type/custom-claims.type';
 import { TrainingFilterDto } from './dto/training-filter.dto';
 import { CycleService } from '../cycle/cycle.service';
 import { firestore } from 'firebase-admin';
-import { TrainingEntity, TrainingRelations } from './entity/training.entity';
+import { TrainingEntity } from './entity/training.entity';
 import { ComponentService } from '../component/component.service';
 import { CycleDto } from '../cycle/dto/cycle.dto';
-import { SetGroupEntity } from '../set/entity/set-group.entity';
 import { ExerciseService } from '../exercise/exercise.service';
 import { Wrapper } from '../common/type/wrapper.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { CommonService } from '../common/service/common.service';
-import { SetExerciseService } from '../set/service/set-exercise.service';
-import { ExerciseInfoService } from '../exercise-info/service/exercise-info.service';
-import { SetGroupService } from '../set/service/set-group.service';
-import { SetSubgroupService } from '../set/service/set-subgroup.service';
-import { AddExerciseToSetSubgroupDto } from './dto/create-set-exercise.dto';
-import { SuperExerciseInfoService } from '../exercise-info/service/super-exercise-info.service';
-import { SuperExerciseInfoEntity } from '../exercise-info/entity/super-exercise-info.entity';
-import { UpdateSetExerciseDto } from './dto/update-set-exercise.dto';
+import { SetService } from '../set/set.service';
 
 @Injectable()
 export class TrainingService {
-  private logger: Logger;
+  private logger = new Logger(TrainingService.name);
 
   constructor(
     private readonly commonService: CommonService,
     @InjectRepository(TrainingEntity)
     private readonly repository: FirestoreRepository<TrainingEntity>,
-    private readonly setGroupService: SetGroupService,
-    private readonly setSubgroupService: SetSubgroupService,
-    private readonly setExerciseService: SetExerciseService,
-    private readonly exerciseInfoService: ExerciseInfoService,
-    private readonly superExerciseInfoService: SuperExerciseInfoService,
     private readonly componentService: ComponentService,
     private readonly exerciseService: ExerciseService,
     @Inject(forwardRef(() => CycleService)) private readonly cycleService: Wrapper<CycleService>,
+    @Inject(forwardRef(() => SetService)) private readonly setService: Wrapper<SetService>,
   ) {
-    this.logger = new Logger(TrainingService.name);
   }
 
   async findOneById(user: CustomClaims, id: string) {
@@ -52,23 +39,26 @@ export class TrainingService {
   }
 
   async findAll(user: CustomClaims, cycle: CycleDto, filter?: TrainingFilterDto) {
-    const startTimestamp = firestore.Timestamp.fromDate(filter?.startDate || cycle.startDate);
-    const endTimestamp = firestore.Timestamp.fromDate(filter?.endDate || cycle.endDate);
-
-    const trainings = await this.repository.getCollection()
+    let query = this.repository
+      .getCollection()
       .where('cycleId', '==', cycle.id)
-      .where('startTime', '>=', startTimestamp)
-      .where('endTime', '<=', endTimestamp)
-      .orderBy('startTime')
-      .get();
+      .where('subgroupId', '==', filter?.subgroupId || null);
 
-    // convert to promise.all
-    return await Promise.all(trainings.docs.map(async training => {
-      const item = this.repository.serialize(training);
-      const setGroups = await this.setGroupService.findAll(user, { trainingId: item.id });
-      const components = await this.componentService.findAll({ ids: setGroups.map(({ componentId }) => componentId) });
-      return this.populate(item, { setGroups, components });
+    if (filter?.startDate)
+      query = query.where('startTime', '>=', firestore.Timestamp.fromDate(filter.startDate));
+
+    if (filter?.endDate)
+      query = query.where('endTime', '<=', firestore.Timestamp.fromDate(filter.endDate));
+
+    const trainings = await query.orderBy('startTime').get();
+    return await Promise.all(trainings.docs.map(async item => {
+      return this.setService.populateTraining(user, this.repository.serialize(item));
     }));
+  }
+
+  async populateCycleAndGroup(user: CustomClaims, trainingId: string) {
+    const training = await this.findOneByIdOrFail(user, trainingId);
+    return await this.cycleService.findOneByIdOrFail(user, training.cycleId);
   }
 
   async create(user: CustomClaims, data: CreateTrainingDto) {
@@ -86,104 +76,22 @@ export class TrainingService {
     // create training
     const training = await this.repository.create({
       cycleId: data.cycleId,
+      subgroupId: data.subgroupId || null,
       startTime: data.startTime,
       endTime: data.endTime,
     });
 
     // check that all components exist
-    const components = await this.componentService.findAll({ ids: data.componentIds });
-    if (!components.length || components.length !== data.componentIds.length)
-      throw new BadRequestException('Some components are invalid');
-
-    // each training component represents one set group
-    const setGroups: SetGroupEntity[] = [];
-    for (let i = 0; i < components.length; i++) {
-      const setGroup = await this.addSetGroup(user, {
-        trainingId: training.id,
-        componentId: components[i].id,
-        order: i,
-      });
-
-      setGroups.push(setGroup);
-    }
-
-    // TODO - automatically create warmup and cooldown sets
-
-    return { components, setGroups };
-  }
-
-  async addSetGroup(user: CustomClaims, data: Partial<SetGroupEntity>): Promise<SetGroupEntity> {
-    const setGroup = await this.setGroupService.getRepository().create({
-      trainingId: data.trainingId,
-      componentId: data.componentId,
-      order: data.order,
-    });
-
-    // for each set group, create 3 set subgroups (representing supersets)
-    setGroup.setSubgroups = await this.setSubgroupService.getRepository().createMany([
-      { setGroupId: setGroup.id, order: 0, color: this.commonService.getRandomColor() },
-      { setGroupId: setGroup.id, order: 1, color: this.commonService.getRandomColor() },
-      { setGroupId: setGroup.id, order: 2, color: this.commonService.getRandomColor() },
-    ]);
-
-    return setGroup;
-  }
-
-  async addExerciseToSetSubgroup(user: CustomClaims, data: AddExerciseToSetSubgroupDto & { setSubgroupId: string }) {
-    this.logger.debug(`Creating exercise for set subgroup: ${JSON.stringify(data)}`);
-    const { setSubgroupId, exerciseIds, order, ...superExerciseInfoData } = data;
-
-    // check that entities exist
-    const setSubgroup = await this.setSubgroupService.getRepository().findOneByIdOrFail(setSubgroupId);
-    const setGroup = await this.setGroupService.getRepository().findOneByIdOrFail(setSubgroup.setGroupId);
-    const training = await this.repository.findOneByIdOrFail(setGroup.trainingId);
-    const cycle = await this.cycleService.findOneByIdOrFail(user, training.cycleId);
-
-    // check that exercises are valid
-    const exercises = await this.exerciseService.findAll(user, { ids: exerciseIds });
-    if (!exerciseIds.length || exerciseIds.length !== exercises.length)
-      throw new BadRequestException('Invalid exercises');
-
-    // check that exercises leaf component ids belongs to training's root component ids
-    const valid = this.exerciseService.isValidSetGroupExercise(user, exercises, setGroup);
-    if (!valid)
-      throw new BadRequestException('Invalid exercises');
-
-    // create set exercise
-    const setExercises = await this.setExerciseService.getRepository().createMany(exerciseIds.map(exerciseId => ({
-      setSubgroupId: setSubgroup.id,
-      exerciseId,
-      order,
-    })));
-
-    // create super exercise info for trainers
-    const superExerciseInfos = await this.superExerciseInfoService.getRepository().createMany(
-      setExercises.map(setExercise => ({
-        ...superExerciseInfoData,
-        setExerciseId: setExercise.id,
-      } as SuperExerciseInfoEntity)),
-    );
-
-    // create exercise info for each exercise for each user in cycle
-    const exerciseInfos = await Promise.all(setExercises.map((setExercise, i) => {
-      const superExerciseInfo = superExerciseInfos[i];
-      return this.exerciseInfoService.createMany(cycle, setExercise, superExerciseInfo);
-    }));
-
-    return setExercises.map(setExercise => ({
-      ...setExercise,
-      setSubgroup,
-      exercise: exercises.find(exercise => exercise.id === setExercise.exerciseId),
-      exerciseInfo: exerciseInfos.flat(),
-      superExerciseInfo: superExerciseInfos.find(superExerciseInfo => superExerciseInfo.setExerciseId === setExercise.id),
-    }));
+    const components = await this.componentService.findAllOrFail({ ids: data.componentIds });
+    const setGroups = await this.setService.initializeTraining(user, training.id, components.map(component => component.id));
+    return { ...training, setGroups };
   }
 
   async update(user: CustomClaims, id: string, data: UpdateTrainingDto) {
     const training = await this.repository.findOneByIdOrFail(id);
 
     // check that user is owner of cycle
-    const cycle = await this.cycleService.findOneById(user, training.cycleId);
+    const cycle = await this.cycleService.findOneByIdOrFail(user, training.cycleId);
     if (!cycle)
       throw new BadRequestException('Cycle does not exist');
 
@@ -203,45 +111,14 @@ export class TrainingService {
     return await this.repository.findOneById(id);
   }
 
-  async updateSetExercise(
-    user: CustomClaims,
-    setExerciseId: string,
-    data: UpdateSetExerciseDto,
-  ) {
-    this.logger.debug(`Updating set exercise: ${JSON.stringify(data)}`);
-
-    const { order, ...superExerciseInfoData } = data;
-
-    // check that user is owner of the cycle group of set exercise
-    const setExercise = await this.setExerciseService.findOneByIdOrFail(user, setExerciseId);
-    const setSubgroup = await this.setSubgroupService.findOneByIdOrFail(user, setExercise.setSubgroupId);
-    const setGroup = await this.setGroupService.findOneByIdOrFail(user, setSubgroup.setGroupId);
-    const training = await this.findOneByIdOrFail(user, setGroup.trainingId);
-    const cycle = await this.cycleService.findOneByIdOrFail(user, training.cycleId);
-    if (!this.cycleService.isOwner(user, cycle))
-      throw new UnauthorizedException('You are not authorized to update set exercise for this cycle');
-
-    // update set exercise order
-    await this.setExerciseService.getRepository().update(setExerciseId, { order });
-
-    // update super exercise info
-    const superExerciseInfo = await this.superExerciseInfoService.findOneBySetExerciseId(user, setExerciseId);
-    const updatedSuperExerciseInfo = await this.superExerciseInfoService.getRepository().update(superExerciseInfo.id, superExerciseInfoData);
-
-    // update all exercise infos for all users in cycle
-
-
-    return {};
-  }
-
   async remove(user: CustomClaims, id: string) {
-    await this.repository.findOneByIdOrFail(id);
-    await this.repository.delete(id);
-  }
+    this.logger.debug(`Deleting training for user ${user.uid}: ${id}`);
 
-  populate(item: TrainingEntity, relations: Partial<TrainingRelations>) {
-    item.setGroups = relations.setGroups;
-    item.components = relations.components;
-    return item;
+    // check if user is owner of cycle
+    const training = await this.repository.findOneByIdOrFail(id);
+    await this.cycleService.findOneByIdOrFail(user, training.cycleId);
+
+    await this.setService.deleteAllByTrainingId(id);
+    await this.repository.delete(id);
   }
 }

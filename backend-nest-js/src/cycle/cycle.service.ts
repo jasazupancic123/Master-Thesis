@@ -7,7 +7,6 @@ import { CustomClaims } from '../common/type/custom-claims.type';
 import { GroupService } from '../group/group.service';
 import { TrainingService } from '../training/training.service';
 import dayjs from 'dayjs';
-import { isDateBetween } from '../common/util/date';
 import { Wrapper } from '../common/type/wrapper.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
@@ -32,7 +31,7 @@ export class CycleService {
     const { groupId, name, description, startDate, endDate } = data;
 
     // check if group exists
-    const group = await this.groupService.findOneById(user, groupId);
+    const group = await this.groupService.findOneByIdOrFail(user, groupId);
 
     this.logger.debug(`Creating cycle for user ${user.uid}`);
     const cycle = await this.repository.create({
@@ -48,35 +47,24 @@ export class CycleService {
 
   async findAll(user: CustomClaims, groupId: string) {
     // check if group exists
-    const group = await this.groupService.findOneById(user, groupId);
+    const group = await this.groupService.findOneByIdOrFail(user, groupId);
     const cycles = await this.repository.getCollection().where('groupId', '==', groupId).get();
 
     return cycles.docs.map((cycle) => {
       const item = this.repository.serialize(cycle);
+      item.group = group;
       return this.populate(item, { group });
     });
   }
 
-  async findOneById(user: CustomClaims, id: string) {
+  async findOneByIdOrFail(user: CustomClaims, id: string) {
     const cycle = await this.repository.findOneById(id);
     if (!cycle)
       return null;
 
     // check if cycle's group contains user
-    const group = await this.groupService.findOneById(user, cycle.groupId);
-    const trainings = await this.trainingService.findAll(user, cycle);
-
-    return this.populate(cycle, { group, trainings });
-  }
-
-  async findOneByIdOrFail(user: CustomClaims, id: string) {
-    const cycle = await this.repository.findOneByIdOrFail(id);
-
-    // check if cycle's group contains user
-    const group = await this.groupService.findOneById(user, cycle.groupId);
-    const trainings = await this.trainingService.findAll(user, cycle);
-
-    return this.populate(cycle, { group, trainings });
+    const group = await this.groupService.findOneByIdOrFail(user, cycle.groupId);
+    return this.populate(cycle, { group });
   }
 
   async update(user: CustomClaims, id: string, data: UpdateCycleDto) {
@@ -145,15 +133,7 @@ export class CycleService {
       const week: Week[] = Array(7).fill(null);
 
       for (let day = 0; day < 7; day++) {
-        const filtered = item.trainings.filter(training =>
-          isDateBetween(dayjs(training.startTime), date.startOf('day'), date.endOf('day')));
-
-        week[day] = {
-          date: date.toDate(),
-          isTrainingDay: isDateBetween(date, start, end),
-          trainings: filtered,
-        };
-
+        week[day] = { date: date.toDate() };
         date = date.add(1, 'day');
       }
 

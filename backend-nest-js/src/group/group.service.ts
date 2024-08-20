@@ -1,127 +1,112 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { CollectionReference } from 'firebase-admin/lib/firestore';
 import { FirebaseService } from '../firebase/firebase.service';
-import { GROUP_COLLECTION } from '../common/const/firestore.const';
 import { GroupDto } from './dto/group.dto';
-import { serializeToDto } from '../common/util/serialize';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { CustomClaims } from '../common/type/custom-claims.type';
 import { UserRole } from '../user/enum/user-role.enum';
-import { PublicUserDto } from '../user/dto/user.dto';
-import { firestore } from 'firebase-admin';
+import { UserService } from '../user/user.service';
+import { InjectRepository } from '../common/decorator/entity.decorator';
+import { FirestoreRepository } from '../firebase/firestore.repository';
 
 @Injectable()
 export class GroupService {
-  private logger: Logger
-  private readonly collection: CollectionReference
+  private logger: Logger;
 
-  constructor(private readonly firebaseService: FirebaseService) {
+  constructor(
+    @InjectRepository(GroupDto)
+    private readonly repository: FirestoreRepository<GroupDto>,
+    private readonly firebaseService: FirebaseService,
+    private readonly userService: UserService,
+  ) {
     this.logger = new Logger(GroupService.name);
-    this.collection = this.firebaseService.collection(GROUP_COLLECTION);
   }
 
-  async findOne(id: string): Promise<GroupDto> {
-    const group = await this.collection.doc(id).get();
-    if (!group.exists)
-      return null
-
-    return serializeToDto(GroupDto, group.data());
-  }
-
-  async findAll(user: CustomClaims): Promise<GroupDto[]> {
+  async findAll(user: CustomClaims) {
     // get only groups where user is a member or owner
-    const groups = await this.collection.get();
+    // const groups = await this.repository.findAllBy('userId', user.uid);
 
-    const documents = groups.docs
-      .filter(group => this.canView(user, group))
-      .map(group => this.serialize(group));
-
-    return await Promise.all(documents.map(async (item) => this.populate(item)));
+    // find all by user id and where parent is null
+    const groups = await this.repository.findAllBy('userId', user.uid);
+    const parents = groups.filter(group => !group.parentId);
+    return parents.filter(group => this.canView(user, group));
   }
 
-  async findOneById(user: CustomClaims, id: string): Promise<GroupDto> {
-    const group = await this.collection.doc(id).get();
-
-    if (!group.exists)
-      return null;
+  async findOneByIdOrFail(user: CustomClaims, id: string): Promise<GroupDto> {
+    const group = await this.repository.findOneByIdOrFail(id);
 
     if (!this.canView(user, group))
-      throw new BadRequestException('You are not a member of this group')
+      throw new BadRequestException('You are not a member of this group');
 
-    const serialized = this.serialize(group);
-    return await this.populate(serialized);
+    group.user = await this.userService.findOne(group.userId);
+    group.subgroups = await this.repository.findAllBy('parentId', group.id);
+
+    // find all members in all subgroups
+    const memberIds = group.memberIds.concat(group.subgroups.flatMap(subgroup => subgroup.memberIds));
+    group.members = await this.userService.findAllByIds(user, memberIds);
+
+    return group;
   }
 
   async create(user: CustomClaims, data: CreateGroupDto): Promise<GroupDto> {
     // TODO - allow only 10 groups per user?
-
-    this.logger.debug(`Creating group for user ${user.uid}`);
+    this.logger.debug(`Creating group for user ${user.uid}: ${JSON.stringify(data)}`);
 
     if (user.role.includes(UserRole.ATHLETE))
-      throw new BadRequestException('Athletes cannot create groups')
+      throw new BadRequestException('Athletes cannot create groups');
 
     if (!data.memberIds?.length)
-      throw new BadRequestException('Group must have at least one member')
+      throw new BadRequestException('Group must have at least one member');
 
-    const item = {
-      name: data.name,
-      userId: user.uid,
-      createdAt: new Date(),
-      memberIds: data.memberIds,
-      cycleIds: [],
+    const members = await this.userService.findAllByIds(user, data.memberIds);
+
+    if (data.parentId) {
+      const parent = await this.repository.findOneByIdOrFail(data.parentId);
+
+      // all members must also be members of the parent group
+      members.forEach(member => {
+        if (!parent.memberIds.includes(member.uid))
+          throw new BadRequestException('All members must be members of the parent group');
+      });
+
+      if (parent.userId !== user.uid)
+        throw new BadRequestException('You are not the owner of the parent group');
+
+      // delete members from parent group
+      await this.repository.update(parent.id, { memberIds: parent.memberIds.filter(id => !data.memberIds.includes(id)) });
     }
 
-    const document = await this.collection.add(item as any);
-    const group = await this.collection.doc(document.id).get();
+    const group = await this.repository.create({
+      name: data.name,
+      userId: user.uid,
+      memberIds: members.map(member => member.uid),
+      parentId: data.parentId || null,
+    });
 
-    const serialized = this.serialize(group);
-    return await this.populate(serialized);
+    group.user = user;
+    group.members = members;
+    return group;
   }
 
   async update(user: CustomClaims, id: string, data: UpdateGroupDto): Promise<GroupDto> {
     if (user.role.includes(UserRole.ATHLETE))
       // athlete can be owner of only his own group with just himself as a member
       if (data.memberIds?.length !== 1 || data.memberIds[0] !== user.uid)
-        throw new BadRequestException('Athletes can only update their own group')
+        throw new BadRequestException('Athletes can only update their own group');
 
-    const group = await this.collection.doc(id).get();
-    if (!group.exists)
-      throw new BadRequestException('Group not found')
+    const group = await this.findOneByIdOrFail(user, id);
 
-    if (group.data().userId !== user.uid)
-      throw new BadRequestException('You are not the owner of this group')
+    if (!this.isOwner(user, group))
+      throw new BadRequestException('You are not the owner of this group');
 
-    await this.collection.doc(id).update(data as any);
-    return serializeToDto(GroupDto, { id, ...data });
+    return await this.repository.update(id, data);
   }
 
-  canView(user: CustomClaims, group: GroupDto): boolean;
-  canView(user: CustomClaims, group: firestore.DocumentSnapshot): boolean
-  canView(user: CustomClaims, group: GroupDto | firestore.DocumentSnapshot): boolean {
-    if (group instanceof GroupDto)
-      return group.memberIds.includes(user.uid) || group.userId === user.uid
-    else
-      return group.data().memberIds.includes(user.uid) || group.data().userId === user.uid
+  canView(user: CustomClaims, group: GroupDto): boolean {
+    return group.memberIds.includes(user.uid) || this.isOwner(user, group);
   }
 
-  private serialize(document: firestore.DocumentSnapshot): GroupDto {
-    return serializeToDto(GroupDto, {
-      id: document.id,
-      name: document.data().name,
-      userId: document.data().userId,
-      memberIds: document.data().memberIds,
-      cycleIds: document.data().cycleIds,
-      createdAt: document.data().createdAt.toDate(),
-    });
-  }
-
-  private async populate(item: GroupDto): Promise<GroupDto> {
-    item.user = serializeToDto(PublicUserDto, await this.firebaseService.auth.getUser(item.userId));
-
-    const members = await Promise.all(item.memberIds.map(async (id) => this.firebaseService.auth.getUser(id)));
-    item.members = serializeToDto(PublicUserDto, members);
-
-    return item;
+  isOwner(user: CustomClaims, group: GroupDto): boolean {
+    return group.userId === user.uid;
   }
 }

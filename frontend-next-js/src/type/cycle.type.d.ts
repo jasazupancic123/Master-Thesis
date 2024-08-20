@@ -4,8 +4,6 @@ import { Training } from '@/type/training.type';
 
 export interface Week {
   date: Dayjs | null;
-  trainings: Training[];
-  isTrainingDay: boolean;
 }
 
 export interface Cycle {

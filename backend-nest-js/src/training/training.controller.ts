@@ -7,15 +7,18 @@ import { CustomClaims } from '../common/type/custom-claims.type';
 import { TrainingFilterDto } from './dto/training-filter.dto';
 import { CycleService } from '../cycle/cycle.service';
 import { Auth } from '../common/decorator/auth.decorator';
-import { CreateSetGroupDto } from './dto/create-set-group.dto';
-import { AddExerciseToSetSubgroupDto } from './dto/create-set-exercise.dto';
+import { AddSetExerciseDto } from './dto/create-set-exercise.dto';
+import { SetService } from '../set/set.service';
+import { SuperExerciseInfoEntity } from '../exercise-info/entity/super-exercise-info.entity';
 import { UpdateSetExerciseDto } from './dto/update-set-exercise.dto';
+import { AddSetDto } from './dto/add-set.dto';
 
 @Controller('training')
 export class TrainingController {
   constructor(
     private readonly cycleService: CycleService,
     private readonly trainingService: TrainingService,
+    private readonly setService: SetService,
   ) {
   }
 
@@ -24,7 +27,7 @@ export class TrainingController {
     @RequestUser() user: CustomClaims,
     @Query() filter: TrainingFilterDto,
   ) {
-    const cycle = await this.cycleService.findOneById(user, filter.cycleId);
+    const cycle = await this.cycleService.findOneByIdOrFail(user, filter.cycleId);
     if (!cycle)
       return [];
 
@@ -41,34 +44,55 @@ export class TrainingController {
 
   @Post()
   @Auth()
-  async createTraining(
+  async create(
     @RequestUser() user: CustomClaims,
     @Body() data: CreateTrainingDto,
   ) {
     return await this.trainingService.create(user, data);
   }
 
-  @Post('set-group')
+  @Post('set')
   @Auth()
-  async addSetGroup(
+  async addSet(
     @RequestUser() user: CustomClaims,
-    @Body() data: CreateSetGroupDto,
+    @Body() data: AddSetDto,
   ) {
-    return await this.trainingService.addSetGroup(user, data);
+    return await this.setService.createSetGroup(data);
   }
 
-  @Post('set-subgroup/:id')
+  @Get(':id/set/:setGroupId')
   @Auth()
-  async addExerciseToSetSubgroup(
+  async getSet(
     @RequestUser() user: CustomClaims,
-    @Param('id') setSubgroupId: string,
-    @Body() data: AddExerciseToSetSubgroupDto,
+    @Param('id') trainingId: string,
+    @Param('setGroupId') setGroupId: string,
   ) {
-    return await this.trainingService.addExerciseToSetSubgroup(user, {
-      setSubgroupId,
-      exerciseIds: data.exerciseIds,
-      ...data,
-    } as AddExerciseToSetSubgroupDto & { setSubgroupId: string });
+    const training = await this.trainingService.findOneByIdOrFail(user, trainingId);
+    const cycle = await this.cycleService.findOneByIdOrFail(user, training.cycleId);
+    if (!cycle)
+      return [];
+
+    return await this.setService.getSetGroup(user, setGroupId);
+  }
+
+  @Post('set/subgroup/:setSubgroupId')
+  @Auth()
+  async addSetExercise(
+    @RequestUser() user: CustomClaims,
+    @Param('setSubgroupId') setSubgroupId: string,
+    @Body() body: AddSetExerciseDto,
+  ) {
+    const { exerciseIds, ...data } = body;
+    return await this.setService.addExercise(user, setSubgroupId, exerciseIds, data as Partial<SuperExerciseInfoEntity>);
+  }
+
+  @Patch('set/subgroup/exercise/:setExerciseId')
+  async updateSetExercise(
+    @RequestUser() user: CustomClaims,
+    @Param('setExerciseId') setExerciseId: string,
+    @Body() data: UpdateSetExerciseDto,
+  ) {
+    return await this.setService.updateExercise(user, setExerciseId, data as Partial<SuperExerciseInfoEntity>);
   }
 
   @Patch(':id')
@@ -80,20 +104,12 @@ export class TrainingController {
     return await this.trainingService.update(user, id, data);
   }
 
-  @Patch('set-exercise/:id')
-  async updateSetExercise(
-    @RequestUser() user: CustomClaims,
-    @Param('id') setExerciseId: string,
-    @Body() data: UpdateSetExerciseDto,
-  ) {
-    return await this.trainingService.updateSetExercise(user, setExerciseId, data);
-  }
-
   @Delete(':id')
   async remove(
     @RequestUser() user: CustomClaims,
     @Param('id') id: string,
   ) {
-    return await this.trainingService.remove(user, id);
+    await this.trainingService.remove(user, id);
+    return {};
   }
 }

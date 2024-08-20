@@ -5,10 +5,11 @@ import React from 'react';
 interface SelectDataProps<T> {
   data: T[];
   label: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: any | any[];
+  onChange: (value: SelectDataProps<T>['value']) => void;
   dataKeyProp?: keyof T;
   dataValueProp?: keyof T;
+  multiple?: boolean;
 }
 
 export default function SelectData<T>(props: SelectDataProps<T>) {
@@ -18,16 +19,18 @@ export default function SelectData<T>(props: SelectDataProps<T>) {
     value,
     onChange,
     dataKeyProp,
-    dataValueProp
+    dataValueProp,
+    multiple = false,
   } = props;
 
   return <FormControl fullWidth>
     <InputLabel id={label}>{label}</InputLabel>
     <Select
+      multiple={multiple}
       labelId={label}
       value={value}
       label={label}
-      variant='outlined'
+      variant="outlined"
       onChange={(e) => onChange(e.target.value as string)}
     >
       <MenuItem value={''}>None</MenuItem>
@@ -40,5 +43,5 @@ export default function SelectData<T>(props: SelectDataProps<T>) {
         </MenuItem>
       ))}
     </Select>
-  </FormControl>
+  </FormControl>;
 }

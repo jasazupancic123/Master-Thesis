@@ -8,7 +8,8 @@ import { CreateGroupDto } from './dto/create-group.dto';
 
 @Controller('group')
 export class GroupController {
-  constructor(private readonly groupService: GroupService) {}
+  constructor(private readonly groupService: GroupService) {
+  }
 
   @Get()
   @Auth()
@@ -22,7 +23,7 @@ export class GroupController {
     @RequestUser() user: CustomClaims,
     @Param('id') id: string,
   ) {
-    return await this.groupService.findOneById(user, id);
+    return await this.groupService.findOneByIdOrFail(user, id);
   }
 
   @Post()

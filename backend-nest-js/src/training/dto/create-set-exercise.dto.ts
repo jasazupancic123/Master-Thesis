@@ -1,13 +1,11 @@
-import { IntersectionType, OmitType, PickType } from '@nestjs/mapped-types';
-import { SetExerciseEntity } from '../../set/entity/set-exercise.entity';
+import { OmitType } from '@nestjs/mapped-types';
 import { ArrayNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { SuperExerciseInfoEntity } from '../../exercise-info/entity/super-exercise-info.entity';
 
-export class AddExerciseToSetSubgroupDto extends IntersectionType(
-  PickType(SetExerciseEntity, ['order'] as const),
-  OmitType(SuperExerciseInfoEntity, ['id', 'setExerciseId', 'createdAt', 'updatedAt'] as const),
+export class AddSetExerciseDto extends OmitType(
+  SuperExerciseInfoEntity, ['id', 'setExerciseId', 'createdAt', 'updatedAt'] as const,
 ) {
   @IsString({ each: true })
   @ArrayNotEmpty()

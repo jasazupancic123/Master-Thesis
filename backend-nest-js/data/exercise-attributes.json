@@ -1,0 +1,125 @@
+[
+  {
+    "name": "Equipment Category",
+    "field": "equipment",
+    "required": false,
+    "type": "select",
+    "values": [],
+    "subattributes": [
+      {
+        "name": "Cardio Equipment",
+        "field": "cardio",
+        "required": false,
+        "type": "select",
+        "subattributes": [],
+        "values": [
+          "Treadmills",
+          "Ellipticals",
+          "Exercise Bikes",
+          "Rowing Machines",
+          "Stair Climbers",
+          "Step Machines",
+          "Cross Trainers",
+          "Arc Trainers",
+          "Air Bikes",
+          "Spin Bikes"
+        ]
+      },
+      {
+        "name": "Strength Training Equipment",
+        "field": "st",
+        "required": false,
+        "type": "select",
+        "subattributes": [],
+        "values": [
+          "Barbells",
+          "Olympic Barbells",
+          "EZ Curl Bars",
+          "Tricep Bars",
+          "Trap Bars"
+        ]
+      },
+      {
+        "name": "Free Weight Equipment",
+        "field": "fw",
+        "required": false,
+        "type": "select",
+        "subattributes": [],
+        "values": [
+          "Weightlifting Belt",
+          "Lifting Straps",
+          "Wrist Wraps",
+          "Knee Wraps",
+          "Elbow Wraps"
+        ]
+      },
+      {
+        "name": "Bodyweight Training Equipment",
+        "field": "bw",
+        "required": false,
+        "type": "select",
+        "subattributes": [],
+        "values": [
+          "Pull Up Bars",
+          "Dip Bars",
+          "Push Up Bars",
+          "Suspension Trainers",
+          "Parallettes",
+          "Gymnastic Rings"
+        ]
+      },
+      {
+        "name": "Functional Training Equipment",
+        "field": "ft",
+        "required": false,
+        "type": "select",
+        "subattributes": [],
+        "values": [
+          "TRX",
+          "Plyo Box",
+          "Jump Rope",
+          "Agility Ladder"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Prescription",
+    "field": "prescription",
+    "required": false,
+    "type": "select",
+    "subattributes": [],
+    "values": [
+      "EL BIL",
+      "EL UNI",
+      "INE BIL",
+      "INE UNI"
+    ]
+  },
+  {
+    "name": "Exercise Priority",
+    "field": "priority",
+    "required": false,
+    "type": "select",
+    "subattributes": [],
+    "values": [
+      "Main Lift",
+      "Supplemental Lift",
+      "Assistance Lift"
+    ]
+  },
+  {
+    "name": "Method",
+    "field": "method",
+    "required": false,
+    "type": "select",
+    "subattributes": [],
+    "values": [
+      "Hypertrophy",
+      "Power",
+      "Reactive Strength",
+      "Explosive Strength",
+      "Braking Strength"
+    ]
+  }
+]

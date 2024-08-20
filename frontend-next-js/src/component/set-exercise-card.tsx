@@ -15,17 +15,14 @@ import {
   SetExerciseOption,
 } from '@/constant/set-exercise';
 import { useEffect, useState } from 'react';
-import { fetcher } from '@/util/fetcher';
-import { AppContextType, useAppContext } from '@/context/app-provider';
-import toast from 'react-hot-toast';
 
 interface Props {
   setExercise: SetExercise;
+  onChange: (data: Partial<SuperExerciseInfo> & { order: number }) => void;
 }
 
 export default function SetExerciseCard(props: Props) {
-  const { setExercise } = props;
-  const { token } = useAppContext() as AppContextType;
+  const { setExercise, onChange } = props;
   const [state, setState] = useState(() => setExercise.superExerciseInfo!);
 
   /**
@@ -45,19 +42,21 @@ export default function SetExerciseCard(props: Props) {
       effort: state.effort,
     };
 
-    async function updateSetExercise() {
-      try {
-        await fetcher<any>(`/training/set-exercise/${setExercise.id}`, {
-          method: 'PATCH',
-          token,
-          body: data,
-        });
-      } catch (e: any) {
-        toast.error(e.message || 'Failed to update set exercise');
-      }
-    }
+    // if data didn't change, don't update
+    if (JSON.stringify(data) === JSON.stringify({
+      order: setExercise.order,
+      sets: setExercise.superExerciseInfo?.sets,
+      setType: setExercise.superExerciseInfo?.setType,
+      setTypeValue: setExercise.superExerciseInfo?.setTypeValue,
+      workloadType: setExercise.superExerciseInfo?.workloadType,
+      workloadValue: setExercise.superExerciseInfo?.workloadValue,
+      rec: setExercise.superExerciseInfo?.rec,
+      // tempo: setExercise.superExerciseInfo?.tempo,
+      effort: setExercise.superExerciseInfo?.effort,
+    }))
+      return;
 
-    updateSetExercise().then();
+    onChange(data);
   }, [state]);
 
   return <Stack direction="column" spacing={3} p={1}>
@@ -119,7 +118,7 @@ export default function SetExerciseCard(props: Props) {
             values: option.values,
             option: option.label,
             format: option.format,
-            value: state.workloadValue.toString(),
+            value: (state.workloadValue || 10).toString(),
           };
         })()}
         onChange={(state) => {
@@ -250,8 +249,8 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             option: value,
             type: option.type,
             values: option.values ?? [],
-            value: option.values ? option.values[0].toString() : '',
-          });
+            value: option.values ? option.values[0].toString() : '10',
+          } as State);
         }}
       >
         {options.map(option => (

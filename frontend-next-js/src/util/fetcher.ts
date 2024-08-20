@@ -6,8 +6,8 @@ interface FetcherOptions {
   body?: object;
 }
 
-export async function fetcher<T>(url: string, options: FetcherOptions): Promise<T> {
-  const { method = 'GET', token, body } = options;
+export async function fetcher<T>(url: string, options?: FetcherOptions): Promise<T> {
+  const { method = 'GET', token, body } = options || {};
   const res = await fetch(`${BASE_URL}${url}`, {
     method,
     headers: {

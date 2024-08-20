@@ -1,33 +1,34 @@
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { ExerciseDto } from './dto/exercise.dto';
+import { ExerciseEntity } from './entity/exercise.entity';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { FirebaseService } from '../firebase/firebase.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
-import { CollectionReference } from 'firebase-admin/lib/firestore';
 import { ComponentService } from '../component/component.service';
-import { serializeToDto } from '../common/util/serialize';
-import { EXERCISE_COLLECTION } from '../common/const/firestore.const';
 import { ComponentDto } from '../component/dto/component.dto';
 import { FilterExerciseDto } from './dto/filter-exercise.dto';
 import { CustomClaims } from '../common/type/custom-claims.type';
 import { SetGroupEntity } from '../set/entity/set-group.entity';
-import { firestore } from 'firebase-admin';
-import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
-import DocumentData = firestore.DocumentData;
+import { InjectRepository } from '../common/decorator/entity.decorator';
+import { FirestoreRepository } from '../firebase/firestore.repository';
+import { ExerciseAttribute } from './entity/exercise-attribute.entity';
+import { ExerciseAttributeValue } from './entity/exercise-attribute-value.entity';
 
 type ComponentLeaf = ComponentDto & { parents: ComponentDto[] }
 
 @Injectable()
 export class ExerciseService {
-  private logger: Logger;
-  private readonly collection: CollectionReference;
+  private logger = new Logger(ExerciseService.name);
 
   constructor(
     private readonly firebaseService: FirebaseService,
+    @InjectRepository(ExerciseEntity)
+    private readonly repository: FirestoreRepository<ExerciseEntity>,
+    @InjectRepository(ExerciseAttribute)
+    private readonly exerciseAttributeRepository: FirestoreRepository<ExerciseAttribute>,
+    @InjectRepository(ExerciseAttributeValue)
+    private readonly exerciseAttributeValueRepository: FirestoreRepository<ExerciseAttributeValue>,
     private readonly componentService: ComponentService,
   ) {
-    this.logger = new Logger(ExerciseService.name);
-    this.collection = firebaseService.firestore.collection(EXERCISE_COLLECTION);
   }
 
   async create(user: CustomClaims, data: CreateExerciseDto) {
@@ -59,7 +60,7 @@ export class ExerciseService {
       roots.push(...this.componentService.getRootComponents(componentId, leafs));
 
     const item = { ...data, userId: user.uid, createdAt: new Date().toISOString() };
-    const reference = await this.collection.add(item as any);
+    const reference = await this.repository.create(item as any);
 
     return {
       id: reference.id,
@@ -73,9 +74,8 @@ export class ExerciseService {
    * trainer, return all exercises from the trainer, if user is athlete,
    * return only his exercises
    */
-  async findAll(user: CustomClaims, filter?: FilterExerciseDto): Promise<ExerciseDto[]> {
-    const exercises = await this.collection.get();
-    let filtered = exercises.docs;
+  async findAll(user: CustomClaims, filter?: FilterExerciseDto): Promise<ExerciseEntity[]> {
+    let filtered = await this.repository.findAll();
 
     // get exercises components
     const components = await this.componentService.findAll();
@@ -83,18 +83,18 @@ export class ExerciseService {
     const leafs = this.componentService.leafs(tree);
 
     // filter global exercises and exercises where user is owner
-    filtered = filtered.filter(doc => {
-      return doc.data().userId === user.uid || doc.data().global;
+    filtered = filtered.filter(exercise => {
+      return exercise.userId === user.uid || exercise.global;
     });
 
     // filter by provided filters
-    filtered = filtered.filter(doc => {
+    filtered = filtered.filter(exercise => {
       // filter by ids
-      if (filter.ids?.length && !filter.ids.includes(doc.id))
+      if (filter.ids?.length && !filter.ids.includes(exercise.id))
         return false;
 
       // filter by name
-      const name = (doc.data().name as string).toLowerCase();
+      const name = (exercise.name as string).toLowerCase();
       if (filter.name && !name.includes(filter.name.toLowerCase()))
         return false;
 
@@ -112,22 +112,21 @@ export class ExerciseService {
 
     // limit
     const limit = filter?.limit ? +filter.limit : 100;
-    filtered = filtered.slice(0, limit);
+    return this.map(filtered.slice(0, limit), { components: leafs });
+  }
 
-    // serialize
-    const serialized = filtered.map(doc => serializeToDto(ExerciseDto, { id: doc.id, ...doc.data() }));
-    return this.map(serialized, { components: leafs });
+  async findAllAttributes(): Promise<ExerciseAttribute[]> {
+    return await this.exerciseAttributeRepository.findAll();
   }
 
   /**
    * Return only user's exercises
    */
-  async findOneById(user: CustomClaims, exerciseId: string): Promise<ExerciseDto> {
-    const document = await this.collection.doc(exerciseId).get();
-    return serializeToDto(ExerciseDto, { id: document.id, ...document.data() });
+  async findOneById(user: CustomClaims, exerciseId: string): Promise<ExerciseEntity> {
+    return await this.repository.findOneById(exerciseId);
   }
 
-  async findOneByIdOrFail(user: CustomClaims, exerciseId: string): Promise<ExerciseDto> {
+  async findOneByIdOrFail(user: CustomClaims, exerciseId: string): Promise<ExerciseEntity> {
     const exercise = await this.findOneById(user, exerciseId);
     if (!exercise)
       throw new BadRequestException('Exercise does not exist');
@@ -135,7 +134,7 @@ export class ExerciseService {
     return exercise;
   }
 
-  async isValidSetGroupExercise(user: CustomClaims, exercises: ExerciseDto[], set: SetGroupEntity): Promise<boolean> {
+  async isValidSetGroupExercise(user: CustomClaims, exercises: ExerciseEntity[], set: SetGroupEntity): Promise<boolean> {
     // check that exercise's leaf component id belongs to training's root component id
     const components = await this.componentService.findAll();
     const tree = this.componentService.tree(components);
@@ -190,7 +189,7 @@ export class ExerciseService {
       roots.push(...this.componentService.getRootComponents(componentId, leafs));
 
     const item = { ...data, userId: user.uid, createdAt: new Date().toISOString() };
-    await this.collection.doc(exerciseId).update(item as any);
+    await this.repository.update(exerciseId, item as any);
 
     return {
       rootComponentIds: roots.map(({ id }) => id),
@@ -208,11 +207,11 @@ export class ExerciseService {
    * Filter provided exercises by provided components. Note - if you pass in a
    * root component, all children will also be checked in the filter
    */
-  private filterByComponents(exercises: QueryDocumentSnapshot<DocumentData, DocumentData>[], componentIds: string[], leafs: ComponentLeaf[]) {
-    const filtered: QueryDocumentSnapshot<DocumentData, DocumentData>[] = [];
+  private filterByComponents(exercises: ExerciseEntity[], componentIds: string[], leafs: ComponentLeaf[]) {
+    const filtered: ExerciseEntity[] = [];
 
     for (const exercise of exercises)
-      for (const exerciseComponentId of exercise.data().componentIds) {
+      for (const exerciseComponentId of exercise.componentIds) {
         const leaf = leafs.find(leaf => leaf.id === exerciseComponentId);
         if (!leaf) continue;
         const parentIds = [leaf.id, ...leaf.parents.map(({ id }) => id)];
@@ -230,7 +229,7 @@ export class ExerciseService {
   /**
    * Maps exercises
    */
-  private map(exercises: ExerciseDto[], mapping?: { components?: ComponentLeaf[] }) {
+  private map(exercises: ExerciseEntity[], mapping?: { components?: ComponentLeaf[] }) {
     return exercises.map(exercise => {
       let components: string[] = [];
 

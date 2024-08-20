@@ -120,22 +120,32 @@ export abstract class FirestoreRepository<T extends BaseEntity> implements CanVi
     return item;
   }
 
-  async findOneByField(field: keyof T, value: any): Promise<T | null> {
-    const snapshot = await this.collection.where(field.toString(), '==', value).limit(1).get();
+  async findOneBy(field: keyof T, value: any): Promise<T | null> {
+    const snapshot = await this.collection.where(field.toString(), '==', value).get();
     if (snapshot.empty)
       return null;
 
-    const item = this.serialize(snapshot.docs[0]);
-    if (!await this.canView(item))
-      return null;
-
-    return item;
+    return this.serialize(snapshot.docs[0]);
   }
 
   async findAll(filter?: { ids?: string[] }): Promise<T[]> {
     let query = this.collection as firestore.Query;
     if (filter?.ids)
       query = query.where(firestore.FieldPath.documentId(), 'in', filter.ids);
+
+    const snapshot = await query.get();
+    return snapshot.docs.map(doc => this.serialize(doc));
+  }
+
+  async findAllBy(field: keyof T, value: any): Promise<T[]> {
+    const snapshot = await this.collection.where(field.toString(), '==', value).get();
+    return snapshot.docs.map(doc => this.serialize(doc));
+  }
+
+  async findAllByFields(fields: { field: keyof T, value: any }[]): Promise<T[]> {
+    let query = this.collection as firestore.Query;
+    for (const { field, value } of fields)
+      query = query.where(field.toString(), '==', value);
 
     const snapshot = await query.get();
     return snapshot.docs.map(doc => this.serialize(doc));

@@ -1,16 +1,18 @@
-import React from 'react'
-import Container from '@mui/material/Container'
-import Sidebar from '@/component/sidebar'
-import Box from '@mui/material/Box'
+import React from 'react';
+import Container from '@mui/material/Container';
+import Sidebar from '@/component/sidebar';
+import Box from '@mui/material/Box';
 
-export default function Layout({children}: Readonly<{ children: React.ReactNode }>) {
-    return (
-        <Container component="main" maxWidth="lg">
-            <Sidebar title='MY GROUPS'/>
+export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <Box bgcolor="background.default" minHeight="calc(100vh - 64px)">
+      <Container component="main" maxWidth="lg">
+        <Sidebar />
 
-            <Box my={20}>
-                {children}
-            </Box>
-        </Container>
-    )
+        <Box mt="64px">
+          {children}
+        </Box>
+      </Container>
+    </Box>
+  );
 }

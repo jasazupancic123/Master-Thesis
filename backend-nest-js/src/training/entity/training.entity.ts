@@ -1,9 +1,7 @@
 import { BaseEntity } from '../../common/entity/base.entity';
-import { IsDate, IsNotEmpty, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { CycleDto } from '../../cycle/dto/cycle.dto';
+import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { ComponentDto } from '../../component/dto/component.dto';
 import { SetGroupEntity } from '../../set/entity/set-group.entity';
 import { Entity } from '../../common/decorator/entity.decorator';
 import { TRAINING_COLLECTION } from '../../common/const/firestore.const';
@@ -15,6 +13,12 @@ export class TrainingEntity extends BaseEntity {
   @ApiProperty()
   @Expose()
   cycleId: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  subgroupId?: string; // if null, then it's a training for cycle's group
 
   @IsDate()
   @ApiProperty()
@@ -29,9 +33,5 @@ export class TrainingEntity extends BaseEntity {
   endTime: Date;
 
   // relations
-  cycle?: CycleDto;
-  setGroups?: SetGroupEntity[];
-  components?: ComponentDto[];
+  setGroups: SetGroupEntity[];
 }
-
-export type TrainingRelations = Pick<TrainingEntity, 'cycle' | 'setGroups' | 'components'>;

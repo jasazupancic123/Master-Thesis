@@ -1,4 +1,4 @@
-import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 
@@ -10,17 +10,31 @@ export class TrainingFilterDto {
   @Expose()
   cycleId?: string;
 
-  @IsDate()
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  subgroupId?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    if (value) {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? undefined : date;
+    }
+  })
   startDate?: Date;
 
-  @IsDate()
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    if (value) {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? undefined : date;
+    }
+  })
   endDate?: Date;
 }
