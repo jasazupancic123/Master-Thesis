@@ -1,10 +1,10 @@
 import { User } from '@/type/user.type';
-import { Cycle } from '@/type/cycle.type';
 
 export interface Group {
   id: string;
   name: string;
   userId: string;
+  parentId?: string | null;
   memberIds: string[];
   cycleIds: string[];
   createdAt: Date;
@@ -12,10 +12,11 @@ export interface Group {
   // relations
   user?: User;
   members?: User[];
-  cycles?: Cycle[];
+  subgroups?: Group[];
 }
 
 export interface CreateGroup {
   name: string;
   memberIds: string[];
+  parentId?: string | null;
 }

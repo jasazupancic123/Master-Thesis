@@ -9,8 +9,6 @@ import { BaseEntity } from '../../common/entity/base.entity';
 
 export interface Week {
   date: Date;
-  isTrainingDay: boolean;
-  trainings: TrainingEntity[];
 }
 
 @Entity(CYCLE_COLLECTION)

@@ -1,5 +1,7 @@
 export const COMPONENT_COLLECTION = 'component';
 export const EXERCISE_COLLECTION = 'exercise';
+export const EXERCISE_ATTRIBUTE_COLLECTION = 'exercise-attribute';
+export const EXERCISE_ATTRIBUTE_VALUE_COLLECTION = 'exercise-attribute-value';
 export const GROUP_COLLECTION = 'group';
 export const CYCLE_COLLECTION = 'cycle';
 export const TRAINING_COLLECTION = 'training';

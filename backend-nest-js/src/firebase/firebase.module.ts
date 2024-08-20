@@ -1,12 +1,7 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
 import { FirebaseMiddleware } from './firebase.middleware';
-import {
-  FIREBASE_ADMIN,
-  FirebaseClient,
-  FirebaseClientOptions,
-  getFirebaseClient,
-} from './get-firebase-client';
+import { FIREBASE_ADMIN, FirebaseClient, FirebaseClientOptions, getFirebaseClient } from './get-firebase-client';
 import { ConfigService } from '@nestjs/config';
 import { getEntityMetadata, getRepositoryToken } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from './firestore.repository';
@@ -45,8 +40,8 @@ export class FirebaseModule {
           constructor() {
             super(firebase, name);
           }
-        }
-      }
+        },
+      };
     });
 
     return {

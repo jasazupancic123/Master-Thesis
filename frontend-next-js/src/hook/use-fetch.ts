@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FIREBASE_COOKIE_NAME } from '@/constant/cookies';
 import { useLocalStorage } from 'usehooks-ts';
 import { BASE_URL } from '@/constant/api';
@@ -40,10 +40,12 @@ export function useFetch<T = any>(url: string, options?: UseFetchOptions<T>) {
         body: JSON.stringify(body),
       });
 
-      if (!response.ok)
-        throw new Error(response.statusText);
-
       const result = await response.json();
+      if (!response.ok) {
+        console.error(result);
+        throw new Error(result.message || 'Failed to fetch data');
+      }
+
       setData(populate ? populate(result) : result);
     } catch (e) {
       setError(e);

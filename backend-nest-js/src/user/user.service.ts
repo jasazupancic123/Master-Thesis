@@ -4,7 +4,6 @@ import { PublicUserDto } from './dto/user.dto';
 import { serializeToDto } from '../common/util/serialize';
 import { UpdateUserClaimsDto, UpdateUserDto } from './dto/update-user.dto';
 import { FilterUserDto } from './dto/filter-user.dto';
-import { UserRecord } from 'firebase-admin/auth';
 import { CustomClaims } from '../common/type/custom-claims.type';
 
 @Injectable()
@@ -15,8 +14,13 @@ export class UserService {
     this.logger = new Logger(UserService.name);
   }
 
-  async findOne(uid: string): Promise<UserRecord> {
-    return await this.firebaseService.auth.getUser(uid);
+  async findOne(uid: string) {
+    return await this.firebaseService.auth.getUser(uid) as unknown as CustomClaims;
+  }
+
+  async findAllByIds(user: CustomClaims, ids: string[]) {
+    const { users } = await this.firebaseService.auth.listUsers();
+    return users.filter(record => ids.includes(record.uid)) as unknown as CustomClaims[];
   }
 
   async findAll(user: CustomClaims, filter?: FilterUserDto) {

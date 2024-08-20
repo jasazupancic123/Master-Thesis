@@ -5,6 +5,7 @@ import { Expose } from 'class-transformer';
 
 export class CreateTrainingDto extends PickType(TrainingEntity, [
   'cycleId',
+  'subgroupId',
   'startTime',
   'endTime',
 ] as const) {

@@ -1,4 +1,3 @@
-import { Cycle } from '@/type/cycle.type';
 import { Dayjs } from 'dayjs';
 import { Component } from '@/type/component.type';
 import { Exercise } from '@/type/exercise.type';
@@ -11,9 +10,7 @@ export interface Training {
   endTime: Dayjs;
 
   // relations
-  cycle?: Cycle;
-  components?: Component[];
-  setGroups?: SetGroup[];
+  setGroups: SetGroup[];
 }
 
 interface CreateTraining {
@@ -53,7 +50,7 @@ export interface SetGroup {
 
   // relations
   setSubgroups: SetSubgroup[];
-  component?: Component;
+  component: Component;
 }
 
 export interface SetSubgroup {

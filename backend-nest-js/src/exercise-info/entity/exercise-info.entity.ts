@@ -17,7 +17,7 @@ export class ExerciseInfoEntity extends BaseEntity {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  superExerciseInfoId: string;
+  setExerciseId: string;
 
   @IsInt()
   @Min(0)

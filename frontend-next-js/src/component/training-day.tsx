@@ -1,38 +1,42 @@
 'use client';
 
-import { SetExercise, SetGroup, SetSubgroup, Training } from '@/type/training.type';
+import { SetGroup, SetSubgroup, SuperExerciseInfo, Training } from '@/type/training.type';
 import Box from '@mui/material/Box';
 import React, { Fragment, useEffect, useState } from 'react';
-import { Badge, Collapse, Divider } from '@mui/material';
+import { Divider } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import { AddCircle } from '@mui/icons-material';
 import { Exercise } from '@/type/exercise.type';
-import Stack from '@mui/material/Stack';
-import { fetcher } from '@/util/fetcher';
 import { AppContextType, useAppContext } from '@/context/app-provider';
-import qs from 'qs';
 import ExerciseList from '@/component/exercise-list';
 import MyModal from '@/component/modal';
 import toast from 'react-hot-toast';
-import SetExerciseCard from '@/component/set-exercise-card';
+import { FitcodeApi } from '@/util/api';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Unstable_Grid2';
+import SetExerciseCard from '@/component/set-exercise-card';
+import { AddCircle } from '@mui/icons-material';
 
 interface Props {
   trainings: Training[];
   setTrainings: (trainings: Training[]) => void;
+  loading?: boolean;
 }
 
-const colors = ['#FF6859', '#FFCF44', '#B15DFF', '#72DEFF', '#1E90FF', '#FF69B4', '#32CD32', '#FFA500'];
+export const colors = ['#FF6859', '#FFCF44', '#B15DFF', '#72DEFF', '#1E90FF', '#FF69B4', '#32CD32', '#FFA500'];
 
 export default function TrainingDay(props: Props) {
   // context
-  const { token } = useAppContext() as AppContextType;
-  const { trainings, setTrainings } = props;
+  const { token, components } = useAppContext() as AppContextType;
+  const { trainings, setTrainings, loading } = props;
+
+  // populate set groups with components
+  for (const training of trainings)
+    for (const setGroup of training.setGroups || [])
+      setGroup.component = components.flat.find(component => component.id === setGroup.componentId)!;
 
   // add set exercise
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [search, setSearch] = useState({ name: '' });
   const [addExercise, setAddExercise] = useState({
     modal: false,
     order: 0,
@@ -62,51 +66,46 @@ export default function TrainingDay(props: Props) {
   }
 
   /**
-   * Filter exercises by selected component
+   * Update set exercise
    */
-  useEffect(() => {
-    async function fetchExercises() {
-      const filter = {
-        ...(search.name && { name: search.name }),
-        ...(selected.setGroup && { componentIds: [selected.setGroup.componentId].join(',') }),
-      };
+  async function updateSetExercise(data: Partial<SuperExerciseInfo> & { order: number }) {
+    if (!selected.setGroup || !data.setExerciseId)
+      return;
 
-      const query = qs.stringify(filter);
-      const url = query ? `/exercise?${query}` : '/exercise';
-
-      const response = await fetcher<Exercise[]>(url, { token });
-      setExercises(response);
+    try {
+      await FitcodeApi.updateSetExercise(data.setExerciseId, data, token);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to update set exercise');
     }
+  }
 
-    fetchExercises().then();
-  }, [selected, search]);
-
-  async function addExercisesToSetSubgroup(setSubgroup: SetSubgroup, setGroup: SetGroup, exercises: Exercise[]) {
+  /**
+   * Add set exercises
+   */
+  async function addSetExercises(setSubgroup: SetSubgroup, setGroup: SetGroup, exercises: Exercise[]) {
     if (!exercises.length) {
       toast.error('Please select exercises');
       return;
     }
 
     try {
-      const ordered = (setSubgroup.setExercises || []).sort((a, b) => a.order - b.order);
-      const order = ordered.length ? ordered[ordered.length - 1].order + 1 : 0;
+      const info = {
+        sets: 3,
+        setType: 'reps',
+        setTypeValue: 10,
+        workloadType: 'kg',
+        workloadValue: 20,
+        rec: 60,
+        tempo: '0:0:0',
+        effort: 'moderate',
+      } as SuperExerciseInfo;
 
-      const response = await fetcher<SetExercise[]>(`/training/set-subgroup/${setSubgroup.id}`, {
-        method: 'POST',
-        token,
-        body: {
-          exerciseIds: exercises.map(exercise => exercise.id),
-          sets: 3,
-          setType: 'reps',
-          setTypeValue: 12,
-          workloadType: 'kg',
-          workloadValue: 20,
-          tempo: undefined,
-          effort: undefined,
-          rec: 60,
-          order,
-        },
-      });
+      const other = {
+        setSubgroupId: setSubgroup.id,
+        exerciseIds: exercises.map(exercise => exercise.id),
+      };
+
+      const response = await FitcodeApi.addSetExercises({ ...info, ...other }, token);
 
       // update set subgroup
       setSubgroup.setExercises = [...setSubgroup.setExercises, ...response]
@@ -117,17 +116,7 @@ export default function TrainingDay(props: Props) {
       setGroup.setSubgroups![index] = setSubgroup;
 
       // update training
-      const trainingIndex = trainings.findIndex(training => training.id === setGroup.trainingId);
-      if (trainingIndex !== -1) {
-        const training = trainings[trainingIndex];
-        const setGroupIndex = training.setGroups!.findIndex(group => group.id === setGroup.id);
-
-        if (setGroupIndex !== -1) {
-          training.setGroups![setGroupIndex] = setGroup;
-          trainings[trainingIndex] = training;
-          setTrainings([...trainings]);
-        }
-      }
+      setSelected(prev => ({ ...prev, setGroup }));
     } catch (e: any) {
       toast.error(e.message || 'Could not add exercises to set group');
     } finally {
@@ -140,23 +129,44 @@ export default function TrainingDay(props: Props) {
     }
   }
 
+  /**
+   * Filter exercises by selected component
+   */
+  useEffect(() => {
+    if (!selected?.setGroup)
+      return;
+
+    const setGroup = selected.setGroup!;
+
+    async function fetchExercises() {
+      const filter = {
+        componentIds: [setGroup.componentId],
+      };
+
+      const response = await FitcodeApi.findAllExercises(token, filter);
+      setExercises(response);
+    }
+
+    async function fetchSet() {
+      const response = await FitcodeApi.getSet(setGroup.trainingId, setGroup.id, token);
+      setSelected(prev => ({ ...prev, setGroup: response }));
+    }
+
+    fetchSet().then();
+    fetchExercises().then();
+  }, [selected.setGroup?.componentId]);
+
   return (<>
-    <Box>
+    <Box mt={4}>
       {trainings.map((training, j) =>
         <Box key={training.id}>
-          {training?.setGroups?.map((setGroup) => {
+          {training?.setGroups?.map((setGroup, i) => {
+            const show = selected.setGroup?.componentId === setGroup.componentId;
+
             return (
               <Fragment key={setGroup.id}>
-                <Badge
-                  badgeContent={j + 1}
-                  color="secondary"
-                  anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                  }}
-                />
-
                 <Box
+                  my={1}
                   sx={{
                     backgroundColor: '#1A2B3C',
                     borderRadius: '4px',
@@ -174,43 +184,48 @@ export default function TrainingDay(props: Props) {
                     onClick={() => handleSelected(setGroup)}
                   >
                     <Typography sx={{ color: '#1EB980', px: 2, mb: 0, textTransform: 'uppercase' }}>
-                      {setGroup.component!.name}
+                      {setGroup.component?.name}
                     </Typography>
                   </Box>
 
-                  <Collapse in={selected.setGroup?.component === setGroup.component} sx={{ p: 1 }}>
-                    <Box sx={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                      {/* 3 Columns For Set Groups*/}
-                      <Grid container spacing={2}>
-                        {setGroup.setSubgroups?.map((subgroup, i) => {
-                          return <Grid xs={4} key={subgroup.id}>
-                            {/* Set Group Exercises */}
-                            <BorderColor color={colors[i]} />
+                  {show ? <Box sx={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    {/* 3 Columns For Set Groups */}
+                    <Grid container spacing={2}>
+                      {selected.setGroup?.setSubgroups?.map((subgroup, i) => {
+                        return <Grid xs={4} key={subgroup.id}>
+                          <BorderColor color={colors[i]} />
 
-                            <Box>
-                              {subgroup?.setExercises?.map((setExercise) => (
-                                <Box key={setExercise.id}>
-                                  <SetExerciseCard setExercise={setExercise} />
-                                </Box>
-                              ))}
-                            </Box>
+                          <Box>
+                            {subgroup?.setExercises?.map((setExercise) => (
+                              <Box key={setExercise.id}>
+                                <SetExerciseCard
+                                  setExercise={setExercise}
+                                  onChange={async (data) => {
+                                    await updateSetExercise({
+                                      setExerciseId: setExercise.id,
+                                      ...data,
+                                    });
+                                  }}
+                                />
+                              </Box>
+                            ))}
+                          </Box>
 
-                            <BorderColor color={colors[i]} lower />
+                          <BorderColor color={colors[i]} lower />
 
-                            <Stack direction="row" justifyContent="center" mt={2} spacing={1}>
-                              <IconButton onClick={() => setAddExercise({
-                                modal: true,
-                                order: i,
-                                setSubgroup: subgroup,
-                              })}>
-                                <AddCircle />
-                              </IconButton>
-                            </Stack>
-                          </Grid>;
-                        })}
-                      </Grid>
-                    </Box>
-                  </Collapse>
+                          <Stack direction="row" justifyContent="center" mt={2} spacing={1}>
+                            <IconButton onClick={() => setAddExercise({
+                              modal: true,
+                              order: i,
+                              setSubgroup: subgroup,
+                            })}>
+                              <AddCircle />
+                            </IconButton>
+                          </Stack>
+                        </Grid>;
+                      })}
+                    </Grid>
+                  </Box> : null}
                 </Box>
 
                 <Divider sx={{ backgroundColor: '#303E4A', height: '4px' }} />
@@ -228,7 +243,7 @@ export default function TrainingDay(props: Props) {
       onCancel={() => setSelected(prev => ({ ...prev, exercises: [] }))}
       onConfirm={async () => {
         if (addExercise.setSubgroup && selected.setGroup)
-          await addExercisesToSetSubgroup(addExercise.setSubgroup, selected.setGroup, selected.exercises);
+          await addSetExercises(addExercise.setSubgroup, selected.setGroup, selected.exercises);
       }}
     >
       <ExerciseList

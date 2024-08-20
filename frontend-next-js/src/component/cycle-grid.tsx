@@ -5,7 +5,7 @@ import CardContent from '@mui/material/CardContent';
 import Box from '@mui/material/Box';
 import { formatDate, isDateBetween } from '@/util/date';
 import { subDays } from 'date-fns';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 
 interface Props {
   cycles: Cycle[];
@@ -26,7 +26,7 @@ export default function CycleGrid(props: Props) {
   // filter out cycles that are not within the date range
   const filtered = cycles.filter(cycle => {
     return dates.some(date => isDateBetween(date, cycle.startDate, cycle.endDate));
-  })
+  });
 
   return (
     <Box display="flex" flexWrap="wrap">
@@ -49,7 +49,7 @@ export default function CycleGrid(props: Props) {
               {/* Loop through all cycles */}
               {filtered.map((cycle, j) => (
                 <Box key={j} display="flex" alignItems="center">
-                  {cycle.isInRange && cycle.isInRange(date) && (
+                  {isDateBetween(date, cycle.startDate, cycle.endDate) && (
                     <>
                       <Box
                         sx={{

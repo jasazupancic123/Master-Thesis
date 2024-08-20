@@ -5,14 +5,74 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a110cea5-83fa-4c21-a030-85b10323fced" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-page-router.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/training-filter.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/training-grid-item.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/props.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.firebaserc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/erd.drawio" beforeDir="false" afterPath="$PROJECT_DIR$/docs/erd.drawio" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/functions/.eslintrc.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/functions/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/functions/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/functions/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/functions/src/index.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/functions/tsconfig.dev.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firebase/functions/tsconfig.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firestore.indexes.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/firestore.rules" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/components/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/components/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/cycle/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/cycle/trainer.page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/date-button-group.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/day/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/day/trainer.page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/layout.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page-props.type.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/training-box.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/training-modal.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/week/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/cycles/[id]/year/page.tsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-modal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/athlete.page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/layout.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/manager.page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/props.type.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/[id]/trainer.page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/group-page.type.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/layout.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/trainer.page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/profile/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/profile/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/users/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/users/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/cycle-grid.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/cycle-grid.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/exercise-chips.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/exercise-chips.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/modal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/select-data.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/select-data.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/sidebar.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/constant/set-exercise.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/constant/set-exercise.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/constant/link.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/constant/link.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/context/app-provider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/context/app-provider.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/hook/use-fetch.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/hook/use-fetch.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/cycle.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/cycle.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/exercise.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/exercise.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/group.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/group.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/props.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/props.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/training.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/training.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/fetcher.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/fetcher.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/firebase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/firebase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/theme.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/theme.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/storage.rules" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,29 +100,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
-    "Jest.FirebaseMiddleware.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/z.bedrac/Documents/projekti/fitcode",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.standard": "true",
-    "node.js.detected.package.stylelint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.standard": "",
-    "node.js.selected.package.stylelint": "",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.jest.jest_package": "D:/projects/fitcode/backend-nest-js/node_modules/jest",
-    "nodejs_package_manager_path": "npm",
-    "rearrange.code.on.save": "true",
-    "settings.editor.selected.configurable": "settings.javascript.linters.eslint",
-    "ts.external.directory.path": "C:\\Users\\z.bedrac\\Documents\\projekti\\fitcode\\frontend-next-js\\node_modules\\typescript\\lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;Jest.FirebaseMiddleware.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/projects/fitcode/frontend-next-js/src/app/cycles/[id]&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.standard&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs.jest.jest_package&quot;: &quot;D:/projects/fitcode/backend-nest-js/node_modules/jest&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;rearrange.code.on.save&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.linters.eslint&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;D:\\projects\\fitcode\\backend-nest-js\\functions\\node_modules\\typescript\\lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="ReactDesignerToolWindowState">
     <option name="myId2Visible">
       <map>
@@ -74,18 +134,18 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]\day" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]\day" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\training\service" />
       <recent name="D:\projects\fitcode\env\frontend-next-js" />
       <recent name="D:\projects\fitcode\env" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\exercise-info\entity" />
-      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\set\entity" />
-      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\exercise-info" />
-      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\set\service" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\common\service" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\exercise\entity" />
+      <recent name="D:\projects\fitcode\backend-nest-js" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\groups\components" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\groups\trainer" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\groups" />
     </key>
     <key name="es6.move.members.recent.items">
       <recent name="D:\projects\fitcode\frontend-next-js\src\type\props.type.d.ts" />
@@ -157,10 +217,34 @@
       <workItem from="1722924244845" duration="793000" />
       <workItem from="1722925311696" duration="745000" />
       <workItem from="1722926261409" duration="18642000" />
+      <workItem from="1723010623538" duration="25155000" />
+      <workItem from="1723102951337" duration="17385000" />
+      <workItem from="1723193795098" duration="9430000" />
+      <workItem from="1723227612670" duration="1603000" />
+      <workItem from="1723272915613" duration="16996000" />
+      <workItem from="1723450801825" duration="10964000" />
+      <workItem from="1723488789764" duration="2603000" />
+      <workItem from="1723557179725" duration="7790000" />
+      <workItem from="1723613806183" duration="12395000" />
+      <workItem from="1723661564109" duration="6704000" />
+      <workItem from="1723969093173" duration="33097000" />
+      <workItem from="1724044599647" duration="6815000" />
+      <workItem from="1724055370651" duration="15542000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

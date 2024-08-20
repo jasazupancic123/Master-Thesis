@@ -1,16 +1,21 @@
 import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   UserCredential,
-  createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { auth } from '@/config/firebase.config';
 import { FirebaseError } from 'firebase/app';
 import { Cycle } from '@/type/cycle.type';
-import dayjs, { Dayjs } from 'dayjs';
-import { isDateBetween } from '@/util/date';
-import { SetGroup, Training } from '@/type/training.type';
+import dayjs from 'dayjs';
+import { Training } from '@/type/training.type';
 import { Component } from '@/type/component.type';
+import { UserRole } from '@/enum/user-role.enum';
+
+export const isAdmin = (role: UserRole[]) => role.includes(UserRole.ADMIN);
+export const isManager = (role: UserRole[]) => role.includes(UserRole.MANAGER);
+export const isTrainer = (role: UserRole[]) => role.includes(UserRole.TRAINER);
+export const isAthlete = (role: UserRole[]) => role.includes(UserRole.ATHLETE);
 
 export class FirebaseAuthService {
   static async login(email: string, password: string): Promise<UserCredential> {
@@ -72,19 +77,18 @@ export class Firestore {
     // convert startDate and endDate to dayjs
     item.startDate = dayjs(item.startDate);
     item.endDate = dayjs(item.endDate);
-    item.isInRange = (date: Dayjs) => isDateBetween(date, item.startDate, item.endDate);
 
     return item;
   }
 
-  static populateTraining(item: Training): Training {
-    // convert startTime and endTime to dayjs
+  static populateTraining(item: Training, components: Component[]): Training {
+    // convert dates to dayjs
     item.startTime = dayjs(item.startTime);
     item.endTime = dayjs(item.endTime);
 
     // if set groups are defined, map components to set groups
     item.setGroups = item.setGroups?.map((setGroup) => {
-      setGroup.component = item.components?.find((c: Component) => c.id === setGroup.componentId);
+      setGroup.component = components.find((c) => c.id === setGroup.componentId);
       return setGroup;
     });
 

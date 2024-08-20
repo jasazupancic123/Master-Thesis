@@ -25,37 +25,37 @@ import { ALL_LEVELS, ALL_ROLES } from '@/constant/user';
 import { UserRole } from '@/enum/user-role.enum';
 import MyModal from '@/component/modal';
 import Typography from '@mui/material/Typography';
-import { fetcher } from '@/util/fetcher';
 import toast from 'react-hot-toast';
 import { CustomClaims } from '@/type/custom-claims.type';
+import { FitcodeApi } from '@/util/api';
 
 function Page() {
-  const [users, loading, _, __, setUsers] = useFetch('/user')
+  const [users, loading, _, __, setUsers] = useFetch(FitcodeApi.URL.users());
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-  const [token] = useLocalStorage(FIREBASE_COOKIE_NAME, '')
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleted, setDeleted] = useState('' as string)
+  const [token] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleted, setDeleted] = useState('' as string);
 
   async function updateUserClaims(uid: string, claims: CustomClaims) {
     try {
-      await fetcher(`/user/${uid}/claims`, { method: 'PATCH', token, body: claims })
-      toast.success('Successfully updated user role')
+      await FitcodeApi.updateUserClaims(uid, token, claims);
+      toast.success('Successfully updated user role');
     } catch (e) {
-      toast.error(e.message)
+      toast.error(e.message);
     }
   }
 
   async function deleteUser(uid: string) {
     try {
-      await fetcher(`/user/${uid}`, {method: 'DELETE', token})
-      toast.success('Successfully deleted user')
-      setUsers(users.filter((user) => user.uid !== uid))
+      await FitcodeApi.deleteUser(uid, token);
+      toast.success('Successfully deleted user');
+      setUsers(users.filter((user) => user.uid !== uid));
     } catch (e) {
-      toast.error(e.message)
+      toast.error(e.message);
     }
   }
 
-  if (loading) return <h2>Loading...</h2>
+  if (loading) return <h2>Loading...</h2>;
 
   const columns: GridColDef<User[number]>[] = [
     { field: 'uid', headerName: 'ID', width: 280 },
@@ -146,13 +146,18 @@ function Page() {
         ];
       },
     },
-  ]
+  ];
 
   return (
     <>
       <Box height={20} />
 
-      <Box sx={{ height: 500, width: '100%', '& .actions': { color: 'text.secondary', }, '& .textPrimary': { color: 'text.primary' }}}>
+      <Box sx={{
+        height: 500,
+        width: '100%',
+        '& .actions': { color: 'text.secondary' },
+        '& .textPrimary': { color: 'text.primary' },
+      }}>
         <DataGrid
           getRowId={(row) => row.uid}
           rows={users}

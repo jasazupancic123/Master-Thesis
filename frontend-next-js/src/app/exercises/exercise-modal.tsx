@@ -3,26 +3,18 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Unstable_Grid2';
 import Select from '@mui/material/Select';
-import React, { ReactNode } from 'react';
+import React, { Fragment, ReactNode, useState } from 'react';
 import MenuItem from '@mui/material/MenuItem';
-import { Divider, InputLabel } from '@mui/material';
+import { Divider, FormControl, InputLabel } from '@mui/material';
 import { ComponentWithParents } from '@/type/component.type';
-import { Prescription } from '@/enum/prescription.enum';
-import SelectEnum from '@/component/select-enum';
-import { Priority } from '@/enum/priority.enum';
-import { Method } from '@/enum/method.enum';
-import { LoadingSide } from '@/enum/loading-side.enum';
-import { BodyRegion } from '@/enum/body-region.enum';
-import { MovementDirection } from '@/enum/movement-direction.enum';
-import { Diagnosis } from '@/enum/diagnosis.enum';
-import { Muscle } from '@/enum/muscle.enum';
-import { SportTask } from '@/enum/sport-task.enum';
 import Box from '@mui/material/Box';
 import type { Exercise } from '@/type/exercise.type';
+import { ExerciseAttribute } from '@/type/exercise.type';
 
 interface ExerciseModalProps {
   data: Partial<Exercise>;
   setData: (data: Partial<Exercise>) => void;
+  attributes: ExerciseAttribute[];
   components: ComponentWithParents[];
   icons: ReactNode;
   isOpen: boolean;
@@ -34,12 +26,19 @@ export default function ExerciseModal(props: ExerciseModalProps) {
   const {
     data,
     setData,
+    attributes,
     components,
     isOpen,
     setIsOpen,
     icons,
     title,
   } = props;
+
+  const [values, setValues] = useState<Record<string, string>>({});
+
+  function handleChange(field: string, value: string) {
+    setValues({ ...values, [field]: value });
+  }
 
   return <MyModal isOpen={isOpen} setIsOpen={setIsOpen} width={500}>
     <Box>
@@ -105,7 +104,20 @@ export default function ExerciseModal(props: ExerciseModalProps) {
           <Divider>Extras</Divider>
         </Grid>
 
-        <Grid xs={6}>
+        {attributes.map((attribute) => {
+          return <Grid xs={6} key={attribute.id}>
+            <Box>{attribute.name}</Box>
+
+            <SelectAttribute
+              attribute={attribute}
+              handleChange={handleChange}
+              values={values}
+              showLabel
+            />
+          </Grid>;
+        })}
+
+        {/*<Grid xs={6}>
           <SelectEnum
             enumObject={Prescription}
             label={'Prescription'}
@@ -235,8 +247,63 @@ export default function ExerciseModal(props: ExerciseModalProps) {
             value={data.location || ''}
             onChange={(value) => setData({ ...data, location: value })}
           />
-        </Grid>
+        </Grid>*/}
       </Grid>
     </Box>
   </MyModal>;
+}
+
+// recursive component to show select for subattributes
+function SelectAttribute(props: {
+  attribute: ExerciseAttribute;
+  handleChange: (field: string, value: string) => void;
+  values: Record<string, string>;
+  showLabel?: boolean;
+}) {
+  const { attribute, handleChange, values } = props;
+
+  const handleSelectChange = (event) => {
+    handleChange(attribute.field, event.target.value);
+  };
+
+  return (
+    <FormControl variant="outlined" fullWidth margin="normal">
+      {props.showLabel && <InputLabel>{attribute.name}</InputLabel>}
+      <Select
+        value={values[attribute.field] || ''}
+        onChange={handleSelectChange}
+        label={attribute.name}
+        required={attribute.required}
+      >
+        <MenuItem value={''}>None</MenuItem>
+
+        {attribute.values?.length > 0 ? attribute.values!.map((value) => (
+          <MenuItem key={value} value={value}>
+            {value}
+          </MenuItem>
+        )) : attribute.subattributes?.length > 0 ? attribute.subattributes!.map((subattribute) => (
+            <MenuItem key={subattribute.id} value={subattribute.name}>
+              {subattribute.name}
+            </MenuItem>
+          ))
+          : null}
+      </Select>
+
+      {/* Render subattribute which name matches current attribute value */}
+      {attribute.subattributes?.map((subattribute) => {
+        if (subattribute.name === values[attribute.field]) {
+          return <Fragment key={subattribute.id}>
+            <SelectAttribute
+              attribute={subattribute}
+              handleChange={handleChange}
+              values={values}
+              showLabel={false}
+            />
+          </Fragment>;
+        }
+
+        return null;
+      })}
+    </FormControl>
+  );
 }

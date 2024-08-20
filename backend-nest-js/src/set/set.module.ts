@@ -1,28 +1,23 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { FirebaseModule } from '../firebase/firebase.module';
 import { SetGroupEntity } from './entity/set-group.entity';
 import { SetSubgroupEntity } from './entity/set-subgroup.entity';
 import { SetExerciseEntity } from './entity/set-exercise.entity';
-import { SetGroupService } from './service/set-group.service';
-import { SetSubgroupService } from './service/set-subgroup.service';
-import { SetExerciseService } from './service/set-exercise.service';
+import { SetService } from './set.service';
+import { ExerciseInfoModule } from '../exercise-info/exercise-info.module';
+import { TrainingModule } from '../training/training.module';
+import { ExerciseModule } from '../exercise/exercise.module';
 
 @Module({
   imports: [
-    FirebaseModule.forFeature([
-      // @ts-ignore
-      SetGroupEntity,
-      // @ts-ignore
-      SetSubgroupEntity,
-      // @ts-ignore
-      SetExerciseEntity,
-    ]),
+    // @ts-ignore
+    FirebaseModule.forFeature([SetGroupEntity, SetSubgroupEntity, SetExerciseEntity]),
+    ExerciseInfoModule,
+    ExerciseModule,
+    forwardRef(() => TrainingModule),
   ],
-  providers: [
-    SetGroupService,
-    SetSubgroupService,
-    SetExerciseService,
-  ],
+  providers: [SetService],
+  exports: [SetService],
 })
 export class SetModule {
 }

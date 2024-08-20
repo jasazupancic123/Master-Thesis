@@ -1,40 +1,49 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CycleService } from './cycle.service';
 import { CreateCycleDto } from './dto/create-cycle.dto';
 import { UpdateCycleDto } from './dto/update-cycle.dto';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { CustomClaims } from '../common/type/custom-claims.type';
 import { Auth } from '../common/decorator/auth.decorator';
+import { IsString } from 'class-validator';
+import { Expose } from 'class-transformer';
+
+export class AllCyclesFilter {
+  @IsString()
+  @Expose()
+  groupId: string;
+}
 
 @Controller('cycle')
 export class CycleController {
-  constructor(private readonly cycleService: CycleService) {}
+  constructor(private readonly cycleService: CycleService) {
+  }
 
   @Post()
   @Auth()
   async create(
     @RequestUser() user: CustomClaims,
-    @Body() createCycleDto: CreateCycleDto
+    @Body() createCycleDto: CreateCycleDto,
   ) {
     return await this.cycleService.create(user, createCycleDto);
   }
 
-  @Get(':groupId')
+  @Get()
   @Auth()
   async findAll(
     @RequestUser() user: CustomClaims,
-    @Param('groupId') groupId: string,
+    @Query() query: AllCyclesFilter,
   ) {
-    return await this.cycleService.findAll(user, groupId);
+    return await this.cycleService.findAll(user, query.groupId);
   }
 
-  @Get('id/:id')
+  @Get(':id')
   @Auth()
   async findOne(
     @RequestUser() user: CustomClaims,
-    @Param('id') id: string
+    @Param('id') id: string,
   ) {
-    return await this.cycleService.findOneById(user, id);
+    return await this.cycleService.findOneByIdOrFail(user, id);
   }
 
   @Patch(':id')
@@ -42,7 +51,7 @@ export class CycleController {
   async update(
     @RequestUser() user: CustomClaims,
     @Param('id') id: string,
-    @Body() data: UpdateCycleDto
+    @Body() data: UpdateCycleDto,
   ) {
     return await this.cycleService.update(user, id, data);
   }
@@ -51,7 +60,7 @@ export class CycleController {
   @Auth()
   async remove(
     @RequestUser() user: CustomClaims,
-    @Param('id') id: string
+    @Param('id') id: string,
   ) {
     return await this.cycleService.remove(user, id);
   }

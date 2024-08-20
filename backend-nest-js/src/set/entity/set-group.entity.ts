@@ -23,5 +23,5 @@ export class SetGroupEntity extends BaseEntity {
   @Expose()
   order: number;
 
-  setSubgroups?: SetSubgroupEntity[];
+  setSubgroups: SetSubgroupEntity[];
 }

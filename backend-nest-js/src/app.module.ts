@@ -23,7 +23,7 @@ import { CommonModule } from './common/common.module';
     ExerciseModule,
     GroupModule,
     CycleModule,
-    TrainingModule
+    TrainingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -33,6 +33,7 @@ export class AppModule implements NestModule {
     consumer
       .apply(FirebaseMiddleware)
       .exclude('component')
+      .exclude('exercise/attribute')
       .forRoutes('*');
   }
 }

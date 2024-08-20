@@ -9,8 +9,8 @@ import { COMPONENT_COLLECTION } from '../common/const/firestore.const';
 
 @Injectable()
 export class ComponentService {
-  private logger: Logger
-  private readonly collection: CollectionReference
+  private logger: Logger;
+  private readonly collection: CollectionReference;
 
   constructor(private readonly firebaseService: FirebaseService) {
     this.logger = new Logger(ComponentService.name);
@@ -20,7 +20,7 @@ export class ComponentService {
   async findOneById(id: string): Promise<ComponentDto> {
     const component = await this.collection.doc(id).get();
     if (!component.exists)
-      return null
+      return null;
 
     return serializeToDto(ComponentDto, component.data());
   }
@@ -31,17 +31,25 @@ export class ComponentService {
 
     if (filter)
       if (filter.ids)
-        components = components.filter(({ id }) => filter.ids.includes(id))
+        components = components.filter(({ id }) => filter.ids.includes(id));
 
-    return components.map(doc => serializeToDto(ComponentDto, { id: doc.id, ...doc.data() }))
+    return components.map(doc => serializeToDto(ComponentDto, { id: doc.id, ...doc.data() }));
+  }
+
+  async findAllOrFail(filter?: { ids?: string[] }): Promise<ComponentDto[]> {
+    const components = await this.findAll(filter);
+    if (filter?.ids?.length && components.length !== filter.ids.length)
+      throw new BadRequestException('Invalid components');
+
+    return components;
   }
 
   tree(componentsFlat: ComponentDto[]): ComponentDto[] {
     return Tree.fromArray(componentsFlat, {
       idPropertyName: 'id',
       parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children'
-    })
+      childrenPropertyName: 'children',
+    });
   }
 
   leafs(componentsTree: ComponentDto[]): (ComponentDto & { parents: ComponentDto[] })[] {
@@ -60,15 +68,15 @@ export class ComponentService {
   async update(userId: string, componentId: string, data: UpdateComponentDto): Promise<string> {
     // TODO - when component's parent is updated, all exercises that are using this component should have parentName, parentId and rootIds updated
 
-    this.logger.debug(`Updating component #${componentId} with data ${JSON.stringify(data)}`)
-    const {name} = data;
+    this.logger.debug(`Updating component #${componentId} with data ${JSON.stringify(data)}`);
+    const { name } = data;
 
     // check if component exists
     const component = await this.collection.doc(componentId).get();
     if (!component.exists)
       throw new BadRequestException(`Component with id ${componentId} not found`);
 
-    await this.collection.doc(componentId).update({name});
+    await this.collection.doc(componentId).update({ name });
     return componentId;
   }
 }
