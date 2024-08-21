@@ -1,17 +1,171 @@
 [
   {
+    "name": "Warm Up",
+    "field": "warm-up",
+    "type": "boolean"
+  },
+  {
+    "name": "Cool Down",
+    "field": "cool-down",
+    "type": "boolean"
+  },
+  {
+    "name": "Prescription",
+    "field": "prescription",
+    "type": "select",
+    "values": [
+      "EL BIL",
+      "EL UNI",
+      "INE BIL",
+      "INE UNI"
+    ]
+  },
+  {
+    "name": "Exercise Priority",
+    "field": "priority",
+    "type": "select",
+    "values": [
+      "Main Lift",
+      "Supplemental Lift",
+      "Assistance Lift"
+    ]
+  },
+  {
+    "name": "Method",
+    "field": "method",
+    "type": "select",
+    "values": [
+      "Hypertrophy",
+      "Power",
+      "Reactive Strength",
+      "Explosive Strength",
+      "Braking Strength"
+    ]
+  },
+  {
+    "name": "Body Region",
+    "field": "body-region",
+    "type": "select",
+    "values": [
+      "Total Body",
+      "Upper Body",
+      "Lower Body",
+      "Core"
+    ]
+  },
+  {
+    "name": "Diagnosis",
+    "field": "diagnosis",
+    "type": "select",
+    "values": [
+      "ACL Reconstruction",
+      "Ankle Sprain"
+    ]
+  },
+  {
+    "name": "Loading Side",
+    "field": "loading-side",
+    "type": "select",
+    "values": [
+      "Unilateral",
+      "Bilateral",
+      "Quadruped",
+      "Monopedal",
+      "Bipedal"
+    ]
+  },
+  {
+    "name": "Location",
+    "field": "location",
+    "type": "select",
+    "values": [
+      "Home",
+      "Gym",
+      "Outdoor"
+    ]
+  },
+  {
+    "name": "Movement Direction",
+    "field": "movement-direction",
+    "type": "select",
+    "values": [
+      "Linear",
+      "Lateral"
+    ]
+  },
+  {
+    "name": "Muscle",
+    "field": "muscle",
+    "type": "select",
+    "values": [
+      "Frontalis",
+      "Orbicularis Oculi",
+      "Orbicularis Oris",
+      "Masseter",
+      "Temporalis",
+      "Sternocleidomastoid",
+      "Platysma",
+      "Pectoralis Major",
+      "Pectoralis Minor",
+      "Serratus Anterior",
+      "Trapezius",
+      "Rhomboid Major",
+      "Rhomboid Minor",
+      "Deltoid",
+      "Biceps Brachii",
+      "Brachialis",
+      "Triceps Brachii",
+      "Brachioradialis",
+      "Flexor Carpi Radialis",
+      "Flexor Carpi Ulnaris",
+      "Extensor Carpi Radialis",
+      "Extensor Carpi Ulnaris",
+      "Rectus Abdominis",
+      "External Oblique",
+      "Internal Oblique",
+      "Transversus Abdominis",
+      "Latissimus Dorsi",
+      "Erector Spinae",
+      "Gluteus Maximus",
+      "Gluteus Medius",
+      "Gluteus Minimus",
+      "Tensor Fasciae Latae",
+      "Quadriceps",
+      "Hamstrings",
+      "Adductor Group",
+      "Sartonius",
+      "Gastrocnemius",
+      "Soleus",
+      "Tibialis Anterior",
+      "Peroneus Longus",
+      "Extensor Digitorum Longus",
+      "Flexor Digitorum Longus"
+    ]
+  },
+  {
+    "name": "Sport Task",
+    "field": "sport-task",
+    "type": "select",
+    "values": [
+      "Sprint",
+      "Acceleration",
+      "Deceleration",
+      "Duel",
+      "Heading",
+      "Jump",
+      "Kicking",
+      "Falling Prone",
+      "Falling Supine"
+    ]
+  },
+  {
     "name": "Equipment Category",
     "field": "equipment",
-    "required": false,
     "type": "select",
-    "values": [],
-    "subattributes": [
+    "values": [
       {
         "name": "Cardio Equipment",
         "field": "cardio",
-        "required": false,
-        "type": "select",
-        "subattributes": [],
         "values": [
           "Treadmills",
           "Ellipticals",
@@ -27,10 +181,7 @@
       },
       {
         "name": "Strength Training Equipment",
-        "field": "st",
-        "required": false,
-        "type": "select",
-        "subattributes": [],
+        "field": "strength",
         "values": [
           "Barbells",
           "Olympic Barbells",
@@ -41,10 +192,7 @@
       },
       {
         "name": "Free Weight Equipment",
-        "field": "fw",
-        "required": false,
-        "type": "select",
-        "subattributes": [],
+        "field": "free-weight",
         "values": [
           "Weightlifting Belt",
           "Lifting Straps",
@@ -55,10 +203,7 @@
       },
       {
         "name": "Bodyweight Training Equipment",
-        "field": "bw",
-        "required": false,
-        "type": "select",
-        "subattributes": [],
+        "field": "bodyweight",
         "values": [
           "Pull Up Bars",
           "Dip Bars",
@@ -70,10 +215,7 @@
       },
       {
         "name": "Functional Training Equipment",
-        "field": "ft",
-        "required": false,
-        "type": "select",
-        "subattributes": [],
+        "field": "functional",
         "values": [
           "TRX",
           "Plyo Box",
@@ -81,45 +223,6 @@
           "Agility Ladder"
         ]
       }
-    ]
-  },
-  {
-    "name": "Prescription",
-    "field": "prescription",
-    "required": false,
-    "type": "select",
-    "subattributes": [],
-    "values": [
-      "EL BIL",
-      "EL UNI",
-      "INE BIL",
-      "INE UNI"
-    ]
-  },
-  {
-    "name": "Exercise Priority",
-    "field": "priority",
-    "required": false,
-    "type": "select",
-    "subattributes": [],
-    "values": [
-      "Main Lift",
-      "Supplemental Lift",
-      "Assistance Lift"
-    ]
-  },
-  {
-    "name": "Method",
-    "field": "method",
-    "required": false,
-    "type": "select",
-    "subattributes": [],
-    "values": [
-      "Hypertrophy",
-      "Power",
-      "Reactive Strength",
-      "Explosive Strength",
-      "Braking Strength"
     ]
   }
 ]

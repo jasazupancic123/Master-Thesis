@@ -12,10 +12,7 @@ import { ExerciseAttribute } from '@/type/exercise.type';
 
 export type AppContextType = {
   token: string
-  attributes: {
-    flat: ExerciseAttribute[]
-    tree: ExerciseAttribute[]
-  },
+  attributes: ExerciseAttribute[],
   components: {
     flat: Component[]
     tree: Component[]
@@ -55,18 +52,9 @@ export function AppProvider({ children }) {
 
   const leafs = Tree.leafs(tree, 'children') as ComponentWithParents[];
 
-  const attributesTree = Tree.fromArray(attributes, {
-    idPropertyName: 'id',
-    parentIdPropertyName: 'parentId',
-    childrenPropertyName: 'subattributes',
-  });
-
   return <AppContext.Provider value={{
     token,
-    attributes: {
-      flat: attributes,
-      tree: attributesTree,
-    },
+    attributes,
     components: {
       tree,
       leafs,

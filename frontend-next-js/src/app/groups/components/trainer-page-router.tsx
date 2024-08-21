@@ -166,7 +166,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
 
   return (<>
       <Box
-        bgcolor="#1A2B3C"
+        bgcolor="background.paper"
         sx={{
           borderTopLeftRadius: '20px',
           borderTopRightRadius: '20px',

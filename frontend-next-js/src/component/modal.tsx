@@ -1,8 +1,6 @@
 import React from 'react';
-import { Divider, Modal } from '@mui/material';
-import Box from '@mui/material/Box';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
 
 export interface MyModalProps {
   isOpen: boolean;
@@ -15,18 +13,6 @@ export interface MyModalProps {
   width?: number;
   sx?: any;
 }
-
-const style = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
-};
 
 export default function MyModal(props: MyModalProps) {
   const {
@@ -48,24 +34,24 @@ export default function MyModal(props: MyModalProps) {
 
   return (
     <>
-      {isOpen && <Modal open={isOpen} onClose={handleClose} sx={sx}>
-        <Box sx={{ ...style, width }}>
-          {title && <Typography variant="h6">
-            {title}
-          </Typography>}
-
+      {isOpen && <Dialog
+        open={isOpen}
+        onClose={handleClose}
+        scroll="paper"
+        sx={sx}
+      >
+        {title && <DialogTitle>{title}</DialogTitle>}
+        <DialogContent dividers sx={{ width, bgcolor: 'background.default' }}>
           {children}
-
-          <Divider sx={{ mt: 2, mb: 2 }} />
 
           {actions}
 
-          <Box>
+          {(onConfirm || onCancel) && <DialogActions>
             {onConfirm && <Button onClick={onConfirm} color="primary">Confirm</Button>}
             {onCancel && <Button onClick={handleClose} color="secondary">Cancel</Button>}
-          </Box>
-        </Box>
-      </Modal>}
+          </DialogActions>}
+        </DialogContent>
+      </Dialog>}
     </>
   );
 }

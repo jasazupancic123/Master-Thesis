@@ -1,7 +1,7 @@
 import qs from 'qs';
 import { Component } from '@/type/component.type';
 import { fetcher } from '@/util/fetcher';
-import { Exercise } from '@/type/exercise.type';
+import { CreateExercise, Exercise } from '@/type/exercise.type';
 import { Cycle } from '@/type/cycle.type';
 import { Group } from '@/type/group.type';
 import { SetGroup, SuperExerciseInfo, Training } from '@/type/training.type';
@@ -76,7 +76,7 @@ export class FitcodeApi {
     return await fetcher<Exercise[]>(url, { token });
   }
 
-  static async createExercise(body: Partial<Exercise>, token: string) {
+  static async createExercise(body: CreateExercise, token: string) {
     return await fetcher<{ id: string, rootComponentIds: string[] }>(`/exercise`, { method: 'POST', token, body });
   }
 

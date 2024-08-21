@@ -11,6 +11,8 @@ import dayjs from 'dayjs';
 import { Training } from '@/type/training.type';
 import { Component } from '@/type/component.type';
 import { UserRole } from '@/enum/user-role.enum';
+import { Exercise } from '@/type/exercise.type';
+import { ObjectUtil } from '@/util/object';
 
 export const isAdmin = (role: UserRole[]) => role.includes(UserRole.ADMIN);
 export const isManager = (role: UserRole[]) => role.includes(UserRole.MANAGER);
@@ -87,11 +89,16 @@ export class Firestore {
     item.endTime = dayjs(item.endTime);
 
     // if set groups are defined, map components to set groups
-    item.setGroups = item.setGroups?.map((setGroup) => {
-      setGroup.component = components.find((c) => c.id === setGroup.componentId);
+    item.setGroups = (item.setGroups || []).map((setGroup) => {
+      setGroup.component = components.find((c) => c.id === setGroup.componentId)!;
       return setGroup;
     });
 
+    return item;
+  }
+
+  static populateExercise(item: Exercise): Exercise {
+    item.attributeValues = ObjectUtil.flattenObject(item.attributeValues);
     return item;
   }
 }

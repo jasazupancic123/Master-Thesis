@@ -11,7 +11,7 @@ export class Tree {
       idPropertyName,
       parentIdPropertyName,
       childrenPropertyName,
-      rootId = null
+      rootId = null,
     } = options;
 
     const map = new Map<any, T & { [key: string]: any }>();
@@ -38,7 +38,7 @@ export class Tree {
     return roots;
   }
 
-  static forEach<T = any, V = any>(items: T[], childrenPropertyName: string, callback: (item: T, parent: T, previousResult: V) => Promise<V>, parent: T = undefined, result: V = undefined) {
+  static forEach<T = any, V = any>(items: T[], childrenPropertyName: keyof T, callback: (item: T, parent: T, previousResult: V) => Promise<V>, parent: T = undefined, result: V = undefined) {
     for (const item of items) {
       callback(item, parent, result)
         .then((result) => this.forEach(item[childrenPropertyName], childrenPropertyName, callback, item, result))
@@ -46,7 +46,7 @@ export class Tree {
     }
   }
 
-  static leafs<T>(items: T[], childrenPropertyName: string): T & { parents: T[] }[] {
+  static leafs<T>(items: T[], childrenPropertyName: keyof T): T & { parents: T[] }[] {
     const result: T & { parents: T[] }[] = [];
 
     this.forEach<T, T & { parents: T[] }>(items, childrenPropertyName, async (item, parent, previousResult) => {

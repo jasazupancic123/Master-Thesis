@@ -2,18 +2,18 @@ import MyModal from '@/component/modal';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Unstable_Grid2';
-import Select from '@mui/material/Select';
-import React, { Fragment, ReactNode, useState } from 'react';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import React, { ReactNode, useEffect, useState } from 'react';
 import MenuItem from '@mui/material/MenuItem';
-import { Divider, FormControl, InputLabel } from '@mui/material';
+import { Checkbox, Divider, FormControl, FormControlLabel, InputLabel } from '@mui/material';
 import { ComponentWithParents } from '@/type/component.type';
 import Box from '@mui/material/Box';
-import type { Exercise } from '@/type/exercise.type';
+import type { CreateExercise, ExerciseAttributeSelectOption } from '@/type/exercise.type';
 import { ExerciseAttribute } from '@/type/exercise.type';
 
 interface ExerciseModalProps {
-  data: Partial<Exercise>;
-  setData: (data: Partial<Exercise>) => void;
+  data: CreateExercise;
+  setData: (data: CreateExercise | ((prev: CreateExercise) => CreateExercise)) => void;
   attributes: ExerciseAttribute[];
   components: ComponentWithParents[];
   icons: ReactNode;
@@ -34,10 +34,14 @@ export default function ExerciseModal(props: ExerciseModalProps) {
     title,
   } = props;
 
-  const [values, setValues] = useState<Record<string, string>>({});
-
-  function handleChange(field: string, value: string) {
-    setValues({ ...values, [field]: value });
+  function handleSelectChange(field: string, value: string) {
+    setData(prev => ({
+      ...prev,
+      attributeValues: {
+        ...prev.attributeValues,
+        [field]: value,
+      },
+    }));
   }
 
   return <MyModal isOpen={isOpen} setIsOpen={setIsOpen} width={500}>
@@ -84,10 +88,10 @@ export default function ExerciseModal(props: ExerciseModalProps) {
         <Grid xs={12}>
           <InputLabel id="component">Component</InputLabel>
           <Select
+            fullWidth
             labelId="component"
             label="Component"
             variant="outlined"
-            fullWidth
             value={data.componentIds?.[0] || ''}
             onChange={(e) => setData({ ...data, componentIds: [e.target.value] as string[] })}
           >
@@ -105,15 +109,39 @@ export default function ExerciseModal(props: ExerciseModalProps) {
         </Grid>
 
         {attributes.map((attribute) => {
-          return <Grid xs={6} key={attribute.id}>
-            <Box>{attribute.name}</Box>
+          const type = attribute.type === 'number'
+            ? 'number'
+            : attribute.type === 'date'
+              ? 'date'
+              : 'text';
 
-            <SelectAttribute
-              attribute={attribute}
-              handleChange={handleChange}
-              values={values}
-              showLabel
-            />
+          return <Grid xs={6} key={attribute.id}>
+            {attribute.type === 'select'
+              ? <SelectAttribute
+                attribute={attribute}
+                onChange={handleSelectChange}
+                initialValue={data.attributeValues}
+                label
+              />
+              : attribute.type === 'boolean'
+                ?
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={data.attributeValues?.[attribute.field] || false}
+                      onChange={(e) => handleSelectChange(attribute.field, e.target.checked)}
+                    />
+                  }
+                  label={attribute.name}
+                />
+                : <TextField
+                  fullWidth
+                  label={attribute.name}
+                  type={type}
+                  variant="outlined"
+                  value={data.attributeValues?.[attribute.field] || ''}
+                  onChange={(e) => handleSelectChange(attribute.field, e.target.value)}
+                />}
           </Grid>;
         })}
 
@@ -255,55 +283,77 @@ export default function ExerciseModal(props: ExerciseModalProps) {
 
 // recursive component to show select for subattributes
 function SelectAttribute(props: {
-  attribute: ExerciseAttribute;
-  handleChange: (field: string, value: string) => void;
-  values: Record<string, string>;
-  showLabel?: boolean;
+  attribute: ExerciseAttribute | ExerciseAttributeSelectOption;
+  onChange: (field: string, value: string) => void;
+  initialValue?: string | Record<string, any>;
+  label?: boolean
 }) {
-  const { attribute, handleChange, values } = props;
+  const { attribute, onChange, initialValue, label } = props;
 
-  const handleSelectChange = (event) => {
-    handleChange(attribute.field, event.target.value);
-  };
+  const [subOptions, setSubOptions] = useState<ExerciseAttributeSelectOption | undefined>(undefined);
+  const [selectedValue, setSelectedValue] = useState<string | undefined>(() => {
+    if (typeof initialValue === 'object')
+      return initialValue[attribute.field] as string;
 
-  return (
-    <FormControl variant="outlined" fullWidth margin="normal">
-      {props.showLabel && <InputLabel>{attribute.name}</InputLabel>}
+    return initialValue as string;
+  });
+
+  /**
+   * Populate initial values for nested select
+   */
+  useEffect(() => {
+    if (typeof initialValue === 'object' && initialValue[attribute.field]) {
+      setSelectedValue(initialValue[attribute.field] as string);
+
+      const selectedOption = attribute.values?.find((option) =>
+        typeof option === 'object' && option.field === initialValue[attribute.field],
+      ) as ExerciseAttributeSelectOption;
+
+      setSubOptions(selectedOption);
+    }
+  }, [initialValue]);
+
+  function handleSelectChange(e: SelectChangeEvent) {
+    const value = e.target.value as string;
+    setSelectedValue(value);
+
+    const selectedOption = attribute.values?.find((option) =>
+      typeof option === 'object' && option.field === value,
+    ) as ExerciseAttributeSelectOption;
+
+    setSubOptions(selectedOption);
+    onChange(attribute.field, value);
+  }
+
+  return <Box>
+    <FormControl fullWidth>
+      {label && <InputLabel id={attribute.field}>{attribute.name}</InputLabel>}
       <Select
-        value={values[attribute.field] || ''}
+        labelId={attribute.field}
+        label={label ? attribute.name : undefined}
+        variant="outlined"
+        fullWidth
+        value={selectedValue || ''}
         onChange={handleSelectChange}
-        label={attribute.name}
-        required={attribute.required}
       >
-        <MenuItem value={''}>None</MenuItem>
+        <MenuItem value="">None</MenuItem>
 
-        {attribute.values?.length > 0 ? attribute.values!.map((value) => (
-          <MenuItem key={value} value={value}>
-            {value}
-          </MenuItem>
-        )) : attribute.subattributes?.length > 0 ? attribute.subattributes!.map((subattribute) => (
-            <MenuItem key={subattribute.id} value={subattribute.name}>
-              {subattribute.name}
-            </MenuItem>
-          ))
-          : null}
+        {attribute.values?.map((option) => {
+          if (typeof option === 'string')
+            return <MenuItem key={option} value={option}>{option}</MenuItem>;
+
+          // nested select
+          return <MenuItem key={option.field} value={option.field}>
+            {option.name}
+          </MenuItem>;
+        })}
       </Select>
-
-      {/* Render subattribute which name matches current attribute value */}
-      {attribute.subattributes?.map((subattribute) => {
-        if (subattribute.name === values[attribute.field]) {
-          return <Fragment key={subattribute.id}>
-            <SelectAttribute
-              attribute={subattribute}
-              handleChange={handleChange}
-              values={values}
-              showLabel={false}
-            />
-          </Fragment>;
-        }
-
-        return null;
-      })}
     </FormControl>
-  );
+
+    {subOptions && <SelectAttribute
+      attribute={subOptions}
+      onChange={onChange}
+      initialValue={initialValue}
+    />}
+  </Box>;
 }

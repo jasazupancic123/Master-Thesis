@@ -1,34 +1,28 @@
 export interface Exercise {
   id: string;
+  userId: string;
   name: string;
   componentIds: string[];
   global: boolean;
-  coefficient1?: number;
-  coefficient2?: number;
-  coefficient3?: number;
   imageUrl?: string;
   videoUrl?: string;
-  prescription?: string;
-  priority?: string;
-  method?: string;
-  loadingSide?: string;
-  bodyRegion?: string;
-  movementDirection?: string;
-  diagnosis?: string;
-  muscle?: string;
-  sportTask?: string;
-  location?: string;
+  attributeValues: Record<string, any>;
 }
 
 export interface ExerciseAttribute {
   id: string;
-  parentId?: string;
   name: string;
   field: string;
   required?: boolean;
   type: 'string' | 'number' | 'date' | 'boolean' | 'select';
-  description?: string;
   unit?: string;
-  values?: string[];
-  subattributes?: ExerciseAttribute[];
+  values: (string | ExerciseAttributeSelectOption)[];
 }
+
+export interface ExerciseAttributeSelectOption {
+  name: string;
+  field: string;
+  values: (string | ExerciseAttributeSelectOption)[];
+}
+
+export type CreateExercise = Partial<Exercise>;
