@@ -1,5 +1,13 @@
-import { ExerciseEntity } from '../entity/exercise.entity';
-import { OmitType } from '@nestjs/mapped-types';
+import { Exercise } from '../entity/exercise.entity';
+import { PickType } from '@nestjs/mapped-types';
+import { IsObject } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 
-export class CreateExerciseDto extends OmitType(ExerciseEntity, ['id', 'userId'] as const) {
+export class CreateExerciseDto extends PickType(Exercise, ['name', 'componentIds', 'imageUrl', 'videoUrl'] as const,
+) {
+  @IsObject()
+  @ApiProperty()
+  @Expose()
+  attributeValues: Record<string, any>;
 }

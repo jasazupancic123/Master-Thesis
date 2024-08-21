@@ -5,12 +5,14 @@ import Box from '@mui/material/Box';
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <Container component="main" maxWidth="lg">
-      <Sidebar title="EXERCISES" />
+    <Box bgcolor="background.paper" minHeight="calc(100vh - 136px)">
+      <Container component="main" maxWidth="lg">
+        <Sidebar title="EXERCISES" />
 
-      <Box pt={20}>
-        {children}
-      </Box>
-    </Container>
+        <Box mt="136px">
+          {children}
+        </Box>
+      </Container>
+    </Box>
   );
 }

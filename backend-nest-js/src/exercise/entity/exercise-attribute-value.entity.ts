@@ -4,6 +4,7 @@ import { BaseEntity } from '../../common/entity/base.entity';
 import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { ExerciseAttribute } from './exercise-attribute.entity';
 
 @Entity(EXERCISE_ATTRIBUTE_VALUE_COLLECTION)
 export class ExerciseAttributeValue extends BaseEntity {
@@ -15,5 +16,11 @@ export class ExerciseAttributeValue extends BaseEntity {
   @IsString()
   @ApiProperty()
   @Expose()
-  value: string;
+  exerciseId: string;
+
+  @ApiProperty()
+  @Expose()
+  value: any;
+
+  attribute?: ExerciseAttribute;
 }

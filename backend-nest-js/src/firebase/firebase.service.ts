@@ -133,17 +133,13 @@ export class FirebaseService implements OnApplicationBootstrap {
     const data = await readFile(filename, 'utf-8');
     const parsed: ExerciseAttribute[] = JSON.parse(data);
 
-    await Tree.forEach<ExerciseAttribute, string>(parsed, 'subattributes', async (item, parent, result) => {
-      const document = await collection.add({
-        parentId: result ? result : parent?.id ? parent.id : null,
+    for (const item of parsed)
+      await collection.add({
         name: item.name,
         field: item.field,
         required: item.required ?? false,
         type: item.type ?? 'string',
-        values: item.values ?? [],
+        values: item.values,
       });
-
-      return document.id; // used in the next iteration as parent id
-    });
   }
 }

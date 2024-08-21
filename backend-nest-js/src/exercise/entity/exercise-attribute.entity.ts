@@ -1,18 +1,12 @@
 import { Entity } from '../../common/decorator/entity.decorator';
 import { EXERCISE_ATTRIBUTE_COLLECTION } from '../../common/const/firestore.const';
 import { BaseEntity } from '../../common/entity/base.entity';
-import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose } from 'class-transformer';
 
 @Entity(EXERCISE_ATTRIBUTE_COLLECTION)
 export class ExerciseAttribute extends BaseEntity {
-  @IsString()
-  @ApiPropertyOptional()
-  @Expose()
-  @IsOptional()
-  parentId?: string; // id of the parent attribute
-
   @IsString()
   @ApiProperty()
   @IsNotEmpty()
@@ -41,24 +35,27 @@ export class ExerciseAttribute extends BaseEntity {
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  description?: string;
-
-  @IsString()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
   unit?: string; // kg, lbs, ...
 
-  @IsString({ each: true })
-  @IsOptional()
-  @ApiPropertyOptional()
+  @ApiProperty()
   @Expose()
-  values?: string[]; // possible values for select type
+  values: (string | ExerciseAttributeSelectOption)[]; // possible values for select type
+}
 
-  @Type(() => ExerciseAttribute)
-  @ValidateNested({ each: true })
-  @IsOptional()
-  @ApiPropertyOptional()
+export class ExerciseAttributeSelectOption {
+  @IsString()
+  @ApiProperty()
+  @IsNotEmpty()
   @Expose()
-  subattributes?: ExerciseAttribute[]; // subattributes for select type
+  name: string;
+
+  @IsString()
+  @ApiProperty()
+  @IsNotEmpty()
+  @Expose()
+  field: string;
+
+  @ApiProperty()
+  @Expose()
+  values: (string | ExerciseAttributeSelectOption)[];
 }

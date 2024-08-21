@@ -4,6 +4,7 @@ import withAuth from '@/hoc/with-auth';
 import React, { useEffect, useState } from 'react';
 import { TextField } from '@mui/material';
 import type { Exercise } from '@/type/exercise.type';
+import { CreateExercise } from '@/type/exercise.type';
 import Box from '@mui/material/Box';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import ExerciseModal from '@/app/exercises/exercise-modal';
@@ -12,16 +13,21 @@ import { ExerciseCard } from '@/app/exercises/exercise-card';
 import { AppContextType, useAppContext } from '@/context/app-provider';
 import { Component } from '@/type/component.type';
 import toast from 'react-hot-toast';
-import { UserRole } from '@/enum/user-role.enum';
-import { AuthContextType, useAuth } from '@/context/auth-provider';
 import IconButton from '@mui/material/IconButton';
 import ExerciseChips from '@/component/exercise-chips';
 import { FitcodeApi } from '@/util/api';
+import { ObjectUtil } from '@/util/object';
+import { Firestore } from '@/util/firebase';
+
+const EMPTY_EXERCISE: CreateExercise = {
+  name: '',
+  componentIds: [],
+  attributeValues: {},
+};
 
 function Page() {
   // global context
   const { token, components, attributes } = useAppContext() as AppContextType;
-  const { role } = useAuth() as AuthContextType;
 
   // filter exercises
   const [component, setComponent] = useState<Component>(null);
@@ -30,45 +36,46 @@ function Page() {
 
   // add and edit modals and exercise state
   const [modal, setModal] = useState({ add: false, edit: false });
-  const [exercise, setExercise] = useState<Partial<Exercise>>({ name: '', global: false });
+  const [exercise, setExercise] = useState<CreateExercise>(EMPTY_EXERCISE);
 
   /**
    * Add exercise
    */
-  async function addExercise(item: Partial<Exercise>) {
-    // remove empty strings
-    Object.keys(item).map((key) => {
-      if (!item[key]) delete item[key];
-    });
-
+  async function addExercise(item: CreateExercise) {
     try {
-      const response = await FitcodeApi.createExercise(item, token);
+      const attributeValues: Record<string, any> = {};
+
+      // find all nested select attributes and convert them to a multi-level object
+      const nestedSelectAttributes = attributes
+        .filter((attribute) => attribute.type === 'select' && typeof attribute.values?.[0] === 'object')
+        .map((attribute) => attribute.field);
+
+      for (const key of nestedSelectAttributes) {
+        const nested = ObjectUtil.nestObject(item.attributeValues, key);
+        if (nested) attributeValues[key] = nested;
+      }
+
+      // add all other attributes
+      const otherAttributes = attributes.filter((attribute) => !nestedSelectAttributes.includes(attribute.field));
+      for (const attribute of otherAttributes)
+        attributeValues[attribute.field] = item.attributeValues?.[attribute.field];
+
+      // delete all keys with undefined values
+      Object.keys(attributeValues).forEach((key) => attributeValues[key] === undefined && delete attributeValues[key]);
+
+      const response = await FitcodeApi.createExercise({
+        name: item.name,
+        componentIds: item.componentIds,
+        imageUrl: item.imageUrl,
+        videoUrl: item.videoUrl,
+        attributeValues,
+      }, token);
+
       toast.success('Exercise added');
 
       const { id, rootComponentIds } = response;
       if (!component || component && rootComponentIds.includes(component.id))
         setExercises([...exercises, { ...item, id } as Exercise]);
-    } catch (e) {
-      toast.error(e.message || 'An error occurred');
-    }
-  }
-
-  /**
-   * Update exercise
-   */
-  async function updateExercise(item: Partial<Exercise>) {
-    // remove empty strings
-    Object.keys(item).map((key) => {
-      if (!item[key]) delete item[key];
-    });
-
-    try {
-      const response = await FitcodeApi.updateExercise(item, token);
-      toast.success('Exercise updated');
-
-      const { rootComponentIds } = response;
-      if (!rootComponentIds.includes(component.id))
-        setExercises(exercises.filter((exercise) => exercise.id !== item.id));
     } catch (e) {
       toast.error(e.message || 'An error occurred');
     }
@@ -85,22 +92,14 @@ function Page() {
       };
 
       const response = await FitcodeApi.findAllExercises(token, filter);
-      setExercises(response);
+      setExercises(response.map(Firestore.populateExercise));
     }
 
     fetchExercises().then();
   }, [component, search]);
 
-  /**
-   * If user is admin, he will create global exercises
-   */
-  useEffect(() => {
-    if (role.includes(UserRole.ADMIN))
-      setExercise({ ...exercise, global: true });
-  }, [role]);
-
   return (
-    <>
+    <Box>
       <Box display="flex" justifyContent="space-between" mb={2}>
         <ExerciseChips
           noSelectionLabel="All"
@@ -122,7 +121,7 @@ function Page() {
           {/* Add Button */}
           <IconButton onClick={() => {
             setModal({ ...modal, add: true });
-            setExercise({ global: exercise.global, name: '' });
+            setExercise(EMPTY_EXERCISE);
           }}>
             <AddIcon />
           </IconButton>
@@ -137,7 +136,7 @@ function Page() {
             sx={{ cursor: 'pointer' }}
             onClick={() => {
               setModal({ ...modal, edit: true });
-              setExercise(exercise);
+              setExercise(exercise as CreateExercise);
             }}
           >
             <ExerciseCard exercise={exercise} />
@@ -149,7 +148,7 @@ function Page() {
       <ExerciseModal
         data={exercise}
         setData={setExercise}
-        attributes={attributes.tree}
+        attributes={attributes}
         components={components.leafs}
         isOpen={modal.add}
         setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
@@ -165,18 +164,19 @@ function Page() {
       <ExerciseModal
         data={exercise}
         setData={setExercise}
-        attributes={attributes.tree}
+        attributes={attributes}
         components={components.leafs}
         isOpen={modal.edit}
         setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
         title={'Update Exercise'}
         icons={<>
-          <IconButton onClick={() => updateExercise(exercise)}>
+          <IconButton onClick={() => {
+          }}>
             <AddIcon />
           </IconButton>
         </>}
       />
-    </>
+    </Box>
   );
 }
 

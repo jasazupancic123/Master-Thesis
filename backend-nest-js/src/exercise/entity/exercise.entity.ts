@@ -6,7 +6,7 @@ import { EXERCISE_COLLECTION } from '../../common/const/firestore.const';
 import { BaseEntity } from '../../common/entity/base.entity';
 
 @Entity(EXERCISE_COLLECTION)
-export class ExerciseEntity extends BaseEntity {
+export class Exercise extends BaseEntity {
   @IsString()
   @ApiProperty()
   @Expose()
@@ -52,10 +52,7 @@ export class ExerciseEntity extends BaseEntity {
   @ApiPropertyOptional()
   videoUrl?: string;
 
-  @IsString({ each: true })
-  @Expose()
-  @ApiProperty()
-  attributeValues: string[];
+  attributeValues: Record<string, any>;
 
   /*@IsEnum(Prescription)
   @IsOptional()
