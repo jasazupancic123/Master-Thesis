@@ -24,6 +24,7 @@ export class FitcodeApi {
     groups: () => '/group',
     groupById: (id: string) => `/group/${id}`,
     exerciseAttributes: () => '/exercise/attribute',
+    uploadExerciseMedia: () => '/exercise/media',
   };
 
   static async updateUserClaims(uid: string, token: string, claims: CustomClaims) {
