@@ -17,7 +17,7 @@ import IconButton from '@mui/material/IconButton';
 import ExerciseChips from '@/component/exercise-chips';
 import { FitcodeApi } from '@/util/api';
 import { ObjectUtil } from '@/util/object';
-import { Firestore } from '@/util/firebase';
+import { FirebaseStorage, Firestore } from '@/util/firebase';
 
 const EMPTY_EXERCISE: CreateExercise = {
   name: '',
@@ -37,6 +37,18 @@ function Page() {
   // add and edit modals and exercise state
   const [modal, setModal] = useState({ add: false, edit: false });
   const [exercise, setExercise] = useState<CreateExercise>(EMPTY_EXERCISE);
+
+  /**
+   * Upload file
+   */
+  async function onFileUpload(file: File, path: string) {
+    try {
+      await FirebaseStorage.uploadFile(file, path);
+    } catch (e) {
+      console.log('error:', e);
+      toast.error(e.message || 'An error occurred');
+    }
+  }
 
   /**
    * Add exercise
@@ -153,6 +165,7 @@ function Page() {
         isOpen={modal.add}
         setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
         title={'Add Exercise'}
+        onFileUpload={onFileUpload}
         icons={<>
           <IconButton onClick={() => addExercise(exercise)}>
             <AddIcon />
@@ -169,6 +182,7 @@ function Page() {
         isOpen={modal.edit}
         setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
         title={'Update Exercise'}
+        onFileUpload={onFileUpload}
         icons={<>
           <IconButton onClick={() => {
           }}>

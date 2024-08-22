@@ -10,6 +10,10 @@ import { ComponentWithParents } from '@/type/component.type';
 import Box from '@mui/material/Box';
 import type { CreateExercise, ExerciseAttributeSelectOption } from '@/type/exercise.type';
 import { ExerciseAttribute } from '@/type/exercise.type';
+import FileUpload from '@/component/file-upload';
+import Stack from '@mui/material/Stack';
+import { FirebaseStorage } from '@/util/firebase';
+import { getFilenameFromPath } from '@/util/link';
 
 interface ExerciseModalProps {
   data: CreateExercise;
@@ -20,6 +24,7 @@ interface ExerciseModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   title: string;
+  onFileUpload: (file: File, path: string) => Promise<void>;
 }
 
 export default function ExerciseModal(props: ExerciseModalProps) {
@@ -64,27 +69,6 @@ export default function ExerciseModal(props: ExerciseModalProps) {
           />
         </Grid>
 
-        {/* Video url and image url */}
-        <Grid xs={6}>
-          <TextField
-            fullWidth
-            label="Video URL"
-            variant="outlined"
-            value={data.videoUrl}
-            onChange={(e) => setData({ ...data, videoUrl: e.target.value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <TextField
-            fullWidth
-            label="Image URL"
-            variant="outlined"
-            value={data.imageUrl}
-            onChange={(e) => setData({ ...data, imageUrl: e.target.value })}
-          />
-        </Grid>
-
         <Grid xs={12}>
           <InputLabel id="component">Component</InputLabel>
           <Select
@@ -104,8 +88,63 @@ export default function ExerciseModal(props: ExerciseModalProps) {
           </Select>
         </Grid>
 
+        {/* Video url and image url */}
+        <Grid xs={6}>
+          <Stack direction="column" alignItems="center">
+            <FileUpload
+              label="Video"
+              input="video"
+              onFileUpload={async (file: File) => {
+                const path = `media/exercise/${Date.now()}-${file.name}`;
+                setData({ ...data, videoUrl: path });
+
+                await props.onFileUpload(file, path);
+              }}
+              initialFileUrl={
+                data.videoUrl ? FirebaseStorage.exerciseUrl(getFilenameFromPath(data.videoUrl)) : undefined
+              }
+            />
+
+            {/*<TextField
+              fullWidth
+              label="Or paste video URL"
+              variant="outlined"
+              value={data.videoUrl || ''}
+              onChange={(e) => setData({ ...data, videoUrl: e.target.value })}
+            />*/}
+          </Stack>
+        </Grid>
+
+        <Grid xs={6}>
+          <Stack direction="column" alignItems="center">
+            <FileUpload
+              label="Image"
+              input="image"
+              onFileUpload={async (file: File) => {
+                const path = `media/exercise/${Date.now()}-${file.name}`;
+                setData({ ...data, imageUrl: path });
+
+                await props.onFileUpload(file, path);
+              }}
+              initialFileUrl={
+                data.imageUrl ? FirebaseStorage.exerciseUrl(getFilenameFromPath(data.imageUrl)) : undefined
+              }
+              // fileUrl={data.imageUrl}
+              // setFileUrl={(url) => setData({ ...data, imageUrl: url })}
+            />
+
+            {/*<TextField
+              fullWidth
+              label="Or paste image URL"
+              variant="outlined"
+              value={data.imageUrl || ''}
+              onChange={(e) => setData({ ...data, imageUrl: e.target.value })}
+            />*/}
+          </Stack>
+        </Grid>
+
         <Grid xs={12}>
-          <Divider>Extras</Divider>
+          <Divider>Other</Divider>
         </Grid>
 
         {attributes.map((attribute) => {
@@ -129,7 +168,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
                   control={
                     <Checkbox
                       checked={data.attributeValues?.[attribute.field] || false}
-                      onChange={(e) => handleSelectChange(attribute.field, e.target.checked)}
+                      onChange={(e) => handleSelectChange(attribute.field, e.target.checked as any)}
                     />
                   }
                   label={attribute.name}
@@ -144,138 +183,6 @@ export default function ExerciseModal(props: ExerciseModalProps) {
                 />}
           </Grid>;
         })}
-
-        {/*<Grid xs={6}>
-          <SelectEnum
-            enumObject={Prescription}
-            label={'Prescription'}
-            value={data.prescription || ''}
-            onChange={(value) => setData({ ...data, prescription: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={Priority}
-            label={'Priority'}
-            value={data.priority || ''}
-            onChange={(value) => setData({ ...data, priority: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={Method}
-            label={'Method'}
-            value={data.method || ''}
-            onChange={(value) => setData({ ...data, method: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={LoadingSide}
-            label={'Loading Side'}
-            value={data.loadingSide || ''}
-            onChange={(value) => setData({ ...data, loadingSide: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={BodyRegion}
-            label={'Body Region'}
-            value={data.bodyRegion || ''}
-            onChange={(value) => setData({ ...data, bodyRegion: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={MovementDirection}
-            label={'Movement Direction'}
-            value={data.movementDirection || ''}
-            onChange={(value) => setData({ ...data, movementDirection: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={Diagnosis}
-            label={'Diagnosis'}
-            value={data.diagnosis || ''}
-            onChange={(value) => setData({ ...data, diagnosis: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={Diagnosis}
-            label={'Diagnosis'}
-            value={data.diagnosis || ''}
-            onChange={(value) => setData({ ...data, diagnosis: value })}
-          />
-        </Grid>
-
-        <Grid xs={4}>
-          <TextField
-            fullWidth
-            type="number"
-            label="Coefficient 1"
-            variant="outlined"
-            value={data.coefficient1 || ''}
-            onChange={(e) => setData({ ...data, coefficient1: +e.target.value })}
-          />
-        </Grid>
-
-        <Grid xs={4}>
-          <TextField
-            fullWidth
-            type="number"
-            label="Coefficient 2"
-            variant="outlined"
-            value={data.coefficient2 || ''}
-            onChange={(e) => setData({ ...data, coefficient2: +e.target.value })}
-          />
-        </Grid>
-
-        <Grid xs={4}>
-          <TextField
-            fullWidth
-            type="number"
-            label="Coefficient 3"
-            variant="outlined"
-            value={data.coefficient3 || ''}
-            onChange={(e) => setData({ ...data, coefficient3: +e.target.value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={Muscle}
-            label={'Muscle'}
-            value={data.muscle || ''}
-            onChange={(value) => setData({ ...data, muscle: value })}
-          />
-        </Grid>
-
-        <Grid xs={6}>
-          <SelectEnum
-            enumObject={SportTask}
-            label={'Sport Task'}
-            value={data.sportTask || ''}
-            onChange={(value) => setData({ ...data, sportTask: value })}
-          />
-        </Grid>
-
-        <Grid xs={12}>
-          <SelectEnum
-            enumObject={Location}
-            label={'Location'}
-            value={data.location || ''}
-            onChange={(value) => setData({ ...data, location: value })}
-          />
-        </Grid>*/}
       </Grid>
     </Box>
   </MyModal>;

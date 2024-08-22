@@ -4,7 +4,7 @@ import {
   updateProfile,
   UserCredential,
 } from 'firebase/auth';
-import { auth } from '@/config/firebase.config';
+import { auth, storage } from '@/config/firebase.config';
 import { FirebaseError } from 'firebase/app';
 import { Cycle } from '@/type/cycle.type';
 import dayjs from 'dayjs';
@@ -13,6 +13,7 @@ import { Component } from '@/type/component.type';
 import { UserRole } from '@/enum/user-role.enum';
 import { Exercise } from '@/type/exercise.type';
 import { ObjectUtil } from '@/util/object';
+import { ref, uploadBytes } from '@firebase/storage';
 
 export const isAdmin = (role: UserRole[]) => role.includes(UserRole.ADMIN);
 export const isManager = (role: UserRole[]) => role.includes(UserRole.MANAGER);
@@ -100,5 +101,16 @@ export class Firestore {
   static populateExercise(item: Exercise): Exercise {
     item.attributeValues = ObjectUtil.flattenObject(item.attributeValues);
     return item;
+  }
+}
+
+export class FirebaseStorage {
+  static exerciseUrl(filename: string) {
+    return `${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_URL}/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/media/exercise/${filename}`;
+  }
+
+  static async uploadFile(file: File, path: string) {
+    const reference = ref(storage, path);
+    await uploadBytes(reference, file);
   }
 }

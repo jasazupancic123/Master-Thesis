@@ -3,6 +3,7 @@ export interface Exercise {
   userId: string;
   name: string;
   componentIds: string[];
+  components?: string[];
   global: boolean;
   imageUrl?: string;
   videoUrl?: string;

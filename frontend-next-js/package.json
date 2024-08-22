@@ -27,6 +27,7 @@
     "qs": "^6.12.3",
     "react": "^18",
     "react-dom": "^18",
+    "react-dropzone": "^14.2.3",
     "react-hot-toast": "^2.4.1",
     "usehooks-ts": "^3.1.0"
   },
