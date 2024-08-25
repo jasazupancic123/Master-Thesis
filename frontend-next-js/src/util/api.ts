@@ -6,6 +6,7 @@ import { Cycle } from '@/type/cycle.type';
 import { Group } from '@/type/group.type';
 import { SetGroup, SuperExerciseInfo, Training } from '@/type/training.type';
 import { CustomClaims } from '@/type/custom-claims.type';
+import { PaginateOptions } from '@/type/paginate.type';
 
 function getQuery(query?: Record<string, string>) {
   return query ? `?${qs.stringify(query)}` : '';
@@ -23,8 +24,9 @@ export class FitcodeApi {
     cycleById: (id: string) => `/cycle/${id}`,
     groups: () => '/group',
     groupById: (id: string) => `/group/${id}`,
+    exercisePageMeta: () => '/exercise/meta/page',
+    exerciseById: (id: string) => `/exercise/${id}`,
     exerciseAttributes: () => '/exercise/attribute',
-    uploadExerciseMedia: () => '/exercise/media',
   };
 
   static async updateUserClaims(uid: string, token: string, claims: CustomClaims) {
@@ -67,14 +69,37 @@ export class FitcodeApi {
     return await fetcher<Cycle>(`/cycle`, { method: 'POST', token, body });
   }
 
-  static async findAllExercises(token: string, filter?: { name?: string; componentIds?: string[] }) {
+  static async getExercisePageMeta(token: string, filter: {
+    name?: string;
+    componentIds?: string[]
+  }, pageSize: number) {
     const query = qs.stringify({
       ...(filter?.name && { name: filter.name }),
       ...(filter?.componentIds && { componentIds: filter.componentIds.join(',') }),
+      pageSize,
+    });
+
+    const url = `${this.URL.exercisePageMeta()}?${query}`;
+    return await fetcher<{ total: number, pages: number }>(url, { token });
+  }
+
+  static async findAllExercises(
+    token: string,
+    filter?: { name?: string; componentIds?: string[] },
+    paginate?: PaginateOptions<Exercise>,
+  ) {
+    const query = qs.stringify({
+      ...(filter?.name && { name: filter.name }),
+      ...(filter?.componentIds && { componentIds: filter.componentIds.join(',') }),
+      ...paginate,
     });
 
     const url = query ? `/exercise?${query}` : '/exercise';
     return await fetcher<Exercise[]>(url, { token });
+  }
+
+  static async getExercise(id: string, token: string) {
+    return await fetcher<Exercise>(this.URL.exerciseById(id), { token });
   }
 
   static async createExercise(body: CreateExercise, token: string) {
@@ -88,14 +113,14 @@ export class FitcodeApi {
   static async findAllTrainings(token: string, filter?: {
     cycleId?: string;
     subgroupId?: string;
-    startDate?: string;
-    endDate?: string
+    startTime?: string;
+    endTime?: string
   }) {
     const query = qs.stringify({
       ...(filter?.cycleId && { cycleId: filter.cycleId }),
       ...(filter?.subgroupId && { subgroupId: filter.subgroupId }),
-      ...(filter?.startDate && { startDate: filter.startDate }),
-      ...(filter?.endDate && { endDate: filter.endDate }),
+      ...(filter?.startTime && { startTime: filter.startTime }),
+      ...(filter?.endTime && { endTime: filter.endTime }),
     });
 
     const url = query ? `/training?${query}` : '/training';

@@ -57,7 +57,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       icon: <GroupIcon />,
       title: 'Add group',
       onClick: () => setModal({ ...modal, group: true }),
-      show: (props: GroupPageProps['selected']): boolean => true,
+      show: (_props: GroupPageProps['selected']): boolean => true,
     },
     {
       icon: <GroupsIcon />,
@@ -82,6 +82,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       setModal({ ...modal, group: false });
 
       props.setSelected({
+        loading: false,
         group: response,
         subgroup: null,
         cycle: null,

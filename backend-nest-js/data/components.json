@@ -57,7 +57,7 @@
         ]
       },
       {
-        "name": "Other Strength",
+        "name": "Other",
         "children": []
       },
       {
@@ -169,7 +169,7 @@
     ]
   },
   {
-    "name":  "Endurance",
+    "name": "Endurance",
     "children": [
       {
         "name": "Aerobic Capacity",
@@ -192,42 +192,42 @@
   {
     "name": "Coordination",
     "children": [
-        {
-            "name": "Technical Work",
-            "children": []
-        },
-        {
-            "name": "Running Mechanics",
-            "children": []
-        },
-        {
-            "name": "Jumping / Landing",
-            "children": []
-        },
-        {
-            "name": "Orientation",
-            "children": []
-        },
-        {
-            "name": "Dissociation",
-            "children": []
-        },
-        {
-            "name": "Balance",
-            "children": []
-        },
-        {
-            "name": "Foot Alignment",
-            "children": []
-        },
-        {
-            "name": "Reaction",
-            "children": []
-        },
-        {
-            "name": "Breathing",
-            "children": []
-        }
+      {
+        "name": "Technical Work",
+        "children": []
+      },
+      {
+        "name": "Running Mechanics",
+        "children": []
+      },
+      {
+        "name": "Jumping / Landing",
+        "children": []
+      },
+      {
+        "name": "Orientation",
+        "children": []
+      },
+      {
+        "name": "Dissociation",
+        "children": []
+      },
+      {
+        "name": "Balance",
+        "children": []
+      },
+      {
+        "name": "Foot Alignment",
+        "children": []
+      },
+      {
+        "name": "Reaction",
+        "children": []
+      },
+      {
+        "name": "Breathing",
+        "children": []
+      }
     ]
   },
   {
@@ -290,7 +290,7 @@
     ]
   },
   {
-    "name":  "Other",
+    "name": "Other",
     "children": []
   }
 ]

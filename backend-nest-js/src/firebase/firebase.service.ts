@@ -1,19 +1,11 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { App } from 'firebase-admin/app';
-import { UserRecord } from 'firebase-admin/auth';
 import * as admin from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
-import { SportLevel } from '../user/enum/sport-level.enum';
-import { readFile } from 'node:fs/promises';
-import { COMPONENT_COLLECTION, EXERCISE_ATTRIBUTE_COLLECTION } from '../common/const/firestore.const';
-import { Tree } from '../common/util/tree';
-import { ComponentDto } from '../component/dto/component.dto';
-import { CustomClaims } from '../common/type/custom-claims.type';
-import { isDev } from '../common/util/node-env';
+import { DecodedUser, User } from '../common/type/custom-claims.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
-import { ExerciseAttribute } from '../exercise/entity/exercise-attribute.entity';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -21,14 +13,12 @@ export class FirebaseService implements OnApplicationBootstrap {
   public readonly auth: admin.auth.Auth;
   public readonly firestore: admin.firestore.Firestore;
   public readonly storage: admin.storage.Storage;
-  private logger: Logger;
+  private logger = new Logger(this.constructor.name);
 
   constructor(
     @InjectFirebaseAdmin() private readonly firebaseAdmin: FirebaseClient,
     private readonly configService: ConfigService<Environment>,
   ) {
-    this.logger = new Logger(this.constructor.name);
-
     this.app = firebaseAdmin.app;
     this.auth = firebaseAdmin.auth;
     this.firestore = firebaseAdmin.firestore;
@@ -39,24 +29,24 @@ export class FirebaseService implements OnApplicationBootstrap {
     return this.firestore.collection(name);
   }
 
-  async findUserById(uid: string): Promise<CustomClaims> {
-    return await this.auth.getUser(uid) as unknown as CustomClaims;
+  async findUserById(uid: string) {
+    return await this.auth.getUser(uid) as User;
   }
 
-  isAdmin(user: CustomClaims): boolean {
-    return user.role?.includes(UserRole.ADMIN) ?? false;
+  isAdmin(user: User | DecodedUser): boolean {
+    return this.checkRole(user, UserRole.ADMIN);
   }
 
-  isManager(user: CustomClaims): boolean {
-    return user.role?.includes(UserRole.MANAGER) ?? false;
+  isManager(user: User | DecodedUser): boolean {
+    return this.checkRole(user, UserRole.MANAGER);
   }
 
-  isTrainer(user: CustomClaims): boolean {
-    return user.role?.includes(UserRole.TRAINER) ?? false;
+  isTrainer(user: User | DecodedUser): boolean {
+    return this.checkRole(user, UserRole.TRAINER);
   }
 
-  isAthlete(user: CustomClaims): boolean {
-    return user.role?.includes(UserRole.ATHLETE) ?? false;
+  isAthlete(user: User | DecodedUser): boolean {
+    return this.checkRole(user, UserRole.ATHLETE);
   }
 
   async onApplicationBootstrap() {
@@ -64,82 +54,16 @@ export class FirebaseService implements OnApplicationBootstrap {
     this.logger.debug(`Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`);
     this.logger.debug(`Using Storage Emulator: ${this.configService.get('FIREBASE_STORAGE_EMULATOR_HOST')}`);
     this.logger.debug(`Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`);
-
-    // create admin user if not exists
-    const email = this.configService.get('FIREBASE_ADMIN_EMAIL');
-    const password = this.configService.get('FIREBASE_ADMIN_PASSWORD');
-    await this.createUser(email, password, UserRole.ADMIN);
-
-    if (isDev()) {
-      await this.createUser('manager@mail.com', 'password', UserRole.MANAGER);
-      await this.createUser('trainer@mail.com', 'password', UserRole.TRAINER);
-      await this.createUser('athlete@mail.com', 'password', UserRole.ATHLETE);
-      await this.createUser('athlete1@mail.com', 'password', UserRole.ATHLETE);
-      await this.createUser('athlete2@mail.com', 'password', UserRole.ATHLETE);
-      await this.createUser('athlete3@mail.com', 'password', UserRole.ATHLETE);
-      await this.createUser('athlete4@mail.com', 'password', UserRole.ATHLETE);
-
-      // import components if they do not exist
-      const components = await this.firestore.collection(COMPONENT_COLLECTION).get();
-      if (components.empty) {
-        await this.importComponents('data/components.json');
-        this.logger.log('Components imported');
-      } else
-        this.logger.log('Components collection already exists');
-
-      // import exercise attributes if they do not exist
-      const attributes = await this.firestore.collection(EXERCISE_ATTRIBUTE_COLLECTION).get();
-      if (attributes.empty) {
-        await this.importExerciseAttributes('data/exercise-attributes.json');
-        this.logger.log('Exercise attributes imported');
-      } else
-        this.logger.log('Exercise attributes collection already exists');
-    }
   }
 
-  private async createUser(email: string, password: string, role: UserRole) {
-    let user: UserRecord;
+  private checkRole(user: User | DecodedUser, role: UserRole): boolean {
+    if (isUser(user))
+      return user.customClaims.role.includes(role);
 
-    try {
-      user = await this.auth.getUserByEmail(email);
-    } catch (e) {
-      user = await this.auth.createUser({ email, password });
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // wait for cloud function to add role and level
-    } finally {
-      // update custom claims
-      await this.auth.setCustomUserClaims(user.uid, {
-        role: [role],
-        level: SportLevel.ADVANCED,
-      });
-    }
-
-    this.logger.log(`(${role}) user created -> ${email}`);
-    return user;
+    return user.role.includes(role);
   }
+}
 
-  private async importComponents(filename: string) {
-    const collection = this.firestore.collection(COMPONENT_COLLECTION);
-    const data = await readFile(filename, 'utf-8');
-    const parsed = JSON.parse(data);
-
-    Tree.forEach<ComponentDto, string>(parsed, 'children', async ({ name }, parent, result) => {
-      const document = await collection.add({ name, parentId: result ?? null });
-      return document.id; // used in the next iteration as parent id
-    });
-  }
-
-  private async importExerciseAttributes(filename: string) {
-    const collection = this.firestore.collection(EXERCISE_ATTRIBUTE_COLLECTION);
-    const data = await readFile(filename, 'utf-8');
-    const parsed: ExerciseAttribute[] = JSON.parse(data);
-
-    for (const item of parsed)
-      await collection.add({
-        name: item.name,
-        field: item.field,
-        required: item.required ?? false,
-        type: item.type ?? 'string',
-        values: item.values,
-      });
-  }
+function isUser(user: User | DecodedUser): user is User {
+  return (user as User).customClaims !== undefined;
 }

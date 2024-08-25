@@ -3,11 +3,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { Entity } from '../../common/decorator/entity.decorator';
 import { GROUP_COLLECTION } from '../../common/const/firestore.const';
-import { CustomClaims } from '../../common/type/custom-claims.type';
+import { User } from '../../common/type/custom-claims.type';
 import { BaseEntity } from '../../common/entity/base.entity';
 
 @Entity(GROUP_COLLECTION)
-export class GroupDto extends BaseEntity {
+export class Group extends BaseEntity {
   @IsString()
   @IsOptional()
   @ApiPropertyOptional()
@@ -31,7 +31,7 @@ export class GroupDto extends BaseEntity {
   @IsNotEmpty()
   memberIds: string[]; // members of the group
 
-  user: CustomClaims;
-  members: CustomClaims[];
-  subgroups: GroupDto[];
+  user: User;
+  members: User[];
+  subgroups: Group[];
 }

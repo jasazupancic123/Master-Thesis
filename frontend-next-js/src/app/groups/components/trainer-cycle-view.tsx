@@ -37,6 +37,20 @@ export default function TrainerCycleView(props: GroupPageProps) {
   });
 
   /**
+   * Set date to cycle start and end when opening the page
+   */
+  useEffect(() => {
+    if (!cycle)
+      return;
+
+    props.setDate({
+      start: dayjs(cycle.startDate).startOf('day'),
+      end: dayjs(cycle.endDate).endOf('day'),
+      custom: false,
+    });
+  }, []);
+
+  /**
    * Create training
    */
   async function createTraining(data: CreateTraining) {
@@ -126,20 +140,6 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
   }
 
-  /**
-   * Set date to cycle start and end when opening the page
-   */
-  useEffect(() => {
-    if (!cycle)
-      return;
-
-    props.setDate({
-      start: dayjs(cycle.startDate).startOf('day'),
-      end: dayjs(cycle.endDate).endOf('day'),
-      custom: false,
-    });
-  }, []);
-
   if (!cycle)
     return null;
 
@@ -217,22 +217,24 @@ export default function TrainerCycleView(props: GroupPageProps) {
         </Stack>
 
         {/* Training weeks */}
-        <Stack spacing={1} mt={2}>
-          {cycle.weeks?.map((week, i) => (
-            <Fragment key={i}>
-              <TrainingWeek
-                index={i}
-                week={week.map(({ date }) => date!)}
-                trainings={props.selected.trainings}
-                components={selected}
-                training={create.training}
-                createTraining={createTraining}
-                addSetGroup={addSet}
-                deleteTraining={deleteTraining}
-              />
-            </Fragment>
-          ))}
-        </Stack>
+        {props.selected.loading
+          ? <Typography>Loading ...</Typography>
+          : <Stack spacing={1} mt={2}>
+            {cycle.weeks?.map((week, i) => (
+              <Fragment key={i}>
+                <TrainingWeek
+                  index={i}
+                  week={week.map(({ date }) => date!)}
+                  trainings={props.selected.trainings}
+                  components={selected}
+                  training={create.training}
+                  createTraining={createTraining}
+                  addSetGroup={addSet}
+                  deleteTraining={deleteTraining}
+                />
+              </Fragment>
+            ))}
+          </Stack>}
       </Box>
     </Box>
   );

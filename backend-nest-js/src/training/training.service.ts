@@ -1,19 +1,18 @@
-import { BadRequestException, forwardRef, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { CreateTrainingDto } from './dto/create-training.dto';
-import { UpdateTrainingDto } from './dto/update-training.dto';
-import { CustomClaims } from '../common/type/custom-claims.type';
-import { TrainingFilterDto } from './dto/training-filter.dto';
+import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { User } from '../common/type/custom-claims.type';
 import { CycleService } from '../cycle/cycle.service';
-import { firestore } from 'firebase-admin';
-import { TrainingEntity } from './entity/training.entity';
+import { Timestamp } from 'firebase-admin/firestore';
+import { Training } from './entity/training.entity';
 import { ComponentService } from '../component/component.service';
-import { CycleDto } from '../cycle/dto/cycle.dto';
 import { ExerciseService } from '../exercise/exercise.service';
 import { Wrapper } from '../common/type/wrapper.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { CommonService } from '../common/service/common.service';
 import { SetService } from '../set/set.service';
+import { Options } from '../common/type/orm.type';
+import { Cycle } from '../cycle/entity/cycle.entity';
+import { Validate } from '../common/type/validate.type';
 
 @Injectable()
 export class TrainingService {
@@ -21,8 +20,8 @@ export class TrainingService {
 
   constructor(
     private readonly commonService: CommonService,
-    @InjectRepository(TrainingEntity)
-    private readonly repository: FirestoreRepository<TrainingEntity>,
+    @InjectRepository(Training)
+    private readonly repository: FirestoreRepository<Training>,
     private readonly componentService: ComponentService,
     private readonly exerciseService: ExerciseService,
     @Inject(forwardRef(() => CycleService)) private readonly cycleService: Wrapper<CycleService>,
@@ -30,48 +29,86 @@ export class TrainingService {
   ) {
   }
 
-  async findOneById(user: CustomClaims, id: string) {
-    return await this.repository.findOneById(id);
+  async canView(user: User, cycle: Cycle | string): Promise<boolean> {
+    // ensure that user can access cycle
+    await this.cycleService.findOneByIdOrFail(user, typeof cycle === 'string' ? cycle : cycle.id);
+    return true;
   }
 
-  async findOneByIdOrFail(user: CustomClaims, id: string) {
-    return await this.repository.findOneByIdOrFail(id);
+  async isOwner(user: User, cycle: Cycle): Promise<boolean> {
+    return this.cycleService.isOwner(user, cycle);
   }
 
-  async findAll(user: CustomClaims, cycle: CycleDto, filter?: TrainingFilterDto) {
-    let query = this.repository
-      .getCollection()
-      .where('cycleId', '==', cycle.id)
-      .where('subgroupId', '==', filter?.subgroupId || null);
-
-    if (filter?.startDate)
-      query = query.where('startTime', '>=', firestore.Timestamp.fromDate(filter.startDate));
-
-    if (filter?.endDate)
-      query = query.where('endTime', '<=', firestore.Timestamp.fromDate(filter.endDate));
-
-    const trainings = await query.orderBy('startTime').get();
-    return await Promise.all(trainings.docs.map(async item => {
-      return this.setService.populateTraining(user, this.repository.serialize(item));
-    }));
+  async populate(training: Training): Promise<Training> {
+    training.setGroups = await this.setService.findAllSetGroupsByTrainingId(training.id);
+    return training;
   }
 
-  async populateCycleAndGroup(user: CustomClaims, trainingId: string) {
-    const training = await this.findOneByIdOrFail(user, trainingId);
+  async findCycle(user: User, trainingId: string): Promise<Cycle> {
+    const training = await this.repository.findOneById(trainingId);
     return await this.cycleService.findOneByIdOrFail(user, training.cycleId);
   }
 
-  async create(user: CustomClaims, data: CreateTrainingDto) {
-    this.logger.debug(`Creating training for user ${user.uid}: ${JSON.stringify(data)}`);
+  async findOneById(user: User, id: string): Promise<Training | null> {
+    const training = await this.repository.findOneById(id);
+    if (!training)
+      return null;
+
+    await this.canView(user, training.cycleId);
+    return await this.populate(training);
+  }
+
+  async findOneByIdOrFail(user: User, id: string): Promise<Training> {
+    const training = await this.repository.findOneByIdOrFail(id);
+    await this.canView(user, training.cycleId);
+    return await this.populate(training);
+  }
+
+  async findAll(user: User, options?: Options<Training>): Promise<Training[]> {
+    const filter = options?.filter || {};
+    const { cycleId, subgroupId = null } = filter;
+
+    if (!cycleId)
+      throw new BadRequestException('Cycle id is required');
+
+    const cycle = await this.cycleService.findOneByIdOrFail(user, cycleId); // ensure that user can access cycle
+    let query = this.repository
+      .getCollection()
+      .where('cycleId', '==', cycle.id)
+      .where('subgroupId', '==', subgroupId);
+
+    if (filter.startTime)
+      query = query.where('startTime', '>=', Timestamp.fromDate(filter.startTime));
+
+    if (filter.endTime)
+      query = query.where('endTime', '<=', Timestamp.fromDate(filter.endTime));
+
+    const data = await query.orderBy('startTime').get();
+    const trainings = data.docs.map(item => this.repository.serialize(item));
+
+    return await Promise.all(trainings.map(training => this.populate(training)));
+  }
+
+  async validate(user: User, data: Partial<Training>): Promise<Validate> {
+    const cycle = await this.cycleService.findOneByIdOrFail(user, data.cycleId);
 
     // check that user is owner of cycle
-    const cycle = await this.cycleService.findOneByIdOrFail(user, data.cycleId);
-    if (!this.cycleService.isOwner(user, cycle))
-      throw new UnauthorizedException('You are not authorized to create training for this cycle');
+    const isOwner = await this.isOwner(user, cycle);
+    if (!isOwner)
+      return { error: true, message: 'You are not authorized to create training for this cycle' };
 
-    // check that training is within cycle start and end date
+    // check time
     if (data.startTime < cycle.startDate || data.endTime > cycle.endDate)
-      throw new BadRequestException('Training must be within cycle start and end date');
+      return { error: true, message: 'Training must be within cycle start and end date' };
+
+    return { error: false };
+  }
+
+  async create(user: User, data: Partial<Training> & { componentIds: string[] }): Promise<Training> {
+    this.logger.debug(`Creating training for user ${user.uid}: ${JSON.stringify(data)}`);
+
+    const { error, message } = await this.validate(user, data);
+    if (error) throw new BadRequestException(message);
 
     // create training
     const training = await this.repository.create({
@@ -82,41 +119,30 @@ export class TrainingService {
     });
 
     // check that all components exist
-    const components = await this.componentService.findAllOrFail({ ids: data.componentIds });
-    const setGroups = await this.setService.initializeTraining(user, training.id, components.map(component => component.id));
+    const { componentIds } = data;
+    await this.componentService.findAllOrFail({ ids: data.componentIds });
+
+    const setGroups = await this.setService.initializeTraining(training.id, componentIds);
     return { ...training, setGroups };
   }
 
-  async update(user: CustomClaims, id: string, data: UpdateTrainingDto) {
-    const training = await this.repository.findOneByIdOrFail(id);
+  async update(user: User, id: string, data: Partial<Training>): Promise<Training> {
+    const { error, message } = await this.validate(user, data);
+    if (error) throw new BadRequestException(message);
 
-    // check that user is owner of cycle
-    const cycle = await this.cycleService.findOneByIdOrFail(user, training.cycleId);
-    if (!cycle)
-      throw new BadRequestException('Cycle does not exist');
-
-    if (!this.cycleService.isOwner(user, cycle))
-      throw new UnauthorizedException('You are not authorized to update training for this cycle');
-
-    /*await training.ref.update({
-      startTime: firestore.Timestamp.fromDate(data.startTime),
-      endTime: firestore.Timestamp.fromDate(data.endTime),
-    });*/
-
-    await this.repository.update(id, {
-      startTime: firestore.Timestamp.fromDate(data.startTime) as unknown as Date,
-      endTime: firestore.Timestamp.fromDate(data.endTime) as unknown as Date,
+    const training = await this.repository.update(id, {
+      startTime: Timestamp.fromDate(data.startTime) as unknown as Date,
+      endTime: Timestamp.fromDate(data.endTime) as unknown as Date,
     });
 
-    return await this.repository.findOneById(id);
+    return await this.populate(training);
   }
 
-  async remove(user: CustomClaims, id: string) {
+  async remove(user: User, id: string) {
     this.logger.debug(`Deleting training for user ${user.uid}: ${id}`);
 
-    // check if user is owner of cycle
     const training = await this.repository.findOneByIdOrFail(id);
-    await this.cycleService.findOneByIdOrFail(user, training.cycleId);
+    await this.canView(user, training.cycleId);
 
     await this.setService.deleteAllByTrainingId(id);
     await this.repository.delete(id);

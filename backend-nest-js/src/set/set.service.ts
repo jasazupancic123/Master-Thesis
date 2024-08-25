@@ -1,17 +1,17 @@
 import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '../common/decorator/entity.decorator';
-import { SetGroupEntity } from './entity/set-group.entity';
+import { SetGroup } from './entity/set-group.entity';
 import { FirestoreRepository } from '../firebase/firestore.repository';
-import { SetSubgroupEntity } from './entity/set-subgroup.entity';
-import { SetExerciseEntity } from './entity/set-exercise.entity';
-import { CustomClaims } from '../common/type/custom-claims.type';
+import { SetSubgroup } from './entity/set-subgroup.entity';
+import { SetExercise } from './entity/set-exercise.entity';
+import { User } from '../common/type/custom-claims.type';
 import { CommonService } from '../common/service/common.service';
-import { TrainingEntity } from '../training/entity/training.entity';
 import { ExerciseInfoService } from '../exercise-info/exercise-info.service';
 import { Wrapper } from '../common/type/wrapper.type';
 import { TrainingService } from '../training/training.service';
 import { ExerciseService } from '../exercise/exercise.service';
-import { SuperExerciseInfoEntity } from '../exercise-info/entity/super-exercise-info.entity';
+import { SuperExerciseInfo } from '../exercise-info/entity/super-exercise-info.entity';
+import { Exercise } from '../exercise/entity/exercise.entity';
 
 @Injectable()
 export class SetService {
@@ -19,21 +19,25 @@ export class SetService {
 
   constructor(
     private readonly commonService: CommonService,
-    @InjectRepository(SetExerciseEntity)
-    private readonly setExerciseRepository: FirestoreRepository<SetExerciseEntity>,
-    @InjectRepository(SetSubgroupEntity)
-    private readonly setSubgroupRepository: FirestoreRepository<SetSubgroupEntity>,
-    @InjectRepository(SetGroupEntity)
-    private readonly setGroupRepository: FirestoreRepository<SetGroupEntity>,
+    @InjectRepository(SetExercise)
+    private readonly setExerciseRepository: FirestoreRepository<SetExercise>,
+    @InjectRepository(SetSubgroup)
+    private readonly setSubgroupRepository: FirestoreRepository<SetSubgroup>,
+    @InjectRepository(SetGroup)
+    private readonly setGroupRepository: FirestoreRepository<SetGroup>,
     private readonly exerciseInfoService: ExerciseInfoService,
     private readonly exerciseService: ExerciseService,
     @Inject(forwardRef(() => TrainingService)) private readonly trainingService: Wrapper<TrainingService>,
   ) {
   }
 
-  async findExerciseBySetExerciseId(user: CustomClaims, setExerciseId: string) {
+  async findExerciseBySetExerciseId(user: User, setExerciseId: string): Promise<Exercise> {
     const setExercise = await this.setExerciseRepository.findOneByIdOrFail(setExerciseId);
     return await this.exerciseService.findOneByIdOrFail(user, setExercise.exerciseId);
+  }
+
+  async findAllSetGroupsByTrainingId(trainingId: string): Promise<SetGroup[]> {
+    return await this.setGroupRepository.findAllBy('trainingId', trainingId);
   }
 
   /**
@@ -41,13 +45,9 @@ export class SetService {
    * set group for each component (where only exercises from that component can
    * be added), and 3 set subgroups for each set group (representing supersets).
    */
-  async initializeTraining(
-    user: CustomClaims,
-    trainingId: string,
-    componentIds: string[],
-  ) {
+  async initializeTraining(trainingId: string, componentIds: string[]) {
     // each training component represents one set group
-    const setGroups: SetGroupEntity[] = [];
+    const setGroups: SetGroup[] = [];
     for (let order = 0; order < componentIds.length; order++) {
       const componentId = componentIds[order];
       const setGroup = await this.createSetGroup({ trainingId, componentId, order });
@@ -57,7 +57,7 @@ export class SetService {
     return setGroups;
   }
 
-  async createSetGroup(data: Partial<SetGroupEntity>): Promise<SetGroupEntity> {
+  async createSetGroup(data: Partial<SetGroup>): Promise<SetGroup> {
     this.logger.debug(`Creating set group: ${JSON.stringify(data)}`);
     const setGroup = await this.setGroupRepository.create(data);
 
@@ -74,38 +74,46 @@ export class SetService {
     return setGroup;
   }
 
-  async addExercise(
-    user: CustomClaims,
+  /**
+   * Set subgroup denotes a superset. Each set subgroup (superset) can have many
+   * exercises. Each exercise has its own super exercise info (weight, reps, ...),
+   * and for each member in the group, exercise info entry is created that holds
+   * relative data (bodyweight, 1RM, ...) for that member.
+   */
+  async addExercisesToSetGroup(
+    user: User,
     setSubgroupId: string,
     exerciseIds: string[],
-    data: Partial<SuperExerciseInfoEntity>,
-  ): Promise<SetExerciseEntity[]> {
+    data: Partial<SuperExerciseInfo>,
+  ): Promise<SetExercise[]> {
     this.logger.debug(`Creating exercise for set subgroup: ${JSON.stringify(data)}`);
 
     // find all entities
-    const subgroup = await this.setSubgroupRepository.findOneByIdOrFail(setSubgroupId);
-    const group = await this.setGroupRepository.findOneByIdOrFail(subgroup.setGroupId);
-    const cycle = await this.trainingService.populateCycleAndGroup(user, group.trainingId);
+    const setSubgroup = await this.setSubgroupRepository.findOneByIdOrFail(setSubgroupId);
+    const setGroup = await this.setGroupRepository.findOneByIdOrFail(setSubgroup.setGroupId);
+    const cycle = await this.trainingService.findCycle(user, setGroup.trainingId);
 
     // check that exercises are valid
-    const exercises = await this.exerciseService.findAll(user, { ids: exerciseIds });
+    const exercises = await this.exerciseService.findAll(user, { filter: { ids: exerciseIds } });
+    console.log('exercises:', exercises);
+
     if (!exerciseIds.length || exerciseIds.length !== exercises.length)
       throw new BadRequestException('Invalid exercises');
 
-    // check that exercises leaf component ids belongs to training's root component ids
-    const valid = this.exerciseService.isValidSetGroupExercise(user, exercises, group);
+    // check that exercises can be added to the training set group
+    const valid = this.exerciseService.isValid(user, setGroup, exercises);
     if (!valid)
       throw new BadRequestException('Invalid exercises');
 
     // create set exercise
-    const order = await this.getSetExerciseOrder(subgroup);
+    const order = await this.getSetExerciseOrder(setSubgroup);
     const setExercises = await this.setExerciseRepository.createMany(exerciseIds.map((exerciseId, i) => ({
       setSubgroupId,
       exerciseId,
       order: order + i,
     })));
 
-    // create exercise info
+    // create exercise info for each member
     const members = cycle.group.members || [];
     const infos = await Promise.all(setExercises.map(async (setExercise) =>
       await this.exerciseInfoService.create(user, setExercise.id, members, data),
@@ -120,16 +128,16 @@ export class SetService {
         exercise,
         superExerciseInfo: info.superExerciseInfo,
         exerciseInfo: info.exerciseInfo,
-        setSubgroup: subgroup,
+        setSubgroup: setSubgroup,
       };
     });
   }
 
   async updateExercise(
-    user: CustomClaims,
+    user: User,
     setExerciseId: string,
-    data: Partial<SuperExerciseInfoEntity> & { order?: number },
-  ): Promise<SetExerciseEntity> {
+    data: Partial<SuperExerciseInfo> & { order?: number },
+  ): Promise<SetExercise> {
     this.logger.debug(`Updating exercise (${setExerciseId}): ${JSON.stringify(data)}`);
 
     // update order if provided
@@ -154,17 +162,17 @@ export class SetService {
     };
   }
 
-  async getSetGroup(user: CustomClaims, setGroupId: string) {
+  async findSetGroupById(user: User, setGroupId: string) {
     // find set group
     const setGroup = await this.setGroupRepository.findOneById(setGroupId);
 
-    // find all subgroups
-    const subgroups = await this.setSubgroupRepository.findAllBy('setGroupId', setGroup.id);
+    // find all set subgroups
+    const setSubgroups = await this.setSubgroupRepository.findAllBy('setGroupId', setGroup.id);
 
-    for (const subgroup of subgroups) {
-      subgroup.setExercises = await this.setExerciseRepository.findAllBy('setSubgroupId', subgroup.id);
+    for (const setSubgroup of setSubgroups) {
+      setSubgroup.setExercises = await this.setExerciseRepository.findAllBy('setSubgroupId', setSubgroup.id);
 
-      for (const setExercise of subgroup.setExercises) {
+      for (const setExercise of setSubgroup.setExercises) {
         const {
           superExerciseInfo,
           exerciseInfo,
@@ -176,11 +184,11 @@ export class SetService {
       }
     }
 
-    setGroup.setSubgroups = subgroups;
+    setGroup.setSubgroups = setSubgroups;
     return setGroup;
   }
 
-  async findAllSetExercisesBySubgroupId(user: CustomClaims, setSubgroupId: string) {
+  async findAllSetExercisesBySubgroupId(user: User, setSubgroupId: string) {
     const setExercises = await this.setExerciseRepository.findAllBy('setSubgroupId', setSubgroupId);
 
     return await Promise.all(setExercises.map(async (setExercise) => {
@@ -199,7 +207,7 @@ export class SetService {
     }));
   }
 
-  async findAllSetExercisesByMemberAndExerciseId(member: CustomClaims, exerciseId: string) {
+  async findAllSetExercisesByMemberAndExerciseId(member: User, exerciseId: string) {
     const setExercises = await this.setExerciseRepository.findAllBy('exerciseId', exerciseId);
 
     return await Promise.all(setExercises.map(async (setExercise) => {
@@ -207,43 +215,20 @@ export class SetService {
       const {
         superExerciseInfo,
         exerciseInfo,
-      } = await this.exerciseInfoService.findInfoBySetExerciseId(setExercise.id, { memberId: member.id });
+      } = await this.exerciseInfoService.findInfoBySetExerciseId(setExercise.id, { memberId: member.uid });
 
       return {
         ...setExercise,
         exercise,
         superExerciseInfo,
         exerciseInfo,
-      } as SetExerciseEntity;
+      } as SetExercise;
     }));
   }
 
-  async populateTraining(user: CustomClaims, training: TrainingEntity) {
-    // TODO - convert to nested Promise.all
-    training.setGroups = await this.setGroupRepository.findAllBy('trainingId', training.id);
-
-    /*for (const setGroup of training.setGroups) {
-      setGroup.setSubgroups = await this.setSubgroupRepository.findAllBy('setGroupId', setGroup.id);
-
-      for (const setSubgroup of setGroup.setSubgroups) {
-        setSubgroup.setExercises = await this.setExerciseRepository.findAllBy('setSubgroupId', setSubgroup.id);
-
-        for (const setExercise of setSubgroup.setExercises) {
-          const {
-            superExerciseInfo,
-            exerciseInfo,
-          } = await this.exerciseInfoService.findInfoBySetExerciseId(setExercise.id);
-
-          setExercise.superExerciseInfo = superExerciseInfo;
-          setExercise.exerciseInfo = exerciseInfo;
-          setExercise.exercise = await this.exerciseService.findOneByIdOrFail(user, setExercise.exerciseId);
-        }
-      }
-    }*/
-
-    return training;
-  }
-
+  /**
+   * Delete all set groups and set subgroups for a training.
+   */
   async deleteAllByTrainingId(trainingId: string) {
     const setGroups = await this.setGroupRepository.findAllBy('trainingId', trainingId);
     for (const setGroup of setGroups) {
@@ -257,15 +242,17 @@ export class SetService {
     }
   }
 
+  /**
+   * Delete all set exercises for a set subgroup, but keep exercise info intact
+   * (for user history and statistics).
+   */
   private async deleteSubgroupExercises(setSubgroupId: string) {
     const setExercises = await this.setExerciseRepository.findAllBy('setSubgroupId', setSubgroupId);
-    for (const setExercise of setExercises) {
+    for (const setExercise of setExercises)
       await this.setExerciseRepository.delete(setExercise.id);
-      await this.exerciseInfoService.deleteAllBySetExerciseId(setExercise.id);
-    }
   }
 
-  private async getSetExerciseOrder(setSubgroup: SetSubgroupEntity) {
+  private async getSetExerciseOrder(setSubgroup: SetSubgroup) {
     const setExercises = await this.setExerciseRepository.findAllBy('setSubgroupId', setSubgroup.id);
     return setExercises.length;
   }

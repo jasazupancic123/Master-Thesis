@@ -1,7 +1,7 @@
-import { GroupDto } from './group.dto';
+import { Group } from '../entity/group.entity';
 import { PartialType, PickType } from '@nestjs/mapped-types';
 
-export class UpdateGroupDto extends PartialType(PickType(GroupDto, [
+export class UpdateGroupDto extends PartialType(PickType(Group, [
   'name',
   'memberIds',
 ])) {

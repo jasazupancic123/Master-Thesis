@@ -1,11 +1,11 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { CommonService } from '../common/service/common.service';
 import { InjectRepository } from '../common/decorator/entity.decorator';
-import { SuperExerciseInfoEntity } from './entity/super-exercise-info.entity';
+import { SuperExerciseInfo } from './entity/super-exercise-info.entity';
 import { FirestoreRepository } from '../firebase/firestore.repository';
-import { ExerciseInfoEntity } from './entity/exercise-info.entity';
+import { ExerciseInfo } from './entity/exercise-info.entity';
 import { WorkloadType } from './enum/workload-type.enum';
-import { CustomClaims } from '../common/type/custom-claims.type';
+import { User } from '../common/type/custom-claims.type';
 import { SetService } from '../set/set.service';
 import { Wrapper } from '../common/type/wrapper.type';
 import { SetType } from './enum/set-type.enum';
@@ -18,10 +18,10 @@ export class ExerciseInfoService {
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    @InjectRepository(SuperExerciseInfoEntity)
-    private readonly superExerciseInfoRepository: FirestoreRepository<SuperExerciseInfoEntity>,
-    @InjectRepository(ExerciseInfoEntity)
-    private readonly exerciseInfoRepository: FirestoreRepository<ExerciseInfoEntity>,
+    @InjectRepository(SuperExerciseInfo)
+    private readonly superExerciseInfoRepository: FirestoreRepository<SuperExerciseInfo>,
+    @InjectRepository(ExerciseInfo)
+    private readonly exerciseInfoRepository: FirestoreRepository<ExerciseInfo>,
     @Inject(forwardRef(() => SetService)) private readonly setService: Wrapper<SetService>,
   ) {
   }
@@ -37,18 +37,17 @@ export class ExerciseInfoService {
 
     // return super exercise info and exercise info for all users
     const exerciseInfo = await this.exerciseInfoRepository.findAllBy('setExerciseId', setExerciseId);
-
     return { superExerciseInfo, exerciseInfo };
   }
 
   /**
-   * Creates super exercise info (for trainers) and exercise infos for all users
+   * Creates super exercise info and exercise infos for all users.
    */
   async create(
-    user: CustomClaims,
+    user: User,
     setExerciseId: string,
-    members: CustomClaims[],
-    data: Partial<SuperExerciseInfoEntity>,
+    members: User[],
+    data: Partial<SuperExerciseInfo>,
   ) {
     const exercise = await this.setService.findExerciseBySetExerciseId(user, setExerciseId);
 
@@ -59,7 +58,7 @@ export class ExerciseInfoService {
     });
 
     // create exercise info for each exercise for each user
-    const input: Partial<ExerciseInfoEntity>[] = await Promise.all(members.map(async (member) => ({
+    const input: Partial<ExerciseInfo>[] = await Promise.all(members.map(async (member) => ({
       setExerciseId,
       userId: member.uid,
       completed: false,
@@ -67,19 +66,15 @@ export class ExerciseInfoService {
     })));
 
     const exerciseInfo = await this.exerciseInfoRepository.createMany(input);
-
     return { superExerciseInfo, exerciseInfo };
   }
 
   /**
-   * Updates super exercise info (for trainers) and exercise infos for all users
+   * Updates super exercise info and exercise infos for all users
    * by re-calculating values for exercise info based on the new super exercise
    * info values
    */
-  async update(
-    setExerciseId: string,
-    data: Partial<SuperExerciseInfoEntity>,
-  ) {
+  async update(setExerciseId: string, data: Partial<SuperExerciseInfo>) {
     const {
       superExerciseInfo,
       exerciseInfo,
@@ -101,7 +96,7 @@ export class ExerciseInfoService {
     const isWorkloadTypeChanged = data.workloadType !== superExerciseInfo.workloadType;
     const isWorkloadValueChanged = data.workloadValue !== superExerciseInfo.workloadValue;
 
-    let updatedExerciseInfo: ExerciseInfoEntity[];
+    let updatedExerciseInfo: ExerciseInfo[];
     if (isWorkloadTypeChanged || isWorkloadValueChanged) {
       this.logger.debug(`Updating exercise info (old: ${superExerciseInfo.workloadType} -> ${superExerciseInfo.workloadValue}, new: ${data.workloadType} -> ${data.workloadValue})`);
 
@@ -133,7 +128,7 @@ export class ExerciseInfoService {
   private async calculateValueFromWorkloadType(
     type: WorkloadType,
     value: number,
-    member: CustomClaims,
+    member: User,
     exerciseId: string,
   ) {
     switch (type) {
@@ -143,7 +138,7 @@ export class ExerciseInfoService {
         return this.commonService.calculateRM(values);
       case WorkloadType.BW:
         // fetch body weight from user's profile and save % of it as KG
-        const bodyweight = member.bodyweight || 0;
+        const bodyweight = member.customClaims.bodyweight || 0;
         return bodyweight * this.commonService.percentFromValue(value);
       case WorkloadType.INT:
       case WorkloadType.KG:
@@ -152,7 +147,7 @@ export class ExerciseInfoService {
     }
   }
 
-  private async getMemberExerciseValues(member: CustomClaims, exerciseId: string) {
+  private async getMemberExerciseValues(member: User, exerciseId: string) {
     // fetch all exercises for user from last month
     const setExercises = await this.setService.findAllSetExercisesByMemberAndExerciseId(member, exerciseId);
 

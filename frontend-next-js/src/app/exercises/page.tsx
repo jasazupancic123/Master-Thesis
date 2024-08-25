@@ -2,7 +2,7 @@
 
 import withAuth from '@/hoc/with-auth';
 import React, { useEffect, useState } from 'react';
-import { TextField } from '@mui/material';
+import { Pagination, TextField } from '@mui/material';
 import type { Exercise } from '@/type/exercise.type';
 import { CreateExercise } from '@/type/exercise.type';
 import Box from '@mui/material/Box';
@@ -18,6 +18,8 @@ import ExerciseChips from '@/component/exercise-chips';
 import { FitcodeApi } from '@/util/api';
 import { ObjectUtil } from '@/util/object';
 import { FirebaseStorage, Firestore } from '@/util/firebase';
+import { PaginateOptions } from '@/type/paginate.type';
+import Stack from '@mui/material/Stack';
 
 const EMPTY_EXERCISE: CreateExercise = {
   name: '',
@@ -33,6 +35,7 @@ function Page() {
   const [component, setComponent] = useState<Component>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState({ name: '' });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 6, pages: 1, total: 0 });
 
   // add and edit modals and exercise state
   const [modal, setModal] = useState({ add: false, edit: false });
@@ -103,16 +106,64 @@ function Page() {
         ...(component && { componentIds: [component?.id || ''] }),
       };
 
-      const response = await FitcodeApi.findAllExercises(token, filter);
-      setExercises(response.map(Firestore.populateExercise));
+      const paginate: PaginateOptions<Exercise> = {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        limit: 100,
+      };
+
+      const response = await FitcodeApi.findAllExercises(token, filter, paginate);
+      setExercises(response);
     }
 
     fetchExercises().then();
-  }, [component, search]);
+  }, [pagination, search, component?.id]);
+
+  /**
+   * Populate exercise attributes
+   */
+  useEffect(() => {
+    if (!exercise.id) return;
+
+    async function populateExercise() {
+      try {
+        const response = await FitcodeApi.getExercise(exercise.id!, token);
+        setExercise(Firestore.populateExercise(response));
+      } catch (e) {
+        toast.error(e.message || 'Could not fetch exercise');
+      }
+    }
+
+    populateExercise().then();
+  }, [exercise?.id]);
+
+  /**
+   * Get page meta for exercises when component or search name changes
+   */
+  useEffect(() => {
+    async function fetchPageMeta() {
+      try {
+        const response = await FitcodeApi.getExercisePageMeta(token, {
+          name: search.name,
+          ...(component && { componentIds: [component?.id || ''] }),
+        }, pagination.pageSize);
+
+        setPagination({
+          ...pagination,
+          pages: response.pages,
+          total: response.total,
+        });
+      } catch (e) {
+        toast.error(e.message || 'Could not fetch page meta');
+      }
+    }
+
+    fetchPageMeta().then();
+  }, [search.name, pagination.pageSize, component?.id]);
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" mb={2}>
+    <Box py={2}>
+      <Box display="flex" justifyContent="space-between" my={2}>
         <ExerciseChips
           noSelectionLabel="All"
           selected={component}
@@ -139,6 +190,15 @@ function Page() {
           </IconButton>
         </Box>
       </Box>
+
+      <Stack direction="row" justifyContent="center" my={2}>
+        <Pagination
+          count={pagination.pages}
+          color="secondary"
+          onChange={(e, page) => setPagination({ ...pagination, page })}
+          page={pagination.page}
+        />
+      </Stack>
 
       <Grid container spacing={2} mb={10}>
         {exercises.map((exercise) => (

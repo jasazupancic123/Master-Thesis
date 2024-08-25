@@ -1,7 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Reflector } from '@nestjs/core';
-import { CustomClaims } from '../type/custom-claims.type';
 import { AUTH_ROLES_KEY } from './role.guard';
 
 @Injectable()
@@ -9,7 +8,8 @@ export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private readonly firebaseService: FirebaseService,
-  ) {}
+  ) {
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const required = this.reflector.getAllAndOverride<string[]>(AUTH_ROLES_KEY, [
@@ -24,7 +24,8 @@ export class AuthGuard implements CanActivate {
 
     try {
       const token = authorization.slice(7);
-      context.switchToHttp().getRequest().user = await this.firebaseService.auth.verifyIdToken(token) as CustomClaims;
+      const verified = await this.firebaseService.auth.verifyIdToken(token);
+      context.switchToHttp().getRequest().user = await this.firebaseService.findUserById(verified.uid);
       return true;
     } catch (e) {
       return false;

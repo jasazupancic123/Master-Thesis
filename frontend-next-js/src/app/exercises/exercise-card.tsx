@@ -16,7 +16,11 @@ export function ExerciseCard(props: Props) {
   return (
     <Card sx={{ maxWidth: 345, borderRadius: 5 }}>
       <CardMedia
-        sx={{ height: 140 }}
+        // component="img"
+        sx={{
+          height: 140,
+          background: 'linear-gradient(180deg, rgba(26,43,60,1) 0%, rgba(37,53,70,1) 100%)',
+        }}
         image={exercise.imageUrl ? imageUrl : undefined}
         title={exercise.name}
       />

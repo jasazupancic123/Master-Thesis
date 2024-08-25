@@ -2,12 +2,12 @@ import { BaseEntity } from '../../common/entity/base.entity';
 import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { SetGroupEntity } from '../../set/entity/set-group.entity';
+import { SetGroup } from '../../set/entity/set-group.entity';
 import { Entity } from '../../common/decorator/entity.decorator';
 import { TRAINING_COLLECTION } from '../../common/const/firestore.const';
 
 @Entity(TRAINING_COLLECTION)
-export class TrainingEntity extends BaseEntity {
+export class Training extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -33,5 +33,5 @@ export class TrainingEntity extends BaseEntity {
   endTime: Date;
 
   // relations
-  setGroups: SetGroupEntity[];
+  setGroups: SetGroup[];
 }

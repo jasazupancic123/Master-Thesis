@@ -1,13 +1,14 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../user/enum/user-role.enum';
-import { CustomClaims } from '../type/custom-claims.type';
+import { User } from '../type/custom-claims.type';
 
 export const AUTH_ROLES_KEY = 'roles';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) {
+  }
 
   canActivate(context: ExecutionContext): boolean {
     const required = this.reflector.getAllAndOverride<UserRole[]>(AUTH_ROLES_KEY, [
@@ -18,9 +19,9 @@ export class RoleGuard implements CanActivate {
     if (!required) return true;
 
     const request = context.switchToHttp().getRequest();
-    const user: CustomClaims = request.user;
+    const user: User = request.user;
 
     if (!required.length) return true;
-    return required.some((role) => user.role?.includes(role));
+    return required.some((role) => user.customClaims.role.includes(role));
   }
 }

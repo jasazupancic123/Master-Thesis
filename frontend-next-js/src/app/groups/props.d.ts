@@ -8,6 +8,7 @@ import { Dayjs } from 'dayjs';
 
 export type GroupPageProps = {
   selected: {
+    loading: boolean,
     group?: Group | null,
     subgroup?: Group | null,
     cycle?: Cycle | null,
