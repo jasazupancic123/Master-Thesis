@@ -217,7 +217,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
         </Stack>
 
         {/* Training weeks */}
-        {props.selected.loading
+        {props.loading
           ? <Typography>Loading ...</Typography>
           : <Stack spacing={1} mt={2}>
             {cycle.weeks?.map((week, i) => (

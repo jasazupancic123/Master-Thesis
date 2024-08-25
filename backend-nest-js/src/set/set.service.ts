@@ -95,7 +95,6 @@ export class SetService {
 
     // check that exercises are valid
     const exercises = await this.exerciseService.findAll(user, { filter: { ids: exerciseIds } });
-    console.log('exercises:', exercises);
 
     if (!exerciseIds.length || exerciseIds.length !== exercises.length)
       throw new BadRequestException('Invalid exercises');

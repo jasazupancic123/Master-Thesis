@@ -36,10 +36,10 @@ export default function SelectData<T>(props: SelectDataProps<T>) {
       <MenuItem value={''}>None</MenuItem>
       {data.map((obj) => (
         <MenuItem
-          key={dataKeyProp ? obj[dataKeyProp] : obj as string}
-          value={dataKeyProp ? obj[dataKeyProp] : obj as string}
+          key={dataKeyProp ? obj?.[dataKeyProp] : obj as string}
+          value={dataKeyProp ? obj?.[dataKeyProp] : obj as string}
         >
-          {dataValueProp ? obj[dataValueProp] : obj as string}
+          {dataValueProp ? obj?.[dataValueProp] : obj as string}
         </MenuItem>
       ))}
     </Select>

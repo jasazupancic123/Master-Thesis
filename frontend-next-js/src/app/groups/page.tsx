@@ -36,8 +36,8 @@ function Page() {
     custom: false,
   });
 
+  const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState({
-    loading: false,
     group: null as Group | null,
     subgroup: null as Group | null,
     cycles: [] as Cycle[], // all cycles for a group / subgroup
@@ -46,50 +46,77 @@ function Page() {
   });
 
   /**
-   * Get initial data
+   * If group id is not provided, reset all other selected items, otherwise
+   * fetch group and its cycles and set other selected items to null
    */
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const groupId = searchParams.get('groupId');
-        const subgroupId = searchParams.get('subgroupId');
-        const cycleId = searchParams.get('cycleId');
-        const filter = searchParams.get('filter');
-
-        if (groupId) {
-          const group = await FitcodeApi.getGroup(groupId, token);
-          const cycles = await FitcodeApi.getAllCycles(token, { groupId: group.id });
-          setSelected({ ...selected, group, cycles });
-        }
-
-        if (subgroupId) {
-          const subgroup = (selected.group?.subgroups || []).find(subgroup => subgroup.id === subgroupId) || null;
-          setSelected({ ...selected, subgroup });
-        }
-
-        if (cycleId) {
-          const cycle = await FitcodeApi.getCycle(cycleId, token);
-          const response = await FitcodeApi.findAllTrainings(token, {
-            cycleId: cycle.id,
-            subgroupId: selected.subgroup?.id,
-            startTime: date.custom ? date.start.toISOString() : dayjs(cycle.startDate).toISOString(),
-            endTime: date.custom ? date.end.toISOString() : dayjs(cycle.endDate).toISOString(),
-          });
-
-          const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
-          setSelected({ ...selected, cycle, trainings });
-        }
-
-        if (filter) {
-          setFilter(filter as TrainingFilter);
-        }
-      } catch (e) {
-        console.error(e);
-      }
+  async function fetchGroup(groupId: string | null) {
+    if (!groupId) {
+      setSelected({ group: null, subgroup: null, cycle: null, cycles: [], trainings: [] });
+      return;
     }
 
-    fetchData().then();
-  }, []);
+    try {
+      const group = await FitcodeApi.getGroup(groupId, token);
+      const cycles = await FitcodeApi.getAllCycles(token, { groupId: group.id });
+
+      setSelected({ group, cycles, subgroup: null, cycle: null, trainings: [] });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function findSubgroup(subgroupId: string | null) {
+    const subgroup = subgroupId ? (selected.group?.subgroups || []).find(subgroup => subgroup.id === subgroupId) || null : null;
+    setSelected(prev => ({ ...prev, subgroup }));
+  }
+
+  /**
+   * Fetch cycle and its trainings
+   */
+  async function fetchCycle(cycleId: string | null) {
+    if (!cycleId) {
+      setSelected(prev => ({ ...prev, cycle: null, trainings: [] }));
+      return;
+    }
+
+    try {
+      const cycle = await FitcodeApi.getCycle(cycleId, token);
+      const response = await FitcodeApi.findAllTrainings(token, {
+        cycleId: cycle.id,
+        subgroupId: selected.subgroup?.id,
+        startTime: date.start.toISOString(),
+        endTime: date.end.toISOString(),
+      });
+
+      const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
+      setSelected({ ...selected, cycle, trainings });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function fetchTrainings(cycleId: string, subgroupId?: string) {
+    if (!cycleId) {
+      setSelected(prev => ({ ...prev, trainings: [] }));
+      return;
+    }
+
+    try {
+      const response = await FitcodeApi.findAllTrainings(token, {
+        cycleId,
+        subgroupId,
+        startTime: date.start.toISOString(),
+        endTime: date.end.toISOString(),
+      });
+
+      const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
+      setSelected({ ...selected, trainings });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // TODO - get initial data based on query params
 
   /**
    * Add query to url when selected items change
@@ -174,47 +201,15 @@ function Page() {
    * Fetch group and its cycles when groupId param changes
    */
   useEffect(() => {
-    async function fetchData() {
-      const groupId = searchParams.get('groupId');
-      if (!groupId) {
-        setSelected({ loading: false, group: null, subgroup: null, cycle: null, cycles: [], trainings: [] });
-        return;
-      }
-
-      try {
-        setSelected({ ...selected, loading: true });
-        const group = await FitcodeApi.getGroup(groupId, token);
-        const cycles = await FitcodeApi.getAllCycles(token, { groupId: group.id });
-
-        setSelected({ loading: false, group, cycles, subgroup: null, cycle: null, trainings: [] });
-      } catch (e) {
-        console.error(e);
-        setSelected({ ...selected, loading: false });
-      }
-    }
-
-    fetchData().then();
+    setLoading(true);
+    fetchGroup(searchParams.get('groupId')).finally(() => setLoading(false));
   }, [searchParams.get('groupId')]);
 
   /**
    * Fetch subgroup when subgroupId param changes
    */
   useEffect(() => {
-    if (!selected.group)
-      return;
-
-    async function fetchData() {
-      const subgroupId = searchParams.get('subgroupId');
-      if (!subgroupId) {
-        setSelected(prev => ({ ...prev, subgroup: null }));
-        return;
-      }
-
-      const subgroup = (selected.group?.subgroups || []).find(subgroup => subgroup.id === subgroupId) || null;
-      setSelected(prev => ({ ...prev, subgroup }));
-    }
-
-    fetchData().then();
+    if (selected.group) findSubgroup(searchParams.get('subgroupId'));
   }, [searchParams.get('subgroupId')]);
 
   /**
@@ -222,63 +217,21 @@ function Page() {
    * selected)
    */
   useEffect(() => {
-    if (!selected.group)
-      return;
-
-    async function fetchData() {
-      const cycleId = searchParams.get('cycleId');
-      if (!cycleId)
-        return;
-
-      try {
-        setSelected({ ...selected, loading: true });
-
-        const cycle = await FitcodeApi.getCycle(cycleId, token);
-        const response = await FitcodeApi.findAllTrainings(token, {
-          cycleId: cycle.id,
-          subgroupId: selected.subgroup?.id,
-          startTime: date.start.toISOString(),
-          endTime: date.end.toISOString(),
-        });
-
-        const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
-        setSelected({ ...selected, loading: false, cycle, trainings });
-      } catch (e) {
-        console.error(e);
-        setSelected({ ...selected, loading: false });
-      }
+    if (selected.group) {
+      setLoading(true);
+      fetchCycle(searchParams.get('cycleId')).finally(() => setLoading(false));
     }
-
-    fetchData().then();
-  }, [searchParams.get('cycleId')]);
+  }, [searchParams.get('cycleId'), selected.subgroup?.id]);
 
   /**
    * Filter trainings for cycle based on date range
    */
   useEffect(() => {
-    if (!selected.cycle)
-      return;
-
-    async function fetchData() {
-      try {
-        setSelected({ ...selected, loading: true });
-        const response = await FitcodeApi.findAllTrainings(token, {
-          cycleId: selected.cycle!.id,
-          subgroupId: selected.subgroup?.id,
-          startTime: date.start.toISOString(),
-          endTime: date.end.toISOString(),
-        });
-
-        const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
-        setSelected({ ...selected, loading: false, trainings });
-      } catch (e) {
-        console.error(e);
-        setSelected({ ...selected, loading: false });
-      }
+    if (selected.cycle) {
+      setLoading(true);
+      fetchTrainings(selected.cycle.id, selected.subgroup?.id).finally(() => setLoading(false));
     }
-
-    fetchData().then();
-  }, [date.start, date.end]);
+  }, [date.start, date.end, selected.subgroup?.id]);
 
   if (loadingUsers || loadingGroups)
     return <div>Loading...</div>;
@@ -289,6 +242,8 @@ function Page() {
   const props: GroupPageProps = {
     selected,
     setSelected,
+    loading,
+    setLoading,
     users,
     setUsers,
     groups,

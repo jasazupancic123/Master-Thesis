@@ -5,6 +5,7 @@ import { User } from '../common/type/custom-claims.type';
 import { UserService } from '../user/user.service';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
+import { Timestamp } from 'firebase-admin/firestore';
 
 @Injectable()
 export class GroupService {
@@ -43,7 +44,7 @@ export class GroupService {
 
   /**
    * Checks if user is owner or a member of the group and returns the group or
-   * throws an error.
+   * throws an error. It also updates the group with newly available members.
    */
   async findOneByIdOrFail(user: User, id: string): Promise<Group> {
     const group = await this.repository.findOneByIdOrFail(id);
@@ -51,12 +52,18 @@ export class GroupService {
       throw new BadRequestException('You are not a member of this group');
 
     // find all members in all subgroups
-    group.subgroups = await this.repository.findAllBy('parentId', group.id);
+    group.subgroups = await this.repository.findAllByMany([
+      { field: 'parentId', operator: '==', value: group.id },
+      { field: 'validUntil', operator: '>', value: Timestamp.now() },
+    ]);
+
+    const availableMemberIds = await this.updateAvailableMemberIds(group.id);
+
+    const subgroupMemberIds = group.subgroups.flatMap(subgroup => subgroup.memberIds);
+    const memberIds = Array.from(new Set(availableMemberIds.concat(subgroupMemberIds)));
+
     group.user = await this.userService.findOneById(group.userId);
-
-    const memberIds = group.memberIds.concat(group.subgroups.flatMap(subgroup => subgroup.memberIds));
     group.members = await this.userService.findAll(user, { ids: memberIds });
-
     return group;
   }
 
@@ -74,6 +81,14 @@ export class GroupService {
 
     if (data.parentId) {
       const parent = await this.repository.findOneByIdOrFail(data.parentId);
+      if (parent.parentId)
+        throw new BadRequestException('Subgroups cannot have subgroups');
+
+      if (!this.isOwner(user, parent))
+        throw new BadRequestException('You are not the owner of the parent group');
+
+      if (!data.validUntil)
+        throw new BadRequestException('Subgroups must have a valid until date');
 
       // all members must also be members of the parent group
       members.forEach(member => {
@@ -81,12 +96,11 @@ export class GroupService {
           throw new BadRequestException('All members must be members of the parent group');
       });
 
-      if (!this.isOwner(user, parent))
-        throw new BadRequestException('You are not the owner of the parent group');
-
       // delete members from parent group
       const memberIds = parent.memberIds.filter(id => !data.memberIds.includes(id));
       await this.repository.update(parent.id, { memberIds });
+
+      // TODO - copy all trainings from parent group to subgroup
     }
 
     const group = await this.repository.create({
@@ -94,10 +108,41 @@ export class GroupService {
       userId: user.uid,
       memberIds: members.map(member => member.uid),
       parentId: data.parentId || null,
+      validUntil: data.validUntil || null,
+      lastModifiedAvailableMembers: new Date(),
     });
 
     group.user = user;
     group.members = members;
     return group;
+  }
+
+  /**
+   * Returns all available member ids for a group. This includes all members of
+   * the group and all members of expired subgroups that can be "used" again.
+   */
+  private async updateAvailableMemberIds(groupId: string): Promise<string[]> {
+    // TODO - cron job
+    const group = await this.repository.findOneById(groupId);
+    if (!group)
+      throw new BadRequestException('Group not found');
+
+    if (group.parentId)
+      throw new BadRequestException('Cannot update available members for subgroup');
+
+    const invalidSubgroups = await this.repository.findAllByMany([
+      { field: 'parentId', operator: '==', value: groupId },
+      { field: 'validUntil', operator: '<=', value: Timestamp.now() },
+    ]);
+
+    // all members in expired subgroups become available again
+    const memberIds = group.memberIds.concat(invalidSubgroups.flatMap(subgroup => subgroup.memberIds));
+    const availableMemberIds = Array.from(new Set(memberIds));
+    await this.repository.update(groupId, {
+      memberIds: availableMemberIds,
+      lastModifiedAvailableMembers: new Date(),
+    });
+
+    return availableMemberIds;
   }
 }

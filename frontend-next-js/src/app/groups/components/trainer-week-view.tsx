@@ -25,9 +25,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
    * Set date to cycle start and end when opening the page
    */
   useEffect(() => {
-    if (!cycle)
-      return;
-
+    if (!cycle) return;
     setIndex(0);
   }, [cycle?.id]);
 

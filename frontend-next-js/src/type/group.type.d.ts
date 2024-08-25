@@ -8,6 +8,7 @@ export interface Group {
   memberIds: string[];
   cycleIds: string[];
   createdAt: Date;
+  validUntil: Date;
 
   // relations
   user?: User;
@@ -19,4 +20,5 @@ export interface CreateGroup {
   name: string;
   memberIds: string[];
   parentId?: string | null;
+  validUntil?: Date;
 }

@@ -19,6 +19,9 @@ export class Training extends BaseEntity {
   @ApiPropertyOptional()
   @Expose()
   subgroupId?: string; // if null, then it's a training for cycle's group
+  // subgroups also have date until which they are valid, by default they are
+  // valid only one day, so trainer can create new subgroups every day, and the
+  // next day members of subgroup are already available in the parent group
 
   @IsDate()
   @ApiProperty()

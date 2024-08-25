@@ -8,13 +8,14 @@ import { Dayjs } from 'dayjs';
 
 export type GroupPageProps = {
   selected: {
-    loading: boolean,
     group?: Group | null,
     subgroup?: Group | null,
     cycle?: Cycle | null,
     cycles: Cycle[],
     trainings: Training[],
   },
+  loading: boolean,
+  setLoading: SetState<boolean>,
   setSelected: SetState<GroupPageProps['selected']>,
   users: User[],
   setUsers: SetState<User[]>,
