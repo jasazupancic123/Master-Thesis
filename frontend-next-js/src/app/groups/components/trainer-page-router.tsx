@@ -25,6 +25,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import GroupsIcon from '@mui/icons-material/Groups';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SelectInput from '@/app/groups/components/select-input';
+import dayjs from 'dayjs';
 
 export default function TrainerPageRouter(props: GroupPageProps) {
   // context
@@ -40,7 +41,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
   // group to create or update
   const [create, setCreate] = useState({
     group: { name: '', memberIds: [], parentId: null },
-    subgroup: { name: '', memberIds: [], parentId: null },
+    subgroup: { name: '', memberIds: [], parentId: null, validUntil: 0 },
     // cycle modal is a separate component
   });
 
@@ -78,11 +79,11 @@ export default function TrainerPageRouter(props: GroupPageProps) {
    */
   async function createGroup(group: CreateGroup) {
     try {
+      props.setLoading(true);
       const response = await FitcodeApi.createGroup(group, token);
       setModal({ ...modal, group: false });
 
       props.setSelected({
-        loading: false,
         group: response,
         subgroup: null,
         cycle: null,
@@ -93,6 +94,8 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       props.setGroups(prev => [...prev, response]);
     } catch (e) {
       toast.error(e.message);
+    } finally {
+      props.setLoading(false);
     }
   }
 
@@ -104,10 +107,15 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       return;
 
     try {
+      props.setLoading(true);
+
+      const validUntilValue = subgroup.validUntil as number;
+      const validUntil = validUntilValue === 0 ? dayjs(props.selected.cycle!.endDate) : dayjs().add(validUntilValue, 'd');
       const response = await FitcodeApi.createGroup({
         name: subgroup.name,
         memberIds: subgroup.memberIds,
         parentId: props.selected.group.id,
+        validUntil: validUntil.toISOString() as Date,
       }, token);
 
       props.setSelected(prev => ({
@@ -115,15 +123,19 @@ export default function TrainerPageRouter(props: GroupPageProps) {
         group: {
           ...prev.group!,
           subgroups: [...(prev.group!.subgroups || []), response],
+          // remove members that are in subgroup
+          memberIds: (prev.group!.memberIds || []).filter(id => !subgroup.memberIds.includes(id)),
         },
         subgroup: response,
       }));
 
       props.setGroups(prev => {
         const group = prev.find(group => group.id === props.selected.group!.id);
-        if (group)
-          group.subgroups = [...(group.subgroups || []), response];
+        if (!group)
+          return prev;
 
+        // add subgroup to group
+        group.subgroups = [...(group.subgroups || []), response];
         return [...prev];
       });
 
@@ -131,6 +143,8 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       toast.success('Successfully created subgroup');
     } catch (e) {
       toast.error(e.message || 'Failed to create subgroup');
+    } finally {
+      props.setLoading(false);
     }
   }
 
@@ -149,6 +163,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     };
 
     try {
+      props.setLoading(true);
       const response = await FitcodeApi.createCycle(body as Partial<Cycle>, token);
       const populated = Firestore.populateCycle(response);
 
@@ -162,6 +177,8 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       toast.success('Successfully created cycle');
     } catch (e) {
       toast.error(e.message || 'Failed to create cycle');
+    } finally {
+      props.setLoading(false);
     }
   }
 
@@ -303,7 +320,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
             isOpen={modal.subgroup}
             setIsOpen={(open) => setModal({ ...modal, subgroup: open })}
             onCancel={() => setModal({ ...modal, subgroup: false })}
-            onConfirm={() => createSubgroup(create.subgroup)}
+            onConfirm={() => createSubgroup(create.subgroup as CreateGroup)}
           >
             <Typography variant="h6" mb={2}>Create Subgroup</Typography>
 
@@ -331,6 +348,24 @@ export default function TrainerPageRouter(props: GroupPageProps) {
               onChange={(memberIds) =>
                 setCreate({ ...create, subgroup: { ...create.subgroup, memberIds } })
               }
+            />
+
+            <Box mt={2} />
+
+            {/* Subgroup duration */}
+            <SelectData<{ label: string, value: number }>
+              data={[
+                { label: '1 day', value: 1 },
+                { label: '1 week', value: 7 },
+                { label: 'Cycle', value: 0 },
+              ]}
+              dataKeyProp="value"
+              dataValueProp="label"
+              label="Duration"
+              value={create.subgroup.validUntil || 0}
+              onChange={(value) => {
+                setCreate({ ...create, subgroup: { ...create.subgroup, validUntil: value } });
+              }}
             />
           </MyModal>
 

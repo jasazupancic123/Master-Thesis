@@ -6,18 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="a110cea5-83fa-4c21-a030-85b10323fced" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/exercise-card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/exercises/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-cycle-view.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-cycle-view.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-day-view.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-day-view.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-page-router.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-page-router.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-week-view.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-week-view.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/training-filter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/training-filter.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/props.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/props.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/select-data.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/select-data.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/group.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/group.type.d.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -182,7 +177,7 @@
       <workItem from="1724307782421" duration="20319000" />
       <workItem from="1724396003079" duration="31676000" />
       <workItem from="1724482242356" duration="20400000" />
-      <workItem from="1724596538135" duration="5927000" />
+      <workItem from="1724596538135" duration="18164000" />
     </task>
     <servers />
   </component>

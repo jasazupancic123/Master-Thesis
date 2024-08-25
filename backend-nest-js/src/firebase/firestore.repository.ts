@@ -69,6 +69,12 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
   }
 
   async update(id: string, data: Partial<T>): Promise<T> {
+    // if any field is of type date, convert it to firestore.Timestamp
+    for (const key in data)
+      if (data[key] instanceof Date)
+        // @ts-ignore
+        data[key] = Timestamp.fromDate(data[key]) as any;
+
     await this.collection.doc(id).update(data as any);
     const result = await this.collection.doc(id).get();
     return this.serialize(result);
@@ -151,7 +157,8 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
     let query = this.collection as Query;
 
     for (const condition of conditions)
-      query = query.where(condition.field.toString(), condition.operator, condition.value);
+      if (condition.value !== undefined)
+        query = query.where(condition.field.toString(), condition.operator, condition.value);
 
     if (options?.paginate)
       query = this.paginate(query, options.paginate);

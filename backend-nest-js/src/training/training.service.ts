@@ -44,6 +44,13 @@ export class TrainingService {
     return training;
   }
 
+  async copy(user: User, data: Partial<Training>): Promise<Training> {
+    // TODO - copy training, set groups, set subgroups, super exercise info and
+    // exercise infos
+
+    // copy training with id "id" and "cycleId" and "subgroupId" and "startTime" and "endTime"
+  }
+
   async findCycle(user: User, trainingId: string): Promise<Cycle> {
     const training = await this.repository.findOneById(trainingId);
     return await this.cycleService.findOneByIdOrFail(user, training.cycleId);
