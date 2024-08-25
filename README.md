@@ -10,54 +10,50 @@ firebase emulators:start
 
 ## TODO
 
-### Users
+### Trainings
 
-- Add body weight and sport level when signing up
-- Trainer can add weight for all users or user can
+- Copy trainings to subgroups on daily basis (add validUntil date to subgroups so that trainer can make new subgroups
+  every day and when subgroups' date expires, trainer can again pick users from the subgroup to create other subgroups,
+  do not query expired subgroups)
+- Athlete training day view
+- Athlete view calendar
+- Athlete welness form
+- Create training warmup and cooldown checkboxes to automatically create them
+
+### Exercises
+
+- Update exercise
+- Delete exercise
+
+### Groups
+
+- Updating / adding / removing group members (removing a member should NOT remove his exercise info, it should just
+  remove him from the group and keep the info for his personal statistics)
+
+### Methodology
+
+- Add methodologies which user can copy as separate trainings
+- Tags for methodologies by admin (upper body, lower body, strength, endurance, etc.)
 
 ### Components
 
 - Component icons
+- Component nested dropdown menu (similar to exercise attributes)
 - Disable updating root components' parents to not mess up trainings
 - Adding internal components (no special case)
 - Adding leaf components (move all exercises to the new leaf component)
 - Deleting internal components (no special case)
 - Deleting leaf components (move all exercises to the first parent)
 
-### Groups
-
-- Updating group members (removing a member should NOT remove his exercise info, it should just remove him from the
-  group and keep the info for his personal statistics)
-- Updating old super exercise info after a new member is added should check `createdAt` for user and super exercise
-  info and not create new record if user was created after the super exercise info
-
-### Exercises
-
-- Architecture to add custom attributes and values to exercises (NOTE - since all attributes and their values can be
-  deleted or updated at any time, use null checks everywhere)
-- Exercise pagination backend
-- Exercise pagination frontend (9 cards max on a page and arrows to navigate)
-- Firebase storage to upload images and videos for exercises
-- Filter user exercises correctly (maybe add group ids array to exercise which are allowed to see it?)
-- Flags "warmup", "cooldown" and "test" for exercises
-
 ### Cycles
 
-- New cycle can only be created if it doesn't overlap with any other cycle
+- New cycle in the same group can only be created if it doesn't overlap with any other cycle
 - Cycle events (event name, start date, end date, location, description)
 
-### Trainings
+### Users
 
-- Copy trainings to subgroups on daily basis
-- Create training warmup and cooldown checkboxes to automatically create them
-- Athlete training day view
-- Athlete view calendar
-- Athlete welness form
-
-### Methodology
-
-- Add methodologies which user can copy as separate trainings
-- Tags for methodologies by admin (upper body, lower body, strength, endurance, etc.)
+- Add body weight and sport level when signing up
+- Trainer can add weight for all users or user can
 
 ### Future
 

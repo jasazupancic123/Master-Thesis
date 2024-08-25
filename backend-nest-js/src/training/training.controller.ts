@@ -3,13 +3,13 @@ import { TrainingService } from './training.service';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { RequestUser } from '../common/decorator/request-user.decorator';
-import { CustomClaims } from '../common/type/custom-claims.type';
+import { User } from '../common/type/custom-claims.type';
 import { TrainingFilterDto } from './dto/training-filter.dto';
 import { CycleService } from '../cycle/cycle.service';
 import { Auth } from '../common/decorator/auth.decorator';
 import { AddSetExerciseDto } from './dto/create-set-exercise.dto';
 import { SetService } from '../set/set.service';
-import { SuperExerciseInfoEntity } from '../exercise-info/entity/super-exercise-info.entity';
+import { SuperExerciseInfo } from '../exercise-info/entity/super-exercise-info.entity';
 import { UpdateSetExerciseDto } from './dto/update-set-exercise.dto';
 import { AddSetDto } from './dto/add-set.dto';
 
@@ -23,47 +23,31 @@ export class TrainingController {
   }
 
   @Get()
-  async findAll(
-    @RequestUser() user: CustomClaims,
-    @Query() filter: TrainingFilterDto,
-  ) {
-    const cycle = await this.cycleService.findOneByIdOrFail(user, filter.cycleId);
-    if (!cycle)
-      return [];
-
-    return await this.trainingService.findAll(user, cycle, filter);
+  async findAll(@RequestUser() user: User, @Query() filter: TrainingFilterDto) {
+    return await this.trainingService.findAll(user, { filter });
   }
 
   @Get(':id')
-  async findOne(
-    @RequestUser() user: CustomClaims,
-    @Param('id') id: string,
-  ) {
+  async findOne(@RequestUser() user: User, @Param('id') id: string) {
     return await this.trainingService.findOneById(user, id);
   }
 
   @Post()
   @Auth()
-  async create(
-    @RequestUser() user: CustomClaims,
-    @Body() data: CreateTrainingDto,
-  ) {
+  async create(@RequestUser() user: User, @Body() data: CreateTrainingDto) {
     return await this.trainingService.create(user, data);
   }
 
   @Post('set')
   @Auth()
-  async addSet(
-    @RequestUser() user: CustomClaims,
-    @Body() data: AddSetDto,
-  ) {
+  async addSet(@RequestUser() user: User, @Body() data: AddSetDto) {
     return await this.setService.createSetGroup(data);
   }
 
   @Get(':id/set/:setGroupId')
   @Auth()
   async getSet(
-    @RequestUser() user: CustomClaims,
+    @RequestUser() user: User,
     @Param('id') trainingId: string,
     @Param('setGroupId') setGroupId: string,
   ) {
@@ -72,32 +56,32 @@ export class TrainingController {
     if (!cycle)
       return [];
 
-    return await this.setService.getSetGroup(user, setGroupId);
+    return await this.setService.findSetGroupById(user, setGroupId);
   }
 
   @Post('set/subgroup/:setSubgroupId')
   @Auth()
   async addSetExercise(
-    @RequestUser() user: CustomClaims,
+    @RequestUser() user: User,
     @Param('setSubgroupId') setSubgroupId: string,
     @Body() body: AddSetExerciseDto,
   ) {
     const { exerciseIds, ...data } = body;
-    return await this.setService.addExercise(user, setSubgroupId, exerciseIds, data as Partial<SuperExerciseInfoEntity>);
+    return await this.setService.addExercisesToSetGroup(user, setSubgroupId, exerciseIds, data as Partial<SuperExerciseInfo>);
   }
 
   @Patch('set/subgroup/exercise/:setExerciseId')
   async updateSetExercise(
-    @RequestUser() user: CustomClaims,
+    @RequestUser() user: User,
     @Param('setExerciseId') setExerciseId: string,
     @Body() data: UpdateSetExerciseDto,
   ) {
-    return await this.setService.updateExercise(user, setExerciseId, data as Partial<SuperExerciseInfoEntity>);
+    return await this.setService.updateExercise(user, setExerciseId, data as Partial<SuperExerciseInfo>);
   }
 
   @Patch(':id')
   async update(
-    @RequestUser() user: CustomClaims,
+    @RequestUser() user: User,
     @Param('id') id: string,
     @Body() data: UpdateTrainingDto,
   ) {
@@ -105,10 +89,7 @@ export class TrainingController {
   }
 
   @Delete(':id')
-  async remove(
-    @RequestUser() user: CustomClaims,
-    @Param('id') id: string,
-  ) {
+  async remove(@RequestUser() user: User, @Param('id') id: string) {
     await this.trainingService.remove(user, id);
     return {};
   }

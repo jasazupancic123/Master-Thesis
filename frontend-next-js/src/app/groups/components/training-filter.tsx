@@ -123,8 +123,8 @@ export default function TrainingFilter(props: Props) {
         if (cycle) {
           const data = await FitcodeApi.findAllTrainings(token, {
             cycleId: cycle.id,
-            startDate: startDate.toISOString(),
-            endDate: endDate.toISOString(),
+            startTime: startDate.toISOString(),
+            endTime: endDate.toISOString(),
           });
 
           setTrainings(data.map(item => Firestore.populateTraining(item, components.flat)));
@@ -171,8 +171,8 @@ export default function TrainingFilter(props: Props) {
         // fetch trainings in either case
         let trainings = await FitcodeApi.findAllTrainings(token, {
           cycleId,
-          startDate: date.startDate.toISOString(),
-          endDate: date.endDate.toISOString(),
+          startTime: date.startDate.toISOString(),
+          endTime: date.endDate.toISOString(),
         });
 
         trainings = trainings.map(item => Firestore.populateTraining(item, components.flat));

@@ -1,39 +1,38 @@
-import { forwardRef, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { CreateCycleDto } from './dto/create-cycle.dto';
-import { UpdateCycleDto } from './dto/update-cycle.dto';
+import { BadRequestException, forwardRef, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
-import { CycleDto, Week } from './dto/cycle.dto';
-import { CustomClaims } from '../common/type/custom-claims.type';
+import { Cycle } from './entity/cycle.entity';
+import { User } from '../common/type/custom-claims.type';
 import { GroupService } from '../group/group.service';
 import { TrainingService } from '../training/training.service';
-import dayjs from 'dayjs';
 import { Wrapper } from '../common/type/wrapper.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
-import { GroupDto } from '../group/dto/group.dto';
-import { TrainingEntity } from '../training/entity/training.entity';
+import { CommonService } from '../common/service/common.service';
+import { Filter } from '../common/type/orm.type';
 
 @Injectable()
 export class CycleService {
-  private logger: Logger;
+  private logger: Logger = new Logger(CycleService.name);
 
   constructor(
+    private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    @InjectRepository(CycleDto) private readonly repository: FirestoreRepository<CycleDto>,
+    @InjectRepository(Cycle) private readonly repository: FirestoreRepository<Cycle>,
     private readonly groupService: GroupService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
   ) {
-    this.logger = new Logger(CycleService.name);
   }
 
-  async create(user: CustomClaims, data: CreateCycleDto) {
-    const { groupId, name, description, startDate, endDate } = data;
+  isOwner(user: User, cycle: Cycle) {
+    return this.groupService.isOwner(user, cycle.group);
+  }
 
-    // check if group exists
+  async create(user: User, data: Partial<Cycle>): Promise<Cycle> {
+    const { groupId, name, description, startDate, endDate } = data;
     const group = await this.groupService.findOneByIdOrFail(user, groupId);
 
-    this.logger.debug(`Creating cycle for user ${user.uid}`);
+    this.logger.debug(`Creating cycle (user ${user.uid}) for group ${groupId}: ${JSON.stringify(data)}`);
     const cycle = await this.repository.create({
       groupId,
       name,
@@ -45,37 +44,35 @@ export class CycleService {
     return this.populate(cycle, { group });
   }
 
-  async findAll(user: CustomClaims, groupId: string) {
-    // check if group exists
-    const group = await this.groupService.findOneByIdOrFail(user, groupId);
-    const cycles = await this.repository.getCollection().where('groupId', '==', groupId).get();
+  async findAll(user: User, filter?: Filter<Cycle>): Promise<Cycle[]> {
+    if (!filter?.groupId)
+      throw new BadRequestException('You must provide group id to filter cycles');
 
-    return cycles.docs.map((cycle) => {
-      const item = this.repository.serialize(cycle);
-      item.group = group;
-      return this.populate(item, { group });
-    });
+    const group = await this.groupService.findOneByIdOrFail(user, filter.groupId);
+    const cycles = await this.repository.findAllBy('groupId', filter.groupId);
+    return cycles.map(cycle => this.populate(cycle, { group }));
   }
 
-  async findOneByIdOrFail(user: CustomClaims, id: string) {
-    const cycle = await this.repository.findOneById(id);
-    if (!cycle)
-      return null;
-
-    // check if cycle's group contains user
+  /**
+   * Find one cycle by id or throw an error. It also makes sure that the user
+   * belongs to the group or is the group owner.
+   */
+  async findOneByIdOrFail(user: User, id: string) {
+    const cycle = await this.repository.findOneByIdOrFail(id);
     const group = await this.groupService.findOneByIdOrFail(user, cycle.groupId);
     return this.populate(cycle, { group });
   }
 
-  async update(user: CustomClaims, id: string, data: UpdateCycleDto) {
+  /**
+   * Updates a cycle. It only allows the group owner to update the cycle.
+   */
+  async update(user: User, id: string, data: Partial<Cycle>) {
     const { name, startDate, endDate } = data;
 
-    // check if cycle exists
+    // check if cycle exists and that user is the group owner
     const cycle = await this.findOneByIdOrFail(user, id);
-
-    // check if current user is cycle's group owner
-    if (!this.isOwner(user, cycle))
-      throw new UnauthorizedException();
+    if (!this.groupService.isOwner(user, cycle.group))
+      throw new UnauthorizedException('You are not the group owner');
 
     const updated = await this.repository.update(id, {
       name,
@@ -87,60 +84,10 @@ export class CycleService {
     return this.populate(updated, { group, trainings });
   }
 
-  async remove(user: CustomClaims, id: string) {
-    // check if cycle exists
-    const cycle = await this.findOneByIdOrFail(user, id);
-
-    // check if current user is cycle's group owner
-    if (!this.isOwner(user, cycle))
-      throw new UnauthorizedException();
-
-    await this.repository.delete(id);
-  }
-
-  isOwner(user: CustomClaims, cycle: CycleDto): boolean {
-    return cycle.group.userId === user.uid;
-  }
-
-  private populate(
-    item: CycleDto,
-    relations: {
-      group?: GroupDto,
-      trainings?: TrainingEntity[]
-    } = {},
-  ): CycleDto {
+  private populate(item: Cycle, relations: Partial<Cycle>): Cycle {
     item.group = relations.group;
     item.trainings = relations.trainings || [];
-
-    let weeks: Week[][] = [];
-    const start = dayjs(item.startDate);
-    const end = dayjs(item.endDate);
-
-    let startDateWeekStart = start.startOf('week').add(1, 'day');
-    let endDateWeekEnd = end.endOf('week').add(1, 'day');
-
-    // if start day is sunday, subtract 7 days
-    if (start.day() === 0) {
-      startDateWeekStart = startDateWeekStart.subtract(7, 'day');
-      endDateWeekEnd = endDateWeekEnd.subtract(7, 'day');
-    }
-
-    const totalDays = endDateWeekEnd.diff(startDateWeekStart, 'day') + 1;
-    const totalWeeks = Math.ceil(totalDays / 7);
-
-    let date = startDateWeekStart;
-    for (let i = 0; i < totalWeeks; i++) {
-      const week: Week[] = Array(7).fill(null);
-
-      for (let day = 0; day < 7; day++) {
-        week[day] = { date: date.toDate() };
-        date = date.add(1, 'day');
-      }
-
-      weeks.push(week);
-    }
-
-    item.weeks = weeks;
+    item.weeks = this.commonService.getWeeksBetween(item.startDate, item.endDate);
     return item;
   }
 }

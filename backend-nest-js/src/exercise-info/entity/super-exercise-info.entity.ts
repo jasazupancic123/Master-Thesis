@@ -11,7 +11,7 @@ import { Effort } from '../enum/effort.enum';
 // NOTE - any values that are represented in % are NOT normalized between 0 and 1 (BW, INT, RM, ...)
 
 @Entity(SUPER_EXERCISE_INFO_COLLECTION)
-export class SuperExerciseInfoEntity extends BaseEntity {
+export class SuperExerciseInfo extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

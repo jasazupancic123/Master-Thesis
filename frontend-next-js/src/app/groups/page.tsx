@@ -17,13 +17,14 @@ import { Training } from '@/type/training.type';
 import dayjs, { Dayjs } from 'dayjs';
 import { getWeekDays } from '@/util/date';
 import { GroupPageProps } from '@/app/groups/props';
+import { Firestore } from '@/util/firebase';
 
 function Page() {
   // context
   const router = useRouter();
   const searchParams = useSearchParams();
   const { role } = useAuth() as AuthContextType;
-  const { token } = useAppContext() as AppContextType;
+  const { token, components } = useAppContext() as AppContextType;
 
   // state
   const [users, loadingUsers, errorUsers, _refetchUsers, setUsers] = useFetch<User[]>(FitcodeApi.URL.users());
@@ -36,6 +37,7 @@ function Page() {
   });
 
   const [selected, setSelected] = useState({
+    loading: false,
     group: null as Group | null,
     subgroup: null as Group | null,
     cycles: [] as Cycle[], // all cycles for a group / subgroup
@@ -44,88 +46,50 @@ function Page() {
   });
 
   /**
-   * When group changes, keep only group and its cycles selected
-   */
-  useEffect(() => {
-    setSelected(prev => ({
-      ...prev,
-      subgroup: null,
-      cycle: null,
-      trainings: [],
-    }));
-  }, [selected.group?.id]);
-
-  /**
-   * Fetch selected items if search params are present
+   * Get initial data
    */
   useEffect(() => {
     async function fetchData() {
-      const params = {
-        groupId: searchParams.get('groupId'),
-        subgroupId: searchParams.get('subgroupId'),
-        cycleId: searchParams.get('cycleId'),
-        filter: searchParams.get('filter') as TrainingFilter,
-      };
-
-      if (!params.groupId) {
-        // show only all groups
-        setSelected({ group: null, subgroup: null, cycle: null, cycles: [], trainings: [] });
-        return;
-      }
-
       try {
-        const group = await FitcodeApi.getGroup(params.groupId, token);
-        const cycles = await FitcodeApi.getAllCycles(token, { groupId: group.id });
+        const groupId = searchParams.get('groupId');
+        const subgroupId = searchParams.get('subgroupId');
+        const cycleId = searchParams.get('cycleId');
+        const filter = searchParams.get('filter');
 
-        let subgroup: Group | null = null;
-        let cycle: Cycle | null = null;
-        let trainings: Training[] = [];
-
-        if (params.subgroupId) {
-          subgroup = (group.subgroups || []).find(subgroup => subgroup.id === params.subgroupId) || null;
+        if (groupId) {
+          const group = await FitcodeApi.getGroup(groupId, token);
+          const cycles = await FitcodeApi.getAllCycles(token, { groupId: group.id });
+          setSelected({ ...selected, group, cycles });
         }
 
-        if (params.cycleId) {
-          cycle = await FitcodeApi.getCycle(params.cycleId, token);
-          trainings = await FitcodeApi.findAllTrainings(token, {
+        if (subgroupId) {
+          const subgroup = (selected.group?.subgroups || []).find(subgroup => subgroup.id === subgroupId) || null;
+          setSelected({ ...selected, subgroup });
+        }
+
+        if (cycleId) {
+          const cycle = await FitcodeApi.getCycle(cycleId, token);
+          const response = await FitcodeApi.findAllTrainings(token, {
             cycleId: cycle.id,
-            subgroupId: subgroup?.id,
-            startDate: date.start.toISOString(),
-            endDate: date.end.toISOString(),
+            subgroupId: selected.subgroup?.id,
+            startTime: date.custom ? date.start.toISOString() : dayjs(cycle.startDate).toISOString(),
+            endTime: date.custom ? date.end.toISOString() : dayjs(cycle.endDate).toISOString(),
           });
+
+          const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
+          setSelected({ ...selected, cycle, trainings });
         }
 
-        setSelected({ ...selected, group, cycles, subgroup, cycle, trainings });
+        if (filter) {
+          setFilter(filter as TrainingFilter);
+        }
       } catch (e) {
         console.error(e);
       }
     }
 
     fetchData().then();
-  }, [
-    searchParams.get('groupId'),
-    searchParams.get('subgroupId'),
-    searchParams.get('cycleId'),
-    searchParams.get('filter'),
-  ]);
-
-  /*useEffect(() => {
-    if (!selected.cycle)
-      return;
-
-    async function fetchTrainings() {
-      const trainings = await FitcodeApi.findAllTrainings(token, {
-        cycleId: selected.cycle!.id,
-        subgroupId: selected.subgroup?.id,
-        startDate: dayjs(selected.cycle!.startDate).toISOString(),
-        endDate: dayjs(selected.cycle!.endDate).toISOString(),
-      });
-
-      setSelected(prev => ({ ...prev, trainings }));
-    }
-
-    fetchTrainings().then();
-  }, [selected.cycle?.id]);*/
+  }, []);
 
   /**
    * Add query to url when selected items change
@@ -167,13 +131,23 @@ function Page() {
 
         break;
       case 'week':
-        start = today.startOf('week');
-        end = today.endOf('week');
+        if (!props.selected.cycle) {
+          start = today.startOf('week');
+          end = today.endOf('week');
+        } else {
+          const week = props.selected.cycle.weeks?.[0] || getWeekDays();
+          start = dayjs(week[0].date!).startOf('day');
+          end = dayjs(week[6].date!).endOf('day');
+        }
+
         break;
       case 'day':
         start = today.startOf('day');
         end = today.endOf('day');
         break;
+      default:
+        start = today.startOf('year');
+        end = today.endOf('year');
     }
 
     if (date.custom) {
@@ -182,7 +156,129 @@ function Page() {
     }
 
     setDate({ ...date, start, end });
-  }, [filter]);
+  }, [searchParams.get('filter'), selected.cycle?.id]);
+
+  /**
+   * When group changes, keep only group and its cycles selected
+   */
+  useEffect(() => {
+    setSelected(prev => ({
+      ...prev,
+      subgroup: null,
+      cycle: null,
+      trainings: [],
+    }));
+  }, [selected.group?.id]);
+
+  /**
+   * Fetch group and its cycles when groupId param changes
+   */
+  useEffect(() => {
+    async function fetchData() {
+      const groupId = searchParams.get('groupId');
+      if (!groupId) {
+        setSelected({ loading: false, group: null, subgroup: null, cycle: null, cycles: [], trainings: [] });
+        return;
+      }
+
+      try {
+        setSelected({ ...selected, loading: true });
+        const group = await FitcodeApi.getGroup(groupId, token);
+        const cycles = await FitcodeApi.getAllCycles(token, { groupId: group.id });
+
+        setSelected({ loading: false, group, cycles, subgroup: null, cycle: null, trainings: [] });
+      } catch (e) {
+        console.error(e);
+        setSelected({ ...selected, loading: false });
+      }
+    }
+
+    fetchData().then();
+  }, [searchParams.get('groupId')]);
+
+  /**
+   * Fetch subgroup when subgroupId param changes
+   */
+  useEffect(() => {
+    if (!selected.group)
+      return;
+
+    async function fetchData() {
+      const subgroupId = searchParams.get('subgroupId');
+      if (!subgroupId) {
+        setSelected(prev => ({ ...prev, subgroup: null }));
+        return;
+      }
+
+      const subgroup = (selected.group?.subgroups || []).find(subgroup => subgroup.id === subgroupId) || null;
+      setSelected(prev => ({ ...prev, subgroup }));
+    }
+
+    fetchData().then();
+  }, [searchParams.get('subgroupId')]);
+
+  /**
+   * Fetch cycle and its trainings when cycleId param changes (and group is
+   * selected)
+   */
+  useEffect(() => {
+    if (!selected.group)
+      return;
+
+    async function fetchData() {
+      const cycleId = searchParams.get('cycleId');
+      if (!cycleId)
+        return;
+
+      try {
+        setSelected({ ...selected, loading: true });
+
+        const cycle = await FitcodeApi.getCycle(cycleId, token);
+        const response = await FitcodeApi.findAllTrainings(token, {
+          cycleId: cycle.id,
+          subgroupId: selected.subgroup?.id,
+          startTime: date.start.toISOString(),
+          endTime: date.end.toISOString(),
+        });
+
+        const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
+        setSelected({ ...selected, loading: false, cycle, trainings });
+      } catch (e) {
+        console.error(e);
+        setSelected({ ...selected, loading: false });
+      }
+    }
+
+    fetchData().then();
+  }, [searchParams.get('cycleId')]);
+
+  /**
+   * Filter trainings for cycle based on date range
+   */
+  useEffect(() => {
+    if (!selected.cycle)
+      return;
+
+    async function fetchData() {
+      try {
+        setSelected({ ...selected, loading: true });
+        const response = await FitcodeApi.findAllTrainings(token, {
+          cycleId: selected.cycle!.id,
+          subgroupId: selected.subgroup?.id,
+          startTime: date.start.toISOString(),
+          endTime: date.end.toISOString(),
+        });
+
+        const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
+        setSelected({ ...selected, loading: false, trainings });
+      } catch (e) {
+        console.error(e);
+        setSelected({ ...selected, loading: false });
+      }
+    }
+
+    fetchData().then();
+  }, [date.start, date.end]);
 
   if (loadingUsers || loadingGroups)
     return <div>Loading...</div>;

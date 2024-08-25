@@ -1,14 +1,21 @@
 import { BaseEntity } from '../common/entity/base.entity';
-import { CollectionReference } from 'firebase-admin/lib/firestore';
+import {
+  CollectionReference,
+  DocumentReference,
+  DocumentSnapshot,
+  FieldPath,
+  Query,
+  QueryDocumentSnapshot,
+  QuerySnapshot,
+  Timestamp,
+  WhereFilterOp,
+} from 'firebase-admin/firestore';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
 import { BadRequestException } from '@nestjs/common';
-import { firestore } from 'firebase-admin';
+import { Options } from '../common/type/orm.type';
+import { PaginateOptions } from '../common/type/paginate.type';
 
-export interface CanView<T> {
-  canView(entity: T, ...args: any[]): boolean | Promise<boolean>;
-}
-
-export abstract class FirestoreRepository<T extends BaseEntity> implements CanView<T> {
+export abstract class FirestoreRepository<T extends BaseEntity> {
   private readonly collection: CollectionReference;
 
   protected constructor(
@@ -22,10 +29,6 @@ export abstract class FirestoreRepository<T extends BaseEntity> implements CanVi
     return this.collection;
   }
 
-  async canView(entity: T) {
-    return true;
-  }
-
   async create(data: Partial<T> & Record<string, any>): Promise<T> {
     // TODO - add zod validation or something similar
 
@@ -33,13 +36,13 @@ export abstract class FirestoreRepository<T extends BaseEntity> implements CanVi
     for (const key in data) {
       if (data[key] instanceof Date)
         // @ts-ignore
-        data[key] = firestore.Timestamp.fromDate(data[key]) as any;
+        data[key] = Timestamp.fromDate(data[key]) as any;
     }
 
     const doc = await this.collection.add({
       ...data,
-      createdAt: firestore.Timestamp.now(),
-      updatedAt: firestore.Timestamp.now(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     });
 
     const result = await doc.get();
@@ -54,8 +57,8 @@ export abstract class FirestoreRepository<T extends BaseEntity> implements CanVi
       const doc = this.collection.doc();
       batch.set(doc, {
         ...item,
-        createdAt: firestore.Timestamp.now(),
-        updatedAt: firestore.Timestamp.now(),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       });
 
       result.push({ id: doc.id, ...item } as unknown as T);
@@ -101,11 +104,7 @@ export abstract class FirestoreRepository<T extends BaseEntity> implements CanVi
     if (!doc.exists)
       return null;
 
-    const item = this.serialize(doc);
-    if (!await this.canView(item))
-      return null;
-
-    return item;
+    return this.serialize(doc);
   }
 
   async findOneByIdOrFail(id: string): Promise<T> {
@@ -113,60 +112,86 @@ export abstract class FirestoreRepository<T extends BaseEntity> implements CanVi
     if (!doc.exists)
       throw new BadRequestException(`Document with id ${id} does not exist`);
 
-    const item = this.serialize(doc);
-    if (!await this.canView(item))
-      throw new BadRequestException(`You are not allowed to view this document`);
-
-    return item;
+    return this.serialize(doc);
   }
 
   async findOneBy(field: keyof T, value: any): Promise<T | null> {
-    const snapshot = await this.collection.where(field.toString(), '==', value).get();
-    if (snapshot.empty)
-      return null;
-
+    const snapshot = await this.collection.where(field.toString(), '==', value).limit(1).get();
+    if (snapshot.empty) return null;
     return this.serialize(snapshot.docs[0]);
   }
 
-  async findAll(filter?: { ids?: string[] }): Promise<T[]> {
-    let query = this.collection as firestore.Query;
-    if (filter?.ids)
-      query = query.where(firestore.FieldPath.documentId(), 'in', filter.ids);
+  async findAll(options?: Options<T>): Promise<T[]> {
+    let query = this.collection as Query;
+
+    if (options?.filter)
+      if (options.filter.ids)
+        query = query.where(FieldPath.documentId(), 'in', options.filter.ids);
+
+    if (options?.paginate)
+      query = this.paginate(query, options.paginate);
 
     const snapshot = await query.get();
     return snapshot.docs.map(doc => this.serialize(doc));
   }
 
-  async findAllBy(field: keyof T, value: any): Promise<T[]> {
-    const snapshot = await this.collection.where(field.toString(), '==', value).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
-  }
-
-  async findAllByFields(fields: { field: keyof T, value: any }[]): Promise<T[]> {
-    let query = this.collection as firestore.Query;
-    for (const { field, value } of fields)
-      query = query.where(field.toString(), '==', value);
+  async findAllBy(field: keyof T, value: any, paginate?: PaginateOptions<T>): Promise<T[]> {
+    let query = await this.collection.where(field.toString(), '==', value);
+    if (paginate)
+      query = this.paginate(query, paginate);
 
     const snapshot = await query.get();
     return snapshot.docs.map(doc => this.serialize(doc));
   }
 
-  map(data: firestore.QuerySnapshot | firestore.DocumentReference): T[] {
-    if (data instanceof firestore.DocumentReference) {
+  async findAllByMany(
+    conditions: { field: keyof T, operator: WhereFilterOp, value: any }[],
+    options?: Options<T>,
+  ): Promise<T[]> {
+    let query = this.collection as Query;
+
+    for (const condition of conditions)
+      query = query.where(condition.field.toString(), condition.operator, condition.value);
+
+    if (options?.paginate)
+      query = this.paginate(query, options.paginate);
+
+    const snapshot = await query.get();
+    return snapshot.docs.map(doc => this.serialize(doc));
+  }
+
+  map(data: QuerySnapshot | DocumentReference): T[] {
+    if (data instanceof DocumentReference) {
       return [{ id: data.id, ...data.get() } as unknown as T];
     }
 
     return data.docs.map(doc => this.serialize(doc));
   }
 
-  serialize(data: firestore.QueryDocumentSnapshot | firestore.DocumentSnapshot): T {
+  serialize(data: QueryDocumentSnapshot | DocumentSnapshot): T {
     // convert firestore.Timestamp to Date
     const result = data.data();
     for (const key in result) {
-      if (result[key] instanceof firestore.Timestamp)
-        result[key] = (result[key] as firestore.Timestamp).toDate();
+      if (result[key] instanceof Timestamp)
+        result[key] = (result[key] as Timestamp).toDate();
     }
 
     return { id: data.id, ...result } as unknown as T;
+  }
+
+  paginate(query: Query, options: PaginateOptions<T>): Query {
+    const { order, page, pageSize, limit } = options;
+
+    if (order)
+      for (const key in order)
+        query = query.orderBy(key, order[key]);
+
+    if (page && pageSize)
+      query = query.limit(pageSize).offset(pageSize * page);
+
+    if (limit)
+      query = query.limit(limit);
+
+    return query;
   }
 }

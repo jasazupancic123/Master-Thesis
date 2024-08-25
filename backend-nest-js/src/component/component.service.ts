@@ -1,50 +1,59 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { FirebaseService } from '../firebase/firebase.service';
-import { CollectionReference } from 'firebase-admin/firestore';
-import { ComponentDto } from './dto/component.dto';
+import { Component } from './entity/component.entity';
 import { Tree } from '../common/util/tree';
-import { UpdateComponentDto } from './dto/update-component.dto';
-import { serializeToDto } from '../common/util/serialize';
-import { COMPONENT_COLLECTION } from '../common/const/firestore.const';
+import slugify from 'slugify';
+import { InjectRepository } from '../common/decorator/entity.decorator';
+import { FirestoreRepository } from '../firebase/firestore.repository';
+import { Filter } from '../common/type/orm.type';
+import { ComponentLeaf } from './type/component-leaf.type';
 
 @Injectable()
 export class ComponentService {
-  private logger: Logger;
-  private readonly collection: CollectionReference;
+  private logger = new Logger(ComponentService.name);
 
-  constructor(private readonly firebaseService: FirebaseService) {
-    this.logger = new Logger(ComponentService.name);
-    this.collection = firebaseService.collection(COMPONENT_COLLECTION);
+  constructor(@InjectRepository(Component) private readonly repository: FirestoreRepository<Component>) {
   }
 
-  async findOneById(id: string): Promise<ComponentDto> {
-    const component = await this.collection.doc(id).get();
-    if (!component.exists)
-      return null;
+  async create(data: Partial<Component>): Promise<Component> {
+    // TODO - check if slug is unique
+    // TODO - if newly created component is leaf node, move all parent exercises to "Other" component
 
-    return serializeToDto(ComponentDto, component.data());
+    this.logger.debug(`Creating component with data ${JSON.stringify(data)}`);
+    return {} as Component;
   }
 
-  async findAll(filter?: { ids?: string[] }): Promise<ComponentDto[]> {
-    const data = await this.collection.get();
-    let components = data.docs;
+  async createMany(components: Component[]): Promise<void> {
+    Tree.forEach(components, 'children', async (component, parent, result) => {
+      const parentId = result ?? null;
+      const { name } = component;
+      const slug = await this.slugify(name);
 
-    if (filter)
-      if (filter.ids)
-        components = components.filter(({ id }) => filter.ids.includes(id));
-
-    return components.map(doc => serializeToDto(ComponentDto, { id: doc.id, ...doc.data() }));
+      const { id } = await this.repository.create({ name, slug, parentId });
+      return id; // used as parentId in next iteration
+    });
   }
 
-  async findAllOrFail(filter?: { ids?: string[] }): Promise<ComponentDto[]> {
-    const components = await this.findAll(filter);
+  async findOneBySlug(slug: string): Promise<Component> {
+    return await this.repository.findOneBy('slug', slug);
+  }
+
+  async findOneById(id: string): Promise<Component> {
+    return await this.repository.findOneById(id);
+  }
+
+  async findAll(filter?: Filter): Promise<Component[]> {
+    return await this.repository.findAll({ filter });
+  }
+
+  async findAllOrFail(filter?: Filter): Promise<Component[]> {
+    const components = await this.repository.findAll({ filter });
     if (filter?.ids?.length && components.length !== filter.ids.length)
       throw new BadRequestException('Invalid components');
 
     return components;
   }
 
-  tree(componentsFlat: ComponentDto[]): ComponentDto[] {
+  tree(componentsFlat: Component[]): Component[] {
     return Tree.fromArray(componentsFlat, {
       idPropertyName: 'id',
       parentIdPropertyName: 'parentId',
@@ -52,31 +61,60 @@ export class ComponentService {
     });
   }
 
-  leafs(componentsTree: ComponentDto[]): (ComponentDto & { parents: ComponentDto[] })[] {
+  leafs(componentsTree: Component[]): ComponentLeaf[] {
     return Tree.leafs(componentsTree, 'children');
   }
 
-  isLeafComponent(componentId: string, leafs: (ComponentDto & { parents: ComponentDto[] })[]): boolean {
+  isLeafComponent(componentId: string, leafs: ComponentLeaf[]): boolean {
     return !!leafs.find(c => c.id === componentId);
   }
 
-  getRootComponents(componentId: string, leafs: (ComponentDto & { parents: ComponentDto[] })[]): ComponentDto[] {
+  /**
+   * Function `componentService.leafs(componentsTree)` returns an array of leaf
+   * nodes, where each leaf node has a `parents` property that contains an array
+   * of all its parent nodes. This function returns the root node of the
+   * provided leaf node.
+   */
+  getRootComponents(componentId: string, leafs: ComponentLeaf[]): Component[] {
     const leaf = leafs.find(c => c.id === componentId);
     return leaf.parents.filter(c => c.parentId === null);
   }
 
-  async update(userId: string, componentId: string, data: UpdateComponentDto): Promise<string> {
-    // TODO - when component's parent is updated, all exercises that are using this component should have parentName, parentId and rootIds updated
+  /**
+   * Allows component's name and slug to be updated.
+   */
+  async update(id: string, data: Partial<Component>): Promise<Component> {
+    // TODO - check if slug is unique
+    this.logger.debug(`Updating component #${id} with data ${JSON.stringify(data)}`);
+    const { name, slug } = data;
 
-    this.logger.debug(`Updating component #${componentId} with data ${JSON.stringify(data)}`);
-    const { name } = data;
+    const component = await this.repository.findOneByIdOrFail(id);
+    return await this.repository.update(component.id, { name, slug });
+  }
 
-    // check if component exists
-    const component = await this.collection.doc(componentId).get();
-    if (!component.exists)
-      throw new BadRequestException(`Component with id ${componentId} not found`);
+  async remove(id: string): Promise<void> {
+    // TODO - move exercises to "Other" component
+    // TODO - remove component
+    this.logger.debug(`Removing component #${id}`);
+  }
 
-    await this.collection.doc(componentId).update({ name });
-    return componentId;
+  /**
+   * Slugify a name and make it unique in the collection
+   */
+  private async slugify(name: string) {
+    let slug = slugify(name, { lower: true });
+
+    let i = 1;
+    do {
+      const exists = await this.repository.findOneBy('slug', slug);
+      if (!exists) {
+        i = 1;
+        break;
+      }
+
+      slug = `${slug}-${i++}`;
+    } while (true);
+
+    return slug;
   }
 }

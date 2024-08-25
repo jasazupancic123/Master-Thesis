@@ -1,47 +1,66 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ExerciseService } from './exercise.service';
 import { Auth } from '../common/decorator/auth.decorator';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { RequestUser } from '../common/decorator/request-user.decorator';
-import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { FilterExerciseDto } from './dto/filter-exercise.dto';
-import { CustomClaims } from '../common/type/custom-claims.type';
+import { User } from '../common/type/custom-claims.type';
+import { FirebaseService } from '../firebase/firebase.service';
 
 @Controller('exercise')
 export class ExerciseController {
-  constructor(private readonly exerciseService: ExerciseService) {
-  }
-
-  @Post()
-  @Auth()
-  async create(
-    @RequestUser() user: CustomClaims,
-    @Body() data: CreateExerciseDto,
-  ) {
-    return await this.exerciseService.create(user, data);
-  }
-
-  @Get()
-  @Auth()
-  async findAll(
-    @RequestUser() user: CustomClaims,
-    @Query() query: FilterExerciseDto,
-  ) {
-    return this.exerciseService.findAll(user, query);
+  constructor(private readonly firebaseService: FirebaseService, private readonly exerciseService: ExerciseService) {
   }
 
   @Get('attribute')
   async findAllAttributes() {
-    return this.exerciseService.findAllAttributes();
+    return await this.exerciseService.findAllAttributes();
   }
 
-  @Patch(':id')
+  @Get()
   @Auth()
-  async update(
-    @RequestUser() user: CustomClaims,
-    @Param('id') id: string,
-    @Body() data: UpdateExerciseDto,
-  ) {
-    return this.exerciseService.update(user, id, data);
+  async findAll(@RequestUser() user: User, @Query() query: FilterExerciseDto) {
+    const paginate = {
+      order: query.order || { createdAt: 'desc' },
+      page: query.page || 1,
+      pageSize: query.pageSize || 10,
+      limit: query.limit || 100,
+    };
+
+    const filter = {
+      name: query.name,
+      componentIds: query.componentIds,
+      ids: query.ids,
+    };
+
+    return this.exerciseService.findAll(user, { filter, paginate });
+  }
+
+  @Get(':id')
+  @Auth()
+  async findOneById(@RequestUser() user: User, @Param('id') id: string) {
+    return await this.exerciseService.findOneById(user, id);
+  }
+
+  @Get('meta/page')
+  @Auth()
+  async getPageMeta(@RequestUser() user: User, @Query() query: FilterExerciseDto) {
+    const filter = {
+      name: query.name,
+      componentIds: query.componentIds,
+      ids: query.ids,
+    };
+
+    const pageSize = query.pageSize;
+    if (!pageSize)
+      throw new BadRequestException('Page size is required');
+
+    return await this.exerciseService.getPageMeta(user, filter, pageSize);
+  }
+
+  @Post()
+  @Auth()
+  async create(@RequestUser() user: User, @Body() data: CreateExerciseDto) {
+    return await this.exerciseService.create(user, data);
   }
 }

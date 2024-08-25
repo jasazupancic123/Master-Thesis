@@ -1,8 +1,10 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
+import { Filter } from '../../common/type/orm.type';
+import { Training } from '../entity/training.entity';
 
-export class TrainingFilterDto {
+export class TrainingFilterDto implements Filter<Training> {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
@@ -25,7 +27,7 @@ export class TrainingFilterDto {
       return isNaN(date.getTime()) ? undefined : date;
     }
   })
-  startDate?: Date;
+  startTime?: Date;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -36,5 +38,5 @@ export class TrainingFilterDto {
       return isNaN(date.getTime()) ? undefined : date;
     }
   })
-  endDate?: Date;
+  endTime?: Date;
 }

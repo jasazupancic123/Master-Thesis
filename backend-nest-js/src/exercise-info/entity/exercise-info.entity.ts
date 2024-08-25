@@ -6,7 +6,7 @@ import { Entity } from '../../common/decorator/entity.decorator';
 import { EXERCISE_INFO_COLLECTION } from '../../common/const/firestore.const';
 
 @Entity(EXERCISE_INFO_COLLECTION)
-export class ExerciseInfoEntity extends BaseEntity {
+export class ExerciseInfo extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

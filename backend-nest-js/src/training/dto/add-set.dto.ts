@@ -1,7 +1,7 @@
 import { PickType } from '@nestjs/mapped-types';
-import { SetGroupEntity } from '../../set/entity/set-group.entity';
+import { SetGroup } from '../../set/entity/set-group.entity';
 
-export class AddSetDto extends PickType(SetGroupEntity, [
+export class AddSetDto extends PickType(SetGroup, [
   'trainingId',
   'componentId',
   'order',

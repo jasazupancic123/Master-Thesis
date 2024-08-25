@@ -1,20 +1,21 @@
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Exercise } from './entity/exercise.entity';
-import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { FirebaseService } from '../firebase/firebase.service';
-import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { ComponentService } from '../component/component.service';
-import { ComponentDto } from '../component/dto/component.dto';
-import { FilterExerciseDto } from './dto/filter-exercise.dto';
-import { CustomClaims } from '../common/type/custom-claims.type';
-import { SetGroupEntity } from '../set/entity/set-group.entity';
+import { Component } from '../component/entity/component.entity';
+import { User } from '../common/type/custom-claims.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
-import { ExerciseAttribute } from './entity/exercise-attribute.entity';
+import { ExerciseAttribute, ExerciseAttributeSelectOption } from './entity/exercise-attribute.entity';
 import { ExerciseAttributeValue } from './entity/exercise-attribute-value.entity';
 import { CommonService } from '../common/service/common.service';
+import { Filter, Options } from '../common/type/orm.type';
+import { UserRole } from '../user/enum/user-role.enum';
+import { SetGroup } from '../set/entity/set-group.entity';
+import { Validate } from '../common/type/validate.type';
+import { FieldPath, Query } from 'firebase-admin/firestore';
 
-type ComponentLeaf = ComponentDto & { parents: ComponentDto[] }
+type ComponentLeaf = Component & { parents: Component[] }
 
 @Injectable()
 export class ExerciseService {
@@ -26,131 +27,133 @@ export class ExerciseService {
     @InjectRepository(Exercise)
     private readonly repository: FirestoreRepository<Exercise>,
     @InjectRepository(ExerciseAttribute)
-    private readonly exerciseAttributeRepository: FirestoreRepository<ExerciseAttribute>,
+    readonly exerciseAttributeRepository: FirestoreRepository<ExerciseAttribute>,
     @InjectRepository(ExerciseAttributeValue)
     private readonly exerciseAttributeValueRepository: FirestoreRepository<ExerciseAttributeValue>,
     private readonly componentService: ComponentService,
   ) {
   }
 
-  async create(user: CustomClaims, data: CreateExerciseDto) {
-    this.logger.debug(`Creating new exercise for user ${user.uid}`);
-    const isAdmin = this.firebaseService.isAdmin(user);
+  isOwner(user: User, exercise: Exercise) {
+    return exercise.userId === user.uid;
+  }
 
-    // only admin can create global exercises
-    const { componentIds, attributeValues } = data;
-
-    // atleast one component must be selected
-    if (!componentIds.length)
-      throw new BadRequestException('No components selected');
-
-    // check that all components exist and are leafs
-    const components = await this.componentService.findAll();
-    const tree = this.componentService.tree(components);
-    const leafs = this.componentService.leafs(tree);
-
-    for (const componentId of componentIds) {
-      const isLeaf = this.componentService.isLeafComponent(componentId, leafs);
-      if (!isLeaf)
-        throw new BadRequestException(`Component with id ${componentId} is not a leaf`);
+  async canView(user: User, exercise: Exercise) {
+    switch (user.customClaims?.role?.[0] ?? user['role']?.[0]) {
+      case UserRole.ADMIN:
+        // can view all exercises
+        return true;
+      case UserRole.MANAGER:
+        // can view all global exercises, his exercises and exercises from all trainers under him
+        // TODO
+        return exercise.global || this.isOwner(user, exercise);
+      case UserRole.TRAINER:
+        // can view all global exercises, his exercises and exercises from his managers
+        // TODO
+        return exercise.global || this.isOwner(user, exercise);
+      case UserRole.ATHLETE:
+        // TODO
+        // can view all global exercises, his exercises and exercises from his trainers
+        return exercise.global || this.isOwner(user, exercise);
+      default:
+        return false;
     }
+  }
 
-    const roots: ComponentDto[] = [];
-    for (const componentId of componentIds)
+  async create(user: User, data: Partial<Exercise>) {
+    this.logger.debug(`Creating new exercise for user ${user.uid}`);
+
+    // validate data
+    const { error, message, data: { leafs } = {} } = await this.validate(data);
+    if (error) throw new BadRequestException(message);
+
+    // find all root components of selected leaf components
+    const roots: Component[] = [];
+    for (const componentId of data.componentIds)
       roots.push(...this.componentService.getRootComponents(componentId, leafs));
 
     const exercise = await this.repository.create({
       userId: user.uid,
-      global: isAdmin,
+      global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
       name: data.name,
-      componentIds,
+      componentIds: data.componentIds,
       videoUrl: data.videoUrl,
       imageUrl: data.imageUrl,
     });
 
     // create attribute values from provided nested object
-    const exerciseAttributeValues = await Promise.all(
-      Object.entries(attributeValues).map(async ([field, value]) => {
-        const attribute = await this.exerciseAttributeRepository.findOneBy('field', field);
-        if (!attribute) return;
-
-        return {
-          exerciseId: exercise.id,
-          attributeId: attribute.id,
-          value,
-        } as ExerciseAttributeValue;
-      }),
-    );
-
-    await this.exerciseAttributeValueRepository.createMany(exerciseAttributeValues);
+    await this.createAttributeValues(exercise.id, data.attributeValues || {});
 
     return {
       id: exercise.id,
-      rootComponentIds: roots.map(({ id }) => id),
+      rootComponentIds: roots.map(({ id }) => id), // used for frontend
     };
   }
 
-  /**
-   * If user is admin, return all exercises in database, if user is manager,
-   * return all exercises from every trainer under the manager, if user is
-   * trainer, return all exercises from the trainer, if user is athlete,
-   * return only his exercises
-   */
-  async findAll(user: CustomClaims, filter?: FilterExerciseDto): Promise<Exercise[]> {
-    let filtered = await this.repository.findAll();
-    for (const exercise of filtered)
-      exercise.attributeValues = await this.findAllAttributesByExerciseId(exercise.id);
+  async getPageMeta(user: User, filter: Filter<Exercise>, pageSize: number): Promise<{
+    total: number;
+    pages: number
+  }> {
+    const exercises = await this.findAll(user, { filter });
+    return { total: exercises.length, pages: Math.ceil(exercises.length / pageSize) };
+  }
 
-    // get exercises components
+  async findAll(user: User, options: Options<Exercise> = {}): Promise<Exercise[]> {
+    let exercises: Exercise[];
+
+    // filter exercises by ids if provided (name and attribute values cannot be
+    // filtered by firestore, so they are filtered in memory)
+    if (options.filter) {
+      let query = this.repository.getCollection() as Query;
+
+      if (options.filter?.ids?.length)
+        query = query.where(FieldPath.documentId(), 'in', options.filter.ids);
+
+      exercises = (await query.get()).docs.map(doc => this.repository.serialize(doc));
+    } else
+      exercises = await this.repository.findAll();
+
+    // filter by name, attribute values and components in memory
     const components = await this.componentService.findAll();
     const tree = this.componentService.tree(components);
     const leafs = this.componentService.leafs(tree);
 
-    // filter global exercises and exercises where user is owner
-    filtered = filtered.filter(exercise => {
-      return exercise.userId === user.uid || exercise.global;
-    });
+    if (options.filter) {
+      const { name, attributeValues, componentIds } = options.filter;
 
-    // filter by provided filters
-    filtered = filtered.filter(exercise => {
-      // filter by ids
-      if (filter.ids?.length && !filter.ids.includes(exercise.id))
-        return false;
+      if (name)
+        exercises = exercises.filter(exercise => exercise.name.toLowerCase().includes(name.toLowerCase()));
 
-      // filter by name
-      const name = (exercise.name as string).toLowerCase();
-      if (filter.name && !name.includes(filter.name.toLowerCase()))
-        return false;
+      if (componentIds?.length)
+        exercises = this.filterByComponents(exercises, componentIds, leafs);
 
-      // accept all if no filters are provided
-      return true;
-    });
- 
-    // filter by components
-    if (filter.componentIds?.length)
-      filtered = this.filterByComponents(filtered, filter.componentIds, leafs);
+      if (attributeValues) {
+        // TODO - improve attribute value filtering
+      }
+    }
 
-    // TODO - if user is admin, return all exercises
-    // TODO - if user is athlete, check all trainers he belongs to and get their exercises
-    // TODO - if user is manager, get all trainers under him and get their exercises
+    // pagination must be done in memory
+    if (options.paginate)
+      exercises = this.commonService.paginate(exercises, options.paginate);
 
-    // limit
-    const limit = filter?.limit ? +filter.limit : 100;
-    return this.map(filtered.slice(0, limit), { components: leafs });
+    return this.map(exercises, { components: leafs });
   }
 
-  async findAllAttributes(): Promise<ExerciseAttribute[]> {
-    return await this.exerciseAttributeRepository.findAll();
+  async findOneById(user: User, exerciseId: string): Promise<Exercise> {
+    const exercise = await this.repository.findOneById(exerciseId);
+    if (!exercise)
+      return null;
+
+    const canView = await this.canView(user, exercise);
+    if (!canView)
+      return null;
+
+    // populate all attribute values
+    exercise.attributeValues = await this.findAllAttributeValues(exercise.id);
+    return exercise;
   }
 
-  /**
-   * Return only user's exercises
-   */
-  async findOneById(user: CustomClaims, exerciseId: string): Promise<Exercise> {
-    return await this.repository.findOneById(exerciseId);
-  }
-
-  async findOneByIdOrFail(user: CustomClaims, exerciseId: string): Promise<Exercise> {
+  async findOneByIdOrFail(user: User, exerciseId: string): Promise<Exercise> {
     const exercise = await this.findOneById(user, exerciseId);
     if (!exercise)
       throw new BadRequestException('Exercise does not exist');
@@ -158,7 +161,14 @@ export class ExerciseService {
     return exercise;
   }
 
-  async isValidSetGroupExercise(user: CustomClaims, exercises: Exercise[], set: SetGroupEntity): Promise<boolean> {
+  /**
+   * Checks if provided exercises are valid for a training. It checks that all
+   * exercises' leaf components belong to the training's root components.
+   *
+   * For example, if training has components `Strength` and `Speed` selected,
+   * then exercise with component parents `Endurance` is not valid.
+   */
+  async isValid(user: User, set: SetGroup, exercises: Exercise[]): Promise<boolean> {
     // check that exercise's leaf component id belongs to training's root component id
     const components = await this.componentService.findAll();
     const tree = this.componentService.tree(components);
@@ -166,8 +176,8 @@ export class ExerciseService {
 
     // check that parents of leaf are in training's root component ids
     for (const exercise of exercises)
-      for (const componentId of exercise.componentIds) {
-        const leaf = leafs.find(leaf => leaf.id === componentId);
+      for (const component of exercise.componentIds) {
+        const leaf = leafs.find(leaf => leaf.id === component);
         if (!leaf || !leaf.parents.some(parent => set.componentId === parent.id))
           return false;
       }
@@ -175,64 +185,39 @@ export class ExerciseService {
     return true;
   }
 
-  /**
-   * Only owner of the exercise and admin can update it
-   */
-  async update(user: CustomClaims, exerciseId: string, data: UpdateExerciseDto) {
-    this.logger.debug(`Updating exercise ${exerciseId} for user ${user.uid}`);
-    const { componentIds } = data;
-    const isAdmin = this.firebaseService.isAdmin(user);
-
-    // check if user is owner of exercise
-    const exercise = await this.findOneById(user, exerciseId);
-    if (!exercise || exercise.userId !== user.uid)
-      throw new UnauthorizedException();
-
-    // atleast one component must be selected
-    if (!componentIds.length)
-      throw new BadRequestException('No components selected');
-
-    // check that all components exist and are leafs
-    const components = await this.componentService.findAll();
-    const tree = this.componentService.tree(components);
-    const leafs = this.componentService.leafs(tree);
-
-    for (const componentId of componentIds) {
-      const isLeaf = this.componentService.isLeafComponent(componentId, leafs);
-      if (!isLeaf)
-        throw new BadRequestException(`Component with id ${componentId} is not a leaf`);
-    }
-
-    const roots: ComponentDto[] = [];
-    for (const componentId of componentIds)
-      roots.push(...this.componentService.getRootComponents(componentId, leafs));
-
-    const item = { ...data, userId: user.uid, createdAt: new Date().toISOString() };
-    await this.repository.update(exerciseId, item as any);
-
-    return {
-      rootComponentIds: roots.map(({ id }) => id),
-    };
+  async findAllAttributes(): Promise<ExerciseAttribute[]> {
+    return await this.exerciseAttributeRepository.findAll();
   }
 
   /**
-   * Only owner of the exercise and admin can delete it
+   * Creates attribute values for an exercise. It finds each attribute by object
+   * key and creates a new attribute value entry for the exercise.
    */
-  async remove(userId: string, exerciseId: string): Promise<void> {
-    this.logger.debug(`Removing exercise ${exerciseId} for user ${userId}`);
+  private async createAttributeValues(exerciseId: string, attributeValues: Record<string, any>): Promise<ExerciseAttributeValue[]> {
+    const exerciseAttributeValues = await Promise.all(
+      Object.entries(attributeValues).map(async ([field, value]) => {
+        const attribute = await this.exerciseAttributeRepository.findOneBy('field', field);
+        if (!attribute) return;
+        return { exerciseId, attributeId: attribute.id, value };
+      }),
+    );
+
+    return await this.exerciseAttributeValueRepository.createMany(exerciseAttributeValues);
   }
 
-  private async findAllAttributesByExerciseId(exerciseId: string) {
+  /**
+   * Finds all attribute values for an exercise and returns them as a nested
+   * object, which is used for frontend display.
+   */
+  private async findAllAttributeValues(exerciseId: string) {
     const values = await this.exerciseAttributeValueRepository.findAllBy('exerciseId', exerciseId);
-    for (const value of values) {
+    for (const value of values)
       value.attribute = await this.exerciseAttributeRepository.findOneById(value.attributeId);
-    }
 
     // convert found attributes and attribute values to nested object for frontend
     const nested: Record<string, any> = {};
-    for (const value of values) {
+    for (const value of values)
       nested[value.attribute.field] = value.value;
-    }
 
     return nested;
   }
@@ -260,17 +245,75 @@ export class ExerciseService {
     return filtered;
   }
 
-  /**
-   * Maps exercises
-   */
-  private map(exercises: Exercise[], mapping?: { components?: ComponentLeaf[] }) {
+  private async validate(data: Partial<Exercise>): Promise<Validate<{ leafs: ComponentLeaf[] }>> {
+    // atleast one component must be selected
+    if (!data.componentIds?.length)
+      return { error: true, message: 'No components selected' };
+
+    // check that all components exist and are leafs
+    const components = await this.componentService.findAll();
+    const tree = this.componentService.tree(components);
+    const leafs = this.componentService.leafs(tree);
+
+    for (const componentId of data.componentIds!)
+      if (!this.componentService.isLeafComponent(componentId, leafs)) {
+        const component = components.find(c => c.id === componentId)!;
+        return { error: true, message: `You cannot select component ${component.name}` };
+      }
+
+    // check that all attributes exist
+    const attributes = await this.exerciseAttributeRepository.findAll();
+    const attributeFields = attributes.map(({ field }) => field);
+    for (const field of Object.keys(data.attributeValues || {}))
+      if (!attributeFields.includes(field))
+        return { error: true, message: `Attribute ${field} does not exist` };
+
+    // check that all attribute values are of correct type
+    for (const field of Object.keys(data.attributeValues || {})) {
+      const attribute = attributes.find((attribute) => attribute.field === field)!;
+      const value = data.attributeValues![field];
+
+      switch (attribute.type) {
+        case 'number':
+          if (typeof value !== 'number')
+            return { error: true, message: `Attribute ${field} must be a number` };
+          break;
+        case 'string':
+          if (typeof value !== 'string')
+            return { error: true, message: `Attribute ${field} must be a string` };
+          break;
+        case 'boolean':
+          if (typeof value !== 'boolean')
+            return { error: true, message: `Attribute ${field} must be a boolean` };
+          break;
+        case 'date':
+          // TODO - check if date is valid
+          break;
+        case 'select':
+          if (typeof attribute.values?.[0] === 'string') {
+            // check if value is in possible values
+            const options = attribute.values as string[];
+            if (!options.includes(value))
+              return { error: true, message: `Attribute ${field} must be one of ${attribute.values.join(', ')}` };
+          } else {
+            // TODO - nested select, check if value is in possible values
+            const options = attribute.values as ExerciseAttributeSelectOption[];
+            break;
+          }
+      }
+    }
+
+    return { error: false, data: { leafs } };
+  }
+
+  private map(exercises: Exercise[], relations: { components: ComponentLeaf[] }) {
     return exercises.map(exercise => {
       let components: string[] = [];
 
       // map component names to exercises if components are provided
-      if (mapping?.components)
+      if (relations?.components)
         components = exercise.componentIds.map(id => {
-          const leaf = mapping.components.find(leaf => leaf.id === id);
+          const leaf = relations.components.find(leaf => leaf.id === id);
           if (!leaf) return '';
           return leaf.parents.map(({ name }) => name).join(' > ') + ' > ' + leaf.name;
         });

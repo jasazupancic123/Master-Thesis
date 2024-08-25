@@ -4,10 +4,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { Entity } from '../../common/decorator/entity.decorator';
 import { SET_SUB_GROUP_COLLECTION } from '../../common/const/firestore.const';
-import { SetExerciseEntity } from './set-exercise.entity';
+import { SetExercise } from './set-exercise.entity';
 
 @Entity(SET_SUB_GROUP_COLLECTION)
-export class SetSubgroupEntity extends BaseEntity {
+export class SetSubgroup extends BaseEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -27,5 +27,5 @@ export class SetSubgroupEntity extends BaseEntity {
   order: number;
 
   // relations
-  setExercises: SetExerciseEntity[];
+  setExercises: SetExercise[];
 }

@@ -1,5 +1,5 @@
 import { GroupPageProps } from '@/app/groups/props';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { formatDate, getToday, getWeekDays, isSameDay } from '@/util/date';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -11,14 +11,6 @@ import { Tooltip } from '@mui/material';
 
 export default function TrainerDayView(props: GroupPageProps) {
   const [day, setDay] = useState(getToday());
-
-  useEffect(() => {
-    props.setDate({
-      start: dayjs(day.date).startOf('day'),
-      end: dayjs(day.date).endOf('day'),
-      custom: false,
-    });
-  }, []);
 
   if (!props.selected.group || !props.selected.cycle)
     return null;
@@ -93,9 +85,6 @@ export default function TrainerDayView(props: GroupPageProps) {
     </Stack>
 
     {/* Training set groups with set exercises */}
-    <TrainingDay
-      trainings={props.selected.trainings}
-      setTrainings={(trainings) => props.setSelected(prev => ({ ...prev, trainings }))}
-    />
+    <TrainingDay trainings={props.selected.trainings} />
   </Box>;
 }

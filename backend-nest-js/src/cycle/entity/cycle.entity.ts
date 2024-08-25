@@ -1,8 +1,8 @@
-import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsDate, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Transform, Type } from 'class-transformer';
-import { GroupDto } from '../../group/dto/group.dto';
-import { TrainingEntity } from '../../training/entity/training.entity';
+import { Expose, Transform } from 'class-transformer';
+import { Group } from '../../group/entity/group.entity';
+import { Training } from '../../training/entity/training.entity';
 import { Entity } from '../../common/decorator/entity.decorator';
 import { CYCLE_COLLECTION } from '../../common/const/firestore.const';
 import { BaseEntity } from '../../common/entity/base.entity';
@@ -12,18 +12,11 @@ export interface Week {
 }
 
 @Entity(CYCLE_COLLECTION)
-export class CycleDto extends BaseEntity {
+export class Cycle extends BaseEntity {
   @IsString()
   @ApiProperty()
   @Expose()
   groupId: string; // group the cycle belongs to
-
-  @ValidateNested()
-  @Type(() => GroupDto)
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  group?: GroupDto;
 
   @IsString()
   @ApiProperty()
@@ -49,6 +42,7 @@ export class CycleDto extends BaseEntity {
   endDate: Date;
 
   // relations
-  trainings?: TrainingEntity[];
-  weeks?: Week[][];
+  group: Group;
+  trainings: Training[];
+  weeks: Week[][];
 }

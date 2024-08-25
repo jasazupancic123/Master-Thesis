@@ -1,5 +1,4 @@
 import { GroupPageProps } from '@/app/groups/props';
-import { AppContextType, useAppContext } from '@/context/app-provider';
 import React, { Fragment, useEffect, useState } from 'react';
 import { formatDate, getWeekDays, isDateBetween } from '@/util/date';
 import dayjs from 'dayjs';
@@ -7,32 +6,44 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Unstable_Grid2';
 import { Training } from '@/type/training.type';
-import { Firestore } from '@/util/firebase';
 import Stack from '@mui/material/Stack';
 import Circles from '@/app/groups/components/circles';
 
 export default function TrainerWeekView(props: GroupPageProps) {
   // context
-  const { token, components } = useAppContext() as AppContextType;
+  const cycle = props.selected.cycle!;
   const [index, setIndex] = useState(0); // week index
+  const weeks = cycle?.weeks || [getWeekDays()];
+  const trainings = props.selected.trainings || [];
 
-  const weeks = props.selected.cycle?.weeks || [getWeekDays()];
-  const trainings = (props.selected.trainings || []).map((training) => Firestore.populateTraining(training, components.flat));
-
+  // helper functions
   const getWeek = (index: number) => weeks[index];
   const getWeekStart = (index: number) => dayjs(weeks[index][0].date)!.startOf('day');
   const getWeekEnd = (index: number) => dayjs(weeks[index][6].date)!.endOf('day');
 
+  /**
+   * Set date to cycle start and end when opening the page
+   */
+  useEffect(() => {
+    if (!cycle)
+      return;
+
+    setIndex(0);
+  }, [cycle?.id]);
+
+  /**
+   * Set date range when week index changes
+   */
   useEffect(() => {
     props.setDate({
       start: getWeekStart(index),
       end: getWeekEnd(index),
-      custom: true,
+      custom: index !== 0,
     });
   }, [index]);
 
-  if (!props.selected.cycle)
-    return <Typography variant="body1">No cycle selected</Typography>;
+  if (!cycle)
+    return <Typography variant="body1" mt={2}>No cycle selected</Typography>;
 
   return <Box>
     {/* Week selector */}
@@ -45,7 +56,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
     {/* Trainings */}
     <Box p={2}>
       <Grid container spacing={2} display="flex" justifyContent="space-between">
-        {getWeek(index).map(({ date }, i) => {
+        {getWeek(index)?.map(({ date }, i) => {
           const day = dayjs(date);
           const filtered = trainings.filter((t) => isDateBetween(day, dayjs(t.startTime), dayjs(t.endTime)));
 

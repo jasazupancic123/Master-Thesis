@@ -3,7 +3,6 @@
 import { SetGroup, SetSubgroup, SuperExerciseInfo, Training } from '@/type/training.type';
 import Box from '@mui/material/Box';
 import React, { Fragment, useEffect, useState } from 'react';
-import { Divider } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { Exercise } from '@/type/exercise.type';
 import { AppContextType, useAppContext } from '@/context/app-provider';
@@ -15,25 +14,18 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Unstable_Grid2';
 import SetExerciseCard from '@/component/set-exercise-card';
-import { AddCircle } from '@mui/icons-material';
+import AddIcon from '@mui/icons-material/Add';
 
 interface Props {
   trainings: Training[];
-  setTrainings: (trainings: Training[]) => void;
-  loading?: boolean;
 }
 
 export const colors = ['#FF6859', '#FFCF44', '#B15DFF', '#72DEFF', '#1E90FF', '#FF69B4', '#32CD32', '#FFA500'];
 
 export default function TrainingDay(props: Props) {
   // context
-  const { token, components } = useAppContext() as AppContextType;
-  const { trainings, setTrainings, loading } = props;
-
-  // populate set groups with components
-  for (const training of trainings)
-    for (const setGroup of training.setGroups || [])
-      setGroup.component = components.flat.find(component => component.id === setGroup.componentId)!;
+  const { token } = useAppContext() as AppContextType;
+  const { trainings } = props;
 
   // add set exercise
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -45,6 +37,7 @@ export default function TrainingDay(props: Props) {
 
   // selected (expanded) entities
   const [selected, setSelected] = useState({
+    loading: false,
     setGroup: null as SetGroup | null,
     exercises: [] as Exercise[],
   });
@@ -89,6 +82,8 @@ export default function TrainingDay(props: Props) {
     }
 
     try {
+      setSelected(prev => ({ ...prev, loading: true }));
+
       const info = {
         sets: 3,
         setType: 'reps',
@@ -116,11 +111,11 @@ export default function TrainingDay(props: Props) {
       setGroup.setSubgroups![index] = setSubgroup;
 
       // update training
-      setSelected(prev => ({ ...prev, setGroup }));
+      setSelected(prev => ({ ...prev, setGroup, loading: false }));
     } catch (e: any) {
       toast.error(e.message || 'Could not add exercises to set group');
     } finally {
-      setSelected(prev => ({ ...prev, exercises: [] }));
+      setSelected(prev => ({ ...prev, exercises: [], loading: false }));
       setAddExercise(({
         modal: false,
         order: 0,
@@ -148,8 +143,9 @@ export default function TrainingDay(props: Props) {
     }
 
     async function fetchSet() {
+      setSelected(prev => ({ ...prev, loading: true }));
       const response = await FitcodeApi.getSet(setGroup.trainingId, setGroup.id, token);
-      setSelected(prev => ({ ...prev, setGroup: response }));
+      setSelected(prev => ({ ...prev, setGroup: response, loading: false }));
     }
 
     fetchSet().then();
@@ -158,21 +154,18 @@ export default function TrainingDay(props: Props) {
 
   return (<>
     <Box mt={4}>
-      {trainings.map((training, j) =>
+      {trainings.map((training) =>
         <Box key={training.id}>
-          {training?.setGroups?.map((setGroup, i) => {
+          {training?.setGroups?.map((setGroup) => {
             const show = selected.setGroup?.componentId === setGroup.componentId;
 
             return (
               <Fragment key={setGroup.id}>
-                <Box
-                  my={1}
-                  sx={{
-                    backgroundColor: '#1A2B3C',
-                    borderRadius: '4px',
-                    width: '100%',
-                  }}
-                >
+                <Box sx={{
+                  bgcolor: 'background.paper',
+                  borderRadius: 2,
+                  my: 2,
+                }}>
                   <Box
                     sx={{
                       display: 'flex',
@@ -188,47 +181,60 @@ export default function TrainingDay(props: Props) {
                     </Typography>
                   </Box>
 
-                  {show ? <Box sx={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-                    {/* 3 Columns For Set Groups */}
-                    <Grid container spacing={2}>
-                      {selected.setGroup?.setSubgroups?.map((subgroup, i) => {
-                        return <Grid xs={4} key={subgroup.id}>
-                          <BorderColor color={colors[i]} />
+                  {show ?
+                    selected.loading ? <Typography p={2}>Loading...</Typography> :
+                      <Box bgcolor="background.paper" p={2}>
+                        {/* 3 Columns For Set Groups */}
+                        <Grid container spacing={2}>
+                          {selected.setGroup?.setSubgroups?.map((subgroup, i) => {
+                            if (!subgroup.setExercises?.length && i > 0)
+                              return null;
 
-                          <Box>
-                            {subgroup?.setExercises?.map((setExercise) => (
-                              <Box key={setExercise.id}>
-                                <SetExerciseCard
-                                  setExercise={setExercise}
-                                  onChange={async (data) => {
-                                    await updateSetExercise({
-                                      setExerciseId: setExercise.id,
-                                      ...data,
-                                    });
-                                  }}
-                                />
+                            return <Grid xs={4} key={subgroup.id}>
+                              <BorderColor color={colors[i]} />
+
+                              <Box>
+                                {subgroup?.setExercises?.map((setExercise) => (
+                                  <Box key={setExercise.id}>
+                                    <SetExerciseCard
+                                      setExercise={setExercise}
+                                      onChange={async (data) => {
+                                        await updateSetExercise({
+                                          setExerciseId: setExercise.id,
+                                          ...data,
+                                        });
+                                      }}
+                                    />
+                                  </Box>
+                                ))}
                               </Box>
-                            ))}
-                          </Box>
 
-                          <BorderColor color={colors[i]} lower />
+                              <BorderColor color={colors[i]} lower />
 
-                          <Stack direction="row" justifyContent="center" mt={2} spacing={1}>
-                            <IconButton onClick={() => setAddExercise({
-                              modal: true,
-                              order: i,
-                              setSubgroup: subgroup,
-                            })}>
-                              <AddCircle />
-                            </IconButton>
-                          </Stack>
-                        </Grid>;
-                      })}
-                    </Grid>
-                  </Box> : null}
+                              <Stack
+                                direction="row"
+                                justifyContent="center"
+                                mt={2}
+                                spacing={1}
+                                sx={{
+                                  border: '1px dashed #B2B3B7',
+                                  borderRadius: 2,
+                                }}
+                              >
+                                <IconButton onClick={() => setAddExercise({
+                                  modal: true,
+                                  order: i,
+                                  setSubgroup: subgroup,
+                                })}>
+                                  <AddIcon />
+                                </IconButton>
+                              </Stack>
+                            </Grid>;
+                          })}
+                        </Grid>
+                      </Box> : null}
                 </Box>
 
-                <Divider sx={{ backgroundColor: '#303E4A', height: '4px' }} />
               </Fragment>
             );
           })}
