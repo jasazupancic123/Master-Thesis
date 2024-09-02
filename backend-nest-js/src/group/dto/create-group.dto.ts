@@ -1,5 +1,5 @@
 import { Group } from '../entity/group.entity';
 import { PickType } from '@nestjs/mapped-types';
 
-export class CreateGroupDto extends PickType(Group, ['name', 'membersIds', 'parentId', 'validUntil']) {
+export class CreateGroupDto extends PickType(Group, ['name', 'membersIds']) {
 }

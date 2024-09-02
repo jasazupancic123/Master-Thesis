@@ -6,6 +6,8 @@ import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { DecodedUser, User } from '../common/type/custom-claims.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
+import { DocumentData, QuerySnapshot, Timestamp } from 'firebase-admin/lib/firestore';
+import { DocumentSnapshot } from 'firebase-admin/firestore';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -33,6 +35,18 @@ export class FirebaseService implements OnApplicationBootstrap {
     return await this.auth.getUser(uid) as User;
   }
 
+  serializeDocument<T>(data: DocumentSnapshot): T & { id: string } {
+    const item = this.convertTimestampToDate(data.data());
+    return { id: data.id, ...item } as T;
+  }
+
+  serialize<T>(data: QuerySnapshot): (T & { id: string })[] {
+    return data.docs.map(doc => {
+      const item = this.convertTimestampToDate(doc.data());
+      return { id: doc.id, ...item } as T;
+    }) as T[];
+  }
+
   isAdmin(user: User | DecodedUser): boolean {
     return this.checkRole(user, UserRole.ADMIN);
   }
@@ -54,6 +68,15 @@ export class FirebaseService implements OnApplicationBootstrap {
     this.logger.debug(`Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`);
     this.logger.debug(`Using Storage Emulator: ${this.configService.get('FIREBASE_STORAGE_EMULATOR_HOST')}`);
     this.logger.debug(`Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`);
+  }
+
+  private convertTimestampToDate(data: DocumentData) {
+    let obj = { ...data };
+    for (const key in obj)
+      if (obj[key] instanceof Timestamp)
+        obj[key] = (obj[key] as Timestamp).toDate();
+
+    return obj;
   }
 
   private checkRole(user: User | DecodedUser, role: UserRole): boolean {

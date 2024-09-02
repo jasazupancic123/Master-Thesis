@@ -319,7 +319,7 @@ export class DataSetup extends BaseSetup<Options> {
           return member.uid;
         }));
 
-        const group = await this.groupService.create(trainer, { name, membersIds: memberIds });
+        const group = await this.groupService.createGroup(trainer, { name, membersIds: memberIds });
 
         // create cycles
         let startDate = new Date();
@@ -328,8 +328,8 @@ export class DataSetup extends BaseSetup<Options> {
             groupId: group.id,
             name,
             description,
-            startDate,
-            endDate: addDays(startDate, durationInWeeks * 7),
+            from: startDate,
+            to: addDays(startDate, durationInWeeks * 7),
           });
 
           // create trainings
@@ -344,8 +344,8 @@ export class DataSetup extends BaseSetup<Options> {
             const training = await this.trainingService.create(trainer, {
               componentIds: [component.id],
               cycleId: cycle.id,
-              startTime: addHours(startTime, 1),
-              endTime: addHours(startTime, 3),
+              from: addHours(startTime, 1),
+              to: addHours(startTime, 3),
             });
 
             // create set subgroup
@@ -362,7 +362,7 @@ export class DataSetup extends BaseSetup<Options> {
 
                 await this.setService.addExercisesToSetGroup(
                   trainer,
-                  setGroups[0].setSubgroups[0].id,
+                  setGroups[0].exercises[0].id,
                   [exercise.id],
                   superExerciseInfo,
                 );

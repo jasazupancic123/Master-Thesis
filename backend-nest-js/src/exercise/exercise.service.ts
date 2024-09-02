@@ -11,7 +11,6 @@ import { ExerciseAttributeValue } from './entity/exercise-attribute-value.entity
 import { CommonService } from '../common/service/common.service';
 import { Filter, Options } from '../common/type/orm.type';
 import { UserRole } from '../user/enum/user-role.enum';
-import { SetGroup } from '../set/entity/set-group.entity';
 import { Validate } from '../common/type/validate.type';
 import { FieldPath, Query } from 'firebase-admin/firestore';
 
@@ -64,7 +63,7 @@ export class ExerciseService {
     this.logger.debug(`Creating new exercise for user ${user.uid}`);
 
     // validate data
-    const { error, message, data: { leafs } = {} } = await this.validate(data);
+    const { error, message, data: { leafs } = {} } = await this._validate(data);
     if (error) throw new BadRequestException(message);
 
     // find all root components of selected leaf components
@@ -168,7 +167,7 @@ export class ExerciseService {
    * For example, if training has components `Strength` and `Speed` selected,
    * then exercise with component parents `Endurance` is not valid.
    */
-  async isValid(user: User, set: SetGroup, exercises: Exercise[]): Promise<boolean> {
+  async validate(user: User, componentId: string, exercises: Exercise[]): Promise<Validate> {
     // check that exercise's leaf component id belongs to training's root component id
     const components = await this.componentService.findAll();
     const tree = this.componentService.tree(components);
@@ -178,11 +177,16 @@ export class ExerciseService {
     for (const exercise of exercises)
       for (const component of exercise.componentIds) {
         const leaf = leafs.find(leaf => leaf.id === component);
-        if (!leaf || !leaf.parents.some(parent => set.componentId === parent.id))
-          return false;
+        if (!leaf || !leaf.parents.some(parent => componentId === parent.id)) {
+          const found = components.find(c => c.id === component);
+          return {
+            error: true,
+            message: `Exercise ${exercise.name} has component ${found?.name} which is not valid for training`,
+          };
+        }
       }
 
-    return true;
+    return { error: false };
   }
 
   async findAllAttributes(): Promise<ExerciseAttribute[]> {
@@ -245,7 +249,7 @@ export class ExerciseService {
     return filtered;
   }
 
-  private async validate(data: Partial<Exercise>): Promise<Validate<{ leafs: ComponentLeaf[] }>> {
+  private async _validate(data: Partial<Exercise>): Promise<Validate<{ leafs: ComponentLeaf[] }>> {
     // atleast one component must be selected
     if (!data.componentIds?.length)
       return { error: true, message: 'No components selected' };

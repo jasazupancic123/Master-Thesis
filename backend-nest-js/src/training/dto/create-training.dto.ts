@@ -6,8 +6,8 @@ import { Expose } from 'class-transformer';
 export class CreateTrainingDto extends PickType(Training, [
   'cycleId',
   'subgroupId',
-  'startTime',
-  'endTime',
+  'from',
+  'to',
 ] as const) {
   @IsString({ each: true })
   @Expose()

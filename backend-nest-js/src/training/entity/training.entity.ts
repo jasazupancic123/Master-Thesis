@@ -1,40 +1,35 @@
 import { BaseEntity } from '../../common/entity/base.entity';
-import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Transform } from 'class-transformer';
-import { SetGroup } from '../../set/entity/set-group.entity';
-import { Entity } from '../../common/decorator/entity.decorator';
-import { TRAINING_COLLECTION } from '../../common/const/firestore.const';
+import { Expose, Transform, Type } from 'class-transformer';
+import { TrainingComponent } from './training-component.entity';
 
-@Entity(TRAINING_COLLECTION)
 export class Training extends BaseEntity {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  cycleId: string;
-
   @IsString()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  subgroupId?: string; // if null, then it's a training for cycle's group
-  // subgroups also have date until which they are valid, by default they are
-  // valid only one day, so trainer can create new subgroups every day, and the
-  // next day members of subgroup are already available in the parent group
+  subgroupId?: string;
+  /*if null, then it's a training for cycle's group subgroups also have date
+  until which they are valid, by default they are valid only one day, so trainer
+  can create new subgroups every day, and the next day members of subgroup are
+  already available in the parent group*/
 
   @IsDate()
   @ApiProperty()
   @Expose()
   @Transform(({ value }) => new Date(value))
-  startTime: Date;
+  from: Date;
 
   @IsDate()
   @ApiProperty()
   @Expose()
   @Transform(({ value }) => new Date(value))
-  endTime: Date;
+  to: Date;
 
-  // relations
-  setGroups: SetGroup[];
+  @ValidateNested({ each: true })
+  @Type(() => TrainingComponent)
+  @ApiProperty()
+  @Expose()
+  components: TrainingComponent[];
 }

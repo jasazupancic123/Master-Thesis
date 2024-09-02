@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { CommonService } from '../common/service/common.service';
 import { InjectRepository } from '../common/decorator/entity.decorator';
-import { SuperExerciseInfo } from './entity/super-exercise-info.entity';
+import { TrainingExerciseMeta } from '../training/entity/training-exercise-meta.entity';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { ExerciseInfo } from './entity/exercise-info.entity';
 import { WorkloadType } from './enum/workload-type.enum';
@@ -18,8 +18,8 @@ export class ExerciseInfoService {
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    @InjectRepository(SuperExerciseInfo)
-    private readonly superExerciseInfoRepository: FirestoreRepository<SuperExerciseInfo>,
+    @InjectRepository(TrainingExerciseMeta)
+    private readonly superExerciseInfoRepository: FirestoreRepository<TrainingExerciseMeta>,
     @InjectRepository(ExerciseInfo)
     private readonly exerciseInfoRepository: FirestoreRepository<ExerciseInfo>,
     @Inject(forwardRef(() => SetService)) private readonly setService: Wrapper<SetService>,
@@ -47,7 +47,7 @@ export class ExerciseInfoService {
     user: User,
     setExerciseId: string,
     members: User[],
-    data: Partial<SuperExerciseInfo>,
+    data: Partial<TrainingExerciseMeta>,
   ) {
     const exercise = await this.setService.findExerciseBySetExerciseId(user, setExerciseId);
 
@@ -74,7 +74,7 @@ export class ExerciseInfoService {
    * by re-calculating values for exercise info based on the new super exercise
    * info values
    */
-  async update(setExerciseId: string, data: Partial<SuperExerciseInfo>) {
+  async update(setExerciseId: string, data: Partial<TrainingExerciseMeta>) {
     const {
       superExerciseInfo,
       exerciseInfo,
