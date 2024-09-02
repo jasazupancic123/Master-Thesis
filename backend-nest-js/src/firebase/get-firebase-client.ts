@@ -4,7 +4,6 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { Inject, Logger } from '@nestjs/common';
-import { isProd } from '../common/util/node-env';
 
 export const FIREBASE_ADMIN = Symbol('FirebaseAdmin');
 
@@ -38,9 +37,6 @@ export function getFirebaseClient(options: FirebaseClientOptions): FirebaseClien
   const storage = getStorage(app);
 
   firestore.settings({ ignoreUndefinedProperties: true });
-  const bucket = storage.bucket('media');
-  if (isProd())
-    bucket.makePublic().then();
 
   return { app, auth, firestore, storage };
 }

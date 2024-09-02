@@ -1,16 +1,25 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { CreateUser, UserDto } from './dto/user.dto';
 import { UpdateUserClaimsDto, UpdateUserDto } from './dto/update-user.dto';
 import { User } from '../common/type/custom-claims.type';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { Filter } from '../common/type/orm.type';
+import { Wellness } from './entity/wellness.entity';
+import { InjectRepository } from '../common/decorator/entity.decorator';
+import { FirestoreRepository } from '../firebase/firestore.repository';
+import { Timestamp } from 'firebase-admin/firestore';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UserService {
   private logger: Logger;
 
-  constructor(private readonly firebaseService: FirebaseService) {
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    @InjectRepository(Wellness)
+    private readonly wellnessRepository: FirestoreRepository<Wellness>,
+  ) {
     this.logger = new Logger(UserService.name);
   }
 
@@ -43,7 +52,7 @@ export class UserService {
     const data = (await this.firebaseService.auth.listUsers()).users as User[];
 
     // mandatory filter based on user role
-    const users = data.filter(user => {
+    /*const users = data.filter(user => {
       // return all users if user is an admin
       if (this.firebaseService.isAdmin(user))
         return true;
@@ -59,14 +68,14 @@ export class UserService {
       // return only current user if user is an athlete
       if (this.firebaseService.isAthlete(user))
         return user.uid === user.uid;
-    });
+    });*/
 
     // optional filter based on query
-    let filtered = users;
+    let filtered = data;
     if (filter) {
       const { email, displayName, ids } = filter;
 
-      filtered = users.filter(user => {
+      filtered = data.filter(user => {
         if (ids && !ids.includes(user.uid)) return false;
         if (email && !user.email.includes(email)) return false;
         if (displayName && !user.displayName.includes(displayName)) return false;
@@ -79,6 +88,10 @@ export class UserService {
     return filtered.filter(record => record.uid !== user.uid);
   }
 
+  async findOneByEmail(email: string): Promise<User> {
+    return await this.firebaseService.auth.getUserByEmail(email) as User;
+  }
+
   async update(uid: string, data: UpdateUserDto): Promise<void> {
     await this.firebaseService.auth.updateUser(uid, data);
   }
@@ -88,7 +101,35 @@ export class UserService {
     await this.firebaseService.auth.setCustomUserClaims(uid, { ...customClaims, ...claims });
   }
 
-  async remove(uid: string): Promise<void> {
-    await this.firebaseService.auth.deleteUser(uid);
+  async createWellness(user: User, data: Partial<Wellness>): Promise<Wellness> {
+    this.logger.log(`Creating wellness for user (${user.uid}, ${JSON.stringify(data)})`);
+
+    // find if any wellness record exists for the current day
+    const found = await this.findWellness(user);
+    if (found)
+      throw new BadRequestException('You already submitted your wellness for today');
+
+    return await this.wellnessRepository.create({
+      userId: user.uid,
+      date: new Date(),
+      sleep: data.sleep,
+      fatigue: data.fatigue,
+      soreness: data.soreness,
+      comment: data.comment,
+    });
+  }
+
+  /**
+   * Returns the wellness record for the current day for the given user
+   */
+  async findWellness(user: User, filter?: Filter<Wellness>): Promise<Wellness> {
+    const startDate = Timestamp.fromDate(filter?.date || dayjs().startOf('day').toDate());
+    const endDate = Timestamp.fromDate(filter?.date || dayjs().endOf('day').toDate());
+    
+    return await this.wellnessRepository.findOneByMany([
+      { field: 'userId', value: user.uid, operator: '==' },
+      { field: 'date', value: startDate, operator: '>=' },
+      { field: 'date', value: endDate, operator: '<=' },
+    ]);
   }
 }

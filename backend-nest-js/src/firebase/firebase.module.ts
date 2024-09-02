@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { getEntityMetadata, getRepositoryToken } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from './firestore.repository';
 import { BaseEntity } from '../common/entity/base.entity';
+import { CommonService } from '../common/service/common.service';
 
 @Global()
 @Module({})
@@ -16,9 +17,17 @@ export class FirebaseModule {
       providers: [
         {
           provide: FIREBASE_ADMIN,
-          inject: [ConfigService],
-          useFactory: async () =>
-            getFirebaseClient(options),
+          inject: [ConfigService, CommonService],
+          useFactory: async (
+            configService: ConfigService,
+            commonService: CommonService,
+          ) => {
+            const client = getFirebaseClient(options);
+            if (commonService.env.isProd())
+              await client.storage.bucket('media').makePublic();
+
+            return client;
+          },
         },
         FirebaseService,
         FirebaseMiddleware,

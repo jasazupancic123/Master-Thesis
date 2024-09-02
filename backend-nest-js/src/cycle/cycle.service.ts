@@ -1,14 +1,15 @@
 import { BadRequestException, forwardRef, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
-import { Cycle } from './entity/cycle.entity';
+import { Cycle } from '../group/entity/cycle.entity';
 import { User } from '../common/type/custom-claims.type';
 import { GroupService } from '../group/group.service';
-import { TrainingService } from '../training/training.service';
-import { Wrapper } from '../common/type/wrapper.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { CommonService } from '../common/service/common.service';
 import { Filter } from '../common/type/orm.type';
+import { Wrapper } from '../common/type/wrapper.type';
+import { Timestamp } from 'firebase-admin/firestore';
+import { WhereFilterOp } from 'firebase-admin/lib/firestore';
 
 @Injectable()
 export class CycleService {
@@ -18,9 +19,8 @@ export class CycleService {
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     @InjectRepository(Cycle) private readonly repository: FirestoreRepository<Cycle>,
-    private readonly groupService: GroupService,
-    @Inject(forwardRef(() => TrainingService))
-    private readonly trainingService: Wrapper<TrainingService>,
+    @Inject(forwardRef(() => GroupService))
+    private readonly groupService: Wrapper<GroupService>,
   ) {
   }
 
@@ -44,12 +44,31 @@ export class CycleService {
     return this.populate(cycle, { group });
   }
 
+  /**
+   * Cycles must not have overlapping dates. This function returns the cycle
+   * that falls within the given date range.
+   */
+  async findActive(user: User, groupId: string, date: Date): Promise<Cycle | null> {
+    // find first cycle that overlaps with the given date
+    const cycles = await this.findAll(user, { groupId });
+    return cycles.find(cycle => this.commonService.date.isBetween(date, cycle.startDate, cycle.endDate));
+  }
+
   async findAll(user: User, filter?: Filter<Cycle>): Promise<Cycle[]> {
     if (!filter?.groupId)
       throw new BadRequestException('You must provide group id to filter cycles');
 
     const group = await this.groupService.findOneByIdOrFail(user, filter.groupId);
-    const cycles = await this.repository.findAllBy('groupId', filter.groupId);
+
+    const { startDate, endDate } = filter;
+    const conditions: { field: keyof Cycle, operator: WhereFilterOp, value: any }[] = [
+      { field: 'groupId', operator: '==', value: filter.groupId as any },
+    ];
+
+    if (startDate) conditions.push({ field: 'startDate', operator: '>=', value: Timestamp.fromDate(startDate) });
+    if (endDate) conditions.push({ field: 'endDate', operator: '<=', value: Timestamp.fromDate(endDate) });
+
+    const cycles = await this.repository.findAllByMany(conditions);
     return cycles.map(cycle => this.populate(cycle, { group }));
   }
 
@@ -87,7 +106,7 @@ export class CycleService {
   private populate(item: Cycle, relations: Partial<Cycle>): Cycle {
     item.group = relations.group;
     item.trainings = relations.trainings || [];
-    item.weeks = this.commonService.getWeeksBetween(item.startDate, item.endDate);
+    item.weeks = this.commonService.date.weeks(item.startDate, item.endDate);
     return item;
   }
 }

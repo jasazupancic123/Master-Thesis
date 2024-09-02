@@ -7,13 +7,13 @@ interface TreeOptions<T> {
 
 type TreeItem = Record<string, any>
 
-export class Tree {
-  static fromArray<T extends TreeItem>(items: T[], options: TreeOptions<T>): T[] {
+export class TreeUtil {
+  fromArray<T extends TreeItem>(items: T[], options: TreeOptions<T>): T[] {
     const {
       idPropertyName,
       parentIdPropertyName,
       childrenPropertyName,
-      rootId = null
+      rootId = null,
     } = options;
 
     const map = new Map<any, T & TreeItem>();
@@ -40,12 +40,12 @@ export class Tree {
     return roots;
   }
 
-  static forEach<T extends TreeItem = any, Result = any>(
+  forEach<T extends TreeItem = any, Result = any>(
     items: T[],
     childrenPropertyName: keyof T,
     callback: (item: T, parent: T, previousResult: Result) => Result | Promise<Result>,
     parent: T = undefined,
-    result: Result = undefined
+    result: Result = undefined,
   ) {
     for (const item of items) {
       const cb = callback(item, parent, result);
@@ -59,9 +59,9 @@ export class Tree {
     }
   }
 
-  static leafs<T extends TreeItem>(
+  leafs<T extends TreeItem>(
     items: T[],
-    childrenPropertyName: keyof T
+    childrenPropertyName: keyof T,
   ): (T & { parents: T[] })[] {
     const result: (T & { parents: T[] })[] = [];
 
@@ -74,10 +74,10 @@ export class Tree {
       return { ...item, parents };
     });
 
-    return result
+    return result;
   }
 
-  static isLeaf<T extends TreeItem>(item: T, childrenPropertyName: keyof T): boolean {
+  isLeaf<T extends TreeItem>(item: T, childrenPropertyName: keyof T): boolean {
     return item[childrenPropertyName].length === 0;
   }
 }

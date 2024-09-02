@@ -24,6 +24,8 @@ interface Props {
 export default function SetExerciseCard(props: Props) {
   const { setExercise, onChange } = props;
   const [state, setState] = useState(() => setExercise.superExerciseInfo!);
+  if (!setExercise.superExerciseInfo)
+    return null;
 
   /**
    * Update set exercise on state change

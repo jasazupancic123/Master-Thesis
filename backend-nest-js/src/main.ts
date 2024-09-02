@@ -1,16 +1,20 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { Environment } from './config/environment-validation-schema';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerSetup } from './common/setup/swagger.setup';
 import { DataSetup } from './common/setup/data.setup';
-import { isDev } from './common/util/node-env';
+import { AllExceptionsFilter } from './common/filter/all-exception.filter';
+import { CommonService } from './common/service/common.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger(bootstrap.name);
   const configService = app.get(ConfigService<Environment>);
+  const commonService = app.get(CommonService);
+  const httpAdapter = app.get(HttpAdapterHost);
+  const isDev = commonService.env.isDev();
 
   // config
   app.enableCors();
@@ -19,10 +23,26 @@ async function bootstrap() {
     whitelist: true,
     transformOptions: { enableImplicitConversion: true },
   }));
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter.httpAdapter as any));
 
   // setups
   new SwaggerSetup(app).setup();
-  await new DataSetup(app).setup({ importDevData: isDev() });
+  await new DataSetup(app).setup({
+    importOnStartup: {
+      users: isDev,
+      components: isDev,
+      exerciseAttributes: isDev,
+      exercises: isDev,
+      groups: isDev,
+    },
+    refreshOnImport: {
+      users: false,
+      components: false,
+      exerciseAttributes: false,
+      exercises: false,
+      groups: false,
+    },
+  });
 
   // start server
   const port = configService.get('PORT');

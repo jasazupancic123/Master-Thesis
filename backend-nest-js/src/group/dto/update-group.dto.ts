@@ -3,7 +3,7 @@ import { PartialType, PickType } from '@nestjs/mapped-types';
 
 export class UpdateGroupDto extends PartialType(PickType(Group, [
   'name',
-  'memberIds',
+  'membersIds',
   'validUntil',
 ])) {
 }

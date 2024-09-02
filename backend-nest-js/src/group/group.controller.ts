@@ -23,6 +23,12 @@ export class GroupController {
     return await this.groupService.findOneByIdOrFail(user, id);
   }
 
+  @Get('athlete/me')
+  @Auth([UserRole.ATHLETE])
+  async findAthleteGroups(@RequestUser() user: User) {
+    return await this.groupService.findAthleteGroups(user);
+  }
+
   @Post()
   @Auth([UserRole.TRAINER, UserRole.MANAGER, UserRole.ADMIN])
   async create(@RequestUser() user: User, @Body() data: CreateGroupDto) {

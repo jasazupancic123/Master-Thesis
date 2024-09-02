@@ -134,7 +134,7 @@ export class ExerciseService {
 
     // pagination must be done in memory
     if (options.paginate)
-      exercises = this.commonService.paginate(exercises, options.paginate);
+      exercises = this.commonService.generic.paginate(exercises, options.paginate);
 
     return this.map(exercises, { components: leafs });
   }

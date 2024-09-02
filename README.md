@@ -10,14 +10,17 @@ firebase emulators:start
 
 ## TODO
 
+- SUBCOLLECTIONS IN FIRESTORE!!!!!
+- Add group address (gym location) for trainers so that groups with the same address get additional logic for
+  overlapping cycles
+- Fix invalid order in set exercises
+- Refactor database structure for 1-M relationships
+- Write tests
+
 ### Trainings
 
-- Copy trainings to subgroups on daily basis (add validUntil date to subgroups so that trainer can make new subgroups
-  every day and when subgroups' date expires, trainer can again pick users from the subgroup to create other subgroups,
-  do not query expired subgroups)
 - Athlete training day view
 - Athlete view calendar
-- Athlete welness form
 - Create training warmup and cooldown checkboxes to automatically create them
 
 ### Exercises
@@ -58,6 +61,7 @@ firebase emulators:start
 ### Future
 
 - UPDATE DOCS!
+- Actions table to track all changes and undo last action?
 - Copying & pasting trainings
 - Automatically increasing training loads through periods by X percent
 - Athlete statistics and graphs
