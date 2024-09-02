@@ -1,17 +1,17 @@
 import { IsDate, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { Group } from '../../group/entity/group.entity';
+import { Group } from './group.entity';
 import { Training } from '../../training/entity/training.entity';
 import { Entity } from '../../common/decorator/entity.decorator';
-import { CYCLE_COLLECTION } from '../../common/const/firestore.const';
 import { BaseEntity } from '../../common/entity/base.entity';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 
 export interface Week {
   date: Date;
 }
 
-@Entity(CYCLE_COLLECTION)
+@Entity(FirestoreCollection.CYCLE)
 export class Cycle extends BaseEntity {
   @IsString()
   @ApiProperty()

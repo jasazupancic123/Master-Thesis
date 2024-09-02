@@ -4,7 +4,7 @@ import { CreateTrainingDto } from './dto/create-training.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/custom-claims.type';
-import { TrainingFilterDto } from './dto/training-filter.dto';
+import { AthleteTrainingFilterDto, TrainingFilterDto } from './dto/training-filter.dto';
 import { CycleService } from '../cycle/cycle.service';
 import { Auth } from '../common/decorator/auth.decorator';
 import { AddSetExerciseDto } from './dto/create-set-exercise.dto';
@@ -12,6 +12,7 @@ import { SetService } from '../set/set.service';
 import { SuperExerciseInfo } from '../exercise-info/entity/super-exercise-info.entity';
 import { UpdateSetExerciseDto } from './dto/update-set-exercise.dto';
 import { AddSetDto } from './dto/add-set.dto';
+import { UserRole } from '../user/enum/user-role.enum';
 
 @Controller('training')
 export class TrainingController {
@@ -25,6 +26,12 @@ export class TrainingController {
   @Get()
   async findAll(@RequestUser() user: User, @Query() filter: TrainingFilterDto) {
     return await this.trainingService.findAll(user, { filter });
+  }
+
+  @Get('athlete/me')
+  @Auth([UserRole.ATHLETE])
+  async findAllAthleteTrainings(@RequestUser() user: User, @Query() filter: AthleteTrainingFilterDto) {
+    return await this.trainingService.findAllAthleteTrainings(user, filter);
   }
 
   @Get(':id')

@@ -18,6 +18,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { getWeekDays } from '@/util/date';
 import { GroupPageProps } from '@/app/groups/props';
 import { Firestore } from '@/util/firebase';
+import toast from 'react-hot-toast';
 
 function Page() {
   // context
@@ -62,6 +63,7 @@ function Page() {
       setSelected({ group, cycles, subgroup: null, cycle: null, trainings: [] });
     } catch (e) {
       console.error(e);
+      toast.error(e.message || 'Error fetching group');
     }
   }
 
@@ -92,6 +94,7 @@ function Page() {
       setSelected({ ...selected, cycle, trainings });
     } catch (e) {
       console.error(e);
+      toast.error(e.message || 'Error fetching cycle');
     }
   }
 
@@ -113,6 +116,7 @@ function Page() {
       setSelected({ ...selected, trainings });
     } catch (e) {
       console.error(e);
+      toast.error(e.message || 'Error fetching trainings');
     }
   }
 

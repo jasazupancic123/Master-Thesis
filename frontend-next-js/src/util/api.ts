@@ -7,6 +7,7 @@ import { Group } from '@/type/group.type';
 import { SetGroup, SuperExerciseInfo, Training } from '@/type/training.type';
 import { CustomClaims } from '@/type/custom-claims.type';
 import { PaginateOptions } from '@/type/paginate.type';
+import { UserWellness } from '@/type/user-wellness.type';
 
 function getQuery(query?: Record<string, string>) {
   return query ? `?${qs.stringify(query)}` : '';
@@ -23,10 +24,15 @@ export class FitcodeApi {
     cycles: (query?: Record<string, string>) => `/cycle${getQuery(query)}`,
     cycleById: (id: string) => `/cycle/${id}`,
     groups: () => '/group',
+    athleteGroups: () => '/group/athlete/me',
     groupById: (id: string) => `/group/${id}`,
     exercisePageMeta: () => '/exercise/meta/page',
     exerciseById: (id: string) => `/exercise/${id}`,
     exerciseAttributes: () => '/exercise/attribute',
+    wellness: () => '/user/wellness',
+    wellnessToday: () => '/user/wellness/today',
+    trainings: (query?: Record<string, string>) => `/training${getQuery(query)}`,
+    athleteTrainings: (query?: Record<string, string>) => `/training/athlete/me${getQuery(query)}`,
   };
 
   static async updateUserClaims(uid: string, token: string, claims: CustomClaims) {
@@ -116,15 +122,14 @@ export class FitcodeApi {
     startTime?: string;
     endTime?: string
   }) {
-    const query = qs.stringify({
+    const query = {
       ...(filter?.cycleId && { cycleId: filter.cycleId }),
       ...(filter?.subgroupId && { subgroupId: filter.subgroupId }),
       ...(filter?.startTime && { startTime: filter.startTime }),
       ...(filter?.endTime && { endTime: filter.endTime }),
-    });
+    };
 
-    const url = query ? `/training?${query}` : '/training';
-    return await fetcher<Training[]>(url, { token });
+    return await fetcher<Training[]>(this.URL.trainings(query), { token });
   }
 
   static async createTraining(
@@ -136,7 +141,21 @@ export class FitcodeApi {
     },
     token: string,
   ) {
-    return await fetcher<Training>(`/training`, { method: 'POST', token, body });
+    return await fetcher<Training>(this.URL.trainings(), { method: 'POST', token, body });
+  }
+
+  static async findAllAthleteTrainings(token: string, filter?: {
+    cycleId?: string;
+    startTime?: string;
+    endTime?: string
+  }) {
+    const query = {
+      ...(filter?.cycleId && { cycleId: filter.cycleId }),
+      ...(filter?.startTime && { startTime: filter.startTime }),
+      ...(filter?.endTime && { endTime: filter.endTime }),
+    };
+
+    return await fetcher<Training[]>(this.URL.athleteTrainings(query), { token });
   }
 
   static async addSet(
@@ -180,5 +199,13 @@ export class FitcodeApi {
 
   static async removeTraining(trainingId: string, token: string) {
     return await fetcher<void>(`/training/${trainingId}`, { method: 'DELETE', token });
+  }
+
+  static async createWellness(data: Partial<UserWellness>, token: string) {
+    return await fetcher<UserWellness>(FitcodeApi.URL.wellness(), { method: 'POST', body: data, token });
+  }
+
+  static async getWellnessForToday(token: string) {
+    return await fetcher<UserWellness>(FitcodeApi.URL.wellnessToday(), { token });
   }
 }

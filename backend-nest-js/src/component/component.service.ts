@@ -1,17 +1,19 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Component } from './entity/component.entity';
-import { Tree } from '../common/util/tree';
 import slugify from 'slugify';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { Filter } from '../common/type/orm.type';
 import { ComponentLeaf } from './type/component-leaf.type';
+import { CommonService } from '../common/service/common.service';
 
 @Injectable()
 export class ComponentService {
   private logger = new Logger(ComponentService.name);
 
-  constructor(@InjectRepository(Component) private readonly repository: FirestoreRepository<Component>) {
+  constructor(
+    private readonly commonService: CommonService,
+    @InjectRepository(Component) private readonly repository: FirestoreRepository<Component>) {
   }
 
   async create(data: Partial<Component>): Promise<Component> {
@@ -23,7 +25,7 @@ export class ComponentService {
   }
 
   async createMany(components: Component[]): Promise<void> {
-    Tree.forEach(components, 'children', async (component, parent, result) => {
+    this.commonService.tree.forEach(components, 'children', async (component, parent, result) => {
       const parentId = result ?? null;
       const { name } = component;
       const slug = await this.slugify(name);
@@ -54,7 +56,7 @@ export class ComponentService {
   }
 
   tree(componentsFlat: Component[]): Component[] {
-    return Tree.fromArray(componentsFlat, {
+    return this.commonService.tree.fromArray(componentsFlat, {
       idPropertyName: 'id',
       parentIdPropertyName: 'parentId',
       childrenPropertyName: 'children',
@@ -62,7 +64,7 @@ export class ComponentService {
   }
 
   leafs(componentsTree: Component[]): ComponentLeaf[] {
-    return Tree.leafs(componentsTree, 'children');
+    return this.commonService.tree.leafs(componentsTree, 'children');
   }
 
   isLeafComponent(componentId: string, leafs: ComponentLeaf[]): boolean {

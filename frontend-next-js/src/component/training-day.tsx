@@ -134,22 +134,24 @@ export default function TrainingDay(props: Props) {
     const setGroup = selected.setGroup!;
 
     async function fetchExercises() {
-      const filter = {
-        componentIds: [setGroup.componentId],
-      };
-
+      const filter = { componentIds: [setGroup.componentId] };
       const response = await FitcodeApi.findAllExercises(token, filter);
       setExercises(response);
     }
 
     async function fetchSet() {
-      setSelected(prev => ({ ...prev, loading: true }));
       const response = await FitcodeApi.getSet(setGroup.trainingId, setGroup.id, token);
       setSelected(prev => ({ ...prev, setGroup: response, loading: false }));
     }
 
-    fetchSet().then();
-    fetchExercises().then();
+    async function fetchData() {
+      setSelected(prev => ({ ...prev, loading: true }));
+      await fetchExercises();
+      await fetchSet();
+      setSelected(prev => ({ ...prev, loading: false }));
+    }
+
+    fetchData().then();
   }, [selected.setGroup?.componentId]);
 
   return (<>

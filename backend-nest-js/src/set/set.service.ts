@@ -12,6 +12,7 @@ import { TrainingService } from '../training/training.service';
 import { ExerciseService } from '../exercise/exercise.service';
 import { SuperExerciseInfo } from '../exercise-info/entity/super-exercise-info.entity';
 import { Exercise } from '../exercise/entity/exercise.entity';
+import { Training } from '../training/entity/training.entity';
 
 @Injectable()
 export class SetService {
@@ -37,7 +38,9 @@ export class SetService {
   }
 
   async findAllSetGroupsByTrainingId(trainingId: string): Promise<SetGroup[]> {
-    return await this.setGroupRepository.findAllBy('trainingId', trainingId);
+    return await this.setGroupRepository.findAllBy('trainingId', trainingId, {
+      order: { order: 'asc' },
+    });
   }
 
   /**
@@ -45,7 +48,7 @@ export class SetService {
    * set group for each component (where only exercises from that component can
    * be added), and 3 set subgroups for each set group (representing supersets).
    */
-  async initializeTraining(trainingId: string, componentIds: string[]) {
+  async initializeTraining(trainingId: string, componentIds: string[]): Promise<SetGroup[]> {
     // each training component represents one set group
     const setGroups: SetGroup[] = [];
     for (let order = 0; order < componentIds.length; order++) {
@@ -57,20 +60,70 @@ export class SetService {
     return setGroups;
   }
 
+  async copyTraining(user: User, training: Training, newTrainingId: string): Promise<SetGroup[]> {
+    const oldSetGroups = await this.findAllSetGroupsByTrainingId(training.id);
+    const group = await this.trainingService.findGroup(user, training);
+
+    // copy all set groups
+    const newSetGroups: SetGroup[] = [];
+    for (const oldSetGroup of oldSetGroups) {
+      const newSetGroup = await this.setGroupRepository.create({
+        trainingId: newTrainingId,
+        componentId: oldSetGroup.componentId,
+        order: oldSetGroup.order,
+      });
+
+      // copy all set subgroups ("supersets")
+      const oldSetSubgroups = await this.setSubgroupRepository.findAllBy('setGroupId', oldSetGroup.id, {
+        order: { order: 'asc' },
+      });
+
+      for (const oldSetSubgroup of oldSetSubgroups) {
+        const newSetSubgroup = await this.setSubgroupRepository.create({
+          setGroupId: newSetGroup.id,
+          order: oldSetSubgroup.order,
+          color: oldSetSubgroup.color,
+        });
+
+        // copy all set exercises for each superset
+        const oldSetExercises = await this.setExerciseRepository.findAllBy('setSubgroupId', oldSetSubgroup.id, {
+          order: { order: 'asc' },
+        });
+
+        for (const oldSetExercise of oldSetExercises) {
+          const newSetExercise = await this.setExerciseRepository.create({
+            setSubgroupId: newSetSubgroup.id,
+            exerciseId: oldSetExercise.exerciseId,
+            order: oldSetExercise.order,
+          });
+
+          // copy super exercise info and exercise info
+          const { superExerciseInfo } = await this.exerciseInfoService.findInfoBySetExerciseId(oldSetExercise.id);
+          await this.exerciseInfoService.create(user, newSetExercise.id, group.members, {
+            ...superExerciseInfo,
+            setExerciseId: newSetExercise.id,
+          });
+        }
+      }
+
+      newSetGroups.push(newSetGroup);
+    }
+
+    return newSetGroups.sort((a, b) => a.order - b.order);
+  }
+
   async createSetGroup(data: Partial<SetGroup>): Promise<SetGroup> {
-    this.logger.debug(`Creating set group: ${JSON.stringify(data)}`);
     const setGroup = await this.setGroupRepository.create(data);
 
     // for each set group, create 3 set subgroups (representing supersets)
     const setGroupId = setGroup.id;
     setGroup.setSubgroups = await this.setSubgroupRepository.createMany([
-      { setGroupId, order: 0, color: this.commonService.getRandomColor() },
-      { setGroupId, order: 1, color: this.commonService.getRandomColor() },
-      { setGroupId, order: 2, color: this.commonService.getRandomColor() },
+      { setGroupId, order: 0, color: this.commonService.color.random() },
+      { setGroupId, order: 1, color: this.commonService.color.random() },
+      { setGroupId, order: 2, color: this.commonService.color.random() },
     ]);
 
-    // TODO - for first subgroup, create warmup and cooldown sets
-
+    setGroup.setSubgroups = setGroup.setSubgroups.sort((a, b) => a.order - b.order);
     return setGroup;
   }
 

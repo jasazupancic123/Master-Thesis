@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Group } from './entity/group.entity';
 import { User } from '../common/type/custom-claims.type';
@@ -6,6 +6,10 @@ import { UserService } from '../user/user.service';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { Timestamp } from 'firebase-admin/firestore';
+import { TrainingService } from '../training/training.service';
+import { CycleService } from '../cycle/cycle.service';
+import { Wrapper } from '../common/type/wrapper.type';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class GroupService {
@@ -16,6 +20,9 @@ export class GroupService {
     private readonly repository: FirestoreRepository<Group>,
     private readonly firebaseService: FirebaseService,
     private readonly userService: UserService,
+    private readonly trainingService: TrainingService,
+    @Inject(forwardRef(() => CycleService))
+    private readonly cycleService: Wrapper<CycleService>,
   ) {
     this.logger = new Logger(GroupService.name);
   }
@@ -25,11 +32,11 @@ export class GroupService {
   }
 
   isMember(user: User, group: Group): boolean {
-    return group.memberIds.includes(user.uid);
+    return group.membersIds.includes(user.uid);
   }
 
   isOwner(user: User, group: Group): boolean {
-    return group.userId === user.uid;
+    return group.ownerId === user.uid;
   }
 
   /**
@@ -37,9 +44,22 @@ export class GroupService {
    */
   async findAll(user: User) {
     // find all by user id and where parent is null
-    const groups = await this.repository.findAllBy('userId', user.uid);
+    const groups = await this.repository.findAllBy('ownerId', user.uid);
     const parents = groups.filter(group => !group.parentId);
     return parents.filter(group => this.canView(user, group));
+  }
+
+  /**
+   * Returns all groups that user is member of.
+   */
+  async findAthleteGroups(user: User) {
+    const all = await this.repository.getCollection()
+      .where('memberIds', 'array-contains', user.uid);
+
+    return await this.repository.findAllByMany([
+      { field: 'membersIds', operator: 'array-contains', value: user.uid },
+      { field: 'validUntil', operator: '>', value: Timestamp.now() },
+    ]);
   }
 
   /**
@@ -58,12 +78,12 @@ export class GroupService {
     ]);
 
     const availableMemberIds = await this.updateAvailableMemberIds(group.id);
-
-    const subgroupMemberIds = group.subgroups.flatMap(subgroup => subgroup.memberIds);
+    const subgroupMemberIds = group.subgroups.flatMap(subgroup => subgroup.membersIds);
     const memberIds = Array.from(new Set(availableMemberIds.concat(subgroupMemberIds)));
 
-    group.user = await this.userService.findOneById(group.userId);
+    group.user = await this.userService.findOneById(group.ownerId);
     group.members = await this.userService.findAll(user, { ids: memberIds });
+
     return group;
   }
 
@@ -74,10 +94,10 @@ export class GroupService {
     if (this.firebaseService.isAthlete(user))
       throw new UnauthorizedException('Athletes cannot create groups');
 
-    if (!data.memberIds?.length)
+    if (!data.membersIds?.length)
       throw new BadRequestException('Group must have at least one member');
 
-    const members = await this.userService.findAll(user, { ids: data.memberIds });
+    const members = await this.userService.findAll(user, { ids: data.membersIds });
 
     if (data.parentId) {
       const parent = await this.repository.findOneByIdOrFail(data.parentId);
@@ -92,25 +112,44 @@ export class GroupService {
 
       // all members must also be members of the parent group
       members.forEach(member => {
-        if (!parent.memberIds.includes(member.uid))
+        if (!parent.membersIds.includes(member.uid))
           throw new BadRequestException('All members must be members of the parent group');
       });
 
       // delete members from parent group
-      const memberIds = parent.memberIds.filter(id => !data.memberIds.includes(id));
-      await this.repository.update(parent.id, { memberIds });
-
-      // TODO - copy all trainings from parent group to subgroup
+      const memberIds = parent.membersIds.filter(id => !data.membersIds.includes(id));
+      await this.repository.update(parent.id, { membersIds: memberIds });
     }
 
     const group = await this.repository.create({
       name: data.name,
-      userId: user.uid,
-      memberIds: members.map(member => member.uid),
+      ownerId: user.uid,
+      membersIds: members.map(member => member.uid),
       parentId: data.parentId || null,
       validUntil: data.validUntil || null,
       lastModifiedAvailableMembers: new Date(),
     });
+
+    if (data.parentId) {
+      // copy all trainings from all parent group's cycles to subgroup from now on until valid until date
+      const cycles = await this.cycleService.findAll(user, { groupId: data.parentId });
+      for (const cycle of cycles) {
+        const trainings = await this.trainingService.findAll(user, {
+          filter: {
+            cycleId: cycle.id,
+            startTime: dayjs().startOf('day').toDate(),
+            endTime: data.validUntil,
+          },
+        });
+
+        for (const training of trainings)
+          await this.trainingService.copy(user, {
+            trainingId: training.id,
+            cycleId: cycle.id,
+            subgroupId: group.id,
+          });
+      }
+    }
 
     group.user = user;
     group.members = members;
@@ -122,7 +161,7 @@ export class GroupService {
    * the group and all members of expired subgroups that can be "used" again.
    */
   private async updateAvailableMemberIds(groupId: string): Promise<string[]> {
-    // TODO - cron job
+    // TODO - cron job?
     const group = await this.repository.findOneById(groupId);
     if (!group)
       throw new BadRequestException('Group not found');
@@ -135,11 +174,13 @@ export class GroupService {
       { field: 'validUntil', operator: '<=', value: Timestamp.now() },
     ]);
 
+    // console.log(`invalid subgroups for group ${group.name}: ${JSON.stringify(invalidSubgroups)}`);
+
     // all members in expired subgroups become available again
-    const memberIds = group.memberIds.concat(invalidSubgroups.flatMap(subgroup => subgroup.memberIds));
+    const memberIds = group.membersIds.concat(invalidSubgroups.flatMap(subgroup => subgroup.membersIds));
     const availableMemberIds = Array.from(new Set(memberIds));
     await this.repository.update(groupId, {
-      memberIds: availableMemberIds,
+      membersIds: availableMemberIds,
       lastModifiedAvailableMembers: new Date(),
     });
 

@@ -27,6 +27,8 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SelectInput from '@/app/groups/components/select-input';
 import dayjs from 'dayjs';
 
+const TEST_SUBGROUP_DURATION_VALUE = 1000;
+
 export default function TrainerPageRouter(props: GroupPageProps) {
   // context
   const { token } = useAppContext() as AppContextType;
@@ -40,8 +42,8 @@ export default function TrainerPageRouter(props: GroupPageProps) {
 
   // group to create or update
   const [create, setCreate] = useState({
-    group: { name: '', memberIds: [], parentId: null },
-    subgroup: { name: '', memberIds: [], parentId: null, validUntil: 0 },
+    group: { name: '', memberIds: [], parentId: null as string | null },
+    subgroup: { name: '', memberIds: [], parentId: null as string | null, validUntil: 0 },
     // cycle modal is a separate component
   });
 
@@ -92,6 +94,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       });
 
       props.setGroups(prev => [...prev, response]);
+      setCreate({ ...create, group: { name: '', memberIds: [], parentId: null } });
     } catch (e) {
       toast.error(e.message);
     } finally {
@@ -115,7 +118,9 @@ export default function TrainerPageRouter(props: GroupPageProps) {
         name: subgroup.name,
         memberIds: subgroup.memberIds,
         parentId: props.selected.group.id,
-        validUntil: validUntil.toISOString() as Date,
+        validUntil: validUntilValue === TEST_SUBGROUP_DURATION_VALUE
+          ? dayjs().add(10, 's').toISOString() as Date
+          : validUntil.toISOString() as Date,
       }, token);
 
       props.setSelected(prev => ({
@@ -140,6 +145,10 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       });
 
       setModal({ ...modal, subgroup: false });
+      setCreate({
+        ...create,
+        subgroup: { name: '', memberIds: [], parentId: props.selected.group!.id, validUntil: 0 },
+      });
       toast.success('Successfully created subgroup');
     } catch (e) {
       toast.error(e.message || 'Failed to create subgroup');
@@ -355,6 +364,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
             {/* Subgroup duration */}
             <SelectData<{ label: string, value: number }>
               data={[
+                { label: '10 seconds', value: TEST_SUBGROUP_DURATION_VALUE }, // TODO - only for testing, remove later
                 { label: '1 day', value: 1 },
                 { label: '1 week', value: 7 },
                 { label: 'Cycle', value: 0 },

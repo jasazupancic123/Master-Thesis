@@ -121,8 +121,22 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
     return this.serialize(doc);
   }
 
-  async findOneBy(field: keyof T, value: any): Promise<T | null> {
-    const snapshot = await this.collection.where(field.toString(), '==', value).limit(1).get();
+  async findOneBy(field: keyof T, value: any, operator: WhereFilterOp = '=='): Promise<T | null> {
+    const snapshot = await this.collection.where(field.toString(), operator, value).limit(1).get();
+    if (snapshot.empty) return null;
+    return this.serialize(snapshot.docs[0]);
+  }
+
+  async findOneByMany(
+    conditions: { field: keyof T, operator: WhereFilterOp, value: any }[],
+  ): Promise<T | null> {
+    let query = this.collection as Query;
+
+    for (const condition of conditions)
+      if (condition.value !== undefined)
+        query = query.where(condition.field.toString(), condition.operator, condition.value);
+
+    const snapshot = await query.limit(1).get();
     if (snapshot.empty) return null;
     return this.serialize(snapshot.docs[0]);
   }

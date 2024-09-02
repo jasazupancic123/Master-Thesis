@@ -5,14 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a110cea5-83fa-4c21-a030-85b10323fced" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/frontend-next-js/src/app/training/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-cycle-view.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-cycle-view.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-page-router.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-page-router.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-week-view.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/components/trainer-week-view.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/groups/props.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/groups/props.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/select-data.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/select-data.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/group.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/group.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/app/profile/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/app/profile/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/training-day.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/constant/link.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/constant/link.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/constant/website.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/constant/website.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/hoc/with-auth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/hoc/with-auth.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/type/link.type.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/type/link.type.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/util/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/util/api.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,6 +31,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/backend-nest-js/src/group/group.service.ts" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/backend-nest-js/src/training/training.service.ts" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="OptimizeOnSaveOptions">
@@ -43,10 +49,12 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;Jest.CommonService Unit Test.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.CommonService::Unit.executor&quot;: &quot;Run&quot;,
     &quot;Jest.FirebaseMiddleware.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/projects/fitcode/frontend-next-js/src/app/cycles/[id]&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/projects/fitcode/frontend-next-js/src/app&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
@@ -57,6 +65,7 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs.jest.jest_package&quot;: &quot;D:/projects/fitcode/backend-nest-js/node_modules/jest&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;npm.test.executor&quot;: &quot;Run&quot;,
     &quot;rearrange.code.on.save&quot;: &quot;true&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.linters.eslint&quot;,
     &quot;ts.external.directory.path&quot;: &quot;D:\\projects\\fitcode\\backend-nest-js\\functions\\node_modules\\typescript\\lib&quot;,
@@ -74,25 +83,49 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\chart" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\app\calendar" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]\day" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\training\service" />
-      <recent name="D:\projects\fitcode\env\frontend-next-js" />
-      <recent name="D:\projects\fitcode\env" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\projects\fitcode\backend-nest-js\src\group\entity" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\cycle\entity" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\component\entity" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\exercise\entity" />
-      <recent name="D:\projects\fitcode\backend-nest-js" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\common\service\test" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\common\service\util" />
+      <recent name="D:\projects\fitcode\backend-nest-js\src\common\service" />
+      <recent name="D:\projects\fitcode\frontend-next-js\src\component" />
     </key>
     <key name="es6.move.members.recent.items">
       <recent name="D:\projects\fitcode\frontend-next-js\src\type\props.type.d.ts" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\common\const\firestore.const.ts" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Jest.CommonService::Unit">
+    <configuration name="CommonService Unit Test" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/backend-nest-js/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$/backend-nest-js" />
+      <envs />
+      <scope-kind value="SUITE" />
+      <test-file value="$PROJECT_DIR$/backend-nest-js/src/common/service/common.service.spec.ts" />
+      <test-names>
+        <test-name value="CommonService Unit Test" />
+      </test-names>
+      <method v="2" />
+    </configuration>
+    <configuration name="CommonService::Unit" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/backend-nest-js/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$/backend-nest-js" />
+      <envs />
+      <scope-kind value="SUITE" />
+      <test-file value="$PROJECT_DIR$/backend-nest-js/src/common/service/common.service.spec.ts" />
+      <test-names>
+        <test-name value="CommonService::Unit" />
+      </test-names>
+      <method v="2" />
+    </configuration>
     <configuration name="FirebaseMiddleware" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/backend-nest-js/node_modules/jest" />
@@ -105,8 +138,21 @@
       </test-names>
       <method v="2" />
     </configuration>
+    <configuration name="test" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/backend-nest-js/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="test" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.CommonService::Unit" />
+        <item itemvalue="Jest.CommonService Unit Test" />
+        <item itemvalue="npm.test" />
         <item itemvalue="Jest.FirebaseMiddleware" />
       </list>
     </recent_temporary>
@@ -114,7 +160,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-WS-242.20224.426" />
+        <option value="bundled-js-predefined-d6986cc7102b-7c0b70fcd90d-JavaScript-WS-242.21829.149" />
       </set>
     </attachedChunks>
   </component>
@@ -177,7 +223,13 @@
       <workItem from="1724307782421" duration="20319000" />
       <workItem from="1724396003079" duration="31676000" />
       <workItem from="1724482242356" duration="20400000" />
-      <workItem from="1724596538135" duration="18164000" />
+      <workItem from="1724596538135" duration="18266000" />
+      <workItem from="1724653355483" duration="17036000" />
+      <workItem from="1724746315774" duration="8380000" />
+      <workItem from="1724850089312" duration="12149000" />
+      <workItem from="1724913720210" duration="12138000" />
+      <workItem from="1724995333221" duration="21904000" />
+      <workItem from="1725259859172" duration="2389000" />
     </task>
     <servers />
   </component>

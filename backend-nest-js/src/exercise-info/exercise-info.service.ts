@@ -135,11 +135,11 @@ export class ExerciseInfoService {
       case WorkloadType.RM:
         // fetch 1RM from last month of user exercises, use formula and save value as KG
         const values = await this.getMemberExerciseValues(member, exerciseId);
-        return this.commonService.calculateRM(values);
+        return this.commonService.number.rm(values);
       case WorkloadType.BW:
         // fetch body weight from user's profile and save % of it as KG
         const bodyweight = member.customClaims.bodyweight || 0;
-        return bodyweight * this.commonService.percentFromValue(value);
+        return bodyweight * this.commonService.number.percent(value);
       case WorkloadType.INT:
       case WorkloadType.KG:
       default:

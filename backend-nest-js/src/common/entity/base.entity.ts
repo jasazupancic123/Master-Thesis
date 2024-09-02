@@ -1,16 +1,19 @@
-import { IsDate, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { firestore } from 'firebase-admin';
+import { Expose } from 'class-transformer';
 
 export class BaseEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
+  @Expose()
   id: string;
 
   @ApiProperty()
-  createdAt: firestore.Timestamp = firestore.Timestamp.now();
+  @Expose()
+  createdAt: Date;
 
   @ApiProperty()
-  updatedAt = firestore.Timestamp.now();
+  @Expose()
+  updatedAt: Date;
 }
