@@ -6,7 +6,7 @@ import { ExerciseInfo } from '../../exercise-info/entity/exercise-info.entity';
 import { Expose } from 'class-transformer';
 import { Entity } from '../../common/decorator/entity.decorator';
 import { SET_EXERCISE_COLLECTION } from '../../common/const/firestore.const';
-import { SuperExerciseInfo } from '../../exercise-info/entity/super-exercise-info.entity';
+import { TrainingExerciseMeta } from '../../training/entity/training-exercise-meta.entity';
 
 @Entity(SET_EXERCISE_COLLECTION)
 export class SetExercise extends BaseEntity {
@@ -30,6 +30,6 @@ export class SetExercise extends BaseEntity {
 
   // relations
   exercise: Exercise;
-  superExerciseInfo: SuperExerciseInfo;
+  superExerciseInfo: TrainingExerciseMeta;
   exerciseInfo: ExerciseInfo[];
 }

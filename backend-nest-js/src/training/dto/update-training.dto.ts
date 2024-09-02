@@ -4,7 +4,8 @@ import { PickType } from '@nestjs/mapped-types';
 
 export class UpdateTrainingDto extends PartialType(
   PickType(CreateTrainingDto, [
-    'startTime',
-    'endTime',
-  ] as const)
-) {}
+    'from',
+    'to',
+  ] as const),
+) {
+}

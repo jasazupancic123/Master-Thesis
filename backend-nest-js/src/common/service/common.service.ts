@@ -9,6 +9,7 @@ export class CommonService {
   readonly date: Util.DateUtil;
   readonly generic: Util.GenericUtil;
   readonly tree: Util.TreeUtil;
+  readonly array: Util.ArrayUtil;
 
   constructor() {
     this.env = new Util.EnvUtil();
@@ -17,5 +18,6 @@ export class CommonService {
     this.date = new Util.DateUtil();
     this.generic = new Util.GenericUtil();
     this.tree = new Util.TreeUtil();
+    this.array = new Util.ArrayUtil();
   }
 }

@@ -36,11 +36,15 @@ export class ComponentService {
   }
 
   async findOneBySlug(slug: string): Promise<Component> {
-    return await this.repository.findOneBy('slug', slug);
+    return await this.repository.findOneBy({ field: 'slug', value: slug });
   }
 
   async findOneById(id: string): Promise<Component> {
     return await this.repository.findOneById(id);
+  }
+
+  async findOneByIdOrFail(id: string): Promise<Component> {
+    return await this.repository.findOneByIdOrFail(id);
   }
 
   async findAll(filter?: Filter): Promise<Component[]> {

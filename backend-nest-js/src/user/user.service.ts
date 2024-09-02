@@ -88,6 +88,14 @@ export class UserService {
     return filtered.filter(record => record.uid !== user.uid);
   }
 
+  async findAllOrFail(user: User, filter?: Filter<UserDto & { ids?: string[] }>): Promise<User[]> {
+    const users = await this.findAll(user, filter);
+    if (filter?.ids && users.length !== filter.ids.length)
+      throw new BadRequestException('Some users not found');
+
+    return users;
+  }
+
   async findOneByEmail(email: string): Promise<User> {
     return await this.firebaseService.auth.getUserByEmail(email) as User;
   }
@@ -125,7 +133,7 @@ export class UserService {
   async findWellness(user: User, filter?: Filter<Wellness>): Promise<Wellness> {
     const startDate = Timestamp.fromDate(filter?.date || dayjs().startOf('day').toDate());
     const endDate = Timestamp.fromDate(filter?.date || dayjs().endOf('day').toDate());
-    
+
     return await this.wellnessRepository.findOneByMany([
       { field: 'userId', value: user.uid, operator: '==' },
       { field: 'date', value: startDate, operator: '>=' },

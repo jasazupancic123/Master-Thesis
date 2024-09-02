@@ -7,9 +7,9 @@ import { User } from '../common/type/custom-claims.type';
 import { AthleteTrainingFilterDto, TrainingFilterDto } from './dto/training-filter.dto';
 import { CycleService } from '../cycle/cycle.service';
 import { Auth } from '../common/decorator/auth.decorator';
-import { AddSetExerciseDto } from './dto/create-set-exercise.dto';
+import { AddTrainingExercise } from './dto/add-training-exercise.dto';
 import { SetService } from '../set/set.service';
-import { SuperExerciseInfo } from '../exercise-info/entity/super-exercise-info.entity';
+import { TrainingExerciseMeta } from './entity/training-exercise-meta.entity';
 import { UpdateSetExerciseDto } from './dto/update-set-exercise.dto';
 import { AddSetDto } from './dto/add-set.dto';
 import { UserRole } from '../user/enum/user-role.enum';
@@ -31,7 +31,7 @@ export class TrainingController {
   @Get('athlete/me')
   @Auth([UserRole.ATHLETE])
   async findAllAthleteTrainings(@RequestUser() user: User, @Query() filter: AthleteTrainingFilterDto) {
-    return await this.trainingService.findAllAthleteTrainings(user, filter);
+    return await this.trainingService.findAllByAthlete(user, filter);
   }
 
   @Get(':id')
@@ -71,10 +71,10 @@ export class TrainingController {
   async addSetExercise(
     @RequestUser() user: User,
     @Param('setSubgroupId') setSubgroupId: string,
-    @Body() body: AddSetExerciseDto,
+    @Body() body: AddTrainingExercise,
   ) {
     const { exerciseIds, ...data } = body;
-    return await this.setService.addExercisesToSetGroup(user, setSubgroupId, exerciseIds, data as Partial<SuperExerciseInfo>);
+    return await this.setService.addExercisesToSetGroup(user, setSubgroupId, exerciseIds, data as Partial<TrainingExerciseMeta>);
   }
 
   @Patch('set/subgroup/exercise/:setExerciseId')
@@ -83,7 +83,7 @@ export class TrainingController {
     @Param('setExerciseId') setExerciseId: string,
     @Body() data: UpdateSetExerciseDto,
   ) {
-    return await this.setService.updateExercise(user, setExerciseId, data as Partial<SuperExerciseInfo>);
+    return await this.setService.updateExercise(user, setExerciseId, data as Partial<TrainingExerciseMeta>);
   }
 
   @Patch(':id')

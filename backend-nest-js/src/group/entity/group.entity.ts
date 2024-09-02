@@ -6,6 +6,7 @@ import { User } from '../../common/type/custom-claims.type';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { Subgroup } from './subgroup.entity';
+import { Cycle } from './cycle.entity';
 
 @Entity(FirestoreCollection.GROUP)
 export class Group extends BaseEntity {
@@ -31,6 +32,13 @@ export class Group extends BaseEntity {
   @ApiProperty()
   @Expose()
   subgroups: Subgroup[];
+
+  @ValidateNested({ each: true })
+  @Type(() => Cycle)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  cycles: Cycle[];
 
   user: User;
   members: User[];
