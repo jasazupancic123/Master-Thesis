@@ -2,11 +2,22 @@ import { IdsDto } from '../dto/id.dto';
 import { PaginateOptions } from './paginate.type';
 import { WhereFilterOp } from 'firebase-admin/lib/firestore';
 
-export interface Options<T> {
+export interface Options<T extends object> {
   filter?: Filter<T>;
   paginate?: PaginateOptions<T>;
   populate?: (keyof T)[];
 }
+
+export interface FindOneOptions<T extends object> {
+  populate?: NestedKeyOf<T>[];
+}
+
+type NestedKeyOf<ObjectType extends object> =
+  {
+    [Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object
+    ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
+    : `${Key}`
+  }[keyof ObjectType & (string | number)];
 
 export interface Condition<T> {
   field: keyof T;
@@ -28,6 +39,9 @@ export interface FilterOperator<T> {
   $arrayContainsAny?: T[];
 }
 
+export function isFilterOperator<T>(value: any): value is FilterOperator<T> {
+  return typeof value === 'object' && value !== null;
+}
 
 /**
  * Filters any object by its fields and also by ids

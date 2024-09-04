@@ -1,9 +1,9 @@
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { SetType } from '../../exercise-info/enum/set-type.enum';
-import { WorkloadType } from '../../exercise-info/enum/workload-type.enum';
-import { Effort } from '../../exercise-info/enum/effort.enum';
+import { SetType } from '../enum/set-type.enum';
+import { WorkloadType } from '../enum/workload-type.enum';
+import { Effort } from '../enum/effort.enum';
 
 // NOTE - any values that are represented in % are NOT normalized between 0 and 1 (BW, INT, RM, ...)
 

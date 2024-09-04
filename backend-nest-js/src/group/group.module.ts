@@ -5,6 +5,7 @@ import { FirebaseModule } from '../firebase/firebase.module';
 import { UserModule } from '../user/user.module';
 import { Group } from './entity/group.entity';
 import { TrainingModule } from '../training/training.module';
+import { GroupRepository } from './repository/group.repository';
 
 @Module({
   imports: [
@@ -14,8 +15,8 @@ import { TrainingModule } from '../training/training.module';
     forwardRef(() => TrainingModule),
   ],
   controllers: [GroupController],
-  providers: [GroupService],
-  exports: [GroupService],
+  providers: [GroupRepository, GroupService],
+  exports: [GroupService, GroupRepository],
 })
 export class GroupModule {
 }
