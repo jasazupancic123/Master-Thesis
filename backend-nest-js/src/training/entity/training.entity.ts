@@ -3,13 +3,15 @@ import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { TrainingComponent } from './training-component.entity';
+import { Subgroup } from '../../group/entity/subgroup.entity';
 
 export class Training extends BaseEntity {
   @IsString()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  subgroupId?: string;
+  subgroupId?: string | null;
+  subgroup: Subgroup;
   /*if null, then it's a training for cycle's group subgroups also have date
   until which they are valid, by default they are valid only one day, so trainer
   can create new subgroups every day, and the next day members of subgroup are

@@ -112,7 +112,7 @@ export class ComponentService {
 
     let i = 1;
     do {
-      const exists = await this.repository.findOneBy('slug', slug);
+      const exists = await this.repository.findOneBy({ field: 'slug', value: slug });
       if (!exists) {
         i = 1;
         break;

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Group } from './entity/group.entity';
 import { User } from '../common/type/custom-claims.type';
@@ -14,13 +14,24 @@ import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
 import { Cycle } from './entity/cycle.entity';
 import { isAfter, isBefore } from 'date-fns';
 import { Filter } from '../common/type/orm.type';
+import { Wrapper } from '../common/type/wrapper.type';
 
-export interface CycleParentRef {
-  groupId: string;
+
+export interface GroupRef {
+  groupId: string; // group/{groupId}
+  cycleId?: string; // group/{groupId}/cycle/{cycleId}
+  subgroupId?: string; // group/{groupId}/subgroup/{subgroupId}
 }
 
 @Injectable()
 export class GroupService {
+  collection = {
+    cycles: (ref: GroupRef) => this.repository.getCollection(ref.groupId, FirestoreCollection.CYCLE),
+    cycle: (ref: GroupRef) => this.collection.cycles(ref).doc(ref.cycleId),
+    subgroups: (ref: GroupRef) => this.repository.getCollection(ref.groupId, FirestoreCollection.SUBGROUP),
+    subgroup: (ref: GroupRef) => this.collection.subgroups(ref).doc(ref.subgroupId),
+  };
+
   private logger = new Logger(GroupService.name);
 
   constructor(
@@ -29,8 +40,13 @@ export class GroupService {
     private readonly userService: UserService,
     @InjectRepository(Group)
     private readonly repository: FirestoreRepository<Group>,
-    private readonly trainingService: TrainingService,
+    @Inject(forwardRef(() => TrainingService))
+    readonly trainingService: Wrapper<TrainingService>,
   ) {
+  }
+
+  async findMembers(user: User, group: Group): Promise<User[]> {
+    return this.userService.findAll(user, { ids: group.membersIds });
   }
 
   /**
@@ -46,21 +62,22 @@ export class GroupService {
 
     // populate
     group.user = await this.userService.findOneById(group.ownerId);
-    group.members = await this.userService.findAll(user, { ids: group.membersIds });
-    group.subgroups = await this.findAllSubgroups(user, { groupId: group.id });
-
+    group.members = await this.findMembers(user, group);
+    group.subgroups = await this.findSubgroups(user, { groupId: group.id });
     return group;
   }
 
-  async findOneCycleByIdOrFail(user: User, ref: CycleParentRef, cycleId: string): Promise<Cycle> {
-    const item = await this.cycles(ref.groupId).doc(cycleId).get();
-    const cycle = this.firebaseService.serializeDocument<Cycle>(item);
-    if (!cycle) throw new BadRequestException('Cycle not found');
+  async findCycleByIdOrFail(user: User, ref: GroupRef): Promise<Cycle> {
+    if (!ref.cycleId)
+      throw new BadRequestException('Cycle ID is required');
+
+    const cycle = this.firebaseService.serializeDocument<Cycle>(await this.collection.cycle(ref).get());
+    if (!cycle)
+      throw new BadRequestException('Cycle not found');
 
     // populate
-    cycle.trainings = await this.trainingService.findAll(user, { groupId: ref.groupId, cycleId });
+    cycle.trainings = await this.trainingService.findTrainings(ref);
     cycle.weeks = this.commonService.date.weeks(cycle.from, cycle.to);
-
     return cycle;
   }
 
@@ -69,8 +86,8 @@ export class GroupService {
    * time. This function returns the active cycle for the given date. By
    * default, it uses the current date.
    */
-  async findActiveCycle(user: User, ref: CycleParentRef, date: Date = new Date()): Promise<Cycle | null> {
-    const cycles = await this.findAllCycles(user, { groupId: ref.groupId }, { from: date });
+  async findActiveCycle(user: User, ref: GroupRef, date: Date = new Date()): Promise<Cycle | null> {
+    const cycles = await this.findAllCycles(user, ref, { from: date });
     return cycles.find(cycle => isBefore(date, cycle.to));
   }
 
@@ -91,18 +108,18 @@ export class GroupService {
   /**
    * Returns all groups that user is member of.
    */
-  async findAthleteGroups(user: User) {
+  async findAthleteGroups(_user: User) {
     return [];
   }
 
-  async findAllCycles(user: User, ref: CycleParentRef, filter?: Filter<Cycle>): Promise<Cycle[]> {
-    const group = await this.findOneByIdOrFail(user, ref.groupId);
+  async findAllCycles(user: User, ref: GroupRef, filter?: Filter<Cycle>): Promise<Cycle[]> {
+    await this.findOneByIdOrFail(user, ref.groupId);
 
-    let query = this.cycles(group.id) as Query;
+    let query = this.collection.cycles(ref) as Query;
     if (filter) {
       if (filter.ids) query = query.where('id', 'in', filter.ids);
-      if (filter.from) query = query.where('from', '>=', Timestamp.fromDate(filter.from));
-      if (filter.to) query = query.where('to', '<=', Timestamp.fromDate(filter.to));
+      if (filter.from) query = query.where('from', '>=', Timestamp.fromDate(<Date>filter.from));
+      if (filter.to) query = query.where('to', '<=', Timestamp.fromDate(<Date>filter.to));
     }
 
     const cycles = this.firebaseService.serialize<Cycle>(await query.get());
@@ -114,14 +131,24 @@ export class GroupService {
     return cycles;
   }
 
-  async findAllSubgroups(user: User, ref: CycleParentRef, filter?: Filter<Subgroup>): Promise<Subgroup[]> {
-    const group = await this.findOneByIdOrFail(user, ref.groupId);
+  async findSubgroupOrFail(user: User, ref: GroupRef): Promise<Subgroup> {
+    const subgroup = this.firebaseService.serializeDocument<Subgroup>(await this.collection.subgroup(ref).get());
+    if (!subgroup)
+      throw new BadRequestException('Subgroup not found');
 
-    let query = this.subgroups(group.id) as Query;
+    // populate
+    subgroup.members = await this.userService.findAll(user, { ids: subgroup.membersIds });
+    return subgroup;
+  }
+
+  async findSubgroups(user: User, ref: GroupRef, filter?: Filter<Subgroup>): Promise<Subgroup[]> {
+    await this.findOneByIdOrFail(user, ref.groupId);
+
+    let query = this.collection.subgroups(ref) as Query;
     if (filter) {
       if (filter.ids) query = query.where('id', 'in', filter.ids);
-      if (filter.from) query = query.where('from', '>=', Timestamp.fromDate(filter.from));
-      if (filter.to) query = query.where('to', '<=', Timestamp.fromDate(filter.to));
+      if (filter.from) query = query.where('from', '>=', Timestamp.fromDate(<Date>filter.from));
+      if (filter.to) query = query.where('to', '<=', Timestamp.fromDate(<Date>filter.to));
     }
 
     const subgroups = this.firebaseService.serialize<Subgroup>(await query.get());
@@ -158,13 +185,12 @@ export class GroupService {
   async addSubgroup(user: User, data: Partial<Subgroup> & IdDto): Promise<Subgroup> {
     // check permissions
     const group = await this.repository.findOneByIdOrFail(data.id); // parent group
-    if (!this.isOwner(user, group)) throw new BadRequestException('You are not allowed to create subgroups for this group');
+    if (!this.isOwner(user, group))
+      throw new BadRequestException('You are not allowed to create subgroups for this group');
 
     // validate dates
-    const {
-      from,
-      to,
-    } = this.firebaseService.serializeDocument<Cycle>(await this.cycles(group.id).doc(data.cycleId).get());
+    const ref: GroupRef = { groupId: group.id, cycleId: data.cycleId };
+    const { from, to } = this.firebaseService.serializeDocument<Cycle>(await this.collection.cycle(ref).get());
     if (isBefore(data.from, from) || isAfter(data.to, to))
       throw new BadRequestException('Subgroup dates must be within the cycle dates');
 
@@ -177,7 +203,7 @@ export class GroupService {
     if (!members.every(member => availableMemberIds.includes(member.uid)))
       throw new BadRequestException('All members must be available in the parent group');
 
-    const document = await this.subgroups(group.id).add({
+    const document = await this.collection.subgroups(ref).add({
       name: data.name,
       cycleId: data.cycleId,
       membersIds: members.map(member => member.uid),
@@ -201,6 +227,7 @@ export class GroupService {
     this.logger.debug(`Adding cycle (user ${user.uid}) for group ${data.id}: ${JSON.stringify(data)}`);
 
     // check permissions
+    const ref: GroupRef = { groupId: data.id };
     const group = await this.repository.findOneByIdOrFail(data.id);
     if (!this.isOwner(user, group)) throw new BadRequestException('You are not allowed to add cycles to this group');
 
@@ -210,7 +237,7 @@ export class GroupService {
       throw new BadRequestException('Cycle dates must not overlap with existing cycles');
 
     // create cycle
-    const item = await this.cycles(group.id).add({
+    const item = await this.collection.cycles(ref).add({
       name: data.name,
       from: Timestamp.fromDate(data.from),
       to: Timestamp.fromDate(data.to),
@@ -252,13 +279,5 @@ export class GroupService {
 
   isOwner(user: User, group: Group): boolean {
     return group.ownerId === user.uid;
-  }
-
-  subgroups(groupId: string) {
-    return this.repository.getCollection(groupId, FirestoreCollection.SUBGROUP);
-  }
-
-  cycles(groupId: string) {
-    return this.repository.getCollection(groupId, FirestoreCollection.CYCLE);
   }
 }

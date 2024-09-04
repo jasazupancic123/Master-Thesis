@@ -120,11 +120,11 @@ export class ExerciseService {
     if (options.filter) {
       const { name, attributeValues, componentIds } = options.filter;
 
-      if (name)
+      if (name && typeof name === 'string')
         exercises = exercises.filter(exercise => exercise.name.toLowerCase().includes(name.toLowerCase()));
 
-      if (componentIds?.length)
-        exercises = this.filterByComponents(exercises, componentIds, leafs);
+      if (componentIds && typeof componentIds[0] === 'string')
+        exercises = this.filterByComponents(exercises, componentIds as string[], leafs);
 
       if (attributeValues) {
         // TODO - improve attribute value filtering
@@ -140,23 +140,22 @@ export class ExerciseService {
 
   async findOneById(user: User, exerciseId: string): Promise<Exercise> {
     const exercise = await this.repository.findOneById(exerciseId);
-    if (!exercise)
-      return null;
+    if (!exercise) return null;
 
     const canView = await this.canView(user, exercise);
-    if (!canView)
-      return null;
+    if (!canView) return null;
 
-    // populate all attribute values
+    // populate all attribute values and components
     exercise.attributeValues = await this.findAllAttributeValues(exercise.id);
-    return exercise;
+
+    const components = await this.componentService.findAll();
+    const tree = this.componentService.tree(components);
+    const leafs = this.componentService.leafs(tree);
   }
 
   async findOneByIdOrFail(user: User, exerciseId: string): Promise<Exercise> {
     const exercise = await this.findOneById(user, exerciseId);
-    if (!exercise)
-      throw new BadRequestException('Exercise does not exist');
-
+    if (!exercise) throw new BadRequestException('Exercise does not exist');
     return exercise;
   }
 
@@ -200,7 +199,7 @@ export class ExerciseService {
   private async createAttributeValues(exerciseId: string, attributeValues: Record<string, any>): Promise<ExerciseAttributeValue[]> {
     const exerciseAttributeValues = await Promise.all(
       Object.entries(attributeValues).map(async ([field, value]) => {
-        const attribute = await this.exerciseAttributeRepository.findOneBy('field', field);
+        const attribute = await this.exerciseAttributeRepository.findOneBy({ field: 'field', value: field });
         if (!attribute) return;
         return { exerciseId, attributeId: attribute.id, value };
       }),
@@ -214,7 +213,7 @@ export class ExerciseService {
    * object, which is used for frontend display.
    */
   private async findAllAttributeValues(exerciseId: string) {
-    const values = await this.exerciseAttributeValueRepository.findAllBy('exerciseId', exerciseId);
+    const values = await this.exerciseAttributeValueRepository.findAllBy({ field: 'exerciseId', value: exerciseId });
     for (const value of values)
       value.attribute = await this.exerciseAttributeRepository.findOneById(value.attributeId);
 

@@ -35,5 +35,4 @@ export class TrainingExerciseUserData {
   @ApiPropertyOptional()
   @Expose()
   completedWorkloadValue?: string | number; // actual user kg / % / ... completed
-
 }

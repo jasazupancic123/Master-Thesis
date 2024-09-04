@@ -6,8 +6,7 @@ import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { DecodedUser, User } from '../common/type/custom-claims.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
-import { DocumentData, QuerySnapshot, Timestamp } from 'firebase-admin/lib/firestore';
-import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { DocumentData, DocumentSnapshot, QuerySnapshot, Timestamp } from 'firebase-admin/firestore';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -27,24 +26,24 @@ export class FirebaseService implements OnApplicationBootstrap {
     this.storage = firebaseAdmin.storage;
   }
 
-  collection(name: string) {
-    return this.firestore.collection(name);
-  }
-
   async findUserById(uid: string) {
     return await this.auth.getUser(uid) as User;
+  }
+  
+  async findUsers(): Promise<User[]> {
+    return (await this.auth.listUsers()).users as User[];
   }
 
   serializeDocument<T>(data: DocumentSnapshot): T & { id: string } {
     const item = this.convertTimestampToDate(data.data());
-    return { id: data.id, ...item } as T;
+    return { id: data.id, ...item } as T & { id: string };
   }
 
   serialize<T>(data: QuerySnapshot): (T & { id: string })[] {
     return data.docs.map(doc => {
       const item = this.convertTimestampToDate(doc.data());
-      return { id: doc.id, ...item } as T;
-    }) as T[];
+      return { id: doc.id, ...item } as T & { id: string };
+    }) as (T & { id: string })[];
   }
 
   isAdmin(user: User | DecodedUser): boolean {

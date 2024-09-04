@@ -35,32 +35,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
-    &quot;Jest.CommonService Unit Test.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.CommonService::Unit.executor&quot;: &quot;Run&quot;,
-    &quot;Jest.FirebaseMiddleware.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/projects/fitcode/frontend-next-js/src/app&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.standard&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.stylelint&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs.jest.jest_package&quot;: &quot;D:/projects/fitcode/backend-nest-js/node_modules/jest&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;npm.test.executor&quot;: &quot;Run&quot;,
-    &quot;rearrange.code.on.save&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.linters.eslint&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;D:\\projects\\fitcode\\backend-nest-js\\functions\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "Jest.CommonService Unit Test.executor": "Run",
+    "Jest.CommonService::Unit.executor": "Run",
+    "Jest.FirebaseMiddleware.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/z.bedrac/Documents/projekti/fitcode/backend-nest-js/src/training/repository",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.standard": "true",
+    "node.js.detected.package.stylelint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.standard": "",
+    "node.js.selected.package.stylelint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs.jest.jest_package": "D:/projects/fitcode/backend-nest-js/node_modules/jest",
+    "nodejs_package_manager_path": "npm",
+    "npm.build.executor": "Run",
+    "npm.test.executor": "Run",
+    "rearrange.code.on.save": "true",
+    "settings.editor.selected.configurable": "settings.javascript.linters.eslint",
+    "ts.external.directory.path": "C:\\Users\\z.bedrac\\Documents\\projekti\\fitcode\\backend-nest-js\\functions\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="ReactDesignerToolWindowState">
     <option name="myId2Visible">
       <map>
@@ -72,25 +73,25 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\training\repository" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\chart" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\calendar" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]" />
-      <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]\day" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\training" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\group\dto" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\training\entity" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\group\entity" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\common\service\test" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\common\service\util" />
     </key>
     <key name="es6.move.members.recent.items">
       <recent name="D:\projects\fitcode\frontend-next-js\src\type\props.type.d.ts" />
       <recent name="D:\projects\fitcode\backend-nest-js\src\common\const\firestore.const.ts" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.CommonService::Unit">
+  <component name="RunManager" selected="npm.build">
     <configuration name="CommonService Unit Test" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/backend-nest-js/node_modules/jest" />
@@ -127,6 +128,16 @@
       </test-names>
       <method v="2" />
     </configuration>
+    <configuration name="build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/backend-nest-js/functions/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <configuration name="test" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/backend-nest-js/package.json" />
       <command value="run" />
@@ -139,6 +150,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.build" />
         <item itemvalue="Jest.CommonService::Unit" />
         <item itemvalue="Jest.CommonService Unit Test" />
         <item itemvalue="npm.test" />
@@ -219,6 +231,8 @@
       <workItem from="1724913720210" duration="12138000" />
       <workItem from="1724995333221" duration="21904000" />
       <workItem from="1725259859172" duration="22675000" />
+      <workItem from="1725373600262" duration="4073000" />
+      <workItem from="1725427990353" duration="13082000" />
     </task>
     <servers />
   </component>

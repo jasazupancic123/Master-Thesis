@@ -27,22 +27,7 @@ async function bootstrap() {
 
   // setups
   new SwaggerSetup(app).setup();
-  await new DataSetup(app).setup({
-    importOnStartup: {
-      users: isDev,
-      components: isDev,
-      exerciseAttributes: isDev,
-      exercises: isDev,
-      groups: isDev,
-    },
-    refreshOnImport: {
-      users: false,
-      components: false,
-      exerciseAttributes: false,
-      exercises: false,
-      groups: false,
-    },
-  });
+  await new DataSetup(app).setup();
 
   // start server
   const port = configService.get('PORT');

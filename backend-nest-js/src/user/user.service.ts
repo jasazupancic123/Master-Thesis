@@ -77,8 +77,8 @@ export class UserService {
 
       filtered = data.filter(user => {
         if (ids && !ids.includes(user.uid)) return false;
-        if (email && !user.email.includes(email)) return false;
-        if (displayName && !user.displayName.includes(displayName)) return false;
+        if (email && typeof email === 'string' && !user.email.includes(email)) return false;
+        if (displayName && typeof displayName === 'string' && !user.displayName.includes(displayName)) return false;
         // add more filters here
         return true;
       });
@@ -131,8 +131,8 @@ export class UserService {
    * Returns the wellness record for the current day for the given user
    */
   async findWellness(user: User, filter?: Filter<Wellness>): Promise<Wellness> {
-    const startDate = Timestamp.fromDate(filter?.date || dayjs().startOf('day').toDate());
-    const endDate = Timestamp.fromDate(filter?.date || dayjs().endOf('day').toDate());
+    const startDate = Timestamp.fromDate(<Date>filter?.date || dayjs().startOf('day').toDate());
+    const endDate = Timestamp.fromDate(<Date>filter?.date || dayjs().endOf('day').toDate());
 
     return await this.wellnessRepository.findOneByMany([
       { field: 'userId', value: user.uid, operator: '==' },

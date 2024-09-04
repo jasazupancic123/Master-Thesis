@@ -11,38 +11,16 @@ import { ExerciseService } from '../../exercise/exercise.service';
 import { User } from '../type/custom-claims.type';
 import { CreateExerciseDto } from '../../exercise/dto/create-exercise.dto';
 import { GroupService } from '../../group/group.service';
-import { SetType } from '../../exercise-info/enum/set-type.enum';
-import { WorkloadType } from '../../exercise-info/enum/workload-type.enum';
-import { Effort } from '../../exercise-info/enum/effort.enum';
-import { CycleService } from '../../cycle/cycle.service';
 import { TrainingService } from '../../training/training.service';
-import { SetService } from '../../set/set.service';
-import { addDays, addHours } from 'date-fns';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { FirestoreCollection } from '../enum/firestore-collection.enum';
 
-interface Data {
-  users: boolean;
-  components: boolean;
-  exercises: boolean;
-  exerciseAttributes: boolean;
-  groups: boolean;
-}
-
-interface Options {
-  importOnStartup: Partial<Data>;
-  refreshOnImport: Partial<Data>;
-}
-
-export class DataSetup extends BaseSetup<Options> {
+export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
   private readonly userService: UserService;
   private readonly componentService: ComponentService;
   private readonly exerciseService: ExerciseService;
   private readonly groupService: GroupService;
-  private readonly cycleService: CycleService;
   private readonly trainingService: TrainingService;
-  private readonly setService: SetService;
   private admin: User;
 
   constructor(app: INestApplication) {
@@ -53,12 +31,10 @@ export class DataSetup extends BaseSetup<Options> {
     this.componentService = app.get(ComponentService);
     this.exerciseService = app.get(ExerciseService);
     this.groupService = app.get(GroupService);
-    this.cycleService = app.get(CycleService);
     this.trainingService = app.get(TrainingService);
-    this.setService = app.get(SetService);
   }
 
-  async setup(options: Options) {
+  async setup() {
     const time = performance.now();
 
     // create / update admin user
@@ -69,101 +45,11 @@ export class DataSetup extends BaseSetup<Options> {
       customClaims: { role: [UserRole.ADMIN], level: SportLevel.ADVANCED },
     });
 
-    if (options.importOnStartup) {
-      const collections = {
-        components: this.firebaseService.firestore.collection(FirestoreCollection.COMPONENT),
-        exercise: this.firebaseService.firestore.collection(FirestoreCollection.EXERCISE),
-        group: this.firebaseService.firestore.collection(FirestoreCollection.GROUP),
-        exerciseAttributeValue: this.firebaseService.firestore.collection(FirestoreCollection.EXERCISE_ATTRIBUTE_VALUE),
-        exerciseAttribute: this.firebaseService.firestore.collection(FirestoreCollection.EXERCISE_ATTRIBUTE),
-        cycle: this.firebaseService.firestore.collection(FirestoreCollection.CYCLE),
-        training: this.firebaseService.firestore.collection(FirestoreCollection.TRAINING),
-        setGroup: this.firebaseService.firestore.collection(FirestoreCollection.SET_GROUP),
-        setSubgroup: this.firebaseService.firestore.collection(FirestoreCollection.SET_SUB_GROUP),
-        setExercise: this.firebaseService.firestore.collection(FirestoreCollection.SET_EXERCISE),
-        superExerciseInfo: this.firebaseService.firestore.collection(FirestoreCollection.SUPER_EXERCISE_INFO),
-        exerciseInfo: this.firebaseService.firestore.collection(FirestoreCollection.EXERCISE_INFO),
-      };
-
-      if (options.importOnStartup.users) {
-        if (options.refreshOnImport.users) {
-          // delete all users
-          const users = await this.userService.findAll(this.admin);
-          for (const user of users) await this.firebaseService.auth.deleteUser(user.uid);
-        }
-
-        // import users
-        await this.importUsers('data/users.json');
-      }
-
-      if (options.importOnStartup.components) {
-        if (options.refreshOnImport.components) {
-          // delete all components
-          const components = await collections.components.get();
-          for (const component of components.docs) await component.ref.delete();
-        }
-
-        // import components
-        await this.importComponents('data/components.json');
-      }
-
-      if (options.importOnStartup.exerciseAttributes) {
-        if (options.refreshOnImport.exerciseAttributes) {
-          // delete all exercise attributes
-          const attributes = await collections.exerciseAttribute.get();
-          for (const attribute of attributes.docs) await attribute.ref.delete();
-
-          // delete all exercise attribute values
-          const attributeValues = await collections.exerciseAttributeValue.get();
-          for (const doc of attributeValues.docs) await doc.ref.delete();
-        }
-
-        // import exercise attributes
-        await this.importExerciseAttributes('data/exercise-attributes.json');
-      }
-
-      if (options.importOnStartup.exercises) {
-        if (options.refreshOnImport.exercises) {
-          // delete all exercises
-          const exercises = await collections.exercise.get();
-          for (const exercise of exercises.docs) await exercise.ref.delete();
-        }
-
-        // import exercises
-        await this.importExercises('data/exercises.json');
-      }
-
-      if (options.importOnStartup.groups) {
-        if (options.refreshOnImport.groups) {
-          // delete groups, cycles, trainings, set groups, set subgroups, set exercises, super exercise info and exercise info
-          const groups = await collections.group.get();
-          for (const group of groups.docs) await group.ref.delete();
-
-          const cycles = await collections.cycle.get();
-          for (const cycle of cycles.docs) await cycle.ref.delete();
-
-          const trainings = await collections.training.get();
-          for (const training of trainings.docs) await training.ref.delete();
-
-          const setGroups = await collections.setGroup.get();
-          for (const setGroup of setGroups.docs) await setGroup.ref.delete();
-
-          const setSubgroups = await collections.setSubgroup.get();
-          for (const setSubgroup of setSubgroups.docs) await setSubgroup.ref.delete();
-
-          const setExercises = await collections.setExercise.get();
-          for (const setExercise of setExercises.docs) await setExercise.ref.delete();
-
-          const superExerciseInfo = await collections.superExerciseInfo.get();
-          for (const info of superExerciseInfo.docs) await info.ref.delete();
-
-          const exerciseInfo = await collections.exerciseInfo.get();
-          for (const info of exerciseInfo.docs) await info.ref.delete();
-        }
-
-        await this.importGroups('data/groups.json');
-      }
-    }
+    await this.importUsers('data/users.json');
+    await this.importComponents('data/components.json');
+    await this.importExerciseAttributes('data/exercise-attributes.json');
+    await this.importExercises('data/exercises.json');
+    // await this.importGroups('data/groups.json');
 
     this.logger.debug(`Data setup took ${(performance.now() - time) / 1000}s`);
   }
@@ -270,34 +156,29 @@ export class DataSetup extends BaseSetup<Options> {
     }
   }
 
-  private async importGroups(filename: string) {
+  /*private async importGroups(filename: string) {
     try {
       const file = await readFile(filename, 'utf-8');
       const data: {
+        ownerMail: string,
         name: string,
-        user: string,
-        members: string[],
+        membersMails: string[],
+        subgroups: { name: string, membersMails: string[] }[],
         cycles: {
           name: string,
           description: string,
-          durationInWeeks: number,
           trainings: {
-            component: string,
-            order: number,
-            setSubgroups: {
-              color: string,
-              order: number,
-              setExercises: {
-                exercise: string,
-                order: number,
-                superExerciseInfo: {
+            subgroupId: string | null,
+            components: {
+              componentSlug: string,
+              exercises: {
+                exerciseName: string, // name
+                meta: {
                   sets: number,
                   setType: SetType,
                   setTypeValue: number,
                   workloadType: WorkloadType,
                   workloadTypeValue: number,
-                  effort: Effort,
-                  rec: number,
                 }
               }[]
             }[]
@@ -305,8 +186,8 @@ export class DataSetup extends BaseSetup<Options> {
         }[]
       }[] = JSON.parse(file);
 
-      for (const { name, user, members, cycles } of data) {
-        const trainer = await this.userService.findOneByEmail(user);
+      for (const { name, owner, members, cycles } of data) {
+        const trainer = await this.userService.findOneByEmail(owner);
         const exercises = await this.exerciseService.findAll(trainer);
         const groups = await this.groupService.findAll(trainer);
         if (groups.some(g => g.name === name)) {
@@ -341,7 +222,7 @@ export class DataSetup extends BaseSetup<Options> {
               continue;
             }
 
-            const training = await this.trainingService.create(trainer, {
+            const training = await this.trainingService.createTraining(trainer, {
               componentIds: [component.id],
               cycleId: cycle.id,
               from: addHours(startTime, 1),
@@ -381,5 +262,5 @@ export class DataSetup extends BaseSetup<Options> {
       this.logger.error('Failed to import groups');
       this.logger.error(e);
     }
-  }
+  }*/
 }

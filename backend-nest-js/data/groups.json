@@ -1,8 +1,8 @@
 [
   {
     "name": "Football U19 Men",
-    "user": "trainer@mail.com",
-    "members": [
+    "ownerMail": "trainer@mail.com",
+    "membersMails": [
       "john.doe@mail.com",
       "mike.tyson@mail.com",
       "bruce.lee@mail.com"
@@ -10,82 +10,55 @@
     "subgroups": [
       {
         "name": "Climbers for some reason",
-        "members": [
+        "membersMails": [
           "janja.garnbret@mail.com"
-        ],
-        "from": "today",
-        "to": "tomorrow"
+        ]
       }
     ],
     "cycles": [
       {
         "name": "Preseason",
         "description": "Preseason training",
-        "durationInWeeks": 4,
         "trainings": [
           {
-            "component": "strength",
-            "order": 0,
-            "setSubgroups": [
+            "subgroupId": null,
+            "components": [
               {
-                "color": "#FF0000",
-                "order": 0,
-                "setExercises": [
+                "componentSlug": "strength",
+                "exercises": [
                   {
-                    "exercise": "Squats",
-                    "order": 0,
-                    "superExerciseInfo": {
+                    "exerciseName": "Squats",
+                    "meta": {
                       "sets": 4,
                       "setType": "reps",
                       "setTypeValue": 8,
                       "workloadType": "kg",
-                      "workloadTypeValue": 100,
-                      "effort": "hard",
-                      "rec": 60
+                      "workloadValue": 100
+                    }
+                  },
+                  {
+                    "exerciseName": "Bench Press",
+                    "meta": {
+                      "sets": 3,
+                      "setType": "reps",
+                      "setTypeValue": 5,
+                      "workloadType": "kg",
+                      "workloadValue": 60
                     }
                   }
                 ]
               },
               {
-                "color": "#00FF00",
-                "order": 1,
-                "setExercises": [
+                "componentId": "speed",
+                "exercises": [
                   {
-                    "exercise": "Bench Press",
-                    "order": 0,
-                    "superExerciseInfo": {
-                      "sets": 4,
-                      "setType": "reps",
-                      "setTypeValue": 8,
-                      "workloadType": "kg",
-                      "workloadTypeValue": 80,
-                      "effort": "hard",
-                      "rec": 60
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "speed",
-            "order": 1,
-            "setSubgroups": [
-              {
-                "color": "#0000FF",
-                "order": 0,
-                "setExercises": [
-                  {
-                    "exercise": "Sprint",
-                    "order": 0,
-                    "superExerciseInfo": {
+                    "exerciseName": "Sprint",
+                    "meta": {
                       "sets": 4,
                       "setType": "distance",
                       "setTypeValue": 20,
                       "workloadType": "int",
-                      "workloadTypeValue": 5,
-                      "effort": "hard",
-                      "rec": 60
+                      "workloadValue": 5
                     }
                   }
                 ]
@@ -97,46 +70,20 @@
       {
         "name": "Competition",
         "description": "In-season training",
-        "durationInWeeks": 8,
         "trainings": [
           {
-            "component": "strength",
-            "order": 0,
-            "setSubgroups": [
+            "components": [
               {
-                "color": "#FF0000",
-                "order": 0,
-                "setExercises": [
+                "componentSlug": "strength",
+                "exercises": [
                   {
-                    "exercise": "Squats",
-                    "order": 0,
-                    "superExerciseInfo": {
+                    "exerciseName": "Squats",
+                    "meta": {
                       "sets": 1,
                       "setType": "reps",
                       "setTypeValue": 5,
                       "workloadType": "kg",
-                      "workloadTypeValue": 50,
-                      "effort": "easy",
-                      "rec": 60
-                    }
-                  }
-                ]
-              },
-              {
-                "color": "#00FF00",
-                "order": 1,
-                "setExercises": [
-                  {
-                    "exercise": "Bench Press",
-                    "order": 0,
-                    "superExerciseInfo": {
-                      "sets": 1,
-                      "setType": "reps",
-                      "setTypeValue": 5,
-                      "workloadType": "kg",
-                      "workloadTypeValue": 40,
-                      "effort": "easy",
-                      "rec": 60
+                      "workloadTypeValue": 50
                     }
                   }
                 ]
@@ -144,24 +91,18 @@
             ]
           },
           {
-            "component": "speed",
-            "order": 1,
-            "setSubgroups": [
+            "components": [
               {
-                "color": "#0000FF",
-                "order": 0,
-                "setExercises": [
+                "componentSlug": "speed",
+                "exercises": [
                   {
-                    "exercise": "Sprint",
-                    "order": 0,
-                    "superExerciseInfo": {
+                    "exerciseName": "Sprint",
+                    "meta": {
                       "sets": 2,
                       "setType": "distance",
                       "setTypeValue": 5,
                       "workloadType": "int",
-                      "workloadTypeValue": 1,
-                      "effort": "easy",
-                      "rec": 60
+                      "workloadTypeValue": 1
                     }
                   }
                 ]
@@ -173,85 +114,14 @@
       {
         "name": "Bulking",
         "description": "Off-season training",
-        "durationInWeeks": 8,
-        "trainings": [
-          {
-            "component": "strength",
-            "order": 0,
-            "setSubgroups": [
-              {
-                "color": "#FF0000",
-                "order": 0,
-                "setExercises": [
-                  {
-                    "exercise": "Squats",
-                    "order": 0,
-                    "superExerciseInfo": {
-                      "sets": 4,
-                      "setType": "reps",
-                      "setTypeValue": 8,
-                      "workloadType": "kg",
-                      "workloadTypeValue": 100,
-                      "effort": "hard",
-                      "rec": 60
-                    }
-                  }
-                ]
-              },
-              {
-                "color": "#00FF00",
-                "order": 1,
-                "setExercises": [
-                  {
-                    "exercise": "Bench Press",
-                    "order": 0,
-                    "superExerciseInfo": {
-                      "sets": 4,
-                      "setType": "reps",
-                      "setTypeValue": 8,
-                      "workloadType": "kg",
-                      "workloadTypeValue": 80,
-                      "effort": "hard",
-                      "rec": 60
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "speed",
-            "order": 1,
-            "setSubgroups": [
-              {
-                "color": "#0000FF",
-                "order": 0,
-                "setExercises": [
-                  {
-                    "exercise": "Sprint",
-                    "order": 0,
-                    "superExerciseInfo": {
-                      "sets": 4,
-                      "setType": "distance",
-                      "setTypeValue": 20,
-                      "workloadType": "int",
-                      "workloadTypeValue": 5,
-                      "effort": "hard",
-                      "rec": 60
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        "trainings": []
       }
     ]
   },
   {
+    "ownerMail": "trainer@mail.com",
     "name": "Volleyball U23 Women",
-    "user": "trainer@mail.com",
-    "members": [
+    "membersMails": [
       "janja.garnbret@mail.com",
       "the.rock@mail.com"
     ],
