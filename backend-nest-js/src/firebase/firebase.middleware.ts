@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, NestMiddleware, Scope } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { FirebaseService } from './firebase.service';
-import { User } from '../common/type/custom-claims.type';
+import { User } from '../common/type/firebase-auth.type';
 
 @Injectable({ scope: Scope.DEFAULT })
 export class FirebaseMiddleware implements NestMiddleware {

@@ -2,7 +2,7 @@ import { IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validato
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { Entity } from '../../common/decorator/entity.decorator';
-import { User } from '../../common/type/custom-claims.type';
+import { User } from '../../common/type/firebase-auth.type';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { Subgroup } from './subgroup.entity';

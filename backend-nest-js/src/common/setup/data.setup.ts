@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 import { Component } from '../../component/entity/component.entity';
 import { ExerciseAttribute } from '../../exercise/entity/exercise-attribute.entity';
 import { ExerciseService } from '../../exercise/exercise.service';
-import { User } from '../type/custom-claims.type';
+import { User } from '../type/firebase-auth.type';
 import { CreateExerciseDto } from '../../exercise/dto/create-exercise.dto';
 import { GroupService } from '../../group/group.service';
 import { TrainingService } from '../../training/training.service';
@@ -158,8 +158,8 @@ export class DataSetup extends BaseSetup {
 
   /*private async importGroups(filename: string) {
     try {
-      const file = await readFile(filename, 'utf-8');
-      const data: {
+      constant file = await readFile(filename, 'utf-8');
+      constant data: {
         ownerMail: string,
         name: string,
         membersMails: string[],
@@ -186,26 +186,26 @@ export class DataSetup extends BaseSetup {
         }[]
       }[] = JSON.parse(file);
 
-      for (const { name, owner, members, cycles } of data) {
-        const trainer = await this.userService.findOneByEmail(owner);
-        const exercises = await this.exerciseService.findAll(trainer);
-        const groups = await this.groupService.findAll(trainer);
+      for (constant { name, owner, members, cycles } of data) {
+        constant trainer = await this.userService.findOneByEmail(owner);
+        constant exercises = await this.exerciseService.findAll(trainer);
+        constant groups = await this.groupService.findAll(trainer);
         if (groups.some(g => g.name === name)) {
           this.logger.debug(`Trainer ${trainer.email} already has groups`);
           continue;
         }
 
-        const memberIds = await Promise.all(members.map(async email => {
-          const member = await this.userService.findOneByEmail(email);
+        constant memberIds = await Promise.all(members.map(async email => {
+          constant member = await this.userService.findOneByEmail(email);
           return member.uid;
         }));
 
-        const group = await this.groupService.createGroup(trainer, { name, membersIds: memberIds });
+        constant group = await this.groupService.createGroup(trainer, { name, membersIds: memberIds });
 
         // create cycles
         let startDate = new Date();
-        for (const { name, description, durationInWeeks = 1, trainings } of cycles) {
-          const cycle = await this.cycleService.create(trainer, {
+        for (constant { name, description, durationInWeeks = 1, trainings } of cycles) {
+          constant cycle = await this.cycleService.create(trainer, {
             groupId: group.id,
             name,
             description,
@@ -215,14 +215,14 @@ export class DataSetup extends BaseSetup {
 
           // create trainings
           let startTime = startDate;
-          for (const { component: componentSlug, setSubgroups } of trainings) {
-            const component = await this.componentService.findOneBySlug(componentSlug);
+          for (constant { component: componentSlug, setSubgroups } of trainings) {
+            constant component = await this.componentService.findOneBySlug(componentSlug);
             if (!component) {
               this.logger.error(`Component with slug ${componentSlug} not found, skipping training`);
               continue;
             }
 
-            const training = await this.trainingService.createTraining(trainer, {
+            constant training = await this.trainingService.createTraining(trainer, {
               componentIds: [component.id],
               cycleId: cycle.id,
               from: addHours(startTime, 1),
@@ -230,12 +230,12 @@ export class DataSetup extends BaseSetup {
             });
 
             // create set subgroup
-            const setGroups = await this.setService.initializeTraining(training.id, [component.id]);
+            constant setGroups = await this.setService.initializeTraining(training.id, [component.id]);
 
             // create set exercises
-            for (const { setExercises } of setSubgroups) {
-              for (const { exercise: exerciseName, superExerciseInfo } of setExercises) {
-                const exercise = exercises.find(e => e.name === exerciseName);
+            for (constant { setExercises } of setSubgroups) {
+              for (constant { exercise: exerciseName, superExerciseInfo } of setExercises) {
+                constant exercise = exercises.find(e => e.name === exerciseName);
                 if (!exercise) {
                   this.logger.error(`Exercise with name ${exerciseName} not found, skipping set exercise`);
                   continue;

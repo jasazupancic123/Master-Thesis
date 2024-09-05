@@ -3,8 +3,7 @@ import { UserRole } from '../enum/user-role.enum';
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SportLevel } from '../enum/sport-level.enum';
-import { Entity } from '../../common/decorator/entity.decorator';
-import { CustomClaims } from '../../common/type/custom-claims.type';
+import { CustomClaims } from '../../common/type/firebase-auth.type';
 
 export class CustomClaimsDto implements CustomClaims {
   @IsEnum(UserRole, { each: true })
@@ -24,7 +23,6 @@ export class CustomClaimsDto implements CustomClaims {
   bodyweight?: number;
 }
 
-@Entity('user')
 export class UserDto {
   @IsString()
   @Expose()

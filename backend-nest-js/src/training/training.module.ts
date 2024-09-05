@@ -8,6 +8,8 @@ import { TrainingRepository } from './repository/training.repository';
 import { TrainingComponentRepository } from './repository/training-component.repository';
 import { TrainingExerciseRepository } from './repository/training-exercise.repository';
 import { TrainingExerciseUserDataService } from './service/training-exercise-user-data.service';
+import { TrainingExerciseService } from './service/training-exercise.service';
+import { TrainingComponentService } from './service/training-component.service';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { TrainingExerciseUserDataService } from './service/training-exercise-use
     TrainingExerciseRepository,
     TrainingExerciseUserDataRepository,
     TrainingExerciseUserDataService,
+    TrainingExerciseService,
+    TrainingComponentService,
     TrainingService,
   ],
   exports: [TrainingService],

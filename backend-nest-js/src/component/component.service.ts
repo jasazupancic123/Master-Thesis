@@ -47,11 +47,11 @@ export class ComponentService {
     return await this.repository.findOneByIdOrFail(id);
   }
 
-  async findAll(filter?: Filter): Promise<Component[]> {
+  async findAll(filter?: Filter<Component>): Promise<Component[]> {
     return await this.repository.findAll({ filter });
   }
 
-  async findAllOrFail(filter?: Filter): Promise<Component[]> {
+  async findAllOrFail(filter?: Filter<Component>): Promise<Component[]> {
     const components = await this.repository.findAll({ filter });
     if (filter?.ids?.length && components.length !== filter.ids.length)
       throw new BadRequestException('Invalid components');

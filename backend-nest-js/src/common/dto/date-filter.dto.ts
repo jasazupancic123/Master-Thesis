@@ -4,6 +4,7 @@ import { IsOptional } from 'class-validator';
 
 export class DateFilterDto {
   @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   @Transform(({ value }) => {
     const date = new Date(value);

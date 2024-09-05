@@ -4,7 +4,7 @@ import { Auth } from '../common/decorator/auth.decorator';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { FilterExerciseDto } from './dto/filter-exercise.dto';
-import { User } from '../common/type/custom-claims.type';
+import { User } from '../common/type/firebase-auth.type';
 import { FirebaseService } from '../firebase/firebase.service';
 
 @Controller('exercise')
@@ -21,7 +21,7 @@ export class ExerciseController {
   @Auth()
   async findAll(@RequestUser() user: User, @Query() query: FilterExerciseDto) {
     const paginate = {
-      order: query.order || { createdAt: 'desc' },
+      order: query.orderBy || { createdAt: 'desc' },
       page: query.page || 1,
       pageSize: query.pageSize || 10,
       limit: query.limit || 100,

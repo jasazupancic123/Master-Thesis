@@ -3,13 +3,13 @@ import { Exercise } from './entity/exercise.entity';
 import { FirebaseService } from '../firebase/firebase.service';
 import { ComponentService } from '../component/component.service';
 import { Component } from '../component/entity/component.entity';
-import { User } from '../common/type/custom-claims.type';
+import { User } from '../common/type/firebase-auth.type';
 import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { ExerciseAttribute, ExerciseAttributeSelectOption } from './entity/exercise-attribute.entity';
 import { ExerciseAttributeValue } from './entity/exercise-attribute-value.entity';
 import { CommonService } from '../common/service/common.service';
-import { Filter, Options } from '../common/type/orm.type';
+import { Filter, FindManyOptions } from '../common/type/orm.type';
 import { UserRole } from '../user/enum/user-role.enum';
 import { Validate } from '../common/type/validate.type';
 import { FieldPath, Query } from 'firebase-admin/firestore';
@@ -97,7 +97,7 @@ export class ExerciseService {
     return { total: exercises.length, pages: Math.ceil(exercises.length / pageSize) };
   }
 
-  async findAll(user: User, options: Options<Exercise> = {}): Promise<Exercise[]> {
+  async findAll(user: User, options: FindManyOptions<Exercise> = {}): Promise<Exercise[]> {
     let exercises: Exercise[];
 
     // filter exercises by ids if provided (name and attribute values cannot be
@@ -105,8 +105,8 @@ export class ExerciseService {
     if (options.filter) {
       let query = this.repository.getCollection() as Query;
 
-      if (options.filter?.ids?.length)
-        query = query.where(FieldPath.documentId(), 'in', options.filter.ids);
+      if (options.filter?.ids)
+        query = query.where(FieldPath.documentId(), 'in', options.filter.ids.value);
 
       exercises = (await query.get()).docs.map(doc => this.repository.serialize(doc));
     } else
@@ -138,6 +138,17 @@ export class ExerciseService {
     return this.map(exercises, { components: leafs });
   }
 
+  async findAllOrFail(user: User, options?: FindManyOptions<Exercise>): Promise<Exercise[]> {
+    const { filter, paginate, populate } = options || {};
+    const { ids } = filter || {};
+
+    const exercises = await this.findAll(user, options);
+    if (exercises.length < 1 || (ids && ids.value.length !== exercises.length))
+      throw new BadRequestException('Invalid exercises provided');
+
+    return exercises;
+  }
+
   async findOneById(user: User, exerciseId: string): Promise<Exercise> {
     const exercise = await this.repository.findOneById(exerciseId);
     if (!exercise) return null;
@@ -166,7 +177,7 @@ export class ExerciseService {
    * For example, if training has components `Strength` and `Speed` selected,
    * then exercise with component parents `Endurance` is not valid.
    */
-  async validate(user: User, componentId: string, exercises: Exercise[]): Promise<Validate> {
+  async validate(componentId: string, exercises: Exercise[]): Promise<Validate> {
     // check that exercise's leaf component id belongs to training's root component id
     const components = await this.componentService.findAll();
     const tree = this.componentService.tree(components);

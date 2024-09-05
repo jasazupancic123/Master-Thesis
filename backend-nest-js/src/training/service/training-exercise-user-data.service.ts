@@ -1,8 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import {
-  TrainingExerciseUserDataRef,
-  TrainingExerciseUserDataRepository,
-} from '../repository/training-exercise-user-data.repository';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { TrainingExerciseUserDataRepository } from '../repository/training-exercise-user-data.repository';
 import { TrainingExerciseMeta } from '../entity/training-exercise-meta.entity';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingComponentRepository } from '../repository/training-component.repository';
@@ -13,6 +10,8 @@ import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.
 import { WorkloadType } from '../enum/workload-type.enum';
 import { CommonService } from '../../common/service/common.service';
 import { GroupRepository } from '../../group/repository/group.repository';
+import { SubgroupRepository } from '../../group/repository/subgroup.repository';
+import { TrainingExerciseRef } from '../../common/type/firebase-firestore.type';
 
 @Injectable()
 export class TrainingExerciseUserDataService {
@@ -20,6 +19,7 @@ export class TrainingExerciseUserDataService {
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly groupRepository: GroupRepository,
+    private readonly subgroupRepository: SubgroupRepository,
     private readonly trainingRepository: TrainingRepository,
     private readonly trainingComponentRepository: TrainingComponentRepository,
     private readonly trainingExerciseRepository: TrainingExerciseRepository,
@@ -40,7 +40,7 @@ export class TrainingExerciseUserDataService {
    * that exercise. We can then use this data and filter it for a specific user
    * to get their workload value.
    */
-  async findAll(ref: TrainingExerciseUserDataRef) {
+  async findAll(ref: Required<TrainingExerciseRef>) {
     const trainings = await this.trainingRepository.getDocs(ref);
 
     return (await Promise.all(
@@ -75,21 +75,31 @@ export class TrainingExerciseUserDataService {
    * meta, calculates individual values for each member and saves them to the
    * correct training component exercise user data document.
    */
-  async create(
-    ref: TrainingExerciseUserDataRef,
+  async createMany(
+    ref: Required<TrainingExerciseRef>,
     input: TrainingExerciseMeta,
-  ) {
-    // find all members for the provided group
+  ): Promise<TrainingExerciseUserData[]> {
+    const result: TrainingExerciseUserData[] = [];
+
+    // find all members for the provided group (or subgroup if provided)
     const group = await this.groupRepository.getDoc(ref);
-    const members = (await this.firebaseService.findUsers()).filter((user) => group.membersIds.includes(user.uid));
+    if (!group) throw new BadRequestException('Group not found');
+
+    const subgroup = await this.subgroupRepository.getDoc(ref);
+    if (ref.subgroupId && !subgroup) throw new BadRequestException('Subgroup not found');
+
+    const users = await this.firebaseService.authUsers();
+    const members = subgroup
+      ? users.filter((user) => subgroup.membersIds.includes(user.uid))
+      : users.filter((user) => group.membersIds.includes(user.uid));
 
     // get data for all users
-    const data = await this.findAll(ref);
+    const userData = await this.findAll(ref);
 
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
-      const memberData = data.filter((item) => item.userId === member.uid);
+      const memberData = userData.filter((item) => item.userId === member.uid);
       const workloadValue = this.calculateWorkloadValue(
         input.workloadType,
         input.workloadValue,
@@ -97,11 +107,19 @@ export class TrainingExerciseUserDataService {
         memberData,
       );
 
+      const data: TrainingExerciseUserData = {
+        userId: member.uid,
+        workloadValue,
+        completedSets: 0,
+      };
+
       const docRef = this.trainingExerciseUserDataRepository.doc({ ...ref, userId: member.uid });
-      batch.set(docRef, { userId: member.uid, workloadValue, completedSets: 0 } as TrainingExerciseUserData);
+      batch.set(docRef, data);
+      result.push(data);
     }
 
     await batch.commit();
+    return result;
   }
 
   /**
@@ -109,17 +127,27 @@ export class TrainingExerciseUserDataService {
    * meta, calculates individual values for each member and updates them in the
    * correct training component exercise user data document.
    */
-  async update(
-    ref: TrainingExerciseUserDataRef,
+  async updateMany(
+    ref: Required<TrainingExerciseRef>,
     input: Partial<TrainingExerciseMeta>,
-  ) {
+  ): Promise<TrainingExerciseUserData[]> {
+    const result: TrainingExerciseUserData[] = [];
+
     // find all members for the provided group
     const group = await this.groupRepository.getDoc(ref);
-    const members = (await this.firebaseService.findUsers()).filter((user) => group.membersIds.includes(user.uid));
+    if (!group) throw new BadRequestException('Group not found');
+
+    const subgroup = await this.subgroupRepository.getDoc(ref);
+    if (ref.subgroupId && !subgroup) throw new BadRequestException('Subgroup not found');
+
+    const users = await this.firebaseService.authUsers();
+    const members = subgroup
+      ? users.filter((user) => subgroup.membersIds.includes(user.uid))
+      : users.filter((user) => group.membersIds.includes(user.uid));
 
     // get data for all users
-    const data = await this.findAll(ref);
-    const { meta } = await this.trainingExerciseRepository.getDoc(ref);
+    const userData = await this.findAll(ref);
+    const { meta } = await this.trainingExerciseRepository.getDoc(ref); // old meta
 
     // if nothing changed, return
     const isWorkloadTypeChanged = input.workloadType && input.workloadType !== meta.workloadType;
@@ -130,7 +158,7 @@ export class TrainingExerciseUserDataService {
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
-      const memberData = data.filter((item) => item.userId === member.uid);
+      const memberData = userData.filter((item) => item.userId === member.uid);
       const workloadValue = this.calculateWorkloadValue(
         input.workloadType || meta.workloadType,
         input.workloadValue || meta.workloadValue,
@@ -138,14 +166,19 @@ export class TrainingExerciseUserDataService {
         memberData,
       );
 
-      const docRef = this.trainingExerciseUserDataRepository.doc({ ...ref, userId: member.uid });
-      batch.update(docRef, {
-        workloadType: input.workloadType || meta.workloadType,
+      const data: TrainingExerciseUserData = {
+        userId: member.uid,
         workloadValue,
-      } as Partial<TrainingExerciseUserData>);
+        completedSets: 0,
+      };
+
+      const docRef = this.trainingExerciseUserDataRepository.doc({ ...ref, userId: member.uid });
+      batch.set(docRef, data);
+      result.push(data);
     }
 
     await batch.commit();
+    return result;
   }
 
   private calculateWorkloadValue(

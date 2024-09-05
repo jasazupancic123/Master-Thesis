@@ -1,0 +1,55 @@
+import { Injectable } from '@nestjs/common';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { CollectionReference, DocumentReference, Timestamp } from 'firebase-admin/firestore';
+import { FirestoreCollectionRepository, GroupRef, SubgroupRef } from '../../common/type/firebase-firestore.type';
+import { Subgroup } from '../entity/subgroup.entity';
+import { GroupRepository } from './group.repository';
+import { CommonService } from '../../common/service/common.service';
+
+@Injectable()
+export class SubgroupRepository implements FirestoreCollectionRepository<Subgroup, SubgroupRef> {
+  constructor(
+    private readonly commonService: CommonService,
+    private readonly groupRepository: GroupRepository,
+  ) {
+  }
+
+  async getDocs(
+    ref: Required<GroupRef>,
+    query: (query: CollectionReference) => CollectionReference = query => query,
+  ): Promise<Subgroup[]> {
+    const snapshot = await query(this.collection(ref)).get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Subgroup);
+  }
+
+  async getDoc(ref: Required<SubgroupRef>): Promise<Subgroup | null> {
+    const snapshot = await this.doc(ref).get();
+    if (!snapshot.exists) return null;
+    return { id: snapshot.id, ...snapshot.data() } as Subgroup;
+  }
+
+  async addDoc(ref: Required<GroupRef>, input: Partial<Subgroup>) {
+    const result = await this.collection(ref).add({
+      name: input.name,
+      cycleId: input.cycleId,
+      membersIds: input.membersIds,
+      from: Timestamp.fromDate(input.from),
+      to: Timestamp.fromDate(input.to),
+    });
+
+    return result.id;
+  }
+
+  async updateDoc(ref: Required<SubgroupRef>, input: Partial<Subgroup>) {
+    const data = this.commonService.object.clean(input);
+    await this.doc(ref).update(data);
+  }
+
+  doc(ref: Required<SubgroupRef>): DocumentReference {
+    return this.collection(ref).doc(ref.subgroupId);
+  }
+
+  collection(ref: Required<GroupRef>): CollectionReference {
+    return this.groupRepository.collection().doc(ref.subgroupId).collection(FirestoreCollection.SUBGROUP);
+  }
+}

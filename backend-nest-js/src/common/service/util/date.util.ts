@@ -55,7 +55,7 @@ export class DateUtil {
    * Returns the negated date range union.
    *
    * @example
-   * const result = negateRange([
+   * constant result = negateRange([
    *  ['1st Jan', '7th Jan'],
    *  ['10th Jan', '15th Jan'],
    *  ['20th Jan', '25th Jan']
