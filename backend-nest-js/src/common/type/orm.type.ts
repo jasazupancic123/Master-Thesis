@@ -9,11 +9,11 @@ export interface PaginateOptions<T> {
 export interface FindManyOptions<T extends Record<string, any>> {
   filter?: Filter<T>;
   paginate?: PaginateOptions<T>;
-  populate?: NestedKey<T>[];
+  populate?: Populate<T>[];
 }
 
 export interface FindOneOptions<T extends Record<string, any>> {
-  populate?: NestedKey<T>[];
+  populate?: Populate<T>[];
 }
 
 /**
@@ -39,16 +39,16 @@ export interface FindOneOptions<T extends Record<string, any>> {
  * constant populate: NestedKey<User>[] = ['address', 'address.city']; // type safe
  * ```
  */
-type NestedKey<O extends Record<string, any>> = {
+export type Populate<O extends Record<string, any>> = {
   [K in Extract<keyof O, string>]:
   O[K] extends Array<string>
     ? K
     : O[K] extends string | number | Date | boolean | Array<string> | Array<number> | Array<Date> | Array<boolean> | Function
       ? never
       : O[K] extends Array<any>
-        ? K | `${K}.${NestedKey<O[K][0]> extends infer U extends string ? U : never}`
+        ? K | `${K}.${Populate<O[K][0]> extends infer U extends string ? U : never}`
         : O[K] extends Record<string, unknown>
-          ? `${K}` | `${K}.${NestedKey<O[K]> extends infer U extends string ? U : never}`
+          ? `${K}` | `${K}.${Populate<O[K]> extends infer U extends string ? U : never}`
           : K
 }[Extract<keyof O, string>];
 
@@ -63,7 +63,7 @@ export interface Condition<T> {
  * and cannot be an object or an array.
  */
 type FilterableFields<T> = {
-  [K in keyof T]: T[K] extends string | number | Date | boolean ? K : null;
+  [K in keyof T]: T[K] extends string | Array<string> | number | Date | boolean ? K : null;
 }[keyof T];
 
 /**

@@ -21,16 +21,15 @@ export class ExerciseController {
   @Auth()
   async findAll(@RequestUser() user: User, @Query() query: FilterExerciseDto) {
     const paginate = {
-      order: query.orderBy || { createdAt: 'desc' },
-      page: query.page || 1,
-      pageSize: query.pageSize || 10,
-      limit: query.limit || 100,
+      orderBy: query.orderBy,
+      page: query.page,
+      pageSize: query.pageSize,
     };
 
     const filter = {
-      name: query.name,
-      componentIds: query.componentIds,
       ids: query.ids,
+      name: { value: query.name },
+      componentIds: { value: query.componentIds },
     };
 
     return this.exerciseService.findAll(user, { filter, paginate });
@@ -46,9 +45,9 @@ export class ExerciseController {
   @Auth()
   async getPageMeta(@RequestUser() user: User, @Query() query: FilterExerciseDto) {
     const filter = {
-      name: query.name,
-      componentIds: query.componentIds,
       ids: query.ids,
+      name: { value: query.name },
+      componentIds: { value: query.componentIds },
     };
 
     const pageSize = query.pageSize;

@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CollectionReference, DocumentReference, Query } from 'firebase-admin/firestore';
+import {
+  CollectionReference,
+  DocumentReference,
+  DocumentSnapshot,
+  Query,
+  QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
 import {
   FirestoreCollectionRepository,
   TrainingComponentRef,
@@ -23,13 +29,13 @@ export class TrainingComponentRepository implements FirestoreCollectionRepositor
     query: (ref: Query) => Query = ref => ref,
   ): Promise<TrainingComponent[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => ({ componentId: doc.id, ...doc.data() } as TrainingComponent));
+    return snapshot.docs.map(doc => this.serialize(doc));
   }
 
   async getDoc(ref: Required<TrainingComponentRef>): Promise<TrainingComponent | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
-    return { componentId: snapshot.id, ...snapshot.data() } as TrainingComponent;
+    return this.serialize(snapshot);
   }
 
   async addDoc(ref: Required<TrainingComponentRef>, data: Partial<TrainingComponent>) {
@@ -52,5 +58,16 @@ export class TrainingComponentRepository implements FirestoreCollectionRepositor
 
   collection(ref: Required<TrainingRef>): CollectionReference {
     return this.trainingRepository.doc(ref).collection(FirestoreCollection.TRAINING_COMPONENT);
+  }
+
+  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): TrainingComponent {
+    const data = snapshot.data();
+
+    return {
+      componentId: snapshot.id,
+      order: +data.order,
+      color: data.color,
+      exercises: [],
+    } as TrainingComponent;
   }
 }

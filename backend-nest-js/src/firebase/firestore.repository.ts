@@ -163,7 +163,7 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
   }
 
   paginate(query: Query, options: PaginateOptions<T>): Query {
-    const { orderBy, page, pageSize, limit } = options;
+    const { orderBy, page, pageSize } = options;
 
     if (orderBy)
       for (const key in orderBy)
@@ -171,9 +171,6 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
 
     if (page && pageSize)
       query = query.limit(pageSize).offset(pageSize * page);
-
-    if (limit)
-      query = query.limit(limit);
 
     return query;
   }

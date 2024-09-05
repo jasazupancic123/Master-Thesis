@@ -5,6 +5,7 @@ import { FirestoreCollectionRepository, GroupRef, SubgroupRef } from '../../comm
 import { Subgroup } from '../entity/subgroup.entity';
 import { GroupRepository } from './group.repository';
 import { CommonService } from '../../common/service/common.service';
+import { DocumentSnapshot, Query, QueryDocumentSnapshot } from 'firebase-admin/lib/firestore';
 
 @Injectable()
 export class SubgroupRepository implements FirestoreCollectionRepository<Subgroup, SubgroupRef> {
@@ -16,16 +17,16 @@ export class SubgroupRepository implements FirestoreCollectionRepository<Subgrou
 
   async getDocs(
     ref: Required<GroupRef>,
-    query: (query: CollectionReference) => CollectionReference = query => query,
+    query: (query: Query) => Query = query => query,
   ): Promise<Subgroup[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Subgroup);
+    return snapshot.docs.map(doc => this.serialize(doc));
   }
 
   async getDoc(ref: Required<SubgroupRef>): Promise<Subgroup | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
-    return { id: snapshot.id, ...snapshot.data() } as Subgroup;
+    return this.serialize(snapshot);
   }
 
   async addDoc(ref: Required<GroupRef>, input: Partial<Subgroup>) {
@@ -50,6 +51,21 @@ export class SubgroupRepository implements FirestoreCollectionRepository<Subgrou
   }
 
   collection(ref: Required<GroupRef>): CollectionReference {
-    return this.groupRepository.collection().doc(ref.subgroupId).collection(FirestoreCollection.SUBGROUP);
+    return this.groupRepository.collection().doc(ref.groupId).collection(FirestoreCollection.SUBGROUP);
+  }
+
+  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Subgroup {
+    const data = snapshot.data();
+
+    return {
+      id: snapshot.id,
+      name: data.name,
+      cycleId: data.cycleId,
+      membersIds: data.membersIds,
+      from: (data.from as Timestamp).toDate(),
+      to: (data.to as Timestamp).toDate(),
+      createdAt: (data.createdAt as Timestamp).toDate(),
+      updatedAt: (data.updatedAt as Timestamp).toDate(),
+    } as Subgroup;
   }
 }

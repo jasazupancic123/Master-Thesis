@@ -82,7 +82,7 @@ export class TrainingExerciseUserDataService {
     const result: TrainingExerciseUserData[] = [];
 
     // find all members for the provided group (or subgroup if provided)
-    const group = await this.groupRepository.getDoc(ref);
+    const group = await this.groupRepository.getDoc(ref.groupId);
     if (!group) throw new BadRequestException('Group not found');
 
     const subgroup = await this.subgroupRepository.getDoc(ref);
@@ -134,7 +134,7 @@ export class TrainingExerciseUserDataService {
     const result: TrainingExerciseUserData[] = [];
 
     // find all members for the provided group
-    const group = await this.groupRepository.getDoc(ref);
+    const group = await this.groupRepository.getDoc(ref.groupId);
     if (!group) throw new BadRequestException('Group not found');
 
     const subgroup = await this.subgroupRepository.getDoc(ref);

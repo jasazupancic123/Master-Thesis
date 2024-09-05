@@ -33,10 +33,6 @@ export class ExerciseService {
   ) {
   }
 
-  isOwner(user: User, exercise: Exercise) {
-    return exercise.userId === user.uid;
-  }
-
   async canView(user: User, exercise: Exercise) {
     switch (user.customClaims?.role?.[0] ?? user['role']?.[0]) {
       case UserRole.ADMIN:
@@ -57,6 +53,10 @@ export class ExerciseService {
       default:
         return false;
     }
+  }
+
+  isOwner(user: User, exercise: Exercise) {
+    return exercise.userId === user.uid;
   }
 
   async create(user: User, data: Partial<Exercise>) {
@@ -106,7 +106,7 @@ export class ExerciseService {
       let query = this.repository.getCollection() as Query;
 
       if (options.filter?.ids)
-        query = query.where(FieldPath.documentId(), 'in', options.filter.ids.value);
+        query = query.where(FieldPath.documentId(), 'in', options.filter.ids);
 
       exercises = (await query.get()).docs.map(doc => this.repository.serialize(doc));
     } else
@@ -118,17 +118,10 @@ export class ExerciseService {
     const leafs = this.componentService.leafs(tree);
 
     if (options.filter) {
-      const { name, attributeValues, componentIds } = options.filter;
-
-      if (name && typeof name === 'string')
-        exercises = exercises.filter(exercise => exercise.name.toLowerCase().includes(name.toLowerCase()));
-
-      if (componentIds && typeof componentIds[0] === 'string')
-        exercises = this.filterByComponents(exercises, componentIds as string[], leafs);
-
-      if (attributeValues) {
-        // TODO - improve attribute value filtering
-      }
+      const { name, componentIds } = options.filter;
+      if (name) exercises = exercises.filter(exercise => exercise.name.toLowerCase().includes(name.value.toLowerCase()));
+      if (componentIds) exercises = this.filterByComponents(exercises, componentIds.value, leafs);
+      // TODO - attribute value filtering
     }
 
     // pagination must be done in memory
@@ -143,7 +136,7 @@ export class ExerciseService {
     const { ids } = filter || {};
 
     const exercises = await this.findAll(user, options);
-    if (exercises.length < 1 || (ids && ids.value.length !== exercises.length))
+    if (exercises.length < 1 || (ids && ids.length !== exercises.length))
       throw new BadRequestException('Invalid exercises provided');
 
     return exercises;
