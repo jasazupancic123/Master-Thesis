@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CollectionReference, DocumentReference, Query, Timestamp } from 'firebase-admin/firestore';
+import {
+  CollectionReference,
+  DocumentReference,
+  DocumentSnapshot,
+  Query,
+  QueryDocumentSnapshot,
+  Timestamp,
+} from 'firebase-admin/firestore';
 import { CycleRef, FirestoreCollectionRepository, TrainingRef } from '../../common/type/firebase-firestore.type';
 import { Training } from '../entity/training.entity';
 import { CommonService } from '../../common/service/common.service';
@@ -18,13 +25,13 @@ export class TrainingRepository implements FirestoreCollectionRepository<Trainin
     query: (query: Query) => Query = query => query,
   ): Promise<Training[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Training);
+    return snapshot.docs.map(doc => this.serialize(doc));
   }
 
   async getDoc(ref: Required<TrainingRef>): Promise<Training | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
-    return { id: snapshot.id, ...snapshot.data() } as Training;
+    return this.serialize(snapshot);
   }
 
   async addDoc(ref: Required<CycleRef>, input: Partial<Training>): Promise<string> {
@@ -53,5 +60,19 @@ export class TrainingRepository implements FirestoreCollectionRepository<Trainin
       .collection(FirestoreCollection.CYCLE)
       .doc(ref.cycleId)
       .collection(FirestoreCollection.TRAINING);
+  }
+
+  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Training {
+    const data = snapshot.data();
+
+    return {
+      id: snapshot.id,
+      subgroupId: data.subgroupId,
+      from: (data.from as Timestamp).toDate(),
+      to: (data.to as Timestamp).toDate(),
+      components: [],
+      createdAt: (data.createdAt as Timestamp).toDate(),
+      updatedAt: (data.updatedAt as Timestamp).toDate(),
+    } as Training;
   }
 }

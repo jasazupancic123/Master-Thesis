@@ -10,11 +10,10 @@ firebase emulators:start
 
 ## TODO
 
-- SUBCOLLECTIONS IN FIRESTORE!!!!!
+- Rewrite exercise service
+- Rewrite frontend calls to use new refactored backend
 - Add group address (gym location) for trainers so that groups with the same address get additional logic for
   overlapping cycles
-- Fix invalid order in set exercises
-- Refactor database structure for 1-M relationships
 - Write tests
 
 ### Trainings

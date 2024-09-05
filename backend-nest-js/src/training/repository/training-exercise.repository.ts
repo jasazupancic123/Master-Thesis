@@ -8,7 +8,7 @@ import {
 } from '../../common/type/firebase-firestore.type';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingComponentRepository } from './training-component.repository';
-import { Query } from 'firebase-admin/lib/firestore';
+import { DocumentSnapshot, Query, QueryDocumentSnapshot } from 'firebase-admin/lib/firestore';
 import { SetType } from '../enum/set-type.enum';
 import { WorkloadType } from '../enum/workload-type.enum';
 import { CommonService } from '../../common/service/common.service';
@@ -26,13 +26,13 @@ export class TrainingExerciseRepository implements FirestoreCollectionRepository
     query: (ref: Query) => Query = ref => ref,
   ): Promise<TrainingExercise[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => ({ exerciseId: doc.id, ...doc.data() } as TrainingExercise));
+    return snapshot.docs.map(doc => this.serialize(doc));
   }
 
   async getDoc(ref: Required<TrainingExerciseRef>): Promise<TrainingExercise | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
-    return { exerciseId: snapshot.id, ...snapshot.data() } as TrainingExercise;
+    return this.serialize(snapshot);
   }
 
   async addDoc(ref: Required<TrainingExerciseRef>, data: Partial<TrainingExercise>) {
@@ -63,5 +63,17 @@ export class TrainingExerciseRepository implements FirestoreCollectionRepository
 
   collection(ref: Required<TrainingComponentRef>): CollectionReference {
     return this.trainingComponentRepository.doc(ref).collection(FirestoreCollection.TRAINING_EXERCISE);
+  }
+
+  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): TrainingExercise {
+    const data = snapshot.data();
+
+    return {
+      exerciseId: snapshot.id,
+      order: +data.order,
+      color: data.color,
+      meta: data.meta,
+      data: [],
+    } as TrainingExercise;
   }
 }

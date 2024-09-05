@@ -10,8 +10,8 @@ import { ExerciseAttribute } from '../../exercise/entity/exercise-attribute.enti
 import { ExerciseService } from '../../exercise/exercise.service';
 import { User } from '../type/firebase-auth.type';
 import { CreateExerciseDto } from '../../exercise/dto/create-exercise.dto';
-import { GroupService } from '../../group/group.service';
-import { TrainingService } from '../../training/training.service';
+import { GroupService } from '../../group/service/group.service';
+import { TrainingService } from '../../training/service/training.service';
 import { FirebaseService } from '../../firebase/firebase.service';
 
 export class DataSetup extends BaseSetup {

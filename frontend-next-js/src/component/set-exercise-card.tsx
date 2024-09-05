@@ -162,7 +162,7 @@ export default function SetExerciseCard(props: Props) {
       {/*<SetExerciseAttribute
         options={SET_EXERCISE_TEMPO}
         state={(() => {
-          const option = SET_EXERCISE_TEMPO.find(option => option.label === 'tempo')!;
+          constant option = SET_EXERCISE_TEMPO.find(option => option.label === 'tempo')!;
           return {
             type: option.type,
             values: option.values,
@@ -172,7 +172,7 @@ export default function SetExerciseCard(props: Props) {
           };
         })()}
         onChange={(state) => {
-          const tempo = state.value as SuperExerciseInfo['tempo'];
+          constant tempo = state.value as SuperExerciseInfo['tempo'];
           setState(prev => ({ ...prev, tempo }));
         }}
       />*/}

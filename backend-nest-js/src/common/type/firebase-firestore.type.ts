@@ -1,4 +1,10 @@
-import { CollectionReference, DocumentReference, Query } from 'firebase-admin/firestore';
+import {
+  CollectionReference,
+  DocumentReference,
+  DocumentSnapshot,
+  Query,
+  QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
 
 export interface FirestoreCollectionRepository<Model = any, Ref = Record<string, string>> {
   doc(ref: Ref): DocumentReference;
@@ -9,9 +15,11 @@ export interface FirestoreCollectionRepository<Model = any, Ref = Record<string,
 
   getDoc(ref: Ref): Promise<Model | null>;
 
-  addDoc(ref: Ref, data: Model | Partial<Model> & Record<string, any>): Promise<string>;
+  addDoc(ref: Ref, input: Model | Partial<Model> & Record<string, any>): Promise<string>;
 
-  updateDoc(ref: Ref, data: Partial<Model> & Record<string, any>): Promise<void>;
+  updateDoc(ref: Ref, input: Partial<Model> & Record<string, any>): Promise<void>;
+
+  serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
 export interface RootFirestoreCollectionRepository<Model = any> {
@@ -23,15 +31,16 @@ export interface RootFirestoreCollectionRepository<Model = any> {
 
   getDoc(id: string): Promise<Model | null>;
 
-  addDoc(data: Model | Partial<Model> & Record<string, any>): Promise<string>;
+  addDoc(input: Model | Partial<Model> & Record<string, any>): Promise<string>;
 
-  updateDoc(id: string, data: Partial<Model> & Record<string, any>): Promise<void>;
+  updateDoc(id: string, input: Partial<Model> & Record<string, any>): Promise<void>;
+
+  serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
-export type RootRef = { userId?: string; } // for root collections
-export type GroupRef = { groupId?: string; subgroupId?: string; }
-export type SubgroupRef = GroupRef
-export type CycleRef = GroupRef & { cycleId?: string }
+export type GroupRef = { groupId?: string }
+export type SubgroupRef = GroupRef & { subgroupId?: string }
+export type CycleRef = SubgroupRef & { cycleId?: string }
 export type TrainingRef = CycleRef & { trainingId?: string }
 export type TrainingComponentRef = TrainingRef & { componentId?: string }
 export type TrainingExerciseRef = TrainingComponentRef & { exerciseId?: string }

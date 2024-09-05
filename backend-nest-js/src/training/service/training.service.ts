@@ -1,33 +1,38 @@
 import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { User } from '../common/type/firebase-auth.type';
+import { User } from '../../common/type/firebase-auth.type';
 import { Query, Timestamp } from 'firebase-admin/firestore';
-import { Training } from './entity/training.entity';
-import { ComponentService } from '../component/component.service';
-import { ExerciseService } from '../exercise/exercise.service';
-import { CommonService } from '../common/service/common.service';
-import { Filter, FindManyOptions, FindOneOptions, PaginateOptions } from '../common/type/orm.type';
-import { Cycle } from '../group/entity/cycle.entity';
-import { Validate } from '../common/type/validate.type';
-import { Group } from '../group/entity/group.entity';
-import { GroupService } from '../group/group.service';
-import { TrainingComponent } from './entity/training-component.entity';
-import { TrainingExercise } from './entity/training-exercise.entity';
-import { Wrapper } from '../common/type/wrapper.type';
-import { TrainingRepository } from './repository/training.repository';
-import { TrainingComponentRepository } from './repository/training-component.repository';
-import { TrainingExerciseRepository } from './repository/training-exercise.repository';
-import { SubgroupRepository } from '../group/repository/subgroup.repository';
-import { TrainingExerciseService } from './service/training-exercise.service';
-import { TrainingComponentService } from './service/training-component.service';
+import { Training } from '../entity/training.entity';
+import { ComponentService } from '../../component/component.service';
+import { ExerciseService } from '../../exercise/exercise.service';
+import { CommonService } from '../../common/service/common.service';
+import { Filter, FindManyOptions, FindOneOptions, PaginateOptions, Populate } from '../../common/type/orm.type';
+import { Cycle } from '../../group/entity/cycle.entity';
+import { Validate } from '../../common/type/validate.type';
+import { Group } from '../../group/entity/group.entity';
+import { GroupService } from '../../group/service/group.service';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { Wrapper } from '../../common/type/wrapper.type';
+import { TrainingRepository } from '../repository/training.repository';
+import { TrainingComponentRepository } from '../repository/training-component.repository';
+import { TrainingExerciseRepository } from '../repository/training-exercise.repository';
+import { SubgroupRepository } from '../../group/repository/subgroup.repository';
+import { TrainingExerciseService } from './training-exercise.service';
+import { TrainingComponentService } from './training-component.service';
 import {
   CycleRef,
+  GroupRef,
   TrainingComponentRef,
   TrainingExerciseRef,
   TrainingRef,
-} from '../common/type/firebase-firestore.type';
+} from '../../common/type/firebase-firestore.type';
+import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
+import { CycleService } from '../../group/service/cycle.service';
+import { SubgroupService } from '../../group/service/subgroup.service';
+import { CanViewService } from '../../common/type/auth.type';
 
 @Injectable()
-export class TrainingService {
+export class TrainingService extends CanViewService<GroupRef> {
   private logger = new Logger(TrainingService.name);
 
   constructor(
@@ -39,15 +44,26 @@ export class TrainingService {
     private readonly exerciseService: ExerciseService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
+    @Inject(forwardRef(() => SubgroupService))
+    private readonly subgroupService: Wrapper<SubgroupService>,
+    @Inject(forwardRef(() => CycleService))
+    private readonly cycleService: Wrapper<CycleService>,
     private readonly subgroupRepository: SubgroupRepository,
     private readonly trainingExerciseService: TrainingExerciseService,
     private readonly trainingComponentService: TrainingComponentService,
   ) {
+    super();
+  }
+
+  async canView(user: User, ref: Required<GroupRef>): Promise<boolean> {
+    return await this.groupService.canView(user, ref);
   }
 
   async findTraining(ref: Required<TrainingRef>, options?: FindOneOptions<Training>): Promise<Training | null> {
     const training = await this.trainingRepository.getDoc(ref);
-    await this.populate(ref, training, options);
+    if (!training) return null;
+
+    if (options?.populate) await this.populate(ref, training, options.populate);
     return training;
   }
 
@@ -58,8 +74,7 @@ export class TrainingService {
   }
 
   async findUserTraining(user: User, ref: Required<TrainingRef>, options?: FindOneOptions<Training>): Promise<Training | null> {
-    await this.groupService.findOneByIdOrFail(user, ref.groupId);
-    await this.groupService.findCycleByIdOrFail(user, { groupId: ref.groupId, cycleId: ref.cycleId });
+    await this.authorize(user, ref);
     return await this.findTraining(ref, options) || null;
   }
 
@@ -83,18 +98,18 @@ export class TrainingService {
 
   async findTrainings(ref: Required<CycleRef>, options?: FindManyOptions<Training>): Promise<Training[]> {
     return await this.trainingRepository.getDocs(ref, (collection) => {
-      let query = this.filter(collection, options?.filter);
-      return this.paginate(query, options?.paginate);
+      let query = collection;
+      if (options.filter) query = this.filter(collection, options.filter);
+      if (options.paginate) query = this.paginate(query, options.paginate);
+
+      return query;
     });
   }
 
   async findTrainingsByAthlete(user: User, ref: Required<CycleRef>): Promise<Training[]> {
     // get athlete's current active cycle
-    const group = await this.groupService.findOneByIdOrFail(user, ref.groupId);
-    const cycle = await this.groupService.findActiveCycle(user, {
-      groupId: ref.groupId,
-      cycleId: ref.cycleId,
-    }, new Date());
+    const group = await this.groupService.findUserGroup(user, ref.groupId);
+    const cycle = await this.cycleService.findActiveCycle(ref, new Date());
     if (!cycle) return [];
 
     // find all active subgroups that user is part of
@@ -132,7 +147,8 @@ export class TrainingService {
     // populate trainings' components and exercises
     return await Promise.all(
       athleteTrainings.map(async (training) => {
-        await this.populate({ ...ref, trainingId: training.id }, training);
+        const trainingRef = { ...ref, trainingId: training.id };
+        await this.populate(trainingRef, training, []);
         return training;
       }),
     );
@@ -142,10 +158,11 @@ export class TrainingService {
     componentIds: string[]
   }): Promise<Training> {
     this.logger.debug(`Creating training (user ${user.uid}): ${JSON.stringify(input)}`);
+    await this.authorize(user, ref);
 
     // find parent references (group and cycle)
-    const group = await this.groupService.findOneByIdOrFail(user, ref.groupId);
-    const cycle = await this.groupService.findCycleByIdOrFail(user, ref);
+    const group = await this.groupService.findGroup(ref.groupId);
+    const cycle = await this.cycleService.findCycle(ref);
 
     // validate data
     await this.componentService.findAllOrFail({ ids: input.componentIds || [] });
@@ -168,12 +185,13 @@ export class TrainingService {
 
   async copyTraining(user: User, source: Required<TrainingRef>, destination: Required<CycleRef>): Promise<Training> {
     this.logger.debug(`Copying training ${source.trainingId} (user ${user.uid})`);
+    await this.authorize(user, destination);
 
     // copy all training data from source to destination
-    const sourceTraining = await this.findUserTrainingOrFail(user, source, { populate: ['components'] });
-    const destinationGroup = await this.groupService.findOneByIdOrFail(user, destination.groupId);
-    const destinationCycle = await this.groupService.findCycleByIdOrFail(user, destination);
-    const destinationSubgroup = destination.subgroupId ? await this.groupService.findSubgroupOrFail(user, destination) : null;
+    const sourceTraining = await this.findTrainingOrFail(source, { populate: ['components'] });
+    const destinationGroup = await this.groupService.findGroup(destination.groupId);
+    const destinationCycle = await this.cycleService.findCycle(destination);
+    const destinationSubgroup = destination.subgroupId ? await this.subgroupService.findSubgroupOrFail(destination) : null;
 
     // validate that user is authorized to create training for the destination group and cycle with given training data
     const data = { subgroupId: destinationSubgroup?.id || null, from: sourceTraining.from, to: sourceTraining.to };
@@ -192,17 +210,18 @@ export class TrainingService {
   }
 
   async findUserTrainingComponent(user: User, ref: Required<TrainingComponentRef>): Promise<TrainingComponent> {
-    await this.groupService.findOneByIdOrFail(user, ref.groupId);
-    await this.groupService.findCycleByIdOrFail(user, ref);
+    await this.groupService.findUserGroup(user, ref.groupId);
+    await this.cycleService.findUserCycle(user, ref);
     await this.findTrainingOrFail(ref);
     return await this.findTrainingComponent(ref);
   }
 
   async addComponent(user: User, ref: Required<TrainingRef>, input: Partial<TrainingComponent>) {
     this.logger.debug(`Adding component to training (user ${user.uid}): ${JSON.stringify(input)}`);
+    await this.authorize(user, ref);
 
     // find parent references (group, cycle, training)
-    const training = await this.findUserTrainingOrFail(user, ref, { populate: ['components'] });
+    const training = await this.findTrainingOrFail(ref, { populate: ['components'] });
 
     // validate data
     await this.componentService.findOneByIdOrFail(input.componentId);
@@ -225,10 +244,7 @@ export class TrainingService {
   }
 
   async findUserTrainingExercise(user: User, ref: Required<TrainingExerciseRef>): Promise<TrainingExercise> {
-    await this.groupService.findOneByIdOrFail(user, ref.groupId);
-    await this.groupService.findCycleByIdOrFail(user, ref);
-    await this.findTrainingOrFail(ref);
-    await this.findTrainingComponent(ref);
+    await this.authorize(user, ref);
     return await this.findTrainingExercise(ref);
   }
 
@@ -238,9 +254,10 @@ export class TrainingService {
     input: Partial<TrainingExercise>,
   ): Promise<TrainingComponent> {
     this.logger.debug(`Adding exercise to training (user ${user.uid}): ${JSON.stringify(input)}`);
+    await this.authorize(user, ref);
 
     // find parent references (group, cycle, training, component)
-    const component = await this.findUserTrainingComponent(user, ref);
+    const component = await this.findTrainingComponent(ref);
 
     // validate data
     const exercises = await this.exerciseService.findAllOrFail(user, { filter: { ids: [input.exerciseId] } });
@@ -260,9 +277,10 @@ export class TrainingService {
     input: Partial<TrainingExercise>,
   ): Promise<TrainingExercise> {
     this.logger.debug(`Updating exercise in training (user ${user.uid}): ${JSON.stringify(input)}`);
+    await this.authorize(user, ref);
 
     // find parent references (group, cycle, training, component, exercise)
-    const trainingExercise = await this.findUserTrainingExercise(user, ref);
+    const trainingExercise = await this.findTrainingExercise(ref);
 
     // validate data
     const exercise = await this.exerciseService.findOneByIdOrFail(user, trainingExercise.exerciseId);
@@ -273,9 +291,7 @@ export class TrainingService {
     return await this.trainingExerciseService.update(ref, input);
   }
 
-  private filter(query: Query, filter?: Filter<Training>) {
-    if (!filter) return query;
-
+  private filter(query: Query, filter: Filter<Training>) {
     if (filter.ids) query = query.where('id', 'in', filter.ids);
     if (filter.subgroupId) query = query.where('subgroupId', filter.subgroupId.op || '==', filter.subgroupId.value);
     if (filter.from) query = query.where('from', filter.from.op || '>=', Timestamp.fromDate(filter.from.value));
@@ -284,20 +300,18 @@ export class TrainingService {
     return query;
   }
 
-  private paginate(query: Query, paginate?: PaginateOptions<Training>) {
-    if (!paginate) return query;
+  private paginate(query: Query, paginate: PaginateOptions<Training>) {
+    const orderBy = paginate.orderBy || { field: 'from', value: 'asc' };
+    const page = paginate.page || 1;
+    const pageSize = paginate.pageSize || DEFAULT_PAGE_SIZE;
 
-    const { orderBy, page, pageSize, limit } = paginate;
-    if (orderBy) query = query.orderBy(orderBy.field, orderBy.value);
-    if (limit) query = query.limit(limit);
-    if (page && pageSize) query = query.offset((page - 1) * pageSize).limit(pageSize);
-
-    return query;
+    return query
+      .orderBy(orderBy.field, orderBy.value)
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
   }
 
-  private async populate(ref: Required<TrainingRef>, training: Training, options?: FindOneOptions<Training>) {
-    const { populate = [] } = options || {};
-
+  private async populate(ref: Required<TrainingRef>, training: Training, populate: Populate<Training>[]) {
     if (populate.includes('components')) {
       training.components = await this.trainingComponentRepository.getDocs(ref);
 

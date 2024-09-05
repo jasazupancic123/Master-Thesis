@@ -8,6 +8,7 @@ import {
 } from '../../common/type/firebase-firestore.type';
 import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.entity';
 import { TrainingExerciseRepository } from './training-exercise.repository';
+import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-admin/lib/firestore';
 
 @Injectable()
 export class TrainingExerciseUserDataRepository implements FirestoreCollectionRepository<TrainingExerciseUserData, TrainingExerciseUserDataRef> {
@@ -16,13 +17,13 @@ export class TrainingExerciseUserDataRepository implements FirestoreCollectionRe
 
   async getDocs(ref: Required<TrainingExerciseRef>): Promise<TrainingExerciseUserData[]> {
     const snapshot = await this.collection(ref).get();
-    return snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() }) as TrainingExerciseUserData);
+    return snapshot.docs.map(doc => this.serialize(doc));
   }
 
   async getDoc(ref: Required<TrainingExerciseUserDataRef>): Promise<TrainingExerciseUserData | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
-    return { userId: snapshot.id, ...snapshot.data() } as TrainingExerciseUserData;
+    return this.serialize(snapshot);
   }
 
   async addDoc(ref: Required<TrainingExerciseUserDataRef>, data: TrainingExerciseUserData) {
@@ -48,5 +49,17 @@ export class TrainingExerciseUserDataRepository implements FirestoreCollectionRe
 
   collection(ref: Required<TrainingExerciseRef>): CollectionReference {
     return this.trainingExerciseRepository.doc(ref).collection(FirestoreCollection.TRAINING_EXERCISE_USER_DATA);
+  }
+
+  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): TrainingExerciseUserData {
+    const data = snapshot.data();
+
+    return {
+      userId: snapshot.id,
+      workloadValue: data.workloadValue,
+      completedSets: data.completedSets,
+      completedSetTypeValue: data.completedSetTypeValue || null,
+      completedWorkloadValue: data.completedWorkloadValue || null,
+    } as TrainingExerciseUserData;
   }
 }
