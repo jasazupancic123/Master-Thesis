@@ -1,10 +1,8 @@
 import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Group } from './entity/group.entity';
-import { User } from '../common/type/custom-claims.type';
+import { User } from '../common/type/firebase-auth.type';
 import { UserService } from '../user/user.service';
-import { InjectRepository } from '../common/decorator/entity.decorator';
-import { FirestoreRepository } from '../firebase/firestore.repository';
 import { Query, Timestamp } from 'firebase-admin/firestore';
 import { TrainingService } from '../training/training.service';
 import { CommonService } from '../common/service/common.service';
@@ -13,40 +11,45 @@ import { IdDto } from '../common/dto/id.dto';
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
 import { Cycle } from './entity/cycle.entity';
 import { isAfter, isBefore } from 'date-fns';
-import { Filter } from '../common/type/orm.type';
+import { Filter, FindManyOptions, PaginateOptions } from '../common/type/orm.type';
 import { Wrapper } from '../common/type/wrapper.type';
-
-
-export interface GroupRef {
-  groupId: string; // group/{groupId}
-  cycleId?: string; // group/{groupId}/cycle/{cycleId}
-  subgroupId?: string; // group/{groupId}/subgroup/{subgroupId}
-}
+import { GroupRef, RootRef } from '../common/type/firebase-firestore.type';
+import { GroupRepository } from './repository/group.repository';
+import { DEFAULT_PAGE_SIZE } from '../common/constant/pagination.constant';
 
 @Injectable()
 export class GroupService {
-  collection = {
-    cycles: (ref: GroupRef) => this.repository.getCollection(ref.groupId, FirestoreCollection.CYCLE),
-    cycle: (ref: GroupRef) => this.collection.cycles(ref).doc(ref.cycleId),
-    subgroups: (ref: GroupRef) => this.repository.getCollection(ref.groupId, FirestoreCollection.SUBGROUP),
-    subgroup: (ref: GroupRef) => this.collection.subgroups(ref).doc(ref.subgroupId),
-  };
-
   private logger = new Logger(GroupService.name);
 
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly userService: UserService,
-    @InjectRepository(Group)
-    private readonly repository: FirestoreRepository<Group>,
+    private readonly repository: GroupRepository,
     @Inject(forwardRef(() => TrainingService))
     readonly trainingService: Wrapper<TrainingService>,
   ) {
   }
 
-  async findMembers(user: User, group: Group): Promise<User[]> {
-    return this.userService.findAll(user, { ids: group.membersIds });
+  async findGroups(ref: Required<RootRef>, options?: FindManyOptions<Group>): Promise<Group[]> {
+  }
+
+  /**
+   * Returns all groups that user is member or owner of
+   */
+  async findUserGroups(user: User) {
+    const owned = await this.repository.findAllBy({ field: 'ownerId', value: user.uid });
+    const member = await this.repository.findAllBy({
+      field: 'membersIds',
+      operator: 'array-contains',
+      value: user.uid,
+    });
+
+    return this.commonService.array.unique(owned.concat(member)); // just in case
+  }
+
+  async findMembers(group: Group): Promise<User[]> {
+    return this.userService.findAll({ ids: group.membersIds });
   }
 
   /**
@@ -61,7 +64,7 @@ export class GroupService {
       throw new BadRequestException('You are not a member of this group');
 
     // populate
-    group.user = await this.userService.findOneById(group.ownerId);
+    group.user = await this.userService.findOneBy(group.ownerId);
     group.members = await this.findMembers(user, group);
     group.subgroups = await this.findSubgroups(user, { groupId: group.id });
     return group;
@@ -81,6 +84,19 @@ export class GroupService {
     return cycle;
   }
 
+  async findUserCycleOrFail(user: User, ref: GroupRef): Promise<Cycle> {
+    // check if user is a member of the group
+    await this.findOneByIdOrFail(user, ref.groupId);
+
+    const cycle = this.firebaseService.serializeDocument<Cycle>(await this.collection.cycle(ref).get());
+    if (!cycle)
+      throw new BadRequestException('Cycle not found');
+
+    // populate
+    cycle.weeks = this.commonService.date.weeks(cycle.from, cycle.to);
+    return cycle;
+  }
+
   /**
    * There is no overlap between cycles, so only one cycle can be active at a
    * time. This function returns the active cycle for the given date. By
@@ -89,20 +105,6 @@ export class GroupService {
   async findActiveCycle(user: User, ref: GroupRef, date: Date = new Date()): Promise<Cycle | null> {
     const cycles = await this.findAllCycles(user, ref, { from: date });
     return cycles.find(cycle => isBefore(date, cycle.to));
-  }
-
-  /**
-   * Returns all groups that user is member or owner of
-   */
-  async findAll(user: User) {
-    const owned = await this.repository.findAllBy({ field: 'ownerId', value: user.uid });
-    const member = await this.repository.findAllBy({
-      field: 'membersIds',
-      operator: 'array-contains',
-      value: user.uid,
-    });
-
-    return this.commonService.array.unique(owned.concat(member));
   }
 
   /**
@@ -212,7 +214,7 @@ export class GroupService {
     });
 
     const subgroup = this.firebaseService.serializeDocument<Subgroup>(await document.get());
-    /*for (const training of []) // TODO - copy trainings from cycle
+    /*for (constant training of []) // TODO - copy trainings from cycle
       await this.trainingService.copy(user, {
         trainingId: training.id,
         cycleId: 'cycleId',
@@ -279,5 +281,28 @@ export class GroupService {
 
   isOwner(user: User, group: Group): boolean {
     return group.ownerId === user.uid;
+  }
+
+  private filter(query: Query, filter?: Filter<Group>) {
+    if (!filter) return query;
+
+    if (filter.ids) query = query.where('id', 'in', filter.ids);
+    if (filter.ownerId) query = query.where('ownerId', '==', filter.ownerId);
+    if (filter.name) query = query.where('name', '>=', filter.name).where('name', '<=', filter.name + '\uf8ff');
+    if (filter.createdAt) query = query.where('createdAt', filter.createdAt.op || '>=', Timestamp.fromDate(filter.createdAt.value));
+    if (filter.updatedAt) query = query.where('updatedAt', filter.updatedAt.op || '>=', Timestamp.fromDate(filter.updatedAt.value));
+
+    return query;
+  }
+
+  private paginate(query: Query, paginate: PaginateOptions<Group>): Query {
+    const orderBy = paginate.orderBy || { field: 'createdAt', value: 'desc' };
+    const page = paginate.page || 1;
+    const pageSize = paginate.pageSize || DEFAULT_PAGE_SIZE;
+
+    return query
+      .orderBy(orderBy.field, orderBy.value)
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
   }
 }

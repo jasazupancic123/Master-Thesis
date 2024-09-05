@@ -6,6 +6,8 @@ import { UserModule } from '../user/user.module';
 import { Group } from './entity/group.entity';
 import { TrainingModule } from '../training/training.module';
 import { GroupRepository } from './repository/group.repository';
+import { SubgroupRepository } from './repository/subgroup.repository';
+import { CycleRepository } from './repository/cycle.repository';
 
 @Module({
   imports: [
@@ -15,8 +17,8 @@ import { GroupRepository } from './repository/group.repository';
     forwardRef(() => TrainingModule),
   ],
   controllers: [GroupController],
-  providers: [GroupRepository, GroupService],
-  exports: [GroupService, GroupRepository],
+  providers: [GroupRepository, SubgroupRepository, CycleRepository, GroupService],
+  exports: [GroupRepository, SubgroupRepository, CycleRepository, GroupService],
 })
 export class GroupModule {
 }

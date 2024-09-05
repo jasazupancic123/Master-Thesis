@@ -6,6 +6,7 @@ import { FirebaseModule } from '../firebase/firebase.module';
 import { Exercise } from './entity/exercise.entity';
 import { ExerciseAttribute } from './entity/exercise-attribute.entity';
 import { ExerciseAttributeValue } from './entity/exercise-attribute-value.entity';
+import { ExerciseRepository } from './repository/exercise.repository';
 
 @Module({
   imports: [
@@ -14,8 +15,8 @@ import { ExerciseAttributeValue } from './entity/exercise-attribute-value.entity
     ComponentModule,
   ],
   controllers: [ExerciseController],
-  providers: [ExerciseService],
-  exports: [ExerciseService],
+  providers: [ExerciseRepository, ExerciseService],
+  exports: [ExerciseRepository, ExerciseService],
 })
 export class ExerciseModule {
 }

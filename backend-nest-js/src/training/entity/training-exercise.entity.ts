@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { TrainingExerciseMeta } from './training-exercise-meta.entity';
 import { TrainingExerciseUserData } from './training-exercise-user-data.entity';
+import { Exercise } from '../../exercise/entity/exercise.entity';
 
 export class TrainingExercise {
   @IsString()
@@ -10,6 +11,7 @@ export class TrainingExercise {
   @ApiProperty()
   @Expose()
   exerciseId: string;
+  exercise: Exercise | null; // virtual
 
   @IsInt()
   @Min(0)

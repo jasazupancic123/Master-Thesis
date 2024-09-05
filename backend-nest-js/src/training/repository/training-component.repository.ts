@@ -1,46 +1,56 @@
 import { Injectable } from '@nestjs/common';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CollectionReference, DocumentReference, Query } from 'firebase-admin/firestore';
-import { CollectionRepository } from '../../firebase/firestore.type';
+import {
+  FirestoreCollectionRepository,
+  TrainingComponentRef,
+  TrainingRef,
+} from '../../common/type/firebase-firestore.type';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingRef, TrainingRepository } from './training.repository';
-
-export type TrainingComponentRef = TrainingRef & { componentId?: string }
+import { TrainingRepository } from './training.repository';
+import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
-export class TrainingComponentRepository implements CollectionRepository<TrainingComponent, TrainingComponentRef> {
+export class TrainingComponentRepository implements FirestoreCollectionRepository<TrainingComponent, TrainingComponentRef> {
   constructor(
+    private readonly commonService: CommonService,
     private readonly trainingRepository: TrainingRepository,
   ) {
   }
 
   async getDocs(
-    ref: TrainingComponentRef,
-    query: (ref: CollectionReference) => Query = ref => ref,
+    ref: Required<TrainingRef>,
+    query: (ref: Query) => Query = ref => ref,
   ): Promise<TrainingComponent[]> {
     const snapshot = await query(this.collection(ref)).get();
     return snapshot.docs.map(doc => ({ componentId: doc.id, ...doc.data() } as TrainingComponent));
   }
 
-  async getDoc(ref: TrainingComponentRef): Promise<TrainingComponent> {
+  async getDoc(ref: Required<TrainingComponentRef>): Promise<TrainingComponent | null> {
     const snapshot = await this.doc(ref).get();
+    if (!snapshot.exists) return null;
     return { componentId: snapshot.id, ...snapshot.data() } as TrainingComponent;
   }
 
-  async addDoc(ref: TrainingComponentRef, data: TrainingComponent) {
-    await this.doc(ref).set(data);
+  async addDoc(ref: Required<TrainingComponentRef>, data: Partial<TrainingComponent>) {
+    await this.doc(ref).set({
+      componentId: ref.componentId,
+      order: data.order,
+      color: data.color || this.commonService.color.random(),
+    });
+
+    return ref.componentId;
   }
 
-  async updateDoc(ref: TrainingComponentRef, data: Partial<TrainingComponent>) {
+  async updateDoc(ref: Required<TrainingComponentRef>, data: Partial<TrainingComponent>) {
     await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
   }
 
-  doc(ref: TrainingComponentRef): DocumentReference {
-    if (!ref.componentId) throw new Error('componentId is required');
+  doc(ref: Required<TrainingComponentRef>): DocumentReference {
     return this.collection(ref).doc(ref.componentId);
   }
 
-  collection(ref: TrainingComponentRef): CollectionReference {
+  collection(ref: Required<TrainingRef>): CollectionReference {
     return this.trainingRepository.doc(ref).collection(FirestoreCollection.TRAINING_COMPONENT);
   }
 }

@@ -11,8 +11,7 @@ import {
 } from 'firebase-admin/firestore';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
 import { BadRequestException } from '@nestjs/common';
-import { Condition, Options } from '../common/type/orm.type';
-import { PaginateOptions } from '../common/type/paginate.type';
+import { Condition, FindManyOptions, PaginateOptions } from '../common/type/orm.type';
 
 
 export abstract class FirestoreRepository<T extends BaseEntity> {
@@ -84,31 +83,6 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
     return this.serialize(result);
   }
 
-  async updateMany(input: { id: string, data: Partial<T> }[]): Promise<T[]> {
-    const batch = this.firebase.firestore.batch();
-    const result: T[] = [];
-
-    for (const item of input) {
-      batch.update(this.collection.doc(item.id), item.data as any);
-      result.push({ id: item.id, ...item.data } as unknown as T);
-    }
-
-    await batch.commit();
-    return result;
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.collection.doc(id).delete();
-  }
-
-  async deleteMany(ids: string[]): Promise<void> {
-    const batch = this.firebase.firestore.batch();
-    for (const id of ids)
-      batch.delete(this.collection.doc(id));
-
-    await batch.commit();
-  }
-
   async findOneById(id: string): Promise<T | null> {
     const doc = await this.collection.doc(id).get();
     if (!doc.exists)
@@ -144,7 +118,7 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
     return this.serialize(snapshot.docs[0]);
   }
 
-  async findAll(options?: Options<T>): Promise<T[]> {
+  async findAll(options?: FindManyOptions<T>): Promise<T[]> {
     let query = this.collection as Query;
 
     if (options?.filter)
@@ -161,26 +135,9 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
   async findAllBy(condition: Condition<T>, paginate?: PaginateOptions<T>): Promise<T[]> {
     const { field, value, operator } = condition;
 
-    let query = await this.collection.where(field.toString(), operator || '==', value);
+    let query = this.collection.where(field.toString(), operator || '==', value);
     if (paginate)
       query = this.paginate(query, paginate);
-
-    const snapshot = await query.get();
-    return snapshot.docs.map(doc => this.serialize(doc));
-  }
-
-  async findAllByMany(
-    conditions: Condition<T>[],
-    options?: Options<T>,
-  ): Promise<T[]> {
-    let query = this.collection as Query;
-
-    for (const condition of conditions)
-      if (condition.value !== undefined)
-        query = query.where(condition.field.toString(), condition.operator, condition.value);
-
-    if (options?.paginate)
-      query = this.paginate(query, options.paginate);
 
     const snapshot = await query.get();
     return snapshot.docs.map(doc => this.serialize(doc));
@@ -206,11 +163,11 @@ export abstract class FirestoreRepository<T extends BaseEntity> {
   }
 
   paginate(query: Query, options: PaginateOptions<T>): Query {
-    const { order, page, pageSize, limit } = options;
+    const { orderBy, page, pageSize, limit } = options;
 
-    if (order)
-      for (const key in order)
-        query = query.orderBy(key, order[key]);
+    if (orderBy)
+      for (const key in orderBy)
+        query = query.orderBy(key, orderBy[key]);
 
     if (page && pageSize)
       query = query.limit(pageSize).offset(pageSize * page);

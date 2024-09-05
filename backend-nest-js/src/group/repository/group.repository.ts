@@ -2,46 +2,51 @@ import { Injectable } from '@nestjs/common';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CollectionReference, DocumentReference } from 'firebase-admin/firestore';
-import { CollectionRepository } from '../../firebase/firestore.type';
+import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
 import { Group } from '../entity/group.entity';
-
-export type GroupRef = {
-  groupId?: string;
-}
+import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
-export class GroupRepository implements CollectionRepository<Group, GroupRef> {
-  constructor(private readonly firebaseService: FirebaseService) {
+export class GroupRepository implements RootFirestoreCollectionRepository<Group> {
+  constructor(
+    private readonly commonService: CommonService,
+    private readonly firebaseService: FirebaseService,
+  ) {
   }
 
   async getDocs(
-    ref: GroupRef,
     query: (query: CollectionReference) => CollectionReference = query => query,
   ): Promise<Group[]> {
     const snapshot = await query(this.collection()).get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Group);
   }
 
-  async getDoc(ref: GroupRef): Promise<Group> {
-    const snapshot = await this.doc(ref).get();
+  async getDoc(id: string): Promise<Group | null> {
+    const snapshot = await this.doc(id).get();
+    if (!snapshot.exists) return null;
     return { id: snapshot.id, ...snapshot.data() } as Group;
   }
 
-  async addDoc(ref: GroupRef, data: Group) {
-    await this.doc(ref).set(data);
+  async addDoc(input: Group) {
+    const result = await this.collection().add({
+      name: input.name,
+      ownerId: input.ownerId,
+      membersIds: input.membersIds,
+    });
+
+    return result.id;
   }
 
-  async updateDoc(ref: GroupRef, data: Partial<Group>) {
-    await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
+  async updateDoc(id: string, input: Partial<Group>) {
+    const data = this.commonService.object.clean(input);
+    await this.doc(id).update(data);
   }
 
-  doc(ref: GroupRef): DocumentReference {
-    if (!ref.groupId) throw new Error('groupId is required');
-    return this.collection().doc(ref.groupId);
+  doc(id: string): DocumentReference {
+    return this.collection().doc(id);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore
-      .collection(FirestoreCollection.GROUP);
+    return this.firebaseService.firestore.collection(FirestoreCollection.GROUP);
   }
 }

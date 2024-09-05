@@ -4,9 +4,9 @@ import * as admin from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
-import { DecodedUser, User } from '../common/type/custom-claims.type';
+import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
-import { DocumentData, DocumentSnapshot, QuerySnapshot, Timestamp } from 'firebase-admin/firestore';
+import { ListUsersResult, UserIdentifier } from 'firebase-admin/auth';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -17,33 +17,32 @@ export class FirebaseService implements OnApplicationBootstrap {
   private logger = new Logger(this.constructor.name);
 
   constructor(
-    @InjectFirebaseAdmin() private readonly firebaseAdmin: FirebaseClient,
     private readonly configService: ConfigService<Environment>,
+    @InjectFirebaseAdmin() private readonly firebaseAdmin: FirebaseClient,
   ) {
-    this.app = firebaseAdmin.app;
-    this.auth = firebaseAdmin.auth;
-    this.firestore = firebaseAdmin.firestore;
-    this.storage = firebaseAdmin.storage;
+    this.app = this.firebaseAdmin.app;
+    this.auth = this.firebaseAdmin.auth;
+    this.firestore = this.firebaseAdmin.firestore;
+    this.storage = this.firebaseAdmin.storage;
   }
 
   async findUserById(uid: string) {
     return await this.auth.getUser(uid) as User;
   }
-  
-  async findUsers(): Promise<User[]> {
-    return (await this.auth.listUsers()).users as User[];
-  }
 
-  serializeDocument<T>(data: DocumentSnapshot): T & { id: string } {
-    const item = this.convertTimestampToDate(data.data());
-    return { id: data.id, ...item } as T & { id: string };
-  }
+  async authUsers(filter?: { ids?: string[], emails?: string[] }): Promise<User[]> {
+    let users: ListUsersResult;
 
-  serialize<T>(data: QuerySnapshot): (T & { id: string })[] {
-    return data.docs.map(doc => {
-      const item = this.convertTimestampToDate(doc.data());
-      return { id: doc.id, ...item } as T & { id: string };
-    }) as (T & { id: string })[];
+    if (filter) {
+      // https://firebase.google.com/docs/auth/admin/manage-users#bulk_retrieve_user_data
+      const identifiers: UserIdentifier[] = [];
+      for (const id of filter.ids ?? []) identifiers.push({ uid: id });
+      for (const email of filter.emails ?? []) identifiers.push({ email });
+      users = await this.auth.getUsers(identifiers);
+    } else
+      users = await this.auth.listUsers();
+
+    return users.users as User[];
   }
 
   isAdmin(user: User | DecodedUser): boolean {
@@ -69,19 +68,8 @@ export class FirebaseService implements OnApplicationBootstrap {
     this.logger.debug(`Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`);
   }
 
-  private convertTimestampToDate(data: DocumentData) {
-    let obj = { ...data };
-    for (const key in obj)
-      if (obj[key] instanceof Timestamp)
-        obj[key] = (obj[key] as Timestamp).toDate();
-
-    return obj;
-  }
-
   private checkRole(user: User | DecodedUser, role: UserRole): boolean {
-    if (isUser(user))
-      return user.customClaims.role.includes(role);
-
+    if (isUser(user)) return user.customClaims.role.includes(role);
     return user.role.includes(role);
   }
 }

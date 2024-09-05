@@ -19,7 +19,7 @@ export class FirebaseModule {
           provide: FIREBASE_ADMIN,
           inject: [ConfigService, CommonService],
           useFactory: async (
-            configService: ConfigService,
+            _configService: ConfigService,
             commonService: CommonService,
           ) => {
             const client = getFirebaseClient(options);

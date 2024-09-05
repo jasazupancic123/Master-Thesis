@@ -1,14 +1,15 @@
 import { IsInt, IsObject, IsOptional, IsPositive } from 'class-validator';
 import { Expose } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { OrderBy, PaginateOptions } from '../type/paginate.type';
+import { PaginateOptions } from '../type/orm.type';
+import { OrderByDirection } from 'firebase-admin/lib/firestore';
 
 export class PaginateDto<T> implements PaginateOptions<T> {
   @IsObject()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  order: OrderBy<T>;
+  orderBy: { field: keyof T; value: OrderByDirection };
 
   @IsInt()
   @IsOptional()

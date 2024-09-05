@@ -10,6 +10,7 @@ export class CommonService {
   readonly generic: Util.GenericUtil;
   readonly tree: Util.TreeUtil;
   readonly array: Util.ArrayUtil;
+  readonly object: Util.ObjectUtil;
 
   constructor() {
     this.env = new Util.EnvUtil();
@@ -19,5 +20,6 @@ export class CommonService {
     this.generic = new Util.GenericUtil();
     this.tree = new Util.TreeUtil();
     this.array = new Util.ArrayUtil();
+    this.object = new Util.ObjectUtil();
   }
 }

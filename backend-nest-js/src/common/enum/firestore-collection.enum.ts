@@ -10,10 +10,5 @@ export enum FirestoreCollection {
   TRAINING_COMPONENT = 'components',
   TRAINING_EXERCISE = 'exercises',
   TRAINING_EXERCISE_USER_DATA = 'data',
-  SET_GROUP = 'set',
-  SET_SUB_GROUP = 'set-sub-group',
-  SET_EXERCISE = 'set-exercise',
-  EXERCISE_INFO = 'exercise-info',
-  SUPER_EXERCISE_INFO = 'super-exercise-info',
   WELLNESS = 'wellness',
 }

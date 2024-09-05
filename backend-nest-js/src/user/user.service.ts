@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
-import { CreateUser, UserDto } from './dto/user.dto';
-import { UpdateUserClaimsDto, UpdateUserDto } from './dto/update-user.dto';
-import { User } from '../common/type/custom-claims.type';
+import { CreateUser } from './dto/user.dto';
+import { UpdateUserClaimsDto } from './dto/update-user.dto';
+import { User } from '../common/type/firebase-auth.type';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { Filter } from '../common/type/orm.type';
 import { Wellness } from './entity/wellness.entity';
@@ -10,17 +10,17 @@ import { InjectRepository } from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from '../firebase/firestore.repository';
 import { Timestamp } from 'firebase-admin/firestore';
 import dayjs from 'dayjs';
+import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 
 @Injectable()
 export class UserService {
-  private logger: Logger;
+  private logger = new Logger(UserService.name);
 
   constructor(
     private readonly firebaseService: FirebaseService,
     @InjectRepository(Wellness)
     private readonly wellnessRepository: FirestoreRepository<Wellness>,
   ) {
-    this.logger = new Logger(UserService.name);
   }
 
   async upsert(data: CreateUser): Promise<User> {
@@ -44,68 +44,34 @@ export class UserService {
     return await auth.getUser(user.uid) as User;
   }
 
-  async findOneById(uid: string): Promise<User> {
-    return await this.firebaseService.auth.getUser(uid) as User;
-  }
-
-  async findAll(user: User, filter?: Filter<UserDto & { ids?: string[] }>): Promise<User[]> {
-    const data = (await this.firebaseService.auth.listUsers()).users as User[];
-
-    // mandatory filter based on user role
-    /*const users = data.filter(user => {
-      // return all users if user is an admin
-      if (this.firebaseService.isAdmin(user))
-        return true;
-
-      // return all trainers if user is a manager
-      if (this.firebaseService.isManager(user))
-        return this.firebaseService.isTrainer(user);
-
-      // return all athletes if user is a trainer
-      if (this.firebaseService.isTrainer(user))
-        return this.firebaseService.isAthlete(user);
-
-      // return only current user if user is an athlete
-      if (this.firebaseService.isAthlete(user))
-        return user.uid === user.uid;
-    });*/
-
-    // optional filter based on query
-    let filtered = data;
-    if (filter) {
-      const { email, displayName, ids } = filter;
-
-      filtered = data.filter(user => {
-        if (ids && !ids.includes(user.uid)) return false;
-        if (email && typeof email === 'string' && !user.email.includes(email)) return false;
-        if (displayName && typeof displayName === 'string' && !user.displayName.includes(displayName)) return false;
-        // add more filters here
-        return true;
-      });
+  async findOneBy(key: 'id' | 'email', value: string): Promise<User> {
+    switch (key) {
+      case 'id':
+        return await this.firebaseService.auth.getUser(value) as User;
+      case 'email':
+        return await this.firebaseService.auth.getUserByEmail(value) as User;
+      default:
+        throw new Error('Invalid key');
     }
-
-    // remove current user from the list
-    return filtered.filter(record => record.uid !== user.uid);
   }
 
-  async findAllOrFail(user: User, filter?: Filter<UserDto & { ids?: string[] }>): Promise<User[]> {
-    const users = await this.findAll(user, filter);
-    if (filter?.ids && users.length !== filter.ids.length)
-      throw new BadRequestException('Some users not found');
+  async findAll(filter?: FilterUserQueryDto): Promise<User[]> {
+    return await this.firebaseService.authUsers(filter);
+  }
 
+  async findAllOrFail(filter?: FilterUserQueryDto): Promise<User[]> {
+    const users = await this.findAll(filter);
+    if (filter) {
+      const length = filter.ids?.length || 0 + filter.emails?.length || 0;
+      if (users.length !== length)
+        throw new BadRequestException('Some users not found');
+    }
+  
     return users;
   }
 
-  async findOneByEmail(email: string): Promise<User> {
-    return await this.firebaseService.auth.getUserByEmail(email) as User;
-  }
-
-  async update(uid: string, data: UpdateUserDto): Promise<void> {
-    await this.firebaseService.auth.updateUser(uid, data);
-  }
-
   async updateClaims(uid: string, claims: UpdateUserClaimsDto): Promise<void> {
-    const customClaims = (await this.findOneById(uid)).customClaims;
+    const customClaims = (await this.firebaseService.auth.getUser(uid)).customClaims;
     await this.firebaseService.auth.setCustomUserClaims(uid, { ...customClaims, ...claims });
   }
 
@@ -131,8 +97,8 @@ export class UserService {
    * Returns the wellness record for the current day for the given user
    */
   async findWellness(user: User, filter?: Filter<Wellness>): Promise<Wellness> {
-    const startDate = Timestamp.fromDate(<Date>filter?.date || dayjs().startOf('day').toDate());
-    const endDate = Timestamp.fromDate(<Date>filter?.date || dayjs().endOf('day').toDate());
+    const startDate = Timestamp.fromDate(filter?.date.value || dayjs().startOf('day').toDate());
+    const endDate = Timestamp.fromDate(filter?.date.value || dayjs().endOf('day').toDate());
 
     return await this.wellnessRepository.findOneByMany([
       { field: 'userId', value: user.uid, operator: '==' },

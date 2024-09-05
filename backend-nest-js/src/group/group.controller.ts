@@ -1,14 +1,14 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { RequestUser } from '../common/decorator/request-user.decorator';
-import { User } from '../common/type/custom-claims.type';
+import { User } from '../common/type/firebase-auth.type';
 import { Auth } from '../common/decorator/auth.decorator';
 import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddCycleDto } from './dto/add-cycle.dto';
 import { AddSubgroupDto } from './dto/add-subgroup.dto';
 import { FirebaseService } from '../firebase/firebase.service';
-import { TrainingFilterDto } from '../training/dto/training-filter.dto';
+import { FilterTrainingQueryDto } from '../training/dto/filter-training-query.dto';
 import { CreateTrainingDto } from '../training/dto/create-training.dto';
 import { AddTrainingComponentDto } from '../training/dto/add-training-component.dto';
 import { AddTrainingExercise } from '../training/dto/add-training-exercise.dto';
@@ -27,7 +27,7 @@ export class GroupController {
   async findAllGroups(@RequestUser() user: User) {
     if (this.firebaseService.isAthlete(user))
       return await this.groupService.findAthleteGroups(user);
-    return await this.groupService.findAll(user);
+    return await this.groupService.findUserGroups(user);
   }
 
   @Post()
@@ -137,7 +137,7 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
-    @Query() filter: TrainingFilterDto,
+    @Query() filter: FilterTrainingQueryDto,
   ) {
     return await this.groupService.trainingService.findTrainings(user, { groupId, cycleId }, { filter });
   }

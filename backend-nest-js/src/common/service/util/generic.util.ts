@@ -1,5 +1,6 @@
 import { ClassConstructor, plainToInstance } from 'class-transformer';
-import { PaginateOptions } from '../../type/paginate.type';
+
+import { PaginateOptions } from '../../type/orm.type';
 
 export class GenericUtil {
   serializeToDto<T, V extends Array<unknown>>(dtoClass: ClassConstructor<T>, plain: V): T[]
