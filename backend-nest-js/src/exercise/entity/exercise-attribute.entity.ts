@@ -1,23 +1,19 @@
-import { Entity } from '../../common/decorator/entity.decorator';
-import { BaseEntity } from '../../common/entity/base.entity';
 import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 
-@Entity(FirestoreCollection.EXERCISE_ATTRIBUTE)
-export class ExerciseAttribute extends BaseEntity {
-  @IsString()
-  @ApiProperty()
-  @IsNotEmpty()
-  @Expose()
-  name: string; // name of the attribute
-
+export class ExerciseAttribute {
   @IsString()
   @ApiProperty()
   @IsNotEmpty()
   @Expose()
   field: string; // name of the field in the database
+  
+  @IsString()
+  @ApiProperty()
+  @IsNotEmpty()
+  @Expose()
+  name: string; // name of the attribute
 
   @IsBoolean()
   @IsOptional()
@@ -37,9 +33,10 @@ export class ExerciseAttribute extends BaseEntity {
   @Expose()
   unit?: string; // kg, lbs, ...
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  values: (string | ExerciseAttributeSelectOption)[]; // possible values for select type
+  values: (string | ExerciseAttributeSelectOption)[] | null; // possible values for select type
 }
 
 export class ExerciseAttributeSelectOption {

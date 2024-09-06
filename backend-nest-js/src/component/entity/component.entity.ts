@@ -33,5 +33,5 @@ export class Component extends BaseEntity {
   @IsOptional()
   @ApiPropertyOptional({ type: Component, isArray: true })
   @Expose()
-  children?: Component[];
+  children?: any[]; // if you pass Component type, then Populate interface will recursively call this class
 }

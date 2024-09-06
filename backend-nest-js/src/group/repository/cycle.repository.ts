@@ -35,6 +35,8 @@ export class CycleRepository implements FirestoreCollectionRepository<Cycle, Cyc
       description: input.description || null,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     });
 
     return result.id;
@@ -50,7 +52,7 @@ export class CycleRepository implements FirestoreCollectionRepository<Cycle, Cyc
   }
 
   collection(ref: Required<GroupRef>): CollectionReference {
-    return this.groupRepository.collection().doc(ref.groupId).collection(FirestoreCollection.CYCLE);
+    return this.groupRepository.doc(ref).collection(FirestoreCollection.CYCLE);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Cycle {

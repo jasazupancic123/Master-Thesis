@@ -5,6 +5,10 @@ import {
   Query,
   QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
+import { UserEntity } from '../../user/entity/user.entity';
+import { Component } from '../../component/entity/component.entity';
+import { ExerciseAttribute } from '../../exercise/entity/exercise-attribute.entity';
+import { FirestoreCollection } from '../enum/firestore-collection.enum';
 
 export interface FirestoreCollectionRepository<Model = any, Ref = Record<string, string>> {
   doc(ref: Ref): DocumentReference;
@@ -38,10 +42,26 @@ export interface RootFirestoreCollectionRepository<Model = any> {
   serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
-export type GroupRef = { groupId?: string }
+// root references
+export type UserRef = { uid?: string } // auth user uid
+export type ComponentRef = { componentId?: string }
+export type ExerciseAttributeRef = { attributeId?: string }
+
+// exercise references
+export type ExerciseRef = UserRef & { exerciseId?: string }
+export type ExerciseAttributeValueRef = ExerciseRef & { attributeId?: string }
+
+// group references
+export type GroupRef = UserRef & { groupId?: string }
 export type SubgroupRef = GroupRef & { subgroupId?: string }
-export type CycleRef = SubgroupRef & { cycleId?: string }
-export type TrainingRef = CycleRef & { trainingId?: string }
+export type CycleRef = GroupRef & { cycleId?: string }
+export type TrainingRef = CycleRef & { trainingId?: string, subgroupId?: string }
 export type TrainingComponentRef = TrainingRef & { componentId?: string }
 export type TrainingExerciseRef = TrainingComponentRef & { exerciseId?: string }
 export type TrainingExerciseUserDataRef = TrainingExerciseRef & { userId?: string }
+
+export type DatabaseSchema = {
+  [FirestoreCollection.USER]: UserEntity[];
+  [FirestoreCollection.COMPONENT]: Component[];
+  [FirestoreCollection.EXERCISE_ATTRIBUTE]: ExerciseAttribute[];
+}

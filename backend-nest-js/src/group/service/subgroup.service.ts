@@ -9,7 +9,6 @@ import { Subgroup } from '../entity/subgroup.entity';
 import { Filter, FindManyOptions, FindOneOptions, PaginateOptions, Populate } from '../../common/type/orm.type';
 import { Query, Timestamp } from 'firebase-admin/firestore';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
-import { Group } from '../entity/group.entity';
 import { CommonService } from '../../common/service/common.service';
 import { CanViewService } from '../../common/type/auth.type';
 
@@ -90,10 +89,10 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
   }
 
   async create(ref: Required<GroupRef>, input: Partial<Subgroup>): Promise<Subgroup> {
-    const group = await this.groupService.findGroupOrFail(ref.groupId);
+    const group = await this.groupService.findGroupOrFail(ref);
 
     // validate data
-    const membersIds = await this.findAvailableMembers(group);
+    const membersIds = await this.findAvailableMembers(ref);
     if (!group.membersIds.every(memberId => membersIds.includes(memberId)))
       throw new BadRequestException('All members must be available in the parent group');
 
@@ -152,9 +151,11 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
    *
    * Formula: (all group members - union of all members in subgroups)
    */
-  private async findAvailableMembers(group: Group): Promise<string[]> {
+  private async findAvailableMembers(ref: Required<GroupRef>): Promise<string[]> {
+    const group = await this.groupService.findGroupOrFail(ref);
+
     // get all active subgroups
-    const subgroups = await this.findActiveSubgroups({ groupId: group.id });
+    const subgroups = await this.findActiveSubgroups(ref);
 
     // unavailable members are all members of active subgroups
     const unavailable = this.commonService.array.unique(subgroups.flatMap(subgroup => subgroup.membersIds));

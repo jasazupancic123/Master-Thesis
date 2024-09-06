@@ -1,0 +1,229 @@
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Exercise } from '../entity/exercise.entity';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { ComponentService } from '../../component/component.service';
+import { Component } from '../../component/entity/component.entity';
+import { User } from '../../common/type/firebase-auth.type';
+import { CommonService } from '../../common/service/common.service';
+import { Filter, FindManyOptions, FindOneOptions, PaginateOptions, Populate } from '../../common/type/orm.type';
+import { Validate } from '../../common/type/validate.type';
+import { Query, Timestamp } from 'firebase-admin/firestore';
+import { ExerciseRepository } from '../repository/exercise.repository';
+import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
+import { ExerciseRef, UserRef } from '../../common/type/firebase-firestore.type';
+import { CanViewService } from '../../common/type/auth.type';
+import { UserRepository } from '../../user/repository/user.repository';
+import { ExerciseAttributeService } from './exercise-attribute.service';
+import { ExerciseAttributeValueService } from './exercise-attribute-value.service';
+
+type ComponentLeaf = Component & { parents: Component[] }
+
+@Injectable()
+export class ExerciseService extends CanViewService<ExerciseRef> {
+  private logger = new Logger(ExerciseService.name);
+
+  constructor(
+    private readonly commonService: CommonService,
+    private readonly firebaseService: FirebaseService,
+    private readonly exerciseRepository: ExerciseRepository,
+    private readonly componentService: ComponentService,
+    private readonly userRepository: UserRepository,
+    private readonly exerciseAttributeService: ExerciseAttributeService,
+    private readonly exerciseAttributeValueService: ExerciseAttributeValueService,
+  ) {
+    super();
+  }
+
+  async canView(user: User, ref: Required<ExerciseRef>): Promise<boolean> {
+    if (this.firebaseService.isAdmin(user)) return true;
+    const exercise = await this.exerciseRepository.getDoc(ref);
+    return !!exercise;
+  }
+
+  async findGlobalExercises(options?: FindManyOptions<Exercise>): Promise<Exercise[]> {
+    let query = this.userRepository.collectionGroup('exercises').where('global', '==', true);
+    if (options.filter) query = this.filter(query, options.filter);
+    if (options.paginate) query = this.paginate(query, options.paginate);
+
+    return await query.get().then(snapshot => snapshot.docs.map(doc => this.exerciseRepository.serialize(doc)));
+  }
+
+  async findUserExercises(ref: Required<UserRef>, options?: FindManyOptions<Exercise>): Promise<Exercise[]> {
+    let query = this.userRepository.collectionGroup('exercises').where('userId', '==', ref.uid);
+
+    if (options?.filter) query = this.filter(query, options.filter);
+    // if (options?.paginate) query = this.paginate(query, options.paginate);
+
+    return await query.get().then(snapshot => snapshot.docs.map(doc => this.exerciseRepository.serialize(doc)));
+  }
+
+  async findExercises(ref: Required<UserRef>, options?: Omit<FindManyOptions<Exercise>, 'paginate'>): Promise<Exercise[]> {
+    const userExercises = await this.findUserExercises(ref, options);
+    const globalExercises = await this.findGlobalExercises(options);
+    return this.commonService.array.unique([...userExercises, ...globalExercises]);
+  }
+ 
+  async findExercise(ref: Required<ExerciseRef>, options?: FindOneOptions<Exercise>): Promise<Exercise | null> {
+    const exercise = await this.exerciseRepository.getDoc(ref);
+    if (!exercise) return null;
+
+    if (options?.populate) await this.populate(ref, exercise, options.populate);
+    return exercise;
+  }
+
+  async findExerciseByName(name: string): Promise<Exercise | null> {
+    const query = this.userRepository.collectionGroup('exercises').where('name', '==', name);
+    const snapshot = await query.get();
+    if (snapshot.empty) return null;
+    return this.exerciseRepository.serialize(snapshot.docs[0]);
+  }
+
+  async findExerciseOrFail(ref: Required<ExerciseRef>, options?: FindOneOptions<Exercise>): Promise<Exercise> {
+    const exercise = await this.findExercise(ref, options);
+    if (!exercise) throw new BadRequestException('Exercise does not exist');
+    return exercise;
+  }
+
+  async findUserExercise(user: User, ref: Required<ExerciseRef>, options?: FindOneOptions<Exercise>): Promise<Exercise | null> {
+    await this.authorize(user, ref);
+    return this.findExercise(ref, options);
+  }
+
+  async findUserExerciseOrFail(user: User, ref: Required<ExerciseRef>, options?: FindOneOptions<Exercise>): Promise<Exercise> {
+    await this.authorize(user, ref);
+    return this.findExerciseOrFail(ref, options);
+  }
+
+  async createExercise(user: User, ref: Required<UserRef>, data: Partial<Exercise>) {
+    this.logger.debug(`Creating new exercise for user ${user.uid}`);
+
+    // validate exercise attributes
+    await this.exerciseAttributeService.validate(data.attributeValues || {});
+
+    // validate exercise data
+    const { error, message, data: { leafs } = {} } = await this.validate(data);
+    if (error) throw new BadRequestException(message);
+
+    // find all root components of selected leaf components
+    const roots: Component[] = [];
+    for (const componentId of data.componentsIds)
+      roots.push(...this.componentService.getRootComponents(componentId, leafs));
+
+    // create exercise
+    const exerciseId = await this.exerciseRepository.addDoc(ref, {
+      name: data.name,
+      componentsIds: data.componentsIds,
+      global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
+      videoUrl: data.videoUrl,
+      imageUrl: data.imageUrl,
+    });
+
+    // create attribute values from provided nested object
+    const exerciseAttributeRef = { uid: ref.uid, exerciseId };
+    await this.exerciseAttributeValueService.createMany(exerciseAttributeRef, data.attributeValues || {});
+
+    return {
+      id: exerciseId,
+      rootComponentIds: roots.map(({ id }) => id), // used for frontend
+    };
+  }
+
+  /**
+   * Checks if provided exercises are valid for a training. It checks that all
+   * exercises' leaf components belong to the training's root components.
+   *
+   * For example, if training has components `Strength` and `Speed` selected,
+   * then exercise with component parents `Endurance` is not valid.
+   */
+  async validateExercises(componentId: string, exercises: Exercise[]): Promise<Validate> {
+    // check that exercise's leaf component id belongs to training's root component id
+    const components = await this.componentService.findAll();
+    const tree = this.componentService.tree(components);
+    const leafs = this.componentService.leafs(tree);
+
+    // check that parents of leaf are in training's root component ids
+    for (const exercise of exercises)
+      for (const component of exercise.componentsIds) {
+        const leaf = leafs.find(leaf => leaf.id === component);
+        if (!leaf || !leaf.parents.some(parent => componentId === parent.id)) {
+          const found = components.find(c => c.id === component);
+          return {
+            error: true,
+            message: `Exercise ${exercise.name} has component ${found?.name} which is not valid for training`,
+          };
+        }
+      }
+
+    return { error: false };
+  }
+
+  private async validate(data: Partial<Exercise>): Promise<Validate<{ leafs: ComponentLeaf[] }>> {
+    // atleast one component must be selected
+    if (!data.componentsIds?.length)
+      return { error: true, message: 'No components selected' };
+
+    // check that all components exist and are leafs
+    const components = await this.componentService.findAll();
+    const tree = this.componentService.tree(components);
+    const leafs = this.componentService.leafs(tree);
+
+    for (const componentId of data.componentsIds!)
+      if (!this.componentService.isLeafComponent(componentId, leafs)) {
+        const component = components.find(c => c.id === componentId)!;
+        return { error: true, message: `You cannot select component ${component.name}` };
+      }
+
+    return { error: false, data: { leafs } };
+  }
+
+  private map(exercises: Exercise[], relations: { components: ComponentLeaf[] }) {
+    return exercises.map(exercise => {
+      let components: string[] = [];
+
+      // map component names to exercises if components are provided
+      if (relations?.components)
+        components = exercise.componentsIds.map(id => {
+          const leaf = relations.components.find(leaf => leaf.id === id);
+          if (!leaf) return '';
+          return leaf.parents.map(({ name }) => name).join(' > ') + ' > ' + leaf.name;
+        });
+
+      return { ...exercise, components };
+    });
+  }
+
+  private filter(query: Query, filter: Filter<Exercise>, componentsTree?: Component[]): Query {
+    if (filter.ids) query = query.where('id', 'in', filter.ids);
+    if (filter.global) query = query.where('global', '==', filter.global.value);
+    if (filter.componentsIds) {
+      // for each component id, find all leafs and filter by them
+      const componentsIds = this.componentService.leafs(componentsTree, filter.componentsIds.value).map(({ id }) => id);
+      query = query.where('componentsIds', 'array-contains-any', componentsIds);
+    }
+
+    if (filter.name) query = query.where('name', '>=', filter.name).where('name', '<=', filter.name + '\uf8ff');
+    if (filter.createdAt) query = query.where('createdAt', filter.createdAt.op || '>=', Timestamp.fromDate(filter.createdAt.value));
+    if (filter.updatedAt) query = query.where('updatedAt', filter.updatedAt.op || '>=', Timestamp.fromDate(filter.updatedAt.value));
+
+    return query;
+  }
+
+  private paginate(query: Query, paginate: PaginateOptions<Exercise>): Query {
+    const orderBy = paginate.orderBy || { field: 'createdAt', value: 'desc' };
+    const page = paginate.page || 1;
+    const pageSize = paginate.pageSize || DEFAULT_PAGE_SIZE;
+
+    return query
+      .orderBy(orderBy.field, orderBy.value)
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+  }
+
+  private async populate(ref: Required<ExerciseRef>, exercise: Exercise, populate: Populate<Exercise>[]) {
+    if (populate.includes('components'))
+      exercise.components = await this.componentService.findAll({ ids: exercise.componentsIds });
+
+    if (populate.includes('attributeValues'))
+      exercise.attributeValues = await this.exerciseAttributeValueService.findAllAsObject(ref);
+  }
+}

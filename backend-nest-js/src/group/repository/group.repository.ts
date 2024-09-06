@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   CollectionReference,
@@ -9,52 +8,56 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
+import { FirestoreCollectionRepository, GroupRef, UserRef } from '../../common/type/firebase-firestore.type';
 import { Group } from '../entity/group.entity';
 import { CommonService } from '../../common/service/common.service';
+import { UserRepository } from '../../user/repository/user.repository';
 
 @Injectable()
-export class GroupRepository implements RootFirestoreCollectionRepository<Group> {
+export class GroupRepository implements FirestoreCollectionRepository<Group, UserRef> {
   constructor(
     private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
+    private readonly userRepository: UserRepository,
   ) {
   }
 
   async getDocs(
+    ref: Required<UserRef>,
     query: (query: Query) => Query = query => query,
   ): Promise<Group[]> {
-    const snapshot = await query(this.collection()).get();
+    const snapshot = await query(this.collection(ref)).get();
     return snapshot.docs.map(doc => this.serialize(doc));
   }
 
-  async getDoc(id: string): Promise<Group | null> {
-    const snapshot = await this.doc(id).get();
+  async getDoc(ref: Required<GroupRef>): Promise<Group | null> {
+    const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(input: Partial<Group>) {
-    const result = await this.collection().add({
+  async addDoc(ref: Required<UserRef>, input: Partial<Group>) {
+    const result = await this.collection(ref).add({
       name: input.name,
       ownerId: input.ownerId,
       membersIds: input.membersIds,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     });
 
     return result.id;
   }
 
-  async updateDoc(id: string, input: Partial<Group>) {
+  async updateDoc(ref: Required<GroupRef>, input: Partial<Group>) {
     const data = this.commonService.object.clean(input);
-    await this.doc(id).update(data);
+    await this.doc(ref).update(data);
   }
 
-  doc(id: string): DocumentReference {
-    return this.collection().doc(id);
+  doc(ref: Required<GroupRef>): DocumentReference {
+    return this.collection(ref).doc(ref.groupId);
   }
 
-  collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(FirestoreCollection.GROUP);
+  collection(ref: Required<UserRef>): CollectionReference {
+    return this.userRepository.doc(ref.uid).collection(FirestoreCollection.GROUP);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Group {

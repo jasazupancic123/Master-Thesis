@@ -51,7 +51,7 @@ export class SubgroupRepository implements FirestoreCollectionRepository<Subgrou
   }
 
   collection(ref: Required<GroupRef>): CollectionReference {
-    return this.groupRepository.collection().doc(ref.groupId).collection(FirestoreCollection.SUBGROUP);
+    return this.groupRepository.doc(ref).collection(FirestoreCollection.SUBGROUP);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Subgroup {

@@ -1,26 +1,16 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
-import { CreateUser } from './dto/user.dto';
+import { CreateUser } from './entity/user.entity';
 import { UpdateUserClaimsDto } from './dto/update-user.dto';
 import { User } from '../common/type/firebase-auth.type';
 import { UserRecord } from 'firebase-admin/lib/auth';
-import { Filter } from '../common/type/orm.type';
-import { Wellness } from './entity/wellness.entity';
-import { InjectRepository } from '../common/decorator/entity.decorator';
-import { FirestoreRepository } from '../firebase/firestore.repository';
-import { Timestamp } from 'firebase-admin/firestore';
-import dayjs from 'dayjs';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
 
-  constructor(
-    private readonly firebaseService: FirebaseService,
-    @InjectRepository(Wellness)
-    private readonly wellnessRepository: FirestoreRepository<Wellness>,
-  ) {
+  constructor(private readonly firebaseService: FirebaseService) {
   }
 
   async upsert(data: CreateUser): Promise<User> {
@@ -66,7 +56,7 @@ export class UserService {
       if (users.length !== length)
         throw new BadRequestException('Some users not found');
     }
-  
+
     return users;
   }
 
@@ -75,7 +65,7 @@ export class UserService {
     await this.firebaseService.auth.setCustomUserClaims(uid, { ...customClaims, ...claims });
   }
 
-  async createWellness(user: User, data: Partial<Wellness>): Promise<Wellness> {
+  /*async createWellness(user: User, data: Partial<Wellness>): Promise<Wellness> {
     this.logger.log(`Creating wellness for user (${user.uid}, ${JSON.stringify(data)})`);
 
     // find if any wellness record exists for the current day
@@ -91,12 +81,12 @@ export class UserService {
       soreness: data.soreness,
       comment: data.comment,
     });
-  }
+  }*/
 
   /**
    * Returns the wellness record for the current day for the given user
    */
-  async findWellness(user: User, filter?: Filter<Wellness>): Promise<Wellness> {
+  /*async findWellness(user: User, filter?: Filter<Wellness>): Promise<Wellness> {
     const startDate = Timestamp.fromDate(filter?.date.value || dayjs().startOf('day').toDate());
     const endDate = Timestamp.fromDate(filter?.date.value || dayjs().endOf('day').toDate());
 
@@ -105,5 +95,5 @@ export class UserService {
       { field: 'date', value: startDate, operator: '>=' },
       { field: 'date', value: endDate, operator: '<=' },
     ]);
-  }
+  }*/
 }

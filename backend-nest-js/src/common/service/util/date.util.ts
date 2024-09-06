@@ -87,4 +87,8 @@ export class DateUtil {
 
     return negated;
   }
+
+  pretty(date: Date): string {
+    return dayjs(date).format('DD MMM YYYY');
+  }
 }

@@ -67,8 +67,17 @@ export class ComponentService {
     });
   }
 
-  leafs(componentsTree: Component[]): ComponentLeaf[] {
-    return this.commonService.tree.leafs(componentsTree, 'children');
+  leafs(componentsTree: Component[], ids?: string[]): ComponentLeaf[] {
+    const leafs = this.commonService.tree.leafs(componentsTree, 'children');
+    if (!ids) return leafs;
+
+    // if leaf is in the provided ids or any of its parents is in the provided ids, add it to the result
+    let result: ComponentLeaf[] = [];
+    for (const leaf of leafs)
+      if (ids.includes(leaf.id) || leaf.parents.some(p => ids.includes(p.id)))
+        result.push(leaf);
+
+    return result;
   }
 
   isLeafComponent(componentId: string, leafs: ComponentLeaf[]): boolean {
@@ -102,6 +111,15 @@ export class ComponentService {
     // TODO - move exercises to "Other" component
     // TODO - remove component
     this.logger.debug(`Removing component #${id}`);
+  }
+
+  async deleteAll(): Promise<void> {
+    // remove all components
+    this.logger.debug('Deleting all components');
+
+    const components = await this.repository.findAll();
+    for (const component of components)
+      await this.repository.getCollection().doc(component.id).delete();
   }
 
   /**

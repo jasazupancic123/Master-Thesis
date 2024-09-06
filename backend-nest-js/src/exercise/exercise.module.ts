@@ -1,22 +1,33 @@
 import { Module } from '@nestjs/common';
-import { ExerciseService } from './exercise.service';
+import { ExerciseService } from './service/exercise.service';
 import { ExerciseController } from './exercise.controller';
 import { ComponentModule } from '../component/component.module';
-import { FirebaseModule } from '../firebase/firebase.module';
-import { Exercise } from './entity/exercise.entity';
-import { ExerciseAttribute } from './entity/exercise-attribute.entity';
-import { ExerciseAttributeValue } from './entity/exercise-attribute-value.entity';
 import { ExerciseRepository } from './repository/exercise.repository';
+import { UserModule } from '../user/user.module';
+import { ExerciseAttributeRepository } from './repository/exercise-attribute.repository';
+import { ExerciseAttributeValueRepository } from './repository/exercise-attribute-value.repository';
+import { ExerciseAttributeService } from './service/exercise-attribute.service';
+import { ExerciseAttributeValueService } from './service/exercise-attribute-value.service';
 
 @Module({
-  imports: [
-    // @ts-ignore
-    FirebaseModule.forFeature([Exercise, ExerciseAttribute, ExerciseAttributeValue]),
-    ComponentModule,
-  ],
+  imports: [UserModule, ComponentModule],
   controllers: [ExerciseController],
-  providers: [ExerciseRepository, ExerciseService],
-  exports: [ExerciseRepository, ExerciseService],
+  providers: [
+    ExerciseAttributeRepository,
+    ExerciseAttributeValueRepository,
+    ExerciseRepository,
+    ExerciseAttributeService,
+    ExerciseAttributeValueService,
+    ExerciseService,
+  ],
+  exports: [
+    ExerciseAttributeRepository,
+    ExerciseAttributeValueRepository,
+    ExerciseRepository,
+    ExerciseAttributeService,
+    ExerciseAttributeValueService,
+    ExerciseService,
+  ],
 })
 export class ExerciseModule {
 }
