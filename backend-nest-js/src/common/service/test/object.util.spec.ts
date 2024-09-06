@@ -65,4 +65,25 @@ describe('ObjectUtil::Unit', () => {
       });
     });
   });
+
+  describe('Valid option', () => {
+    it('should return true if the value object corresponds to the options', () => {
+      const attribute = {
+        name: 'Color',
+        field: 'color',
+        type: 'select' as 'select',
+        values: [
+          { name: 'Red', field: 'red', values: ['dark', 'light'] },
+          { name: 'Blue', field: 'blue', values: ['ocean', 'navy'] },
+        ],
+      };
+
+      expect(objectUtil.isValidValue(attribute, { color: { red: 'dark' } })).toBe(true);
+      expect(objectUtil.isValidValue(attribute, { color: { red: 'light' } })).toBe(true);
+      expect(objectUtil.isValidValue(attribute, { color: { blue: 'ocean' } })).toBe(true);
+      expect(objectUtil.isValidValue(attribute, { color: { blue: 'navy' } })).toBe(true);
+      expect(objectUtil.isValidValue(attribute, { color: { red: 'ocean' } })).toBe(false);
+      expect(objectUtil.isValidValue(attribute, { color: { blue: 'dark' } })).toBe(false);
+    });
+  });
 });

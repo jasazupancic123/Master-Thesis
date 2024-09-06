@@ -31,22 +31,25 @@ export class GroupController {
   @Get()
   @Auth()
   async findAllGroups(@RequestUser() user: User) {
+    const ref = { uid: user.uid };
     if (this.firebaseService.isAthlete(user))
-      return await this.groupService.findGroupsByMember(user.uid);
+      return await this.groupService.findGroupsByMember(ref);
 
-    return await this.groupService.findGroupsByOwner(user.uid);
+    return await this.groupService.findGroupsByOwner(ref);
   }
 
   @Post()
   @Auth([UserRole.TRAINER, UserRole.MANAGER, UserRole.ADMIN])
   async createGroup(@RequestUser() user: User, @Body() data: CreateGroupDto) {
-    return await this.groupService.createGroup(user, data);
+    const ref = { uid: user.uid };
+    return await this.groupService.createGroup(user, ref, data);
   }
 
   @Get(':groupId')
   @Auth()
   async findGroup(@RequestUser() user: User, @Param('groupId') groupId: string) {
-    return await this.groupService.findUserGroupOrFail(user, groupId);
+    const ref = { uid: user.uid, groupId };
+    return await this.groupService.findUserGroupOrFail(user, ref);
   }
 
   @Patch(':groupId')
@@ -62,7 +65,8 @@ export class GroupController {
   @Get(':groupId/cycle')
   @Auth()
   async findAllCycles(@RequestUser() user: User, @Param('groupId') groupId: string) {
-    return await this.cycleService.findUserCycles(user, { groupId });
+    const ref = { uid: user.uid, groupId };
+    return await this.cycleService.findUserCycles(user, ref);
   }
 
   @Post(':groupId/cycle')
@@ -72,7 +76,7 @@ export class GroupController {
     @Param('groupId') groupId: string,
     @Body() data: AddCycleDto,
   ) {
-    const ref = { groupId };
+    const ref = { uid: user.uid, groupId };
     return await this.groupService.addCycle(user, ref, data);
   }
 
@@ -83,7 +87,7 @@ export class GroupController {
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
   ) {
-    const ref = { groupId, cycleId, subgroupId: null };
+    const ref = { uid: user.uid, groupId, cycleId, subgroupId: null };
 
     if (cycleId === 'active') return await this.cycleService.findActiveCycle(ref);
     return await this.cycleService.findUserCycleOrFail(user, ref);
@@ -105,7 +109,7 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
   ) {
-    const ref = { groupId };
+    const ref = { uid: user.uid, groupId };
     return await this.subgroupService.findSubgroups(ref);
   }
 
@@ -116,7 +120,7 @@ export class GroupController {
     @Param('groupId') groupId: string,
     @Body() data: AddSubgroupDto,
   ) {
-    const ref = { groupId };
+    const ref = { uid: user.uid, groupId, subgroupId: null };
     return await this.groupService.addSubgroup(user, ref, data);
   }
 
@@ -149,7 +153,7 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    const ref = { groupId, cycleId, subgroupId: filter.subgroupId || null };
+    const ref = { uid: user.uid, groupId, cycleId, subgroupId: filter.subgroupId || null };
     return await this.trainingService.findTrainings(ref, {
       filter: {
         ...(filter.subgroupId && { subgroupId: { value: filter.subgroupId, op: '==' } }),
@@ -167,7 +171,7 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
     @Body() data: CreateTrainingDto,
   ) {
-    const ref = { groupId, cycleId, subgroupId: data.subgroupId || null };
+    const ref = { uid: user.uid, groupId, cycleId, subgroupId: data.subgroupId || null };
     return await this.trainingService.createTraining(user, ref, data);
   }
 
@@ -179,7 +183,7 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
     @Param('trainingId') trainingId: string,
   ) {
-    const ref = { groupId, cycleId, trainingId, subgroupId: null };
+    const ref = { uid: user.uid, groupId, cycleId, trainingId, subgroupId: null };
     return await this.trainingService.findUserTraining(user, ref);
   }
 
@@ -215,7 +219,7 @@ export class GroupController {
     @Param('trainingId') trainingId: string,
     @Body() data: AddTrainingComponentDto,
   ) {
-    const ref = { groupId, cycleId, trainingId, subgroupId: null };
+    const ref = { uid: user.uid, groupId, cycleId, trainingId, subgroupId: null };
     return await this.trainingService.addComponent(user, ref, data);
   }
 
@@ -228,7 +232,7 @@ export class GroupController {
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
   ) {
-    const ref = { groupId, cycleId, trainingId, componentId, subgroupId: null };
+    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, subgroupId: null };
     return await this.trainingService.findUserTrainingComponent(user, ref);
   }
 
@@ -268,7 +272,7 @@ export class GroupController {
     @Param('componentId') componentId: string,
     @Body() data: AddTrainingExercise,
   ) {
-    const ref = { groupId, cycleId, trainingId, componentId, subgroupId: null };
+    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, subgroupId: null };
     return await this.trainingService.addExercise(user, ref, data);
   }
 
@@ -282,7 +286,7 @@ export class GroupController {
     @Param('componentId') componentId: string,
     @Param('exerciseId') exerciseId: string,
   ) {
-    const ref = { groupId, cycleId, trainingId, componentId, exerciseId, subgroupId: null };
+    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, exerciseId, subgroupId: null };
     return await this.trainingService.findUserTrainingExercise(user, ref);
   }
 
@@ -297,7 +301,7 @@ export class GroupController {
     @Param('exerciseId') exerciseId: string,
     @Body() data: UpdateTrainingExerciseDto,
   ) {
-    const ref = { groupId, cycleId, trainingId, componentId, exerciseId, subgroupId: null };
+    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, exerciseId, subgroupId: null };
     return await this.trainingService.updateExercise(user, ref, data);
   }
 }

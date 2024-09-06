@@ -82,10 +82,10 @@ export class TrainingExerciseUserDataService {
     const result: TrainingExerciseUserData[] = [];
 
     // find all members for the provided group (or subgroup if provided)
-    const group = await this.groupRepository.getDoc(ref.groupId);
+    const group = await this.groupRepository.getDoc(ref);
     if (!group) throw new BadRequestException('Group not found');
 
-    const subgroup = await this.subgroupRepository.getDoc(ref);
+    const subgroup = ref.subgroupId ? await this.subgroupRepository.getDoc(ref) : null;
     if (ref.subgroupId && !subgroup) throw new BadRequestException('Subgroup not found');
 
     const users = await this.firebaseService.authUsers();
@@ -134,7 +134,7 @@ export class TrainingExerciseUserDataService {
     const result: TrainingExerciseUserData[] = [];
 
     // find all members for the provided group
-    const group = await this.groupRepository.getDoc(ref.groupId);
+    const group = await this.groupRepository.getDoc(ref);
     if (!group) throw new BadRequestException('Group not found');
 
     const subgroup = await this.subgroupRepository.getDoc(ref);

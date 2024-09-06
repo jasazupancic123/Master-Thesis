@@ -1,15 +1,15 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { Expose, Transform } from 'class-transformer';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Expose, Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Entity } from '../../common/decorator/entity.decorator';
 import { BaseEntity } from '../../common/entity/base.entity';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { Component } from '../../component/entity/component.entity';
+import { ExerciseAttributeValue } from './exercise-attribute-value.entity';
 
-@Entity(FirestoreCollection.EXERCISE)
 export class Exercise extends BaseEntity {
   @IsString()
-  @ApiProperty()
+  @IsNotEmpty()
   @Expose()
+  @ApiProperty()
   userId: string;
 
   @IsString()
@@ -22,7 +22,8 @@ export class Exercise extends BaseEntity {
   @IsNotEmpty({ each: true })
   @Expose()
   @ApiProperty()
-  componentIds: string[];
+  componentsIds: string[];
+  components: Component[];
 
   @IsBoolean()
   @IsOptional()
@@ -45,6 +46,11 @@ export class Exercise extends BaseEntity {
   @ApiPropertyOptional()
   videoUrl?: string;
 
-  attributeValues: Record<string, any>;
-  components: string[];
+  @ValidateNested({ each: true })
+  @Type(() => ExerciseAttributeValue)
+  @ApiProperty()
+  @Expose()
+  attributes: ExerciseAttributeValue[]; // subcollection where each document has attribute id and value
+
+  attributeValues: Record<string, any>; // for frontend to use
 }

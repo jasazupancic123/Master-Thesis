@@ -1,36 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CollectionReference, DocumentReference, Query } from 'firebase-admin/firestore';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
+import {
+  CollectionGroup,
+  CollectionReference,
+  DocumentReference,
+  DocumentSnapshot,
+  Query,
+  QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
+import { ExerciseRef, FirestoreCollectionRepository, UserRef } from '../../common/type/firebase-firestore.type';
 import { Exercise } from '../entity/exercise.entity';
-import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-admin/lib/firestore';
 import { CommonService } from '../../common/service/common.service';
+import { UserRepository } from '../../user/repository/user.repository';
+import { FirebaseService } from '../../firebase/firebase.service';
 
 @Injectable()
-export class ExerciseRepository implements RootFirestoreCollectionRepository<Exercise> {
+export class ExerciseRepository implements FirestoreCollectionRepository<Exercise, UserRef> {
   constructor(
     private readonly commonService: CommonService,
+    private readonly userRepository: UserRepository,
     private readonly firebaseService: FirebaseService,
   ) {
   }
 
-  async getDocs(query: (query: Query) => Query = query => query): Promise<Exercise[]> {
-    const snapshot = await query(this.collection()).get();
+  async getDocs(
+    ref: Required<UserRef>,
+    query: (query: Query) => Query = query => query,
+  ): Promise<Exercise[]> {
+    const snapshot = await query(this.collection(ref)).get();
     return snapshot.docs.map(doc => this.serialize(doc));
   }
 
-  async getDoc(id: string): Promise<Exercise> {
-    const snapshot = await this.doc(id).get();
+  async getDoc(ref: Required<ExerciseRef>): Promise<Exercise> {
+    const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(input: Partial<Exercise>) {
-    const result = await this.collection().add({
-      userId: input.userId,
+  async addDoc(ref: Required<UserRef>, input: Partial<Exercise>) {
+    const result = await this.collection(ref).add({
+      userId: ref.uid,
       name: input.name,
-      componentIds: input.componentIds,
+      componentIds: input.componentsIds,
       global: input.global ?? false,
       imageUrl: input.imageUrl ?? null,
       videoUrl: input.videoUrl ?? null,
@@ -39,17 +50,21 @@ export class ExerciseRepository implements RootFirestoreCollectionRepository<Exe
     return result.id;
   }
 
-  async updateDoc(id: string, input: Partial<Exercise>) {
+  async updateDoc(ref: Required<ExerciseRef>, input: Partial<Exercise>) {
     const data = this.commonService.object.clean(input);
-    await this.doc(id).update(data);
+    await this.doc(ref).update(data);
   }
 
-  doc(id: string): DocumentReference {
-    return this.collection().doc(id);
+  doc(ref: Required<ExerciseRef>): DocumentReference {
+    return this.collection(ref).doc(ref.exerciseId);
   }
 
-  collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(FirestoreCollection.EXERCISE);
+  collection(ref: Required<UserRef>): CollectionReference {
+    return this.userRepository.doc(ref.uid).collection(FirestoreCollection.EXERCISE);
+  }
+
+  collectionGroup(collectionGroupName: keyof Exercise): CollectionGroup {
+    return this.firebaseService.firestore.collectionGroup(collectionGroupName);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Exercise {
@@ -59,7 +74,7 @@ export class ExerciseRepository implements RootFirestoreCollectionRepository<Exe
       id: snapshot.id,
       userId: data.userId,
       name: data.name,
-      componentIds: data.componentIds,
+      componentsIds: data.componentIds,
       global: data.global ?? false,
       imageUrl: data.imageUrl ?? null,
       videoUrl: data.videoUrl ?? null,

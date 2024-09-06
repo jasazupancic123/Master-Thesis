@@ -1,26 +1,23 @@
-import { Entity } from '../../common/decorator/entity.decorator';
-import { BaseEntity } from '../../common/entity/base.entity';
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { ExerciseAttribute } from './exercise-attribute.entity';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 
-@Entity(FirestoreCollection.EXERCISE_ATTRIBUTE_VALUE)
-export class ExerciseAttributeValue extends BaseEntity {
+export class ExerciseAttributeValue {
   @IsString()
-  @ApiProperty()
+  @IsNotEmpty()
   @Expose()
+  @ApiProperty()
   attributeId: string;
+  attribute: ExerciseAttribute | null;
 
   @IsString()
-  @ApiProperty()
+  @IsNotEmpty()
   @Expose()
+  @ApiProperty()
   exerciseId: string;
 
   @ApiProperty()
   @Expose()
   value: any;
-
-  attribute?: ExerciseAttribute;
 }

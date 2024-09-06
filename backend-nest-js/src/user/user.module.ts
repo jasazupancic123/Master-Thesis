@@ -1,17 +1,12 @@
 import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { FirebaseModule } from '../firebase/firebase.module';
-import { Wellness } from './entity/wellness.entity';
+import { UserRepository } from './repository/user.repository';
 
 @Module({
-  imports: [
-    // @ts-ignore
-    FirebaseModule.forFeature([Wellness]),
-  ],
   controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService],
+  providers: [UserRepository, UserService],
+  exports: [UserRepository, UserService],
 })
 export class UserModule {
 }

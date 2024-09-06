@@ -3,7 +3,7 @@ import { User } from '../../common/type/firebase-auth.type';
 import { Query, Timestamp } from 'firebase-admin/firestore';
 import { Training } from '../entity/training.entity';
 import { ComponentService } from '../../component/component.service';
-import { ExerciseService } from '../../exercise/exercise.service';
+import { ExerciseService } from '../../exercise/service/exercise.service';
 import { CommonService } from '../../common/service/common.service';
 import { Filter, FindManyOptions, FindOneOptions, PaginateOptions, Populate } from '../../common/type/orm.type';
 import { Cycle } from '../../group/entity/cycle.entity';
@@ -22,6 +22,7 @@ import { TrainingComponentService } from './training-component.service';
 import {
   CycleRef,
   GroupRef,
+  SubgroupRef,
   TrainingComponentRef,
   TrainingExerciseRef,
   TrainingRef,
@@ -108,7 +109,7 @@ export class TrainingService extends CanViewService<GroupRef> {
 
   async findTrainingsByAthlete(user: User, ref: Required<CycleRef>): Promise<Training[]> {
     // get athlete's current active cycle
-    const group = await this.groupService.findUserGroup(user, ref.groupId);
+    const group = await this.groupService.findUserGroup(user, ref);
     const cycle = await this.cycleService.findActiveCycle(ref, new Date());
     if (!cycle) return [];
 
@@ -134,6 +135,7 @@ export class TrainingService extends CanViewService<GroupRef> {
         },
       },
     });
+
     const trainings = subgroupsTrainings
       .concat(parentTrainings)
       .sort((a, b) => a.from.getTime() - b.from.getTime());
@@ -147,7 +149,7 @@ export class TrainingService extends CanViewService<GroupRef> {
     // populate trainings' components and exercises
     return await Promise.all(
       athleteTrainings.map(async (training) => {
-        const trainingRef = { ...ref, trainingId: training.id };
+        const trainingRef = { ...ref, trainingId: training.id, subgroupId: training.subgroupId };
         await this.populate(trainingRef, training, []);
         return training;
       }),
@@ -161,7 +163,7 @@ export class TrainingService extends CanViewService<GroupRef> {
     await this.authorize(user, ref);
 
     // find parent references (group and cycle)
-    const group = await this.groupService.findGroup(ref.groupId);
+    const group = await this.groupService.findGroup(ref);
     const cycle = await this.cycleService.findCycle(ref);
 
     // validate data
@@ -174,7 +176,7 @@ export class TrainingService extends CanViewService<GroupRef> {
     const trainingId = await this.trainingRepository.addDoc(ref, data);
 
     // create training components
-    const trainingRef = { ...ref, trainingId };
+    const trainingRef = { ...ref, trainingId, subgroupId: data.subgroupId };
     const training = await this.findTrainingOrFail(trainingRef);
     training.components = await this.trainingComponentService.createMany(trainingRef, input.componentIds.map(
       (componentId, order) => ({ componentId, order }),
@@ -183,13 +185,13 @@ export class TrainingService extends CanViewService<GroupRef> {
     return training;
   }
 
-  async copyTraining(user: User, source: Required<TrainingRef>, destination: Required<CycleRef>): Promise<Training> {
+  async copyTraining(user: User, source: Required<TrainingRef>, destination: Required<CycleRef & SubgroupRef>): Promise<Training> {
     this.logger.debug(`Copying training ${source.trainingId} (user ${user.uid})`);
     await this.authorize(user, destination);
 
     // copy all training data from source to destination
     const sourceTraining = await this.findTrainingOrFail(source, { populate: ['components'] });
-    const destinationGroup = await this.groupService.findGroup(destination.groupId);
+    const destinationGroup = await this.groupService.findGroup(destination);
     const destinationCycle = await this.cycleService.findCycle(destination);
     const destinationSubgroup = destination.subgroupId ? await this.subgroupService.findSubgroupOrFail(destination) : null;
 
@@ -210,7 +212,7 @@ export class TrainingService extends CanViewService<GroupRef> {
   }
 
   async findUserTrainingComponent(user: User, ref: Required<TrainingComponentRef>): Promise<TrainingComponent> {
-    await this.groupService.findUserGroup(user, ref.groupId);
+    await this.groupService.findUserGroup(user, ref);
     await this.cycleService.findUserCycle(user, ref);
     await this.findTrainingOrFail(ref);
     return await this.findTrainingComponent(ref);
@@ -255,13 +257,15 @@ export class TrainingService extends CanViewService<GroupRef> {
   ): Promise<TrainingComponent> {
     this.logger.debug(`Adding exercise to training (user ${user.uid}): ${JSON.stringify(input)}`);
     await this.authorize(user, ref);
+    if (!input.exerciseId)
+      throw new BadRequestException('Exercise ID is required');
 
     // find parent references (group, cycle, training, component)
     const component = await this.findTrainingComponent(ref);
 
     // validate data
-    const exercises = await this.exerciseService.findAllOrFail(user, { filter: { ids: [input.exerciseId] } });
-    const { error, message } = await this.exerciseService.validate(component.componentId, exercises);
+    const exercises = await this.exerciseService.findExercises(ref, { filter: { ids: [input.exerciseId] } });
+    const { error, message } = await this.exerciseService.validateExercises(component.componentId, exercises);
     if (error) throw new BadRequestException(message);
 
     // add exercises to training component
@@ -283,8 +287,9 @@ export class TrainingService extends CanViewService<GroupRef> {
     const trainingExercise = await this.findTrainingExercise(ref);
 
     // validate data
-    const exercise = await this.exerciseService.findOneByIdOrFail(user, trainingExercise.exerciseId);
-    const { error, message } = await this.exerciseService.validate(ref.componentId, [exercise]);
+    const exerciseRef = { ...ref, exerciseId: trainingExercise.exerciseId };
+    const exercise = await this.exerciseService.findUserExerciseOrFail(user, exerciseRef);
+    const { error, message } = await this.exerciseService.validateExercises(ref.componentId, [exercise]);
     if (error) throw new BadRequestException(message);
 
     // update training exercise and its user data
@@ -347,7 +352,7 @@ export class TrainingService extends CanViewService<GroupRef> {
       return { error: true, message: 'Invalid subgroup provided' };
 
     // check time
-    if (this.commonService.date.isBetween(data.from, cycle.from, cycle.to))
+    if (!this.commonService.date.isBetween(data.from, cycle.from, cycle.to))
       return { error: true, message: 'Training must be within cycle start and end date' };
 
     return { error: false };

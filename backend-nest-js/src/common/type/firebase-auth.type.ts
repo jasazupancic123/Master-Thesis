@@ -1,11 +1,8 @@
 import { UserRole } from '../../user/enum/user-role.enum';
-import { SportLevel } from '../../user/enum/sport-level.enum';
 import { UserRecord } from 'firebase-admin/lib/auth';
 
 export type CustomClaims = {
   role: UserRole[],
-  level: SportLevel,
-  bodyweight?: number,
 };
 
 /**

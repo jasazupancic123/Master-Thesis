@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { Auth } from '../common/decorator/auth.decorator';
 import { UserRole } from './enum/user-role.enum';
@@ -6,7 +6,6 @@ import { UpdateUserClaimsDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import type { User } from '../common/type/firebase-auth.type';
-import { CreateWellnessDto } from './dto/create-wellness.dto';
 
 @Controller('user')
 export class UserController {
@@ -33,18 +32,5 @@ export class UserController {
   async updateUserClaims(@Param('id') id: string, @Body() data: UpdateUserClaimsDto) {
     await this.userService.updateClaims(id, data);
     return { id };
-  }
-
-  @Post('me/wellness')
-  @Auth([UserRole.ATHLETE])
-  async createMyWellness(@RequestUser() user: User, @Body() data: CreateWellnessDto) {
-    return await this.userService.createWellness(user, data);
-  }
-
-  @Get('me/wellness')
-  @Auth([UserRole.ATHLETE])
-  async findWellness(@RequestUser() user: User) {
-    const wellness = await this.userService.findWellness(user);
-    return wellness || {};
   }
 }

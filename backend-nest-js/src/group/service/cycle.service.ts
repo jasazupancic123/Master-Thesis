@@ -34,8 +34,8 @@ export class CycleService extends CanViewService<GroupRef> {
   async findCycles(ref: Required<GroupRef>, options?: FindManyOptions<Cycle>): Promise<Cycle[]> {
     return await this.cycleRepository.getDocs(ref, (collection) => {
       let query = collection;
-      if (options.filter) query = this.filter(query, options.filter);
-      if (options.paginate) query = this.paginate(query, options.paginate);
+      if (options?.filter) query = this.filter(query, options.filter);
+      if (options?.paginate) query = this.paginate(query, options.paginate);
 
       return query;
     });
@@ -50,7 +50,7 @@ export class CycleService extends CanViewService<GroupRef> {
     const cycle = await this.cycleRepository.getDoc(ref);
     if (!cycle) return null;
 
-    if (options.populate) await this.populate(ref, cycle, options.populate);
+    if (options?.populate) await this.populate(ref, cycle, options.populate);
     return cycle;
   }
 
@@ -85,11 +85,14 @@ export class CycleService extends CanViewService<GroupRef> {
   }
 
   async create(ref: Required<GroupRef>, input: Partial<Cycle>): Promise<Cycle> {
-    await this.groupService.findGroupOrFail(ref.groupId);
+    await this.groupService.findGroupOrFail(ref);
 
     // validate data
     if (input.from >= input.to)
       throw new BadRequestException('Cycle start date must be before end date');
+
+    // TODO - separate validate() function, also check that this cycle does not
+    // overlap with existing cycles in the group
 
     // create cycle
     const data = {

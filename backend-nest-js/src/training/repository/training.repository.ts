@@ -12,12 +12,15 @@ import {
 import { CycleRef, FirestoreCollectionRepository, TrainingRef } from '../../common/type/firebase-firestore.type';
 import { Training } from '../entity/training.entity';
 import { CommonService } from '../../common/service/common.service';
+import { CycleRepository } from '../../group/repository/cycle.repository';
 
 @Injectable()
 export class TrainingRepository implements FirestoreCollectionRepository<Training, TrainingRef> {
   constructor(
     private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService) {
+    private readonly firebaseService: FirebaseService,
+    private readonly cycleRepository: CycleRepository,
+  ) {
   }
 
   async getDocs(
@@ -39,6 +42,8 @@ export class TrainingRepository implements FirestoreCollectionRepository<Trainin
       subgroupId: input.subgroupId || null,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     });
 
     return result.id;
@@ -54,12 +59,7 @@ export class TrainingRepository implements FirestoreCollectionRepository<Trainin
   }
 
   collection(ref: Required<CycleRef>): CollectionReference {
-    return this.firebaseService.firestore
-      .collection(FirestoreCollection.GROUP)
-      .doc(ref.groupId)
-      .collection(FirestoreCollection.CYCLE)
-      .doc(ref.cycleId)
-      .collection(FirestoreCollection.TRAINING);
+    return this.cycleRepository.doc(ref).collection(FirestoreCollection.TRAINING);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Training {
