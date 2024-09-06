@@ -10,17 +10,13 @@ firebase emulators:start
 
 ## TODO
 
-- Rewrite exercise service
+- Rewrite component repository (use slugs instead of ids for document ref) and service
 - Rewrite frontend calls to use new refactored backend
-- Add group address (gym location) for trainers so that groups with the same address get additional logic for
-  overlapping cycles
-- Write tests
 
 ### Trainings
 
 - Athlete training day view
 - Athlete view calendar
-- Create training warmup and cooldown checkboxes to automatically create them
 
 ### Exercises
 
@@ -54,12 +50,15 @@ firebase emulators:start
 
 ### Users
 
-- Add body weight and sport level when signing up
 - Trainer can add weight for all users or user can
 
 ### Future
 
+- Write tests
 - UPDATE DOCS!
+- Add group address (gym location) for trainers so that groups with the same address get additional logic for
+  overlapping cycles
+- Create training warmup and cooldown checkboxes to automatically create them
 - Actions table to track all changes and undo last action?
 - Copying & pasting trainings
 - Automatically increasing training loads through periods by X percent

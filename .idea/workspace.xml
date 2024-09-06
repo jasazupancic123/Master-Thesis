@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a110cea5-83fa-4c21-a030-85b10323fced" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend-next-js/src/component/set-exercise-card.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +43,7 @@
     &quot;Jest.FirebaseMiddleware.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/z.bedrac/Documents/projekti/fitcode/backend-nest-js/src/common/type/firebase-firestore.type.ts&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/z.bedrac/Documents/projekti/fitcode/backend-nest-js/src/user/dto/custom-claims.dto.ts&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
@@ -82,13 +80,14 @@
       <recent name="D:\projects\fitcode\frontend-next-js\src\app\cycles\[id]" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js" />
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\exercise\service" />
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\user\entity" />
       <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\training\service" />
       <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\group\service" />
-      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\common\type" />
-      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\training" />
-      <recent name="D:\projects\fitcode\backend-nest-js\src\group\dto" />
     </key>
     <key name="es6.move.members.recent.items">
+      <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\user\dto\custom-claims.dto.ts" />
       <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\common\type\firebase-firestore.type.ts" />
       <recent name="C:\Users\z.bedrac\Documents\projekti\fitcode\backend-nest-js\src\common\type\orm.type.ts" />
       <recent name="D:\projects\fitcode\frontend-next-js\src\type\props.type.d.ts" />
@@ -238,7 +237,9 @@
       <workItem from="1725373600262" duration="4073000" />
       <workItem from="1725427990353" duration="22447000" />
       <workItem from="1725512167459" duration="20710000" />
-      <workItem from="1725562454504" duration="9679000" />
+      <workItem from="1725562454504" duration="9797000" />
+      <workItem from="1725602537802" duration="24916000" />
+      <workItem from="1725645651129" duration="6961000" />
     </task>
     <servers />
   </component>
