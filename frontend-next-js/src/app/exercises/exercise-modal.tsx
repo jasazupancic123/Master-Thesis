@@ -1,4 +1,4 @@
-import MyModal from '@/component/modal';
+import MyModal from '@/components/modal';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -6,14 +6,14 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import React, { ReactNode, useEffect, useState } from 'react';
 import MenuItem from '@mui/material/MenuItem';
 import { Checkbox, Divider, FormControl, FormControlLabel, InputLabel } from '@mui/material';
-import { ComponentWithParents } from '@/type/component.type';
+import { ComponentWithParents } from '@/component/type/component.type';
 import Box from '@mui/material/Box';
-import type { CreateExercise, ExerciseAttributeSelectOption } from '@/type/exercise.type';
-import { ExerciseAttribute } from '@/type/exercise.type';
-import FileUpload from '@/component/file-upload';
+import type { CreateExercise, ExerciseAttributeSelectOption } from '@/exercise/type/exercise.type';
+import { ExerciseAttribute } from '@/exercise/type/exercise.type';
+import FileUpload from '@/components/file-upload';
 import Stack from '@mui/material/Stack';
-import { FirebaseStorage } from '@/util/firebase';
 import { getFilenameFromPath } from '@/util/link';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 
 interface ExerciseModalProps {
   data: CreateExercise;
@@ -101,7 +101,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
                 await props.onFileUpload(file, path);
               }}
               initialFileUrl={
-                data.videoUrl ? FirebaseStorage.exerciseUrl(getFilenameFromPath(data.videoUrl)) : undefined
+                data.videoUrl ? FirebaseStorageUtil.exerciseUrl(getFilenameFromPath(data.videoUrl)) : undefined
               }
             />
 
@@ -127,7 +127,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
                 await props.onFileUpload(file, path);
               }}
               initialFileUrl={
-                data.imageUrl ? FirebaseStorage.exerciseUrl(getFilenameFromPath(data.imageUrl)) : undefined
+                data.imageUrl ? FirebaseStorageUtil.exerciseUrl(getFilenameFromPath(data.imageUrl)) : undefined
               }
               // fileUrl={data.imageUrl}
               // setFileUrl={(url) => setData({ ...data, imageUrl: url })}
@@ -188,7 +188,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
   </MyModal>;
 }
 
-// recursive component to show select for subattributes
+// recursive components to show select for subattributes
 function SelectAttribute(props: {
   attribute: ExerciseAttribute | ExerciseAttributeSelectOption;
   onChange: (field: string, value: string) => void;

@@ -59,24 +59,6 @@ export class TreeUtil {
     }
   }
 
-  leafs<T extends TreeItem>(
-    items: T[],
-    childrenPropertyName: keyof T,
-  ): (T & { parents: T[] })[] {
-    const result: (T & { parents: T[] })[] = [];
-
-    this.forEach<T, T & { parents: T[] }>(items, childrenPropertyName, (item, parent, previousResult) => {
-      // get all parents of the current item in the tree
-      const parents = parent ? [...previousResult.parents, parent] : [];
-      if (this.isLeaf(item, childrenPropertyName))
-        result.push({ ...item, parents });
-
-      return { ...item, parents };
-    });
-
-    return result;
-  }
-
   isLeaf<T extends TreeItem>(item: T, childrenPropertyName: keyof T): boolean {
     return item[childrenPropertyName].length === 0;
   }

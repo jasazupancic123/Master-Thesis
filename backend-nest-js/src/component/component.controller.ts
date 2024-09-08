@@ -11,7 +11,7 @@ export class ComponentController {
 
   @Get()
   async findAll() {
-    return await this.componentService.findAll();
+    return await this.componentService.findAllFlat({ populate: ['parents', 'children'] });
   }
 
   // TODO - create components and move exercises to new components

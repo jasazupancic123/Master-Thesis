@@ -1,6 +1,6 @@
 import React from 'react';
 import Container from '@mui/material/Container';
-import Sidebar from '@/component/sidebar';
+import Sidebar from '@/components/sidebar';
 import Box from '@mui/material/Box';
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {

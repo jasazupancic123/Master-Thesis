@@ -1,15 +1,15 @@
-import { formatTime } from '@/util/date';
+import { formatTime } from '@/common/service/util/date.util';
 import { Dayjs } from 'dayjs';
 import Box from '@mui/material/Box';
-import { AddSetGroup, Training } from '@/type/training.type';
+import { AddSetGroup, Training } from '@/training/type/training.type';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import { Divider } from '@mui/material';
 import { AppContextType, useAppContext } from '@/context/app-provider';
-import { Firestore } from '@/util/firebase';
 import { RemoveCircle } from '@mui/icons-material';
+import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 
 type TrainingBoxProps = {
   training: Training
@@ -23,7 +23,7 @@ export default function TrainingGridItem(props: TrainingBoxProps) {
   const { components } = useAppContext() as AppContextType;
 
   // populate training with components
-  const populated = Firestore.populateTraining(training, components.flat);
+  const populated = FirebaseFirestoreUtil.populateTraining(training, components.flat);
   const setGroups = populated.setGroups || [];
 
   return <Box position="relative" width={100}>

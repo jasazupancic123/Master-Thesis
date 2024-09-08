@@ -61,6 +61,10 @@ export class FirebaseService implements OnApplicationBootstrap {
     return this.checkRole(user, UserRole.ATHLETE);
   }
 
+  async deleteCollection(collectionPath: string) {
+    await this.firestore.recursiveDelete(this.firestore.collection(collectionPath));
+  }
+
   async onApplicationBootstrap() {
     this.logger.debug(`Using Firestore Emulator: ${this.configService.get('FIRESTORE_EMULATOR_HOST')}`);
     this.logger.debug(`Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`);

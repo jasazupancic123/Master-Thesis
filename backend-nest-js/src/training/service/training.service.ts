@@ -167,7 +167,12 @@ export class TrainingService extends CanViewService<GroupRef> {
     const cycle = await this.cycleService.findCycle(ref);
 
     // validate data
-    await this.componentService.findAllOrFail({ ids: input.componentIds || [] });
+    await this.componentService.findAllOrFail({
+      filter: {
+        ...(input.componentIds.length > 0 && { ids: input.componentIds }),
+      },
+    });
+
     const data = { subgroupId: input.subgroupId || null, from: input.from, to: input.to };
     const { error, message } = await this.validate(user, group, cycle, data);
     if (error) throw new BadRequestException(message);
@@ -226,7 +231,7 @@ export class TrainingService extends CanViewService<GroupRef> {
     const training = await this.findTrainingOrFail(ref, { populate: ['components'] });
 
     // validate data
-    await this.componentService.findOneByIdOrFail(input.componentId);
+    await this.componentService.findOneBySlugOrFail(input.componentId);
     if (training.components.map(c => c.componentId).includes(input.componentId))
       throw new BadRequestException('Component already exists in the training');
 
@@ -322,7 +327,7 @@ export class TrainingService extends CanViewService<GroupRef> {
 
       if (populate.includes('components.component'))
         await Promise.all(training.components.map(async (component) => {
-          component.component = await this.componentService.findOneByIdOrFail(component.componentId);
+          component.component = await this.componentService.findOneBySlugOrFail(component.componentId);
         }));
 
       if (populate.includes('components.exercises'))

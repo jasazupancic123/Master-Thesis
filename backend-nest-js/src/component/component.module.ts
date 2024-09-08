@@ -1,14 +1,13 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ComponentService } from './component.service';
 import { ComponentController } from './component.controller';
-import { FirebaseModule } from '../firebase/firebase.module';
-import { Component } from './entity/component.entity';
+import { ExerciseModule } from '../exercise/exercise.module';
+import { ComponentRepository } from './repository/component.repository';
 
 @Module({
-  // @ts-ignore
-  imports: [FirebaseModule.forFeature([Component])],
+  imports: [forwardRef(() => ExerciseModule)],
   controllers: [ComponentController],
-  providers: [ComponentService],
+  providers: [ComponentService, ComponentRepository],
   exports: [ComponentService],
 })
 export class ComponentModule {

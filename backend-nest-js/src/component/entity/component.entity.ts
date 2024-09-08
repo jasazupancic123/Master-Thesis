@@ -1,37 +1,25 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import { IsOptional, IsString, ValidateNested } from 'class-validator';
-import { Entity } from '../../common/decorator/entity.decorator';
-import { BaseEntity } from '../../common/entity/base.entity';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
+import { IsNotEmpty, IsString } from 'class-validator';
+import { IdEntity } from '../../common/entity/id.entity';
 
-@Entity(FirestoreCollection.COMPONENT)
-export class Component extends BaseEntity {
-  @IsString()
-  @ApiProperty()
-  @Expose()
-  id: string;
-
-  @IsString()
-  @ApiProperty()
-  @Expose()
-  name: string;
-
+export class Component extends IdEntity {
   @IsString()
   @ApiProperty()
   @Expose()
   slug: string;
 
   @IsString()
-  @IsOptional()
-  @ApiPropertyOptional()
+  @IsNotEmpty()
+  @ApiProperty()
   @Expose()
-  parentId?: string;
+  parent: string | null; // parent component slug
 
-  @ValidateNested({ each: true })
-  @Type(() => Component)
-  @IsOptional()
-  @ApiPropertyOptional({ type: Component, isArray: true })
+  @IsString()
+  @ApiProperty()
   @Expose()
-  children?: any[]; // if you pass Component type, then Populate interface will recursively call this class
+  name: string;
+
+  children: any[]; // virtual field of children components, cannot be Component[] because of circular dependency of Populate interface
+  parents: any[];
 }

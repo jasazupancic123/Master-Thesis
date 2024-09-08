@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ExerciseService } from './service/exercise.service';
 import { ExerciseController } from './exercise.controller';
 import { ComponentModule } from '../component/component.module';
@@ -10,7 +10,10 @@ import { ExerciseAttributeService } from './service/exercise-attribute.service';
 import { ExerciseAttributeValueService } from './service/exercise-attribute-value.service';
 
 @Module({
-  imports: [UserModule, ComponentModule],
+  imports: [
+    UserModule,
+    forwardRef(() => ComponentModule),
+  ],
   controllers: [ExerciseController],
   providers: [
     ExerciseAttributeRepository,

@@ -4,11 +4,11 @@ import { GroupPageProps } from '@/app/groups/props';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { formatDate } from '@/util/date';
+import { formatDate } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
 import { ArrowCircleRight } from '@mui/icons-material';
 import React, { Fragment } from 'react';
-import YearDateRangeSlider from '@/component/year-date-range-slider';
+import YearDateRangeSlider from '@/components/year-date-range-slider';
 import Stack from '@mui/material/Stack';
 
 export default function TrainerYearView(props: GroupPageProps) {

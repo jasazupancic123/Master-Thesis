@@ -1,13 +1,13 @@
 'use client';
 
-import withAuth from '@/hoc/with-auth';
-import { UserRole } from '@/enum/user-role.enum';
+import withAuth from '@/common/components/with-auth';
+import { UserRole } from '@/user/enum/user-role.enum';
 import { useFetch } from '@/hook/use-fetch';
-import { FitcodeApi } from '@/util/api';
-import { Group } from '@/type/group.type';
+import { ApiUtil } from '@/common/service/util/api.util';
+import { Group } from '@/group/type/group.type';
 
 function Page() {
-  const [groups] = useFetch<Group[]>(FitcodeApi.URL.athleteGroups());
+  const [groups] = useFetch<Group[]>(ApiUtil.URL.athleteGroups());
   console.log(groups);
 
   return (

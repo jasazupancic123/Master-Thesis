@@ -21,7 +21,7 @@ export class ExerciseAttributeService {
       if (!fields.includes(field))
         throw new BadRequestException(`Attribute ${field} does not exist`);
   }
-
+ 
   async findAll(): Promise<ExerciseAttribute[]> {
     return await this.exerciseAttributeRepository.getDocs();
   }

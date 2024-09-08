@@ -1,8 +1,8 @@
 'use client';
 
-import withAuth from '@/hoc/with-auth';
+import withAuth from '@/common/components/with-auth';
 import React, { useState } from 'react';
-import { User } from '@/type/user.type';
+import { User } from '@/user/type/user.type';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import EditIcon from '@mui/icons-material/Edit';
@@ -11,7 +11,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import { useFetch } from '@/hook/use-fetch';
 import { useLocalStorage } from 'usehooks-ts';
-import { FIREBASE_COOKIE_NAME } from '@/constant/cookies';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import {
   DataGrid,
   GridActionsCellItem,
@@ -21,16 +21,16 @@ import {
   GridRowModes,
   GridRowModesModel,
 } from '@mui/x-data-grid';
-import { ALL_LEVELS, ALL_ROLES } from '@/constant/user';
-import { UserRole } from '@/enum/user-role.enum';
-import MyModal from '@/component/modal';
+import { ALL_LEVELS, ALL_ROLES } from '@/common/constant/user.constant';
+import { UserRole } from '@/user/enum/user-role.enum';
+import MyModal from '@/components/modal';
 import Typography from '@mui/material/Typography';
 import toast from 'react-hot-toast';
-import { CustomClaims } from '@/type/custom-claims.type';
-import { FitcodeApi } from '@/util/api';
+import { CustomClaims } from '@/user/type/custom-claims.type';
+import { ApiUtil } from '@/common/service/util/api.util';
 
 function Page() {
-  const [users, loading, _, __, setUsers] = useFetch(FitcodeApi.URL.users());
+  const [users, loading, _, __, setUsers] = useFetch(ApiUtil.URL.users());
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
   const [token] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -38,7 +38,7 @@ function Page() {
 
   async function updateUserClaims(uid: string, claims: CustomClaims) {
     try {
-      await FitcodeApi.updateUserClaims(uid, token, claims);
+      await ApiUtil.updateUserClaims(uid, token, claims);
       toast.success('Successfully updated user role');
     } catch (e) {
       toast.error(e.message);
@@ -47,7 +47,7 @@ function Page() {
 
   async function deleteUser(uid: string) {
     try {
-      await FitcodeApi.deleteUser(uid, token);
+      await ApiUtil.deleteUser(uid, token);
       toast.success('Successfully deleted user');
       setUsers(users.filter((user) => user.uid !== uid));
     } catch (e) {

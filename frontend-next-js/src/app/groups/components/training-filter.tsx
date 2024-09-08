@@ -3,22 +3,22 @@
 import { FormControl, InputLabel, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import Box from '@mui/material/Box';
 import React, { useEffect, useState } from 'react';
-import { Training } from '@/type/training.type';
+import { Training } from '@/training/type/training.type';
 import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
-import { CreateCycle, Cycle } from '@/type/cycle.type';
+import { CreateCycle, Cycle } from '@/group/type/cycle.type';
 import { AppContextType, useAppContext } from '@/context/app-provider';
-import { Firestore } from '@/util/firebase';
-import { FitcodeApi } from '@/util/api';
+import { ApiUtil } from '@/common/service/util/api.util';
 import { useFetch } from '@/hook/use-fetch';
 import { useParams, useRouter } from 'next/navigation';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import { Group } from '@/type/group.type';
-import { getWeekDays } from '@/util/date';
+import { Group } from '@/group/type/group.type';
+import { getWeekDays } from '@/common/service/util/date.util';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import CreateCycleModal from '@/component/create-cycle-modal';
+import CreateCycleModal from '@/components/create-cycle-modal';
+import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 
 export type TrainingFilter = 'year' | 'cycle' | 'week' | 'day';
 
@@ -52,8 +52,8 @@ export default function TrainingFilter(props: Props) {
   const { token, components } = useAppContext() as AppContextType;
   const { filter, setFilter, cycle, subgroup, setTrainings, date, setDate, setLoading } = props;
 
-  const [groups] = useFetch<Group[]>(FitcodeApi.URL.groups());
-  const [cycles, _, __, ___, setCycles] = useFetch<Cycle[]>(FitcodeApi.URL.cycles({ groupId }));
+  const [groups] = useFetch<Group[]>(ApiUtil.URL.groups());
+  const [cycles, _, __, ___, setCycles] = useFetch<Cycle[]>(ApiUtil.URL.cycles({ groupId }));
   const [selected, setSelected] = React.useState({ cycleId: cycle?.id, groupId });
 
   // create cycle
@@ -71,9 +71,9 @@ export default function TrainingFilter(props: Props) {
     };
 
     try {
-      const response = await FitcodeApi.createCycle(body as Partial<Cycle>, token);
+      const response = await ApiUtil.createCycle(body as Partial<Cycle>, token);
       toast.success('Successfully created cycle');
-      setCycles([...cycles, Firestore.populateCycle(response)]);
+      setCycles([...cycles, FirebaseFirestoreUtil.populateCycle(response)]);
     } catch (e) {
       toast.error(e.message || 'Failed to create cycle');
     }
@@ -121,13 +121,13 @@ export default function TrainingFilter(props: Props) {
         }
 
         if (cycle) {
-          const data = await FitcodeApi.findAllTrainings(token, {
+          const data = await ApiUtil.findAllTrainings(token, {
             cycleId: cycle.id,
             startTime: startDate.toISOString(),
             endTime: endDate.toISOString(),
           });
 
-          setTrainings(data.map(item => Firestore.populateTraining(item, components.flat)));
+          setTrainings(data.map(item => FirebaseFirestoreUtil.populateTraining(item, components.flat)));
 
           // add filter to URL
           router.replace(getGroupCycleFilterUrl(groupId, cycle.id, filter));
@@ -169,18 +169,18 @@ export default function TrainingFilter(props: Props) {
         let cycleId = selected.cycleId;
 
         // fetch trainings in either case
-        let trainings = await FitcodeApi.findAllTrainings(token, {
+        let trainings = await ApiUtil.findAllTrainings(token, {
           cycleId,
           startTime: date.startDate.toISOString(),
           endTime: date.endDate.toISOString(),
         });
 
-        trainings = trainings.map(item => Firestore.populateTraining(item, components.flat));
+        trainings = trainings.map(item => FirebaseFirestoreUtil.populateTraining(item, components.flat));
         setTrainings(trainings);
 
         if (isGroupChanged) {
-          let cycles = await FitcodeApi.getAllCycles(token, { groupId: selected.groupId });
-          cycles = cycles.map(item => Firestore.populateCycle(item));
+          let cycles = await ApiUtil.getAllCycles(token, { groupId: selected.groupId });
+          cycles = cycles.map(item => FirebaseFirestoreUtil.populateCycle(item));
           setCycles(cycles);
 
           // select first cycle from the new group

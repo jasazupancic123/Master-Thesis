@@ -1,35 +1,32 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FIREBASE_COOKIE_NAME } from '@/constant/cookies';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { useLocalStorage } from 'usehooks-ts';
-import { BASE_URL } from '@/constant/api';
+import { BASE_URL } from '@/common/constant/api.constant';
 
-interface UseFetchOptions<T> {
+interface UseFetchOptions {
   method?: string;
   authorization?: boolean;
   body?: object;
-  populate?: (data: T) => T & { [key: string]: any };
 }
 
-export function useFetch<T = any>(url: string, options?: UseFetchOptions<T>) {
+export function useFetch<T extends Record<string, unknown>>(url: string, options?: UseFetchOptions) {
   const {
     method = 'GET',
     authorization = true,
     body,
-    populate,
   } = options || {};
 
-  const [data, setData] = useState<T>(null);
-  const [error, setError] = useState<Error>(null);
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
   const [token] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
 
   const fetchData = useCallback(async () => {
     if (authorization && !token) return;
-
     setLoading(true);
-    const headers = {};
 
     // Add authorization header if `authorization` is true
+    const headers = {} as Record<string, string>;
     if (authorization)
       headers['Authorization'] = `Bearer ${token}`;
 
@@ -43,11 +40,13 @@ export function useFetch<T = any>(url: string, options?: UseFetchOptions<T>) {
       const result = await response.json();
       if (!response.ok) {
         console.error(result);
-        throw new Error(result.message || 'Failed to fetch data');
+        setError(new Error(result.message || 'Failed to fetch data'));
+        setLoading(false);
+        return;
       }
 
-      setData(populate ? populate(result) : result);
-    } catch (e) {
+      setData(result);
+    } catch (e: any) {
       setError(e);
     } finally {
       setLoading(false);
@@ -56,7 +55,7 @@ export function useFetch<T = any>(url: string, options?: UseFetchOptions<T>) {
 
   useEffect(() => {
     fetchData().then();
-  }, [token]);
+  }, [token, fetchData]);
 
   return [data, loading, error, fetchData, setData] as const;
 }

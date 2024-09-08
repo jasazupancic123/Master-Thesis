@@ -1,24 +1,24 @@
 'use client';
 
 import { useFetch } from '@/hook/use-fetch';
-import { User } from '@/type/user.type';
-import { UserRole } from '@/enum/user-role.enum';
+import { User } from '@/user/type/user.type';
+import { UserRole } from '@/user/enum/user-role.enum';
 import TrainerPageRouter from './components/trainer-page-router';
-import withAuth from '@/hoc/with-auth';
+import withAuth from '@/common/components/with-auth';
 import React, { ReactNode, useEffect, useState } from 'react';
-import { FitcodeApi } from '@/util/api';
+import { ApiUtil } from '@/common/service/util/api.util';
 import { AuthContextType, useAuth } from '@/context/auth-provider';
-import { Group } from '@/type/group.type';
-import { Cycle } from '@/type/cycle.type';
+import { Group } from '@/group/type/group.type';
+import { Cycle } from '@/group/type/cycle.type';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppContextType, useAppContext } from '@/context/app-provider';
 import { TrainingFilter } from '@/app/groups/components/training-filter';
-import { Training } from '@/type/training.type';
+import { Training } from '@/training/type/training.type';
 import dayjs, { Dayjs } from 'dayjs';
-import { getWeekDays } from '@/util/date';
+import { getWeekDays } from '@/common/service/util/date.util';
 import { GroupPageProps } from '@/app/groups/props';
-import { Firestore } from '@/util/firebase';
 import toast from 'react-hot-toast';
+import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 
 function Page() {
   // context
@@ -28,8 +28,8 @@ function Page() {
   const { token, components } = useAppContext() as AppContextType;
 
   // state
-  const [users, loadingUsers, errorUsers, _refetchUsers, setUsers] = useFetch<User[]>(FitcodeApi.URL.users());
-  const [groups, loadingGroups, errorGroups, _refetchGroups, setGroups] = useFetch<Group[]>(FitcodeApi.URL.groups());
+  const [users, loadingUsers, errorUsers, _refetchUsers, setUsers] = useFetch<User[]>(ApiUtil.URL.users());
+  const [groups, loadingGroups, errorGroups, _refetchGroups, setGroups] = useFetch<Group[]>(ApiUtil.URL.groups());
   const [filter, setFilter] = useState<TrainingFilter>('year');
   const [date, setDate] = useState({
     start: dayjs().startOf('year'),
@@ -57,8 +57,8 @@ function Page() {
     }
 
     try {
-      const group = await FitcodeApi.getGroup(groupId, token);
-      const cycles = await FitcodeApi.getAllCycles(token, { groupId: group.id });
+      const group = await ApiUtil.getGroup(groupId, token);
+      const cycles = await ApiUtil.getAllCycles(token, { groupId: group.id });
 
       setSelected({ group, cycles, subgroup: null, cycle: null, trainings: [] });
     } catch (e) {
@@ -82,15 +82,15 @@ function Page() {
     }
 
     try {
-      const cycle = await FitcodeApi.getCycle(cycleId, token);
-      const response = await FitcodeApi.findAllTrainings(token, {
+      const cycle = await ApiUtil.getCycle(cycleId, token);
+      const response = await ApiUtil.findAllTrainings(token, {
         cycleId: cycle.id,
         subgroupId: selected.subgroup?.id,
         startTime: date.start.toISOString(),
         endTime: date.end.toISOString(),
       });
 
-      const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
+      const trainings = response.map(training => FirebaseFirestoreUtil.populateTraining(training, components.flat));
       setSelected({ ...selected, cycle, trainings });
     } catch (e) {
       console.error(e);
@@ -105,14 +105,14 @@ function Page() {
     }
 
     try {
-      const response = await FitcodeApi.findAllTrainings(token, {
+      const response = await ApiUtil.findAllTrainings(token, {
         cycleId,
         subgroupId,
         startTime: date.start.toISOString(),
         endTime: date.end.toISOString(),
       });
 
-      const trainings = response.map(training => Firestore.populateTraining(training, components.flat));
+      const trainings = response.map(training => FirebaseFirestoreUtil.populateTraining(training, components.flat));
       setSelected({ ...selected, trainings });
     } catch (e) {
       console.error(e);

@@ -1,6 +1,6 @@
 'use client';
 
-import withAuth from '@/hoc/with-auth';
+import withAuth from '@/common/components/with-auth';
 
 function Page() {
   return <>Profile</>

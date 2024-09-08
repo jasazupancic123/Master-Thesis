@@ -12,12 +12,14 @@ import { CommonService } from '../../common/service/common.service';
 import { GroupRepository } from '../../group/repository/group.repository';
 import { SubgroupRepository } from '../../group/repository/subgroup.repository';
 import { TrainingExerciseRef } from '../../common/type/firebase-firestore.type';
+import { UserRepository } from '../../user/repository/user.repository';
 
 @Injectable()
 export class TrainingExerciseUserDataService {
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
+    private readonly userRepository: UserRepository,
     private readonly groupRepository: GroupRepository,
     private readonly subgroupRepository: SubgroupRepository,
     private readonly trainingRepository: TrainingRepository,
@@ -55,13 +57,18 @@ export class TrainingExerciseUserDataService {
         return (await Promise.all(
           trainingComponents.map(async ({ componentId }) => {
             const trainingExercises = await this.trainingExerciseRepository.getDocs(
-              { ...ref, trainingId, componentId },
+              { ...ref, trainingId, componentId: componentId },
               query => query.where(FieldPath.documentId(), '==', ref.exerciseId),
             );
 
             return (await Promise.all(
               trainingExercises.map(async ({ exerciseId }) => {
-                return this.trainingExerciseUserDataRepository.getDocs({ ...ref, trainingId, componentId, exerciseId });
+                return this.trainingExerciseUserDataRepository.getDocs({
+                  ...ref,
+                  trainingId,
+                  componentId: componentId,
+                  exerciseId,
+                });
               }),
             )).flat();
           }),
@@ -94,16 +101,18 @@ export class TrainingExerciseUserDataService {
       : users.filter((user) => group.membersIds.includes(user.uid));
 
     // get data for all users
-    const userData = await this.findAll(ref);
+    const userData = await this.findAll(ref) || [];
 
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
+      const { bodyweight } = await this.userRepository.getDoc(member.uid);
+
       const memberData = userData.filter((item) => item.userId === member.uid);
       const workloadValue = this.calculateWorkloadValue(
         input.workloadType,
         input.workloadValue,
-        member.customClaims.bodyweight,
+        bodyweight.length ? bodyweight[bodyweight.length - 1].weight : 0,
         memberData,
       );
 

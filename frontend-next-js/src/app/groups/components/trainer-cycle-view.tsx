@@ -1,30 +1,30 @@
 import { GroupPageProps } from '@/app/groups/props';
 import { AppContextType, useAppContext } from '@/context/app-provider';
 import React, { Fragment, useEffect, useState } from 'react';
-import { Component } from '@/type/component.type';
-import { AddSetGroup, CreateTraining, Training } from '@/type/training.type';
+import { Component } from '@/component/type/component.type';
+import { AddSetGroup, CreateTraining, Training } from '@/training/type/training.type';
 import dayjs, { Dayjs } from 'dayjs';
-import { formatDate, isDateBetween } from '@/util/date';
+import { formatDate, isDateBetween } from '@/common/service/util/date.util';
 import toast from 'react-hot-toast';
-import { FitcodeApi } from '@/util/api';
+import { ApiUtil } from '@/common/service/util/api.util';
 import Box from '@mui/material/Box';
-import ExerciseChips from '@/component/exercise-chips';
+import ExerciseChips from '@/components/exercise-chips';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Firestore } from '@/util/firebase';
 import IconButton from '@mui/material/IconButton';
 import { AddCircle } from '@mui/icons-material';
 import { Alert, Divider } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 
 export default function TrainerCycleView(props: GroupPageProps) {
   // context
   const { token, components } = useAppContext() as AppContextType;
   const cycle = props.selected.cycle!;
 
-  // filter exercise component
+  // filter exercise components
   const [selected, setSelected] = useState<Component[]>([]);
 
   // create training
@@ -55,7 +55,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
    */
   async function createTraining(data: CreateTraining) {
     if (!selected.length) {
-      toast.error('Select atleast one component');
+      toast.error('Select atleast one components');
       return;
     }
 
@@ -85,7 +85,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
         endTime: endTime.toISOString(),
       };
 
-      const response = await FitcodeApi.createTraining(body, token);
+      const response = await ApiUtil.createTraining(body, token);
       props.setSelected(prev => ({ ...prev, trainings: [...prev.trainings, response] }));
 
       toast.success('Training created');
@@ -95,7 +95,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
   }
 
   /**
-   * Add set group (training component) to training
+   * Add set group (training components) to training
    */
   async function addSet(data: AddSetGroup) {
     try {
@@ -107,7 +107,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
           color: 'red',
         };
 
-        const response = await FitcodeApi.addSet(body, token);
+        const response = await ApiUtil.addSet(body, token);
         props.setSelected(prev => ({
           ...prev,
           trainings: prev.trainings.map(training => {
@@ -131,7 +131,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
    */
   async function deleteTraining(training: Training) {
     try {
-      await FitcodeApi.removeTraining(training.id, token);
+      await ApiUtil.removeTraining(training.id, token);
       props.setSelected(prev => ({ ...prev, trainings: prev.trainings.filter(t => t.id !== training.id) }));
 
       toast.success('Training removed');
@@ -351,7 +351,7 @@ function TrainingGridItem(props: {
   const { components } = useAppContext() as AppContextType;
 
   // populate training with components
-  const populated = Firestore.populateTraining(training, components.flat);
+  const populated = FirebaseFirestoreUtil.populateTraining(training, components.flat);
   const setGroups = populated.setGroups || [];
 
   return <Box px={1}>

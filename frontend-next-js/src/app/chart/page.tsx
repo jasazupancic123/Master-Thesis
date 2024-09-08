@@ -1,7 +1,7 @@
 'use client';
 
-import withAuth from '@/hoc/with-auth';
-import { UserRole } from '@/enum/user-role.enum';
+import withAuth from '@/common/components/with-auth';
+import { UserRole } from '@/user/enum/user-role.enum';
 
 function Page() {
   return (
