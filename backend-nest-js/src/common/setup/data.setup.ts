@@ -17,9 +17,11 @@ import { Group } from '../../group/entity/group.entity';
 import { addDays, addHours } from 'date-fns';
 import { TrainingComponent } from '../../training/entity/training-component.entity';
 import { CommonService } from '../service/common.service';
+import { FirebaseService } from '../../firebase/firebase.service';
 
 export class DataSetup extends BaseSetup {
   private readonly commonService: CommonService;
+  private readonly firebaseService: FirebaseService;
   private readonly userService: UserService;
   private readonly componentService: ComponentService;
   private readonly exerciseAttributeService: ExerciseAttributeService;
@@ -31,6 +33,7 @@ export class DataSetup extends BaseSetup {
     super(app);
 
     this.commonService = app.get(CommonService);
+    this.firebaseService = app.get(FirebaseService);
     this.userService = app.get(UserService);
     this.componentService = app.get(ComponentService);
     this.exerciseAttributeService = app.get(ExerciseAttributeService);
@@ -50,8 +53,16 @@ export class DataSetup extends BaseSetup {
       customClaims: { role: [UserRole.ADMIN], level: SportLevel.ADVANCED },
     });
 
-    // delete all components
-    await this.componentService.deleteAll();
+    // delete all data
+    const foundUsers = await this.userService.findAll();
+    for (const user of foundUsers) {
+      await this.firebaseService.deleteCollection(`${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.EXERCISE}`);
+      await this.firebaseService.deleteCollection(`${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.GROUP}`);
+      await this.firebaseService.deleteCollection(`${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`);
+    }
+
+    await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
+    await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE_ATTRIBUTE);
 
     try {
       await this.import('data.json');
@@ -68,7 +79,9 @@ export class DataSetup extends BaseSetup {
 
     // import components
     const components = data[FirestoreCollection.COMPONENT] || [];
-    await this.componentService.createMany(components);
+    for (const component of components)
+      await this.componentService.createFromTree(component);
+
     this.logger.debug(`Successfully imported ${components.length} components`);
 
     // import exercise attributes

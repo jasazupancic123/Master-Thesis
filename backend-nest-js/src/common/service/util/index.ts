@@ -6,3 +6,4 @@ export * from './generic.util';
 export * from './tree.util';
 export * from './array.util';
 export * from './object.util';
+export * from './string.util';

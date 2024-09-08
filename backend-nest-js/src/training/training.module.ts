@@ -10,9 +10,11 @@ import { TrainingExerciseRepository } from './repository/training-exercise.repos
 import { TrainingExerciseUserDataService } from './service/training-exercise-user-data.service';
 import { TrainingExerciseService } from './service/training-exercise.service';
 import { TrainingComponentService } from './service/training-component.service';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
+    UserModule,
     ComponentModule,
     ExerciseModule,
     forwardRef(() => GroupModule),

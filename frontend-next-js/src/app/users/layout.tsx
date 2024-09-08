@@ -1,5 +1,5 @@
 import Container from '@mui/material/Container'
-import Sidebar from '@/component/sidebar'
+import Sidebar from '@/components/sidebar'
 import Box from '@mui/material/Box'
 import React from 'react';
 

@@ -1,25 +1,26 @@
 'use client';
 
-import withAuth from '@/hoc/with-auth';
+import withAuth from '@/common/components/with-auth';
 import React, { useEffect, useState } from 'react';
 import { Pagination, TextField } from '@mui/material';
-import type { Exercise } from '@/type/exercise.type';
-import { CreateExercise } from '@/type/exercise.type';
+import type { Exercise } from '@/exercise/type/exercise.type';
+import { CreateExercise } from '@/exercise/type/exercise.type';
 import Box from '@mui/material/Box';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import ExerciseModal from '@/app/exercises/exercise-modal';
 import Grid from '@mui/material/Unstable_Grid2';
 import { ExerciseCard } from '@/app/exercises/exercise-card';
 import { AppContextType, useAppContext } from '@/context/app-provider';
-import { Component } from '@/type/component.type';
+import { Component } from '@/component/type/component.type';
 import toast from 'react-hot-toast';
 import IconButton from '@mui/material/IconButton';
-import ExerciseChips from '@/component/exercise-chips';
-import { FitcodeApi } from '@/util/api';
-import { ObjectUtil } from '@/util/object';
-import { FirebaseStorage, Firestore } from '@/util/firebase';
-import { PaginateOptions } from '@/type/paginate.type';
+import ExerciseChips from '@/components/exercise-chips';
+import { ApiUtil } from '@/common/service/util/api.util';
+import { ObjectUtil } from '@/common/service/util/object.util';
+import { PaginateOptions } from '@/common/type/paginate.type';
 import Stack from '@mui/material/Stack';
+import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 
 const EMPTY_EXERCISE: CreateExercise = {
   name: '',
@@ -46,7 +47,7 @@ function Page() {
    */
   async function onFileUpload(file: File, path: string) {
     try {
-      await FirebaseStorage.uploadFile(file, path);
+      await FirebaseStorageUtil.uploadFile(file, path);
     } catch (e) {
       console.log('error:', e);
       toast.error(e.message || 'An error occurred');
@@ -78,7 +79,7 @@ function Page() {
       // delete all keys with undefined values
       Object.keys(attributeValues).forEach((key) => attributeValues[key] === undefined && delete attributeValues[key]);
 
-      const response = await FitcodeApi.createExercise({
+      const response = await ApiUtil.createExercise({
         name: item.name,
         componentIds: item.componentIds,
         imageUrl: item.imageUrl,
@@ -97,7 +98,7 @@ function Page() {
   }
 
   /**
-   * Filter exercises by selected component
+   * Filter exercises by selected components
    */
   useEffect(() => {
     async function fetchExercises() {
@@ -112,7 +113,7 @@ function Page() {
         limit: 100,
       };
 
-      const response = await FitcodeApi.findAllExercises(token, filter, paginate);
+      const response = await ApiUtil.findAllExercises(token, filter, paginate);
       setExercises(response);
     }
 
@@ -127,8 +128,8 @@ function Page() {
 
     async function populateExercise() {
       try {
-        const response = await FitcodeApi.getExercise(exercise.id!, token);
-        setExercise(Firestore.populateExercise(response));
+        const response = await ApiUtil.getExercise(exercise.id!, token);
+        setExercise(FirebaseFirestoreUtil.populateExercise(response));
       } catch (e) {
         toast.error(e.message || 'Could not fetch exercise');
       }
@@ -138,12 +139,12 @@ function Page() {
   }, [exercise?.id]);
 
   /**
-   * Get page meta for exercises when component or search name changes
+   * Get page meta for exercises when components or search name changes
    */
   useEffect(() => {
     async function fetchPageMeta() {
       try {
-        const response = await FitcodeApi.getExercisePageMeta(token, {
+        const response = await ApiUtil.getExercisePageMeta(token, {
           name: search.name,
           ...(component && { componentIds: [component?.id || ''] }),
         }, pagination.pageSize);

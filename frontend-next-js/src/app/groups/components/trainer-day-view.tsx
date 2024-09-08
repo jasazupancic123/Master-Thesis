@@ -1,10 +1,10 @@
 import { GroupPageProps } from '@/app/groups/props';
 import React, { useState } from 'react';
-import { formatDate, getToday, getWeekDays, isSameDay } from '@/util/date';
+import { formatDate, getToday, getWeekDays, isSameDay } from '@/common/service/util/date.util';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
-import TrainingDay, { colors } from '@/component/training-day';
+import TrainingDay, { colors } from '@/components/training-day';
 import Circles from '@/app/groups/components/circles';
 import dayjs from 'dayjs';
 import { Tooltip } from '@mui/material';

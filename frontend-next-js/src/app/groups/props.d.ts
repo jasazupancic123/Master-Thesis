@@ -1,8 +1,8 @@
-import { User } from '@/type/user.type';
-import { Group } from '@/type/group.type';
-import { Cycle } from '@/type/cycle.type';
-import { SetState } from '@/type/react-state.type';
-import { Training } from '@/type/training.type';
+import { User } from '@/user/type/user.type';
+import { Group } from '@/group/type/group.type';
+import { Cycle } from '@/group/type/cycle.type';
+import { SetState } from '@/common/type/react-state.type';
+import { Training } from '@/training/type/training.type';
 import { TrainingFilter } from '@/app/groups/components/training-filter';
 import { Dayjs } from 'dayjs';
 

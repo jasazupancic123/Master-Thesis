@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   CollectionReference,
@@ -18,7 +17,6 @@ import { CycleRepository } from '../../group/repository/cycle.repository';
 export class TrainingRepository implements FirestoreCollectionRepository<Training, TrainingRef> {
   constructor(
     private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
     private readonly cycleRepository: CycleRepository,
   ) {
   }

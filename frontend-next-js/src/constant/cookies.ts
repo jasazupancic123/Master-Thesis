@@ -1,1 +1,0 @@
-export const FIREBASE_COOKIE_NAME = 'firebaseIdToken'

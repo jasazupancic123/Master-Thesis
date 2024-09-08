@@ -1,6 +1,140 @@
 {
   "users": [
     {
+      "email": "admin@mail.com",
+      "role": "admin",
+      "level": "beginner",
+      "displayName": "FitCode Admin",
+      "exercises": [
+        {
+          "name": "Squats",
+          "component": "concentric",
+          "attributes": {
+            "priority": "Main Lift",
+            "body-region": "Lower Body",
+            "sport-task": "Jump",
+            "method": "Power",
+            "muscle": "Quadriceps",
+            "location": "Gym",
+            "movement-direction": "Linear",
+            "warm-up": true,
+            "equipment": {
+              "strength": "Barbells"
+            }
+          }
+        },
+        {
+          "name": "Deadlifts",
+          "component": "concentric",
+          "attributes": {
+            "priority": "Main Lift",
+            "body-region": "Total Body",
+            "method": "Hypertrophy",
+            "muscle": "Hamstrings",
+            "location": "Gym",
+            "movement-direction": "Linear",
+            "warm-up": true,
+            "equipment": {
+              "strength": "Barbells"
+            }
+          }
+        },
+        {
+          "name": "Bench Press",
+          "component": "concentric",
+          "attributes": {
+            "priority": "Main Lift",
+            "body-region": "Upper Body",
+            "method": "Hypertrophy",
+            "muscle": "Pectoralis Major",
+            "location": "Gym",
+            "movement-direction": "Linear",
+            "warm-up": true,
+            "equipment": {
+              "strength": "Barbells"
+            }
+          }
+        },
+        {
+          "name": "High Plank Reach",
+          "component": "shoulder",
+          "attributes": {
+            "priority": "Assistance Lift",
+            "body-region": "Core",
+            "muscle": "Transversus Abdominis",
+            "location": "Home",
+            "warm-up": true
+          }
+        },
+        {
+          "name": "Power Clean",
+          "component": "olympic-lifts",
+          "attributes": {
+            "priority": "Main Lift",
+            "body-region": "Total Body",
+            "sport-task": "Jump",
+            "method": "Power",
+            "muscle": "Hamstrings",
+            "location": "Gym",
+            "movement-direction": "Linear",
+            "warm-up": true,
+            "equipment": {
+              "strength": "Barbells"
+            }
+          }
+        },
+        {
+          "name": "Sprint",
+          "component": "peak-speed",
+          "attributes": {
+            "body-region": "Total Body",
+            "sport-task": "Acceleration",
+            "method": "Explosive Strength",
+            "muscle": "Hamstrings",
+            "location": "Outdoor",
+            "movement-direction": "Linear",
+            "warm-up": true
+          }
+        },
+        {
+          "name": "Sleed Acceleration",
+          "component": "generic",
+          "attributes": {
+            "body-region": "Total Body",
+            "sport-task": "Acceleration",
+            "method": "Explosive Strength",
+            "muscle": "Hamstrings",
+            "location": "Outdoor",
+            "movement-direction": "Linear",
+            "warm-up": true
+          }
+        },
+        {
+          "name": "Jogging",
+          "component": "aerobic-capacity",
+          "attributes": {
+            "body-region": "Total Body",
+            "muscle": "Hamstrings",
+            "location": "Outdoor",
+            "movement-direction": "Linear",
+            "warm-up": true,
+            "cool-down": true
+          }
+        },
+        {
+          "name": "Bicep Stretching",
+          "component": "passive-stretching",
+          "attributes": {
+            "body-region": "Upper Body",
+            "muscle": "Biceps Brachii",
+            "location": "Home",
+            "movement-direction": "Linear",
+            "cool-down": true
+          }
+        }
+      ]
+    },
+    {
       "email": "manager@mail.com",
       "role": "manager",
       "level": "beginner",
@@ -190,143 +324,9 @@
       "role": "athlete",
       "level": "beginner",
       "displayName": "Dwayne Johnson"
-    },
-    {
-      "email": "admin@mail.com",
-      "role": "admin",
-      "level": "beginner",
-      "displayName": "FitCode Admin",
-      "exercises": [
-        {
-          "name": "Squats",
-          "component": "concentric",
-          "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Lower Body",
-            "sport-task": "Jump",
-            "method": "Power",
-            "muscle": "Quadriceps",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
-            "equipment": {
-              "strength": "Barbells"
-            }
-          }
-        },
-        {
-          "name": "Deadlifts",
-          "component": "concentric",
-          "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Total Body",
-            "method": "Hypertrophy",
-            "muscle": "Hamstrings",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
-            "equipment": {
-              "strength": "Barbells"
-            }
-          }
-        },
-        {
-          "name": "Bench Press",
-          "component": "concentric",
-          "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Upper Body",
-            "method": "Hypertrophy",
-            "muscle": "Pectoralis Major",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
-            "equipment": {
-              "strength": "Barbells"
-            }
-          }
-        },
-        {
-          "name": "High Plank Reach",
-          "component": "shoulder",
-          "attributes": {
-            "priority": "Assistance Lift",
-            "body-region": "Core",
-            "muscle": "Transversus Abdominis",
-            "location": "Home",
-            "warm-up": true
-          }
-        },
-        {
-          "name": "Power Clean",
-          "component": "olympic-lifts",
-          "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Total Body",
-            "sport-task": "Jump",
-            "method": "Power",
-            "muscle": "Hamstrings",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
-            "equipment": {
-              "strength": "Barbells"
-            }
-          }
-        },
-        {
-          "name": "Sprint",
-          "component": "peak-speed",
-          "attributes": {
-            "body-region": "Total Body",
-            "sport-task": "Acceleration",
-            "method": "Explosive Strength",
-            "muscle": "Hamstrings",
-            "location": "Outdoor",
-            "movement-direction": "Linear",
-            "warm-up": true
-          }
-        },
-        {
-          "name": "Sleed Acceleration",
-          "component": "generic",
-          "attributes": {
-            "body-region": "Total Body",
-            "sport-task": "Acceleration",
-            "method": "Explosive Strength",
-            "muscle": "Hamstrings",
-            "location": "Outdoor",
-            "movement-direction": "Linear",
-            "warm-up": true
-          }
-        },
-        {
-          "name": "Jogging",
-          "component": "aerobic-capacity",
-          "attributes": {
-            "body-region": "Total Body",
-            "muscle": "Hamstrings",
-            "location": "Outdoor",
-            "movement-direction": "Linear",
-            "warm-up": true,
-            "cool-down": true
-          }
-        },
-        {
-          "name": "Bicep Stretching",
-          "component": "passive-stretching",
-          "attributes": {
-            "body-region": "Upper Body",
-            "muscle": "Biceps Brachii",
-            "location": "Home",
-            "movement-direction": "Linear",
-            "cool-down": true
-          }
-        }
-      ]
     }
   ],
-  "sport-components": [
+  "components": [
     {
       "name": "Strength",
       "slug": "strength",
@@ -692,7 +692,7 @@
       "children": []
     }
   ],
-  "exercise-attributes": [
+  "attributes": [
     {
       "field": "warm-up",
       "name": "Warm Up",

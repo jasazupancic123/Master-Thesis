@@ -1,11 +1,11 @@
 import { GroupPageProps } from '@/app/groups/props';
 import React, { Fragment, useEffect, useState } from 'react';
-import { formatDate, getWeekDays, isDateBetween } from '@/util/date';
+import { formatDate, getWeekDays, isDateBetween } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Unstable_Grid2';
-import { Training } from '@/type/training.type';
+import { Training } from '@/training/type/training.type';
 import Stack from '@mui/material/Stack';
 import Circles from '@/app/groups/components/circles';
 

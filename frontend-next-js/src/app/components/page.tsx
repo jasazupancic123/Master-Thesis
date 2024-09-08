@@ -1,22 +1,22 @@
 'use client';
 
-import withAuth from '@/hoc/with-auth';
+import withAuth from '@/common/components/with-auth';
 import React, { useState } from 'react';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
-import { Component } from '@/type/component.type';
+import { Component } from '@/component/type/component.type';
 import EditIcon from '@mui/icons-material/Edit';
 import { AuthContextType, useAuth } from '@/context/auth-provider';
-import { UserRole } from '@/enum/user-role.enum';
+import { UserRole } from '@/user/enum/user-role.enum';
 import toast from 'react-hot-toast';
 import Button from '@mui/material/Button';
-import MyModal from '@/component/modal';
+import MyModal from '@/components/modal';
 import { TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Tree, { TreeItem } from '@/component/tree';
+import Tree, { TreeItem } from '@/components/tree';
 import { AppContextType, useAppContext } from '@/context/app-provider';
-import SelectData from '@/component/select-data';
-import { FitcodeApi } from '@/util/api';
+import SelectData from '@/components/select-data';
+import { ApiUtil } from '@/common/service/util/api.util';
 
 function Page() {
   // app global context
@@ -26,7 +26,7 @@ function Page() {
   const { role } = useAuth() as AuthContextType;
   const isAdmin = role.includes(UserRole.ADMIN);
 
-  // component being modified
+  // components being modified
   const [component, setComponent] = useState<Partial<Component>>({});
 
   // modal states
@@ -36,15 +36,15 @@ function Page() {
   const [isTreeView, setIsTreeView] = useState(false);
 
   /**
-   * Edit component
+   * Edit components
    */
   async function editComponent(id: string) {
     try {
-      await FitcodeApi.editComponent(id, token, component);
-      toast.success('Successfully edited component');
+      await ApiUtil.editComponent(id, token, component);
+      toast.success('Successfully edited components');
       setModal(prev => ({ ...prev, edit: false }));
     } catch (e) {
-      toast.error('Failed to edit component');
+      toast.error('Failed to edit components');
     }
   }
 

@@ -5,16 +5,15 @@ import { GroupPageProps } from '../props';
 import Box from '@mui/material/Box';
 import { SpeedDial, SpeedDialAction, SpeedDialIcon, TextField, ToggleButtonGroup } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import MyModal from '@/component/modal';
-import { CreateGroup, Group } from '@/type/group.type';
+import MyModal from '@/components/modal';
+import { CreateGroup, Group } from '@/group/type/group.type';
 import { AppContextType, useAppContext } from '@/context/app-provider';
 import toast from 'react-hot-toast';
-import { FitcodeApi } from '@/util/api';
-import SelectData from '@/component/select-data';
-import { User } from '@/type/user.type';
-import CreateCycleModal from '@/component/create-cycle-modal';
-import { CreateCycle, Cycle } from '@/type/cycle.type';
-import { Firestore } from '@/util/firebase';
+import { ApiUtil } from '@/common/service/util/api.util';
+import SelectData from '@/components/select-data';
+import { User } from '@/user/type/user.type';
+import CreateCycleModal from '@/components/create-cycle-modal';
+import { CreateCycle, Cycle } from '@/group/type/cycle.type';
 import { TrainingFilter } from '@/app/groups/components/training-filter';
 import FilterButton from '@/app/groups/components/filter-button';
 import TrainerDayView from '@/app/groups/components/trainer-day-view';
@@ -26,6 +25,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SelectInput from '@/app/groups/components/select-input';
 import dayjs from 'dayjs';
+import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 
 const TEST_SUBGROUP_DURATION_VALUE = 1000;
 
@@ -44,7 +44,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
   const [create, setCreate] = useState({
     group: { name: '', memberIds: [], parentId: null as string | null },
     subgroup: { name: '', memberIds: [], parentId: null as string | null, validUntil: 0 },
-    // cycle modal is a separate component
+    // cycle modal is a separate components
   });
 
   const mapper: Record<TrainingFilter, ReactNode> = {
@@ -82,7 +82,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
   async function createGroup(group: CreateGroup) {
     try {
       props.setLoading(true);
-      const response = await FitcodeApi.createGroup(group, token);
+      const response = await ApiUtil.createGroup(group, token);
       setModal({ ...modal, group: false });
 
       props.setSelected({
@@ -114,7 +114,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
 
       const validUntilValue = subgroup.validUntil as number;
       const validUntil = validUntilValue === 0 ? dayjs(props.selected.cycle!.endDate) : dayjs().add(validUntilValue, 'd');
-      const response = await FitcodeApi.createGroup({
+      const response = await ApiUtil.createGroup({
         name: subgroup.name,
         memberIds: subgroup.memberIds,
         parentId: props.selected.group.id,
@@ -173,8 +173,8 @@ export default function TrainerPageRouter(props: GroupPageProps) {
 
     try {
       props.setLoading(true);
-      const response = await FitcodeApi.createCycle(body as Partial<Cycle>, token);
-      const populated = Firestore.populateCycle(response);
+      const response = await ApiUtil.createCycle(body as Partial<Cycle>, token);
+      const populated = FirebaseFirestoreUtil.populateCycle(response);
 
       props.setSelected(prev => ({
         ...prev,

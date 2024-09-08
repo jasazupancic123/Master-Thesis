@@ -49,17 +49,18 @@ export type ExerciseAttributeRef = { attributeId?: string }
 
 // exercise references
 export type ExerciseRef = UserRef & { exerciseId?: string }
-export type ExerciseAttributeValueRef = ExerciseRef & { attributeId?: string }
+export type ExerciseAttributeValueRef = ExerciseRef & ExerciseAttributeRef
 
 // group references
 export type GroupRef = UserRef & { groupId?: string }
 export type SubgroupRef = GroupRef & { subgroupId?: string }
 export type CycleRef = GroupRef & { cycleId?: string }
 export type TrainingRef = CycleRef & { trainingId?: string, subgroupId?: string }
-export type TrainingComponentRef = TrainingRef & { componentId?: string }
-export type TrainingExerciseRef = TrainingComponentRef & { exerciseId?: string }
+export type TrainingComponentRef = TrainingRef & ComponentRef
+export type TrainingExerciseRef = TrainingComponentRef & ExerciseRef
 export type TrainingExerciseUserDataRef = TrainingExerciseRef & { userId?: string }
 
+// root collections
 export type DatabaseSchema = {
   [FirestoreCollection.USER]: UserEntity[];
   [FirestoreCollection.COMPONENT]: Component[];

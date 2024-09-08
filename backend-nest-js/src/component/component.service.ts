@@ -1,11 +1,12 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Component } from './entity/component.entity';
-import slugify from 'slugify';
-import { InjectRepository } from '../common/decorator/entity.decorator';
-import { FirestoreRepository } from '../firebase/firestore.repository';
-import { Filter } from '../common/type/orm.type';
-import { ComponentLeaf } from './type/component-leaf.type';
+import { Filter, FindManyOptions, Populate } from '../common/type/orm.type';
 import { CommonService } from '../common/service/common.service';
+import { ComponentRepository } from './repository/component.repository';
+import { ExerciseService } from '../exercise/service/exercise.service';
+import { Wrapper } from '../common/type/wrapper.type';
+import { Query } from 'firebase-admin/firestore';
+import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class ComponentService {
@@ -13,132 +14,134 @@ export class ComponentService {
 
   constructor(
     private readonly commonService: CommonService,
-    @InjectRepository(Component) private readonly repository: FirestoreRepository<Component>) {
+    private readonly firebaseService: FirebaseService,
+    private readonly componentRepository: ComponentRepository,
+    @Inject(forwardRef(() => ExerciseService))
+    private readonly exerciseService: Wrapper<ExerciseService>,
+  ) {
+  }
+
+  rootCollection() {
+    return this.componentRepository.collection();
   }
 
   async create(data: Partial<Component>): Promise<Component> {
-    // TODO - check if slug is unique
+    this.logger.debug(`Creating component with data ${JSON.stringify(data)}`);
+    const componentSlug = await this.componentRepository.addDoc(data);
+
     // TODO - if newly created component is leaf node, move all parent exercises to "Other" component
 
-    this.logger.debug(`Creating component with data ${JSON.stringify(data)}`);
-    return {} as Component;
+    return await this.componentRepository.getDoc(componentSlug);
   }
 
-  async createMany(components: Component[]): Promise<void> {
-    this.commonService.tree.forEach(components, 'children', async (component, parent, result) => {
-      const parentId = result ?? null;
-      const { name } = component;
-      const slug = await this.slugify(name);
+  async createFromTree(data: Component): Promise<Component> {
+    const component = await this.create(data);
+    for (const child of data.children) {
+      const childData = { ...child, parent: component.id };
+      await this.createFromTree(childData);
+    }
 
-      const { id } = await this.repository.create({ name, slug, parentId });
-      return id; // used as parentId in next iteration
-    });
+    return component;
   }
 
   async findOneBySlug(slug: string): Promise<Component> {
-    return await this.repository.findOneBy({ field: 'slug', value: slug });
+    return await this.componentRepository.getDoc(slug);
   }
 
-  async findOneById(id: string): Promise<Component> {
-    return await this.repository.findOneById(id);
+  async findOneBySlugOrFail(slug: string): Promise<Component> {
+    const component = await this.componentRepository.getDoc(slug);
+    if (!component) throw new BadRequestException('Component not found');
+    return component;
   }
 
-  async findOneByIdOrFail(id: string): Promise<Component> {
-    return await this.repository.findOneByIdOrFail(id);
+  async findAllFlat(options?: FindManyOptions<Component>): Promise<Component[]> {
+    const components = await this.componentRepository.getDocs((collection) => {
+      let query = collection;
+      if (options?.filter) query = this.filter(query, options.filter);
+      return query;
+    });
+
+    if (options?.populate) this.populate(components, options.populate);
+    return components;
   }
 
-  async findAll(filter?: Filter<Component>): Promise<Component[]> {
-    return await this.repository.findAll({ filter });
+  async findAllTree(options?: FindManyOptions<Component>): Promise<Component[]> {
+    if (options?.populate.includes('children')) // remove 'children' from populate, as it will be populated in the tree
+      options.populate = options.populate.filter(p => p !== 'children');
+
+    const components = await this.findAllFlat(options);
+    return this.commonService.tree.fromArray(components, {
+      idPropertyName: 'id',
+      parentIdPropertyName: 'parent',
+      childrenPropertyName: 'children',
+    });
   }
 
-  async findAllOrFail(filter?: Filter<Component>): Promise<Component[]> {
-    const components = await this.repository.findAll({ filter });
-    if (filter?.ids?.length && components.length !== filter.ids.length)
+  async findAllLeafs(options?: FindManyOptions<Component>) {
+    const components = await this.findAllFlat({ ...options, populate: ['children', 'parents'] });
+    return this.leafsFromFlat(components);
+  }
+
+  leafsFromFlat(components: Component[]): Component[] {
+    if (components.every(component => !component.children.length))
+      throw new Error('To get leafs from flat components array, populate `children` first');
+
+    return components.filter(c => !c.children.length);
+  }
+
+  async findAllOrFail(options?: FindManyOptions<Component>): Promise<Component[]> {
+    const components = await this.findAllFlat(options);
+    if (options?.filter?.ids?.length && components.length !== options?.filter.ids.length)
       throw new BadRequestException('Invalid components');
 
     return components;
   }
 
-  tree(componentsFlat: Component[]): Component[] {
-    return this.commonService.tree.fromArray(componentsFlat, {
-      idPropertyName: 'id',
-      parentIdPropertyName: 'parentId',
-      childrenPropertyName: 'children',
-    });
+  async getLeafBySlug(slug: string, leafs?: Component[]): Promise<Component | null> {
+    if (!leafs) leafs = await this.findAllLeafs({ populate: ['children', 'parents'] });
+    return leafs.find(c => c.slug === slug) || null;
   }
 
-  leafs(componentsTree: Component[], ids?: string[]): ComponentLeaf[] {
-    const leafs = this.commonService.tree.leafs(componentsTree, 'children');
-    if (!ids) return leafs;
-
-    // if leaf is in the provided ids or any of its parents is in the provided ids, add it to the result
-    let result: ComponentLeaf[] = [];
-    for (const leaf of leafs)
-      if (ids.includes(leaf.id) || leaf.parents.some(p => ids.includes(p.id)))
-        result.push(leaf);
-
-    return result;
-  }
-
-  isLeafComponent(componentId: string, leafs: ComponentLeaf[]): boolean {
-    return !!leafs.find(c => c.id === componentId);
-  }
-
-  /**
-   * Function `componentService.leafs(componentsTree)` returns an array of leaf
-   * nodes, where each leaf node has a `parents` property that contains an array
-   * of all its parent nodes. This function returns the root node of the
-   * provided leaf node.
-   */
-  getRootComponents(componentId: string, leafs: ComponentLeaf[]): Component[] {
-    const leaf = leafs.find(c => c.id === componentId);
-    return leaf.parents.filter(c => c.parentId === null);
+  async getRootBySlug(slug: string, leaf?: Component): Promise<Component | null> {
+    if (!leaf) leaf = await this.getLeafBySlug(slug);
+    return leaf?.parents.find(c => c.parent === null) || null;
   }
 
   /**
    * Allows component's name and slug to be updated.
    */
   async update(id: string, data: Partial<Component>): Promise<Component> {
-    // TODO - check if slug is unique
     this.logger.debug(`Updating component #${id} with data ${JSON.stringify(data)}`);
-    const { name, slug } = data;
 
-    const component = await this.repository.findOneByIdOrFail(id);
-    return await this.repository.update(component.id, { name, slug });
+    const component = await this.componentRepository.getDoc(id);
+    if (!component) throw new BadRequestException('Component not found');
+
+    await this.componentRepository.updateDoc(id, data);
+    return component;
   }
 
-  async remove(id: string): Promise<void> {
-    // TODO - move exercises to "Other" component
-    // TODO - remove component
-    this.logger.debug(`Removing component #${id}`);
+  private filter(query: Query, filter: Filter<Component>) {
+    if (filter.ids) query = query.where('id', 'in', filter.ids);
+    if (filter.name) query = query.where('name', '>=', filter.name).where('name', '<=', filter.name + '\uf8ff');
+    if (filter.slug) query = query.where('slug', '==', filter.slug);
+    return query;
   }
 
-  async deleteAll(): Promise<void> {
-    // remove all components
-    this.logger.debug('Deleting all components');
+  private populate(flatComponents: Component[], populate: Populate<Component>[]) {
+    for (const component of flatComponents) {
+      if (populate.includes('children'))
+        component.children = flatComponents.filter(c => c.parent === component.id);
 
-    const components = await this.repository.findAll();
-    for (const component of components)
-      await this.repository.getCollection().doc(component.id).delete();
-  }
+      if (populate.includes('parents')) {
+        const parents: Component[] = [];
+        let parent = flatComponents.find(c => c.id === component.parent);
+        while (parent) {
+          parents.push(parent);
+          parent = flatComponents.find(c => c.id === parent.parent);
+        }
 
-  /**
-   * Slugify a name and make it unique in the collection
-   */
-  private async slugify(name: string) {
-    let slug = slugify(name, { lower: true });
-
-    let i = 1;
-    do {
-      const exists = await this.repository.findOneBy({ field: 'slug', value: slug });
-      if (!exists) {
-        i = 1;
-        break;
+        component.parents = parents;
       }
-
-      slug = `${slug}-${i++}`;
-    } while (true);
-
-    return slug;
+    }
   }
 }
