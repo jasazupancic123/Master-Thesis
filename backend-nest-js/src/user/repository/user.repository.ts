@@ -16,18 +16,19 @@ import { FirestoreCollection } from '../../common/enum/firestore-collection.enum
 import { SportLevel } from '../enum/sport-level.enum';
 
 @Injectable()
-export class UserRepository implements RootFirestoreCollectionRepository<UserEntity> {
+export class UserRepository
+  implements RootFirestoreCollectionRepository<UserEntity>
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-  ) {
-  }
+  ) {}
 
   async getDocs(
-    query: (query: Query) => Query = query => query,
+    query: (query: Query) => Query = (query) => query,
   ): Promise<UserEntity[]> {
     const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async getDoc(id: string): Promise<UserEntity | null> {
@@ -37,13 +38,16 @@ export class UserRepository implements RootFirestoreCollectionRepository<UserEnt
   }
 
   async addDoc(input: Partial<UserEntity>) {
-    if (!input.id)
-      throw new Error('User ID is required');
+    if (!input.id) throw new Error('User ID is required');
 
     await this.doc(input.id).set({
       id: input.id,
       level: input.level || SportLevel.BEGINNER,
-      bodyweight: input.bodyweight || [],
+      bodyweight: (input.bodyweight || []).map((item) => ({
+        weight: item.weight,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      })),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
@@ -51,9 +55,26 @@ export class UserRepository implements RootFirestoreCollectionRepository<UserEnt
     return input.id;
   }
 
-  async updateDoc(id: string, input: Partial<UserEntity>) {
-    const data = this.commonService.object.clean(input);
-    await this.doc(id).update(data);
+  async updateDoc(
+    id: string,
+    input: Omit<Partial<UserEntity>, 'bodyweight'> & { weight: number },
+  ) {
+    let bodyweight: object[];
+    if (input.weight) {
+      const document = await this.getDoc(id);
+      bodyweight = document?.bodyweight || [];
+      bodyweight.push({
+        weight: input.weight,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    }
+
+    const data = this.commonService.object.clean({
+      level: input.level,
+      bodyweight,
+    });
+    await this.doc(id).update({ ...data, updatedAt: Timestamp.now() });
   }
 
   doc(id: string): DocumentReference {
@@ -80,7 +101,11 @@ export class UserRepository implements RootFirestoreCollectionRepository<UserEnt
     return {
       id: snapshot.id,
       level: data.level,
-      bodyweight: data.bodyweight || [],
+      bodyweight: (data.bodyweight || []).map((item: any) => ({
+        weight: item.weight,
+        createdAt: (item.createdAt as Timestamp).toDate(),
+        updatedAt: (item.updatedAt as Timestamp).toDate(),
+      })),
       groups: data.groups || [],
       exercises: data.exercises || [],
       wellness: data.wellness || [],

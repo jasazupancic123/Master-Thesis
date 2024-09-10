@@ -1,31 +1,30 @@
 'use client';
 
 import Typography from '@mui/material/Typography';
-import { SetExercise, SuperExerciseInfo } from '@/training/type/training.type';
 import Stack from '@mui/material/Stack';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { FormControl, TextField } from '@mui/material';
 import {
-  SET_EXERCISE_EFFORT,
-  SET_EXERCISE_RECOVERY,
-  SET_EXERCISE_SET,
-  SET_EXERCISE_SET_TYPE,
-  SET_EXERCISE_WORKLOAD,
   SetExerciseOption,
+  TRAINING_EXERCISE_EFFORT,
+  TRAINING_EXERCISE_RECOVERY,
+  TRAINING_EXERCISE_SET,
+  TRAINING_EXERCISE_SET_TYPE,
+  TRAINING_EXERCISE_WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
 import { useEffect, useState } from 'react';
+import type { TrainingExercise } from '@/training/entity/training-exercise.entity';
+import type { TrainingExerciseMeta } from '@/training/entity/training-exercise-meta.entity';
 
 interface Props {
-  setExercise: SetExercise;
-  onChange: (data: Partial<SuperExerciseInfo> & { order: number }) => void;
+  exercise: TrainingExercise;
+  onChange: (data: Partial<TrainingExerciseMeta>) => void;
 }
 
-export default function SetExerciseCard(props: Props) {
-  const { setExercise, onChange } = props;
-  const [state, setState] = useState(() => setExercise.superExerciseInfo!);
-  if (!setExercise.superExerciseInfo)
-    return null;
+export default function TrainingExerciseCard(props: Props) {
+  const { exercise, onChange } = props;
+  const [state, setState] = useState(() => exercise.meta);
 
   /**
    * Update set exercise on state change
@@ -33,7 +32,7 @@ export default function SetExerciseCard(props: Props) {
   useEffect(() => {
     // manual data object to avoid id, createdAt, updatedAt, etc.
     const data = {
-      order: setExercise.order,
+      order: exercise.order,
       sets: state.sets,
       setType: state.setType,
       setTypeValue: state.setTypeValue,
@@ -46,32 +45,32 @@ export default function SetExerciseCard(props: Props) {
 
     // if data didn't change, don't update
     if (JSON.stringify(data) === JSON.stringify({
-      order: setExercise.order,
-      sets: setExercise.superExerciseInfo?.sets,
-      setType: setExercise.superExerciseInfo?.setType,
-      setTypeValue: setExercise.superExerciseInfo?.setTypeValue,
-      workloadType: setExercise.superExerciseInfo?.workloadType,
-      workloadValue: setExercise.superExerciseInfo?.workloadValue,
-      rec: setExercise.superExerciseInfo?.rec,
+      order: exercise.order,
+      sets: exercise.meta.sets,
+      setType: exercise.meta.setType,
+      setTypeValue: exercise.meta.setTypeValue,
+      workloadType: exercise.meta.workloadType,
+      workloadValue: exercise.meta.workloadValue,
+      rec: exercise.meta.rec,
       // tempo: setExercise.superExerciseInfo?.tempo,
-      effort: setExercise.superExerciseInfo?.effort,
+      effort: exercise.meta.effort,
     }))
       return;
 
     onChange(data);
-  }, [state]);
+  }, [exercise.meta, exercise.order, state, onChange]);
 
   return <Stack direction="column" spacing={3} p={1}>
     <Typography variant="body1" fontWeight="bold" textTransform="uppercase">
-      {setExercise.exercise?.name}
+      {exercise.exercise?.name}
     </Typography>
 
     <Stack direction="row" spacing={1}>
       {/* Sets */}
       <SetExerciseAttribute
-        options={SET_EXERCISE_SET}
+        options={TRAINING_EXERCISE_SET}
         state={(() => {
-          const option = SET_EXERCISE_SET.find(option => option.label === 'sets')!;
+          const option = TRAINING_EXERCISE_SET.find(option => option.label === 'sets')!;
           return {
             type: option.type,
             values: option.values,
@@ -88,9 +87,9 @@ export default function SetExerciseCard(props: Props) {
 
       {/* Set Type */}
       <SetExerciseAttribute
-        options={SET_EXERCISE_SET_TYPE}
+        options={TRAINING_EXERCISE_SET_TYPE}
         state={(() => {
-          const option = SET_EXERCISE_SET_TYPE.find(option => option.label === state.setType)!;
+          const option = TRAINING_EXERCISE_SET_TYPE.find(option => option.label === state.setType)!;
           return {
             type: option.type,
             values: option.values,
@@ -100,7 +99,7 @@ export default function SetExerciseCard(props: Props) {
           };
         })()}
         onChange={(state) => {
-          const setType = state.option as SuperExerciseInfo['setType'];
+          const setType = state.option as TrainingExerciseMeta['setType'];
           const setTypeValue = parseInt(state.value);
           setState(prev => ({
             ...prev,
@@ -112,9 +111,9 @@ export default function SetExerciseCard(props: Props) {
 
       {/* Workload */}
       <SetExerciseAttribute
-        options={SET_EXERCISE_WORKLOAD}
+        options={TRAINING_EXERCISE_WORKLOAD}
         state={(() => {
-          const option = SET_EXERCISE_WORKLOAD.find(option => option.label === state.workloadType)!;
+          const option = TRAINING_EXERCISE_WORKLOAD.find(option => option.label === state.workloadType)!;
           return {
             type: option.type,
             values: option.values,
@@ -124,7 +123,7 @@ export default function SetExerciseCard(props: Props) {
           };
         })()}
         onChange={(state) => {
-          const workloadType = state.option as SuperExerciseInfo['workloadType'];
+          const workloadType = state.option as TrainingExerciseMeta['workloadType'];
 
           // if workload value not in values array, select first value in array
           let workloadValue = parseInt(state.value);
@@ -141,9 +140,9 @@ export default function SetExerciseCard(props: Props) {
 
       {/* Effort */}
       <SetExerciseAttribute
-        options={SET_EXERCISE_EFFORT}
+        options={TRAINING_EXERCISE_EFFORT}
         state={(() => {
-          const option = SET_EXERCISE_EFFORT.find(option => option.label === 'effort')!;
+          const option = TRAINING_EXERCISE_EFFORT.find(option => option.label === 'effort')!;
           return {
             type: option.type,
             values: option.values,
@@ -153,7 +152,7 @@ export default function SetExerciseCard(props: Props) {
           };
         })()}
         onChange={(state) => {
-          const effort = state.value as SuperExerciseInfo['effort'];
+          const effort = state.value as TrainingExerciseMeta['effort'];
           setState(prev => ({ ...prev, effort }));
         }}
       />
@@ -179,15 +178,15 @@ export default function SetExerciseCard(props: Props) {
 
       {/* Recovery */}
       <SetExerciseAttribute
-        options={SET_EXERCISE_RECOVERY}
+        options={TRAINING_EXERCISE_RECOVERY}
         state={(() => {
-          const option = SET_EXERCISE_RECOVERY.find(option => option.label === 'rec')!;
+          const option = TRAINING_EXERCISE_RECOVERY.find(option => option.label === 'rec')!;
           return {
             type: option.type,
             values: option.values,
             option: option.label,
             format: option.format,
-            value: state.rec.toString(),
+            value: state.rec ? state.rec.toString() : '',
           };
         })()}
         onChange={(state) => {
@@ -238,6 +237,7 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
     {/* On option change */}
     <FormControl variant="filled" size="small" sx={sx}>
       <Select
+        variant="filled"
         sx={sx['& .MuiSelect-select']}
         disableUnderline={true}
         value={state.option}
@@ -269,6 +269,7 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         sx={sx}
       >
         <Select
+          variant="filled"
           sx={sx['& .MuiSelect-select']}
           value={state.value}
           onChange={(e) => {

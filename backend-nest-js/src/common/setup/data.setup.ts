@@ -19,7 +19,7 @@ import { TrainingComponent } from '../../training/entity/training-component.enti
 import { CommonService } from '../service/common.service';
 import { FirebaseService } from '../../firebase/firebase.service';
 
-export class DataSetup extends BaseSetup {
+export class DataSetup extends BaseSetup<{ dev: boolean }> {
   private readonly commonService: CommonService;
   private readonly firebaseService: FirebaseService;
   private readonly userService: UserService;
@@ -42,7 +42,7 @@ export class DataSetup extends BaseSetup {
     this.trainingService = app.get(TrainingService);
   }
 
-  async setup() {
+  async setup(options: { dev: boolean }) {
     const time = performance.now();
 
     // create / update admin user
@@ -51,25 +51,42 @@ export class DataSetup extends BaseSetup {
       password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
       displayName: 'Admin',
       customClaims: { role: [UserRole.ADMIN], level: SportLevel.ADVANCED },
+      weight: 0,
     });
 
-    // delete all data
-    const foundUsers = await this.userService.findAll();
-    for (const user of foundUsers) {
-      await this.firebaseService.deleteCollection(`${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.EXERCISE}`);
-      await this.firebaseService.deleteCollection(`${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.GROUP}`);
-      await this.firebaseService.deleteCollection(`${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`);
-    }
+    if (options?.dev) {
+      // delete all data
+      const foundUsers = await this.userService.findAll();
+      for (const user of foundUsers) {
+        await this.firebaseService.deleteCollection(
+          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.EXERCISE}`,
+        );
 
-    await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
-    await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE_ATTRIBUTE);
+        await this.firebaseService.deleteCollection(
+          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.GROUP}`,
+        );
 
-    try {
-      await this.import('data.json');
-      this.logger.debug(`Data setup took ${(performance.now() - time) / 1000}s`);
-    } catch (e) {
-      this.logger.error('Failed to import data');
-      console.error(e);
+        await this.firebaseService.deleteCollection(
+          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`,
+        );
+      }
+
+      await this.firebaseService.deleteCollection(
+        FirestoreCollection.COMPONENT,
+      );
+      await this.firebaseService.deleteCollection(
+        FirestoreCollection.EXERCISE_ATTRIBUTE,
+      );
+
+      try {
+        await this.import('data.json');
+        this.logger.debug(
+          `Data setup took ${(performance.now() - time) / 1000}s`,
+        );
+      } catch (e) {
+        this.logger.error('Failed to import data');
+        console.error(e);
+      }
     }
   }
 
@@ -85,31 +102,54 @@ export class DataSetup extends BaseSetup {
     this.logger.debug(`Successfully imported ${components.length} components`);
 
     // import exercise attributes
-    const exerciseAttributes = data[FirestoreCollection.EXERCISE_ATTRIBUTE] || [];
-    await Promise.all(exerciseAttributes.map(attribute => this.exerciseAttributeService.create(attribute)));
-    this.logger.debug(`Successfully imported ${exerciseAttributes.length} exercise attributes`);
+    const exerciseAttributes =
+      data[FirestoreCollection.EXERCISE_ATTRIBUTE] || [];
+    await Promise.all(
+      exerciseAttributes.map((attribute) =>
+        this.exerciseAttributeService.create(attribute),
+      ),
+    );
+    this.logger.debug(
+      `Successfully imported ${exerciseAttributes.length} exercise attributes`,
+    );
 
     // import users
-    const usersData = data[FirestoreCollection.USER] as (UserEntity & Record<string, any>)[] || [];
-    await Promise.all(usersData.map(user => this.userService.upsert({
-      email: user.email,
-      displayName: user.displayName,
-      customClaims: { role: [user.role], level: SportLevel.ADVANCED },
-      password: 'password',
-    })));
+    const usersData =
+      (data[FirestoreCollection.USER] as (UserEntity &
+        Record<string, any>)[]) || [];
+
+    await Promise.all(
+      usersData.map((user) =>
+        this.userService.upsert({
+          email: user.email,
+          displayName: user.displayName,
+          customClaims: { role: [user.role], level: SportLevel.ADVANCED },
+          password: 'password',
+          weight: user.weight,
+        }),
+      ),
+    );
 
     this.logger.debug(`Successfully imported ${usersData.length} users`);
-    const users = await this.userService.findAll({ emails: usersData.map(user => user.email) });
+    const users = await this.userService.findAll({
+      emails: usersData.map((user) => user.email),
+    });
 
     for (const user of users) {
       const ref = { uid: user.uid };
 
       // import exercises
-      const exercises = usersData.find(u => u.email === user.email)?.exercises as (Exercise & Record<string, any>)[] || [];
+      const exercises =
+        (usersData.find((u) => u.email === user.email)?.exercises as (Exercise &
+          Record<string, any>)[]) || [];
       for (const exercise of exercises) {
-        const component = await this.componentService.findOneBySlug(exercise.component);
+        const component = await this.componentService.findOneBySlug(
+          exercise.component,
+        );
         if (!component) {
-          this.logger.error(`Component with slug ${exercise.component} not found`);
+          this.logger.error(
+            `Component with slug ${exercise.component} not found`,
+          );
           continue;
         }
 
@@ -122,11 +162,17 @@ export class DataSetup extends BaseSetup {
 
       // import groups
       // NOTE - cycle will last 10 days by default and subgroup 1 day
-      const groups = usersData.find(u => u.email === user.email)?.groups as (Group & Record<string, any>)[] || [];
+      const groups =
+        (usersData.find((u) => u.email === user.email)?.groups as (Group &
+          Record<string, any>)[]) || [];
       for (const { name, membersEmails: emails, cycles } of groups) {
         const members = await this.userService.findAll({ emails });
-        const membersIds = members.map(m => m.uid);
-        const group = await this.groupService.createGroup(user, ref, { ownerId: user.uid, name, membersIds });
+        const membersIds = members.map((m) => m.uid);
+        const group = await this.groupService.createGroup(user, ref, {
+          ownerId: user.uid,
+          name,
+          membersIds,
+        });
 
         // import cycles
         let from = new Date();
@@ -134,13 +180,23 @@ export class DataSetup extends BaseSetup {
 
         const cycleRef = { ...ref, groupId: group.id };
         for (const { name, description, trainings } of cycles) {
-          const cycle = await this.groupService.addCycle(user, cycleRef, { name, description, from, to });
+          const cycle = await this.groupService.addCycle(user, cycleRef, {
+            name,
+            description,
+            from,
+            to,
+          });
 
           // import trainings
           const trainingRef = { ...cycleRef, cycleId: cycle.id };
           for (const { components } of trainings) {
-            for (const { component: slug, exercises } of components as (TrainingComponent & Record<string, any>)[]) {
-              const component = await this.componentService.findOneBySlug(slug as unknown as string);
+            for (const {
+              component: slug,
+              exercises,
+            } of components as (TrainingComponent & Record<string, any>)[]) {
+              const component = await this.componentService.findOneBySlug(
+                slug as unknown as string,
+              );
               if (!component) {
                 this.logger.error(`Component with slug ${slug} not found`);
                 continue;
@@ -148,17 +204,23 @@ export class DataSetup extends BaseSetup {
 
               const trainingFrom = addDays(from, 1);
               const trainingTo = addHours(trainingFrom, 3);
-              const training = await this.trainingService.createTraining(user, trainingRef, {
-                componentIds: [component.id],
-                from: trainingFrom,
-                to: trainingTo,
-              });
+              const training = await this.trainingService.createTraining(
+                user,
+                trainingRef,
+                {
+                  componentIds: [component.id],
+                  from: trainingFrom,
+                  to: trainingTo,
+                },
+              );
 
               from = addDays(from, 1);
 
               // import training exercises
               for (const { exercise: name, meta } of exercises) {
-                const exercise = await this.exerciseService.findExerciseByName(name as unknown as string);
+                const exercise = await this.exerciseService.findExerciseByName(
+                  name as unknown as string,
+                );
                 if (!exercise) {
                   this.logger.error(`Exercise with name ${name} not found`);
                   continue;
@@ -171,7 +233,10 @@ export class DataSetup extends BaseSetup {
                   subgroupId: null,
                 };
 
-                await this.trainingService.addExercise(user, exerciseRef, { meta, exerciseId: exercise.id });
+                await this.trainingService.addExercise(user, exerciseRef, {
+                  meta,
+                  exerciseId: exercise.id,
+                });
               }
             }
           }

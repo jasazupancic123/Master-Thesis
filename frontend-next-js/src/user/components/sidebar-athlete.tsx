@@ -6,7 +6,7 @@ import { BottomNavigation, BottomNavigationAction } from '@mui/material';
 import Box from '@mui/material/Box';
 import * as React from 'react';
 import { useState } from 'react';
-import Logo from '@/components/logo';
+import Logo from '@/common/components/logo';
 import Typography from '@mui/material/Typography';
 import { usePathname, useRouter } from 'next/navigation';
 import Stack from '@mui/material/Stack';
