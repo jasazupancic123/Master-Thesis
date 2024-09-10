@@ -6,7 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/X';
-import Copyright from '@/components/copyright';
+import Copyright from '@/common/components/copyright';
 import Image from 'next/image';
 import { SITE_MAIL } from '@/common/constant/browser.constant';
 

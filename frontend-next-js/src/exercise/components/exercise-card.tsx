@@ -1,9 +1,9 @@
-import type { Exercise } from '@/exercise/type/exercise.type';
+import type { Exercise } from '@/exercise/entity/exercise.entity';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React from 'react';
-import { getFilenameFromPath } from '@/util/link';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { CommonService } from '@/common/service/common.service';
 
 interface Props {
   exercise: Exercise;
@@ -11,7 +11,7 @@ interface Props {
 
 export function ExerciseCard(props: Props) {
   const { exercise } = props;
-  const imageUrl = FirebaseStorageUtil.exerciseUrl(getFilenameFromPath(exercise.imageUrl || ''));
+  const imageUrl = FirebaseStorageUtil.exerciseUrl(CommonService.instance.navigation.getFilenameFromPath(exercise.imageUrl || ''));
 
   return (
     <Card sx={{ maxWidth: 345, borderRadius: 5 }}>

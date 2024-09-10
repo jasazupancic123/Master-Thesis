@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ExerciseService } from './service/exercise.service';
 import { Auth } from '../common/decorator/auth.decorator';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
@@ -6,14 +14,15 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { FilterExerciseDto } from './dto/filter-exercise.dto';
 import { User } from '../common/type/firebase-auth.type';
 import { ExerciseAttributeService } from './service/exercise-attribute.service';
+import { FindManyOptions } from '../common/type/orm.type';
+import { Exercise } from './entity/exercise.entity';
 
 @Controller('exercise')
 export class ExerciseController {
   constructor(
     private readonly exerciseAttributeService: ExerciseAttributeService,
     private readonly exerciseService: ExerciseService,
-  ) {
-  }
+  ) {}
 
   @Get('attribute')
   async findAllAttributes() {
@@ -23,24 +32,33 @@ export class ExerciseController {
   @Get()
   @Auth()
   async findAll(@RequestUser() user: User, @Query() query: FilterExerciseDto) {
-    const paginate = {
-      orderBy: query.orderBy,
-      page: query.page,
-      pageSize: query.pageSize,
-    };
+    const options: FindManyOptions<Exercise> = { filter: {}, paginate: {} };
 
-    const filter = {
-      ids: query.ids,
-      name: { value: query.name },
-      componentIds: { value: query.componentIds },
-    };
+    if (query) {
+      // filter
+      const { ids, name, componentsIds } = query;
+      if (ids) options.filter.ids = ids;
+      if (name) options.filter.name = name;
+      if (componentsIds) options.filter.componentsIds = componentsIds;
 
-    return this.exerciseService.findGlobalExercises({ filter, paginate });
+      // paginate
+      const { orderBy, page, pageSize } = query;
+      if (orderBy) options.paginate.orderBy = orderBy;
+      if (page) options.paginate.page = page;
+      if (pageSize) options.paginate.pageSize = pageSize;
+    }
+
+    const total = await this.exerciseService.countGlobalExercises(options);
+    const data = await this.exerciseService.findGlobalExercises(options);
+    return { total, data };
   }
 
   @Get(':exerciseId')
   @Auth()
-  async findOneById(@RequestUser() user: User, @Param('exerciseId') exerciseId: string) {
+  async findOneById(
+    @RequestUser() user: User,
+    @Param('exerciseId') exerciseId: string,
+  ) {
     const ref = { uid: user.uid, exerciseId };
     return await this.exerciseService.findUserExerciseOrFail(user, ref);
   }
@@ -50,5 +68,17 @@ export class ExerciseController {
   async create(@RequestUser() user: User, @Body() data: CreateExerciseDto) {
     const ref = { uid: user.uid };
     return await this.exerciseService.createExercise(user, ref, data);
+  }
+
+  @Patch(':exerciseId')
+  @Auth()
+  async update(
+    @RequestUser() user: User,
+    @Param('exerciseId') exerciseId: string,
+    @Body() data: CreateExerciseDto,
+  ) {
+    const ref = { uid: user.uid, exerciseId };
+    return {} as any;
+    // return await this.exerciseService.updateExercise(user, ref, data);
   }
 }

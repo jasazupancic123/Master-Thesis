@@ -1,4 +1,4 @@
-import MyModal from '@/components/modal';
+import MyModal from '@/common/components/modal';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -6,20 +6,20 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import React, { ReactNode, useEffect, useState } from 'react';
 import MenuItem from '@mui/material/MenuItem';
 import { Checkbox, Divider, FormControl, FormControlLabel, InputLabel } from '@mui/material';
-import { ComponentWithParents } from '@/component/type/component.type';
 import Box from '@mui/material/Box';
-import type { CreateExercise, ExerciseAttributeSelectOption } from '@/exercise/type/exercise.type';
-import { ExerciseAttribute } from '@/exercise/type/exercise.type';
-import FileUpload from '@/components/file-upload';
+import type { ExerciseAttribute, ExerciseAttributeSelectOption } from '@/exercise/entity/exercise-attribute.entity';
+import type { CreateExercise } from '@/exercise/type/exercise.type';
+import FileUpload from '@/common/components/file-upload';
 import Stack from '@mui/material/Stack';
-import { getFilenameFromPath } from '@/util/link';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { Component } from '@/component/entity/component.entity';
+import { CommonService } from '@/common/service/common.service';
 
-interface ExerciseModalProps {
+interface Props {
   data: CreateExercise;
   setData: (data: CreateExercise | ((prev: CreateExercise) => CreateExercise)) => void;
   attributes: ExerciseAttribute[];
-  components: ComponentWithParents[];
+  components: Component[];
   icons: ReactNode;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -27,7 +27,7 @@ interface ExerciseModalProps {
   onFileUpload: (file: File, path: string) => Promise<void>;
 }
 
-export default function ExerciseModal(props: ExerciseModalProps) {
+export default function ExerciseModal(props: Props) {
   const {
     data,
     setData,
@@ -40,7 +40,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
   } = props;
 
   function handleSelectChange(field: string, value: string) {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       attributeValues: {
         ...prev.attributeValues,
@@ -76,8 +76,8 @@ export default function ExerciseModal(props: ExerciseModalProps) {
             labelId="component"
             label="Component"
             variant="outlined"
-            value={data.componentIds?.[0] || ''}
-            onChange={(e) => setData({ ...data, componentIds: [e.target.value] as string[] })}
+            value={data.componentsIds?.[0] || ''}
+            onChange={(e) => setData({ ...data, componentsIds: [e.target.value] as string[] })}
           >
             <MenuItem value={''}>None</MenuItem>
             {components.map((component) => (
@@ -101,7 +101,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
                 await props.onFileUpload(file, path);
               }}
               initialFileUrl={
-                data.videoUrl ? FirebaseStorageUtil.exerciseUrl(getFilenameFromPath(data.videoUrl)) : undefined
+                data.videoUrl ? FirebaseStorageUtil.exerciseUrl(CommonService.instance.navigation.getFilenameFromPath(data.videoUrl)) : undefined
               }
             />
 
@@ -127,7 +127,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
                 await props.onFileUpload(file, path);
               }}
               initialFileUrl={
-                data.imageUrl ? FirebaseStorageUtil.exerciseUrl(getFilenameFromPath(data.imageUrl)) : undefined
+                data.imageUrl ? FirebaseStorageUtil.exerciseUrl(CommonService.instance.navigation.getFilenameFromPath(data.imageUrl)) : undefined
               }
               // fileUrl={data.imageUrl}
               // setFileUrl={(url) => setData({ ...data, imageUrl: url })}
@@ -154,7 +154,7 @@ export default function ExerciseModal(props: ExerciseModalProps) {
               ? 'date'
               : 'text';
 
-          return <Grid xs={6} key={attribute.id}>
+          return <Grid xs={6} key={attribute.field}>
             {attribute.type === 'select'
               ? <SelectAttribute
                 attribute={attribute}
@@ -218,7 +218,7 @@ function SelectAttribute(props: {
 
       setSubOptions(selectedOption);
     }
-  }, [initialValue]);
+  }, [attribute.field, attribute.values, initialValue]);
 
   function handleSelectChange(e: SelectChangeEvent) {
     const value = e.target.value as string;

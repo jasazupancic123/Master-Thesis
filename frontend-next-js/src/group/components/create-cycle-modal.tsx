@@ -1,6 +1,6 @@
 import { DatePicker, LocalizationProvider, PickerValidDate } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import MyModal from '@/components/modal';
+import MyModal from '@/common/components/modal';
 import Grid from '@mui/material/Unstable_Grid2';
 import { TextField } from '@mui/material';
 import dayjs, { Dayjs } from 'dayjs';

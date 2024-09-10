@@ -26,8 +26,7 @@ export class TrainingExerciseUserDataService {
     private readonly trainingComponentRepository: TrainingComponentRepository,
     private readonly trainingExerciseRepository: TrainingExerciseRepository,
     private readonly trainingExerciseUserDataRepository: TrainingExerciseUserDataRepository,
-  ) {
-  }
+  ) {}
 
   /**
    * Gets all training exercise user data for all trainings for all users by the
@@ -45,36 +44,46 @@ export class TrainingExerciseUserDataService {
   async findAll(ref: Required<TrainingExerciseRef>) {
     const trainings = await this.trainingRepository.getDocs(ref);
 
-    return (await Promise.all(
-      trainings.map(async ({ id: trainingId }) => {
-        // find all training components that match the given componentId
-        const trainingComponents = await this.trainingComponentRepository.getDocs(
-          { ...ref, trainingId },
-          query => query.where(FieldPath.documentId(), '==', ref.componentId),
-        );
-
-        // find all training exercises that match the given exerciseId
-        return (await Promise.all(
-          trainingComponents.map(async ({ componentId }) => {
-            const trainingExercises = await this.trainingExerciseRepository.getDocs(
-              { ...ref, trainingId, componentId: componentId },
-              query => query.where(FieldPath.documentId(), '==', ref.exerciseId),
+    return (
+      await Promise.all(
+        trainings.map(async ({ id: trainingId }) => {
+          // find all training components that match the given componentId
+          const trainingComponents =
+            await this.trainingComponentRepository.getDocs(
+              { ...ref, trainingId },
+              (query) =>
+                query.where(FieldPath.documentId(), '==', ref.componentId),
             );
 
-            return (await Promise.all(
-              trainingExercises.map(async ({ exerciseId }) => {
-                return this.trainingExerciseUserDataRepository.getDocs({
-                  ...ref,
-                  trainingId,
-                  componentId: componentId,
-                  exerciseId,
-                });
+          // find all training exercises that match the given exerciseId
+          return (
+            await Promise.all(
+              trainingComponents.map(async ({ componentId }) => {
+                const trainingExercises =
+                  await this.trainingExerciseRepository.getDocs(
+                    { ...ref, trainingId, componentId: componentId },
+                    (query) =>
+                      query.where(FieldPath.documentId(), '==', ref.exerciseId),
+                  );
+
+                return (
+                  await Promise.all(
+                    trainingExercises.map(async ({ exerciseId }) => {
+                      return this.trainingExerciseUserDataRepository.getDocs({
+                        ...ref,
+                        trainingId,
+                        componentId: componentId,
+                        exerciseId,
+                      });
+                    }),
+                  )
+                ).flat();
               }),
-            )).flat();
-          }),
-        )).flat();
-      }),
-    )).flat();
+            )
+          ).flat();
+        }),
+      )
+    ).flat();
   }
 
   /**
@@ -92,21 +101,24 @@ export class TrainingExerciseUserDataService {
     const group = await this.groupRepository.getDoc(ref);
     if (!group) throw new BadRequestException('Group not found');
 
-    const subgroup = ref.subgroupId ? await this.subgroupRepository.getDoc(ref) : null;
-    if (ref.subgroupId && !subgroup) throw new BadRequestException('Subgroup not found');
+    const subgroup = ref.subgroupId
+      ? await this.subgroupRepository.getDoc(ref)
+      : null;
+    if (ref.subgroupId && !subgroup)
+      throw new BadRequestException('Subgroup not found');
 
-    const users = await this.firebaseService.authUsers();
-    const members = subgroup
-      ? users.filter((user) => subgroup.membersIds.includes(user.uid))
-      : users.filter((user) => group.membersIds.includes(user.uid));
+    const membersIds = subgroup ? subgroup.membersIds : group.membersIds;
+    const members = await this.firebaseService.authUsers({ ids: membersIds });
 
     // get data for all users
-    const userData = await this.findAll(ref) || [];
+    const userData = (await this.findAll(ref)) || [];
 
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
-      const { bodyweight } = await this.userRepository.getDoc(member.uid);
+      const { bodyweight } = (await this.userRepository.getDoc(member.uid)) || {
+        bodyweight: [],
+      };
 
       const memberData = userData.filter((item) => item.userId === member.uid);
       const workloadValue = this.calculateWorkloadValue(
@@ -122,7 +134,10 @@ export class TrainingExerciseUserDataService {
         completedSets: 0,
       };
 
-      const docRef = this.trainingExerciseUserDataRepository.doc({ ...ref, userId: member.uid });
+      const docRef = this.trainingExerciseUserDataRepository.doc({
+        ...ref,
+        userId: member.uid,
+      });
       batch.set(docRef, data);
       result.push(data);
     }
@@ -147,7 +162,8 @@ export class TrainingExerciseUserDataService {
     if (!group) throw new BadRequestException('Group not found');
 
     const subgroup = await this.subgroupRepository.getDoc(ref);
-    if (ref.subgroupId && !subgroup) throw new BadRequestException('Subgroup not found');
+    if (ref.subgroupId && !subgroup)
+      throw new BadRequestException('Subgroup not found');
 
     const users = await this.firebaseService.authUsers();
     const members = subgroup
@@ -159,10 +175,11 @@ export class TrainingExerciseUserDataService {
     const { meta } = await this.trainingExerciseRepository.getDoc(ref); // old meta
 
     // if nothing changed, return
-    const isWorkloadTypeChanged = input.workloadType && input.workloadType !== meta.workloadType;
-    const isWorkloadValueChanged = input.workloadValue && input.workloadValue !== meta.workloadValue;
-    if (!isWorkloadTypeChanged && !isWorkloadValueChanged)
-      return;
+    const isWorkloadTypeChanged =
+      input.workloadType && input.workloadType !== meta.workloadType;
+    const isWorkloadValueChanged =
+      input.workloadValue && input.workloadValue !== meta.workloadValue;
+    if (!isWorkloadTypeChanged && !isWorkloadValueChanged) return;
 
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
@@ -181,7 +198,10 @@ export class TrainingExerciseUserDataService {
         completedSets: 0,
       };
 
-      const docRef = this.trainingExerciseUserDataRepository.doc({ ...ref, userId: member.uid });
+      const docRef = this.trainingExerciseUserDataRepository.doc({
+        ...ref,
+        userId: member.uid,
+      });
       batch.set(docRef, data);
       result.push(data);
     }
@@ -199,10 +219,12 @@ export class TrainingExerciseUserDataService {
     switch (workloadType) {
       case WorkloadType.RM:
         // fetch 1RM from last month of user exercises, use formula and save value as KG
-        const values = data.map(({ completedSetTypeValue, completedWorkloadValue }) => ({
-          reps: completedSetTypeValue,
-          weight: +completedWorkloadValue,
-        }));
+        const values = data.map(
+          ({ completedSetTypeValue, completedWorkloadValue }) => ({
+            reps: completedSetTypeValue,
+            weight: +completedWorkloadValue,
+          }),
+        );
 
         return this.commonService.number.rm(values);
       case WorkloadType.BW:

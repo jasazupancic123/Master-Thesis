@@ -20,28 +20,31 @@ export class UserEntity extends BaseEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  bodyweight: Bodyweight[]; // array of bodyweight, not subcollection
+  bodyweight: Bodyweight[]; // array of bodyweight, not sub collection
 
   @ValidateNested({ each: true })
   @Type(() => Group)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  groups: Group[]; // subcollection
+  groups: Group[]; // sub collection
 
   @ValidateNested({ each: true })
   @Type(() => Exercise)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  exercises: Exercise[];  // subcollection
+  exercises: Exercise[]; // sub collection
 
   @ValidateNested({ each: true })
   @Type(() => Wellness)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  wellness: Wellness[];  // subcollection
+  wellness: Wellness[]; // sub collection
 }
 
-export type CreateUser = Pick<User, 'email' | 'displayName' | 'customClaims'> & { password: string }
+export type CreateUser = Pick<
+  User,
+  'email' | 'displayName' | 'customClaims'
+> & { password: string; weight: number };

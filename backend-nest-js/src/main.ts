@@ -18,16 +18,18 @@ async function bootstrap() {
 
   // config
   app.enableCors();
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    transformOptions: { enableImplicitConversion: true },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter.httpAdapter as any));
 
   // setups
   new SwaggerSetup(app).setup();
-  await new DataSetup(app).setup();
+  await new DataSetup(app).setup({ dev: commonService.env.isDev() });
 
   // start server
   const port = configService.get('PORT');

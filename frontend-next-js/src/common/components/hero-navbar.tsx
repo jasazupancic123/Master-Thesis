@@ -12,7 +12,7 @@ import MenuItem from '@mui/material/MenuItem';
 import { LINK_PROFILE, LINKS_AUTH, LINKS_NAVBAR } from '@/common/constant/navigation.constant';
 import NextLink from 'next/link';
 import { Divider, Drawer } from '@mui/material';
-import Logo from '@/components/logo';
+import Logo from '@/common/components/logo';
 import { AuthContextType, useAuth } from '@/context/auth-provider';
 
 export default function HeroNavbar({ showLogin = true }) {
@@ -40,7 +40,7 @@ export default function HeroNavbar({ showLogin = true }) {
               <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
                 {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
                   <MenuItem key={id} sx={{ py: 0, px: 2 }}>
-                    <NextLink href={`/#${id}`} passHref>
+                    <NextLink href={`/public#${id}`} passHref>
                       <Typography variant="body2" color="text.primary">{label}</Typography>
                     </NextLink>
                   </MenuItem>
@@ -66,7 +66,7 @@ export default function HeroNavbar({ showLogin = true }) {
                 <Box sx={{ minWidth: '60dvw', p: 2, backgroundColor: 'background.paper', flexGrow: 1 }}>
                   {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
                     <MenuItem key={id} sx={{ p: 1 }}>
-                      <NextLink href={`/#${id}`} passHref>
+                      <NextLink href={`/public#${id}`} passHref>
                         <Typography variant="body2" color="text.primary">{label}</Typography>
                       </NextLink>
                     </MenuItem>

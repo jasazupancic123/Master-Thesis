@@ -3,12 +3,12 @@ import TextField, { TextFieldProps } from '@mui/material/TextField';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { InputAdornment } from '@mui/material';
 
-interface Props extends TextFieldProps {
+type Props = TextFieldProps & {
   label?: string;
   children?: React.ReactNode; // icon
 }
 
-export default function IconTextfield(props: Props) {
+export default function IconTextField(props: Props) {
   const { children } = props;
 
   // noinspection TypeScriptValidateTypes

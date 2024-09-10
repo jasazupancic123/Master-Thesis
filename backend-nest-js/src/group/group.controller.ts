@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { GroupService } from './service/group.service';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
@@ -25,8 +33,7 @@ export class GroupController {
     private readonly cycleService: CycleService,
     private readonly subgroupService: SubgroupService,
     private readonly trainingService: TrainingService,
-  ) {
-  }
+  ) {}
 
   @Get()
   @Auth()
@@ -47,9 +54,14 @@ export class GroupController {
 
   @Get(':groupId')
   @Auth()
-  async findGroup(@RequestUser() user: User, @Param('groupId') groupId: string) {
+  async findGroup(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+  ) {
     const ref = { uid: user.uid, groupId };
-    return await this.groupService.findUserGroupOrFail(user, ref);
+    return await this.groupService.findUserGroupOrFail(user, ref, {
+      populate: ['members', 'subgroups', 'cycles', 'cycles.trainings'],
+    });
   }
 
   @Patch(':groupId')
@@ -64,7 +76,10 @@ export class GroupController {
 
   @Get(':groupId/cycle')
   @Auth()
-  async findAllCycles(@RequestUser() user: User, @Param('groupId') groupId: string) {
+  async findAllCycles(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+  ) {
     const ref = { uid: user.uid, groupId };
     return await this.cycleService.findUserCycles(user, ref);
   }
@@ -89,7 +104,8 @@ export class GroupController {
   ) {
     const ref = { uid: user.uid, groupId, cycleId, subgroupId: null };
 
-    if (cycleId === 'active') return await this.cycleService.findActiveCycle(ref);
+    if (cycleId === 'active')
+      return await this.cycleService.findActiveCycle(ref);
     return await this.cycleService.findUserCycleOrFail(user, ref);
   }
 
@@ -153,10 +169,17 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, subgroupId: filter.subgroupId || null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      subgroupId: filter.subgroupId || null,
+    };
     return await this.trainingService.findTrainings(ref, {
       filter: {
-        ...(filter.subgroupId && { subgroupId: { value: filter.subgroupId, op: '==' } }),
+        ...(filter.subgroupId && {
+          subgroupId: { value: filter.subgroupId, op: '==' },
+        }),
         ...(filter.from && { from: { value: filter.from, op: '>=' } }),
         ...(filter.to && { to: { value: filter.to, op: '<=' } }),
       },
@@ -171,7 +194,12 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
     @Body() data: CreateTrainingDto,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, subgroupId: data.subgroupId || null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      subgroupId: data.subgroupId || null,
+    };
     return await this.trainingService.createTraining(user, ref, data);
   }
 
@@ -183,7 +211,14 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
     @Param('trainingId') trainingId: string,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, trainingId, subgroupId: null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      trainingId,
+      subgroupId: null,
+    };
+
     return await this.trainingService.findUserTraining(user, ref);
   }
 
@@ -219,7 +254,13 @@ export class GroupController {
     @Param('trainingId') trainingId: string,
     @Body() data: AddTrainingComponentDto,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, trainingId, subgroupId: null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      trainingId,
+      subgroupId: null,
+    };
     return await this.trainingService.addComponent(user, ref, data);
   }
 
@@ -232,7 +273,15 @@ export class GroupController {
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, subgroupId: null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      trainingId,
+      componentId,
+      subgroupId: null,
+    };
+
     return await this.trainingService.findUserTrainingComponent(user, ref);
   }
 
@@ -262,7 +311,9 @@ export class GroupController {
     return {};
   }*/
 
-  @Post(':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise')
+  @Post(
+    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise',
+  )
   @Auth()
   async addTrainingComponentExercise(
     @RequestUser() user: User,
@@ -272,11 +323,21 @@ export class GroupController {
     @Param('componentId') componentId: string,
     @Body() data: AddTrainingExercise,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, subgroupId: null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      trainingId,
+      componentId,
+      subgroupId: null,
+    };
+
     return await this.trainingService.addExercise(user, ref, data);
   }
 
-  @Get(':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise/:exerciseId')
+  @Get(
+    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise/:exerciseId',
+  )
   @Auth()
   async findTrainingComponentExercise(
     @RequestUser() user: User,
@@ -286,11 +347,22 @@ export class GroupController {
     @Param('componentId') componentId: string,
     @Param('exerciseId') exerciseId: string,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, exerciseId, subgroupId: null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      trainingId,
+      componentId,
+      exerciseId,
+      subgroupId: null,
+    };
+
     return await this.trainingService.findUserTrainingExercise(user, ref);
   }
 
-  @Patch(':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise/:exerciseId')
+  @Patch(
+    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise/:exerciseId',
+  )
   @Auth()
   async updateTrainingComponentExercise(
     @RequestUser() user: User,
@@ -301,7 +373,16 @@ export class GroupController {
     @Param('exerciseId') exerciseId: string,
     @Body() data: UpdateTrainingExerciseDto,
   ) {
-    const ref = { uid: user.uid, groupId, cycleId, trainingId, componentId, exerciseId, subgroupId: null };
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      trainingId,
+      componentId,
+      exerciseId,
+      subgroupId: null,
+    };
+
     return await this.trainingService.updateExercise(user, ref, data);
   }
 }

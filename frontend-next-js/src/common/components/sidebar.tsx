@@ -12,7 +12,7 @@ import Link from 'next/link';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
-import Logo from '@/components/logo';
+import Logo from '@/common/components/logo';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Tooltip } from '@mui/material';
 import { AuthContextType, useAuth } from '@/context/auth-provider';

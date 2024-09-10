@@ -5,13 +5,16 @@ import { UpdateUserClaimsDto } from './dto/update-user.dto';
 import { User } from '../common/type/firebase-auth.type';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
+import { UserRepository } from './repository/user.repository';
 
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
 
-  constructor(private readonly firebaseService: FirebaseService) {
-  }
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly userRepository: UserRepository,
+  ) {}
 
   async upsert(data: CreateUser): Promise<User> {
     const { auth } = this.firebaseService;
@@ -21,25 +24,30 @@ export class UserService {
     try {
       user = await auth.getUserByEmail(email);
     } catch (e) {
-      this.logger.log(`Creating user (${email}, ${JSON.stringify(customClaims)})`);
+      this.logger.log(
+        `Creating user (${email}, ${JSON.stringify(customClaims)})`,
+      );
 
       // wait for cloud function to add role and level
       user = await auth.createUser({ email, password, displayName });
       await new Promise((resolve) => setTimeout(resolve, 4000));
+
+      // update custom user data
+      await this.userRepository.updateDoc(user.uid, { weight: data.weight });
     } finally {
       // update custom claims
       await auth.setCustomUserClaims(user.uid, customClaims);
     }
 
-    return await auth.getUser(user.uid) as User;
+    return (await auth.getUser(user.uid)) as User;
   }
 
   async findOneBy(key: 'id' | 'email', value: string): Promise<User> {
     switch (key) {
       case 'id':
-        return await this.firebaseService.auth.getUser(value) as User;
+        return (await this.firebaseService.auth.getUser(value)) as User;
       case 'email':
-        return await this.firebaseService.auth.getUserByEmail(value) as User;
+        return (await this.firebaseService.auth.getUserByEmail(value)) as User;
       default:
         throw new Error('Invalid key');
     }
@@ -61,8 +69,12 @@ export class UserService {
   }
 
   async updateClaims(uid: string, claims: UpdateUserClaimsDto): Promise<void> {
-    const customClaims = (await this.firebaseService.auth.getUser(uid)).customClaims;
-    await this.firebaseService.auth.setCustomUserClaims(uid, { ...customClaims, ...claims });
+    const customClaims = (await this.firebaseService.auth.getUser(uid))
+      .customClaims;
+    await this.firebaseService.auth.setCustomUserClaims(uid, {
+      ...customClaims,
+      ...claims,
+    });
   }
 
   /*async createWellness(user: User, data: Partial<Wellness>): Promise<Wellness> {

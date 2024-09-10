@@ -6,14 +6,14 @@ import React, { Fragment, useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import { Exercise } from '@/exercise/type/exercise.type';
 import { AppContextType, useAppContext } from '@/context/app-provider';
-import ExerciseList from '@/components/exercise-list';
-import MyModal from '@/components/modal';
+import ExerciseList from '@/exercise/components/exercise-list';
+import MyModal from '@/common/components/modal';
 import toast from 'react-hot-toast';
 import { ApiUtil } from '@/common/service/util/api.util';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Unstable_Grid2';
-import SetExerciseCard from '@/components/set-exercise-card';
+import SetExerciseCard from '@/exercise/components/set-exercise-card';
 import AddIcon from '@mui/icons-material/Add';
 
 interface Props {

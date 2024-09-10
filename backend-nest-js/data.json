@@ -5,6 +5,7 @@
       "role": "admin",
       "level": "beginner",
       "displayName": "FitCode Admin",
+      "weight": 102.3,
       "exercises": [
         {
           "name": "Squats",
@@ -139,20 +140,14 @@
       "role": "manager",
       "level": "beginner",
       "displayName": "Manager",
-      "bodyweight": [
-        {
-          "weight": 70
-        },
-        {
-          "weight": 70.5
-        }
-      ]
+      "weight": 80.5
     },
     {
       "email": "trainer@mail.com",
       "role": "trainer",
       "level": "beginner",
       "displayName": "Trainer",
+      "weight": 90.5,
       "exercises": [
         {
           "name": "Power Snatch",
@@ -299,31 +294,36 @@
       "email": "john.doe@mail.com",
       "role": "athlete",
       "level": "beginner",
-      "displayName": "John Doe"
+      "displayName": "John Doe",
+      "weight": 70.5
     },
     {
       "email": "mike.tyson@mail.com",
       "role": "athlete",
       "level": "beginner",
-      "displayName": "Mike Tyson"
+      "displayName": "Mike Tyson",
+      "weight": 93.5
     },
     {
       "email": "bruce.lee@mail.com",
       "role": "athlete",
       "level": "beginner",
-      "displayName": "Bruce Lee"
+      "displayName": "Bruce Lee",
+      "weight": 80
     },
     {
       "email": "janja.garnbret@mail.com",
       "role": "athlete",
       "level": "beginner",
-      "displayName": "Janja Garnbret"
+      "displayName": "Janja Garnbret",
+      "weight": 60
     },
     {
       "email": "the.rock@mail.com",
       "role": "athlete",
       "level": "beginner",
-      "displayName": "Dwayne Johnson"
+      "displayName": "Dwayne Johnson",
+      "weight": 120
     }
   ],
   "components": [
