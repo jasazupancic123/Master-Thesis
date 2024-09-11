@@ -39,4 +39,4 @@ export class UserEntity extends BaseEntity {
 export type CreateUser = Pick<
   User,
   'email' | 'displayName' | 'customClaims'
-> & { password: string; weight: number };
+> & { password: string };

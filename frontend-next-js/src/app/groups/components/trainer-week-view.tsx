@@ -1,22 +1,22 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { formatDate, getWeekDays, isDateBetween } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Unstable_Grid2';
-import { Training } from '@/training/type/training.type';
+import { Training } from '@/training/entity/training.entity';
 import Stack from '@mui/material/Stack';
 import Circles from '@/app/groups/components/circles';
 import { GroupPageProps } from '@/group/type/props.type';
+import { CommonService } from '@/common/service/common.service';
+
+const commonService = CommonService.instance;
 
 export default function TrainerWeekView(props: GroupPageProps) {
-  // context
-  const cycle = props.selected.cycle!;
   const [index, setIndex] = useState(0); // week index
-  const weeks = cycle?.weeks || [getWeekDays()];
-  const trainings = props.selected.trainings || [];
+  const cycle = props.selected.cycle;
+  const weeks = cycle?.weeks || [commonService.date.getWeekDays()];
+  const trainings = cycle?.trainings || [];
 
-  // helper functions
   const getWeek = (index: number) => weeks[index];
   const getWeekStart = (index: number) => dayjs(weeks[index][0].date)!.startOf('day');
   const getWeekEnd = (index: number) => dayjs(weeks[index][6].date)!.endOf('day');
@@ -46,7 +46,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
   return <Box>
     {/* Week selector */}
     <Circles
-      items={weeks.map((week, i) => ({ label: `W${i + 1}`, value: i.toString() }))}
+      items={weeks.map((_, i) => ({ label: `W${i + 1}`, value: i.toString() }))}
       value={index.toString()}
       setValue={(value) => setIndex(parseInt(value))}
     />
@@ -56,7 +56,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
       <Grid container spacing={2} display="flex" justifyContent="space-between">
         {getWeek(index)?.map(({ date }, i) => {
           const day = dayjs(date);
-          const filtered = trainings.filter((t) => isDateBetween(day, dayjs(t.startTime), dayjs(t.endTime)));
+          const filtered = trainings.filter((t) => commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to)));
 
           return <Grid
             key={i}
@@ -71,7 +71,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
               flexDirection: 'column',
             }}
           >
-            <Typography sx={{ color: '#fff' }}>{formatDate(day)}</Typography>
+            <Typography sx={{ color: '#fff' }}>{commonService.date.format(day)}</Typography>
 
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               {filtered.map((training) => (
@@ -90,8 +90,8 @@ export default function TrainerWeekView(props: GroupPageProps) {
 function TrainingItem(props: { training: Training }) {
   const { training } = props;
   const [date, setDate] = useState(() => ({
-    start: dayjs(training.startTime).format('HH:mm'),
-    end: dayjs(training.endTime).format('HH:mm'),
+    start: dayjs(training.from).format('HH:mm'),
+    end: dayjs(training.to).format('HH:mm'),
   }));
 
   return <Box>
@@ -127,9 +127,9 @@ function TrainingItem(props: { training: Training }) {
         />
       </Stack>
 
-      {training.setGroups.map((set) => (
-        <Box key={set.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-          <Typography sx={{ color: '#fff', textAlign: 'left', flexBasis: '66.67%' }}>{set.component?.name}</Typography>
+      {training.components.map((c) => (
+        <Box key={c.componentId} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+          <Typography sx={{ color: '#fff', textAlign: 'left', flexBasis: '66.67%' }}>{c.component?.name}</Typography>
         </Box>
       ))}
     </Box>

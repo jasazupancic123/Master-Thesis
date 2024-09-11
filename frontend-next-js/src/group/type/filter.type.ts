@@ -1,0 +1,1 @@
+export type FilterType = 'day' | 'week' | 'cycle' | 'year'

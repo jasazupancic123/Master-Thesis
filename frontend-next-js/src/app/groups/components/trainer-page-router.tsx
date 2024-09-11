@@ -5,15 +5,13 @@ import Box from '@mui/material/Box';
 import { SpeedDial, SpeedDialAction, SpeedDialIcon, TextField, ToggleButtonGroup } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import MyModal from '@/common/components/modal';
-import { CreateGroup, Group } from '@/group/type/group.type';
+import { CreateGroup } from '@/group/type/group.type';
 import { useAppContext } from '@/context/app-provider';
 import toast from 'react-hot-toast';
-import { ApiUtil } from '@/common/service/util/api.util';
 import SelectData from '@/common/components/select-data';
 import { User } from '@/user/type/user.type';
 import CreateCycleModal from '@/group/components/create-cycle-modal';
-import { CreateCycle, Cycle } from '@/group/type/cycle.type';
-import { TrainingFilter } from '@/app/groups/components/training-filter';
+import { CreateCycle } from '@/group/type/cycle.type';
 import FilterButton from '@/app/groups/components/filter-button';
 import TrainerDayView from '@/app/groups/components/trainer-day-view';
 import TrainerCycleView from '@/app/groups/components/trainer-cycle-view';
@@ -24,9 +22,14 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SelectInput from '@/app/groups/components/select-input';
 import dayjs from 'dayjs';
-import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 import { AppContextType } from '@/common/type/context.type';
 import { GroupPageProps } from '@/group/type/props.type';
+import { GroupController } from '@/group/group.controller';
+import { CreateSubgroup } from '@/group/type/subgroup.type';
+import { Group } from '@/group/entity/group.entity';
+import { Subgroup } from '@/group/entity/subgroup.entity';
+import { Cycle } from '@/group/entity/cycle.entity';
+import { FilterType } from '@/group/type/filter.type';
 
 const TEST_SUBGROUP_DURATION_VALUE = 1000;
 
@@ -43,12 +46,12 @@ export default function TrainerPageRouter(props: GroupPageProps) {
 
   // group to create or update
   const [create, setCreate] = useState({
-    group: { name: '', memberIds: [], parentId: null as string | null },
-    subgroup: { name: '', memberIds: [], parentId: null as string | null, validUntil: 0 },
-    // cycle modal is a separate components
+    group: { name: '', membersIds: [] },
+    subgroup: { name: '', membersIds: [], to: 0 }, // `to` is duration in days
+    // cycle modal is a separate component
   });
 
-  const mapper: Record<TrainingFilter, ReactNode> = {
+  const mapper: Record<FilterType, ReactNode> = {
     day: <TrainerDayView {...props} />,
     week: <TrainerWeekView {...props} />,
     cycle: <TrainerCycleView {...props} />,
@@ -77,81 +80,87 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     },
   ];
 
-  /**
-   * Create group
-   */
   async function createGroup(group: CreateGroup) {
     try {
       props.setLoading(true);
-      const response = await ApiUtil.createGroup(group, token);
+      const response = await GroupController.createGroup(token, group);
       setModal({ ...modal, group: false });
 
       props.setSelected({
         group: response,
         subgroup: null,
         cycle: null,
-        cycles: [],
-        trainings: [],
       });
 
-      props.setGroups(prev => [...prev, response]);
-      setCreate({ ...create, group: { name: '', memberIds: [], parentId: null } });
-    } catch (e) {
+      props.groups.setData(prev => [...(prev || []), response]);
+      setCreate({ ...create, group: { name: '', membersIds: [] } });
+    } catch (e: any) {
       toast.error(e.message);
     } finally {
       props.setLoading(false);
     }
   }
 
-  /**
-   * Create subgroup
-   */
-  async function createSubgroup(subgroup: CreateGroup) {
-    if (!props.selected.group)
+  async function createSubgroup(subgroup: CreateSubgroup) {
+    if (!props.selected.group || !props.selected.cycle)
       return;
+
+    const group = props.selected.group;
+    const cycle = props.selected.cycle;
 
     try {
       props.setLoading(true);
 
-      const validUntilValue = subgroup.validUntil as number;
-      const validUntil = validUntilValue === 0 ? dayjs(props.selected.cycle!.endDate) : dayjs().add(validUntilValue, 'd');
-      const response = await ApiUtil.createGroup({
-        name: subgroup.name,
-        memberIds: subgroup.memberIds,
-        parentId: props.selected.group.id,
-        validUntil: validUntilValue === TEST_SUBGROUP_DURATION_VALUE
-          ? dayjs().add(10, 's').toISOString() as Date
-          : validUntil.toISOString() as Date,
-      }, token);
+      const days = subgroup.to as unknown as number;
+      const to = days === 0 ? dayjs(cycle.to) : dayjs().add(days, 'd');
 
+      const response = await GroupController.addSubgroup(token, group.id, {
+        cycleId: cycle.id,
+        membersIds: subgroup.membersIds,
+        name: subgroup.name,
+        from: dayjs().toISOString() as unknown as Date,
+        to: days === TEST_SUBGROUP_DURATION_VALUE
+          ? dayjs().add(10, 's').toISOString() as unknown as Date
+          : to.toISOString() as unknown as Date,
+      });
+
+      // fetch subgroup trainings
+      const trainings = await GroupController.findTrainings(token, group.id, cycle.id, {
+        subgroupId: response.id,
+        from: props.date.start.toDate() || cycle.from,
+        to: props.date.end.toDate() || cycle.to,
+      });
+
+      // remove members that are in subgroup from main group and update cycle trainings
       props.setSelected(prev => ({
         ...prev,
         group: {
           ...prev.group!,
           subgroups: [...(prev.group!.subgroups || []), response],
-          // remove members that are in subgroup
-          memberIds: (prev.group!.memberIds || []).filter(id => !subgroup.memberIds.includes(id)),
+          memberIds: (prev.group!.membersIds || []).filter(id => !subgroup.membersIds.includes(id)),
         },
         subgroup: response,
+        cycle: {
+          ...prev.cycle!,
+          trainings: trainings,
+        },
       }));
 
-      props.setGroups(prev => {
-        const group = prev.find(group => group.id === props.selected.group!.id);
+      // add subgroup to group
+      props.groups.setData(prev => {
+        const groups = prev || [];
+        const group = groups.find(group => group.id === props.selected.group!.id);
         if (!group)
           return prev;
 
-        // add subgroup to group
         group.subgroups = [...(group.subgroups || []), response];
-        return [...prev];
+        return [...groups];
       });
 
       setModal({ ...modal, subgroup: false });
-      setCreate({
-        ...create,
-        subgroup: { name: '', memberIds: [], parentId: props.selected.group!.id, validUntil: 0 },
-      });
+      setCreate({ ...create, subgroup: { name: '', membersIds: [], to: 0 } });
       toast.success('Successfully created subgroup');
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e.message || 'Failed to create subgroup');
     } finally {
       props.setLoading(false);
@@ -165,27 +174,33 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     if (!props.selected.group)
       return;
 
-    const body = {
-      name: cycle.name,
-      startDate: cycle.startDate.toISOString(),
-      endDate: cycle.endDate.toISOString(),
-      groupId: props.selected.group.id,
-    };
+    const group = props.selected.group;
 
     try {
       props.setLoading(true);
-      const response = await ApiUtil.createCycle(body as Partial<Cycle>, token);
-      const populated = FirebaseFirestoreUtil.populateCycle(response);
 
+      const response = await GroupController.addCycle(token, group.id, cycle);
+      if (!response) {
+        toast.error('Failed to create cycle');
+        return;
+      }
+
+      // add cycle to group
       props.setSelected(prev => ({
         ...prev,
-        cycles: [...prev.cycles, populated],
-        cycle: populated,
+        group: {
+          ...prev.group!,
+          cycles: [...(prev.group!.cycles || []), response],
+        },
+        cycle: {
+          ...response,
+          trainings: [],
+        },
       }));
 
       setModal({ ...modal, cycle: false });
       toast.success('Successfully created cycle');
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e.message || 'Failed to create cycle');
     } finally {
       props.setLoading(false);
@@ -205,7 +220,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
           <ToggleButtonGroup
             value={props.filter}
             exclusive
-            onChange={(event, value) => props.setFilter(value as TrainingFilter)}
+            onChange={(_, value) => props.setFilter(value as FilterType)}
             sx={{ display: 'flex', bgcolor: '#1A2B3C', width: 300, mx: 'auto' }}
           >
             <FilterButton value="day" />
@@ -228,23 +243,23 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                 icon={<GroupIcon />}
                 value={props.selected.group?.id || ''}
                 setValue={(value) => {
-                  const group = props.groups.find((group) => group.id === value);
-                  props.setSelected(prev => ({ ...prev, group }));
+                  const group = props.groups.data?.find((group) => group.id === value);
+                  if (group) props.setSelected(prev => ({ ...prev, group }));
                 }}
-                items={props.groups}
+                items={props.groups.data || []}
                 itemKey="id"
                 itemName="name"
               />
 
               {/* Select subgroup */}
               {props.selected.group &&
-                <SelectInput<Group>
+                <SelectInput<Subgroup>
                   label="Subgroup"
                   icon={<GroupsIcon />}
                   value={props.selected.subgroup?.id || ''}
                   setValue={(value) => {
-                    const subgroup = (props.selected.group!.subgroups || []).find(subgroup => subgroup.id === value);
-                    props.setSelected(prev => ({ ...prev, subgroup }));
+                    const subgroup = props.selected.group!.subgroups?.find(subgroup => subgroup.id === value);
+                    if (subgroup) props.setSelected(prev => ({ ...prev, subgroup }));
                   }}
                   items={props.selected.group.subgroups || []}
                   itemKey="id"
@@ -259,10 +274,11 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                   icon={<RotateRightIcon />}
                   value={props.selected.cycle?.id || ''}
                   setValue={(value) => {
-                    const cycle = props.selected.cycles.find(cycle => cycle.id === value);
-                    props.setSelected(prev => ({ ...prev, cycle }));
+                    const cycles = props.selected.group!.cycles || [];
+                    const cycle = cycles.find(cycle => cycle.id === value);
+                    if (cycle) props.setSelected(prev => ({ ...prev, cycle }));
                   }}
-                  items={props.selected.cycles}
+                  items={props.selected.group!.cycles || []}
                   itemKey="id"
                   itemName="name"
                 />
@@ -293,7 +309,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
         {/* Create group modal */}
         <MyModal
           isOpen={modal.group}
-          setIsOpen={(open) => setModal({ ...modal, groupId: open })}
+          setIsOpen={(open) => setModal({ ...modal, group: open })}
           onCancel={() => setModal({ ...modal, group: false })}
           onConfirm={() => createGroup(create.group)}
         >
@@ -313,13 +329,13 @@ export default function TrainerPageRouter(props: GroupPageProps) {
 
           <SelectData<User>
             multiple
-            data={props.users}
+            data={props.users.data || []}
             dataKeyProp="uid"
             dataValueProp="email"
             label="Members"
-            value={create.group.memberIds || []}
-            onChange={(memberIds) =>
-              setCreate({ ...create, group: { ...create.group, memberIds } })
+            value={create.group.membersIds || []}
+            onChange={(membersIds) =>
+              setCreate({ ...create, group: { ...create.group, membersIds } })
             }
           />
         </MyModal>
@@ -330,7 +346,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
             isOpen={modal.subgroup}
             setIsOpen={(open) => setModal({ ...modal, subgroup: open })}
             onCancel={() => setModal({ ...modal, subgroup: false })}
-            onConfirm={() => createSubgroup(create.subgroup as CreateGroup)}
+            onConfirm={() => createSubgroup(create.subgroup as unknown as CreateSubgroup)}
           >
             <Typography variant="h6" mb={2}>Create Subgroup</Typography>
 
@@ -350,13 +366,13 @@ export default function TrainerPageRouter(props: GroupPageProps) {
               // NOTE - selected group member ids can be null, if group has all users in its subgroups, but selected group
               // members are fetched from all subgroups, so we need to filter out members that are not in selected group
               multiple
-              data={props.selected.group.memberIds.map(id => (props.selected.group!.members || []).find(user => user.uid === id) as User)}
+              data={props.selected.group.membersIds.map(id => (props.selected.group!.members || []).find(user => user.uid === id) as User)}
               dataKeyProp="uid"
               dataValueProp="email"
               label="Members"
-              value={create.subgroup.memberIds || []}
-              onChange={(memberIds) =>
-                setCreate({ ...create, subgroup: { ...create.subgroup, memberIds } })
+              value={create.subgroup.membersIds || []}
+              onChange={(membersIds) =>
+                setCreate({ ...create, subgroup: { ...create.subgroup, membersIds } })
               }
             />
 
@@ -373,9 +389,9 @@ export default function TrainerPageRouter(props: GroupPageProps) {
               dataKeyProp="value"
               dataValueProp="label"
               label="Duration"
-              value={create.subgroup.validUntil || 0}
+              value={create.subgroup.to || 0}
               onChange={(value) => {
-                setCreate({ ...create, subgroup: { ...create.subgroup, validUntil: value } });
+                setCreate({ ...create, subgroup: { ...create.subgroup, to: value } });
               }}
             />
           </MyModal>

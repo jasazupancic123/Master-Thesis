@@ -40,16 +40,28 @@ export interface FindOneOptions<T extends Record<string, any>> {
  * ```
  */
 export type Populate<O extends Record<string, any>> = {
-  [K in Extract<keyof O, string>]:
-  O[K] extends Array<string>
+  [K in Extract<keyof O, string>]: O[K] extends Array<string>
     ? K
-    : O[K] extends string | number | Date | boolean | Array<string> | Array<number> | Array<Date> | Array<boolean> | Function
+    : O[K] extends
+          | string
+          | number
+          | Date
+          | boolean
+          | Array<string>
+          | Array<number>
+          | Array<Date>
+          | Array<boolean>
+          | Function
       ? never
       : O[K] extends Array<any>
-        ? K | `${K}.${Populate<O[K][0]> extends infer U extends string ? U : never}`
+        ?
+            | K
+            | `${K}.${Populate<O[K][0]> extends infer U extends string ? U : never}`
         : O[K] extends Record<string, unknown>
-          ? `${K}` | `${K}.${Populate<O[K]> extends infer U extends string ? U : never}`
-          : K
+          ?
+              | `${K}`
+              | `${K}.${Populate<O[K]> extends infer U extends string ? U : never}`
+          : K;
 }[Extract<keyof O, string>];
 
 export interface Condition<T> {
@@ -63,15 +75,19 @@ export interface Condition<T> {
  * and cannot be an object or an array.
  */
 type FilterableFields<T> = {
-  [K in keyof T]: T[K] extends string | Array<string> | number | Date | boolean ? K : null;
+  [K in keyof T]: T[K] extends string | Array<string> | number | Date | boolean
+    ? K
+    : null;
 }[keyof T];
 
 /**
  * Filters any object by its fields and also by ids
  */
 export type Filter<T = {}> = { ids?: string[] } & {
-  [K in FilterableFields<T>]?: {
-    value: any;
-    op?: WhereFilterOp;
-  }
-}
+  [K in FilterableFields<T>]?: T[K] extends boolean
+    ? boolean // if field is boolean, don't allow any operator
+    : {
+        value: any;
+        op?: WhereFilterOp;
+      };
+};

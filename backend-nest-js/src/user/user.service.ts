@@ -30,10 +30,6 @@ export class UserService {
 
       // wait for cloud function to add role and level
       user = await auth.createUser({ email, password, displayName });
-      await new Promise((resolve) => setTimeout(resolve, 4000));
-
-      // update custom user data
-      await this.userRepository.updateDoc(user.uid, { weight: data.weight });
     } finally {
       // update custom claims
       await auth.setCustomUserClaims(user.uid, customClaims);

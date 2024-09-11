@@ -22,6 +22,7 @@ export default function SelectInput<T>(props: Props<T>) {
     </InputLabel>
 
     <Select
+      variant="outlined"
       label={props.label}
       value={props.value}
       onChange={(e) => props.setValue(e.target.value as string | number)}

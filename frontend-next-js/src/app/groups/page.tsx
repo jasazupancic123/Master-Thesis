@@ -3,15 +3,12 @@
 import { useFetch } from '@/hook/use-fetch';
 import type { User } from '@/user/type/user.type';
 import { UserRole } from '@/user/enum/user-role.enum';
-import TrainerPageRouter from './components/trainer-page-router';
 import withAuth from '@/common/components/with-auth';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth-provider';
 import type { Group } from '@/group/entity/group.entity';
 import type { Cycle } from '@/group/entity/cycle.entity';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppContext } from '@/context/app-provider';
-import type { TrainingFilter } from '@/app/groups/components/training-filter';
 import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
 import type { AppContextType, AuthContextType } from '@/common/type/context.type';
@@ -20,18 +17,21 @@ import { UserController } from '@/user/user.controller';
 import { GroupController } from '@/group/group.controller';
 import { Subgroup } from '@/group/entity/subgroup.entity';
 import { CommonService } from '@/common/service/common.service';
+import TrainerPageRouter from '@/app/groups/components/trainer-page-router';
+import { FilterType } from '@/group/type/filter.type';
 
 function Page() {
+  // const router = useRouter();
+  // const searchParams = useSearchParams();
   // context
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { role } = useAuth() as AuthContextType;
-  const { token } = useAppContext() as AppContextType;
+  const { token, components } = useAppContext() as AppContextType;
 
   // state
+  const [loading, setLoading] = useState(false);
   const users = useFetch<User[]>(UserController.URL.users());
   const groups = useFetch<Group[]>(GroupController.URL.groups());
-  const [filter, setFilter] = useState<TrainingFilter>('year');
+  const [filter, setFilter] = useState<FilterType>('year');
   const [date, setDate] = useState({
     start: dayjs().startOf('year'),
     end: dayjs().endOf('year'),
@@ -45,6 +45,8 @@ function Page() {
   });
 
   const props: GroupPageProps = {
+    loading,
+    setLoading,
     users,
     groups,
     filter,
@@ -66,9 +68,11 @@ function Page() {
         return;
       }
 
+      const group = selected.group;
+
       try {
-        const group = await GroupController.findGroup(token, selected.group.id);
-        setSelected({ group, subgroup: null, cycle: null });
+        const response = await GroupController.findGroup(token, group.id);
+        setSelected({ group: response, subgroup: null, cycle: null });
       } catch (e: any) {
         console.error(e);
         toast.error(e.message || 'Error fetching group');
@@ -76,14 +80,14 @@ function Page() {
     }
 
     fetchGroup().then();
-  }, [searchParams, selected.group?.id, token]);
+  }, [selected.group?.id, token]);
 
   // TODO - get initial data based on query params
 
   /**
    * Add query to url when selected items change
    */
-  useEffect(() => {
+  /*useEffect(() => {
     const params = new URLSearchParams();
 
     if (selected.group) params.set('groupId', selected.group.id);
@@ -92,7 +96,7 @@ function Page() {
     params.set('filter', filter);
 
     router.replace(`?${params.toString()}`);
-  }, [router, selected.group, selected.subgroup, selected.cycle, filter]);
+  }, [selected.group?.id, selected.subgroup?.id, selected.cycle?.id, filter]);*/
 
   /**
    * Filter date range based on provided filters
@@ -145,24 +149,40 @@ function Page() {
     }
 
     setDate({ ...date, start, end });
-  }, [date, filter, selected.cycle, props.selected.cycle]);
+  }, [filter, selected.cycle?.id, props.selected.cycle?.id]);
 
   /**
-   * Filter trainings for cycle based on date range
+   * Filter trainings
    */
   useEffect(() => {
-    if (!selected.cycle)
+    if (!selected.group || !selected.cycle)
       return;
 
-    const cycleId = selected.cycle.id;
-    const allTrainings = selected.group?.cycles?.find(({ id }) => id === cycleId)?.trainings || [];
+    const group = selected.group;
+    const cycle = selected.cycle;
+    const subgroup = selected.subgroup;
 
-    const filteredTrainings = allTrainings.filter(training =>
-      CommonService.instance.date.isBetween(dayjs(training.from), date.start, date.end) && training.subgroupId === (selected.subgroup?.id || null),
-    );
+    async function fetchTrainings() {
+      setLoading(true);
 
-    setSelected(prev => ({ ...prev, cycle: { ...prev.cycle!, trainings: filteredTrainings } }));
-  }, [selected, date.start, date.end, selected.subgroup?.id]);
+      try {
+        const response = await GroupController.findTrainings(token, group.id, cycle.id, {
+          subgroupId: subgroup?.id || null,
+          from: date.start.toDate(),
+          to: date.end.toDate(),
+        });
+
+        setSelected(prev => ({ ...prev, cycle: { ...prev.cycle!, trainings: response } }));
+      } catch (e: any) {
+        console.error(e);
+        toast.error(e.message || 'Error fetching trainings');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTrainings().then();
+  }, [date.custom, date.start, date.end, selected.subgroup?.id]);
 
   if (users.loading || groups.loading)
     return <div>Loading...</div>;

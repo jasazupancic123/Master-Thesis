@@ -1,41 +1,39 @@
 import { useAppContext } from '@/context/app-provider';
 import React, { Fragment, useEffect, useState } from 'react';
-import { Component } from '@/component/type/component.type';
-import { AddSetGroup, CreateTraining, Training } from '@/training/type/training.type';
+import { Component } from '@/component/entity/component.entity';
+import { CreateTraining } from '@/training/type/training.type';
+import { Training } from '@/training/entity/training.entity';
 import dayjs, { Dayjs } from 'dayjs';
-import { formatDate, isDateBetween } from '@/common/service/util/date.util';
 import toast from 'react-hot-toast';
-import { ApiUtil } from '@/common/service/util/api.util';
 import Box from '@mui/material/Box';
 import ExerciseChips from '@/exercise/components/exercise-chips';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import { AddCircle } from '@mui/icons-material';
-import { Alert, Divider } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
+import { Alert } from '@mui/material';
 import { AppContextType } from '@/common/type/context.type';
 import { GroupPageProps } from '@/group/type/props.type';
+import { GroupController } from '@/group/group.controller';
+import { CreateTrainingComponent } from '@/training/type/training-component.type';
+import { CommonService } from '@/common/service/common.service';
+import TrainingWeek from '@/app/groups/components/training-cycle-view-week';
 
 export default function TrainerCycleView(props: GroupPageProps) {
   // context
   const { token, components } = useAppContext() as AppContextType;
-  const cycle = props.selected.cycle!;
-
-  // filter exercise components
+  const [global, setGlobal] = useState(true);
   const [selected, setSelected] = useState<Component[]>([]);
-
-  // create training
-  const [create, setCreate] = useState<{ training: CreateTraining }>({
+  const [create, setCreate] = useState({
     training: {
-      startTime: dayjs(),
-      endTime: dayjs().add(2, 'hour'),
+      from: dayjs(),
+      to: dayjs().add(2, 'hour'),
       date: dayjs(),
     },
   });
+
+  const group = props.selected.group;
+  const cycle = props.selected.cycle;
 
   /**
    * Set date to cycle start and end when opening the page
@@ -45,104 +43,104 @@ export default function TrainerCycleView(props: GroupPageProps) {
       return;
 
     props.setDate({
-      start: dayjs(cycle.startDate).startOf('day'),
-      end: dayjs(cycle.endDate).endOf('day'),
+      start: dayjs(cycle.from).startOf('day'),
+      end: dayjs(cycle.to).endOf('day'),
       custom: false,
     });
-  }, []);
+  }, [cycle?.id]);
 
-  /**
-   * Create training
-   */
-  async function createTraining(data: CreateTraining) {
+  async function addTraining(data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs }) {
+    if (!cycle || !group) {
+      toast.error('Please select a group and cycle');
+      return;
+    }
+
     if (!selected.length) {
-      toast.error('Select atleast one components');
+      toast.error('Select at least one components');
       return;
     }
 
     // set start time and end time to date
-    const startTime = data.date
+    const from = data.date
       .set('year', data.date.year())
       .set('month', data.date.month())
       .set('date', data.date.date())
-      .set('hour', data.startTime.hour())
-      .set('minute', data.startTime.minute())
-      .set('second', data.startTime.second());
+      .set('hour', data.from.hour())
+      .set('minute', data.from.minute())
+      .set('second', data.from.second());
 
-    const endTime = data.date
+    const to = data.date
       .set('year', data.date.year())
       .set('month', data.date.month())
       .set('date', data.date.date())
-      .set('hour', data.endTime.hour())
-      .set('minute', data.endTime.minute())
-      .set('second', data.endTime.second());
+      .set('hour', data.to.hour())
+      .set('minute', data.to.minute())
+      .set('second', data.to.second());
 
     try {
-      const body = {
-        cycleId: cycle.id,
-        subgroupId: props.selected.subgroup?.id,
+      const response = await GroupController.addTraining(token, group.id, cycle.id, {
+        subgroupId: props.selected.subgroup?.id || null,
         componentIds: selected.map(c => c.id),
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-      };
+        from,
+        to,
+      });
 
-      const response = await ApiUtil.createTraining(body, token);
-      props.setSelected(prev => ({ ...prev, trainings: [...prev.trainings, response] }));
+      if (!response) {
+        toast.error('Failed to create training');
+        return;
+      }
+
+      // update selected trainings
+      props.setSelected(prev => ({
+        ...prev,
+        cycle: {
+          ...prev.cycle!,
+          trainings: [...(prev.cycle?.trainings || []), response],
+        },
+      }));
 
       toast.success('Training created');
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e.message || 'Failed to create training');
     }
   }
 
-  /**
-   * Add set group (training components) to training
-   */
-  async function addSet(data: AddSetGroup) {
-    try {
-      for (const componentId of data.componentIds) {
-        const body = {
-          trainingId: data.trainingId,
-          componentId,
-          order: 0,
-          color: 'red',
-        };
+  async function addTrainingComponents(trainingId: string, data: CreateTrainingComponent[]) {
+    if (!cycle || !group) {
+      toast.error('Please select a group and cycle');
+      return;
+    }
 
-        const response = await ApiUtil.addSet(body, token);
-        props.setSelected(prev => ({
-          ...prev,
-          trainings: prev.trainings.map(training => {
-            if (training.id === data.trainingId)
+    try {
+      const responses = await Promise.all(data.map(item => GroupController.addTrainingComponent(token, group.id, cycle.id, trainingId, item)));
+
+      // update training
+      props.setSelected(prev => ({
+        ...prev,
+        cycle: {
+          ...cycle,
+          trainings: cycle.trainings.map(training => {
+            if (training.id === trainingId)
               return {
                 ...training,
-                setGroups: [...(training.setGroups || []), response],
+                components: [...(training.components || []), ...responses],
               };
 
             return training;
           }),
-        }));
-      }
-    } catch (e) {
+        },
+      }));
+    } catch (e: any) {
       toast.error(e.message || 'Failed to add set group');
     }
   }
 
-  /**
-   * Delete training and all corresponding set data
-   */
-  async function deleteTraining(training: Training) {
-    try {
-      await ApiUtil.removeTraining(training.id, token);
-      props.setSelected(prev => ({ ...prev, trainings: prev.trainings.filter(t => t.id !== training.id) }));
-
-      toast.success('Training removed');
-    } catch (e) {
-      toast.error(e.message || 'Failed to remove training');
-    }
+  async function deleteTraining(_training: Training) {
+    toast('Deleting training ...');
   }
 
-  if (!cycle)
-    return null;
+  if (!group || !cycle)
+    return <Typography variant="body1" mt={2}>No cycle selected</Typography>;
 
   return (
     <Box>
@@ -162,6 +160,8 @@ export default function TrainerCycleView(props: GroupPageProps) {
           }}
         >
           <ExerciseChips
+            global={global}
+            setGlobal={setGlobal}
             noSelectionLabel="None"
             selected={selected}
             setSelected={(component) => setSelected(component as Component[])}
@@ -172,24 +172,22 @@ export default function TrainerCycleView(props: GroupPageProps) {
             <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
               {/* Start time */}
               <TimePicker
-                fullWidth
                 label="Start Time"
-                value={create.training.startTime as any}
+                value={create.training.from}
                 onChange={(date) => setCreate({
                   ...create,
-                  training: { ...create.training, startTime: date as any },
+                  training: { ...create.training, from: date! },
                 })}
                 sx={{ mr: 1 }}
               />
 
               {/* End time */}
               <TimePicker
-                fullWidth
                 label="End Time"
-                value={create.training.endTime as any}
+                value={create.training.to}
                 onChange={(date) => setCreate({
                   ...create,
-                  training: { ...create.training, endTime: date as any },
+                  training: { ...create.training, to: date! },
                 })}
               />
             </Box>
@@ -213,7 +211,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
           </Typography>
 
           <Typography variant="body1" fontSize={16}>
-            {formatDate(cycle.startDate as Dayjs)} - {formatDate(cycle.endDate as Dayjs)}
+            {CommonService.instance.date.format(cycle.from)} - {CommonService.instance.date.format(cycle.to)}
           </Typography>
         </Stack>
 
@@ -221,17 +219,16 @@ export default function TrainerCycleView(props: GroupPageProps) {
         {props.loading
           ? <Typography>Loading ...</Typography>
           : <Stack spacing={1} mt={2}>
-            {cycle.weeks?.map((week, i) => (
+            {cycle.weeks.map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
                   index={i}
-                  week={week.map(({ date }) => date!)}
-                  trainings={props.selected.trainings}
+                  week={week.map(({ date }) => dayjs(date!))}
+                  trainings={cycle.trainings || []}
                   components={selected}
                   training={create.training}
-                  createTraining={createTraining}
-                  addSetGroup={addSet}
-                  deleteTraining={deleteTraining}
+                  addTraining={addTraining}
+                  addTrainingComponent={addTrainingComponents}
                 />
               </Fragment>
             ))}
@@ -241,154 +238,4 @@ export default function TrainerCycleView(props: GroupPageProps) {
   );
 }
 
-function TrainingWeek(props: {
-  index: number,
-  week: Dayjs[],
-  trainings: Training[],
-  training: CreateTraining,
-  components: Component[],
-  createTraining: (data: CreateTraining) => void,
-  addSetGroup: (data: AddSetGroup) => void,
-  deleteTraining: (training: Training) => Promise<void>,
-}) {
-  function getFilteredTrainings(date: Dayjs) {
-    date = dayjs(date);
 
-    return props.trainings.map(training => {
-      const start = dayjs(training.startTime).startOf('day');
-      const end = dayjs(training.endTime).endOf('day');
-
-      if (isDateBetween(date, start, end))
-        return training;
-
-      return null;
-    });
-  }
-
-  return <Box>
-    <Box direction="column">
-      {/* Render days of the week */}
-      <Stack
-        direction="row"
-        p={2}
-        sx={{
-          padding: '0px',
-          textAlign: 'center',
-          border: '1px solid',
-          borderColor: '#303E4A',
-          backgroundColor: '#1A2B3C',
-          height: '100%',
-          cursor: props.components.length ? 'pointer' : 'default',
-          borderTopLeftRadius: 8,
-          borderBottomLeftRadius: 8,
-        }}>
-        {/* Extra column to display the week number */}
-        <Typography
-          color="#1A2B3C"
-          bgcolor="#1EB980"
-          p={2}
-          sx={{
-            backgroundColor: '#1EB980',
-            writingMode: 'vertical-rl',
-            transform: 'rotate(180deg)',
-            borderBottomRightRadius: 8,
-            borderTopRightRadius: 8,
-          }}
-        >
-          Week {props.index + 1}
-        </Typography>
-
-        {props.week.map((date, j) => (
-          <Box
-            key={j}
-            width="calc(100% / 7)"
-            sx={{
-              border: '1px solid',
-              borderColor: '#303E4A',
-              backgroundColor: '#1A2B3C',
-              cursor: props.components.length ? 'pointer' : 'default',
-            }}
-            onClick={async () => {
-              if (props.components.length)
-                await props.createTraining({ ...props.training, date: dayjs(date) as Dayjs });
-            }}
-          >
-            <Typography sx={{ color: '#fff', fontSize: '0.7rem', opacity: 0.7 }}>
-              {formatDate(date)}
-            </Typography>
-
-            {/* Full-width divider */}
-            <Divider />
-
-            <Box>
-              {getFilteredTrainings(date).map((training, key) => (
-                !training ? null :
-                  <Box key={key} borderRadius={2} p={1}>
-                    <TrainingGridItem
-                      order={key + 1}
-                      training={training}
-                      components={props.components}
-                      addSetGroup={props.addSetGroup}
-                      deleteTraining={props.deleteTraining}
-                    />
-                  </Box>
-              ))}
-            </Box>
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-  </Box>;
-}
-
-function TrainingGridItem(props: {
-  training: Training;
-  order: number;
-  components: Component[];
-  addSetGroup: (data: AddSetGroup) => void;
-  deleteTraining: (training: Training) => Promise<void>;
-}) {
-  const { training, deleteTraining } = props;
-  const { components } = useAppContext() as AppContextType;
-
-  // populate training with components
-  const populated = FirebaseFirestoreUtil.populateTraining(training, components.flat);
-  const setGroups = populated.setGroups || [];
-
-  return <Box px={1}>
-    <Box display="flex" justifyContent="space-between" alignItems="center">
-      <Box sx={{ flex: 1 }}>
-        <Divider />
-
-        <Typography variant="caption" color="primary" fontSize={12}>
-          Training #{props.order}
-        </Typography>
-      </Box>
-
-      <IconButton size="small" onClick={async (e) => {
-        e.stopPropagation();
-        await deleteTraining(training);
-      }}>
-        <DeleteIcon />
-      </IconButton>
-    </Box>
-
-
-    <ExerciseChips
-      components={setGroups.map(({ component }) => component)}
-      itemSx={{ fontSize: 10, cursor: 'default' }}
-      direction="column"
-      small
-    />
-
-    {/* Add set group icon */}
-    {props.components.length > 0 && <>
-      <IconButton size="small" onClick={() => props.addSetGroup({
-        trainingId: training.id,
-        componentIds: props.components.map(c => c.id),
-      })}>
-        <AddCircle />
-      </IconButton>
-    </>}
-  </Box>;
-}

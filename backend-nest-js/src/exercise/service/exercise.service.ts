@@ -89,8 +89,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     let query = this.exerciseRepository.collection() as Query;
 
     // necessary filter either by `global` or `userId`
-    if (options?.filter?.global?.value)
-      query = query.where('global', '==', true);
+    if (options?.filter?.global) query = query.where('global', '==', true);
     else query = query.where('userId', '==', ref.uid);
 
     const components = await this.componentService.findAllFlat();
@@ -125,14 +124,14 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
       ...options,
       paginate: undefined,
       populate: options?.populate,
-      filter: { ...options?.filter, global: { value: false } },
+      filter: { ...options?.filter, global: false },
     });
 
     const globalExercises = await this.findUserExercises(ref, {
       ...options,
       paginate: undefined,
       populate: options?.populate,
-      filter: { ...options?.filter, global: { value: true } },
+      filter: { ...options?.filter, global: true },
     });
 
     return this.commonService.array.unique([
@@ -330,7 +329,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     if (filter.ids?.length)
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
 
-    if (filter.global) query = query.where('global', '==', filter.global.value);
+    if (filter.global) query = query.where('global', '==', filter.global);
 
     if (filter.componentsIds) {
       // for each component id, find all children and filter by them

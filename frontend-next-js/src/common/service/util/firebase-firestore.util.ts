@@ -15,6 +15,19 @@ export class FirebaseFirestoreUtil {
     // convert dates to dayjs
     // item.from = dayjs(item.from);
     // item.to = dayjs(item.to);
+
+    // populate components
+    item.components = item.components.map((component) => {
+      const componentItem = components.find((c) => c.id === component.componentId);
+      if (!componentItem)
+        return component;
+
+      return {
+        ...component,
+        component: componentItem,
+      };
+    });
+
     return item;
   }
 

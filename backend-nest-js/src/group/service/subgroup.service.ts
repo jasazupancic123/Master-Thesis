@@ -1,12 +1,28 @@
-import { BadRequestException, forwardRef, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from '../../user/user.service';
 import { SubgroupRepository } from '../repository/subgroup.repository';
-import { GroupRef, SubgroupRef } from '../../common/type/firebase-firestore.type';
+import {
+  GroupRef,
+  SubgroupRef,
+} from '../../common/type/firebase-firestore.type';
 import { User } from '../../common/type/firebase-auth.type';
 import { GroupService } from './group.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { Subgroup } from '../entity/subgroup.entity';
-import { Filter, FindManyOptions, FindOneOptions, PaginateOptions, Populate } from '../../common/type/orm.type';
+import {
+  Filter,
+  FindManyOptions,
+  FindOneOptions,
+  PaginateOptions,
+  Populate,
+} from '../../common/type/orm.type';
 import { Query, Timestamp } from 'firebase-admin/firestore';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
 import { CommonService } from '../../common/service/common.service';
@@ -35,10 +51,14 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
 
   async authorize(user: User, ref: Required<SubgroupRef>): Promise<void> {
     const permitted = await this.canView(user, ref);
-    if (!permitted) throw new UnauthorizedException('You cannot view this subgroup');
+    if (!permitted)
+      throw new UnauthorizedException('You cannot view this subgroup');
   }
 
-  async findSubgroups(ref: Required<GroupRef>, options?: FindManyOptions<Subgroup>): Promise<Subgroup[]> {
+  async findSubgroups(
+    ref: Required<GroupRef>,
+    options?: FindManyOptions<Subgroup>,
+  ): Promise<Subgroup[]> {
     return await this.subgroupRepository.getDocs(ref, (collection) => {
       let query = collection;
       if (options.filter) query = this.filter(query, options.filter);
@@ -48,7 +68,11 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
     });
   }
 
-  async findUserSubgroups(user: User, ref: Required<SubgroupRef>, options?: FindManyOptions<Subgroup>): Promise<Subgroup[]> {
+  async findUserSubgroups(
+    user: User,
+    ref: Required<SubgroupRef>,
+    options?: FindManyOptions<Subgroup>,
+  ): Promise<Subgroup[]> {
     await this.authorize(user, ref);
     return await this.findSubgroups(ref, options);
   }
@@ -58,18 +82,24 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
    * the subgroup. To get all active subgroups, we need to filter the subgroups
    * where today's date is between `from` and `to`.
    */
-  async findActiveSubgroups(ref: Required<GroupRef>, options?: FindManyOptions<Subgroup>): Promise<Subgroup[]> {
+  async findActiveSubgroups(
+    ref: Required<GroupRef>,
+    options?: FindManyOptions<Subgroup>,
+  ): Promise<Subgroup[]> {
     return await this.findSubgroups(ref, {
       ...options,
       filter: {
-        ...options.filter,
-        from: { op: '>=', value: new Date() },
-        to: { op: '<=', value: new Date() },
+        ...(options?.filter || {}),
+        from: { op: '<=', value: new Date() },
+        to: { op: '>=', value: new Date() },
       },
     });
   }
 
-  async findSubgroup(ref: Required<SubgroupRef>, options?: FindOneOptions<Subgroup>): Promise<Subgroup> {
+  async findSubgroup(
+    ref: Required<SubgroupRef>,
+    options?: FindOneOptions<Subgroup>,
+  ): Promise<Subgroup> {
     const subgroup = await this.subgroupRepository.getDoc(ref);
     if (!subgroup) return null;
 
@@ -77,30 +107,56 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
     return subgroup;
   }
 
-  async findSubgroupOrFail(ref: Required<SubgroupRef>, options?: FindOneOptions<Subgroup>): Promise<Subgroup> {
+  async findSubgroupOrFail(
+    ref: Required<SubgroupRef>,
+    options?: FindOneOptions<Subgroup>,
+  ): Promise<Subgroup> {
     const subgroup = await this.findSubgroup(ref, options);
     if (!subgroup) throw new BadRequestException('Subgroup not found');
     return subgroup;
   }
 
-  async findUserSubgroupOrFail(user: User, ref: Required<SubgroupRef>, options?: FindOneOptions<Subgroup>): Promise<Subgroup> {
+  async findUserSubgroupOrFail(
+    user: User,
+    ref: Required<SubgroupRef>,
+    options?: FindOneOptions<Subgroup>,
+  ): Promise<Subgroup> {
     await this.authorize(user, ref);
     return await this.findSubgroupOrFail(ref, options);
   }
 
-  async create(ref: Required<GroupRef>, input: Partial<Subgroup>): Promise<Subgroup> {
+  async create(
+    ref: Required<GroupRef>,
+    input: Partial<Subgroup>,
+  ): Promise<Subgroup> {
     const group = await this.groupService.findGroupOrFail(ref);
 
     // validate data
     const membersIds = await this.findAvailableMembers(ref);
-    if (!group.membersIds.every(memberId => membersIds.includes(memberId)))
-      throw new BadRequestException('All members must be available in the parent group');
+    if (!input.membersIds.every((memberId) => membersIds.includes(memberId)))
+      throw new BadRequestException(
+        'All members must be available in the parent group',
+      );
+
+    console.log('available members', membersIds);
+
+    return {
+      id: '123',
+      name: 'subgroup',
+      cycleId: '123',
+      membersIds: [],
+      from: new Date(),
+      to: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      members: [],
+    };
 
     // create subgroup
     const data = {
       name: input.name,
       cycleId: input.cycleId,
-      membersIds,
+      membersIds: input.membersIds,
       from: input.from,
       to: input.to,
     };
@@ -117,10 +173,28 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
 
   private filter(query: Query, filter: Filter<Subgroup>): Query {
     if (filter.ids) query = query.where('id', 'in', filter.ids);
-    if (filter.membersIds) query = query.where('membersIds', 'array-contains-any', filter.membersIds);
-    if (filter.name) query = query.where('name', '>=', filter.name.value).where('name', '<=', filter.name.value + '\uf8ff');
-    if (filter.from) query = query.where('from', filter.from.op || '>=', Timestamp.fromDate(filter.from.value));
-    if (filter.to) query = query.where('to', filter.to.op || '<=', Timestamp.fromDate(filter.to.value));
+    if (filter.membersIds)
+      query = query.where(
+        'membersIds',
+        'array-contains-any',
+        filter.membersIds,
+      );
+    if (filter.name)
+      query = query
+        .where('name', '>=', filter.name.value)
+        .where('name', '<=', filter.name.value + '\uf8ff');
+    if (filter.from)
+      query = query.where(
+        'from',
+        filter.from.op || '>=',
+        Timestamp.fromDate(filter.from.value),
+      );
+    if (filter.to)
+      query = query.where(
+        'to',
+        filter.to.op || '<=',
+        Timestamp.fromDate(filter.to.value),
+      );
 
     return query;
   }
@@ -136,9 +210,15 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
       .offset((page - 1) * pageSize);
   }
 
-  private async populate(ref: Required<SubgroupRef>, subgroup: Subgroup, populate: Populate<Subgroup>[]): Promise<Subgroup> {
+  private async populate(
+    ref: Required<SubgroupRef>,
+    subgroup: Subgroup,
+    populate: Populate<Subgroup>[],
+  ): Promise<Subgroup> {
     if (populate.includes('members'))
-      subgroup.members = await this.userService.findAll({ ids: subgroup.membersIds });
+      subgroup.members = await this.userService.findAll({
+        ids: subgroup.membersIds,
+      });
 
     return subgroup;
   }
@@ -149,18 +229,22 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
    * the result is subtracted from all group members to get the available
    * members.
    *
-   * Formula: (all group members - union of all members in subgroups)
+   * Formula: (all group members - union of all members in active subgroups)
    */
-  private async findAvailableMembers(ref: Required<GroupRef>): Promise<string[]> {
+  private async findAvailableMembers(
+    ref: Required<GroupRef>,
+  ): Promise<string[]> {
     const group = await this.groupService.findGroupOrFail(ref);
 
     // get all active subgroups
     const subgroups = await this.findActiveSubgroups(ref);
 
     // unavailable members are all members of active subgroups
-    const unavailable = this.commonService.array.unique(subgroups.flatMap(subgroup => subgroup.membersIds));
+    const unavailable = this.commonService.array.unique(
+      subgroups.flatMap((subgroup) => subgroup.membersIds),
+    );
 
     // group members - unavailable members = available members
-    return group.membersIds.filter(member => !unavailable.includes(member));
+    return group.membersIds.filter((member) => !unavailable.includes(member));
   }
 }

@@ -1,9 +1,9 @@
-import { TrainingFilter } from '@/app/groups/components/training-filter';
 import { ToggleButton } from '@mui/material';
 import React from 'react';
+import { FilterType } from '@/group/type/filter.type';
 
 interface Props {
-  value: TrainingFilter;
+  value: FilterType;
   disabled?: boolean;
 }
 

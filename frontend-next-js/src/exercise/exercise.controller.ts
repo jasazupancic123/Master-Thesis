@@ -10,9 +10,10 @@ export class ExerciseController {
     attributes: () => '/exercise/attribute',
     exercises: (filter?: FilterExerciseQuery) => {
       const query = {
+        ...(filter?.global && { global: filter.global ? 'true' : 'false' }),
         ...(filter?.ids && { ids: filter.ids.join(',') }),
-        ...(filter?.name && { name: `:==:${filter.name}` }),
         ...(filter?.componentsIds && { componentsIds: `:in:${filter.componentsIds.join(',')}` }),
+        ...(filter?.name && { name: `:==:${filter.name}` }),
       };
 
       const paginate = {

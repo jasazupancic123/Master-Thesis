@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CollectionReference, DocumentReference, Query, Timestamp } from 'firebase-admin/firestore';
-import { CycleRef, FirestoreCollectionRepository, GroupRef } from '../../common/type/firebase-firestore.type';
+import {
+  CollectionReference,
+  DocumentReference,
+  Query,
+  Timestamp,
+} from 'firebase-admin/firestore';
+import {
+  CycleRef,
+  FirestoreCollectionRepository,
+  GroupRef,
+} from '../../common/type/firebase-firestore.type';
 import { Cycle } from '../entity/cycle.entity';
 import { GroupRepository } from './group.repository';
 import { CommonService } from '../../common/service/common.service';
-import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-admin/lib/firestore';
+import {
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
+} from 'firebase-admin/lib/firestore';
 
 @Injectable()
-export class CycleRepository implements FirestoreCollectionRepository<Cycle, CycleRef> {
+export class CycleRepository
+  implements FirestoreCollectionRepository<Cycle, CycleRef>
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly groupRepository: GroupRepository,
-  ) {
-  }
+  ) {}
 
   async getDocs(
     ref: Required<GroupRef>,
-    query: (query: Query) => Query = query => query,
+    query: (query: Query) => Query = (query) => query,
   ): Promise<Cycle[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async getDoc(ref: Required<CycleRef>): Promise<Cycle | null> {
@@ -29,7 +42,10 @@ export class CycleRepository implements FirestoreCollectionRepository<Cycle, Cyc
     return this.serialize(snapshot);
   }
 
-  async addDoc(ref: Required<GroupRef>, input: Partial<Cycle>): Promise<string> {
+  async addDoc(
+    ref: Required<GroupRef>,
+    input: Partial<Cycle>,
+  ): Promise<string> {
     const result = await this.collection(ref).add({
       name: input.name,
       description: input.description || null,
@@ -65,7 +81,10 @@ export class CycleRepository implements FirestoreCollectionRepository<Cycle, Cyc
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),
       trainings: [],
-      weeks: [],
+      weeks: this.commonService.date.weeks(
+        data.from.toDate(),
+        data.to.toDate(),
+      ),
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
     } as Cycle;

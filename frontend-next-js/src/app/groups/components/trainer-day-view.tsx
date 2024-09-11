@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { formatDate, getToday, getWeekDays, isSameDay } from '@/common/service/util/date.util';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
@@ -8,20 +7,27 @@ import Circles from '@/app/groups/components/circles';
 import dayjs from 'dayjs';
 import { Tooltip } from '@mui/material';
 import { GroupPageProps } from '@/group/type/props.type';
+import { CommonService } from '@/common/service/common.service';
+import Typography from '@mui/material/Typography';
+
+const commonService = CommonService.instance;
 
 export default function TrainerDayView(props: GroupPageProps) {
-  const [day, setDay] = useState(getToday());
+  const [day, setDay] = useState(commonService.date.getToday());
 
-  if (!props.selected.group || !props.selected.cycle)
-    return null;
+  const group = props.selected.group;
+  const cycle = props.selected.cycle;
+  if (!group || !cycle)
+    return <Typography variant="body1" mt={2}>No cycle selected</Typography>;
+  console.log('group', group);
 
   return <Box>
     {/* Week day badges */}
     <Circles
-      items={getWeekDays().map(({ label, date }) => ({
+      items={commonService.date.getWeekDays().map(({ label, date }) => ({
         label: label[0],
         value: date.toString(),
-        sublabel: formatDate(date, { withYear: false }),
+        sublabel: commonService.date.format(date, { withYear: false }),
       }))}
       value={day.date.toString()}
       setValue={(value) => {
@@ -33,7 +39,7 @@ export default function TrainerDayView(props: GroupPageProps) {
           custom: true,
         });
       }}
-      getBackgroundColor={(value, itemValue) => isSameDay(dayjs(value), dayjs(itemValue)) ? '#1EB980' : 'rgba(255, 255, 255, 0.1)'}
+      getBackgroundColor={(value, itemValue) => commonService.date.isSameDay(dayjs(value), dayjs(itemValue)) ? '#1EB980' : 'rgba(255, 255, 255, 0.1)'}
       sx={{
         borderBottomRightRadius: 0,
         borderBottomLeftRadius: 0,
@@ -53,27 +59,30 @@ export default function TrainerDayView(props: GroupPageProps) {
       }}
     >
       <Stack direction="row" spacing={1}>
-        {[props.selected.group].concat(props.selected.group.subgroups || []).map((subgroup, i) => {
-          const members = subgroup.memberIds.map(id => (props.selected.group!.members || []).find(m => m.uid === id));
-          const isMainGroup = subgroup.id === props.selected.group!.id;
+        {([group.id]).concat(group.subgroups.map(({ id }) => id)).map((groupOrSubgroupId, i) => {
+          const foundGroup = groupOrSubgroupId === group.id ? group : null;
+          const foundSubgroup = groupOrSubgroupId === group.id ? null : group.subgroups.find(s => s.id === groupOrSubgroupId) || null;
+
+          const members = (foundGroup || foundSubgroup || { membersIds: [] }).membersIds.map(id => (group!.members || []).find(m => m.uid === id));
 
           return <Stack
-            key={subgroup.id}
+            key={groupOrSubgroupId}
             direction="row"
             spacing={1}
             my={4}
             sx={{ cursor: 'pointer' }}
             onClick={() => {
-              if (isMainGroup)
+              if (group)
                 props.setSelected(prev => ({ ...prev, subgroup: null }));
               else
-                props.setSelected(prev => ({ ...prev, subgroup: prev.subgroup === subgroup ? null : subgroup }));
+                // props.setSelected(prev => ({ ...prev, subgroup: prev.subgroup === subgroup ? null : subgroup }));
+                props.setSelected(prev => ({ ...prev, subgroup: foundSubgroup }));
             }}
           >
             {members.map(member => member && <Box key={member.uid}>
               <Tooltip title={member.email}>
                 <Avatar
-                  sx={{ border: isMainGroup ? 0 : `2px solid ${colors[i % colors.length]}` }}
+                  sx={{ border: group ? 0 : `2px solid ${colors[i % colors.length]}` }}
                 >
                   {member.email[0].toUpperCase()}
                 </Avatar>
@@ -85,6 +94,6 @@ export default function TrainerDayView(props: GroupPageProps) {
     </Stack>
 
     {/* Training set groups with set exercises */}
-    <TrainingDay trainings={props.selected.trainings} />
+    <TrainingDay trainings={cycle.trainings} />
   </Box>;
 }

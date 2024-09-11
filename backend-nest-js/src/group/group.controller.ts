@@ -60,7 +60,7 @@ export class GroupController {
   ) {
     const ref = { uid: user.uid, groupId };
     return await this.groupService.findUserGroupOrFail(user, ref, {
-      populate: ['members', 'subgroups', 'cycles', 'cycles.trainings'],
+      populate: ['members', 'subgroups', 'cycles'],
     });
   }
 
@@ -163,7 +163,7 @@ export class GroupController {
 
   @Get(':groupId/cycle/:cycleId/training')
   @Auth()
-  async findAllTrainings(
+  async findTrainings(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
@@ -175,6 +175,7 @@ export class GroupController {
       cycleId,
       subgroupId: filter.subgroupId || null,
     };
+
     return await this.trainingService.findTrainings(ref, {
       filter: {
         ...(filter.subgroupId && {
@@ -183,6 +184,7 @@ export class GroupController {
         ...(filter.from && { from: { value: filter.from, op: '>=' } }),
         ...(filter.to && { to: { value: filter.to, op: '<=' } }),
       },
+      populate: ['components', 'components.exercises'],
     });
   }
 
@@ -261,6 +263,7 @@ export class GroupController {
       trainingId,
       subgroupId: null,
     };
+
     return await this.trainingService.addComponent(user, ref, data);
   }
 
