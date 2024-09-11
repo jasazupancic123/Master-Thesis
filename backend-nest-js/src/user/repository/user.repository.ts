@@ -86,9 +86,9 @@ export class UserRepository
   }
 
   /**
-   * Newest query tool to query all subcollections with the same name. For user
-   * repository, it can be useful to query all `groups` subcollections where
-   * some user is a member, or `exercises` subcollections where some user is
+   * Newest query tool to query all sub collections with the same name. For user
+   * repository, it can be useful to query all `groups` sub collections where
+   * some user is a member, or `exercises` sub collections where some user is
    * the author.
    */
   collectionGroup(collectionGroupName: keyof UserEntity): CollectionGroup {
@@ -107,7 +107,6 @@ export class UserRepository
         updatedAt: (item.updatedAt as Timestamp).toDate(),
       })),
       groups: data.groups || [],
-      exercises: data.exercises || [],
       wellness: data.wellness || [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),

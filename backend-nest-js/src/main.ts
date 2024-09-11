@@ -29,7 +29,7 @@ async function bootstrap() {
 
   // setups
   new SwaggerSetup(app).setup();
-  await new DataSetup(app).setup({ dev: commonService.env.isDev() });
+  await new DataSetup(app).setup({ dev: !isDev });
 
   // start server
   const port = configService.get('PORT');

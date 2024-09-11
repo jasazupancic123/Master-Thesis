@@ -1,4 +1,10 @@
-import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Component } from './entity/component.entity';
 import { Filter, FindManyOptions, Populate } from '../common/type/orm.type';
 import { CommonService } from '../common/service/common.service';
@@ -18,8 +24,7 @@ export class ComponentService {
     private readonly componentRepository: ComponentRepository,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
-  ) {
-  }
+  ) {}
 
   rootCollection() {
     return this.componentRepository.collection();
@@ -34,10 +39,18 @@ export class ComponentService {
     return await this.componentRepository.getDoc(componentSlug);
   }
 
-  async createFromTree(data: Component): Promise<Component> {
-    const component = await this.create(data);
-    for (const child of data.children) {
-      const childData = { ...child, parent: component.id };
+  async createFromTree(
+    data: Omit<Component, 'children'> & { children: Component[] },
+  ): Promise<Component> {
+    const { children, ...rest } = data;
+    const component = await this.create(rest);
+
+    for (const child of children) {
+      const childData = {
+        ...child,
+        parent: component.id,
+        children: child.children as unknown as Component[],
+      };
       await this.createFromTree(childData);
     }
 
@@ -54,20 +67,28 @@ export class ComponentService {
     return component;
   }
 
-  async findAllFlat(options?: FindManyOptions<Component>): Promise<Component[]> {
+  async findAllFlat(
+    options?: FindManyOptions<Component>,
+  ): Promise<Component[]> {
     const components = await this.componentRepository.getDocs((collection) => {
       let query = collection;
       if (options?.filter) query = this.filter(query, options.filter);
       return query;
     });
 
-    if (options?.populate) this.populate(components, options.populate);
+    if (options?.populate)
+      for (const component of components)
+        this.populate(component, components, options.populate);
+
     return components;
   }
 
-  async findAllTree(options?: FindManyOptions<Component>): Promise<Component[]> {
-    if (options?.populate.includes('children')) // remove 'children' from populate, as it will be populated in the tree
-      options.populate = options.populate.filter(p => p !== 'children');
+  async findAllTree(
+    options?: FindManyOptions<Component>,
+  ): Promise<Component[]> {
+    if (options?.populate.includes('children'))
+      // remove 'children' from populate, as it will be populated in the tree
+      options.populate = options.populate.filter((p) => p !== 'children');
 
     const components = await this.findAllFlat(options);
     return this.commonService.tree.fromArray(components, {
@@ -78,40 +99,62 @@ export class ComponentService {
   }
 
   async findAllLeafs(options?: FindManyOptions<Component>) {
-    const components = await this.findAllFlat({ ...options, populate: ['children', 'parents'] });
+    const components = await this.findAllFlat({
+      ...options,
+      populate: ['children', 'parents'],
+    });
     return this.leafsFromFlat(components);
   }
 
   leafsFromFlat(components: Component[]): Component[] {
-    if (components.every(component => !component.children.length))
-      throw new Error('To get leafs from flat components array, populate `children` first');
+    if (components.every((component) => !component.children.length))
+      throw new Error(
+        'To get leafs from flat components array, populate `children` first',
+      );
 
-    return components.filter(c => !c.children.length);
+    return components.filter((c) => !c.children.length);
   }
 
-  async findAllOrFail(options?: FindManyOptions<Component>): Promise<Component[]> {
+  async findAllOrFail(
+    options?: FindManyOptions<Component>,
+  ): Promise<Component[]> {
     const components = await this.findAllFlat(options);
-    if (options?.filter?.ids?.length && components.length !== options?.filter.ids.length)
+    if (
+      options?.filter?.ids?.length &&
+      components.length !== options?.filter.ids.length
+    )
       throw new BadRequestException('Invalid components');
 
     return components;
   }
 
-  async getLeafBySlug(slug: string, leafs?: Component[]): Promise<Component | null> {
-    if (!leafs) leafs = await this.findAllLeafs({ populate: ['children', 'parents'] });
-    return leafs.find(c => c.slug === slug) || null;
+  async getLeafBySlug(
+    slug: string,
+    leafs?: Component[],
+  ): Promise<Component | null> {
+    if (!leafs)
+      leafs = await this.findAllLeafs({ populate: ['children', 'parents'] });
+    return leafs.find((c) => c.slug === slug) || null;
   }
 
-  async getRootBySlug(slug: string, leaf?: Component): Promise<Component | null> {
-    if (!leaf) leaf = await this.getLeafBySlug(slug);
-    return leaf?.parents.find(c => c.parent === null) || null;
+  getRoot(component: Component, components: Component[]): Component | null {
+    if (component.parents.length === 0) return component;
+
+    for (const parentId of component.parents) {
+      const parent = components.find((c) => c.id === parentId);
+      if (parent?.parents.length === 0) return parent;
+    }
+
+    return null;
   }
 
   /**
    * Allows component's name and slug to be updated.
    */
   async update(id: string, data: Partial<Component>): Promise<Component> {
-    this.logger.debug(`Updating component #${id} with data ${JSON.stringify(data)}`);
+    this.logger.debug(
+      `Updating component #${id} with data ${JSON.stringify(data)}`,
+    );
 
     const component = await this.componentRepository.getDoc(id);
     if (!component) throw new BadRequestException('Component not found');
@@ -122,26 +165,34 @@ export class ComponentService {
 
   private filter(query: Query, filter: Filter<Component>) {
     if (filter.ids) query = query.where('id', 'in', filter.ids);
-    if (filter.name) query = query.where('name', '>=', filter.name).where('name', '<=', filter.name + '\uf8ff');
+    if (filter.name)
+      query = query
+        .where('name', '>=', filter.name)
+        .where('name', '<=', filter.name + '\uf8ff');
     if (filter.slug) query = query.where('slug', '==', filter.slug);
     return query;
   }
 
-  private populate(flatComponents: Component[], populate: Populate<Component>[]) {
-    for (const component of flatComponents) {
-      if (populate.includes('children'))
-        component.children = flatComponents.filter(c => c.parent === component.id);
+  private populate(
+    component: Component,
+    components: Component[], // flat components
+    populate: Populate<Component>[],
+  ) {
+    if (populate.includes('parents')) {
+      const parents: Component[] = [];
 
-      if (populate.includes('parents')) {
-        const parents: Component[] = [];
-        let parent = flatComponents.find(c => c.id === component.parent);
-        while (parent) {
-          parents.push(parent);
-          parent = flatComponents.find(c => c.id === parent.parent);
-        }
-
-        component.parents = parents;
+      let parent = components.find((c) => c.id === component.parent);
+      while (parent) {
+        parents.push(parent);
+        parent = components.find((c) => c.id === parent.parent);
       }
+
+      component.parents = parents.map((p) => p.id);
     }
+
+    if (populate.includes('children'))
+      component.children = components
+        .filter((c) => c.parent === component.id)
+        .map((c) => c.id);
   }
 }

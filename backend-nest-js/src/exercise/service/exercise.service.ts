@@ -19,7 +19,7 @@ import {
   Populate,
 } from '../../common/type/orm.type';
 import { Validate } from '../../common/type/validate.type';
-import { Query, Timestamp } from 'firebase-admin/firestore';
+import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
 import { ExerciseRepository } from '../repository/exercise.repository';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
 import {
@@ -31,8 +31,6 @@ import { UserRepository } from '../../user/repository/user.repository';
 import { ExerciseAttributeService } from './exercise-attribute.service';
 import { ExerciseAttributeValueService } from './exercise-attribute-value.service';
 import { Wrapper } from '../../common/type/wrapper.type';
-
-type ComponentLeaf = Component & { parents: Component[] };
 
 @Injectable()
 export class ExerciseService extends CanViewService<ExerciseRef> {
@@ -52,35 +50,32 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
   }
 
   async canView(user: User, ref: Required<ExerciseRef>): Promise<boolean> {
-    if (this.firebaseService.isAdmin(user)) return true;
-    const exercise = await this.exerciseRepository.getDoc(ref);
-    return !!exercise;
+    const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
+    if (!exercise) return false;
+
+    if (
+      exercise.global ||
+      this.firebaseService.isAdmin(user) ||
+      exercise.userId === user.uid
+    )
+      return true;
+
+    // false by default
+    return false;
   }
 
-  async findGlobalExercises(
-    options?: FindManyOptions<Exercise>,
-  ): Promise<Exercise[]> {
-    let query = this.userRepository
-      .collectionGroup('exercises')
-      .where('global', '==', true);
-    if (options.filter) query = this.filter(query, options.filter);
-    if (options.paginate) query = this.paginate(query, options.paginate);
-
-    return await query
-      .get()
-      .then((snapshot) =>
-        snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
-      );
-  }
-
-  async countGlobalExercises(
+  async countExercises(
+    ref: Required<UserRef>,
     options?: FindManyOptions<Exercise>,
   ): Promise<number> {
-    let query = this.userRepository
-      .collectionGroup('exercises')
-      .where('global', '==', true);
+    let query = this.exerciseRepository.collection() as Query;
 
-    if (options?.filter) query = this.filter(query, options.filter);
+    // necessary filter either by `global` or `userId`
+    if (options?.filter?.global) query = query.where('global', '==', true);
+    else query = query.where('userId', '==', ref.uid);
+
+    const components = await this.componentService.findAllFlat();
+    if (options?.filter) query = this.filter(query, options.filter, components);
     return await query
       .count()
       .get()
@@ -91,41 +86,55 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     ref: Required<UserRef>,
     options?: FindManyOptions<Exercise>,
   ): Promise<Exercise[]> {
-    let query = this.userRepository
-      .collectionGroup('exercises')
-      .where('userId', '==', ref.uid);
+    let query = this.exerciseRepository.collection() as Query;
 
-    if (options?.filter) query = this.filter(query, options.filter);
-    if (options?.paginate) query = this.paginate(query, options.paginate);
+    // necessary filter either by `global` or `userId`
+    if (options?.filter?.global?.value)
+      query = query.where('global', '==', true);
+    else query = query.where('userId', '==', ref.uid);
 
-    return await query
+    const components = await this.componentService.findAllFlat();
+    if (options.filter) query = this.filter(query, options.filter, components);
+    if (options.paginate) query = this.paginate(query, options.paginate);
+
+    const exercises = await query
       .get()
       .then((snapshot) =>
         snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
       );
+
+    if (options.populate)
+      for (const exercise of exercises)
+        await this.populate(
+          { exerciseId: exercise.id },
+          exercise,
+          options.populate,
+        );
+
+    return exercises;
   }
 
-  async countUserExercises(
-    ref: Required<UserRef>,
-    options?: FindManyOptions<Exercise>,
-  ): Promise<number> {
-    let query = this.userRepository
-      .collectionGroup('exercises')
-      .where('userId', '==', ref.uid);
-
-    if (options?.filter) query = this.filter(query, options.filter);
-    return await query
-      .count()
-      .get()
-      .then((snapshot) => snapshot.data().count);
-  }
-
+  /**
+   * For internal use to find all exercises without pagination.
+   */
   async findExercises(
     ref: Required<UserRef>,
     options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
   ): Promise<Exercise[]> {
-    const userExercises = await this.findUserExercises(ref, options);
-    const globalExercises = await this.findGlobalExercises(options);
+    const userExercises = await this.findUserExercises(ref, {
+      ...options,
+      paginate: undefined,
+      populate: options?.populate,
+      filter: { ...options?.filter, global: { value: false } },
+    });
+
+    const globalExercises = await this.findUserExercises(ref, {
+      ...options,
+      paginate: undefined,
+      populate: options?.populate,
+      filter: { ...options?.filter, global: { value: true } },
+    });
+
     return this.commonService.array.unique([
       ...userExercises,
       ...globalExercises,
@@ -136,7 +145,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     ref: Required<ExerciseRef>,
     options?: FindOneOptions<Exercise>,
   ): Promise<Exercise | null> {
-    const exercise = await this.exerciseRepository.getDoc(ref);
+    const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
     if (!exercise) return null;
 
     if (options?.populate) await this.populate(ref, exercise, options.populate);
@@ -144,9 +153,10 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
   }
 
   async findExerciseByName(name: string): Promise<Exercise | null> {
-    const query = this.userRepository
-      .collectionGroup('exercises')
+    const query = this.exerciseRepository
+      .collection()
       .where('name', '==', name);
+
     const snapshot = await query.get();
     if (snapshot.empty) return null;
     return this.exerciseRepository.serialize(snapshot.docs[0]);
@@ -194,21 +204,21 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     if (error) throw new BadRequestException(message);
 
     // find all root components of selected leaf components
-    const leafs = await this.componentService.findAllLeafs({
+    const components = await this.componentService.findAllFlat({
       populate: ['children', 'parents'],
     });
+
+    const leafs = this.componentService.leafsFromFlat(components);
     const roots: Component[] = [];
-    for (const componentId of data.componentsIds)
-      roots.push(
-        await this.componentService.getRootBySlug(
-          componentId,
-          leafs.filter((c) => c.id === componentId)[0],
-        ),
-      );
-    // roots.push(...this.componentService.getRootComponents(componentId, leafs));
+    for (const componentId of data.componentsIds) {
+      const component = leafs.find((c) => c.id === componentId)!;
+      const root = this.componentService.getRoot(component, components);
+      roots.push(root);
+    }
 
     // create exercise
-    const exerciseId = await this.exerciseRepository.addDoc(ref, {
+    const exerciseId = await this.exerciseRepository.addDoc({
+      userId: ref.uid,
       name: data.name,
       componentsIds: data.componentsIds,
       global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
@@ -250,7 +260,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     // update all exercises
     const batch = this.firebaseService.firestore.batch();
     for (const exerciseId of exerciseIds) {
-      const document = this.exerciseRepository.doc({ ...ref, exerciseId });
+      const document = this.exerciseRepository.doc(exerciseId);
       batch.update(document, { componentsIds: [componentId] });
     }
 
@@ -279,10 +289,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
       for (const component of exercise.componentsIds) {
         const leaf = leafs.find((leaf) => leaf.id === component);
 
-        if (
-          !leaf ||
-          !leaf.parents.some((parent) => componentId === parent.id)
-        ) {
+        if (!leaf || !leaf.parents.some((parent) => componentId === parent)) {
           const found = components.find((c) => c.id === component);
           return {
             error: true,
@@ -295,7 +302,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
   }
 
   private async validate(data: Partial<Exercise>): Promise<Validate> {
-    // atleast one component must be selected
+    // at least one component must be selected
     if (!data.componentsIds?.length)
       return { error: true, message: 'No components selected' };
 
@@ -318,28 +325,57 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
   private filter(
     query: Query,
     filter: Filter<Exercise>,
-    componentsLeafs?: Component[],
+    components: Component[], // flat components
   ): Query {
-    if (filter.ids) query = query.where('id', 'in', filter.ids);
+    if (filter.ids?.length)
+      query = query.where(FieldPath.documentId(), 'in', filter.ids);
+
     if (filter.global) query = query.where('global', '==', filter.global.value);
+
     if (filter.componentsIds) {
-      // for each component id, find all leafs and filter by them
-      const componentsIds = componentsLeafs
-        ?.filter((c) => filter.componentsIds.value.includes(c.id))
-        .map(({ id }) => id);
-      query = query.where('componentsIds', 'array-contains-any', componentsIds);
+      // for each component id, find all children and filter by them
+      const componentsIds: string[] = [];
+      for (const componentId of filter.componentsIds.value as string[]) {
+        const component = components.find((c) => c.id === componentId);
+        if (!component) continue;
+
+        // filter by root node
+        componentsIds.push(component.id);
+
+        // filter by all its children
+        const tree = this.commonService.tree.fromArray(components, {
+          rootId: component.id,
+          idPropertyName: 'id',
+          parentIdPropertyName: 'parent',
+          childrenPropertyName: 'children',
+        });
+
+        this.commonService.tree.forEach(tree, 'children', (item) => {
+          componentsIds.push(item.id);
+          return null;
+        });
+      }
+
+      if (componentsIds.length)
+        query = query.where(
+          'componentIds',
+          'array-contains-any',
+          componentsIds,
+        );
     }
 
     if (filter.name)
       query = query
         .where('name', '>=', filter.name)
         .where('name', '<=', filter.name + '\uf8ff');
+
     if (filter.createdAt)
       query = query.where(
         'createdAt',
         filter.createdAt.op || '>=',
         Timestamp.fromDate(filter.createdAt.value),
       );
+
     if (filter.updatedAt)
       query = query.where(
         'updatedAt',

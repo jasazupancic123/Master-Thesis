@@ -18,16 +18,23 @@ export class FilterExerciseDto
   @ApiPropertyOptional()
   @Expose()
   @Transform(({ value }) => parseQueryCondition(value))
+  global?: Filter<Exercise>['global'];
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  @Transform(({ value }) => parseQueryCondition(value))
   name?: Filter<Exercise>['name'];
 
-  @IsString({ each: true })
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   @Transform(({ value }) => {
     const result = parseQueryCondition(value);
-    const val = parseQueryArray(result.value);
-    return { ...result, value: val };
+    return result
+      ? { ...result, value: parseQueryArray(result?.value) }
+      : undefined;
   })
   componentsIds?: Filter<Exercise>['componentsIds'];
 
