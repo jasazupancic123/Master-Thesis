@@ -4,41 +4,26 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import { Card, CardContent, CardMedia, Divider, Grid, Paper } from '@mui/material';
-import Footer from '@/components/footer';
+import Footer from '@/common/components/footer';
 import { features, highlights, products, team, trademark } from '@/common/constant/hero-data.constant';
 import Stack from '@mui/material/Stack';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import Button from '@mui/material/Button';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Link from '@mui/material/Link';
 import { LINKS_NAVBAR } from '@/common/constant/navigation.constant';
-import HeroNavbar from '@/components/hero-navbar';
+import HeroNavbar from '@/common/components/hero-navbar';
+import { buttonStyle, titleStyle } from '@/app/style';
 
-const buttonStyle = {
-  p: 2,
-  bgcolor: 'rgba(255, 255, 255, 0.1)',
-  borderRadius: 2,
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  color: 'white',
-  textAlign: 'center',
-};
+interface Props {
+  title: string;
+  description: string;
+  id: string;
+  children: ReactNode;
+}
 
-const titleStyle = {
-  p: 3,
-  bgcolor: 'rgba(0, 0, 0, 0.5)',
-  borderRadius: 2,
-  transition: 'transform 0.3s',
-  '&:hover': { transform: 'scale(1.05)' },
-};
-
-function Section({ title, description, id, children }) {
+function Section({ title, description, id, children }: Props) {
   return <Box id={id} p={8}>
     <Container
       sx={{
@@ -79,15 +64,7 @@ export default function Home() {
         }}
       >
         <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
-          {/*<video
-                        style={{width: '100%', height: '100%', objectFit: 'cover'}}
-                        src={HERO_VIDEO_URL}
-                        autoPlay
-                        loop
-                        muted
-                    >
-                        Your browser does not support the video tag.
-                    </video>*/}
+          TODO - video background
         </Box>
 
         <Container sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
@@ -129,7 +106,7 @@ export default function Home() {
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                 Are you involved in competitive sports, where precision to detail is a
                 game-changer? Do you want to gain
-                a comprehensive understanding of every aspect of your athletes' training
+                a comprehensive understanding of every aspect of your athletes&apos; training
                 process? We offer a complete
                 tool to gain insight into the training load of your team or individual athletes.
                 Turn the gym blind spot
@@ -205,14 +182,14 @@ export default function Home() {
         id={LINKS_NAVBAR.products.id}
       >
         <Grid container spacing={2.5}>
-          {products.map(({ image, title, icon, description }, i) => (
+          {products.map(({ image, title, description }, i) => (
             <Grid item xs={12} sm={6} md={4} key={i}>
               <Card>
                 <CardMedia component="img" image={image} alt={title} sx={{ height: 140 }} />
 
                 <CardContent>
                   <Stack direction="column" color="inherit" spacing={1}>
-                    <Box sx={{ opacity: '50%' }}>{icon}</Box>
+                    {/*<Box sx={{ opacity: '50%' }}>{icon}</Box>*/}
 
                     <div>
                       <Typography fontWeight="medium" gutterBottom>{title}</Typography>
@@ -300,13 +277,13 @@ export default function Home() {
         id={LINKS_NAVBAR.trademark.id}
       >
         <Grid container spacing={2.5}>
-          {trademark.map(({ image, title, icon, description }, i) => (
+          {trademark.map(({ image, title, description }, i) => (
             <Grid item xs={12} sm={6} md={4} key={i}>
               <Card>
                 <CardMedia component="img" image={image} alt={title} sx={{ height: 140 }} />
                 <CardContent>
                   <Stack direction="column" color="inherit" spacing={1}>
-                    <Box sx={{ opacity: '50%' }}>{icon}</Box>
+                    {/*<Box sx={{ opacity: '50%' }}>{icon}</Box>*/}
 
                     <div>
                       <Typography fontWeight="medium" gutterBottom>{title}</Typography>

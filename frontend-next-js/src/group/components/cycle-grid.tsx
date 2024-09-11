@@ -1,11 +1,11 @@
-import { Cycle } from '@/group/type/cycle.type';
+import { Cycle } from '@/group/entity/cycle.entity';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Box from '@mui/material/Box';
-import { formatDate, isDateBetween } from '@/common/service/util/date.util';
 import { subDays } from 'date-fns';
 import dayjs from 'dayjs';
+import { CommonService } from '@/common/service/common.service';
 
 interface Props {
   cycles: Cycle[];
@@ -25,7 +25,7 @@ export default function CycleGrid(props: Props) {
 
   // filter out cycles that are not within the date range
   const filtered = cycles.filter(cycle => {
-    return dates.some(date => isDateBetween(date, cycle.startDate, cycle.endDate));
+    return dates.some(date => CommonService.instance.date.isBetween(date, dayjs(cycle.from), dayjs(cycle.to)));
   });
 
   return (
@@ -43,20 +43,20 @@ export default function CycleGrid(props: Props) {
           >
             <CardContent>
               <Typography variant="h6">
-                {formatDate(date)}
+                {CommonService.instance.date.format(date)}
               </Typography>
 
               {/* Loop through all cycles */}
               {filtered.map((cycle, j) => (
                 <Box key={j} display="flex" alignItems="center">
-                  {isDateBetween(date, cycle.startDate, cycle.endDate) && (
+                  {CommonService.instance.date.isBetween(date, dayjs(cycle.from), dayjs(cycle.to)) && (
                     <>
                       <Box
                         sx={{
                           width: '10px',
                           height: '10px',
                           borderRadius: '50%',
-                          bgcolor: `#${cycle.color}`,
+                          bgcolor: `background.paper`,
                           marginRight: 1,
                         }}
                       />

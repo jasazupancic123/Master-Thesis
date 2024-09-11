@@ -3,61 +3,57 @@
 import withAuth from '@/common/components/with-auth';
 import React, { useEffect, useState } from 'react';
 import { Pagination, TextField } from '@mui/material';
-import type { Exercise } from '@/exercise/type/exercise.type';
-import { CreateExercise } from '@/exercise/type/exercise.type';
+import type { Exercise } from '@/exercise/entity/exercise.entity';
+import type { CreateExercise } from '@/exercise/type/exercise.type';
 import Box from '@mui/material/Box';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import ExerciseModal from '@/app/exercises/exercise-modal';
+import ExerciseModal from '@/exercise/components/exercise-modal';
 import Grid from '@mui/material/Unstable_Grid2';
-import { ExerciseCard } from '@/app/exercises/exercise-card';
-import { AppContextType, useAppContext } from '@/context/app-provider';
-import { Component } from '@/component/type/component.type';
+import { ExerciseCard } from '@/exercise/components/exercise-card';
+import { useAppContext } from '@/context/app-provider';
+import type { Component } from '@/component/entity/component.entity';
 import toast from 'react-hot-toast';
 import IconButton from '@mui/material/IconButton';
-import ExerciseChips from '@/components/exercise-chips';
-import { ApiUtil } from '@/common/service/util/api.util';
-import { ObjectUtil } from '@/common/service/util/object.util';
+import ExerciseChips from '@/exercise/components/exercise-chips';
 import { PaginateOptions } from '@/common/type/paginate.type';
 import Stack from '@mui/material/Stack';
-import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { CommonService } from '@/common/service/common.service';
+import { ExerciseController } from '@/exercise/exercise.controller';
 
-const EMPTY_EXERCISE: CreateExercise = {
+const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
-  componentIds: [],
+  componentsIds: [],
   attributeValues: {},
 };
 
 function Page() {
-  // global context
-  const { token, components, attributes } = useAppContext() as AppContextType;
+  // context
+  const { token, components, attributes } = useAppContext();
 
   // filter exercises
-  const [component, setComponent] = useState<Component>(null);
+  const [component, setComponent] = useState<Component | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState({ name: '' });
   const [pagination, setPagination] = useState({ page: 1, pageSize: 6, pages: 1, total: 0 });
 
   // add and edit modals and exercise state
   const [modal, setModal] = useState({ add: false, edit: false });
-  const [exercise, setExercise] = useState<CreateExercise>(EMPTY_EXERCISE);
+  const [exercise, setExercise] = useState(DEFAULT_EXERCISE);
 
-  /**
-   * Upload file
-   */
   async function onFileUpload(file: File, path: string) {
     try {
       await FirebaseStorageUtil.uploadFile(file, path);
-    } catch (e) {
-      console.log('error:', e);
+    } catch (e: any) {
+      console.error(e);
       toast.error(e.message || 'An error occurred');
     }
   }
 
-  /**
-   * Add exercise
-   */
-  async function addExercise(item: CreateExercise) {
+  async function addExercise(item: Partial<Exercise>) {
+    if (!item.name) return toast.error('Name is required');
+    if (!item.componentsIds?.length) return toast.error('Select at least one component');
+
     try {
       const attributeValues: Record<string, any> = {};
 
@@ -67,7 +63,7 @@ function Page() {
         .map((attribute) => attribute.field);
 
       for (const key of nestedSelectAttributes) {
-        const nested = ObjectUtil.nestObject(item.attributeValues, key);
+        const nested = CommonService.instance.object.nestObject(item.attributeValues || {}, key);
         if (nested) attributeValues[key] = nested;
       }
 
@@ -79,20 +75,21 @@ function Page() {
       // delete all keys with undefined values
       Object.keys(attributeValues).forEach((key) => attributeValues[key] === undefined && delete attributeValues[key]);
 
-      const response = await ApiUtil.createExercise({
+      const response = await ExerciseController.createExercise(token, {
         name: item.name,
-        componentIds: item.componentIds,
+        componentsIds: item.componentsIds,
         imageUrl: item.imageUrl,
         videoUrl: item.videoUrl,
         attributeValues,
-      }, token);
+      });
 
       toast.success('Exercise added');
 
       const { id, rootComponentIds } = response;
       if (!component || component && rootComponentIds.includes(component.id))
         setExercises([...exercises, { ...item, id } as Exercise]);
-    } catch (e) {
+    } catch (e: any) {
+      console.error(e);
       toast.error(e.message || 'An error occurred');
     }
   }
@@ -104,63 +101,22 @@ function Page() {
     async function fetchExercises() {
       const filter = {
         ...(search.name && { name: search.name }),
-        ...(component && { componentIds: [component?.id || ''] }),
+        ...(component?.id && { componentsIds: [component?.id || ''] }),
       };
 
       const paginate: PaginateOptions<Exercise> = {
+        orderBy: { field: 'name', value: 'asc' },
         page: pagination.page,
         pageSize: pagination.pageSize,
-        limit: 100,
       };
 
-      const response = await ApiUtil.findAllExercises(token, filter, paginate);
-      setExercises(response);
+      const { total, data } = await ExerciseController.findExercises(token, { ...filter, ...paginate });
+      setExercises(data.map(exercise => CommonService.instance.firebase.firestore.populateExercise(exercise)));
+      setPagination(prev => ({ ...prev, total, pages: Math.ceil(total / pagination.pageSize) }));
     }
 
     fetchExercises().then();
-  }, [pagination, search, component?.id]);
-
-  /**
-   * Populate exercise attributes
-   */
-  useEffect(() => {
-    if (!exercise.id) return;
-
-    async function populateExercise() {
-      try {
-        const response = await ApiUtil.getExercise(exercise.id!, token);
-        setExercise(FirebaseFirestoreUtil.populateExercise(response));
-      } catch (e) {
-        toast.error(e.message || 'Could not fetch exercise');
-      }
-    }
-
-    populateExercise().then();
-  }, [exercise?.id]);
-
-  /**
-   * Get page meta for exercises when components or search name changes
-   */
-  useEffect(() => {
-    async function fetchPageMeta() {
-      try {
-        const response = await ApiUtil.getExercisePageMeta(token, {
-          name: search.name,
-          ...(component && { componentIds: [component?.id || ''] }),
-        }, pagination.pageSize);
-
-        setPagination({
-          ...pagination,
-          pages: response.pages,
-          total: response.total,
-        });
-      } catch (e) {
-        toast.error(e.message || 'Could not fetch page meta');
-      }
-    }
-
-    fetchPageMeta().then();
-  }, [search.name, pagination.pageSize, component?.id]);
+  }, [pagination.page, pagination.pageSize, search, component?.id, token]);
 
   return (
     <Box py={2}>
@@ -185,7 +141,7 @@ function Page() {
           {/* Add Button */}
           <IconButton onClick={() => {
             setModal({ ...modal, add: true });
-            setExercise(EMPTY_EXERCISE);
+            setExercise(DEFAULT_EXERCISE);
           }}>
             <AddIcon />
           </IconButton>
@@ -196,7 +152,7 @@ function Page() {
         <Pagination
           count={pagination.pages}
           color="secondary"
-          onChange={(e, page) => setPagination({ ...pagination, page })}
+          onChange={(_, page) => setPagination({ ...pagination, page })}
           page={pagination.page}
         />
       </Stack>
@@ -222,7 +178,6 @@ function Page() {
         data={exercise}
         setData={setExercise}
         attributes={attributes}
-        components={components.leafs}
         isOpen={modal.add}
         setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
         title={'Add Exercise'}
@@ -239,7 +194,6 @@ function Page() {
         data={exercise}
         setData={setExercise}
         attributes={attributes}
-        components={components.leafs}
         isOpen={modal.edit}
         setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
         title={'Update Exercise'}

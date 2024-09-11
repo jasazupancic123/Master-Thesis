@@ -18,8 +18,8 @@ export default function CreateCycleModal(props: Props) {
   const { open, setOpen, onConfirm } = props;
   const [cycle, setCycle] = useState<CreateCycle>({
     name: 'Cycle A',
-    startDate: dayjs(),
-    endDate: dayjs(addDays(new Date(), 14)),
+    from: dayjs().toDate(),
+    to: dayjs(addDays(new Date(), 14)).toDate(),
   });
 
   return <LocalizationProvider dateAdapter={AdapterDayjs as any}>
@@ -44,8 +44,8 @@ export default function CreateCycleModal(props: Props) {
         <Grid xs={6}>
           <DatePicker
             label="Start Date"
-            value={cycle.startDate as PickerValidDate}
-            onChange={(date) => setCycle({ ...cycle, startDate: date as Dayjs })}
+            value={dayjs(cycle.from) as PickerValidDate}
+            onChange={(date) => setCycle({ ...cycle, from: (date as Dayjs).toDate() })}
             sx={{ width: '100%' }}
           />
         </Grid>
@@ -53,8 +53,8 @@ export default function CreateCycleModal(props: Props) {
         <Grid xs={6}>
           <DatePicker
             label="End Date"
-            value={cycle.endDate as PickerValidDate}
-            onChange={(date) => setCycle({ ...cycle, endDate: date as Dayjs })}
+            value={dayjs(cycle.to) as PickerValidDate}
+            onChange={(date) => setCycle({ ...cycle, to: (date as Dayjs).toDate() })}
             sx={{ width: '100%' }}
           />
         </Grid>

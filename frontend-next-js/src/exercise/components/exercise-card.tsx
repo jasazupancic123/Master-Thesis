@@ -36,7 +36,7 @@ export function ExerciseCard(props: Props) {
         </Typography>
 
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          {exercise.components?.[0]}
+          {exercise.components?.[0].name}
         </Typography>
       </CardContent>
     </Card>

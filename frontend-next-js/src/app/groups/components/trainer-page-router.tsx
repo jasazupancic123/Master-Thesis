@@ -1,18 +1,17 @@
 'use client';
 
 import React, { ReactNode, useState } from 'react';
-import { GroupPageProps } from '../props';
 import Box from '@mui/material/Box';
 import { SpeedDial, SpeedDialAction, SpeedDialIcon, TextField, ToggleButtonGroup } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import MyModal from '@/components/modal';
+import MyModal from '@/common/components/modal';
 import { CreateGroup, Group } from '@/group/type/group.type';
-import { AppContextType, useAppContext } from '@/context/app-provider';
+import { useAppContext } from '@/context/app-provider';
 import toast from 'react-hot-toast';
 import { ApiUtil } from '@/common/service/util/api.util';
-import SelectData from '@/components/select-data';
+import SelectData from '@/common/components/select-data';
 import { User } from '@/user/type/user.type';
-import CreateCycleModal from '@/components/create-cycle-modal';
+import CreateCycleModal from '@/group/components/create-cycle-modal';
 import { CreateCycle, Cycle } from '@/group/type/cycle.type';
 import { TrainingFilter } from '@/app/groups/components/training-filter';
 import FilterButton from '@/app/groups/components/filter-button';
@@ -26,6 +25,8 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SelectInput from '@/app/groups/components/select-input';
 import dayjs from 'dayjs';
 import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
+import { AppContextType } from '@/common/type/context.type';
+import { GroupPageProps } from '@/group/type/props.type';
 
 const TEST_SUBGROUP_DURATION_VALUE = 1000;
 

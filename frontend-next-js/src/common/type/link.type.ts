@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export interface ILink {
+export type ILink = {
   id: string;
   href: string;
   label: string;

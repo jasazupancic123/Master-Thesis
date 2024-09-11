@@ -1,11 +1,12 @@
 'use client';
 
-import { AuthContextType, useAuth } from '@/context/auth-provider';
+import { useAuth } from '@/context/auth-provider';
 import Box from '@mui/material/Box';
 import { notFound } from 'next/navigation';
 import { UserRole } from '@/user/enum/user-role.enum';
 import { ALL_ROLES } from '@/common/constant/user.constant';
 import { ElementType } from 'react';
+import { AuthContextType } from '@/common/type/context.type';
 
 export default function withAuth(Component: ElementType, roles: UserRole[] = ALL_ROLES) {
   return function AuthComponent(props: unknown) {

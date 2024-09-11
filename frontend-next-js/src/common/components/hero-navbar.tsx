@@ -13,12 +13,13 @@ import { LINK_PROFILE, LINKS_AUTH, LINKS_NAVBAR } from '@/common/constant/naviga
 import NextLink from 'next/link';
 import { Divider, Drawer } from '@mui/material';
 import Logo from '@/common/components/logo';
-import { AuthContextType, useAuth } from '@/context/auth-provider';
+import { useAuth } from '@/context/auth-provider';
+import { AuthContextType } from '@/common/type/context.type';
 
 export default function HeroNavbar({ showLogin = true }) {
   const { user, logout } = useAuth() as AuthContextType;
   const [open, setOpen] = React.useState(false);
-  const toggleDrawer = (newOpen) => () => setOpen(newOpen);
+  const toggleDrawer = (newOpen: boolean) => () => setOpen(newOpen);
 
   return (
     <div>

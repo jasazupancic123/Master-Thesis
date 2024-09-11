@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import React, { Fragment, useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import { Exercise } from '@/exercise/type/exercise.type';
-import { AppContextType, useAppContext } from '@/context/app-provider';
+import { useAppContext } from '@/context/app-provider';
 import ExerciseList from '@/exercise/components/exercise-list';
 import MyModal from '@/common/components/modal';
 import toast from 'react-hot-toast';
@@ -13,8 +13,9 @@ import { ApiUtil } from '@/common/service/util/api.util';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Unstable_Grid2';
-import SetExerciseCard from '@/exercise/components/set-exercise-card';
+import TrainingExerciseCard from '@/exercise/components/training-exercise-card';
 import AddIcon from '@mui/icons-material/Add';
+import { AppContextType } from '@/common/type/context.type';
 
 interface Props {
   trainings: Training[];
@@ -198,8 +199,8 @@ export default function TrainingDay(props: Props) {
                               <Box>
                                 {subgroup?.setExercises?.map((setExercise) => (
                                   <Box key={setExercise.id}>
-                                    <SetExerciseCard
-                                      setExercise={setExercise}
+                                    <TrainingExerciseCard
+                                      exercise={setExercise}
                                       onChange={async (data) => {
                                         await updateSetExercise({
                                           setExerciseId: setExercise.id,

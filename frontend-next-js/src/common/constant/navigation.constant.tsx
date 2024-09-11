@@ -19,20 +19,20 @@ export const LINK_USERS: ILink = { label: 'Users', href: '/users', id: '#users' 
 export const LINK_COMPONENTS: ILink = { label: 'Components', href: '/components', id: '#components' };
 export const LINK_EXERCISES: ILink = { label: 'Exercises', href: '/exercises', id: '#exercises' };
 export const LINK_GROUPS: ILink = { label: 'My Groups', href: '/groups', id: '#groups' };
+export const LINK_CHART: ILink = { label: 'Chart', href: '/chart', id: '#chart', icon: <BarChartIcon /> };
+export const LINK_WELLNESS: ILink = { label: 'Wellness', href: '/wellness', id: '#wellness', icon: <SpaIcon /> };
 export const LINK_TRAINING: ILink = {
   label: 'Training',
   href: '/training',
   id: '#training',
   icon: <FitnessCenterIcon />,
 };
-export const LINK_CHART: ILink = { label: 'Chart', href: '/chart', id: '#chart', icon: <BarChartIcon /> };
 export const LINK_CALENDAR: ILink = {
   label: 'Calendar',
   href: '/calendar',
   id: '#calendar',
   icon: <CalendarTodayIcon />,
 };
-export const LINK_WELLNESS: ILink = { label: 'Wellness', href: '/wellness', id: '#wellness', icon: <SpaIcon /> };
 
 export const LINKS_AUTH = {
   login: LINK_SIGN_IN,

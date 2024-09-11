@@ -7,9 +7,10 @@ import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import { Divider } from '@mui/material';
-import { AppContextType, useAppContext } from '@/context/app-provider';
+import { useAppContext } from '@/context/app-provider';
 import { RemoveCircle } from '@mui/icons-material';
 import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
+import { AppContextType } from '@/common/type/context.type';
 
 type TrainingBoxProps = {
   training: Training

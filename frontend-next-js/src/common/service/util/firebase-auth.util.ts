@@ -36,6 +36,8 @@ export class FirebaseAuthUtil {
             throw new Error('An error occurred');
         }
       }
+
+      throw new Error('An error occurred');
     }
   }
 
@@ -61,6 +63,8 @@ export class FirebaseAuthUtil {
             throw new Error('An error occurred');
         }
       }
+
+      throw new Error('An error occurred');
     }
   }
 }
