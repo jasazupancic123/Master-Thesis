@@ -1,5 +1,5 @@
-import { UserWellness } from '@/user/type/user-wellness.type';
-import { SetState } from '@/common/type/react-state.type';
+import { Wellness } from '@/user/entity/wellness.entity';
+import { SetState } from '@/common/type/state.type';
 import { Slider } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
@@ -8,7 +8,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
 interface Props {
-  onSubmit: (data: Partial<UserWellness>) => void | Promise<void>;
+  onSubmit: (data: Partial<Wellness>) => void | Promise<void>;
   disabled: boolean;
 }
 

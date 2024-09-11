@@ -1,67 +1,62 @@
 'use client';
 
-import type { Component } from '@/component/type/component.type';
-import { ComponentWithParents } from '@/component/type/component.type';
 import React, { createContext, useContext } from 'react';
+import type { Component } from '@/component/entity/component.entity';
+import type { ExerciseAttribute } from '@/exercise/entity/exercise-attribute.entity';
 import { useFetch } from '@/hook/use-fetch';
 import { useLocalStorage } from 'usehooks-ts';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import { TreeUtil } from '@/common/service/util/tree.util';
-import { ApiUtil } from '@/common/service/util/api.util';
-import { ExerciseAttribute } from '@/exercise/type/exercise.type';
+import { ComponentController } from '@/component/component.controller';
+import { ExerciseController } from '@/exercise/exercise.controller';
+import { CommonService } from '@/common/service/common.service';
+import { AppContextType } from '@/common/type/context.type';
+import { theme } from '@/app/style';
+import { ThemeProvider } from '@mui/material';
 
-export type AppContextType = {
-  token: string
-  attributes: ExerciseAttribute[],
-  components: {
-    flat: Component[]
-    tree: Component[]
-    leafs: ComponentWithParents[]
-  }
+interface Props {
+  children: React.ReactNode;
 }
 
 const AppContext = createContext<AppContextType>({
   token: '',
-  attributes: {
-    flat: [],
-    tree: [],
-  },
+  attributes: [],
   components: {
     flat: [],
     tree: [],
     leafs: [],
   },
-} as AppContextType);
+});
 
-export function AppProvider({ children }) {
-  const [token] = useLocalStorage<string>(FIREBASE_COOKIE_NAME, null);
-  const [components, loading, error] = useFetch<Component[]>(ApiUtil.URL.components(), { authorization: false });
-  const [attributes, loadingAttributes, errorAttributes] = useFetch<ExerciseAttribute[]>(ApiUtil.URL.exerciseAttributes(), { authorization: false });
+export function AppProvider({ children }: Props) {
+  const [token] = useLocalStorage<string>(FIREBASE_COOKIE_NAME, '');
+  const components = useFetch<Component[]>(ComponentController.URL.components(), { authorization: false });
+  const attributes = useFetch<ExerciseAttribute[]>(ExerciseController.URL.attributes(), { authorization: false });
 
-  if (error || errorAttributes)
-    return <div>Error: {error?.message || 'Error'}</div>;
+  if (components.error || attributes.error)
+    return <div>Error</div>;
 
-  if (loading || loadingAttributes)
+  if (components.loading || attributes.loading)
     return <div>Loading...</div>;
 
-  const tree = TreeUtil.fromArray(components, {
-    idPropertyName: 'id',
-    parentIdPropertyName: 'parentId',
-    childrenPropertyName: 'children',
-  });
-
-  const leafs = TreeUtil.leafs(tree, 'children') as ComponentWithParents[];
+  if (!components || !attributes)
+    return <div>Missing data</div>;
 
   return <AppContext.Provider value={{
     token,
-    attributes,
+    attributes: attributes.data!,
     components: {
-      tree,
-      leafs,
-      flat: components,
+      flat: components.data!,
+      leafs: components.data!.filter(c => !c.children.length),
+      tree: CommonService.instance.tree.fromArray(components.data!, {
+        idPropertyName: 'id',
+        parentIdPropertyName: 'parent',
+        childrenPropertyName: 'children',
+      }),
     },
   }}>
-    {children}
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
   </AppContext.Provider>;
 }
 

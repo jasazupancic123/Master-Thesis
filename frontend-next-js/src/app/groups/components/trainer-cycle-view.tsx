@@ -1,5 +1,4 @@
-import { GroupPageProps } from '@/app/groups/props';
-import { AppContextType, useAppContext } from '@/context/app-provider';
+import { useAppContext } from '@/context/app-provider';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Component } from '@/component/type/component.type';
 import { AddSetGroup, CreateTraining, Training } from '@/training/type/training.type';
@@ -8,7 +7,7 @@ import { formatDate, isDateBetween } from '@/common/service/util/date.util';
 import toast from 'react-hot-toast';
 import { ApiUtil } from '@/common/service/util/api.util';
 import Box from '@mui/material/Box';
-import ExerciseChips from '@/components/exercise-chips';
+import ExerciseChips from '@/exercise/components/exercise-chips';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import Stack from '@mui/material/Stack';
@@ -18,6 +17,8 @@ import { AddCircle } from '@mui/icons-material';
 import { Alert, Divider } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
+import { AppContextType } from '@/common/type/context.type';
+import { GroupPageProps } from '@/group/type/props.type';
 
 export default function TrainerCycleView(props: GroupPageProps) {
   // context

@@ -4,14 +4,10 @@ import withAuth from '@/common/components/with-auth';
 import React, { useState } from 'react';
 import { User } from '@/user/type/user.type';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import { useFetch } from '@/hook/use-fetch';
-import { useLocalStorage } from 'usehooks-ts';
-import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import {
   DataGrid,
   GridActionsCellItem,
@@ -23,41 +19,26 @@ import {
 } from '@mui/x-data-grid';
 import { ALL_LEVELS, ALL_ROLES } from '@/common/constant/user.constant';
 import { UserRole } from '@/user/enum/user-role.enum';
-import MyModal from '@/components/modal';
-import Typography from '@mui/material/Typography';
 import toast from 'react-hot-toast';
 import { CustomClaims } from '@/user/type/custom-claims.type';
-import { ApiUtil } from '@/common/service/util/api.util';
+import { UserController } from '@/user/user.controller';
 
 function Page() {
-  const [users, loading, _, __, setUsers] = useFetch(ApiUtil.URL.users());
+  const users = useFetch<User[]>(UserController.URL.users());
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-  const [token] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleted, setDeleted] = useState('' as string);
 
-  async function updateUserClaims(uid: string, claims: CustomClaims) {
+  async function updateUserClaims(uid: string, claims: Partial<CustomClaims>) {
     try {
-      await ApiUtil.updateUserClaims(uid, token, claims);
+      await UserController.updateUserClaims(uid, claims);
       toast.success('Successfully updated user role');
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e.message);
     }
   }
 
-  async function deleteUser(uid: string) {
-    try {
-      await ApiUtil.deleteUser(uid, token);
-      toast.success('Successfully deleted user');
-      setUsers(users.filter((user) => user.uid !== uid));
-    } catch (e) {
-      toast.error(e.message);
-    }
-  }
+  if (users.loading) return <h2>Loading...</h2>;
 
-  if (loading) return <h2>Loading...</h2>;
-
-  const columns: GridColDef<User[number]>[] = [
+  const columns: GridColDef<User>[] = [
     { field: 'uid', headerName: 'ID', width: 280 },
     { field: 'email', headerName: 'E-mail', width: 250 },
     {
@@ -105,6 +86,7 @@ function Page() {
         if (isInEditMode)
           return [
             <GridActionsCellItem
+              key={0}
               icon={<SaveIcon />}
               label="Save"
               sx={{ color: 'primary.main' }}
@@ -113,6 +95,7 @@ function Page() {
               }}
             />,
             <GridActionsCellItem
+              key={1}
               icon={<CancelIcon />}
               label="Cancel"
               className="textPrimary"
@@ -128,19 +111,11 @@ function Page() {
 
         return [
           <GridActionsCellItem
+            key={0}
             icon={<EditIcon />}
             label="Edit"
             className="textPrimary"
             onClick={() => setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } })}
-            color="inherit"
-          />,
-          <GridActionsCellItem
-            icon={<DeleteIcon />}
-            label="Delete"
-            onClick={() => {
-              setShowDeleteModal(true);
-              setDeleted(id as string);
-            }}
             color="inherit"
           />,
         ];
@@ -160,8 +135,8 @@ function Page() {
       }}>
         <DataGrid
           getRowId={(row) => row.uid}
-          rows={users}
-          columns={columns}
+          rows={users.data || []}
+          columns={columns as GridColDef[]}
           editMode="row"
           rowModesModel={rowModesModel}
           onRowModesModelChange={(newRowModesModel: GridRowModesModel) =>
@@ -171,35 +146,16 @@ function Page() {
             if (params.reason === GridRowEditStopReasons.rowFocusOut)
               event.defaultMuiPrevented = true;
           }}
-          processRowUpdate={async (newRow: GridRowModel) => {
+          processRowUpdate={async (newRow: GridRowModel<User>) => {
             const updatedRow = { ...newRow, isNew: false };
             const userId = updatedRow.uid;
 
-            setUsers(users.map((user) => (user.uid === userId ? updatedRow : user)));
+            users.setData((users.data || []).map((user) => (user.uid === userId ? updatedRow : user)));
             await updateUserClaims(userId, updatedRow.customClaims);
             return updatedRow;
           }}
         />
       </Box>
-
-      {/* Delete Modal */}
-      <MyModal
-        isOpen={showDeleteModal}
-        setIsOpen={setShowDeleteModal}
-        actions={<>
-          <Button
-            onClick={async () => {
-              await deleteUser(deleted);
-              setShowDeleteModal(false);
-            }}
-            color="primary">
-            Delete
-          </Button>
-          <Button onClick={() => setShowDeleteModal(false)} color="secondary">Cancel</Button>
-        </>}
-      >
-        <Typography>Are you sure you want to delete this user?</Typography>
-      </MyModal>
     </>
   );
 }

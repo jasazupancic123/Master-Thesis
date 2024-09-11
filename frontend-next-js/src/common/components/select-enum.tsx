@@ -2,14 +2,14 @@ import MenuItem from '@mui/material/MenuItem';
 import { FormControl, InputLabel, Select } from '@mui/material';
 import React from 'react';
 
-interface SelectEnumProps {
+interface Props {
   enumObject: any;
   label: string;
   value: string;
   onChange: (value: string) => void;
 }
 
-export default function SelectEnum(props: SelectEnumProps) {
+export default function SelectEnum(props: Props) {
   const { enumObject, label, value, onChange } = props;
 
   return <FormControl fullWidth>
@@ -18,7 +18,7 @@ export default function SelectEnum(props: SelectEnumProps) {
       labelId={enumObject.name}
       value={value}
       label={label}
-      variant='outlined'
+      variant="outlined"
       onChange={(e) => onChange(e.target.value as string)}
     >
       <MenuItem value={''}>None</MenuItem>
@@ -28,5 +28,5 @@ export default function SelectEnum(props: SelectEnumProps) {
         </MenuItem>
       ))}
     </Select>
-  </FormControl>
+  </FormControl>;
 }

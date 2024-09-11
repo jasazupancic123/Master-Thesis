@@ -1,33 +1,25 @@
-import { Cycle } from '@/group/type/cycle.type';
-import dayjs from 'dayjs';
-import { Training } from '@/training/type/training.type';
-import { Component } from '@/component/type/component.type';
-import { Exercise } from '@/exercise/type/exercise.type';
-import { ObjectUtil } from '@/common/service/util/object.util';
+import { Cycle } from '@/group/entity/cycle.entity';
+import { Training } from '@/training/entity/training.entity';
+import { Component } from '@/component/entity/component.entity';
+import { Exercise } from '@/exercise/entity/exercise.entity';
+import { CommonService } from '@/common/service/common.service';
 
 export class FirebaseFirestoreUtil {
-  static populateCycle(item: Cycle): Cycle {
-    item.startDate = dayjs(item.startDate);
-    item.endDate = dayjs(item.endDate);
+  populateCycle(item: Cycle): Cycle {
+    // item.from = dayjs(item.from);
+    // item.to = dayjs(item.to);
     return item;
   }
 
-  static populateTraining(item: Training, components: Component[]): Training {
+  populateTraining(item: Training, components: Component[]): Training {
     // convert dates to dayjs
-    item.startTime = dayjs(item.startTime);
-    item.endTime = dayjs(item.endTime);
-
-    // if set groups are defined, map components to set groups
-    item.setGroups = (item.setGroups || []).map((setGroup) => {
-      setGroup.component = components.find((c) => c.id === setGroup.componentId)!;
-      return setGroup;
-    });
-
+    // item.from = dayjs(item.from);
+    // item.to = dayjs(item.to);
     return item;
   }
 
-  static populateExercise(item: Exercise): Exercise {
-    item.attributeValues = ObjectUtil.flattenObject(item.attributeValues);
+  populateExercise(item: Exercise): Exercise {
+    item.attributeValues = CommonService.instance.object.flattenObject(item.attributeValues);
     return item;
   }
 }

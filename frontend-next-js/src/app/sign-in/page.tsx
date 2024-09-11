@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Grid, TextField } from '@mui/material';
@@ -8,22 +8,22 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
-import HeroNavbar from '@/components/hero-navbar';
+import HeroNavbar from '@/common/components/hero-navbar';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { LINK_PROFILE, LINKS_AUTH } from '@/common/constant/navigation.constant';
 import toast from 'react-hot-toast';
 import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
-import { sleep } from '@/util/sleep';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { useLocalStorage } from 'usehooks-ts';
+import { CommonService } from '@/common/service/common.service';
 
 export default function Page() {
   const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [token, setToken] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
+  const [_, setToken] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     try {
@@ -32,9 +32,9 @@ export default function Page() {
       setToken(tokenResult.token);
       toast.success('Logged in successfully');
 
-      await sleep(0.25);
+      await CommonService.instance.generic.sleep(0.25);
       router.push(LINK_PROFILE.href);
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e.message);
     }
   }
@@ -81,7 +81,7 @@ export default function Page() {
           <Grid container>
             <Grid item>
               <Link href={LINKS_AUTH.register.href} style={{ textDecoration: 'none', color: '#1976d2' }}>
-                Don't have an account? Sign Up
+                Don&apos;t have an account? Sign Up
               </Link>
             </Grid>
           </Grid>

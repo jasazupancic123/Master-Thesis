@@ -2,24 +2,24 @@ import MyModal from '@/common/components/modal';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Unstable_Grid2';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 import React, { ReactNode, useEffect, useState } from 'react';
-import MenuItem from '@mui/material/MenuItem';
-import { Checkbox, Divider, FormControl, FormControlLabel, InputLabel } from '@mui/material';
+import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
-import type { ExerciseAttribute, ExerciseAttributeSelectOption } from '@/exercise/entity/exercise-attribute.entity';
-import type { CreateExercise } from '@/exercise/type/exercise.type';
+import type { ExerciseAttribute } from '@/exercise/entity/exercise-attribute.entity';
 import FileUpload from '@/common/components/file-upload';
 import Stack from '@mui/material/Stack';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { Component } from '@/component/entity/component.entity';
 import { CommonService } from '@/common/service/common.service';
+import { Exercise } from '@/exercise/entity/exercise.entity';
+import { SetState } from '@/common/type/state.type';
+import SelectAttribute from '@/exercise/components/select-attribute';
+import SelectComponent from '@/exercise/components/select-component';
+import { useAppContext } from '@/context/app-provider';
 
 interface Props {
-  data: CreateExercise;
-  setData: (data: CreateExercise | ((prev: CreateExercise) => CreateExercise)) => void;
+  data: Partial<Exercise>;
+  setData: SetState<Partial<Exercise>>;
   attributes: ExerciseAttribute[];
-  components: Component[];
   icons: ReactNode;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -32,12 +32,42 @@ export default function ExerciseModal(props: Props) {
     data,
     setData,
     attributes,
-    components,
     isOpen,
     setIsOpen,
     icons,
     title,
   } = props;
+
+  const { components } = useAppContext();
+  const [selectedComponents, setSelectedComponents] = useState<{ [key: number]: string }>({});
+
+  useEffect(() => {
+    // set the selected components to the data's components
+    if (data.componentsIds?.length === 0) {
+      setSelectedComponents({});
+      return;
+    }
+
+    // for now, only one selected component is supported
+    const component = components.flat.find((c) => c.id === data.componentsIds![0]);
+    if (!component)
+      return;
+
+    const selected: { [key: number]: string } = {};
+    let level = component.parents.length;
+
+    let parentId = component.parent;
+    while (parentId) {
+      const parent = components.flat.find((c) => c.id === parentId);
+      if (!parent) break;
+
+      selected[--level] = parent.id;
+      parentId = parent.parent;
+    }
+
+    selected[component.parents.length] = component.id;
+    setSelectedComponents(selected);
+  }, [data?.id]);
 
   function handleSelectChange(field: string, value: string) {
     setData((prev) => ({
@@ -48,6 +78,16 @@ export default function ExerciseModal(props: Props) {
       },
     }));
   }
+
+  useEffect(() => {
+    const componentsIds = Object.values(selectedComponents);
+    if (!componentsIds.length) return;
+
+    setData((prev) => ({
+      ...prev,
+      componentsIds: [componentsIds[componentsIds.length - 1]], // only the leaf component (last one) is selected
+    }));
+  }, [setData, selectedComponents]);
 
   return <MyModal isOpen={isOpen} setIsOpen={setIsOpen} width={500}>
     <Box>
@@ -69,23 +109,14 @@ export default function ExerciseModal(props: Props) {
           />
         </Grid>
 
+        {/* Multi-level dropdown for components */}
         <Grid xs={12}>
           <InputLabel id="component">Component</InputLabel>
-          <Select
-            fullWidth
-            labelId="component"
-            label="Component"
-            variant="outlined"
-            value={data.componentsIds?.[0] || ''}
-            onChange={(e) => setData({ ...data, componentsIds: [e.target.value] as string[] })}
-          >
-            <MenuItem value={''}>None</MenuItem>
-            {components.map((component) => (
-              <MenuItem key={component.id} value={component.id}>
-                {component.parents.map((parent) => parent.name).join(' > ')} {'>'} {component.name}
-              </MenuItem>
-            ))}
-          </Select>
+          <SelectComponent
+            selectedComponents={selectedComponents}
+            setSelectedComponents={setSelectedComponents}
+            components={components.tree}
+          />
         </Grid>
 
         {/* Video url and image url */}
@@ -188,79 +219,3 @@ export default function ExerciseModal(props: Props) {
   </MyModal>;
 }
 
-// recursive components to show select for subattributes
-function SelectAttribute(props: {
-  attribute: ExerciseAttribute | ExerciseAttributeSelectOption;
-  onChange: (field: string, value: string) => void;
-  initialValue?: string | Record<string, any>;
-  label?: boolean
-}) {
-  const { attribute, onChange, initialValue, label } = props;
-
-  const [subOptions, setSubOptions] = useState<ExerciseAttributeSelectOption | undefined>(undefined);
-  const [selectedValue, setSelectedValue] = useState<string | undefined>(() => {
-    if (typeof initialValue === 'object')
-      return initialValue[attribute.field] as string;
-
-    return initialValue as string;
-  });
-
-  /**
-   * Populate initial values for nested select
-   */
-  useEffect(() => {
-    if (typeof initialValue === 'object' && initialValue[attribute.field]) {
-      setSelectedValue(initialValue[attribute.field] as string);
-
-      const selectedOption = attribute.values?.find((option) =>
-        typeof option === 'object' && option.field === initialValue[attribute.field],
-      ) as ExerciseAttributeSelectOption;
-
-      setSubOptions(selectedOption);
-    }
-  }, [attribute.field, attribute.values, initialValue]);
-
-  function handleSelectChange(e: SelectChangeEvent) {
-    const value = e.target.value as string;
-    setSelectedValue(value);
-
-    const selectedOption = attribute.values?.find((option) =>
-      typeof option === 'object' && option.field === value,
-    ) as ExerciseAttributeSelectOption;
-
-    setSubOptions(selectedOption);
-    onChange(attribute.field, value);
-  }
-
-  return <Box>
-    <FormControl fullWidth>
-      {label && <InputLabel id={attribute.field}>{attribute.name}</InputLabel>}
-      <Select
-        labelId={attribute.field}
-        label={label ? attribute.name : undefined}
-        variant="outlined"
-        fullWidth
-        value={selectedValue || ''}
-        onChange={handleSelectChange}
-      >
-        <MenuItem value="">None</MenuItem>
-
-        {attribute.values?.map((option) => {
-          if (typeof option === 'string')
-            return <MenuItem key={option} value={option}>{option}</MenuItem>;
-
-          // nested select
-          return <MenuItem key={option.field} value={option.field}>
-            {option.name}
-          </MenuItem>;
-        })}
-      </Select>
-    </FormControl>
-
-    {subOptions && <SelectAttribute
-      attribute={subOptions}
-      onChange={onChange}
-      initialValue={initialValue}
-    />}
-  </Box>;
-}

@@ -1,10 +1,8 @@
-import { Group } from '@/group/type/group.type';
+import { Group } from '@/group/entity/group.entity';
 import { User } from '@/user/type/user.type';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import { Tooltip } from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import IconButton from '@mui/material/IconButton';
 import Avatar from '@mui/material/Avatar';
 
 interface Props {
@@ -14,7 +12,7 @@ interface Props {
 
 export default function GroupMembersStack(props: Props) {
   const { group, onClick } = props;
-  const { members, user } = group;
+  const { members } = group;
 
   return (
     <Stack spacing={2} direction="row">
@@ -26,5 +24,5 @@ export default function GroupMembersStack(props: Props) {
         </Box>
       ))}
     </Stack>
-  )
+  );
 }

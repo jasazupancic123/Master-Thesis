@@ -2,17 +2,17 @@ import MenuItem from '@mui/material/MenuItem';
 import { FormControl, InputLabel, Select } from '@mui/material';
 import React from 'react';
 
-interface SelectDataProps<T> {
+interface Props<T> {
   data: T[];
   label: string;
   value: any | any[];
-  onChange: (value: SelectDataProps<T>['value']) => void;
+  onChange: (value: Props<T>['value']) => void;
   dataKeyProp?: keyof T;
   dataValueProp?: keyof T;
   multiple?: boolean;
 }
 
-export default function SelectData<T>(props: SelectDataProps<T>) {
+export default function SelectData<T>(props: Props<T>) {
   const {
     data,
     label,
@@ -36,10 +36,10 @@ export default function SelectData<T>(props: SelectDataProps<T>) {
       <MenuItem value={''}>None</MenuItem>
       {data.map((obj) => (
         <MenuItem
-          key={dataKeyProp ? obj?.[dataKeyProp] : obj as string}
-          value={dataKeyProp ? obj?.[dataKeyProp] : obj as string}
+          key={dataKeyProp ? obj?.[dataKeyProp] as string : obj as string}
+          value={dataKeyProp ? obj?.[dataKeyProp] as string : obj as string}
         >
-          {dataValueProp ? obj?.[dataValueProp] : obj as string}
+          {dataValueProp ? obj?.[dataValueProp] as string : obj as string}
         </MenuItem>
       ))}
     </Select>

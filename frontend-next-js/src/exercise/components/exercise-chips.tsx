@@ -1,13 +1,15 @@
 import { Chip, SxProps } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
-import { Component } from '@/component/type/component.type';
+import { Component } from '@/component/entity/component.entity';
+import { TreeComponent } from '@/component/type/component.type';
+import { SetState } from '@/common/type/state.type';
 
 interface Props {
-  components: Component[];
+  components: (Component | TreeComponent)[];
   noSelectionLabel?: string; // for all / no selection
-  selected?: Component | Component[];
-  setSelected?: (component: Component | Component[]) => void;
+  selected?: null | Component | TreeComponent | (Component | TreeComponent)[];
+  setSelected?: SetState<Props['selected']>;
   small?: boolean;
   direction?: 'row' | 'column';
   itemSx?: SxProps;
@@ -31,7 +33,7 @@ export default function ExerciseChips(props: Props) {
         if (Array.isArray(selected))
           setSelected([]);
         else
-          setSelected(null as Component);
+          setSelected(null);
       }}
       sx={props.itemSx}
     />}
@@ -60,7 +62,7 @@ export default function ExerciseChips(props: Props) {
         } else {
           // if components already selected, deselect it
           if (selected?.id === c.id)
-            setSelected(null as Component);
+            setSelected(null);
           // if components not selected, select it
           else
             setSelected(c);

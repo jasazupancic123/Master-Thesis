@@ -3,8 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import React from 'react';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
-import { ThemeProvider } from '@mui/material';
-import { theme } from '@/util/theme';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/auth-provider';
 import { AppProvider } from '@/context/app-provider';
@@ -21,13 +19,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
     <body className={inter.className}>
     <AppRouterCacheProvider>
-      <ThemeProvider theme={theme}>
-        <AppProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </AppProvider>
-      </ThemeProvider>
+      <AppProvider>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </AppProvider>
     </AppRouterCacheProvider>
 
     <Toaster />

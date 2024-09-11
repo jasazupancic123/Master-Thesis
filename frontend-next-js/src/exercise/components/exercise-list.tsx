@@ -1,4 +1,4 @@
-import { Exercise } from '@/exercise/type/exercise.type';
+import type { Exercise } from '@/exercise/entity/exercise.entity';
 import Typography from '@mui/material/Typography';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import React from 'react';
@@ -12,10 +12,10 @@ interface Props {
 }
 
 export default function ExerciseList(props: Props) {
-  const { exercises, selectedExercises, setSelectedExercises, size = 'medium' } = props;
+  const { exercises, selectedExercises, setSelectedExercises } = props;
 
   return (
-    <Stack direction='row' spacing={1} mt={5}>
+    <Stack direction="row" spacing={1} mt={5}>
       {exercises.map((exercise) => (
         <Card
           key={exercise.id}
@@ -39,7 +39,7 @@ export default function ExerciseList(props: Props) {
           />
           <CardContent
             sx={{
-              backgroundColor: selectedExercises.find(e => e.id === exercise.id) ? 'primary.main' : '#1A2B3C'
+              backgroundColor: selectedExercises.find(e => e.id === exercise.id) ? 'primary.main' : '#1A2B3C',
             }}
           >
             <Typography gutterBottom variant="caption" component="div">

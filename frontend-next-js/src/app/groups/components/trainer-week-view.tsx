@@ -1,4 +1,3 @@
-import { GroupPageProps } from '@/app/groups/props';
 import React, { Fragment, useEffect, useState } from 'react';
 import { formatDate, getWeekDays, isDateBetween } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
@@ -8,6 +7,7 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { Training } from '@/training/type/training.type';
 import Stack from '@mui/material/Stack';
 import Circles from '@/app/groups/components/circles';
+import { GroupPageProps } from '@/group/type/props.type';
 
 export default function TrainerWeekView(props: GroupPageProps) {
   // context

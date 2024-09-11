@@ -14,8 +14,11 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
 export default function FileUpload(props: Props) {
+  const { label, onFileUpload, input, initialFileUrl } = props;
+  const onFileUploadCallback = useCallback(onFileUpload, [onFileUpload]);
+
   const [preview, setPreview] = useState(() => ({
-    url: props.initialFileUrl || '',
+    url: initialFileUrl || '',
     error: '',
   }));
 
@@ -24,10 +27,11 @@ export default function FileUpload(props: Props) {
     setPreview(prev => ({ ...prev, url }));
   }, []);
 
-  const maxSize = props.input === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
+
+  const maxSize = input === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
   const accept: Accept = {
-    ...(props.input === 'image' && { 'image/*': ['.png', '.jpeg'] }),
-    ...(props.input === 'video' && { 'video/*': ['.mp4'] }),
+    ...(input === 'image' && { 'image/*': ['.png', '.jpeg'] }),
+    ...(input === 'video' && { 'video/*': ['.mp4'] }),
   };
 
   const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
@@ -38,13 +42,11 @@ export default function FileUpload(props: Props) {
   });
 
   /**
-   * Clean up the previewUrl when the components unmounts
+   * Clean up the previewUrl when the component unmounts
    */
   useEffect(() => {
-    if (preview.error) {
-      // reset the previewUrl if there is an error
+    if (preview.error) // reset the previewUrl if there is an error
       setPreview({ url: '', error: preview.error });
-    }
 
     return () => {
       if (preview) URL.revokeObjectURL(preview.url);
@@ -61,14 +63,14 @@ export default function FileUpload(props: Props) {
 
     const uploadFile = async () => {
       try {
-        await props.onFileUpload(file);
-      } catch (e) {
+        await onFileUploadCallback(file);
+      } catch (e: any) {
         setPreview(prev => ({ ...prev, error: e.message || 'An error occurred' }));
       }
     };
 
     uploadFile().then();
-  }, [acceptedFiles]);
+  }, [acceptedFiles, onFileUploadCallback]);
 
   return (
     <div {...getRootProps()} style={{ width: '100%', height: 150 }}>
@@ -81,7 +83,7 @@ export default function FileUpload(props: Props) {
         }}
       >
         <Box p={1}>
-          <Typography>{props.label}</Typography>
+          <Typography>{label}</Typography>
 
           {preview.error
             ? <Typography color="error">{preview.error}</Typography>
@@ -95,7 +97,7 @@ export default function FileUpload(props: Props) {
 
         {!preview.error && preview.url && (
           <Box height={100} position="relative">
-            {props.input === 'video' ? (
+            {input === 'video' ? (
               <video
                 src={preview.url}
                 controls

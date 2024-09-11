@@ -3,44 +3,34 @@
 import withAuth from '@/common/components/with-auth';
 import React, { useState } from 'react';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
-import { Component } from '@/component/type/component.type';
+import { Component } from '@/component/entity/component.entity';
 import EditIcon from '@mui/icons-material/Edit';
-import { AuthContextType, useAuth } from '@/context/auth-provider';
 import { UserRole } from '@/user/enum/user-role.enum';
 import toast from 'react-hot-toast';
 import Button from '@mui/material/Button';
-import MyModal from '@/components/modal';
+import MyModal from '@/common/components/modal';
 import { TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Tree, { TreeItem } from '@/components/tree';
-import { AppContextType, useAppContext } from '@/context/app-provider';
-import SelectData from '@/components/select-data';
-import { ApiUtil } from '@/common/service/util/api.util';
+import Tree, { TreeItem } from '@/common/components/tree';
+import { useAppContext } from '@/context/app-provider';
+import SelectData from '@/common/components/select-data';
+import { ComponentController } from '@/component/component.controller';
+
+const DEFAULT_COMPONENT: Component = { id: '', slug: '', name: '', parent: null, children: [], parents: [] };
 
 function Page() {
-  // app global context
-  const { token, components } = useAppContext() as AppContextType;
+  // context
+  const { token, components } = useAppContext();
 
-  // auth context
-  const { role } = useAuth() as AuthContextType;
-  const isAdmin = role.includes(UserRole.ADMIN);
-
-  // components being modified
-  const [component, setComponent] = useState<Partial<Component>>({});
-
-  // modal states
+  // state
+  const [component, setComponent] = useState(DEFAULT_COMPONENT);
   const [modal, setModal] = useState({ edit: false });
-
-  // view state
   const [isTreeView, setIsTreeView] = useState(false);
 
-  /**
-   * Edit components
-   */
   async function editComponent(id: string) {
     try {
-      await ApiUtil.editComponent(id, token, component);
+      await ComponentController.updateComponent(token, id, component);
       toast.success('Successfully edited components');
       setModal(prev => ({ ...prev, edit: false }));
     } catch (e) {
@@ -48,13 +38,16 @@ function Page() {
     }
   }
 
-  const columns: GridColDef<Component[number]>[] = [
+  const columns: GridColDef<Component>[] = [
     { field: 'name', headerName: 'Name', width: 150 },
     {
       field: 'parentName',
       headerName: 'Parent',
       width: 150,
-      valueGetter: (_, row: Component) => (components.flat.find((component: Component) => component.id === row.parentId) || { name: '' }).name,
+      valueGetter: (_, row: Component) => {
+        const found = components.flat.find((component) => component.id === row.parent);
+        return (found || DEFAULT_COMPONENT).name;
+      },
       valueSetter: (params) => params.value,
     },
     {
@@ -63,8 +56,9 @@ function Page() {
       width: 100,
       getActions: ({ id }) => {
         return [
-          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => {
-            setComponent(components.flat.find((component: Component) => component.id === id));
+          <GridActionsCellItem key={0} icon={<EditIcon />} label="Edit" onClick={() => {
+            const found = components.flat.find((component) => component.id === id);
+            setComponent(found || DEFAULT_COMPONENT);
             setModal(prev => ({ ...prev, edit: true }));
           }} />,
         ];
@@ -126,8 +120,8 @@ function Page() {
             dataKeyProp="id"
             dataValueProp="name"
             label="Parent"
-            value={component.parentId || ''}
-            onChange={(parentId) => setComponent({ ...component, parentId })}
+            value={component.parent || ''}
+            onChange={(parent) => setComponent({ ...component, parent })}
           />
         </Box>
       </MyModal>

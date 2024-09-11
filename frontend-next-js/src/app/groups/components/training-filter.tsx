@@ -7,7 +7,7 @@ import { Training } from '@/training/type/training.type';
 import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
 import { CreateCycle, Cycle } from '@/group/type/cycle.type';
-import { AppContextType, useAppContext } from '@/context/app-provider';
+import { useAppContext } from '@/context/app-provider';
 import { ApiUtil } from '@/common/service/util/api.util';
 import { useFetch } from '@/hook/use-fetch';
 import { useParams, useRouter } from 'next/navigation';
@@ -17,8 +17,9 @@ import { Group } from '@/group/type/group.type';
 import { getWeekDays } from '@/common/service/util/date.util';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import CreateCycleModal from '@/components/create-cycle-modal';
+import CreateCycleModal from '@/group/components/create-cycle-modal';
 import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
+import { AppContextType } from '@/common/type/context.type';
 
 export type TrainingFilter = 'year' | 'cycle' | 'week' | 'day';
 

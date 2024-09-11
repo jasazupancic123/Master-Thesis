@@ -1,20 +1,20 @@
-import React from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import React, { ReactNode } from 'react';
+import { Dialog, DialogActions, DialogContent, DialogTitle, SxProps } from '@mui/material';
 import Button from '@mui/material/Button';
 
-export interface MyModalProps {
+export interface Props {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  children: React.ReactNode;
-  actions?: React.ReactNode;
+  children: ReactNode;
+  actions?: ReactNode;
   title?: string;
   onCancel?: () => void;
   onConfirm?: () => void;
   width?: number;
-  sx?: any;
+  sx?: SxProps;
 }
 
-export default function MyModal(props: MyModalProps) {
+export default function MyModal(props: Props) {
   const {
     isOpen,
     setIsOpen,

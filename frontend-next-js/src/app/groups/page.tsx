@@ -1,35 +1,36 @@
 'use client';
 
 import { useFetch } from '@/hook/use-fetch';
-import { User } from '@/user/type/user.type';
+import type { User } from '@/user/type/user.type';
 import { UserRole } from '@/user/enum/user-role.enum';
 import TrainerPageRouter from './components/trainer-page-router';
 import withAuth from '@/common/components/with-auth';
 import React, { ReactNode, useEffect, useState } from 'react';
-import { ApiUtil } from '@/common/service/util/api.util';
-import { AuthContextType, useAuth } from '@/context/auth-provider';
-import { Group } from '@/group/type/group.type';
-import { Cycle } from '@/group/type/cycle.type';
+import { useAuth } from '@/context/auth-provider';
+import type { Group } from '@/group/entity/group.entity';
+import type { Cycle } from '@/group/entity/cycle.entity';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AppContextType, useAppContext } from '@/context/app-provider';
-import { TrainingFilter } from '@/app/groups/components/training-filter';
-import { Training } from '@/training/type/training.type';
+import { useAppContext } from '@/context/app-provider';
+import type { TrainingFilter } from '@/app/groups/components/training-filter';
 import dayjs, { Dayjs } from 'dayjs';
-import { getWeekDays } from '@/common/service/util/date.util';
-import { GroupPageProps } from '@/app/groups/props';
 import toast from 'react-hot-toast';
-import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
+import type { AppContextType, AuthContextType } from '@/common/type/context.type';
+import type { GroupPageProps } from '@/group/type/props.type';
+import { UserController } from '@/user/user.controller';
+import { GroupController } from '@/group/group.controller';
+import { Subgroup } from '@/group/entity/subgroup.entity';
+import { CommonService } from '@/common/service/common.service';
 
 function Page() {
   // context
   const router = useRouter();
   const searchParams = useSearchParams();
   const { role } = useAuth() as AuthContextType;
-  const { token, components } = useAppContext() as AppContextType;
+  const { token } = useAppContext() as AppContextType;
 
   // state
-  const [users, loadingUsers, errorUsers, _refetchUsers, setUsers] = useFetch<User[]>(ApiUtil.URL.users());
-  const [groups, loadingGroups, errorGroups, _refetchGroups, setGroups] = useFetch<Group[]>(ApiUtil.URL.groups());
+  const users = useFetch<User[]>(UserController.URL.users());
+  const groups = useFetch<Group[]>(GroupController.URL.groups());
   const [filter, setFilter] = useState<TrainingFilter>('year');
   const [date, setDate] = useState({
     start: dayjs().startOf('year'),
@@ -37,88 +38,45 @@ function Page() {
     custom: false,
   });
 
-  const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState({
+  const [selected, setSelected] = useState<GroupPageProps['selected']>({
     group: null as Group | null,
-    subgroup: null as Group | null,
-    cycles: [] as Cycle[], // all cycles for a group / subgroup
-    cycle: null as Cycle | null, // selected cycle
-    trainings: [] as Training[], // selected cycle trainings
+    subgroup: null as Subgroup | null,
+    cycle: null as Cycle | null,
   });
+
+  const props: GroupPageProps = {
+    users,
+    groups,
+    filter,
+    setFilter,
+    selected,
+    setSelected,
+    date,
+    setDate,
+  };
 
   /**
    * If group id is not provided, reset all other selected items, otherwise
    * fetch group and its cycles and set other selected items to null
    */
-  async function fetchGroup(groupId: string | null) {
-    if (!groupId) {
-      setSelected({ group: null, subgroup: null, cycle: null, cycles: [], trainings: [] });
-      return;
+  useEffect(() => {
+    async function fetchGroup() {
+      if (!selected.group?.id) {
+        setSelected({ group: null, subgroup: null, cycle: null });
+        return;
+      }
+
+      try {
+        const group = await GroupController.findGroup(token, selected.group.id);
+        setSelected({ group, subgroup: null, cycle: null });
+      } catch (e: any) {
+        console.error(e);
+        toast.error(e.message || 'Error fetching group');
+      }
     }
 
-    try {
-      const group = await ApiUtil.getGroup(groupId, token);
-      const cycles = await ApiUtil.getAllCycles(token, { groupId: group.id });
-
-      setSelected({ group, cycles, subgroup: null, cycle: null, trainings: [] });
-    } catch (e) {
-      console.error(e);
-      toast.error(e.message || 'Error fetching group');
-    }
-  }
-
-  function findSubgroup(subgroupId: string | null) {
-    const subgroup = subgroupId ? (selected.group?.subgroups || []).find(subgroup => subgroup.id === subgroupId) || null : null;
-    setSelected(prev => ({ ...prev, subgroup }));
-  }
-
-  /**
-   * Fetch cycle and its trainings
-   */
-  async function fetchCycle(cycleId: string | null) {
-    if (!cycleId) {
-      setSelected(prev => ({ ...prev, cycle: null, trainings: [] }));
-      return;
-    }
-
-    try {
-      const cycle = await ApiUtil.getCycle(cycleId, token);
-      const response = await ApiUtil.findAllTrainings(token, {
-        cycleId: cycle.id,
-        subgroupId: selected.subgroup?.id,
-        startTime: date.start.toISOString(),
-        endTime: date.end.toISOString(),
-      });
-
-      const trainings = response.map(training => FirebaseFirestoreUtil.populateTraining(training, components.flat));
-      setSelected({ ...selected, cycle, trainings });
-    } catch (e) {
-      console.error(e);
-      toast.error(e.message || 'Error fetching cycle');
-    }
-  }
-
-  async function fetchTrainings(cycleId: string, subgroupId?: string) {
-    if (!cycleId) {
-      setSelected(prev => ({ ...prev, trainings: [] }));
-      return;
-    }
-
-    try {
-      const response = await ApiUtil.findAllTrainings(token, {
-        cycleId,
-        subgroupId,
-        startTime: date.start.toISOString(),
-        endTime: date.end.toISOString(),
-      });
-
-      const trainings = response.map(training => FirebaseFirestoreUtil.populateTraining(training, components.flat));
-      setSelected({ ...selected, trainings });
-    } catch (e) {
-      console.error(e);
-      toast.error(e.message || 'Error fetching trainings');
-    }
-  }
+    fetchGroup().then();
+  }, [searchParams, selected.group?.id, token]);
 
   // TODO - get initial data based on query params
 
@@ -134,7 +92,7 @@ function Page() {
     params.set('filter', filter);
 
     router.replace(`?${params.toString()}`);
-  }, [selected.group, selected.subgroup, selected.cycle, filter]);
+  }, [router, selected.group, selected.subgroup, selected.cycle, filter]);
 
   /**
    * Filter date range based on provided filters
@@ -152,12 +110,12 @@ function Page() {
         break;
       case 'cycle':
         if (!props.selected.cycle) {
-          const week = getWeekDays();
+          const week = CommonService.instance.date.getWeekDays();
           start = week[0].date.startOf('day');
           end = week[6].date.endOf('day');
         } else {
-          start = dayjs(props.selected.cycle.startDate).startOf('day');
-          end = dayjs(props.selected.cycle.endDate).endOf('day');
+          start = dayjs(props.selected.cycle.from).startOf('day');
+          end = dayjs(props.selected.cycle.to).endOf('day');
         }
 
         break;
@@ -166,7 +124,7 @@ function Page() {
           start = today.startOf('week');
           end = today.endOf('week');
         } else {
-          const week = props.selected.cycle.weeks?.[0] || getWeekDays();
+          const week = props.selected.cycle.weeks?.[0] || CommonService.instance.date.getWeekDays();
           start = dayjs(week[0].date!).startOf('day');
           end = dayjs(week[6].date!).endOf('day');
         }
@@ -187,76 +145,30 @@ function Page() {
     }
 
     setDate({ ...date, start, end });
-  }, [searchParams.get('filter'), selected.cycle?.id]);
-
-  /**
-   * When group changes, keep only group and its cycles selected
-   */
-  useEffect(() => {
-    setSelected(prev => ({
-      ...prev,
-      subgroup: null,
-      cycle: null,
-      trainings: [],
-    }));
-  }, [selected.group?.id]);
-
-  /**
-   * Fetch group and its cycles when groupId param changes
-   */
-  useEffect(() => {
-    setLoading(true);
-    fetchGroup(searchParams.get('groupId')).finally(() => setLoading(false));
-  }, [searchParams.get('groupId')]);
-
-  /**
-   * Fetch subgroup when subgroupId param changes
-   */
-  useEffect(() => {
-    if (selected.group) findSubgroup(searchParams.get('subgroupId'));
-  }, [searchParams.get('subgroupId')]);
-
-  /**
-   * Fetch cycle and its trainings when cycleId param changes (and group is
-   * selected)
-   */
-  useEffect(() => {
-    if (selected.group) {
-      setLoading(true);
-      fetchCycle(searchParams.get('cycleId')).finally(() => setLoading(false));
-    }
-  }, [searchParams.get('cycleId'), selected.subgroup?.id]);
+  }, [date, filter, selected.cycle, props.selected.cycle]);
 
   /**
    * Filter trainings for cycle based on date range
    */
   useEffect(() => {
-    if (selected.cycle) {
-      setLoading(true);
-      fetchTrainings(selected.cycle.id, selected.subgroup?.id).finally(() => setLoading(false));
-    }
-  }, [date.start, date.end, selected.subgroup?.id]);
+    if (!selected.cycle)
+      return;
 
-  if (loadingUsers || loadingGroups)
+    const cycleId = selected.cycle.id;
+    const allTrainings = selected.group?.cycles?.find(({ id }) => id === cycleId)?.trainings || [];
+
+    const filteredTrainings = allTrainings.filter(training =>
+      CommonService.instance.date.isBetween(dayjs(training.from), date.start, date.end) && training.subgroupId === (selected.subgroup?.id || null),
+    );
+
+    setSelected(prev => ({ ...prev, cycle: { ...prev.cycle!, trainings: filteredTrainings } }));
+  }, [selected, date.start, date.end, selected.subgroup?.id]);
+
+  if (users.loading || groups.loading)
     return <div>Loading...</div>;
 
-  if (errorUsers || errorGroups || !users || !groups)
+  if (users.error || groups.error)
     return <div>Error</div>;
-
-  const props: GroupPageProps = {
-    selected,
-    setSelected,
-    loading,
-    setLoading,
-    users,
-    setUsers,
-    groups,
-    setGroups,
-    filter,
-    setFilter,
-    date,
-    setDate,
-  };
 
   const mapper: Record<UserRole, ReactNode> = {
     [UserRole.ADMIN]: <div>Admin</div>,
@@ -265,7 +177,7 @@ function Page() {
     [UserRole.ATHLETE]: <div>Athlete</div>,
   };
 
-  return mapper[role];
+  return mapper[role[0]];
 }
 
 export default withAuth(Page);

@@ -9,7 +9,7 @@ interface UseFetchOptions {
   body?: object;
 }
 
-export function useFetch<T extends Record<string, unknown>>(url: string, options?: UseFetchOptions) {
+export function useFetch<T>(url: string, options?: UseFetchOptions) {
   const {
     method = 'GET',
     authorization = true,
@@ -57,5 +57,5 @@ export function useFetch<T extends Record<string, unknown>>(url: string, options
     fetchData().then();
   }, [token, fetchData]);
 
-  return [data, loading, error, fetchData, setData] as const;
+  return { data, setData, loading, error, fetch: fetchData };
 }

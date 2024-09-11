@@ -4,15 +4,11 @@ import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { ObjectUtil } from '@/common/service/util/object.util';
-import { MuiUtil } from '@/common/service/util/mui.util';
 import { NavigationUtil } from '@/common/service/util/navigation.util';
 import { GenericUtil } from './util/generic.util';
-import { BASE_URL } from '@/common/constant/api.constant';
-import { FetchOptions } from '@/common/type/api.type';
+import { TreeUtil } from '@/common/service/util/tree.util';
 
 export class CommonService {
-  private static _instance: CommonService;
-
   readonly firebase: {
     readonly auth: FirebaseAuthUtil;
     readonly firestore: FirebaseFirestoreUtil;
@@ -22,8 +18,8 @@ export class CommonService {
   readonly api: ApiUtil;
   readonly date: DateUtil;
   readonly object: ObjectUtil;
+  readonly tree: TreeUtil;
   readonly navigation: NavigationUtil;
-  readonly mui: MuiUtil;
   readonly generic: GenericUtil;
 
   constructor() {
@@ -36,10 +32,12 @@ export class CommonService {
     this.api = new ApiUtil();
     this.date = new DateUtil();
     this.object = new ObjectUtil();
+    this.tree = new TreeUtil();
     this.navigation = new NavigationUtil();
-    this.mui = new MuiUtil();
     this.generic = new GenericUtil();
   }
+
+  private static _instance: CommonService;
 
   static get instance() {
     return this._instance || (this._instance = new this());

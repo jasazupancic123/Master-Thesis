@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Grid, TextField } from '@mui/material';
@@ -11,8 +11,8 @@ import Avatar from '@mui/material/Avatar';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { LINKS_AUTH } from '@/common/constant/navigation.constant';
 import toast from 'react-hot-toast';
-import { sleep } from '@/util/sleep';
 import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
+import { CommonService } from '@/common/service/common.service';
 
 export default function Page() {
   const router = useRouter();
@@ -21,16 +21,16 @@ export default function Page() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     try {
       await FirebaseAuthUtil.register(email, password, `${firstName} ${lastName}`);
       toast.success('Account created successfully');
 
-      await sleep(0.25);
+      await CommonService.instance.generic.sleep(0.25);
       router.push(LINKS_AUTH.login.href);
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e.message);
     }
   }

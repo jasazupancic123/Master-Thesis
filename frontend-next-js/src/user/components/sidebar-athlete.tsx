@@ -55,7 +55,7 @@ export default function SidebarAthlete(props: Props) {
       >
         <BottomNavigation
           value={index}
-          onChange={(event, newValue) => {
+          onChange={(_, newValue) => {
             setIndex(newValue);
             router.push(mapper[newValue]);
           }}
