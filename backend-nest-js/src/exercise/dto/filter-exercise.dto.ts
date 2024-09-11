@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import { PaginateDto } from '../../common/dto/paginate.dto';
@@ -13,11 +13,11 @@ export class FilterExerciseDto
   extends PaginateDto<Exercise>
   implements Filter<Exercise>
 {
-  @IsString()
+  @IsBoolean()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  @Transform(({ value }) => parseQueryCondition(value))
+  @Transform(({ value }) => value === 'true')
   global?: Filter<Exercise>['global'];
 
   @IsString()

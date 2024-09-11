@@ -16,12 +16,11 @@ import { UserEntity } from '../../user/entity/user.entity';
 import { Group } from '../../group/entity/group.entity';
 import { addDays, addHours } from 'date-fns';
 import { TrainingComponent } from '../../training/entity/training-component.entity';
-import { CommonService } from '../service/common.service';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Component } from '../../component/entity/component.entity';
+import { UserRepository } from '../../user/repository/user.repository';
 
 export class DataSetup extends BaseSetup<{ dev: boolean }> {
-  private readonly commonService: CommonService;
   private readonly firebaseService: FirebaseService;
   private readonly userService: UserService;
   private readonly componentService: ComponentService;
@@ -33,7 +32,6 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
   constructor(app: INestApplication) {
     super(app);
 
-    this.commonService = app.get(CommonService);
     this.firebaseService = app.get(FirebaseService);
     this.userService = app.get(UserService);
     this.componentService = app.get(ComponentService);
@@ -51,8 +49,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
       password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
       displayName: 'Admin',
-      customClaims: { role: [UserRole.ADMIN], level: SportLevel.ADVANCED },
-      weight: 0,
+      customClaims: { role: [UserRole.ADMIN] },
     });
 
     if (options?.dev) {
@@ -72,6 +69,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       await this.firebaseService.deleteCollection(
         FirestoreCollection.COMPONENT,
       );
+
       await this.firebaseService.deleteCollection(
         FirestoreCollection.EXERCISE_ATTRIBUTE,
       );
@@ -98,19 +96,24 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       children: Component[];
     })[];
 
-    for (const component of components)
-      await this.componentService.createFromTree(component);
+    await Promise.all(
+      components.map((component) =>
+        this.componentService.createFromTree(component),
+      ),
+    );
 
     this.logger.debug(`Successfully imported ${components.length} components`);
 
     // import exercise attributes
     const exerciseAttributes =
       data[FirestoreCollection.EXERCISE_ATTRIBUTE] || [];
+
     await Promise.all(
       exerciseAttributes.map((attribute) =>
         this.exerciseAttributeService.create(attribute),
       ),
     );
+
     this.logger.debug(
       `Successfully imported ${exerciseAttributes.length} exercise attributes`,
     );
@@ -120,16 +123,44 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       (data[FirestoreCollection.USER] as (UserEntity &
         Record<string, any>)[]) || [];
 
-    await Promise.all(
+    const createdUsers = await Promise.all(
       usersData.map((user) =>
         this.userService.upsert({
           email: user.email,
           displayName: user.displayName,
           customClaims: { role: [user.role], level: SportLevel.ADVANCED },
           password: 'password',
-          weight: user.weight,
         }),
       ),
+    );
+
+    // set user custom claims to avoid waiting for function to be triggered
+    await Promise.all(
+      createdUsers.map((user) => {
+        const userData = usersData.find((u) => u.email === user.email);
+        this.firebaseService.auth.setCustomUserClaims(user.uid, {
+          role: [userData?.role || UserRole.ATHLETE],
+        });
+      }),
+    );
+
+    // set `users` collection data to avoid waiting for function to be triggered
+    const userRepository = this.app.get(UserRepository);
+    await Promise.all(
+      createdUsers.map((user) => {
+        const userData = usersData.find((u) => u.email === user.email);
+        userRepository.addDoc({
+          id: user.uid,
+          level: userData?.level || SportLevel.BEGINNER,
+          bodyweight: [
+            {
+              weight: userData?.weight,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          ],
+        });
+      }),
     );
 
     this.logger.debug(`Successfully imported ${usersData.length} users`);

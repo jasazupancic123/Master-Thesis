@@ -11,6 +11,7 @@ import { TrainingComponent } from '@/training/entity/training-component.entity';
 import { CreateTrainingComponent, UpdateTrainingComponent } from '@/training/type/training-component.type';
 import { TrainingExercise } from '@/training/entity/training-exercise.entity';
 import { CreateTrainingExercise, UpdateTrainingExercise } from '@/training/type/training-exercise.type';
+import dayjs from 'dayjs';
 
 const commonService = CommonService.instance;
 
@@ -25,9 +26,9 @@ export class GroupController {
     trainings: (groupId: string, cycleId: string, filter?: FilterTrainingQuery) => {
       const query = {
         ...(filter?.subgroupId && { subgroupId: filter.subgroupId }),
-        ...(filter?.from && { from: filter.from.toISOString() }),
-        ...(filter?.to && { to: filter.to.toISOString() }),
-      }
+        ...(filter?.from && { from: dayjs(filter.from).toISOString() }),
+        ...(filter?.to && { to: dayjs(filter.to).toISOString() }),
+      };
 
       return `/group/${groupId}/cycle/${cycleId}/training${commonService.api.query(query)}`;
     },
@@ -36,7 +37,7 @@ export class GroupController {
     trainingComponentById: (groupId: string, cycleId: string, trainingId: string, componentId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}`,
     trainingExercises: (groupId: string, cycleId: string, trainingId: string, componentId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/exercise`,
     trainingExerciseById: (groupId: string, cycleId: string, trainingId: string, componentId: string, exerciseId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/exercise/${exerciseId}`,
-  }
+  };
 
   static async findGroups(token: string) {
     return await commonService.api.fetch<Group[]>(this.URL.groups(), { token });
@@ -62,7 +63,14 @@ export class GroupController {
     return await commonService.api.fetch<Cycle>(this.URL.cycleById(groupId, cycleId), { token });
   }
 
-  static async addCycle(token: string, groupId: string, body: CreateCycle) {
+  static async addCycle(token: string, groupId: string, input: CreateCycle) {
+    const body: CreateCycle = {
+      name: input.name,
+      description: input.description,
+      from: dayjs(input.from).toISOString() as unknown as Date,
+      to: dayjs(input.to).toISOString() as unknown as Date,
+    };
+
     return await commonService.api.fetch<Cycle>(this.URL.cycles(groupId), { token, method: 'POST', body });
   }
 
@@ -78,12 +86,16 @@ export class GroupController {
     return await commonService.api.fetch<Subgroup>(this.URL.subgroupById(groupId, subgroupId), { token });
   }
 
-  static async addSubgroup(token: string, groupId: string, body: Partial<Subgroup>) {
+  static async addSubgroup(token: string, groupId: string, body: CreateSubgroup) {
     return await commonService.api.fetch<Subgroup>(this.URL.subgroups(groupId), { token, method: 'POST', body });
   }
 
   static async updateSubgroup(token: string, groupId: string, subgroupId: string, body: CreateSubgroup) {
-    return await commonService.api.fetch<Subgroup>(this.URL.subgroupById(groupId, subgroupId), { token, method: 'PATCH', body });
+    return await commonService.api.fetch<Subgroup>(this.URL.subgroupById(groupId, subgroupId), {
+      token,
+      method: 'PATCH',
+      body,
+    });
   }
 
   static async findTrainings(token: string, groupId: string, cycleId: string, filter?: FilterTrainingQuery) {
@@ -94,12 +106,27 @@ export class GroupController {
     return await commonService.api.fetch<Training>(this.URL.trainingById(groupId, cycleId, trainingId), { token });
   }
 
-  static async addTraining(token: string, groupId: string, cycleId: string, body: CreateTraining) {
-    return await commonService.api.fetch<Training>(this.URL.trainings(groupId, cycleId), { token, method: 'POST', body });
+  static async addTraining(token: string, groupId: string, cycleId: string, input: CreateTraining) {
+    const body = {
+      subgroupId: input.subgroupId || null,
+      from: dayjs(input.from).toISOString(),
+      to: dayjs(input.to).toISOString(),
+      componentIds: input.componentIds,
+    };
+
+    return await commonService.api.fetch<Training>(this.URL.trainings(groupId, cycleId), {
+      token,
+      method: 'POST',
+      body,
+    });
   }
 
   static async updateTraining(token: string, groupId: string, cycleId: string, trainingId: string, body: UpdateTraining) {
-    return await commonService.api.fetch<Training>(this.URL.trainingById(groupId, cycleId, trainingId), { token, method: 'PATCH', body });
+    return await commonService.api.fetch<Training>(this.URL.trainingById(groupId, cycleId, trainingId), {
+      token,
+      method: 'PATCH',
+      body,
+    });
   }
 
   static async findTrainingComponents(token: string, groupId: string, cycleId: string, trainingId: string) {
@@ -110,12 +137,25 @@ export class GroupController {
     return await commonService.api.fetch<TrainingComponent>(this.URL.trainingComponentById(groupId, cycleId, trainingId, componentId), { token });
   }
 
-  static async addTrainingComponent(token: string, groupId: string, cycleId: string, trainingId: string, body: CreateTrainingComponent) {
-    return await commonService.api.fetch<TrainingComponent>(this.URL.trainingComponents(groupId, cycleId, trainingId), { token, method: 'POST', body });
+  static async addTrainingComponent(token: string, groupId: string, cycleId: string, trainingId: string, input: CreateTrainingComponent) {
+    const body = {
+      componentId: input.componentId,
+      order: input.order,
+    };
+
+    return await commonService.api.fetch<TrainingComponent>(this.URL.trainingComponents(groupId, cycleId, trainingId), {
+      token,
+      method: 'POST',
+      body,
+    });
   }
 
   static async updateTrainingComponent(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, body: UpdateTrainingComponent) {
-    return await commonService.api.fetch<TrainingComponent>(this.URL.trainingComponentById(groupId, cycleId, trainingId, componentId), { token, method: 'PATCH', body });
+    return await commonService.api.fetch<TrainingComponent>(this.URL.trainingComponentById(groupId, cycleId, trainingId, componentId), {
+      token,
+      method: 'PATCH',
+      body,
+    });
   }
 
   static async findTrainingComponentExercises(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string) {
@@ -127,10 +167,18 @@ export class GroupController {
   }
 
   static async addTrainingComponentExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, body: CreateTrainingExercise) {
-    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExercises(groupId, cycleId, trainingId, componentId), { token, method: 'POST', body });
+    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExercises(groupId, cycleId, trainingId, componentId), {
+      token,
+      method: 'POST',
+      body,
+    });
   }
 
   static async updateTrainingComponentExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, exerciseId: string, body: UpdateTrainingExercise) {
-    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExerciseById(groupId, cycleId, trainingId, componentId, exerciseId), { token, method: 'PATCH', body });
+    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExerciseById(groupId, cycleId, trainingId, componentId, exerciseId), {
+      token,
+      method: 'PATCH',
+      body,
+    });
   }
 }

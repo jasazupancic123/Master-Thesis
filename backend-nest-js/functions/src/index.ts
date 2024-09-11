@@ -11,11 +11,13 @@ export const createUserRole = auth.user().onCreate(async (user) => {
     role: ['athlete'],
   });
 
-  await getFirestore().collection('users').doc(user.uid).set({
-    id: user.uid,
-    level: 'beginner',
-    bodyweight: [],
-    createdAt: Timestamp.fromDate(new Date()),
-    updatedAt: Timestamp.fromDate(new Date()),
-  });
+  await getFirestore()
+    .collection('users')
+    .doc(user.uid)
+    .set({
+      id: user.uid,
+      level: 'beginner',
+      createdAt: Timestamp.fromDate(new Date()),
+      updatedAt: Timestamp.fromDate(new Date()),
+    });
 });

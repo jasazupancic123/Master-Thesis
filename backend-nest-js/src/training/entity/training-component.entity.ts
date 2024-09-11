@@ -1,5 +1,12 @@
-import { IsInt, IsNotEmpty, IsString, Min, ValidateNested } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { TrainingExercise } from './training-exercise.entity';
 import { Component } from '../../component/entity/component.entity';
@@ -19,9 +26,10 @@ export class TrainingComponent {
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @IsOptional()
+  @ApiPropertyOptional()
   @Expose()
-  color: string;
+  color?: string;
 
   @ValidateNested({ each: true })
   @Type(() => TrainingExercise)

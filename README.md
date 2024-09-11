@@ -2,16 +2,10 @@
 
 Project for managers, trainers and athletes to track their workouts more efficiently.
 
-## Firebase
-
-```bash
-firebase emulators:start
-```
-
 ## TODO
 
-- Rewrite component repository (use slugs instead of ids for document ref) and service
-- Rewrite frontend calls to use new refactored backend
+- add `availableMembersIds` string array to group as a virtual property to show available members more easily on frontend
+- in subgroups, change field `membersIds` from string array to custom object array with member id and dates `entered` and `left`, because trainer can update subgroup in the middle of a cycle, or in the middle of the day and we want to keep user training data for statistics, and logic to `findAvailableMembers` changes by filtering not just subgroup `to` date field, but also all other subgroups' `left` property in `membersIds` to find potential removed athletes from subgroups, and when filtering all athlete trainings, also all subgroups have to be checked and their trainings to not miss any out
 
 ### Trainings
 
@@ -36,7 +30,6 @@ firebase emulators:start
 ### Components
 
 - Component icons
-- Component nested dropdown menu (similar to exercise attributes)
 - Disable updating root components' parents to not mess up trainings
 - Adding internal components (no special case)
 - Adding leaf components (move all exercises to the new leaf component)

@@ -32,6 +32,7 @@ function Page() {
   const { token, components, attributes } = useAppContext();
 
   // filter exercises
+  const [global, setGlobal] = useState(true);
   const [component, setComponent] = useState<Component | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState({ name: '' });
@@ -95,11 +96,12 @@ function Page() {
   }
 
   /**
-   * Filter exercises by selected components
+   * Filter exercises
    */
   useEffect(() => {
     async function fetchExercises() {
       const filter = {
+        global,
         ...(search.name && { name: search.name }),
         ...(component?.id && { componentsIds: [component?.id || ''] }),
       };
@@ -116,12 +118,14 @@ function Page() {
     }
 
     fetchExercises().then();
-  }, [pagination.page, pagination.pageSize, search, component?.id, token]);
+  }, [pagination.page, pagination.pageSize, search, component?.id, token, global]);
 
   return (
     <Box py={2}>
       <Box display="flex" justifyContent="space-between" my={2}>
         <ExerciseChips
+          global={global}
+          setGlobal={setGlobal}
           noSelectionLabel="All"
           selected={component}
           setSelected={(component) => setComponent(component as Component)}

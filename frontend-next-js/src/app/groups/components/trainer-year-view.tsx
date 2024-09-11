@@ -3,15 +3,21 @@
 import Grid2 from '@mui/material/Unstable_Grid2';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { formatDate } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
 import { ArrowCircleRight } from '@mui/icons-material';
-import React, { Fragment } from 'react';
+import React from 'react';
 import YearDateRangeSlider from '@/common/components/year-date-range-slider';
 import Stack from '@mui/material/Stack';
 import { GroupPageProps } from '@/group/type/props.type';
+import { CommonService } from '@/common/service/common.service';
 
 export default function TrainerYearView(props: GroupPageProps) {
+  const group = props.selected.group;
+  const cycle = props.selected.cycle;
+
+  if (!group)
+    return <Typography variant="body1" mt={2}>No group selected</Typography>;
+
   return <>
     <Stack
       direction="column"
@@ -24,13 +30,13 @@ export default function TrainerYearView(props: GroupPageProps) {
         bgcolor: 'background.paper',
       }}
     >
-      {props.selected.cycles.map(cycle => (
+      {group.cycles.map(cycle => (
         <Stack direction="row" key={cycle.id} spacing={2}>
           <Typography variant="caption">
             {cycle.name}
           </Typography>
 
-          <YearDateRangeSlider date={[dayjs(cycle.startDate), dayjs(cycle.endDate)]} />
+          <YearDateRangeSlider date={[dayjs(cycle.from), dayjs(cycle.to)]} />
         </Stack>
       ))}
     </Stack>
@@ -41,7 +47,7 @@ export default function TrainerYearView(props: GroupPageProps) {
      */}
     {props.selected.group && !props.selected.cycle ? <>
       <Grid2 container spacing={1}>
-        {props.selected.cycles.map((cycle) => (
+        {group.cycles.map((cycle) => (
           <Grid2 key={cycle.id} xs={12} sm={6} md={4} lg={3}>
             <Box
               sx={{
@@ -59,9 +65,9 @@ export default function TrainerYearView(props: GroupPageProps) {
               </Typography>
 
               <Typography variant="body2" mb={1}>
-                {formatDate(dayjs(cycle.startDate))}
+                {CommonService.instance.date.format(dayjs(cycle.from))}
                 <ArrowCircleRight sx={{ mx: 1 }} />
-                {formatDate(dayjs(cycle.endDate))}
+                {CommonService.instance.date.format(dayjs(cycle.to))}
               </Typography>
 
               <Typography variant="body2">
@@ -71,11 +77,11 @@ export default function TrainerYearView(props: GroupPageProps) {
           </Grid2>
         ))}
       </Grid2>
-    </> : props.selected.cycle ? <>
+    </> : cycle ? <>
       <Typography variant="h6" mr={2}>
-        {formatDate(dayjs(props.selected.cycle!.startDate))}
+        {CommonService.instance.date.format(dayjs(cycle.from))}
         <ArrowCircleRight sx={{ mx: 1 }} />
-        {formatDate(dayjs(props.selected.cycle!.endDate))}
+        {CommonService.instance.date.format(dayjs(cycle.to))}
       </Typography>
     </> : null}
   </>;

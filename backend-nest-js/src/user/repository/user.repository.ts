@@ -8,6 +8,7 @@ import {
   CollectionReference,
   DocumentReference,
   DocumentSnapshot,
+  FieldValue,
   Query,
   QueryDocumentSnapshot,
   Timestamp,
@@ -40,14 +41,18 @@ export class UserRepository
   async addDoc(input: Partial<UserEntity>) {
     if (!input.id) throw new Error('User ID is required');
 
+    const bodyweight = input.bodyweight || [];
+
     await this.doc(input.id).set({
       id: input.id,
       level: input.level || SportLevel.BEGINNER,
-      bodyweight: (input.bodyweight || []).map((item) => ({
-        weight: item.weight,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      })),
+      bodyweight: FieldValue.arrayUnion(
+        ...bodyweight.map((item) => ({
+          weight: item.weight,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        })),
+      ),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
@@ -59,21 +64,17 @@ export class UserRepository
     id: string,
     input: Omit<Partial<UserEntity>, 'bodyweight'> & { weight: number },
   ) {
-    let bodyweight: object[];
-    if (input.weight) {
-      const document = await this.getDoc(id);
-      bodyweight = document?.bodyweight || [];
-      bodyweight.push({
-        weight: input.weight,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
-    }
-
     const data = this.commonService.object.clean({
       level: input.level,
-      bodyweight,
+      ...(input.weight && {
+        bodyweight: FieldValue.arrayUnion({
+          weight: input.weight,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        }),
+      }),
     });
+
     await this.doc(id).update({ ...data, updatedAt: Timestamp.now() });
   }
 
@@ -101,7 +102,7 @@ export class UserRepository
     return {
       id: snapshot.id,
       level: data.level,
-      bodyweight: (data.bodyweight || []).map((item: any) => ({
+      bodyweight: (data.bodyweight?.elements || []).map((item: any) => ({
         weight: item.weight,
         createdAt: (item.createdAt as Timestamp).toDate(),
         updatedAt: (item.updatedAt as Timestamp).toDate(),
