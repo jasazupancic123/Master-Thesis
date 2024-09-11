@@ -1,4 +1,10 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Expose, Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BaseEntity } from '../../common/entity/base.entity';
@@ -50,7 +56,7 @@ export class Exercise extends BaseEntity {
   @Type(() => ExerciseAttributeValue)
   @ApiProperty()
   @Expose()
-  attributes: ExerciseAttributeValue[]; // subcollection where each document has attribute id and value
+  attributes: ExerciseAttributeValue[]; // sub collection where each document has attribute id and value
 
   attributeValues: Record<string, any>; // for frontend to use
 }

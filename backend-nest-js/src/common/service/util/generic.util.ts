@@ -23,6 +23,8 @@ export class GenericUtil {
 }
 
 export function parseQueryArray(value: string): string[] {
+  if (!value) return [];
+
   try {
     return value.split(',') || [];
   } catch (e) {
@@ -37,18 +39,21 @@ export function parseQueryArray(value: string): string[] {
  * Example query: ?name:==:John
  */
 export function parseQueryCondition(condition: string) {
-  const error = new BadRequestException(
-    'Invalid query condition, must be in the format of ?<field>:<operator>:<value>',
-  );
+  if (!condition) return undefined;
 
   try {
     condition.split(':');
   } catch (e) {
-    throw error;
+    throw new BadRequestException(
+      'Invalid query condition, must be in the format of ?<field>:<operator>:<value>',
+    );
   }
 
   const parts = condition.split(':');
-  if (!parts.length || parts.length !== 3) throw error;
+  if (!parts.length || parts.length !== 3)
+    throw new BadRequestException(
+      'Invalid query condition, must be in the format of ?<field>:<operator>:<value>',
+    );
 
   const operators: WhereFilterOp[] = [
     '==',

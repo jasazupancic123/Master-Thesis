@@ -3,7 +3,6 @@ import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../common/type/firebase-auth.type';
 import { Group } from '../../group/entity/group.entity';
-import { Exercise } from '../../exercise/entity/exercise.entity';
 import { Wellness } from './wellness.entity';
 import { Bodyweight } from './body-weight.entity';
 import { BaseEntity } from '../../common/entity/base.entity';
@@ -28,13 +27,6 @@ export class UserEntity extends BaseEntity {
   @ApiProperty()
   @Expose()
   groups: Group[]; // sub collection
-
-  @ValidateNested({ each: true })
-  @Type(() => Exercise)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  exercises: Exercise[]; // sub collection
 
   @ValidateNested({ each: true })
   @Type(() => Wellness)

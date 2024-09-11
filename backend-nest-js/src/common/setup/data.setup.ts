@@ -18,6 +18,7 @@ import { addDays, addHours } from 'date-fns';
 import { TrainingComponent } from '../../training/entity/training-component.entity';
 import { CommonService } from '../service/common.service';
 import { FirebaseService } from '../../firebase/firebase.service';
+import { Component } from '../../component/entity/component.entity';
 
 export class DataSetup extends BaseSetup<{ dev: boolean }> {
   private readonly commonService: CommonService;
@@ -59,10 +60,6 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       const foundUsers = await this.userService.findAll();
       for (const user of foundUsers) {
         await this.firebaseService.deleteCollection(
-          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.EXERCISE}`,
-        );
-
-        await this.firebaseService.deleteCollection(
           `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.GROUP}`,
         );
 
@@ -71,6 +68,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
         );
       }
 
+      await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
       await this.firebaseService.deleteCollection(
         FirestoreCollection.COMPONENT,
       );
@@ -95,7 +93,11 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
     const data: DatabaseSchema = JSON.parse(file);
 
     // import components
-    const components = data[FirestoreCollection.COMPONENT] || [];
+    const components = (data[FirestoreCollection.COMPONENT] ||
+      []) as unknown as (Omit<Component, 'children'> & {
+      children: Component[];
+    })[];
+
     for (const component of components)
       await this.componentService.createFromTree(component);
 

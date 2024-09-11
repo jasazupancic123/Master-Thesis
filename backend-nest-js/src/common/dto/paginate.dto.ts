@@ -18,7 +18,7 @@ export class PaginateDto<T> implements PaginateOptions<T> {
       if (
         !result.length ||
         result.length !== 2 ||
-        ['asc', 'desc'].includes(result[1])
+        !['asc', 'desc'].includes(result[1])
       )
         throw new Error();
 

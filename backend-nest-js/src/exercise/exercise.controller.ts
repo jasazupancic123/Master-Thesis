@@ -31,15 +31,24 @@ export class ExerciseController {
 
   @Get()
   @Auth()
-  async findAll(@RequestUser() user: User, @Query() query: FilterExerciseDto) {
-    const options: FindManyOptions<Exercise> = { filter: {}, paginate: {} };
+  async findExercises(
+    @RequestUser() user: User,
+    @Query() query: FilterExerciseDto,
+  ) {
+    const ref = { uid: user.uid };
+    const options: FindManyOptions<Exercise> = {
+      filter: {},
+      paginate: {},
+      populate: ['attributeValues'],
+    };
 
     if (query) {
       // filter
-      const { ids, name, componentsIds } = query;
-      if (ids) options.filter.ids = ids;
+      const { ids, name, componentsIds, global } = query;
+      if (ids && ids.length > 0) options.filter.ids = ids;
       if (name) options.filter.name = name;
       if (componentsIds) options.filter.componentsIds = componentsIds;
+      if (global) options.filter.global = global;
 
       // paginate
       const { orderBy, page, pageSize } = query;
@@ -48,8 +57,8 @@ export class ExerciseController {
       if (pageSize) options.paginate.pageSize = pageSize;
     }
 
-    const total = await this.exerciseService.countGlobalExercises(options);
-    const data = await this.exerciseService.findGlobalExercises(options);
+    const total = await this.exerciseService.countExercises(ref, options);
+    const data = await this.exerciseService.findUserExercises(ref, options);
     return { total, data };
   }
 

@@ -17,33 +17,51 @@ import {
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 
 @Injectable()
-export class ExerciseAttributeValueRepository implements FirestoreCollectionRepository<ExerciseAttributeValue, ExerciseAttributeValueRef> {
+export class ExerciseAttributeValueRepository
+  implements
+    FirestoreCollectionRepository<
+      ExerciseAttributeValue,
+      ExerciseAttributeValueRef
+    >
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly exerciseRepository: ExerciseRepository,
-  ) {
-  }
+  ) {}
 
   async getDocs(
     ref: Required<ExerciseRef>,
-    query: (query: Query) => Query = query => query,
+    query: (query: Query) => Query = (query) => query,
   ): Promise<ExerciseAttributeValue[]> {
-    const snapshot = await this.collection(ref).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    const snapshot = await query(this.collection(ref)).get();
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
-  async getDoc(ref: Required<ExerciseAttributeValueRef>): Promise<ExerciseAttributeValue> {
+  async getDoc(
+    ref: Required<ExerciseAttributeValueRef>,
+  ): Promise<ExerciseAttributeValue> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(ref: Required<ExerciseAttributeValueRef>, input: Partial<ExerciseAttributeValue>): Promise<string> {
-    await this.doc(ref).set({ value: input.value });
+  async addDoc(
+    ref: Required<ExerciseAttributeValueRef>,
+    input: Partial<ExerciseAttributeValue>,
+  ): Promise<string> {
+    await this.doc(ref).set({
+      attributeId: ref.attributeId,
+      exerciseId: ref.exerciseId,
+      value: input.value,
+    });
+
     return ref.attributeId;
   }
 
-  async updateDoc(ref: Required<ExerciseAttributeValueRef>, input: Partial<ExerciseAttributeValue>): Promise<void> {
+  async updateDoc(
+    ref: Required<ExerciseAttributeValueRef>,
+    input: Partial<ExerciseAttributeValue>,
+  ): Promise<void> {
     const data = this.commonService.object.clean(input);
     await this.doc(ref).update(data);
   }
@@ -53,10 +71,14 @@ export class ExerciseAttributeValueRepository implements FirestoreCollectionRepo
   }
 
   collection(ref: Required<ExerciseRef>): CollectionReference {
-    return this.exerciseRepository.doc(ref).collection(FirestoreCollection.EXERCISE_ATTRIBUTE_VALUE);
+    return this.exerciseRepository
+      .doc(ref.exerciseId)
+      .collection(FirestoreCollection.EXERCISE_ATTRIBUTE_VALUE);
   }
 
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): ExerciseAttributeValue {
+  serialize(
+    snapshot: DocumentSnapshot | QueryDocumentSnapshot,
+  ): ExerciseAttributeValue {
     const data = snapshot.data();
 
     return {
