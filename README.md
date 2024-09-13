@@ -4,7 +4,7 @@ Project for managers, trainers and athletes to track their workouts more efficie
 
 ## TODO
 
-- in subgroups, change field `membersIds` from string array to custom object array with member id and dates `entered` and `left`, because trainer can update subgroup in the middle of a cycle, or in the middle of the day and we want to keep user training data for statistics, and logic to `findAvailableMembers` changes by filtering not just subgroup `to` date field, but also all other subgroups' `left` property in `membersIds` to find potential removed athletes from subgroups, and when filtering all athlete trainings, also all subgroups have to be checked and their trainings to not miss any out
+- Update all `createMany` methods in training services to start order from the length of the array already stored in database
 
 ### Trainings
 
@@ -47,6 +47,7 @@ Project for managers, trainers and athletes to track their workouts more efficie
 ### Future
 
 - Write tests
+- in subgroups, change field `membersIds` from string array to custom object array with member id and dates `entered` and `left`, because trainer can update subgroup in the middle of a cycle, or in the middle of the day and we want to keep user training data for statistics, and logic to `findAvailableMembers` changes by filtering not just subgroup `to` date field, but also all other subgroups' `left` property in `membersIds` to find potential removed athletes from subgroups, and when filtering all athlete trainings, also all subgroups have to be checked and their trainings to not miss any out
 - UPDATE DOCS!
 - Add group address (gym location) for trainers so that groups with the same address get additional logic for
   overlapping cycles
