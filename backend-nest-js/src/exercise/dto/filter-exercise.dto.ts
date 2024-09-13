@@ -20,7 +20,6 @@ export class FilterExerciseDto
   @Transform(({ value }) => value === 'true')
   global?: Filter<Exercise>['global'];
 
-  @IsString()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()

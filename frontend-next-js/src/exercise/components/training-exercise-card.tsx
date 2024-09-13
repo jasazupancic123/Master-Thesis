@@ -7,7 +7,6 @@ import MenuItem from '@mui/material/MenuItem';
 import { FormControl, TextField } from '@mui/material';
 import {
   SetExerciseOption,
-  TRAINING_EXERCISE_EFFORT,
   TRAINING_EXERCISE_RECOVERY,
   TRAINING_EXERCISE_SET,
   TRAINING_EXERCISE_SET_TYPE,
@@ -139,7 +138,7 @@ export default function TrainingExerciseCard(props: Props) {
       />
 
       {/* Effort */}
-      <SetExerciseAttribute
+      {/*<SetExerciseAttribute
         options={TRAINING_EXERCISE_EFFORT}
         state={(() => {
           const option = TRAINING_EXERCISE_EFFORT.find(option => option.label === 'effort')!;
@@ -155,7 +154,7 @@ export default function TrainingExerciseCard(props: Props) {
           const effort = state.value as TrainingExerciseMeta['effort'];
           setState(prev => ({ ...prev, effort }));
         }}
-      />
+      />*/}
 
       {/* Tempo */}
       {/*<SetExerciseAttribute

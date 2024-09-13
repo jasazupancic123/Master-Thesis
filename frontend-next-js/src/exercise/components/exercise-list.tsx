@@ -3,12 +3,14 @@ import Typography from '@mui/material/Typography';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import React from 'react';
 import Stack from '@mui/material/Stack';
+import { SetState } from '@/common/type/state.type';
 
 interface Props {
+  global: boolean;
+  setGlobal: SetState<boolean>;
   exercises: Exercise[];
   selectedExercises: Exercise[];
   setSelectedExercises: (exercises: Exercise[]) => void;
-  size?: 'small' | 'medium' | 'large';
 }
 
 export default function ExerciseList(props: Props) {

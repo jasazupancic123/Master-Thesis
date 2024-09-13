@@ -60,8 +60,18 @@ export class GroupController {
   ) {
     const ref = { uid: user.uid, groupId };
     return await this.groupService.findUserGroupOrFail(user, ref, {
-      populate: ['members', 'subgroups', 'cycles'],
+      populate: ['members', 'availableMembersIds', 'subgroups', 'cycles'],
     });
+  }
+
+  @Get(':groupId/available-members')
+  @Auth()
+  async findAvailableMembers(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+  ) {
+    const ref = { uid: user.uid, groupId };
+    return await this.groupService.findAvailableMembers(ref);
   }
 
   @Patch(':groupId')
@@ -178,13 +188,16 @@ export class GroupController {
 
     return await this.trainingService.findTrainings(ref, {
       filter: {
-        ...(filter.subgroupId && {
-          subgroupId: { value: filter.subgroupId, op: '==' },
-        }),
+        subgroupId: { value: filter.subgroupId || null, op: '==' },
         ...(filter.from && { from: { value: filter.from, op: '>=' } }),
         ...(filter.to && { to: { value: filter.to, op: '<=' } }),
       },
-      populate: ['components', 'components.exercises'],
+      populate: [
+        'components',
+        'components.supersets',
+        'components.supersets.exercises',
+        'components.supersets.exercises.exercise',
+      ],
     });
   }
 
@@ -238,7 +251,7 @@ export class GroupController {
 
   @Get(':groupId/cycle/:cycleId/training/:trainingId/component')
   @Auth()
-  async findAllTrainingComponents(
+  async findComponents(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
@@ -249,7 +262,7 @@ export class GroupController {
 
   @Post(':groupId/cycle/:cycleId/training/:trainingId/component')
   @Auth()
-  async addTrainingComponent(
+  async addComponent(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
@@ -269,7 +282,7 @@ export class GroupController {
 
   @Get(':groupId/cycle/:cycleId/training/:trainingId/component/:componentId')
   @Auth()
-  async findTrainingComponent(
+  async findComponent(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
@@ -290,7 +303,7 @@ export class GroupController {
 
   @Patch(':groupId/cycle/:cycleId/training/:trainingId/component/:componentId')
   @Auth()
-  async updateTrainingComponent(
+  async updateComponent(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
@@ -315,15 +328,39 @@ export class GroupController {
   }*/
 
   @Post(
-    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise',
+    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/superset',
   )
   @Auth()
-  async addTrainingComponentExercise(
+  async addSuperset(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
+  ) {
+    const ref = {
+      uid: user.uid,
+      groupId,
+      cycleId,
+      trainingId,
+      componentId,
+      subgroupId: null,
+    };
+
+    return await this.trainingService.addSuperset(user, ref, { exercises: [] });
+  }
+
+  @Post(
+    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/superset/:supersetId/exercise',
+  )
+  @Auth()
+  async addExercise(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Param('cycleId') cycleId: string,
+    @Param('trainingId') trainingId: string,
+    @Param('componentId') componentId: string,
+    @Param('supersetId') supersetId: string,
     @Body() data: AddTrainingExercise,
   ) {
     const ref = {
@@ -332,6 +369,7 @@ export class GroupController {
       cycleId,
       trainingId,
       componentId,
+      supersetId,
       subgroupId: null,
     };
 
@@ -339,15 +377,16 @@ export class GroupController {
   }
 
   @Get(
-    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise/:exerciseId',
+    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId',
   )
   @Auth()
-  async findTrainingComponentExercise(
+  async findExercise(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
+    @Param('supersetId') supersetId: string,
     @Param('exerciseId') exerciseId: string,
   ) {
     const ref = {
@@ -356,6 +395,7 @@ export class GroupController {
       cycleId,
       trainingId,
       componentId,
+      supersetId,
       exerciseId,
       subgroupId: null,
     };
@@ -364,15 +404,16 @@ export class GroupController {
   }
 
   @Patch(
-    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/exercise/:exerciseId',
+    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId',
   )
   @Auth()
-  async updateTrainingComponentExercise(
+  async updateExercise(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
+    @Param('supersetId') supersetId: string,
     @Param('exerciseId') exerciseId: string,
     @Body() data: UpdateTrainingExerciseDto,
   ) {
@@ -382,6 +423,7 @@ export class GroupController {
       cycleId,
       trainingId,
       componentId,
+      supersetId,
       exerciseId,
       subgroupId: null,
     };

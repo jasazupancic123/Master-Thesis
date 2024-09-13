@@ -86,6 +86,10 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       const response = await GroupController.createGroup(token, group);
       setModal({ ...modal, group: false });
 
+      // populate available members
+      if (!response.availableMembersIds)
+        response.availableMembersIds = group.membersIds;
+
       props.setSelected({
         group: response,
         subgroup: null,
@@ -102,14 +106,21 @@ export default function TrainerPageRouter(props: GroupPageProps) {
   }
 
   async function createSubgroup(subgroup: CreateSubgroup) {
-    if (!props.selected.group || !props.selected.cycle)
-      return;
-
     const group = props.selected.group;
     const cycle = props.selected.cycle;
+    if (!group || !cycle) {
+      toast.error('Group or cycle not selected');
+      return;
+    }
 
     try {
       props.setLoading(true);
+
+      // check that all members are available in group
+      if (!subgroup.membersIds.every(id => group.availableMembersIds?.includes(id))) {
+        toast.error('Some members are occupied in other subgroups');
+        return;
+      }
 
       const days = subgroup.to as unknown as number;
       const to = days === 0 ? dayjs(cycle.to) : dayjs().add(days, 'd');
@@ -131,30 +142,33 @@ export default function TrainerPageRouter(props: GroupPageProps) {
         to: props.date.end.toDate() || cycle.to,
       });
 
-      // remove members that are in subgroup from main group and update cycle trainings
+      // remove members that are in subgroup from main group's available members
       props.setSelected(prev => ({
         ...prev,
         group: {
           ...prev.group!,
           subgroups: [...(prev.group!.subgroups || []), response],
-          memberIds: (prev.group!.membersIds || []).filter(id => !subgroup.membersIds.includes(id)),
+          availableMembersIds: group.availableMembersIds
+            ?.filter(id => !subgroup.membersIds.includes(id)) || [],
         },
         subgroup: response,
         cycle: {
           ...prev.cycle!,
-          trainings: trainings,
+          trainings,
         },
       }));
 
-      // add subgroup to group
+      // add subgroup to all groups list
       props.groups.setData(prev => {
         const groups = prev || [];
-        const group = groups.find(group => group.id === props.selected.group!.id);
-        if (!group)
-          return prev;
+        const found = groups.find(g => g.id === group.id);
+        if (!found) return groups;
 
-        group.subgroups = [...(group.subgroups || []), response];
-        return [...groups];
+        found.subgroups = [...(found.subgroups || []), response];
+        found.availableMembersIds = found.availableMembersIds
+          ?.filter(id => !subgroup.membersIds.includes(id)) || [];
+
+        return groups;
       });
 
       setModal({ ...modal, subgroup: false });
@@ -171,10 +185,9 @@ export default function TrainerPageRouter(props: GroupPageProps) {
    * Create cycle
    */
   async function createCycle(cycle: CreateCycle) {
-    if (!props.selected.group)
-      return;
-
     const group = props.selected.group;
+    if (!group)
+      return;
 
     try {
       props.setLoading(true);
@@ -244,7 +257,12 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                 value={props.selected.group?.id || ''}
                 setValue={(value) => {
                   const group = props.groups.data?.find((group) => group.id === value);
-                  if (group) props.setSelected(prev => ({ ...prev, group }));
+                  props.setSelected(prev => ({
+                    ...prev,
+                    group: group || null,
+                    cycle: null,
+                    subgroup: null,
+                  }));
                 }}
                 items={props.groups.data || []}
                 itemKey="id"
@@ -259,7 +277,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                   value={props.selected.subgroup?.id || ''}
                   setValue={(value) => {
                     const subgroup = props.selected.group!.subgroups?.find(subgroup => subgroup.id === value);
-                    if (subgroup) props.setSelected(prev => ({ ...prev, subgroup }));
+                    props.setSelected(prev => ({ ...prev, subgroup: subgroup || null }));
                   }}
                   items={props.selected.group.subgroups || []}
                   itemKey="id"
@@ -276,7 +294,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                   setValue={(value) => {
                     const cycles = props.selected.group!.cycles || [];
                     const cycle = cycles.find(cycle => cycle.id === value);
-                    if (cycle) props.setSelected(prev => ({ ...prev, cycle }));
+                    props.setSelected(prev => ({ ...prev, cycle: cycle || null }));
                   }}
                   items={props.selected.group!.cycles || []}
                   itemKey="id"
@@ -366,7 +384,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
               // NOTE - selected group member ids can be null, if group has all users in its subgroups, but selected group
               // members are fetched from all subgroups, so we need to filter out members that are not in selected group
               multiple
-              data={props.selected.group.membersIds.map(id => (props.selected.group!.members || []).find(user => user.uid === id) as User)}
+              data={(props.selected.group.availableMembersIds || []).map(id => (props.selected.group!.members || []).find(user => user.uid === id) as User)}
               dataKeyProp="uid"
               dataValueProp="email"
               label="Members"

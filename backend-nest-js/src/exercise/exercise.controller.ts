@@ -57,6 +57,9 @@ export class ExerciseController {
       if (pageSize) options.paginate.pageSize = pageSize;
     }
 
+    if (Object.keys(options.filter).length === 0) delete options.filter;
+    if (Object.keys(options.paginate).length === 0) delete options.paginate;
+
     const total = await this.exerciseService.countExercises(ref, options);
     const data = await this.exerciseService.findUserExercises(ref, options);
     return { total, data };

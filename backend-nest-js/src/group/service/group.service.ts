@@ -85,6 +85,7 @@ export class GroupService extends CanViewService<GroupRef> {
       .collectionGroup('groups')
       .where('membersIds', 'array-contains', ref.uid)
       .get();
+
     return groups.docs.map((doc) => this.groupRepository.serialize(doc));
   }
 
@@ -185,6 +186,7 @@ export class GroupService extends CanViewService<GroupRef> {
     // find parent references (group and cycle)
     const cycleRef = { ...ref, cycleId: input.cycleId, subgroupId: null };
     const cycle = await this.cycleService.findCycleOrFail(cycleRef);
+    const group = await this.findGroupOrFail(ref);
 
     // validate dates
     if (
@@ -203,7 +205,7 @@ export class GroupService extends CanViewService<GroupRef> {
     if (members.length < 1)
       throw new BadRequestException('Subgroup must have at least one member');
 
-    const subgroup = await this.subgroupService.create(ref, {
+    const subgroup = await this.subgroupService.create(user, ref, {
       name: input.name,
       cycleId: input.cycleId,
       membersIds: members.map((member) => member.uid),
@@ -211,13 +213,35 @@ export class GroupService extends CanViewService<GroupRef> {
       to: input.to,
     });
 
-    // TODO - copy trainings from cycle to subgroup
-    /*for (constant training of [])
-      await this.trainingService.copy(user, {
+    // copy trainings from cycle to subgroup
+    const trainings = await this.trainingService.findTrainings(
+      {
+        ...ref,
+        cycleId: input.cycleId,
+      },
+      {
+        filter: { subgroupId: { value: null } },
+      },
+    ); // all parent group trainings
+
+    for (const training of trainings) {
+      const source = {
+        uid: user.uid,
+        groupId: group.id,
+        cycleId: input.cycleId,
+        subgroupId: null,
         trainingId: training.id,
-        cycleId: 'cycleId',
-        subgroupId: group.id,
-      });*/
+      };
+
+      const destination = {
+        uid: user.uid,
+        groupId: group.id,
+        cycleId: input.cycleId,
+        subgroupId: subgroup.id,
+      };
+
+      await this.trainingService.copyTraining(user, source, destination);
+    }
 
     // populate subgroup
     subgroup.members = members;
@@ -236,6 +260,33 @@ export class GroupService extends CanViewService<GroupRef> {
     return await this.cycleService.create(ref, input);
   }
 
+  /**
+   * Finds all available members for a group. First, all active subgroups and
+   * their members are found, then only unique values are found, and finally,
+   * the result is subtracted from all group members to get the available
+   * members.
+   *
+   * Formula: (all group members - union of all members in active subgroups)
+   */
+  async findAvailableMembers(ref: Required<GroupRef>): Promise<string[]> {
+    const group = await this.findGroupOrFail(ref);
+
+    // get all active subgroups
+    const subgroups = await this.subgroupService.findActiveSubgroups(ref);
+
+    // unavailable members are all members of active subgroups
+    const unavailableMembers = subgroups.flatMap(
+      (subgroup) => subgroup.membersIds,
+    );
+    const uniqueUnavailableMembers =
+      this.commonService.array.unique(unavailableMembers);
+
+    // group members - unavailable members = available members
+    return group.membersIds.filter(
+      (memberId) => !uniqueUnavailableMembers.includes(memberId),
+    );
+  }
+
   private filter(query: Query, filter: Filter<Group>) {
     if (filter.ids)
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
@@ -244,12 +295,14 @@ export class GroupService extends CanViewService<GroupRef> {
       query = query
         .where('name', '>=', filter.name)
         .where('name', '<=', filter.name + '\uf8ff');
+
     if (filter.createdAt)
       query = query.where(
         'createdAt',
         filter.createdAt.op || '>=',
         Timestamp.fromDate(filter.createdAt.value),
       );
+
     if (filter.updatedAt)
       query = query.where(
         'updatedAt',
@@ -282,8 +335,11 @@ export class GroupService extends CanViewService<GroupRef> {
     if (populate.includes('members'))
       group.members = await this.userService.findAll({ ids: group.membersIds });
 
+    if (populate.includes('availableMembersIds'))
+      group.availableMembersIds = await this.findAvailableMembers(ref);
+
     if (populate.includes('subgroups')) {
-      group.subgroups = await this.subgroupRepository.getDocs(ref);
+      group.subgroups = await this.subgroupService.findActiveSubgroups(ref);
 
       if (populate.includes('subgroups.members')) {
         if (!populate.includes('members'))

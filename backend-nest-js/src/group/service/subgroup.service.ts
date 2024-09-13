@@ -27,6 +27,7 @@ import { Query, Timestamp } from 'firebase-admin/firestore';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
 import { CommonService } from '../../common/service/common.service';
 import { CanViewService } from '../../common/type/auth.type';
+import { TrainingService } from '../../training/service/training.service';
 
 @Injectable()
 export class SubgroupService extends CanViewService<SubgroupRef> {
@@ -38,6 +39,8 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
     private readonly subgroupRepository: SubgroupRepository,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
+    @Inject(forwardRef(() => TrainingService))
+    private readonly trainingService: Wrapper<TrainingService>,
   ) {
     super();
   }
@@ -80,7 +83,7 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
   /**
    * All subgroups have `from` and `to` dates which define the active period of
    * the subgroup. To get all active subgroups, we need to filter the subgroups
-   * where today's date is between `from` and `to`.
+   * where today's date is between `from` and `to` dates.
    */
   async findActiveSubgroups(
     ref: Required<GroupRef>,
@@ -103,7 +106,7 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
     const subgroup = await this.subgroupRepository.getDoc(ref);
     if (!subgroup) return null;
 
-    if (options.populate) await this.populate(ref, subgroup, options.populate);
+    if (options?.populate) await this.populate(ref, subgroup, options.populate);
     return subgroup;
   }
 
@@ -126,31 +129,18 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
   }
 
   async create(
+    user: User,
     ref: Required<GroupRef>,
     input: Partial<Subgroup>,
   ): Promise<Subgroup> {
-    const group = await this.groupService.findGroupOrFail(ref);
+    const group = await this.groupService.findUserGroupOrFail(user, ref);
 
     // validate data
-    const membersIds = await this.findAvailableMembers(ref);
+    const membersIds = await this.groupService.findAvailableMembers(ref);
     if (!input.membersIds.every((memberId) => membersIds.includes(memberId)))
       throw new BadRequestException(
-        'All members must be available in the parent group',
+        'Some members are occupied in other subgroups',
       );
-
-    console.log('available members', membersIds);
-
-    return {
-      id: '123',
-      name: 'subgroup',
-      cycleId: '123',
-      membersIds: [],
-      from: new Date(),
-      to: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      members: [],
-    };
 
     // create subgroup
     const data = {
@@ -179,10 +169,12 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
         'array-contains-any',
         filter.membersIds,
       );
+
     if (filter.name)
       query = query
         .where('name', '>=', filter.name.value)
         .where('name', '<=', filter.name.value + '\uf8ff');
+
     if (filter.from)
       query = query.where(
         'from',
@@ -221,30 +213,5 @@ export class SubgroupService extends CanViewService<SubgroupRef> {
       });
 
     return subgroup;
-  }
-
-  /**
-   * Finds all available members for a group. First, all active subgroups and
-   * their members are found, then only unique values are found, and finally,
-   * the result is subtracted from all group members to get the available
-   * members.
-   *
-   * Formula: (all group members - union of all members in active subgroups)
-   */
-  private async findAvailableMembers(
-    ref: Required<GroupRef>,
-  ): Promise<string[]> {
-    const group = await this.groupService.findGroupOrFail(ref);
-
-    // get all active subgroups
-    const subgroups = await this.findActiveSubgroups(ref);
-
-    // unavailable members are all members of active subgroups
-    const unavailable = this.commonService.array.unique(
-      subgroups.flatMap((subgroup) => subgroup.membersIds),
-    );
-
-    // group members - unavailable members = available members
-    return group.membersIds.filter((member) => !unavailable.includes(member));
   }
 }

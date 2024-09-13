@@ -1,4 +1,9 @@
-import { IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { User } from '../../common/type/firebase-auth.type';
@@ -23,6 +28,7 @@ export class Group extends BaseEntity {
   @ApiProperty()
   @Expose()
   membersIds: string[]; // all members of the group
+  availableMembersIds: string[]; // (virtual) all members that can be added to the group
   members: User[];
 
   @ValidateNested({ each: true })

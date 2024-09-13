@@ -102,7 +102,6 @@ function Page() {
     async function fetchExercises() {
       const filter = {
         global,
-        ...(search.name && { name: search.name }),
         ...(component?.id && { componentsIds: [component?.id || ''] }),
       };
 
@@ -118,7 +117,7 @@ function Page() {
     }
 
     fetchExercises().then();
-  }, [pagination.page, pagination.pageSize, search, component?.id, token, global]);
+  }, [pagination.page, pagination.pageSize, component?.id, token, global]);
 
   return (
     <Box py={2}>

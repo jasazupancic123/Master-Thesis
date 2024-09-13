@@ -15,6 +15,7 @@ export enum FirestoreCollection {
   CYCLE = 'cycles',
   TRAINING = 'trainings',
   TRAINING_COMPONENT = 'training-components',
+  TRAINING_SUPERSET = 'training-supersets',
   TRAINING_EXERCISE = 'training-exercises',
   TRAINING_EXERCISE_USER_DATA = 'user-data',
 }

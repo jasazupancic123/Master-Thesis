@@ -11,6 +11,8 @@ import { TrainingExerciseUserDataService } from './service/training-exercise-use
 import { TrainingExerciseService } from './service/training-exercise.service';
 import { TrainingComponentService } from './service/training-component.service';
 import { UserModule } from '../user/user.module';
+import { TrainingSupersetRepository } from './repository/training-superset.repository';
+import { TrainingSupersetService } from './service/training-superset.service';
 
 @Module({
   imports: [
@@ -22,14 +24,15 @@ import { UserModule } from '../user/user.module';
   providers: [
     TrainingRepository,
     TrainingComponentRepository,
+    TrainingSupersetRepository,
     TrainingExerciseRepository,
     TrainingExerciseUserDataRepository,
     TrainingExerciseUserDataService,
     TrainingExerciseService,
+    TrainingSupersetService,
     TrainingComponentService,
     TrainingService,
   ],
   exports: [TrainingService],
 })
-export class TrainingModule {
-}
+export class TrainingModule {}

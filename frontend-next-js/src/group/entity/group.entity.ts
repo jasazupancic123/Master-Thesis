@@ -9,6 +9,7 @@ export type Group = IdEntity & TimestampEntity & {
   ownerId: string;
   owner?: User;
   membersIds: string[];
+  availableMembersIds?: string[];
   members?: User[];
   subgroups: Subgroup[];
   cycles: Cycle[];
