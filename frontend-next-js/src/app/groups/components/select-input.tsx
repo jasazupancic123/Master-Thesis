@@ -43,8 +43,8 @@ export default function SelectInput<T>(props: Props<T>) {
       </MenuItem>
 
       {props.items.map((item, i) => (
-        <MenuItem key={i} value={item[props.itemKey]}>
-          {item[props.itemName]}
+        <MenuItem key={i} value={item[props.itemKey] as unknown as string}>
+          {item[props.itemName] as unknown as string}
         </MenuItem>
       ))}
     </Select>

@@ -160,10 +160,9 @@ export class TrainingExerciseUserDataService {
     // find all members for the provided group
     const group = await this.groupRepository.getDoc(ref);
     if (!group) throw new BadRequestException('Group not found');
-
-    const subgroup = await this.subgroupRepository.getDoc(ref);
-    if (ref.subgroupId && !subgroup)
-      throw new BadRequestException('Subgroup not found');
+    const subgroup = ref.subgroupId
+      ? await this.subgroupRepository.getDoc(ref)
+      : null;
 
     const users = await this.firebaseService.authUsers();
     const members = subgroup
@@ -185,10 +184,11 @@ export class TrainingExerciseUserDataService {
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
       const memberData = userData.filter((item) => item.userId === member.uid);
+
       const workloadValue = this.calculateWorkloadValue(
         input.workloadType || meta.workloadType,
         input.workloadValue || meta.workloadValue,
-        member.customClaims.bodyweight,
+        await this.userRepository.getBodyweight(member.uid),
         memberData,
       );
 
@@ -202,6 +202,7 @@ export class TrainingExerciseUserDataService {
         ...ref,
         userId: member.uid,
       });
+
       batch.set(docRef, data);
       result.push(data);
     }
@@ -229,7 +230,9 @@ export class TrainingExerciseUserDataService {
         return this.commonService.number.rm(values);
       case WorkloadType.BW:
         // % of bodyweight
-        return bodyweight * this.commonService.number.percent(workloadValue);
+        return (
+          (bodyweight || 0) * this.commonService.number.percent(workloadValue)
+        );
       case WorkloadType.KG:
       case WorkloadType.INT:
       default:

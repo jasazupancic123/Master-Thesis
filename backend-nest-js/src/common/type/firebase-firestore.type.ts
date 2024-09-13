@@ -74,7 +74,10 @@ export type TrainingRef = CycleRef & {
   subgroupId?: string;
 };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
-export type TrainingExerciseRef = TrainingComponentRef & ExerciseRef;
+export type TrainingSupersetRef = TrainingComponentRef & {
+  supersetId?: string;
+};
+export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
 export type TrainingExerciseUserDataRef = TrainingExerciseRef & {
   userId?: string;
 };

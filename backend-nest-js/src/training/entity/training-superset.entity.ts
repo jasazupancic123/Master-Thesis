@@ -1,3 +1,4 @@
+import { IdEntity } from '../../common/entity/id.entity';
 import {
   IsInt,
   IsNotEmpty,
@@ -6,17 +7,15 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { Component } from '../../component/entity/component.entity';
-import { TrainingSuperset } from './training-superset.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TrainingExercise } from './training-exercise.entity';
 
-export class TrainingComponent {
+export class TrainingSuperset extends IdEntity {
   @IsString()
   @IsNotEmpty()
   @Expose()
-  componentId: string; // check that component is root component
-  component: Component | null; // virtual
+  componentId: string; // training component id
 
   @IsInt()
   @Min(0)
@@ -32,8 +31,8 @@ export class TrainingComponent {
   color?: string;
 
   @ValidateNested({ each: true })
-  @Type(() => TrainingSuperset)
+  @Type(() => TrainingExercise)
   @ApiProperty()
   @Expose()
-  supersets: TrainingSuperset[];
+  exercises: TrainingExercise[];
 }

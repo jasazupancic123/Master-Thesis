@@ -17,28 +17,35 @@ import { TrainingRepository } from './training.repository';
 import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
-export class TrainingComponentRepository implements FirestoreCollectionRepository<TrainingComponent, TrainingComponentRef> {
+export class TrainingComponentRepository
+  implements
+    FirestoreCollectionRepository<TrainingComponent, TrainingComponentRef>
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly trainingRepository: TrainingRepository,
-  ) {
-  }
+  ) {}
 
   async getDocs(
     ref: Required<TrainingRef>,
-    query: (ref: Query) => Query = ref => ref,
+    query: (ref: Query) => Query = (ref) => ref,
   ): Promise<TrainingComponent[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
-  async getDoc(ref: Required<TrainingComponentRef>): Promise<TrainingComponent | null> {
+  async getDoc(
+    ref: Required<TrainingComponentRef>,
+  ): Promise<TrainingComponent | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(ref: Required<TrainingComponentRef>, data: Partial<TrainingComponent>) {
+  async addDoc(
+    ref: Required<TrainingComponentRef>,
+    data: Partial<TrainingComponent>,
+  ) {
     await this.doc(ref).set({
       componentId: ref.componentId,
       order: data.order,
@@ -48,7 +55,11 @@ export class TrainingComponentRepository implements FirestoreCollectionRepositor
     return ref.componentId;
   }
 
-  async updateDoc(ref: Required<TrainingComponentRef>, data: Partial<TrainingComponent>) {
+  async updateDoc(
+    ref: Required<TrainingComponentRef>,
+    input: Partial<TrainingComponent>,
+  ) {
+    const data = this.commonService.object.clean(input);
     await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
   }
 
@@ -57,17 +68,21 @@ export class TrainingComponentRepository implements FirestoreCollectionRepositor
   }
 
   collection(ref: Required<TrainingRef>): CollectionReference {
-    return this.trainingRepository.doc(ref).collection(FirestoreCollection.TRAINING_COMPONENT);
+    return this.trainingRepository
+      .doc(ref)
+      .collection(FirestoreCollection.TRAINING_COMPONENT);
   }
 
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): TrainingComponent {
+  serialize(
+    snapshot: DocumentSnapshot | QueryDocumentSnapshot,
+  ): TrainingComponent {
     const data = snapshot.data();
 
     return {
       componentId: snapshot.id,
       order: +data.order,
       color: data.color,
-      exercises: [],
+      supersets: [],
     } as TrainingComponent;
   }
 }

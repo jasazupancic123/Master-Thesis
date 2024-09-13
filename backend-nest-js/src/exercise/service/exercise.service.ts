@@ -365,8 +365,8 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
 
     if (filter.name)
       query = query
-        .where('name', '>=', filter.name)
-        .where('name', '<=', filter.name + '\uf8ff');
+        .where('name', '>=', filter.name.value)
+        .where('name', '<=', filter.name.value + '\uf8ff');
 
     if (filter.createdAt)
       query = query.where(

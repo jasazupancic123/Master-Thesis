@@ -1,23 +1,35 @@
 'use client';
 
-import { SetGroup, SetSubgroup, SuperExerciseInfo, Training } from '@/training/type/training.type';
+import { Training } from '@/training/entity/training.entity';
 import Box from '@mui/material/Box';
 import React, { Fragment, useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
-import { Exercise } from '@/exercise/type/exercise.type';
+import { Exercise } from '@/exercise/entity/exercise.entity';
 import { useAppContext } from '@/context/app-provider';
 import ExerciseList from '@/exercise/components/exercise-list';
 import MyModal from '@/common/components/modal';
 import toast from 'react-hot-toast';
-import { ApiUtil } from '@/common/service/util/api.util';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Unstable_Grid2';
 import TrainingExerciseCard from '@/exercise/components/training-exercise-card';
 import AddIcon from '@mui/icons-material/Add';
 import { AppContextType } from '@/common/type/context.type';
+import { TrainingExercise } from '@/training/entity/training-exercise.entity';
+import { GroupController } from '@/group/group.controller';
+import { Group } from '@/group/entity/group.entity';
+import { Cycle } from '@/group/entity/cycle.entity';
+import { TrainingExerciseMeta } from '@/training/entity/training-exercise-meta.entity';
+import { SetType } from '@/training/enum/set-type.enum';
+import { WorkloadType } from '@/training/enum/workload-type.enum';
+import { Effort } from '@/training/enum/effort.enum';
+import { ExerciseController } from '@/exercise/exercise.controller';
+import { TrainingComponent } from '@/training/entity/training-component.entity';
+import { TrainingSuperset } from '@/training/entity/training-superset.entity';
 
 interface Props {
+  group: Group;
+  cycle: Cycle;
   trainings: Training[];
 }
 
@@ -25,103 +37,128 @@ export const colors = ['#FF6859', '#FFCF44', '#B15DFF', '#72DEFF', '#1E90FF', '#
 
 export default function TrainingDay(props: Props) {
   // context
-  const { token } = useAppContext() as AppContextType;
-  const { trainings } = props;
+  const { token, components } = useAppContext() as AppContextType;
+  const { group, cycle, trainings } = props;
 
   // add set exercise
+  const [global, setGlobal] = useState(true); // exercise filter
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [addExercise, setAddExercise] = useState({
-    modal: false,
-    order: 0,
-    setSubgroup: null as SetSubgroup | null,
-  });
+  const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState({ exercise: false });
 
   // selected (expanded) entities
-  const [selected, setSelected] = useState({
-    loading: false,
-    setGroup: null as SetGroup | null,
-    exercises: [] as Exercise[],
+  const [selected, setSelected] = useState<{
+    component: TrainingComponent | null,
+    exercises: Exercise[], // selected exercises to create
+    superset: TrainingSuperset | null, // needed for modal when adding exercises
+  }>({
+    component: null,
+    exercises: [],
+    superset: null,
   });
 
-  function handleSelected(setGroup: SetGroup) {
-    if (selected.setGroup === setGroup) {
-      // same set group selected, collapse
-      setSelected(prev => ({ ...prev, setGroup: null }));
+  function handleSelected(component: TrainingComponent) {
+    if (selected.component?.componentId === component?.componentId) {
+      // same training component selected, collapse
+      setSelected(prev => ({ ...prev, component: null }));
     } else {
-      // new set group selected, expand
-      setSelected(prev => ({ ...prev, setGroup }));
+      // new training component selected, expand
+      setSelected(prev => ({ ...prev, component }));
     }
 
-    setAddExercise(({
-      modal: false,
-      order: 0,
-      setSubgroup: null,
-    }));
+    setModal({ exercise: false });
   }
 
-  /**
-   * Update set exercise
-   */
-  async function updateSetExercise(data: Partial<SuperExerciseInfo> & { order: number }) {
-    if (!selected.setGroup || !data.setExerciseId)
-      return;
+  async function addSuperset(trainingId: string) {
+    const component = selected.component;
+    if (!component) return;
 
     try {
-      await ApiUtil.updateSetExercise(data.setExerciseId, data, token);
+      const superset = await GroupController.addSuperset(token, group.id, cycle.id, trainingId, component.componentId, {});
+
+      // update selected component with new superset
+      setSelected(prev => ({
+        ...prev,
+        component: {
+          ...prev.component!,
+          supersets: [
+            ...prev.component!.supersets,
+            superset,
+          ].sort((a, b) => a.order - b.order),
+        },
+      }));
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to add superset');
+    }
+  }
+
+  async function updateTrainingExercise(trainingId: string, supersetId: string, exerciseId: string, data: Partial<TrainingExercise>) {
+    const component = selected.component;
+    if (!component) return;
+
+    try {
+      await GroupController.updateExercise(token, group.id, cycle.id, trainingId, component.componentId, supersetId, exerciseId, data);
     } catch (e: any) {
       toast.error(e.message || 'Failed to update set exercise');
     }
   }
 
-  /**
-   * Add set exercises
-   */
-  async function addSetExercises(setSubgroup: SetSubgroup, setGroup: SetGroup, exercises: Exercise[]) {
+  async function addTrainingExercise(trainingId: string, supersetId: string, exercises: Exercise[]) {
+    const component = selected.component;
+    if (!component) return;
+
+    const superset = component.supersets.find(s => s.id === supersetId);
+    if (!superset) {
+      toast.error('Wrong superset');
+      return;
+    }
+
     if (!exercises.length) {
       toast.error('Please select exercises');
       return;
     }
 
     try {
-      setSelected(prev => ({ ...prev, loading: true }));
+      setLoading(true);
 
-      const info = {
+      const meta: TrainingExerciseMeta = {
         sets: 3,
-        setType: 'reps',
+        setType: SetType.REPS,
         setTypeValue: 10,
-        workloadType: 'kg',
+        workloadType: WorkloadType.KG,
         workloadValue: 20,
         rec: 60,
         tempo: '0:0:0',
-        effort: 'moderate',
-      } as SuperExerciseInfo;
-
-      const other = {
-        setSubgroupId: setSubgroup.id,
-        exerciseIds: exercises.map(exercise => exercise.id),
+        effort: Effort.MODERATE,
       };
 
-      const response = await ApiUtil.addSetExercises({ ...info, ...other }, token);
+      const responses = await Promise.all(exercises.map(exercise => GroupController.addTrainingExercise(token, group.id, cycle.id, trainingId, component.componentId, supersetId, {
+        exerciseId: exercise.id,
+        meta,
+      })));
 
-      // update set subgroup
-      setSubgroup.setExercises = [...setSubgroup.setExercises, ...response]
-        .sort((a, b) => a.order - b.order);
-
-      // update set group
-      const index = setGroup.setSubgroups!.findIndex(subgroup => subgroup.id === setSubgroup.id);
-      setGroup.setSubgroups![index] = setSubgroup;
-
-      // update training
-      setSelected(prev => ({ ...prev, setGroup, loading: false }));
-    } catch (e: any) {
-      toast.error(e.message || 'Could not add exercises to set group');
-    } finally {
-      setSelected(prev => ({ ...prev, exercises: [], loading: false }));
-      setAddExercise(({
-        modal: false,
-        order: 0,
-        setSubgroup: null,
+      // update selected superset with new set exercises
+      setSelected(prev => ({
+        ...prev,
+        component: {
+          ...prev.component!,
+          supersets: [
+            ...prev.component!.supersets.filter(s => s.id !== supersetId),
+            {
+              ...superset,
+              exercises: [
+                ...superset.exercises,
+                ...responses,
+              ].sort((a, b) => a.order - b.order),
+            },
+          ].sort((a, b) => a.order - b.order),
+        },
       }));
+    } catch (e: any) {
+      toast.error(e.message || 'Could not add exercises to training');
+    } finally {
+      setModal({ exercise: false });
+      setLoading(false);
     }
   }
 
@@ -129,41 +166,39 @@ export default function TrainingDay(props: Props) {
    * Filter exercises by selected components
    */
   useEffect(() => {
-    if (!selected?.setGroup)
-      return;
-
-    const setGroup = selected.setGroup!;
-
     async function fetchExercises() {
-      const filter = { componentIds: [setGroup.componentId] };
-      const response = await ApiUtil.findAllExercises(token, filter);
-      setExercises(response);
+      const component = selected.component;
+      if (!component) return;
+
+      try {
+        setLoading(true);
+
+        const filter = {
+          global,
+          componentsIds: [component.componentId],
+        };
+
+        const response = await ExerciseController.findExercises(token, filter);
+        setExercises(response.data);
+      } catch (e: any) {
+        toast.error(e.message || 'Failed to fetch exercises');
+      } finally {
+        setLoading(false);
+      }
     }
 
-    async function fetchSet() {
-      const response = await ApiUtil.getSet(setGroup.trainingId, setGroup.id, token);
-      setSelected(prev => ({ ...prev, setGroup: response, loading: false }));
-    }
-
-    async function fetchData() {
-      setSelected(prev => ({ ...prev, loading: true }));
-      await fetchExercises();
-      await fetchSet();
-      setSelected(prev => ({ ...prev, loading: false }));
-    }
-
-    fetchData().then();
-  }, [selected.setGroup?.componentId]);
+    fetchExercises().then();
+  }, [selected.component?.componentId]);
 
   return (<>
     <Box mt={4}>
       {trainings.map((training) =>
         <Box key={training.id}>
-          {training?.setGroups?.map((setGroup) => {
-            const show = selected.setGroup?.componentId === setGroup.componentId;
+          {training?.components?.map((component) => {
+            const show = selected.component?.componentId === component.componentId;
 
             return (
-              <Fragment key={setGroup.id}>
+              <Fragment key={component.componentId}>
                 <Box sx={{
                   bgcolor: 'background.paper',
                   borderRadius: 2,
@@ -177,63 +212,68 @@ export default function TrainingDay(props: Props) {
                       height: '40px',
                       cursor: 'pointer',
                     }}
-                    onClick={() => handleSelected(setGroup)}
+                    onClick={() => handleSelected(component)}
                   >
                     <Typography sx={{ color: '#1EB980', px: 2, mb: 0, textTransform: 'uppercase' }}>
-                      {setGroup.component?.name}
+                      {components.flat.find(({ id }) => id === component.componentId)?.name}
                     </Typography>
                   </Box>
 
                   {show ?
-                    selected.loading ? <Typography p={2}>Loading...</Typography> :
+                    loading ? <Typography p={2}>Loading...</Typography> :
                       <Box bgcolor="background.paper" p={2}>
-                        {/* 3 Columns For Set Groups */}
-                        <Grid container spacing={2}>
-                          {selected.setGroup?.setSubgroups?.map((subgroup, i) => {
-                            if (!subgroup.setExercises?.length && i > 0)
-                              return null;
+                        {/* Add superset */}
+                        <IconButton onClick={async () => await addSuperset(training.id)}>
+                          <AddIcon />
+                        </IconButton>
 
-                            return <Grid xs={4} key={subgroup.id}>
-                              <BorderColor color={colors[i]} />
+                        {/* Supersets */}
+                        <Grid container spacing={2} wrap="wrap">
+                          {selected.component?.supersets
+                            ?.sort((a, b) => a.order - b.order)
+                            ?.map((superset, i) => {
+                              return <Grid xs={4} key={superset.id}>
+                                <BorderColor color={colors[i]} />
 
-                              <Box>
-                                {subgroup?.setExercises?.map((setExercise) => (
-                                  <Box key={setExercise.id}>
-                                    <TrainingExerciseCard
-                                      exercise={setExercise}
-                                      onChange={async (data) => {
-                                        await updateSetExercise({
-                                          setExerciseId: setExercise.id,
-                                          ...data,
-                                        });
-                                      }}
-                                    />
-                                  </Box>
-                                ))}
-                              </Box>
+                                <Box>
+                                  {superset.exercises.map((exercise) => (
+                                    <Box key={exercise.exerciseId}>
+                                      <TrainingExerciseCard
+                                        exercise={exercise}
+                                        onChange={async (meta) => {
+                                          await updateTrainingExercise(
+                                            training.id,
+                                            superset.id,
+                                            exercise.exerciseId,
+                                            { meta } as Partial<TrainingExercise>);
+                                        }}
+                                      />
+                                    </Box>
+                                  ))}
+                                </Box>
 
-                              <BorderColor color={colors[i]} lower />
+                                <BorderColor color={colors[i]} lower />
 
-                              <Stack
-                                direction="row"
-                                justifyContent="center"
-                                mt={2}
-                                spacing={1}
-                                sx={{
-                                  border: '1px dashed #B2B3B7',
-                                  borderRadius: 2,
-                                }}
-                              >
-                                <IconButton onClick={() => setAddExercise({
-                                  modal: true,
-                                  order: i,
-                                  setSubgroup: subgroup,
-                                })}>
-                                  <AddIcon />
-                                </IconButton>
-                              </Stack>
-                            </Grid>;
-                          })}
+                                {/* Add exercises to superset */}
+                                <Stack
+                                  direction="row"
+                                  justifyContent="center"
+                                  mt={2}
+                                  spacing={1}
+                                  sx={{
+                                    border: '1px dashed #B2B3B7',
+                                    borderRadius: 2,
+                                  }}
+                                >
+                                  <IconButton onClick={() => {
+                                    setSelected(prev => ({ ...prev, superset }));
+                                    setModal({ exercise: true });
+                                  }}>
+                                    <AddIcon />
+                                  </IconButton>
+                                </Stack>
+                              </Grid>;
+                            })}
                         </Grid>
                       </Box> : null}
                 </Box>
@@ -246,16 +286,26 @@ export default function TrainingDay(props: Props) {
     </Box>
 
     <MyModal
-      isOpen={addExercise.modal}
-      setIsOpen={(modal) => setAddExercise(prev => ({ ...prev, modal }))}
+      isOpen={modal.exercise}
+      setIsOpen={(modal) => setModal({ exercise: modal })}
       title="Choose exercises"
       onCancel={() => setSelected(prev => ({ ...prev, exercises: [] }))}
       onConfirm={async () => {
-        if (addExercise.setSubgroup && selected.setGroup)
-          await addSetExercises(addExercise.setSubgroup, selected.setGroup, selected.exercises);
+        const { component, superset, exercises } = selected;
+        if (!component || !superset || !exercises?.length)
+          return;
+
+        // find training based on superset
+        const training = trainings.find(({ components }) => components.find(({ supersets }) => supersets.find(({ id }) => id === superset.id)));
+        if (!training)
+          return;
+
+        await addTrainingExercise(training.id, superset.id, exercises);
       }}
     >
       <ExerciseList
+        global={global}
+        setGlobal={setGlobal}
         exercises={exercises}
         selectedExercises={selected.exercises}
         setSelectedExercises={(exercises) => setSelected(prev => ({ ...prev, exercises }))}

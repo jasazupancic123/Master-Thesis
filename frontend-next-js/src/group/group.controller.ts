@@ -12,6 +12,8 @@ import { CreateTrainingComponent, UpdateTrainingComponent } from '@/training/typ
 import { TrainingExercise } from '@/training/entity/training-exercise.entity';
 import { CreateTrainingExercise, UpdateTrainingExercise } from '@/training/type/training-exercise.type';
 import dayjs from 'dayjs';
+import { TrainingSuperset } from '@/training/entity/training-superset.entity';
+import { CreateTrainingSuperset } from '@/training/type/training-superset.type';
 
 const commonService = CommonService.instance;
 
@@ -19,6 +21,7 @@ export class GroupController {
   static URL = {
     groups: () => '/group',
     groupById: (groupId: string) => `/group/${groupId}`,
+    groupAvailableMembers: (groupId: string) => `/group/${groupId}/available-members`,
     cycles: (groupId: string) => `/group/${groupId}/cycle`,
     cycleById: (groupId: string, cycleId: string) => `/group/${groupId}/cycle/${cycleId}`,
     subgroups: (groupId: string) => `/group/${groupId}/subgroup`,
@@ -35,24 +38,30 @@ export class GroupController {
     trainingById: (groupId: string, cycleId: string, trainingId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}`,
     trainingComponents: (groupId: string, cycleId: string, trainingId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component`,
     trainingComponentById: (groupId: string, cycleId: string, trainingId: string, componentId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}`,
-    trainingExercises: (groupId: string, cycleId: string, trainingId: string, componentId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/exercise`,
-    trainingExerciseById: (groupId: string, cycleId: string, trainingId: string, componentId: string, exerciseId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/exercise/${exerciseId}`,
+    trainingSupersets: (groupId: string, cycleId: string, trainingId: string, componentId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset`,
+    trainingSupersetById: (groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset/${supersetId}`,
+    trainingExercises: (groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset/${supersetId}/exercise`,
+    trainingExerciseById: (groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string, exerciseId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset/${supersetId}/exercise/${exerciseId}`,
   };
 
   static async findGroups(token: string) {
     return await commonService.api.fetch<Group[]>(this.URL.groups(), { token });
   }
 
-  static async findGroup(token: string, id: string) {
-    return await commonService.api.fetch<Group>(this.URL.groupById(id), { token });
+  static async findGroup(token: string, groupId: string) {
+    return await commonService.api.fetch<Group>(this.URL.groupById(groupId), { token });
+  }
+
+  static async findGroupAvailableMembers(token: string, groupId: string) {
+    return await commonService.api.fetch<string[]>(this.URL.groupAvailableMembers(groupId), { token });
   }
 
   static async createGroup(token: string, body: CreateGroup) {
     return await commonService.api.fetch<Group>(this.URL.groups(), { token, method: 'POST', body });
   }
 
-  static async updateGroup(token: string, id: string, body: UpdateGroup) {
-    return await commonService.api.fetch<Group>(this.URL.groupById(id), { token, method: 'PATCH', body });
+  static async updateGroup(token: string, groupId: string, body: UpdateGroup) {
+    return await commonService.api.fetch<Group>(this.URL.groupById(groupId), { token, method: 'PATCH', body });
   }
 
   static async findCycles(token: string, groupId: string) {
@@ -158,24 +167,32 @@ export class GroupController {
     });
   }
 
-  static async findTrainingComponentExercises(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string) {
-    return await commonService.api.fetch<TrainingExercise[]>(this.URL.trainingExercises(groupId, cycleId, trainingId, componentId), { token });
+  static async findTrainingComponentExercises(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string) {
+    return await commonService.api.fetch<TrainingExercise[]>(this.URL.trainingExercises(groupId, cycleId, trainingId, componentId, supersetId), { token });
   }
 
-  static async findTrainingComponentExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, exerciseId: string) {
-    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExerciseById(groupId, cycleId, trainingId, componentId, exerciseId), { token });
+  static async findTrainingComponentExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string, exerciseId: string) {
+    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExerciseById(groupId, cycleId, trainingId, componentId, supersetId, exerciseId), { token });
   }
 
-  static async addTrainingComponentExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, body: CreateTrainingExercise) {
-    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExercises(groupId, cycleId, trainingId, componentId), {
+  static async addSuperset(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, body: CreateTrainingSuperset) {
+    return await commonService.api.fetch<TrainingSuperset>(this.URL.trainingSupersets(groupId, cycleId, trainingId, componentId), {
       token,
       method: 'POST',
       body,
     });
   }
 
-  static async updateTrainingComponentExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, exerciseId: string, body: UpdateTrainingExercise) {
-    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExerciseById(groupId, cycleId, trainingId, componentId, exerciseId), {
+  static async addTrainingExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string, body: CreateTrainingExercise) {
+    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExercises(groupId, cycleId, trainingId, componentId, supersetId), {
+      token,
+      method: 'POST',
+      body,
+    });
+  }
+
+  static async updateExercise(token: string, groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string, exerciseId: string, body: UpdateTrainingExercise) {
+    return await commonService.api.fetch<TrainingExercise>(this.URL.trainingExerciseById(groupId, cycleId, trainingId, componentId, supersetId, exerciseId), {
       token,
       method: 'PATCH',
       body,

@@ -211,9 +211,9 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
         let from = new Date();
         let to = addDays(from, 10);
 
-        const cycleRef = { ...ref, groupId: group.id };
+        const groupRef = { ...ref, groupId: group.id };
         for (const { name, description, trainings } of cycles) {
-          const cycle = await this.groupService.addCycle(user, cycleRef, {
+          const cycle = await this.groupService.addCycle(user, groupRef, {
             name,
             description,
             from,
@@ -221,11 +221,11 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
           });
 
           // import trainings
-          const trainingRef = { ...cycleRef, cycleId: cycle.id };
+          const cycleRef = { ...groupRef, cycleId: cycle.id };
           for (const { components } of trainings) {
             for (const {
               component: slug,
-              exercises,
+              supersets,
             } of components as (TrainingComponent & Record<string, any>)[]) {
               const component = await this.componentService.findOneBySlug(
                 slug as unknown as string,
@@ -239,7 +239,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
               const trainingTo = addHours(trainingFrom, 3);
               const training = await this.trainingService.createTraining(
                 user,
-                trainingRef,
+                cycleRef,
                 {
                   componentIds: [component.id],
                   from: trainingFrom,
@@ -250,26 +250,44 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
               from = addDays(from, 1);
 
               // import training exercises
-              for (const { exercise: name, meta } of exercises) {
-                const exercise = await this.exerciseService.findExerciseByName(
-                  name as unknown as string,
+              const trainingRef = { ...cycleRef, trainingId: training.id };
+              const componentRef = {
+                ...trainingRef,
+                componentId: component.id,
+                subgroupId: null,
+              };
+
+              for (const { exercises } of supersets) {
+                const superset = await this.trainingService.addSuperset(
+                  user,
+                  componentRef,
+                  {},
                 );
-                if (!exercise) {
-                  this.logger.error(`Exercise with name ${name} not found`);
-                  continue;
+
+                for (const { exercise: name, meta } of exercises) {
+                  const exercise =
+                    await this.exerciseService.findExerciseByName(
+                      name as unknown as string,
+                    );
+
+                  if (!exercise) {
+                    this.logger.error(`Exercise with name ${name} not found`);
+                    continue;
+                  }
+
+                  const exerciseRef = {
+                    ...cycleRef,
+                    trainingId: training.id,
+                    componentId: component.id,
+                    supersetId: superset.id,
+                    subgroupId: null,
+                  };
+
+                  await this.trainingService.addExercise(user, exerciseRef, {
+                    meta,
+                    exerciseId: exercise.id,
+                  });
                 }
-
-                const exerciseRef = {
-                  ...trainingRef,
-                  trainingId: training.id,
-                  componentId: component.id,
-                  subgroupId: null,
-                };
-
-                await this.trainingService.addExercise(user, exerciseRef, {
-                  meta,
-                  exerciseId: exercise.id,
-                });
               }
             }
           }

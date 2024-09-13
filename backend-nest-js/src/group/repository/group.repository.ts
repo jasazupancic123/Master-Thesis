@@ -8,25 +8,30 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { FirestoreCollectionRepository, GroupRef, UserRef } from '../../common/type/firebase-firestore.type';
+import {
+  FirestoreCollectionRepository,
+  GroupRef,
+  UserRef,
+} from '../../common/type/firebase-firestore.type';
 import { Group } from '../entity/group.entity';
 import { CommonService } from '../../common/service/common.service';
 import { UserRepository } from '../../user/repository/user.repository';
 
 @Injectable()
-export class GroupRepository implements FirestoreCollectionRepository<Group, UserRef> {
+export class GroupRepository
+  implements FirestoreCollectionRepository<Group, UserRef>
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly userRepository: UserRepository,
-  ) {
-  }
+  ) {}
 
   async getDocs(
     ref: Required<UserRef>,
-    query: (query: Query) => Query = query => query,
+    query: (query: Query) => Query = (query) => query,
   ): Promise<Group[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async getDoc(ref: Required<GroupRef>): Promise<Group | null> {
@@ -57,7 +62,9 @@ export class GroupRepository implements FirestoreCollectionRepository<Group, Use
   }
 
   collection(ref: Required<UserRef>): CollectionReference {
-    return this.userRepository.doc(ref.uid).collection(FirestoreCollection.GROUP);
+    return this.userRepository
+      .doc(ref.uid)
+      .collection(FirestoreCollection.GROUP);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Group {
@@ -67,11 +74,14 @@ export class GroupRepository implements FirestoreCollectionRepository<Group, Use
       id: snapshot.id,
       name: data.name,
       ownerId: data.ownerId,
+      owner: null,
       membersIds: data.membersIds,
+      availableMembersIds: [],
+      members: [],
       subgroups: [],
       cycles: [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
-    } as Group;
+    };
   }
 }

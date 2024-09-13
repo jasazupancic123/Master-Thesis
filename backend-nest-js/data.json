@@ -185,41 +185,49 @@
                   "components": [
                     {
                       "component": "strength",
-                      "exercises": [
+                      "supersets": [
                         {
-                          "exercise": "Squats",
-                          "meta": {
-                            "sets": 4,
-                            "setType": "reps",
-                            "setTypeValue": 8,
-                            "workloadType": "kg",
-                            "workloadValue": 100
-                          }
-                        },
-                        {
-                          "exercise": "Bench Press",
-                          "meta": {
-                            "sets": 3,
-                            "setType": "reps",
-                            "setTypeValue": 5,
-                            "workloadType": "kg",
-                            "workloadValue": 60
-                          }
+                          "exercises": [
+                            {
+                              "exercise": "Squats",
+                              "meta": {
+                                "sets": 4,
+                                "setType": "reps",
+                                "setTypeValue": 8,
+                                "workloadType": "kg",
+                                "workloadValue": 100
+                              }
+                            },
+                            {
+                              "exercise": "Bench Press",
+                              "meta": {
+                                "sets": 3,
+                                "setType": "reps",
+                                "setTypeValue": 5,
+                                "workloadType": "kg",
+                                "workloadValue": 60
+                              }
+                            }
+                          ]
                         }
                       ]
                     },
                     {
                       "component": "speed",
-                      "exercises": [
+                      "supersets": [
                         {
-                          "exercise": "Sprint",
-                          "meta": {
-                            "sets": 4,
-                            "setType": "distance",
-                            "setTypeValue": 20,
-                            "workloadType": "int",
-                            "workloadValue": 5
-                          }
+                          "exercises": [
+                            {
+                              "exercise": "Sprint",
+                              "meta": {
+                                "sets": 4,
+                                "setType": "distance",
+                                "setTypeValue": 20,
+                                "workloadType": "int",
+                                "workloadValue": 5
+                              }
+                            }
+                          ]
                         }
                       ]
                     }
@@ -235,16 +243,20 @@
                   "components": [
                     {
                       "component": "strength",
-                      "exercises": [
+                      "supersets": [
                         {
-                          "exercise": "Squats",
-                          "meta": {
-                            "sets": 1,
-                            "setType": "reps",
-                            "setTypeValue": 5,
-                            "workloadType": "kg",
-                            "workloadTypeValue": 50
-                          }
+                          "exercises": [
+                            {
+                              "exercise": "Squats",
+                              "meta": {
+                                "sets": 1,
+                                "setType": "reps",
+                                "setTypeValue": 5,
+                                "workloadType": "kg",
+                                "workloadTypeValue": 50
+                              }
+                            }
+                          ]
                         }
                       ]
                     }
@@ -254,16 +266,20 @@
                   "components": [
                     {
                       "component": "speed",
-                      "exercises": [
+                      "supersets": [
                         {
-                          "exercise": "Sprint",
-                          "meta": {
-                            "sets": 2,
-                            "setType": "distance",
-                            "setTypeValue": 5,
-                            "workloadType": "int",
-                            "workloadTypeValue": 1
-                          }
+                          "exercises": [
+                            {
+                              "exercise": "Sprint",
+                              "meta": {
+                                "sets": 2,
+                                "setType": "distance",
+                                "setTypeValue": 5,
+                                "workloadType": "int",
+                                "workloadTypeValue": 1
+                              }
+                            }
+                          ]
                         }
                       ]
                     }

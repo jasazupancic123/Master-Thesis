@@ -38,6 +38,18 @@ export class UserRepository
     return this.serialize(snapshot);
   }
 
+  /**
+   * Returns last bodyweight of the user.
+   */
+  async getBodyweight(id: string): Promise<number> {
+    const { bodyweight } = await this.getDoc(id);
+    const sorted = bodyweight.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+    
+    return sorted.length ? sorted[sorted.length - 1].weight : 0;
+  }
+
   async addDoc(input: Partial<UserEntity>) {
     if (!input.id) throw new Error('User ID is required');
 
@@ -102,7 +114,7 @@ export class UserRepository
     return {
       id: snapshot.id,
       level: data.level,
-      bodyweight: (data.bodyweight?.elements || []).map((item: any) => ({
+      bodyweight: (data.bodyweight || []).map((item: any) => ({
         weight: item.weight,
         createdAt: (item.createdAt as Timestamp).toDate(),
         updatedAt: (item.updatedAt as Timestamp).toDate(),

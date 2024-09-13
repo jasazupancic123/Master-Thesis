@@ -19,7 +19,6 @@ export default function TrainerDayView(props: GroupPageProps) {
   const cycle = props.selected.cycle;
   if (!group || !cycle)
     return <Typography variant="body1" mt={2}>No cycle selected</Typography>;
-  console.log('group', group);
 
   return <Box>
     {/* Week day badges */}
@@ -59,30 +58,33 @@ export default function TrainerDayView(props: GroupPageProps) {
       }}
     >
       <Stack direction="row" spacing={1}>
-        {([group.id]).concat(group.subgroups.map(({ id }) => id)).map((groupOrSubgroupId, i) => {
-          const foundGroup = groupOrSubgroupId === group.id ? group : null;
-          const foundSubgroup = groupOrSubgroupId === group.id ? null : group.subgroups.find(s => s.id === groupOrSubgroupId) || null;
+        {group.availableMembersIds?.map(id => group.members?.find(m => m.uid === id)).map((member, i) => member &&
+          <Box
+            key={member.uid}
+            sx={{ cursor: 'pointer' }}
+            onClick={() => props.setSelected(prev => ({ ...prev, subgroup: null }))}
+          >
+            <Tooltip title={member.email}>
+              <Avatar>
+                {member.email[0].toUpperCase()}
+              </Avatar>
+            </Tooltip>
+          </Box>)}
 
-          const members = (foundGroup || foundSubgroup || { membersIds: [] }).membersIds.map(id => (group!.members || []).find(m => m.uid === id));
-
+        {group.subgroups.map((subgroup, i) => {
+          const members = subgroup.membersIds?.map(id => group.members?.find(m => m.uid === id));
           return <Stack
-            key={groupOrSubgroupId}
+            key={subgroup.id}
             direction="row"
             spacing={1}
             my={4}
             sx={{ cursor: 'pointer' }}
-            onClick={() => {
-              if (group)
-                props.setSelected(prev => ({ ...prev, subgroup: null }));
-              else
-                // props.setSelected(prev => ({ ...prev, subgroup: prev.subgroup === subgroup ? null : subgroup }));
-                props.setSelected(prev => ({ ...prev, subgroup: foundSubgroup }));
-            }}
+            onClick={() => props.setSelected(prev => ({ ...prev, subgroup }))}
           >
             {members.map(member => member && <Box key={member.uid}>
               <Tooltip title={member.email}>
                 <Avatar
-                  sx={{ border: group ? 0 : `2px solid ${colors[i % colors.length]}` }}
+                  sx={{ border: `2px solid ${colors[i % colors.length]}` }}
                 >
                   {member.email[0].toUpperCase()}
                 </Avatar>
@@ -94,6 +96,10 @@ export default function TrainerDayView(props: GroupPageProps) {
     </Stack>
 
     {/* Training set groups with set exercises */}
-    <TrainingDay trainings={cycle.trainings} />
+    <TrainingDay
+      group={group}
+      cycle={cycle}
+      trainings={cycle.trainings}
+    />
   </Box>;
 }
