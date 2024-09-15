@@ -3,6 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { Training } from '../../training/entity/training.entity';
 import { BaseEntity } from '../../common/entity/base.entity';
+import { Group } from './group.entity';
 
 export interface Week {
   date: Date;
@@ -41,4 +42,5 @@ export class Cycle extends BaseEntity {
   @ApiProperty()
   @Expose()
   weeks: Week[][]; // virtual
+  group: Group | null; // virtual
 }

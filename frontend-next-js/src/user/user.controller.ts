@@ -3,6 +3,7 @@ import { CommonService } from '@/common/service/common.service';
 import { User } from '@/user/type/user.type';
 import { CustomClaims } from '@/user/type/custom-claims.type';
 import { Wellness } from '@/user/entity/wellness.entity';
+import { CreateWellness } from '@/user/type/wellness.type';
 
 const commonService = CommonService.instance;
 
@@ -19,7 +20,7 @@ export class UserController {
     userById: (id: string) => `/user/${id}`,
     me: () => '/user/me',
     customClaims: (id: string) => `/user/${id}/claims`,
-    wellness: () => '/user/me/wellness',
+    wellness: () => `/user/me/wellness`,
   };
 
   static async findAll(filter?: FilterUserQuery): Promise<User[]> {
@@ -38,11 +39,11 @@ export class UserController {
     await commonService.api.fetch(this.URL.customClaims(uid), { method: 'PATCH', body: claims });
   }
 
-  static async getWellness(token: string): Promise<Wellness> {
+  static async getTodayWellness(token: string): Promise<Wellness> {
     return await commonService.api.fetch<Wellness>(this.URL.wellness(), { token });
   }
 
-  static async createWellness(token: string, data: Partial<Wellness>): Promise<void> {
-    await commonService.api.fetch(this.URL.wellness(), { method: 'POST', body: data });
+  static async submitWellness(token: string, data: CreateWellness): Promise<void> {
+    await commonService.api.fetch(this.URL.wellness(), { method: 'POST', token, body: data });
   }
 }

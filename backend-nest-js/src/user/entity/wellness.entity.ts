@@ -1,9 +1,9 @@
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { Expose } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { TimestampEntity } from '../../common/entity/timestamp.entity';
+import { BaseEntity } from '../../common/entity/base.entity';
 
-export class Wellness extends TimestampEntity {
+export class Wellness extends BaseEntity {
   @IsOptional()
   @IsNumber()
   @ApiPropertyOptional()

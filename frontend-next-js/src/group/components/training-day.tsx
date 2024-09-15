@@ -132,7 +132,7 @@ export default function TrainingDay(props: Props) {
         effort: Effort.MODERATE,
       };
 
-      const responses = await Promise.all(exercises.map(exercise => GroupController.addTrainingExercise(token, group.id, cycle.id, trainingId, component.componentId, supersetId, {
+      const response = await GroupController.addTrainingExercises(token, group.id, cycle.id, trainingId, component.componentId, supersetId, exercises.map(exercise => ({
         exerciseId: exercise.id,
         meta,
       })));
@@ -148,7 +148,7 @@ export default function TrainingDay(props: Props) {
               ...superset,
               exercises: [
                 ...superset.exercises,
-                ...responses,
+                ...response,
               ].sort((a, b) => a.order - b.order),
             },
           ].sort((a, b) => a.order - b.order),

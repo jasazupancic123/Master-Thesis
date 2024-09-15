@@ -11,7 +11,7 @@ import { CommonService } from '../common/service/common.service';
 import { ComponentRepository } from './repository/component.repository';
 import { ExerciseService } from '../exercise/service/exercise.service';
 import { Wrapper } from '../common/type/wrapper.type';
-import { Query } from 'firebase-admin/firestore';
+import { FieldPath, Query } from 'firebase-admin/firestore';
 import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
@@ -164,11 +164,14 @@ export class ComponentService {
   }
 
   private filter(query: Query, filter: Filter<Component>) {
-    if (filter.ids) query = query.where('id', 'in', filter.ids);
+    if (filter.ids)
+      query = query.where(FieldPath.documentId(), 'in', filter.ids);
+
     if (filter.name)
       query = query
         .where('name', '>=', filter.name)
         .where('name', '<=', filter.name + '\uf8ff');
+
     if (filter.slug) query = query.where('slug', '==', filter.slug);
     return query;
   }

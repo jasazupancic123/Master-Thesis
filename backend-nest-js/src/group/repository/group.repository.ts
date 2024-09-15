@@ -45,6 +45,8 @@ export class GroupRepository
       name: input.name,
       ownerId: input.ownerId,
       membersIds: input.membersIds,
+      from: null,
+      to: null,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
@@ -53,8 +55,11 @@ export class GroupRepository
   }
 
   async updateDoc(ref: Required<GroupRef>, input: Partial<Group>) {
-    const data = this.commonService.object.clean(input);
-    await this.doc(ref).update(data);
+    await this.doc(ref).update({
+      ...(input.name && { name: input.name }),
+      ...(input.from && { from: Timestamp.fromDate(input.from) }),
+      ...(input.to && { to: Timestamp.fromDate(input.to) }),
+    });
   }
 
   doc(ref: Required<GroupRef>): DocumentReference {
@@ -77,6 +82,8 @@ export class GroupRepository
       owner: null,
       membersIds: data.membersIds,
       availableMembersIds: [],
+      from: data.from ? (data.from as Timestamp).toDate() : null,
+      to: data.to ? (data.to as Timestamp).toDate() : null,
       members: [],
       subgroups: [],
       cycles: [],

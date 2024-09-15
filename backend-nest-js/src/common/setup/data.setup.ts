@@ -1,6 +1,6 @@
 import { BaseSetup } from './base.setup';
 import { INestApplication } from '@nestjs/common';
-import { UserService } from '../../user/user.service';
+import { UserService } from '../../user/service/user.service';
 import { SportLevel } from '../../user/enum/sport-level.enum';
 import { UserRole } from '../../user/enum/user-role.enum';
 import { ComponentService } from '../../component/component.service';
@@ -49,7 +49,6 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
       password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
       displayName: 'Admin',
-      customClaims: { role: [UserRole.ADMIN] },
     });
 
     if (options?.dev) {
@@ -128,7 +127,6 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
         this.userService.upsert({
           email: user.email,
           displayName: user.displayName,
-          customClaims: { role: [user.role], level: SportLevel.ADVANCED },
           password: 'password',
         }),
       ),
@@ -186,7 +184,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
           continue;
         }
 
-        await this.exerciseService.createExercise(user, ref, {
+        await this.exerciseService.create(user.uid, {
           name: exercise.name,
           componentsIds: [component.id],
           attributeValues: exercise.attributes,
@@ -201,11 +199,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       for (const { name, membersEmails: emails, cycles } of groups) {
         const members = await this.userService.findAll({ emails });
         const membersIds = members.map((m) => m.uid);
-        const group = await this.groupService.createGroup(user, ref, {
-          ownerId: user.uid,
-          name,
-          membersIds,
-        });
+        const group = await this.groupService.create(ref, { name, membersIds });
 
         // import cycles
         let from = new Date();
@@ -213,7 +207,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
 
         const groupRef = { ...ref, groupId: group.id };
         for (const { name, description, trainings } of cycles) {
-          const cycle = await this.groupService.addCycle(user, groupRef, {
+          const cycle = await this.groupService.addCycle(groupRef, {
             name,
             description,
             from,
@@ -230,6 +224,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
               const component = await this.componentService.findOneBySlug(
                 slug as unknown as string,
               );
+
               if (!component) {
                 this.logger.error(`Component with slug ${slug} not found`);
                 continue;
@@ -237,15 +232,11 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
 
               const trainingFrom = addDays(from, 1);
               const trainingTo = addHours(trainingFrom, 3);
-              const training = await this.trainingService.createTraining(
-                user,
-                cycleRef,
-                {
-                  componentIds: [component.id],
-                  from: trainingFrom,
-                  to: trainingTo,
-                },
-              );
+              const training = await this.trainingService.create(cycleRef, {
+                componentIds: [component.id],
+                from: trainingFrom,
+                to: trainingTo,
+              });
 
               from = addDays(from, 1);
 
@@ -259,16 +250,14 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
 
               for (const { exercises } of supersets) {
                 const superset = await this.trainingService.addSuperset(
-                  user,
                   componentRef,
                   {},
                 );
 
                 for (const { exercise: name, meta } of exercises) {
-                  const exercise =
-                    await this.exerciseService.findExerciseByName(
-                      name as unknown as string,
-                    );
+                  const exercise = await this.exerciseService.findOneByName(
+                    name as unknown as string,
+                  );
 
                   if (!exercise) {
                     this.logger.error(`Exercise with name ${name} not found`);
@@ -283,10 +272,12 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
                     subgroupId: null,
                   };
 
-                  await this.trainingService.addExercise(user, exerciseRef, {
-                    meta,
-                    exerciseId: exercise.id,
-                  });
+                  await this.trainingService.addExercises(exerciseRef, [
+                    {
+                      meta,
+                      exerciseId: exercise.id,
+                    },
+                  ]);
                 }
               }
             }

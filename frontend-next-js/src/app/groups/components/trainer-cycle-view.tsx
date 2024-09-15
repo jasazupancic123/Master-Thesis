@@ -112,7 +112,8 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
 
     try {
-      const responses = await Promise.all(data.map(item => GroupController.addTrainingComponent(token, group.id, cycle.id, trainingId, item)));
+      // const responses = await Promise.all(data.map(item => GroupController.addTrainingComponent(token, group.id, cycle.id, trainingId, item)));
+      const response = await GroupController.addTrainingComponents(token, group.id, cycle.id, trainingId, data);
 
       // update training
       props.setSelected(prev => ({
@@ -123,7 +124,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
             if (training.id === trainingId)
               return {
                 ...training,
-                components: [...(training.components || []), ...responses],
+                components: [...(training.components || []), ...response],
               };
 
             return training;

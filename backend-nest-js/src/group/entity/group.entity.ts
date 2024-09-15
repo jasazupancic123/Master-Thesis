@@ -1,11 +1,12 @@
 import {
+  IsDate,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Transform, Type } from 'class-transformer';
 import { User } from '../../common/type/firebase-auth.type';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { Subgroup } from './subgroup.entity';
@@ -21,7 +22,7 @@ export class Group extends BaseEntity {
   @ApiProperty()
   @Expose()
   ownerId: string; // owner of the group
-  owner: User;
+  owner: User | null;
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
@@ -29,7 +30,21 @@ export class Group extends BaseEntity {
   @Expose()
   membersIds: string[]; // all members of the group
   availableMembersIds: string[]; // (virtual) all members that can be added to the group
-  members: User[];
+  members: User[] | null;
+
+  @IsDate()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  @Transform(({ value }) => (value ? new Date(value) : undefined))
+  from?: Date;
+
+  @IsDate()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  @Transform(({ value }) => (value ? new Date(value) : undefined))
+  to?: Date;
 
   @ValidateNested({ each: true })
   @Type(() => Subgroup)

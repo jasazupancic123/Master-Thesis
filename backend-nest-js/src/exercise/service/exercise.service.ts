@@ -9,7 +9,6 @@ import { Exercise } from '../entity/exercise.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { ComponentService } from '../../component/component.service';
 import { Component } from '../../component/entity/component.entity';
-import { User } from '../../common/type/firebase-auth.type';
 import { CommonService } from '../../common/service/common.service';
 import {
   Filter,
@@ -26,14 +25,13 @@ import {
   ExerciseRef,
   UserRef,
 } from '../../common/type/firebase-firestore.type';
-import { CanViewService } from '../../common/type/auth.type';
-import { UserRepository } from '../../user/repository/user.repository';
 import { ExerciseAttributeService } from './exercise-attribute.service';
 import { ExerciseAttributeValueService } from './exercise-attribute-value.service';
 import { Wrapper } from '../../common/type/wrapper.type';
+import { UserService } from '../../user/service/user.service';
 
 @Injectable()
-export class ExerciseService extends CanViewService<ExerciseRef> {
+export class ExerciseService {
   private logger = new Logger(ExerciseService.name);
 
   constructor(
@@ -42,29 +40,12 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     private readonly exerciseRepository: ExerciseRepository,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
     private readonly exerciseAttributeValueService: ExerciseAttributeValueService,
-  ) {
-    super();
-  }
+  ) {}
 
-  async canView(user: User, ref: Required<ExerciseRef>): Promise<boolean> {
-    const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
-    if (!exercise) return false;
-
-    if (
-      exercise.global ||
-      this.firebaseService.isAdmin(user) ||
-      exercise.userId === user.uid
-    )
-      return true;
-
-    // false by default
-    return false;
-  }
-
-  async countExercises(
+  async countAll(
     ref: Required<UserRef>,
     options?: FindManyOptions<Exercise>,
   ): Promise<number> {
@@ -82,7 +63,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
       .then((snapshot) => snapshot.data().count);
   }
 
-  async findUserExercises(
+  async findAllByUser(
     ref: Required<UserRef>,
     options?: FindManyOptions<Exercise>,
   ): Promise<Exercise[]> {
@@ -93,8 +74,8 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     else query = query.where('userId', '==', ref.uid);
 
     const components = await this.componentService.findAllFlat();
-    if (options.filter) query = this.filter(query, options.filter, components);
-    if (options.paginate) query = this.paginate(query, options.paginate);
+    if (options?.filter) query = this.filter(query, options.filter, components);
+    if (options?.paginate) query = this.paginate(query, options.paginate);
 
     const exercises = await query
       .get()
@@ -102,7 +83,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
         snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
       );
 
-    if (options.populate)
+    if (options?.populate)
       for (const exercise of exercises)
         await this.populate(
           { exerciseId: exercise.id },
@@ -116,18 +97,18 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
   /**
    * For internal use to find all exercises without pagination.
    */
-  async findExercises(
+  async findAll(
     ref: Required<UserRef>,
     options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
   ): Promise<Exercise[]> {
-    const userExercises = await this.findUserExercises(ref, {
+    const userExercises = await this.findAllByUser(ref, {
       ...options,
       paginate: undefined,
       populate: options?.populate,
       filter: { ...options?.filter, global: false },
     });
 
-    const globalExercises = await this.findUserExercises(ref, {
+    const globalExercises = await this.findAllByUser(ref, {
       ...options,
       paginate: undefined,
       populate: options?.populate,
@@ -140,18 +121,23 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     ]);
   }
 
-  async findExercise(
+  async findOne(
     ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise>,
+    options?: FindOneOptions<Exercise> & { userId?: string },
   ): Promise<Exercise | null> {
+    // find exercise
     const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
     if (!exercise) return null;
+
+    // authorize
+    if (options?.userId)
+      if (!exercise.global && exercise.userId !== options.userId) return null;
 
     if (options?.populate) await this.populate(ref, exercise, options.populate);
     return exercise;
   }
 
-  async findExerciseByName(name: string): Promise<Exercise | null> {
+  async findOneByName(name: string): Promise<Exercise | null> {
     const query = this.exerciseRepository
       .collection()
       .where('name', '==', name);
@@ -161,39 +147,17 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     return this.exerciseRepository.serialize(snapshot.docs[0]);
   }
 
-  async findExerciseOrFail(
+  async findOneOrFail(
     ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise>,
+    options?: FindOneOptions<Exercise> & { userId?: string },
   ): Promise<Exercise> {
-    const exercise = await this.findExercise(ref, options);
+    const exercise = await this.findOne(ref, options);
     if (!exercise) throw new BadRequestException('Exercise does not exist');
     return exercise;
   }
 
-  async findUserExercise(
-    user: User,
-    ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise>,
-  ): Promise<Exercise | null> {
-    await this.authorize(user, ref);
-    return this.findExercise(ref, options);
-  }
-
-  async findUserExerciseOrFail(
-    user: User,
-    ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise>,
-  ): Promise<Exercise> {
-    await this.authorize(user, ref);
-    return this.findExerciseOrFail(ref, options);
-  }
-
-  async createExercise(
-    user: User,
-    ref: Required<UserRef>,
-    data: Partial<Exercise>,
-  ) {
-    this.logger.debug(`Creating new exercise for user ${user.uid}`);
+  async create(userId: string, data: Partial<Exercise>) {
+    this.logger.debug(`Creating new exercise for user ${userId}`);
 
     // validate exercise attributes
     await this.exerciseAttributeService.validate(data.attributeValues || {});
@@ -216,8 +180,9 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     }
 
     // create exercise
+    const user = await this.userService.findOneBy('id', userId);
     const exerciseId = await this.exerciseRepository.addDoc({
-      userId: ref.uid,
+      userId,
       name: data.name,
       componentsIds: data.componentsIds,
       global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
@@ -226,7 +191,7 @@ export class ExerciseService extends CanViewService<ExerciseRef> {
     });
 
     // create attribute values from provided nested object
-    const exerciseAttributeRef = { uid: ref.uid, exerciseId };
+    const exerciseAttributeRef = { uid: userId, exerciseId };
     await this.exerciseAttributeValueService.createMany(
       exerciseAttributeRef,
       data.attributeValues || {},

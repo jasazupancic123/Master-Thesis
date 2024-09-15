@@ -10,6 +10,12 @@ export class TrainingExerciseUserData {
   @Expose()
   userId: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  exerciseId: string;
+
   @IsStringOrNumber()
   @IsNotEmpty()
   @ApiProperty()

@@ -1,7 +1,18 @@
-import { BadRequestException, forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { CommonService } from '../../common/service/common.service';
-import { Query, Timestamp } from 'firebase-admin/firestore';
-import { Filter, FindManyOptions, FindOneOptions, PaginateOptions, Populate } from '../../common/type/orm.type';
+import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
+import {
+  Filter,
+  FindManyOptions,
+  FindOneOptions,
+  PaginateOptions,
+  Populate,
+} from '../../common/type/orm.type';
 import { Cycle } from '../entity/cycle.entity';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
 import { CycleRepository } from '../repository/cycle.repository';
@@ -9,13 +20,13 @@ import { Wrapper } from '../../common/type/wrapper.type';
 import { TrainingService } from '../../training/service/training.service';
 import { CycleRef, GroupRef } from '../../common/type/firebase-firestore.type';
 import { GroupService } from './group.service';
-import { User } from '../../common/type/firebase-auth.type';
-import { CanViewService } from '../../common/type/auth.type';
+import { CreateCycle } from '../type/cycle.type';
+import { Validate } from '../../common/type/validate.type';
+import { isAfter, isBefore } from 'date-fns';
+import { GroupRepository } from '../repository/group.repository';
 
 @Injectable()
-export class CycleService extends CanViewService<GroupRef> {
-  private logger = new Logger(CycleService.name);
-
+export class CycleService {
   constructor(
     private readonly commonService: CommonService,
     private readonly cycleRepository: CycleRepository,
@@ -23,15 +34,17 @@ export class CycleService extends CanViewService<GroupRef> {
     private readonly trainingService: Wrapper<TrainingService>,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
-  ) {
-    super();
-  }
+    private readonly groupRepository: GroupRepository,
+  ) {}
 
-  async canView(user: User, ref: Required<GroupRef>): Promise<boolean> {
-    return await this.groupService.canView(user, ref);
-  }
+  async findAll(
+    ref: Required<GroupRef>,
+    options?: FindManyOptions<Cycle> & { authorize?: boolean },
+  ): Promise<Cycle[]> {
+    await this.groupService.findOneOrFail(ref, {
+      authorize: options?.authorize,
+    });
 
-  async findCycles(ref: Required<GroupRef>, options?: FindManyOptions<Cycle>): Promise<Cycle[]> {
     return await this.cycleRepository.getDocs(ref, (collection) => {
       let query = collection;
       if (options?.filter) query = this.filter(query, options.filter);
@@ -41,33 +54,42 @@ export class CycleService extends CanViewService<GroupRef> {
     });
   }
 
-  async findUserCycles(user: User, ref: Required<GroupRef>, options?: FindManyOptions<Cycle>): Promise<Cycle[]> {
-    await this.authorize(user, ref);
-    return await this.findCycles(ref, options);
+  async findAllByMember(
+    userId: string,
+    _options?: FindManyOptions<Cycle>,
+  ): Promise<Cycle[]> {
+    // find all active groups for the user (groups that are ongoing)
+    const groups = await this.groupService.findAllByMember(userId, {
+      populate: ['cycles'],
+    });
+
+    return groups.flatMap((group) => group.cycles);
   }
 
-  async findCycle(ref: Required<CycleRef>, options?: FindOneOptions<Cycle>): Promise<Cycle> {
+  async findOne(
+    ref: Required<CycleRef>,
+    options?: FindOneOptions<Cycle> & { authorize?: boolean },
+  ): Promise<Cycle> {
+    // find parent references
+    const group = await this.groupService.findOneOrFail(ref, {
+      authorize: options?.authorize,
+    });
+
     const cycle = await this.cycleRepository.getDoc(ref);
     if (!cycle) return null;
 
     if (options?.populate) await this.populate(ref, cycle, options.populate);
+    cycle.group = group;
     return cycle;
   }
 
-  async findCycleOrFail(ref: Required<CycleRef>, options?: FindOneOptions<Cycle>): Promise<Cycle> {
-    const cycle = await this.findCycle(ref, options);
+  async findOneOrFail(
+    ref: Required<CycleRef>,
+    options?: FindOneOptions<Cycle> & { authorize?: boolean },
+  ): Promise<Cycle> {
+    const cycle = await this.findOne(ref, options);
     if (!cycle) throw new BadRequestException('Cycle not found');
     return cycle;
-  }
-
-  async findUserCycle(user: User, ref: Required<CycleRef>, options?: FindOneOptions<Cycle>): Promise<Cycle> {
-    await this.authorize(user, ref);
-    return await this.findCycle(ref, options);
-  }
-
-  async findUserCycleOrFail(user: User, ref: Required<CycleRef>, options?: FindOneOptions<Cycle>): Promise<Cycle> {
-    await this.authorize(user, ref);
-    return await this.findCycleOrFail(ref, options);
   }
 
   /**
@@ -76,23 +98,45 @@ export class CycleService extends CanViewService<GroupRef> {
    * default, it uses the current date.
    */
   async findActiveCycle(
-    ref: Required<GroupRef>,
+    userId: string,
     date = new Date(),
-    _options?: FindOneOptions<Cycle>,
+    options?: FindOneOptions<Cycle>,
   ): Promise<Cycle | null> {
-    const cycles = await this.findCycles(ref, { filter: { to: { value: date } } });
-    return cycles[0] || null;
+    // find all active groups for the user (groups that are ongoing)
+    const groups = await this.groupService.findAllByMember(userId, {
+      active: true,
+      populate: ['cycles'],
+    });
+
+    // find first active cycle for the given date
+    for (const group of groups)
+      for (const cycle of group.cycles)
+        if (this.commonService.date.isBetween(date, cycle.from, cycle.to)) {
+          const ref = {
+            uid: group.ownerId,
+            groupId: group.id,
+            cycleId: cycle.id,
+          };
+
+          const activeCycle = await this.findOne(ref, {
+            ...options,
+            authorize: false,
+          });
+
+          activeCycle.group = group;
+          return activeCycle;
+        }
+
+    return null;
   }
 
-  async create(ref: Required<GroupRef>, input: Partial<Cycle>): Promise<Cycle> {
-    await this.groupService.findGroupOrFail(ref);
+  async create(ref: Required<GroupRef>, input: CreateCycle): Promise<Cycle> {
+    // find parent references
+    const group = await this.groupService.findOneOrFail(ref);
 
     // validate data
-    if (input.from >= input.to)
-      throw new BadRequestException('Cycle start date must be before end date');
-
-    // TODO - separate validate() function, also check that this cycle does not
-    // overlap with existing cycles in the group
+    const { error, message } = await this.validate(ref, input);
+    if (error) throw new BadRequestException(message);
 
     // create cycle
     const data = {
@@ -103,21 +147,69 @@ export class CycleService extends CanViewService<GroupRef> {
     };
 
     const cycleId = await this.cycleRepository.addDoc(ref, data);
+
+    // update group's `from` and `to` dates if cycle extends beyond them
+    const updateGroup = {
+      ...(!group.from || isBefore(input.from, group.from)
+        ? { from: input.from }
+        : {}),
+      ...(!group.to || isAfter(input.to, group.to) ? { to: input.to } : {}),
+    };
+
+    if (Object.keys(updateGroup).length > 0)
+      await this.groupRepository.updateDoc(ref, updateGroup);
+
     return {
       id: cycleId,
       ...data,
       createdAt: new Date(),
       updatedAt: new Date(),
-      weeks: [],
+      weeks: this.commonService.date.weeks(input.from, input.to),
       trainings: [],
+      group,
     };
   }
 
+  private async validate(
+    ref: Required<GroupRef>,
+    input: Partial<Cycle>,
+  ): Promise<Validate> {
+    // check that this cycle does not overlap with existing cycles in the group
+    const cycles = await this.findAll(ref, { authorize: false });
+    const overlap = cycles.find(
+      (c) =>
+        (input.from >= c.from && input.from <= c.to) ||
+        (input.to >= c.from && input.to <= c.to),
+    );
+
+    if (overlap)
+      return { error: true, message: 'Cycle overlaps with existing cycle' };
+
+    return { error: false };
+  }
+
   private filter(query: Query, filter: Filter<Cycle>): Query {
-    if (filter.ids) query = query.where('id', 'in', filter.ids);
-    if (filter.name) query = query.where('name', '>=', filter.name.value).where('name', '<=', filter.name.value + '\uf8ff');
-    if (filter.from) query = query.where('from', filter.from.op || '<=', Timestamp.fromDate(filter.from.value));
-    if (filter.to) query = query.where('to', filter.to.op || '>=', Timestamp.fromDate(filter.to.value));
+    if (filter.ids)
+      query = query.where(FieldPath.documentId(), 'in', filter.ids);
+
+    if (filter.name)
+      query = query
+        .where('name', '>=', filter.name.value)
+        .where('name', '<=', filter.name.value + '\uf8ff');
+
+    if (filter.from)
+      query = query.where(
+        'from',
+        filter.from.op || '<=',
+        Timestamp.fromDate(filter.from.value),
+      );
+
+    if (filter.to)
+      query = query.where(
+        'to',
+        filter.to.op || '>=',
+        Timestamp.fromDate(filter.to.value),
+      );
 
     return query;
   }
@@ -133,7 +225,11 @@ export class CycleService extends CanViewService<GroupRef> {
       .offset((page - 1) * pageSize);
   }
 
-  private async populate(ref: Required<CycleRef>, cycle: Cycle, populate: Populate<Cycle>[]): Promise<Cycle> {
+  private async populate(
+    ref: Required<CycleRef>,
+    cycle: Cycle,
+    populate: Populate<Cycle>[],
+  ): Promise<Cycle> {
     if (populate.includes('weeks'))
       cycle.weeks = this.commonService.date.weeks(cycle.from, cycle.to);
 
@@ -142,7 +238,10 @@ export class CycleService extends CanViewService<GroupRef> {
       if (populate.includes('trainings.components'))
         options.populate.push('components');
 
-      cycle.trainings = await this.trainingService.findTrainings(ref, options);
+      cycle.trainings = await this.trainingService.findAll(ref, {
+        ...options,
+        authorize: false,
+      });
     }
 
     return cycle;

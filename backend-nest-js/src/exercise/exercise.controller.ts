@@ -60,8 +60,8 @@ export class ExerciseController {
     if (Object.keys(options.filter).length === 0) delete options.filter;
     if (Object.keys(options.paginate).length === 0) delete options.paginate;
 
-    const total = await this.exerciseService.countExercises(ref, options);
-    const data = await this.exerciseService.findUserExercises(ref, options);
+    const total = await this.exerciseService.countAll(ref, options);
+    const data = await this.exerciseService.findAllByUser(ref, options);
     return { total, data };
   }
 
@@ -72,14 +72,15 @@ export class ExerciseController {
     @Param('exerciseId') exerciseId: string,
   ) {
     const ref = { uid: user.uid, exerciseId };
-    return await this.exerciseService.findUserExerciseOrFail(user, ref);
+    return await this.exerciseService.findOneOrFail(ref, {
+      userId: user.uid,
+    });
   }
 
   @Post()
   @Auth()
   async create(@RequestUser() user: User, @Body() data: CreateExerciseDto) {
-    const ref = { uid: user.uid };
-    return await this.exerciseService.createExercise(user, ref, data);
+    return await this.exerciseService.create(user.uid, data);
   }
 
   @Patch(':exerciseId')

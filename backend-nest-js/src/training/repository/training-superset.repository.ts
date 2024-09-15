@@ -25,6 +25,16 @@ export class TrainingSupersetRepository
     private readonly trainingComponentRepository: TrainingComponentRepository,
   ) {}
 
+  async getLastOrder(ref: Required<TrainingComponentRef>): Promise<number> {
+    const snapshot = await this.collection(ref)
+      .orderBy('order', 'desc')
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) return 0;
+    return snapshot.docs[0].get('order');
+  }
+
   async getDocs(
     ref: Required<TrainingComponentRef>,
     query: (ref: Query) => Query = (ref) => ref,

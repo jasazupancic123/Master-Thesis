@@ -9,6 +9,7 @@ import { UserEntity } from '../../user/entity/user.entity';
 import { Component } from '../../component/entity/component.entity';
 import { ExerciseAttribute } from '../../exercise/entity/exercise-attribute.entity';
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
+import { Exercise } from '../../exercise/entity/exercise.entity';
 
 export interface FirestoreCollectionRepository<
   Model = any,
@@ -56,16 +57,14 @@ export interface RootFirestoreCollectionRepository<Model = any> {
   serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
-// root references
-export type UserRef = { uid?: string }; // auth user uid
-export type ExerciseRef = { exerciseId?: string };
 export type ComponentRef = { componentId?: string };
-export type ExerciseAttributeRef = { attributeId?: string };
 
-// exercise references
+export type ExerciseRef = { exerciseId?: string };
+export type ExerciseAttributeRef = { attributeId?: string };
 export type ExerciseAttributeValueRef = ExerciseRef & ExerciseAttributeRef;
 
-// group references
+export type UserRef = { uid?: string }; // auth user uid
+export type WellnessRef = UserRef & { wellnessId?: string };
 export type GroupRef = UserRef & { groupId?: string };
 export type SubgroupRef = GroupRef & { subgroupId?: string };
 export type CycleRef = GroupRef & { cycleId?: string };
@@ -87,4 +86,5 @@ export type DatabaseSchema = {
   [FirestoreCollection.USER]: UserEntity[];
   [FirestoreCollection.COMPONENT]: Component[];
   [FirestoreCollection.EXERCISE_ATTRIBUTE]: ExerciseAttribute[];
+  [FirestoreCollection.EXERCISE]: Exercise[];
 };
