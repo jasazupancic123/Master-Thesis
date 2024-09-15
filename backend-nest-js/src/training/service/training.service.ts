@@ -6,7 +6,6 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { User } from '../../common/type/firebase-auth.type';
 import { Query, Timestamp } from 'firebase-admin/firestore';
 import { Training } from '../entity/training.entity';
 import { ComponentService } from '../../component/component.service';
@@ -21,7 +20,6 @@ import {
 } from '../../common/type/orm.type';
 import { Cycle } from '../../group/entity/cycle.entity';
 import { Validate } from '../../common/type/validate.type';
-import { Group } from '../../group/entity/group.entity';
 import { GroupService } from '../../group/service/group.service';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
@@ -34,7 +32,6 @@ import { TrainingExerciseService } from './training-exercise.service';
 import { TrainingComponentService } from './training-component.service';
 import {
   CycleRef,
-  GroupRef,
   SubgroupRef,
   TrainingComponentRef,
   TrainingExerciseRef,
@@ -44,13 +41,20 @@ import {
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
 import { CycleService } from '../../group/service/cycle.service';
 import { SubgroupService } from '../../group/service/subgroup.service';
-import { CanViewService } from '../../common/type/auth.type';
 import { TrainingSupersetRepository } from '../repository/training-superset.repository';
 import { TrainingSuperset } from '../entity/training-superset.entity';
 import { TrainingSupersetService } from './training-superset.service';
+import {
+  CreateTrainingExercise,
+  UpdateTrainingExercise,
+} from '../type/training-exercise.type';
+import { CreateTrainingSuperset } from '../type/training-superset.type';
+import { CreateTrainingComponent } from '../type/training-component.type';
+import { Component } from '../../component/entity/component.entity';
+import { CreateTraining } from '../type/training.type';
 
 @Injectable()
-export class TrainingService extends CanViewService<GroupRef> {
+export class TrainingService {
   private logger = new Logger(TrainingService.name);
 
   constructor(
@@ -71,94 +75,48 @@ export class TrainingService extends CanViewService<GroupRef> {
     private readonly trainingExerciseService: TrainingExerciseService,
     private readonly trainingComponentService: TrainingComponentService,
     private readonly trainingSupersetService: TrainingSupersetService,
-  ) {
-    super();
-  }
+  ) {}
 
-  async canView(user: User, ref: Required<GroupRef>): Promise<boolean> {
-    return await this.groupService.canView(user, ref);
-  }
-
-  async findTraining(
+  async findOne(
     ref: Required<TrainingRef>,
-    options?: FindOneOptions<Training>,
+    options?: FindOneOptions<Training> & { authorize?: boolean },
   ): Promise<Training | null> {
+    // find parent references
+    const cycle = await this.cycleService.findOneOrFail(ref, {
+      authorize: options?.authorize,
+    });
+
+    // find training
     const training = await this.trainingRepository.getDoc(ref);
     if (!training) return null;
 
     if (options?.populate) await this.populate(ref, training, options.populate);
+    training.cycle = cycle;
     return training;
   }
 
-  async findTrainingOrFail(
+  async findOneOrFail(
     ref: Required<TrainingRef>,
-    options?: FindOneOptions<Training>,
+    options?: FindOneOptions<Training> & { authorize?: boolean },
   ): Promise<Training> {
-    const training = await this.findTraining(ref, options);
+    const training = await this.findOne(ref, options);
     if (!training) throw new BadRequestException('Training not found');
     return training;
   }
 
-  async findUserTraining(
-    user: User,
-    ref: Required<TrainingRef>,
-    options?: FindOneOptions<Training>,
-  ): Promise<Training | null> {
-    await this.authorize(user, ref);
-    return (await this.findTraining(ref, options)) || null;
-  }
-
-  async findUserTrainingOrFail(
-    user: User,
-    ref: Required<TrainingRef>,
-    options?: FindOneOptions<Training>,
-  ): Promise<Training> {
-    const training = await this.findUserTraining(user, ref, options);
-    if (!training) throw new BadRequestException('Training not found');
-    return training;
-  }
-
-  async findTrainingComponent(
-    ref: Required<TrainingComponentRef>,
-  ): Promise<TrainingComponent> {
-    return await this.trainingComponentRepository.getDoc(ref);
-  }
-
-  async findTrainingComponents(
-    ref: Required<TrainingRef>,
-  ): Promise<TrainingComponent[]> {
-    return await this.trainingComponentRepository.getDocs(ref);
-  }
-
-  async findTrainingSuperset(
-    ref: Required<TrainingSupersetRef>,
-  ): Promise<TrainingSuperset> {
-    return await this.trainingSupersetRepository.getDoc(ref);
-  }
-
-  async findTrainingSupersetOrFail(
-    ref: Required<TrainingSupersetRef>,
-  ): Promise<TrainingSuperset> {
-    const superset = await this.findTrainingSuperset(ref);
-    if (!superset) throw new BadRequestException('Training superset not found');
-    return superset;
-  }
-
-  async findTrainingExercise(
-    ref: Required<TrainingExerciseRef>,
-  ): Promise<TrainingExercise> {
-    return await this.trainingExerciseRepository.getDoc(ref);
-  }
-
-  async findTrainings(
+  async findAll(
     ref: Required<CycleRef>,
-    options?: FindManyOptions<Training>,
+    options?: FindManyOptions<Training> & { authorize?: boolean },
   ): Promise<Training[]> {
+    await this.cycleService.findOneOrFail(ref, {
+      authorize: options?.authorize,
+    });
+
     const trainings = await this.trainingRepository.getDocs(
       ref,
       (collection) => {
         let query = collection;
-        if (options?.filter) query = this.filter(collection, options.filter);
+        if (options?.filter) query = this.filter(query, options.filter);
         if (options?.paginate) query = this.paginate(query, options.paginate);
 
         return query;
@@ -181,39 +139,58 @@ export class TrainingService extends CanViewService<GroupRef> {
     return trainings;
   }
 
-  async findTrainingsByAthlete(
-    user: User,
-    ref: Required<CycleRef>,
+  async findAllByMember(
+    userId: string,
+    options?: FindManyOptions<Training>,
   ): Promise<Training[]> {
     // get athlete's current active cycle
-    const group = await this.groupService.findUserGroup(user, ref);
-    const cycle = await this.cycleService.findActiveCycle(ref, new Date());
+    const cycle = await this.cycleService.findActiveCycle(userId, new Date());
     if (!cycle) return [];
 
+    // console.log('active cycle:', cycle);
+
     // find all active subgroups that user is part of
-    const subgroups = group.subgroups
-      .filter(({ from, to }) =>
-        this.commonService.date.isBetween(new Date(), from, to),
-      )
-      .filter((subgroup) => this.groupService.isMember(user, subgroup));
+    const subgroups = (
+      await this.subgroupService.findAllActive({
+        uid: cycle.group.ownerId,
+        groupId: cycle.group.id,
+      })
+    ).filter((subgroup) => this.groupService.isMember(userId, subgroup));
+
+    // console.log('subgroups:', subgroups);
 
     /* all subgroups have `from` and `to` fields which indicate the date range
     for which the subgroup is valid and each subgroup has unique dates so there
     is no overlap between subgroups. Now, we get the union of all subgroup dates
     and return their trainings, and for the dates that are not in the union,
     return the parent group trainings. */
-    const range = this.commonService.date.negateRange(
-      subgroups.map(({ from, to }) => [from, to]),
-    ); // range for parent group trainings
-    const parentTrainings = await this.findTrainings(ref);
+    const range = [
+      [cycle.group.from, cycle.group.to],
+      ...subgroups.map(({ from, to }) => [from, to]),
+    ].sort((a, b) => a[0].getTime() - b[0].getTime());
 
-    // find all active cycle trainings where subgroupId is null or user is part of the subgroup
-    // and filter by date range
-    const subgroupsTrainings = await this.findTrainings(ref, {
+    const negated = this.commonService.date.negateRange(range); // range for parent group trainings
+
+    console.log('range:', range);
+    console.log('negated:', negated);
+
+    const ref = {
+      uid: cycle.group.ownerId,
+      groupId: cycle.group.id,
+      cycleId: cycle.id,
+    };
+
+    const parentTrainings = await this.findAll(ref);
+
+    // find all active cycle trainings where subgroupId is null or user is part
+    // of the subgroup and filter by date range
+    const subgroupsTrainings = await this.findAll(ref, {
       filter: {
-        subgroupId: {
-          value: subgroups.map(({ id }) => id),
-        },
+        ...(subgroups.length && {
+          subgroupId: {
+            value: subgroups.map(({ id }) => id),
+          },
+        }),
       },
     });
 
@@ -223,7 +200,7 @@ export class TrainingService extends CanViewService<GroupRef> {
 
     const athleteTrainings = trainings.filter((training) => {
       if (training.subgroupId) return true;
-      return range.some(([from, to]) =>
+      return negated.some(([from, to]) =>
         this.commonService.date.isBetween(training.from, from, to),
       );
     });
@@ -236,28 +213,27 @@ export class TrainingService extends CanViewService<GroupRef> {
           trainingId: training.id,
           subgroupId: training.subgroupId,
         };
-        await this.populate(trainingRef, training, []);
+
+        if (options?.populate)
+          await this.populate(trainingRef, training, options.populate);
+
         return training;
       }),
     );
   }
 
-  async createTraining(
-    user: User,
+  async create(
     ref: Required<CycleRef>,
-    input: Partial<Training> & {
-      componentIds: string[];
-    },
+    input: CreateTraining,
   ): Promise<Training> {
     this.logger.debug(
-      `Creating training (user ${user.uid}): ${JSON.stringify(input)}`,
+      `Creating training (user ${ref.uid}): ${JSON.stringify(input)}`,
     );
 
-    await this.authorize(user, ref);
-
-    // find parent references (group and cycle)
-    const group = await this.groupService.findGroup(ref);
-    const cycle = await this.cycleService.findCycle(ref);
+    // find parent references
+    const cycle = await this.cycleService.findOne(ref, {
+      authorize: true,
+    });
 
     // validate data
     await this.componentService.findAllOrFail({
@@ -272,7 +248,7 @@ export class TrainingService extends CanViewService<GroupRef> {
       to: input.to,
     };
 
-    const { error, message } = await this.validate(user, group, cycle, data);
+    const { error, message } = await this.validate(ref.uid, cycle, data);
     if (error) throw new BadRequestException(message);
 
     // create training
@@ -280,42 +256,50 @@ export class TrainingService extends CanViewService<GroupRef> {
 
     // create training components
     const trainingRef = { ...ref, trainingId, subgroupId: data.subgroupId };
-    const training = await this.findTrainingOrFail(trainingRef);
+    const training = await this.findOneOrFail(trainingRef);
+
     training.components = await this.trainingComponentService.createMany(
       trainingRef,
-      input.componentIds.map((componentId, order) => ({ componentId, order })),
+      input.componentIds.map((componentId) => ({ componentId })),
     );
 
     return training;
   }
 
-  async copyTraining(
-    user: User,
+  async copy(
     source: Required<TrainingRef>,
     destination: Required<CycleRef & SubgroupRef>,
   ): Promise<Training> {
     this.logger.debug(
-      `Copying training ${source.trainingId} (user ${user.uid})`,
+      `Copying training ${source.trainingId} (user ${source.uid})`,
     );
 
-    await this.authorize(user, source);
     if (source.uid !== destination.uid)
       throw new UnauthorizedException(
         'You are not authorized to copy training',
       );
 
     // copy all training data from source to destination
-    const sourceTraining = await this.findTrainingOrFail(source, {
-      populate: ['components'],
+    const sourceTraining = await this.findOneOrFail(source, {
+      authorize: true,
+      populate: [
+        'components',
+        'components.supersets',
+        'components.supersets.exercises',
+      ],
     });
 
-    const destinationGroup = await this.groupService.findGroup(destination);
-    const destinationCycle = await this.cycleService.findCycle(destination);
+    const destinationCycle = await this.cycleService.findOneOrFail(
+      destination,
+      { authorize: true },
+    );
+
     const destinationSubgroup = destination.subgroupId
-      ? await this.subgroupService.findSubgroupOrFail(destination)
+      ? await this.subgroupService.findOneOrFail(destination)
       : null;
 
-    // validate that user is authorized to create training for the destination group and cycle with given training data
+    // validate that user is authorized to create training for the destination
+    // group and cycle with given training data
     const data = {
       subgroupId: destinationSubgroup?.id || null,
       from: sourceTraining.from,
@@ -323,8 +307,7 @@ export class TrainingService extends CanViewService<GroupRef> {
     };
 
     const { error, message } = await this.validate(
-      user,
-      destinationGroup,
+      source.uid,
       destinationCycle,
       data,
     );
@@ -335,126 +318,136 @@ export class TrainingService extends CanViewService<GroupRef> {
     const trainingId = await this.trainingRepository.addDoc(destination, data);
 
     // create training components
-    const componentRef = { ...destination, trainingId };
-    const training = await this.findTrainingOrFail(componentRef);
-    training.components = await this.trainingComponentService.createMany(
+    const componentRef = { ...destination, trainingId, subgroupId: null };
+    const components = await this.trainingComponentService.createMany(
       componentRef,
-      sourceTraining.components,
+      sourceTraining.components.map((component) => ({
+        componentId: component.componentId,
+        color: component.color,
+        supersets: component.supersets.map((superset) => ({
+          color: superset.color,
+          exercises: superset.exercises.map((exercise) => ({
+            exerciseId: exercise.exerciseId,
+            meta: exercise.meta,
+            color: exercise.color,
+          })),
+        })),
+      })),
     );
 
-    return training;
+    return {
+      id: trainingId,
+      ...data,
+      components,
+      cycle: destinationCycle,
+      subgroup: destinationSubgroup,
+      from: data.from,
+      to: data.to,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
-  async findUserTrainingComponent(
-    user: User,
-    ref: Required<TrainingComponentRef>,
-  ): Promise<TrainingComponent> {
-    await this.groupService.findUserGroup(user, ref);
-    await this.cycleService.findUserCycle(user, ref);
-    await this.findTrainingOrFail(ref);
-    return await this.findTrainingComponent(ref);
-  }
-
-  async addComponent(
-    user: User,
+  async addComponents(
     ref: Required<TrainingRef>,
-    input: Partial<TrainingComponent>,
-  ) {
+    input: CreateTrainingComponent[],
+  ): Promise<TrainingComponent[]> {
     this.logger.debug(
-      `Adding component to training (user ${user.uid}): ${JSON.stringify(input)}`,
+      `Adding component to training (user ${ref.uid}): ${JSON.stringify(input)}`,
     );
-    await this.authorize(user, ref);
 
-    // find parent references (group, cycle, training)
-    const training = await this.findTrainingOrFail(ref, {
+    // find parent references
+    const training = await this.findOneOrFail(ref, {
+      authorize: true,
       populate: ['components'],
     });
 
-    // validate data
-    await this.componentService.findOneBySlugOrFail(input.componentId);
-    if (
-      training.components.map((c) => c.componentId).includes(input.componentId)
-    )
-      throw new BadRequestException('Component already exists in the training');
+    // make sure that all components exist
+    const componentIds = input.map((item) => item.componentId);
+    const components = await this.componentService.findAllFlat({
+      filter: { ids: componentIds },
+    });
 
-    // create training component
-    const data = {
-      componentId: input.componentId,
-      order: input.order || training.components.length,
-      color: input.color || this.commonService.color.random(),
-    };
+    if (components.length !== componentIds.length)
+      throw new BadRequestException('Some components do not exist');
 
-    const componentRef = { ...ref, componentId: input.componentId };
-    await this.trainingComponentRepository.addDoc(componentRef, data);
+    // training components must be unique
+    const duplicates: Component[] = [];
+    for (const component of components) {
+      const exists = training.components?.find(
+        (c) => c.componentId === component.id,
+      );
 
-    // populate training component
-    training.components = [
-      ...(training.components || []),
-      { ...data, component: null, supersets: [] },
-    ];
-    return training;
-  }
+      if (exists) duplicates.push(component);
+    }
 
-  async findUserTrainingExercise(
-    user: User,
-    ref: Required<TrainingExerciseRef>,
-  ): Promise<TrainingExercise> {
-    await this.authorize(user, ref);
-    return await this.findTrainingExercise(ref);
+    if (duplicates.length)
+      throw new BadRequestException(
+        `Components ${duplicates.map((c) => c.name.toLowerCase()).join(', ')} already exist in the training`,
+      );
+
+    return await this.trainingComponentService.createMany(ref, input);
   }
 
   async addSuperset(
-    user: User,
     ref: Required<TrainingComponentRef>,
-    input: Partial<TrainingSuperset>,
+    input: CreateTrainingSuperset,
   ): Promise<TrainingSuperset> {
     this.logger.debug(
-      `Adding superset to training (user ${user.uid}): ${JSON.stringify(input)}`,
+      `Adding superset to training (user ${ref.uid}): ${JSON.stringify(input)}`,
     );
 
-    await this.authorize(user, ref);
+    // find parent references
+    await this.findOneOrFail(ref, { authorize: true });
+    const component = await this.trainingComponentRepository.getDoc(ref);
+    if (!component)
+      throw new BadRequestException('Training component not found');
 
-    // find parent references (group, cycle, training, component)
-    const component = await this.findTrainingComponent(ref);
-    component.supersets = await this.trainingSupersetRepository.getDocs(ref);
+    // validate exercises
+    if (input.exercises?.length) {
+      const exerciseIds = input.exercises.map((e) => e.exerciseId);
+      const exercises = await this.exerciseService.findAll(ref, {
+        filter: { ids: exerciseIds },
+      });
+
+      const { error, message } = await this.exerciseService.validateExercises(
+        ref.componentId,
+        exercises,
+      );
+
+      if (error) throw new BadRequestException(message);
+    }
 
     // create training superset
-    const data = {
-      order: input.order || component.supersets.length,
-      color: input.color || this.commonService.color.random(),
-      exercises: input.exercises || [],
-    };
-
-    const supersets = await this.trainingSupersetService.createMany(ref, [
-      data,
-    ]);
-
-    return supersets?.[0] || null;
+    return await this.trainingSupersetService.create(ref, {
+      color: input.color,
+      exercises: input.exercises,
+    });
   }
 
-  async addExercise(
-    user: User,
+  async addExercises(
     ref: Required<TrainingSupersetRef>,
-    input: Partial<TrainingExercise>,
-  ): Promise<TrainingExercise | null> {
+    input: CreateTrainingExercise[],
+  ): Promise<TrainingExercise[]> {
     this.logger.debug(
-      `Adding exercise to training (user ${user.uid}): ${JSON.stringify(input)}`,
+      `Adding exercise to training (user ${ref.uid}): ${JSON.stringify(input)}`,
     );
 
-    await this.authorize(user, ref);
-    if (!input.exerciseId)
-      throw new BadRequestException('Exercise ID is required');
+    // find parent references
+    await this.findOneOrFail(ref, { authorize: true });
+    const superset = await this.trainingSupersetRepository.getDoc(ref);
+    if (!superset) throw new BadRequestException('Training superset not found');
 
-    // find parent references (group, cycle, training, component)
-    const superset = await this.findTrainingSupersetOrFail(ref);
-    superset.exercises = await this.trainingExerciseRepository.getDocs(ref);
-    input.order = superset.exercises.length;
-
-    // validate data
-    const exercises = await this.exerciseService.findExercises(ref, {
-      filter: { ids: [input.exerciseId] },
+    // find all exercises
+    const exerciseIds = input.map((e) => e.exerciseId);
+    const exercises = await this.exerciseService.findAll(ref, {
+      filter: { ids: exerciseIds },
     });
 
+    if (exercises.length !== exerciseIds.length)
+      throw new BadRequestException('Some exercises do not exist');
+
+    // validate exercises
     const { error, message } = await this.exerciseService.validateExercises(
       ref.componentId,
       exercises,
@@ -465,35 +458,37 @@ export class TrainingService extends CanViewService<GroupRef> {
     // add exercises to training component
     const trainingExercises = await this.trainingExerciseService.createMany(
       ref,
-      [input],
+      input,
     );
 
-    const trainingExercise = trainingExercises?.[0] || null;
-    if (!trainingExercise) return null;
-
-    // populate exercise
-    trainingExercise.exercise = exercises[0];
-    return trainingExercise;
+    // populate exercises
+    return trainingExercises.map((exercise) => {
+      exercise.exercise = exercises.find((e) => e.id === exercise.exerciseId);
+      return exercise;
+    });
   }
 
   async updateExercise(
-    user: User,
     ref: Required<TrainingExerciseRef>,
-    input: Partial<TrainingExercise>,
+    input: UpdateTrainingExercise,
   ): Promise<TrainingExercise> {
     this.logger.debug(
-      `Updating exercise in training (user ${user.uid}): ${JSON.stringify(input)}`,
+      `Updating exercise in training (user ${ref.uid}): ${JSON.stringify(input)}`,
     );
 
-    await this.authorize(user, ref);
+    // find parent references
+    await this.findOneOrFail(ref, { authorize: true });
+    const trainingExercise = await this.trainingExerciseRepository.getDoc(ref);
+    if (!trainingExercise)
+      throw new BadRequestException('Training exercise not found');
 
-    // find parent references (group, cycle, training, component, exercise)
-    const trainingExercise = await this.findTrainingExercise(ref);
-    const exercise = await this.exerciseService.findUserExerciseOrFail(user, {
-      ...ref,
-      exerciseId: trainingExercise.exerciseId,
+    // make sure user has access to the exercise
+    const exerciseRef = { exerciseId: trainingExercise.exerciseId };
+    const exercise = await this.exerciseService.findOneOrFail(exerciseRef, {
+      userId: ref.uid,
     });
 
+    // validate exercise
     const { error, message } = await this.exerciseService.validateExercises(
       ref.componentId,
       [exercise],
@@ -589,11 +584,10 @@ export class TrainingService extends CanViewService<GroupRef> {
                   )
                     await Promise.all(
                       superset.exercises.map(async (exercise) => {
-                        exercise.exercise =
-                          await this.exerciseService.findExercise({
-                            ...ref,
-                            exerciseId: exercise.exerciseId,
-                          });
+                        exercise.exercise = await this.exerciseService.findOne({
+                          ...ref,
+                          exerciseId: exercise.exerciseId,
+                        });
                       }),
                     );
 
@@ -618,13 +612,12 @@ export class TrainingService extends CanViewService<GroupRef> {
   }
 
   private async validate(
-    user: User,
-    group: Group,
+    userId: string,
     cycle: Cycle,
     data: Partial<Training>,
   ): Promise<Validate> {
     // check that user is owner of the group
-    if (!this.groupService.isOwner(user, group))
+    if (!this.groupService.isOwner(userId, cycle.group))
       return {
         error: true,
         message: 'You are not authorized to create training for this cycle',
@@ -632,14 +625,12 @@ export class TrainingService extends CanViewService<GroupRef> {
 
     // check that subgroup exists within cycle's parent group
     const subgroupRef = {
-      uid: user.uid,
-      groupId: group.id,
+      uid: userId,
+      groupId: cycle.group.id,
       subgroupId: data.subgroupId,
     };
 
-    const subgroup = data.subgroupId
-      ? await this.subgroupService.findSubgroupOrFail(subgroupRef)
-      : null;
+    if (data.subgroupId) await this.subgroupService.findOneOrFail(subgroupRef);
 
     // check time
     if (!this.commonService.date.isBetween(data.from, cycle.from, cycle.to))

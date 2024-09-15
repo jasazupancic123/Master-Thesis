@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CollectionReference, DocumentReference } from 'firebase-admin/firestore';
+import {
+  CollectionReference,
+  DocumentReference,
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
 import {
   FirestoreCollectionRepository,
   TrainingExerciseRef,
@@ -8,37 +13,53 @@ import {
 } from '../../common/type/firebase-firestore.type';
 import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.entity';
 import { TrainingExerciseRepository } from './training-exercise.repository';
-import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-admin/lib/firestore';
 
 @Injectable()
-export class TrainingExerciseUserDataRepository implements FirestoreCollectionRepository<TrainingExerciseUserData, TrainingExerciseUserDataRef> {
-  constructor(private readonly trainingExerciseRepository: TrainingExerciseRepository) {
-  }
+export class TrainingExerciseUserDataRepository
+  implements
+    FirestoreCollectionRepository<
+      TrainingExerciseUserData,
+      TrainingExerciseUserDataRef
+    >
+{
+  constructor(
+    private readonly trainingExerciseRepository: TrainingExerciseRepository,
+  ) {}
 
-  async getDocs(ref: Required<TrainingExerciseRef>): Promise<TrainingExerciseUserData[]> {
+  async getDocs(
+    ref: Required<TrainingExerciseRef>,
+  ): Promise<TrainingExerciseUserData[]> {
     const snapshot = await this.collection(ref).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
-  async getDoc(ref: Required<TrainingExerciseUserDataRef>): Promise<TrainingExerciseUserData | null> {
+  async getDoc(
+    ref: Required<TrainingExerciseUserDataRef>,
+  ): Promise<TrainingExerciseUserData | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(ref: Required<TrainingExerciseUserDataRef>, data: TrainingExerciseUserData) {
+  async addDoc(
+    ref: Required<TrainingExerciseUserDataRef>,
+    data: TrainingExerciseUserData,
+  ) {
     await this.doc(ref).set({
       userId: ref.userId,
-      workloadValue: data.workloadValue,
-      completedSets: data.completedSets,
-      completedSetTypeValue: data.completedSetTypeValue,
-      completedWorkloadValue: data.completedWorkloadValue,
+      workloadValue: data.workloadValue || null,
+      completedSets: data.completedSets || 0,
+      completedSetTypeValue: data.completedSetTypeValue || null,
+      completedWorkloadValue: data.completedWorkloadValue || null,
     });
 
     return ref.userId;
   }
 
-  async updateDoc(ref: Required<TrainingExerciseUserDataRef>, data: Partial<TrainingExerciseUserData>) {
+  async updateDoc(
+    ref: Required<TrainingExerciseUserDataRef>,
+    data: Partial<TrainingExerciseUserData>,
+  ) {
     await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
   }
 
@@ -48,18 +69,23 @@ export class TrainingExerciseUserDataRepository implements FirestoreCollectionRe
   }
 
   collection(ref: Required<TrainingExerciseRef>): CollectionReference {
-    return this.trainingExerciseRepository.doc(ref).collection(FirestoreCollection.TRAINING_EXERCISE_USER_DATA);
+    return this.trainingExerciseRepository
+      .doc(ref)
+      .collection(FirestoreCollection.TRAINING_EXERCISE_USER_DATA);
   }
 
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): TrainingExerciseUserData {
+  serialize(
+    snapshot: DocumentSnapshot | QueryDocumentSnapshot,
+  ): TrainingExerciseUserData {
     const data = snapshot.data();
 
     return {
       userId: snapshot.id,
+      exerciseId: data.exerciseId,
       workloadValue: data.workloadValue,
       completedSets: data.completedSets,
       completedSetTypeValue: data.completedSetTypeValue || null,
       completedWorkloadValue: data.completedWorkloadValue || null,
-    } as TrainingExerciseUserData;
+    };
   }
 }

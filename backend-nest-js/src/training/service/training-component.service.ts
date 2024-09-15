@@ -4,10 +4,13 @@ import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingRef } from '../../common/type/firebase-firestore.type';
 import { TrainingSuperset } from '../entity/training-superset.entity';
 import { TrainingSupersetService } from './training-superset.service';
+import { CommonService } from '../../common/service/common.service';
+import { CreateTrainingComponent } from '../type/training-component.type';
 
 @Injectable()
 export class TrainingComponentService {
   constructor(
+    private readonly commonService: CommonService,
     private readonly trainingSupersetService: TrainingSupersetService,
     private readonly trainingComponentRepository: TrainingComponentRepository,
   ) {}
@@ -19,18 +22,19 @@ export class TrainingComponentService {
    */
   async createMany(
     ref: Required<TrainingRef>,
-    input: Partial<TrainingComponent>[],
-  ) {
+    input: CreateTrainingComponent[],
+  ): Promise<TrainingComponent[]> {
     const result: TrainingComponent[] = [];
+    const lastOrder = await this.trainingComponentRepository.getLastOrder(ref);
 
-    for (let order = 0; order < input.length; order++) {
-      const item = input[order];
+    for (let i = 0; i < input.length; i++) {
+      const item = input[i];
 
       // create training component
       const data = {
         componentId: item.componentId,
-        order: item.order || order,
-        color: item.color,
+        color: item.color || this.commonService.color.random(),
+        order: lastOrder + 1 + i,
       };
 
       const componentRef = { ...ref, componentId: data.componentId };
@@ -38,10 +42,13 @@ export class TrainingComponentService {
 
       // create training supersets
       let supersets: TrainingSuperset[] = [];
-      if (item.supersets)
+      if (item.supersets?.length)
         supersets = await this.trainingSupersetService.createMany(
           componentRef,
-          item.supersets,
+          item.supersets.map((superset) => ({
+            color: superset.color || data.color,
+            exercises: superset.exercises,
+          })),
         );
 
       result.push({ ...data, supersets, component: null });

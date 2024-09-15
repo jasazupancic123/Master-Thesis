@@ -26,6 +26,19 @@ export class TrainingComponentRepository
     private readonly trainingRepository: TrainingRepository,
   ) {}
 
+  /**
+   * Returns the last order of the training components in the training.
+   */
+  async getLastOrder(ref: Required<TrainingRef>): Promise<number> {
+    const snapshot = await this.collection(ref)
+      .orderBy('order', 'desc')
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) return 0;
+    return snapshot.docs[0].get('order');
+  }
+
   async getDocs(
     ref: Required<TrainingRef>,
     query: (ref: Query) => Query = (ref) => ref,

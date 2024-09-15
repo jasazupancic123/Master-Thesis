@@ -6,13 +6,42 @@ import {
   TrainingExerciseRef,
   TrainingSupersetRef,
 } from '../../common/type/firebase-firestore.type';
+import { CommonService } from '../../common/service/common.service';
+import {
+  CreateTrainingExercise,
+  UpdateTrainingExercise,
+} from '../type/training-exercise.type';
 
 @Injectable()
 export class TrainingExerciseService {
   constructor(
-    private readonly trainingExerciseUserDataService: TrainingExerciseUserDataService,
+    private readonly commonService: CommonService,
     private readonly trainingExerciseRepository: TrainingExerciseRepository,
+    private readonly trainingExerciseUserDataService: TrainingExerciseUserDataService,
   ) {}
+
+  async create(
+    ref: Required<TrainingSupersetRef>,
+    input: CreateTrainingExercise,
+  ): Promise<TrainingExercise> {
+    const lastOrder = await this.trainingExerciseRepository.getLastOrder(ref);
+    const data = {
+      exerciseId: input.exerciseId,
+      meta: input.meta,
+      color: input.color || this.commonService.color.random(),
+      order: lastOrder + 1,
+    };
+
+    const exerciseRef = { ...ref, exerciseId: data.exerciseId };
+    await this.trainingExerciseRepository.addDoc(exerciseRef, data);
+
+    const userData = await this.trainingExerciseUserDataService.createMany(
+      exerciseRef,
+      input.meta,
+    );
+
+    return { ...data, data: userData, exercise: null };
+  }
 
   /**
    * Adds training exercises to a training component. For each exercise, it also
@@ -21,9 +50,10 @@ export class TrainingExerciseService {
    */
   async createMany(
     ref: Required<TrainingSupersetRef>,
-    input: Partial<TrainingExercise>[],
+    input: Pick<TrainingExercise, 'exerciseId' | 'meta' | 'color'>[],
   ) {
     const result: TrainingExercise[] = [];
+    const lastOrder = await this.trainingExerciseRepository.getLastOrder(ref);
 
     for (let i = 0; i < input.length; i++) {
       const item = input[i];
@@ -31,21 +61,18 @@ export class TrainingExerciseService {
       // create training exercise
       const data = {
         exerciseId: item.exerciseId,
-        order: item.order + i,
-        color: item.color,
         meta: item.meta,
+        color: item.color || this.commonService.color.random(),
+        order: lastOrder + 1 + i,
       };
 
       const exerciseRef = { ...ref, exerciseId: data.exerciseId };
       await this.trainingExerciseRepository.addDoc(exerciseRef, data);
 
       // create training exercise user data
-      const trainingExercise =
-        await this.trainingExerciseRepository.getDoc(exerciseRef);
-
       const userData = await this.trainingExerciseUserDataService.createMany(
         exerciseRef,
-        trainingExercise.meta,
+        item.meta,
       );
 
       result.push({ ...data, data: userData, exercise: null });
@@ -59,11 +86,10 @@ export class TrainingExerciseService {
    */
   async update(
     ref: Required<TrainingExerciseRef>,
-    input: Partial<TrainingExercise>,
+    input: UpdateTrainingExercise,
   ): Promise<TrainingExercise> {
     const data = {
       exerciseId: ref.exerciseId,
-      order: input.order,
       color: input.color,
       meta: input.meta,
     };
@@ -75,6 +101,8 @@ export class TrainingExerciseService {
     );
 
     await this.trainingExerciseRepository.updateDoc(ref, data);
-    return { ...data, data: userData, exercise: null };
+
+    const trainingExercise = await this.trainingExerciseRepository.getDoc(ref);
+    return { ...trainingExercise, data: userData };
   }
 }

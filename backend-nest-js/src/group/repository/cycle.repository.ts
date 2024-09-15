@@ -3,7 +3,9 @@ import { FirestoreCollection } from '../../common/enum/firestore-collection.enum
 import {
   CollectionReference,
   DocumentReference,
+  DocumentSnapshot,
   Query,
+  QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
 import {
@@ -14,10 +16,6 @@ import {
 import { Cycle } from '../entity/cycle.entity';
 import { GroupRepository } from './group.repository';
 import { CommonService } from '../../common/service/common.service';
-import {
-  DocumentSnapshot,
-  QueryDocumentSnapshot,
-} from 'firebase-admin/lib/firestore';
 
 @Injectable()
 export class CycleRepository

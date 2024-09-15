@@ -4,19 +4,51 @@ import { TrainingComponentRef } from '../../common/type/firebase-firestore.type'
 import { TrainingSuperset } from '../entity/training-superset.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingExerciseService } from './training-exercise.service';
+import { CommonService } from '../../common/service/common.service';
+import { CreateTrainingSuperset } from '../type/training-superset.type';
 
 @Injectable()
 export class TrainingSupersetService {
   constructor(
+    private readonly commonService: CommonService,
     private readonly trainingSupersetRepository: TrainingSupersetRepository,
     private readonly trainingExerciseService: TrainingExerciseService,
   ) {}
 
+  async create(
+    ref: Required<TrainingComponentRef>,
+    input: CreateTrainingSuperset,
+  ): Promise<TrainingSuperset> {
+    const lastOrder = await this.trainingSupersetRepository.getLastOrder(ref);
+
+    const data = {
+      componentId: ref.componentId,
+      color: input.color || this.commonService.color.random(),
+      order: lastOrder + 1,
+    };
+
+    const supersetId = await this.trainingSupersetRepository.addDoc(ref, data);
+
+    let exercises: TrainingExercise[] = [];
+    if (input.exercises?.length)
+      exercises = await this.trainingExerciseService.createMany(
+        { ...ref, supersetId },
+        input.exercises.map((exercise) => ({
+          exerciseId: exercise.exerciseId,
+          meta: exercise.meta,
+          color: exercise.color || data.color,
+        })),
+      );
+
+    return { ...data, id: supersetId, exercises };
+  }
+
   async createMany(
     ref: Required<TrainingComponentRef>,
-    input: Partial<Omit<TrainingSuperset, 'id' | 'componentId'>[]>,
-  ) {
+    input: CreateTrainingSuperset[],
+  ): Promise<TrainingSuperset[]> {
     const result: TrainingSuperset[] = [];
+    const lastOrder = await this.trainingSupersetRepository.getLastOrder(ref);
 
     for (let i = 0; i < input.length; i++) {
       const item = input[i];
@@ -24,8 +56,8 @@ export class TrainingSupersetService {
       // create training superset
       const data = {
         componentId: ref.componentId,
-        order: item.order,
-        color: item.color,
+        color: item.color || this.commonService.color.random(),
+        order: lastOrder + 1 + i,
       };
 
       const supersetId = await this.trainingSupersetRepository.addDoc(
@@ -35,12 +67,13 @@ export class TrainingSupersetService {
 
       // create training exercises
       let exercises: TrainingExercise[] = [];
-      if (item.exercises)
+      if (item.exercises?.length)
         exercises = await this.trainingExerciseService.createMany(
           { ...ref, supersetId },
-          item.exercises.map((exercise, i) => ({
-            ...exercise,
-            order: i,
+          item.exercises.map((exercise) => ({
+            exerciseId: exercise.exerciseId,
+            meta: exercise.meta,
+            color: exercise.color || data.color,
           })),
         );
 

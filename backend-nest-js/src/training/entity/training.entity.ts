@@ -4,6 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { TrainingComponent } from './training-component.entity';
 import { Subgroup } from '../../group/entity/subgroup.entity';
+import { Cycle } from '../../group/entity/cycle.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -34,4 +35,6 @@ export class Training extends BaseEntity {
   @ApiProperty()
   @Expose()
   components: TrainingComponent[];
+
+  cycle: Cycle | null; // virtual
 }

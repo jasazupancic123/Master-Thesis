@@ -36,7 +36,6 @@ export class UserEntity extends BaseEntity {
   wellness: Wellness[]; // sub collection
 }
 
-export type CreateUser = Pick<
-  User,
-  'email' | 'displayName' | 'customClaims'
-> & { password: string };
+export type CreateUser = Pick<User, 'email' | 'displayName'> & {
+  password: string;
+};

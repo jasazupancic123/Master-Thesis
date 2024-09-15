@@ -5,20 +5,18 @@ import UserWellnessForm from '@/user/components/user-wellness-form';
 import withAuth from '@/common/components/with-auth';
 import { UserRole } from '@/user/enum/user-role.enum';
 import { useAppContext } from '@/context/app-provider';
-import { useEffect, useState } from 'react';
 import { UserController } from '@/user/user.controller';
-import { CreateWellness, isWellness } from '@/user/type/wellness.type';
+import { CreateWellness } from '@/user/type/wellness.type';
+import { useFetch } from '@/hook/use-fetch';
+import { Wellness } from '@/user/entity/wellness.entity';
 
 function Page() {
   const { token } = useAppContext();
-  const [wellness, setWellness] = useState({
-    loading: false,
-    data: null as CreateWellness | null,
-  });
+  const wellness = useFetch<Wellness>(UserController.URL.wellness());
 
-  async function createWellness(data: CreateWellness) {
+  async function submitWellness(data: CreateWellness) {
     try {
-      await UserController.createWellness(token, data);
+      await UserController.submitWellness(token, data);
       toast.success('Successfully submitted wellness');
     } catch (e: any) {
       console.error(e);
@@ -26,32 +24,12 @@ function Page() {
     }
   }
 
-  useEffect(() => {
-    async function getWellnessForToday() {
-      setWellness(prev => ({ ...prev, loading: true }));
-
-      try {
-        const response = await UserController.getWellness(token);
-        setWellness({
-          loading: false,
-          data: !isWellness(response) ? null : response,
-        });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setWellness(prev => ({ ...prev, loading: false }));
-      }
-    }
-
-    getWellnessForToday().then();
-  }, [token]);
-
   if (wellness.loading)
     return <div>Loading...</div>;
 
   return (
     <div>
-      <UserWellnessForm onSubmit={createWellness} disabled={!!wellness.data} />
+      <UserWellnessForm onSubmit={submitWellness} disabled={!!wellness.data} />
     </div>
   );
 }

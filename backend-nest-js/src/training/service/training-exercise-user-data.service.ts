@@ -1,10 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { TrainingExerciseUserDataRepository } from '../repository/training-exercise-user-data.repository';
 import { TrainingExerciseMeta } from '../entity/training-exercise-meta.entity';
-import { TrainingRepository } from '../repository/training.repository';
-import { TrainingComponentRepository } from '../repository/training-component.repository';
 import { TrainingExerciseRepository } from '../repository/training-exercise.repository';
-import { FieldPath } from 'firebase-admin/firestore';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.entity';
 import { WorkloadType } from '../enum/workload-type.enum';
@@ -13,6 +10,7 @@ import { GroupRepository } from '../../group/repository/group.repository';
 import { SubgroupRepository } from '../../group/repository/subgroup.repository';
 import { TrainingExerciseRef } from '../../common/type/firebase-firestore.type';
 import { UserRepository } from '../../user/repository/user.repository';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 
 @Injectable()
 export class TrainingExerciseUserDataService {
@@ -22,27 +20,26 @@ export class TrainingExerciseUserDataService {
     private readonly userRepository: UserRepository,
     private readonly groupRepository: GroupRepository,
     private readonly subgroupRepository: SubgroupRepository,
-    private readonly trainingRepository: TrainingRepository,
-    private readonly trainingComponentRepository: TrainingComponentRepository,
     private readonly trainingExerciseRepository: TrainingExerciseRepository,
     private readonly trainingExerciseUserDataRepository: TrainingExerciseUserDataRepository,
   ) {}
 
   /**
-   * Gets all training exercise user data for all trainings for all users by the
-   * provided group, cycle, training, component and exercise ids: `groups/
-   * {groupId}/cycles/{cycleId}/trainings/{trainingId}/components/{componentId}/
-   * exercises/{exerciseId}/data` and returns flat array.
-   *
-   * For example, if we pass in exercise "Squats" for cycle "Preseason", this
-   * function will fetch all trainings for the cycle, filter out all training
-   * components that match the provided componentId, filter out all training
-   * exercises that match the provided exerciseId, and return all user data for
-   * that exercise. We can then use this data and filter it for a specific user
-   * to get their workload value.
+   * Gets all training exercise user data for all trainings for all users by
+   * provided exercise id.
    */
   async findAll(ref: Required<TrainingExerciseRef>) {
-    const trainings = await this.trainingRepository.getDocs(ref);
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_EXERCISE_USER_DATA)
+      .where('exerciseId', '==', ref.exerciseId)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.trainingExerciseUserDataRepository.serialize(doc),
+        ),
+      );
+
+    /*const trainings = await this.trainingRepository.getDocs(ref);
 
     return (
       await Promise.all(
@@ -83,7 +80,7 @@ export class TrainingExerciseUserDataService {
           ).flat();
         }),
       )
-    ).flat();
+    ).flat();*/
   }
 
   /**
@@ -104,32 +101,31 @@ export class TrainingExerciseUserDataService {
     const subgroup = ref.subgroupId
       ? await this.subgroupRepository.getDoc(ref)
       : null;
-    if (ref.subgroupId && !subgroup)
-      throw new BadRequestException('Subgroup not found');
 
-    const membersIds = subgroup ? subgroup.membersIds : group.membersIds;
+    const { membersIds } = subgroup ? subgroup : group;
     const members = await this.firebaseService.authUsers({ ids: membersIds });
 
     // get data for all users
-    const userData = (await this.findAll(ref)) || [];
+    const allUsersData = (await this.findAll(ref)) || [];
 
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
-      const { bodyweight } = (await this.userRepository.getDoc(member.uid)) || {
-        bodyweight: [],
-      };
+      const bodyweight = await this.userRepository.getBodyweight(member.uid);
+      const userData = allUsersData.filter(
+        (item) => item.userId === member.uid,
+      );
 
-      const memberData = userData.filter((item) => item.userId === member.uid);
       const workloadValue = this.calculateWorkloadValue(
         input.workloadType,
         input.workloadValue,
-        bodyweight.length ? bodyweight[bodyweight.length - 1].weight : 0,
-        memberData,
+        bodyweight,
+        userData,
       );
 
       const data: TrainingExerciseUserData = {
         userId: member.uid,
+        exerciseId: ref.exerciseId,
         workloadValue,
         completedSets: 0,
       };
@@ -138,6 +134,7 @@ export class TrainingExerciseUserDataService {
         ...ref,
         userId: member.uid,
       });
+
       batch.set(docRef, data);
       result.push(data);
     }
@@ -170,7 +167,7 @@ export class TrainingExerciseUserDataService {
       : users.filter((user) => group.membersIds.includes(user.uid));
 
     // get data for all users
-    const userData = await this.findAll(ref);
+    const allUsersData = await this.findAll(ref);
     const { meta } = await this.trainingExerciseRepository.getDoc(ref); // old meta
 
     // if nothing changed, return
@@ -183,17 +180,21 @@ export class TrainingExerciseUserDataService {
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
-      const memberData = userData.filter((item) => item.userId === member.uid);
+      const bodyweight = await this.userRepository.getBodyweight(member.uid);
+      const userData = allUsersData.filter(
+        (item) => item.userId === member.uid,
+      );
 
       const workloadValue = this.calculateWorkloadValue(
         input.workloadType || meta.workloadType,
         input.workloadValue || meta.workloadValue,
-        await this.userRepository.getBodyweight(member.uid),
-        memberData,
+        bodyweight,
+        userData,
       );
 
       const data: TrainingExerciseUserData = {
         userId: member.uid,
+        exerciseId: ref.exerciseId,
         workloadValue,
         completedSets: 0,
       };

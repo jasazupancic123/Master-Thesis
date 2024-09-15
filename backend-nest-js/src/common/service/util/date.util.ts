@@ -4,9 +4,11 @@ import { addDays, compareAsc, isAfter, isBefore, isEqual } from 'date-fns';
 
 export class DateUtil {
   isBetween(date: Date, start: Date, end: Date): boolean {
-    return isEqual(date, start)
-      || isEqual(date, end)
-      || (isAfter(date, start) && isBefore(date, end));
+    return (
+      isEqual(date, start) ||
+      isEqual(date, end) ||
+      (isAfter(date, start) && isBefore(date, end))
+    );
   }
 
   /**
@@ -69,8 +71,12 @@ export class DateUtil {
    * @param dates Array of date ranges (with start and end date)
    */
   negateRange(dates: Date[][]): Date[][] {
-    if (!dates.every(date => date.length === 2))
-      throw new Error('Invalid date range provided (provide array of [start, end] dates)');
+    if (!dates.length) return [];
+
+    if (!dates.every((date) => date.length === 2))
+      throw new Error(
+        'Invalid date range provided (provide array of [start, end] dates)',
+      );
 
     const sorted = dates.sort((a, b) => compareAsc(a[0], b[0]));
     const negated = [];

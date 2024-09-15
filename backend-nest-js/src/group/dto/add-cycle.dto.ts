@@ -1,8 +1,7 @@
 import { Cycle } from '../entity/cycle.entity';
-import { IntersectionType, PickType } from '@nestjs/mapped-types';
-import { IdDto } from '../../common/dto/id.dto';
+import { PickType } from '@nestjs/mapped-types';
+import { CreateCycle } from '../type/cycle.type';
 
-export class AddCycleDto extends IntersectionType(
-  IdDto, // group id
-  PickType(Cycle, ['name', 'description', 'from', 'to'] as const)) {
-}
+export class AddCycleDto
+  extends PickType(Cycle, ['name', 'description', 'from', 'to'])
+  implements CreateCycle {}

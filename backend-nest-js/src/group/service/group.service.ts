@@ -6,8 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Group } from '../entity/group.entity';
-import { User } from '../../common/type/firebase-auth.type';
-import { UserService } from '../../user/user.service';
+import { UserService } from '../../user/service/user.service';
 import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
 import { TrainingService } from '../../training/service/training.service';
 import { CommonService } from '../../common/service/common.service';
@@ -24,15 +23,17 @@ import { Wrapper } from '../../common/type/wrapper.type';
 import { GroupRef, UserRef } from '../../common/type/firebase-firestore.type';
 import { GroupRepository } from '../repository/group.repository';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
-import { SubgroupRepository } from '../repository/subgroup.repository';
 import { CycleRepository } from '../repository/cycle.repository';
 import { CycleService } from './cycle.service';
 import { SubgroupService } from './subgroup.service';
-import { CanViewService } from '../../common/type/auth.type';
 import { UserRepository } from '../../user/repository/user.repository';
+import { CreateGroup } from '../type/group.type';
+import { CreateSubgroup } from '../type/subgroup.type';
+import { CreateCycle } from '../type/cycle.type';
+import { endOfDay, startOfDay } from 'date-fns';
 
 @Injectable()
-export class GroupService extends CanViewService<GroupRef> {
+export class GroupService {
   private logger = new Logger(GroupService.name);
 
   constructor(
@@ -40,36 +41,34 @@ export class GroupService extends CanViewService<GroupRef> {
     private readonly userService: UserService,
     private readonly userRepository: UserRepository,
     private readonly groupRepository: GroupRepository,
-    private readonly subgroupRepository: SubgroupRepository,
     private readonly cycleRepository: CycleRepository,
     private readonly cycleService: CycleService,
     private readonly subgroupService: SubgroupService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
-  ) {
-    super();
+  ) {}
+
+  canView(ref: Required<UserRef>, group: Group): boolean {
+    return this.isMember(ref.uid, group) || this.isOwner(ref.uid, group);
   }
 
-  async canView(user: User, ref: Required<GroupRef>): Promise<boolean> {
-    const group = await this.findGroup(ref);
-    if (!group) return false;
-    return this.isMember(user, group) || this.isOwner(user, group);
+  isMember(userId: string, group: Group | Subgroup): boolean {
+    return group.membersIds.includes(userId);
   }
 
-  isMember(user: User, group: Group | Subgroup): boolean {
-    return group.membersIds.includes(user.uid);
+  isOwner(userId: string, group: Group): boolean {
+    return group.ownerId === userId;
   }
 
-  isOwner(user: User, group: Group): boolean {
-    return group.ownerId === user.uid;
-  }
-
-  async findGroupsByOwner(
-    ref: Required<UserRef>,
+  async findAllByOwner(
+    userId: string,
     options?: FindManyOptions<Group>,
   ): Promise<Group[]> {
-    return await this.groupRepository.getDocs(ref, (collection) => {
-      let query = collection.where('ownerId', '==', ref.uid);
+    // find parent references
+    await this.userService.findOneOrFail(userId);
+
+    return await this.groupRepository.getDocs({ uid: userId }, (collection) => {
+      let query = collection.where('ownerId', '==', userId);
       if (options?.filter) query = this.filter(query, options.filter);
       if (options?.paginate) query = this.paginate(query, options.paginate);
 
@@ -77,116 +76,116 @@ export class GroupService extends CanViewService<GroupRef> {
     });
   }
 
-  async findGroupsByMember(
-    ref: Required<UserRef>,
-    _options?: FindManyOptions<Group>,
+  async findAllByMember(
+    userId: string,
+    options?: FindManyOptions<Group> & { active?: boolean },
   ): Promise<Group[]> {
-    const groups = await this.userRepository
+    let query = this.userRepository
       .collectionGroup('groups')
-      .where('membersIds', 'array-contains', ref.uid)
-      .get();
+      .where('membersIds', 'array-contains', userId);
 
-    return groups.docs.map((doc) => this.groupRepository.serialize(doc));
+    if (options?.active)
+      query = query
+        .where('from', '<=', Timestamp.now())
+        .where('to', '>=', Timestamp.now());
+
+    if (options?.filter) query = this.filter(query, options.filter);
+
+    const groups = await query
+      .orderBy('from', 'desc')
+      .get()
+      .then((snapshot) =>
+        snapshot.docs.map((doc) => this.groupRepository.serialize(doc)),
+      );
+
+    if (options?.populate)
+      await Promise.all(
+        groups.map((group) => {
+          const ref = { uid: group.ownerId, groupId: group.id };
+          return this.populate(ref, group, options.populate);
+        }),
+      );
+
+    return groups;
   }
 
-  async findGroup(
+  async findOne(
     ref: Required<GroupRef>,
-    options?: FindOneOptions<Group>,
+    options?: FindOneOptions<Group> & { authorize?: boolean },
   ): Promise<Group | null> {
+    // find parent references
+    await this.userService.findOneOrFail(ref.uid);
+
+    // find group
     const group = await this.groupRepository.getDoc(ref);
     if (!group) return null;
+
+    // authorize
+    if (options?.authorize && !this.canView(ref, group)) return null;
 
     if (options?.populate) await this.populate(ref, group, options.populate);
     return group;
   }
 
-  async findGroupOrFail(
+  async findOneOrFail(
     ref: Required<GroupRef>,
-    options?: FindOneOptions<Group>,
+    options?: FindOneOptions<Group> & { authorize?: boolean },
   ): Promise<Group> {
-    const group = await this.findGroup(ref, options);
+    const group = await this.findOne(ref, options);
     if (!group) throw new BadRequestException('Group not found');
     return group;
   }
 
-  /**
-   * Returns a group by ID that user is permitted to view.
-   */
-  async findUserGroup(
-    user: User,
-    ref: Required<GroupRef>,
-    options?: FindOneOptions<Group>,
-  ): Promise<Group | null> {
-    const group = await this.findGroup(ref, options);
-    if (!group || !(await this.canView(user, ref))) return null;
-    return group;
-  }
+  async create(ref: Required<UserRef>, input: CreateGroup): Promise<Group> {
+    // find parent references
+    await this.userService.findOneOrFail(ref.uid);
 
-  /**
-   * Returns a group by ID that user is permitted to view. Throws an error if
-   * group is not found.
-   */
-  async findUserGroupOrFail(
-    user: User,
-    ref: Required<GroupRef>,
-    options?: FindOneOptions<Group>,
-  ): Promise<Group> {
-    const group = await this.findUserGroup(user, ref, options);
-    if (!group) throw new BadRequestException('Group not found');
-    return group;
-  }
-
-  async createGroup(
-    user: User,
-    ref: Required<UserRef>,
-    input: Partial<Group>,
-  ): Promise<Group> {
-    // TODO - allow only 10 groups per user for free plan?
     this.logger.debug(
-      `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
+      `User ${ref.uid} is creating group: ${JSON.stringify(input)}`,
     );
 
-    // validate data
-    const members = await this.userService.findAllOrFail({
-      ids: input.membersIds,
-    });
-    if (members.length < 1)
-      throw new BadRequestException('Group must have at least one member');
+    // TODO - allow only 10 groups per user for free plan?
+
+    // validate members
+    const members = await this.validateMembers(input.membersIds);
 
     // create group
     const data = {
-      ownerId: user.uid,
+      ownerId: ref.uid,
       name: input.name,
-      membersIds: members.map((member) => member.uid),
+      membersIds: input.membersIds,
     };
+
     const groupId = await this.groupRepository.addDoc(ref, data);
 
-    // populate group
-    const groupRef = { ...ref, groupId };
-    const group = await this.findGroup(groupRef);
-    group.owner = user;
-    group.members = members;
-    group.subgroups = [];
-    group.cycles = [];
-
-    return group;
+    return {
+      id: groupId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      name: input.name,
+      ownerId: ref.uid,
+      owner: null,
+      membersIds: input.membersIds,
+      availableMembersIds: input.membersIds,
+      members,
+      subgroups: [],
+      cycles: [],
+    };
   }
 
   async addSubgroup(
-    user: User,
     ref: Required<GroupRef>,
-    input: Partial<Subgroup>,
+    input: CreateSubgroup,
   ): Promise<Subgroup> {
     this.logger.debug(
-      `Adding subgroup (user ${user.uid}) for group ${ref.groupId}: ${JSON.stringify(input)}`,
+      `Adding subgroup (user ${ref.uid}) for group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
 
-    await this.authorize(user, ref);
-
-    // find parent references (group and cycle)
-    const cycleRef = { ...ref, cycleId: input.cycleId, subgroupId: null };
-    const cycle = await this.cycleService.findCycleOrFail(cycleRef);
-    const group = await this.findGroupOrFail(ref);
+    // find parent references
+    const cycle = await this.cycleService.findOneOrFail({
+      ...ref,
+      cycleId: input.cycleId,
+    });
 
     // validate dates
     if (
@@ -198,14 +197,9 @@ export class GroupService extends CanViewService<GroupRef> {
       );
 
     // validate members
-    const members = await this.userService.findAllOrFail({
-      ids: input.membersIds,
-    });
+    const members = await this.validateMembers(input.membersIds);
 
-    if (members.length < 1)
-      throw new BadRequestException('Subgroup must have at least one member');
-
-    const subgroup = await this.subgroupService.create(user, ref, {
+    const subgroup = await this.subgroupService.create(ref, {
       name: input.name,
       cycleId: input.cycleId,
       membersIds: members.map((member) => member.uid),
@@ -214,49 +208,50 @@ export class GroupService extends CanViewService<GroupRef> {
     });
 
     // copy trainings from cycle to subgroup
-    const trainings = await this.trainingService.findTrainings(
+    const trainings = await this.trainingService.findAll(
       {
         ...ref,
         cycleId: input.cycleId,
       },
       {
-        filter: { subgroupId: { value: null } },
+        authorize: false,
+        filter: {
+          subgroupId: { value: null },
+          from: { op: '>=', value: startOfDay(input.from) },
+          to: { op: '<=', value: endOfDay(input.to) },
+        },
       },
     ); // all parent group trainings
 
     for (const training of trainings) {
       const source = {
-        uid: user.uid,
-        groupId: group.id,
-        cycleId: input.cycleId,
+        uid: ref.uid,
+        groupId: ref.groupId,
+        cycleId: cycle.id,
         subgroupId: null,
         trainingId: training.id,
       };
 
       const destination = {
-        uid: user.uid,
-        groupId: group.id,
-        cycleId: input.cycleId,
+        uid: ref.uid,
+        groupId: ref.groupId,
+        cycleId: cycle.id,
         subgroupId: subgroup.id,
       };
 
-      await this.trainingService.copyTraining(user, source, destination);
+      await this.trainingService.copy(source, destination);
     }
 
     // populate subgroup
     subgroup.members = members;
-
     return subgroup;
   }
 
-  async addCycle(
-    user: User,
-    ref: Required<GroupRef>,
-    input: Partial<Cycle>,
-  ): Promise<Cycle> {
+  async addCycle(ref: Required<GroupRef>, input: CreateCycle): Promise<Cycle> {
     this.logger.debug(
-      `Adding cycle (user ${user.uid}) for group ${ref.groupId}: ${JSON.stringify(input)}`,
+      `Adding cycle (user ${ref.uid}) for group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
+
     return await this.cycleService.create(ref, input);
   }
 
@@ -269,15 +264,16 @@ export class GroupService extends CanViewService<GroupRef> {
    * Formula: (all group members - union of all members in active subgroups)
    */
   async findAvailableMembers(ref: Required<GroupRef>): Promise<string[]> {
-    const group = await this.findGroupOrFail(ref);
+    const group = await this.findOneOrFail(ref);
 
     // get all active subgroups
-    const subgroups = await this.subgroupService.findActiveSubgroups(ref);
+    const subgroups = await this.subgroupService.findAllActive(ref);
 
     // unavailable members are all members of active subgroups
     const unavailableMembers = subgroups.flatMap(
       (subgroup) => subgroup.membersIds,
     );
+
     const uniqueUnavailableMembers =
       this.commonService.array.unique(unavailableMembers);
 
@@ -287,10 +283,24 @@ export class GroupService extends CanViewService<GroupRef> {
     );
   }
 
+  private async validateMembers(membersIds: string[]) {
+    const members = await this.userService.findAllOrFail({ ids: membersIds });
+
+    if (members.length < 1)
+      throw new BadRequestException('Group must have at least one member');
+
+    if (members.length !== membersIds.length)
+      throw new BadRequestException('Invalid members provided');
+
+    return members;
+  }
+
   private filter(query: Query, filter: Filter<Group>) {
     if (filter.ids)
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
+
     if (filter.ownerId) query = query.where('ownerId', '==', filter.ownerId);
+
     if (filter.name)
       query = query
         .where('name', '>=', filter.name)
@@ -339,7 +349,7 @@ export class GroupService extends CanViewService<GroupRef> {
       group.availableMembersIds = await this.findAvailableMembers(ref);
 
     if (populate.includes('subgroups')) {
-      group.subgroups = await this.subgroupService.findActiveSubgroups(ref);
+      group.subgroups = await this.subgroupService.findAllActive(ref);
 
       if (populate.includes('subgroups.members')) {
         if (!populate.includes('members'))
@@ -359,7 +369,7 @@ export class GroupService extends CanViewService<GroupRef> {
 
       if (populate.includes('cycles.trainings')) {
         for (const cycle of group.cycles)
-          cycle.trainings = await this.trainingService.findTrainings({
+          cycle.trainings = await this.trainingService.findAll({
             ...ref,
             cycleId: cycle.id,
           });

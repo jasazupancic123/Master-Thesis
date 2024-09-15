@@ -1,5 +1,12 @@
-import { IsInt, IsNotEmpty, IsString, Min, ValidateNested } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { TrainingExerciseMeta } from './training-exercise-meta.entity';
 import { TrainingExerciseUserData } from './training-exercise-user-data.entity';
@@ -14,16 +21,18 @@ export class TrainingExercise {
   exercise: Exercise | null; // virtual
 
   @IsInt()
+  @IsOptional()
   @Min(0)
-  @ApiProperty()
+  @ApiPropertyOptional()
   @Expose()
-  order: number;
+  order?: number;
 
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
   @Expose()
-  color: string;
+  color?: string;
 
   @ValidateNested()
   @Type(() => TrainingExerciseMeta)
