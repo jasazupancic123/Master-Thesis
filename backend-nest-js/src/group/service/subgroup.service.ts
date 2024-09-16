@@ -138,6 +138,8 @@ export class SubgroupService {
 
   private filter(query: Query, filter: Filter<Subgroup>): Query {
     if (filter.ids) query = query.where('id', 'in', filter.ids);
+    if (filter.cycleId)
+      query = query.where('cycleId', '==', filter.cycleId.value);
 
     if (filter.membersIds)
       query = query.where(

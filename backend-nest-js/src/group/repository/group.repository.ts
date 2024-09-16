@@ -51,6 +51,8 @@ export class GroupRepository
       updatedAt: Timestamp.now(),
     });
 
+    // add group id to the document for querying by collection group
+    await result.update({ id: result.id });
     return result.id;
   }
 

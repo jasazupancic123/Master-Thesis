@@ -26,7 +26,7 @@ export class GroupController {
     cycleById: (groupId: string, cycleId: string) => `/group/${groupId}/cycle/${cycleId}`,
     subgroups: (groupId: string) => `/group/${groupId}/subgroup`,
     subgroupById: (groupId: string, subgroupId: string) => `/group/${groupId}/subgroup/${subgroupId}`,
-    trainings: (groupId = 'active', cycleId = 'active', filter?: FilterTrainingQuery) => {
+    trainings: (groupId: string, cycleId: string, filter?: FilterTrainingQuery) => {
       const query = {
         ...(filter?.subgroupId && { subgroupId: filter.subgroupId }),
         ...(filter?.from && { from: dayjs(filter.from).toISOString() }),
@@ -39,7 +39,6 @@ export class GroupController {
     trainingComponents: (groupId: string, cycleId: string, trainingId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component`,
     trainingComponentById: (groupId: string, cycleId: string, trainingId: string, componentId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}`,
     trainingSupersets: (groupId: string, cycleId: string, trainingId: string, componentId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset`,
-    trainingSupersetById: (groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset/${supersetId}`,
     trainingExercises: (groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset/${supersetId}/exercise`,
     trainingExerciseById: (groupId: string, cycleId: string, trainingId: string, componentId: string, supersetId: string, exerciseId: string) => `/group/${groupId}/cycle/${cycleId}/training/${trainingId}/component/${componentId}/superset/${supersetId}/exercise/${exerciseId}`,
   };
@@ -62,6 +61,10 @@ export class GroupController {
 
   static async updateGroup(token: string, groupId: string, body: UpdateGroup) {
     return await commonService.api.fetch<Group>(this.URL.groupById(groupId), { token, method: 'PATCH', body });
+  }
+
+  static async findCycles(token: string, groupId: string) {
+    return await commonService.api.fetch<Cycle[]>(this.URL.cycles(groupId), { token });
   }
 
   static async addCycle(token: string, groupId: string, input: CreateCycle) {

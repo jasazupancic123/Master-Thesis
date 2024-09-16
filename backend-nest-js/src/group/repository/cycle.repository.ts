@@ -83,6 +83,7 @@ export class CycleRepository
         data.from.toDate(),
         data.to.toDate(),
       ),
+      subgroups: [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
     } as Cycle;

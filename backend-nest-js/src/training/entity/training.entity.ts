@@ -18,6 +18,12 @@ export class Training extends BaseEntity {
   can create new subgroups every day, and the next day members of subgroup are
   already available in the parent group*/
 
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  copiedFromId?: string | null; // if this training is copied from another training
+
   @IsDate()
   @ApiProperty()
   @Expose()

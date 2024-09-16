@@ -139,87 +139,72 @@ export class TrainingService {
     return trainings;
   }
 
+  /**
+   * Finds all training by member for the given cycle reference. Each member
+   * can be part of the main (parent) group and many subgroups and each subgroup
+   * can have different trainings than the main group.
+   *
+   * Flow:
+   * 1. Find all trainings for the main group
+   * 2. Find all subgroups for the given cycle that member is part of.
+   * 3. Filter all subgroup trainings from the main group and remember their
+   *    `copiedFromId` field.
+   * 4. Ignore all trainings in the parent group that have been copied.
+   * 5. The result is a list of trainings that are part of the main group and
+   *    subgroups that member is part of.
+   */
   async findAllByMember(
-    userId: string,
+    ref: Required<CycleRef>,
+    memberId: string,
     options?: FindManyOptions<Training>,
   ): Promise<Training[]> {
-    // get athlete's current active cycle
-    const cycle = await this.cycleService.findActiveCycle(userId, new Date());
-    if (!cycle) return [];
-
-    // console.log('active cycle:', cycle);
-
-    // find all active subgroups that user is part of
-    const subgroups = (
-      await this.subgroupService.findAllActive({
-        uid: cycle.group.ownerId,
-        groupId: cycle.group.id,
-      })
-    ).filter((subgroup) => this.groupService.isMember(userId, subgroup));
-
-    // console.log('subgroups:', subgroups);
-
-    /* all subgroups have `from` and `to` fields which indicate the date range
-    for which the subgroup is valid and each subgroup has unique dates so there
-    is no overlap between subgroups. Now, we get the union of all subgroup dates
-    and return their trainings, and for the dates that are not in the union,
-    return the parent group trainings. */
-    const range = [
-      [cycle.group.from, cycle.group.to],
-      ...subgroups.map(({ from, to }) => [from, to]),
-    ].sort((a, b) => a[0].getTime() - b[0].getTime());
-
-    const negated = this.commonService.date.negateRange(range); // range for parent group trainings
-
-    console.log('range:', range);
-    console.log('negated:', negated);
-
-    const ref = {
-      uid: cycle.group.ownerId,
-      groupId: cycle.group.id,
-      cycleId: cycle.id,
-    };
-
-    const parentTrainings = await this.findAll(ref);
-
-    // find all active cycle trainings where subgroupId is null or user is part
-    // of the subgroup and filter by date range
-    const subgroupsTrainings = await this.findAll(ref, {
-      filter: {
-        ...(subgroups.length && {
-          subgroupId: {
-            value: subgroups.map(({ id }) => id),
-          },
-        }),
-      },
+    // find cycle
+    const cycle = await this.cycleService.findOneOrFail(ref, {
+      authorize: true,
+      populate: ['subgroups'],
     });
 
-    const trainings = subgroupsTrainings
-      .concat(parentTrainings)
+    const trainings = await this.findAll(ref); // parent group trainings
+
+    // find all subgroups that user is part of in the given cycle
+    const subgroups = cycle.subgroups.filter((subgroup) =>
+      this.groupService.isMember(memberId, subgroup),
+    );
+
+    // find all subgroup trainings
+    const subgroupTrainings = trainings.filter((training) =>
+      subgroups.some((subgroup) => training.subgroupId === subgroup.id),
+    );
+
+    // find all trainings that have been copied from subgroup trainings
+    const ignoreTrainingsIds = subgroupTrainings.map(
+      (training) => training.copiedFromId,
+    );
+
+    const memberTrainings = trainings
+
+      .filter((training) => !training.subgroupId) // keep only parent trainings
+      .filter(
+        (training) => !ignoreTrainingsIds.includes(training.id), // ignore copied trainings
+      )
+      .concat(subgroupTrainings)
       .sort((a, b) => a.from.getTime() - b.from.getTime());
 
-    const athleteTrainings = trainings.filter((training) => {
-      if (training.subgroupId) return true;
-      return negated.some(([from, to]) =>
-        this.commonService.date.isBetween(training.from, from, to),
-      );
-    });
+    // populate trainings
+    if (options?.populate)
+      await Promise.all(
+        memberTrainings.map(async (training) => {
+          const trainingRef = {
+            ...ref,
+            trainingId: training.id,
+            subgroupId: null,
+          };
 
-    // populate trainings' components and exercises
-    return await Promise.all(
-      athleteTrainings.map(async (training) => {
-        const trainingRef = {
-          ...ref,
-          trainingId: training.id,
-          subgroupId: training.subgroupId,
-        };
-
-        if (options?.populate)
           await this.populate(trainingRef, training, options.populate);
+        }),
+      );
 
-        return training;
-      }),
-    );
+    return memberTrainings;
   }
 
   async create(
@@ -302,6 +287,7 @@ export class TrainingService {
     // group and cycle with given training data
     const data = {
       subgroupId: destinationSubgroup?.id || null,
+      copiedFromId: sourceTraining.id,
       from: sourceTraining.from,
       to: sourceTraining.to,
     };
