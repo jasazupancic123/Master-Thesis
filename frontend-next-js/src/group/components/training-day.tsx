@@ -194,11 +194,11 @@ export default function TrainingDay(props: Props) {
     <Box mt={4}>
       {trainings.map((training) =>
         <Box key={training.id}>
-          {training?.components?.map((component) => {
+          {training?.components?.map((component, i) => {
             const show = selected.component?.componentId === component.componentId;
 
             return (
-              <Fragment key={component.componentId}>
+              <Fragment key={i}>
                 <Box sx={{
                   bgcolor: 'background.paper',
                   borderRadius: 2,
@@ -231,13 +231,13 @@ export default function TrainingDay(props: Props) {
                         <Grid container spacing={2} wrap="wrap">
                           {selected.component?.supersets
                             ?.sort((a, b) => a.order - b.order)
-                            ?.map((superset, i) => {
+                            ?.map((superset) => {
                               return <Grid xs={4} key={superset.id}>
                                 <BorderColor color={colors[i]} />
 
                                 <Box>
-                                  {superset.exercises.map((exercise) => (
-                                    <Box key={exercise.exerciseId}>
+                                  {superset.exercises.map((exercise, k) => (
+                                    <Box key={`${superset.id}-${exercise.exerciseId}-${k}`}>
                                       <TrainingExerciseCard
                                         exercise={exercise}
                                         onChange={async (meta) => {

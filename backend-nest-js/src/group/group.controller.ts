@@ -158,9 +158,26 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    if (groupId === 'active' && cycleId === 'active') {
-      return await this.trainingService.findAllByMember(user.uid);
+    if (this.firebaseService.isAthlete(user)) {
+      // find group without provided ownerId
+      const group = await this.groupService.findOneOrFail({ groupId });
+      const ref = {
+        uid: group.ownerId,
+        groupId,
+        cycleId,
+      };
+
+      return await this.trainingService.findAllByMember(ref, user.uid, {
+        populate: [
+          'components',
+          'components.supersets',
+          'components.supersets.exercises',
+          'components.supersets.exercises.exercise',
+        ],
+      });
     }
+
+    // return await this.trainingService.findAllByMember(user.uid);
 
     const ref = {
       uid: user.uid,

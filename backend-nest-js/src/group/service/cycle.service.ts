@@ -24,6 +24,7 @@ import { CreateCycle } from '../type/cycle.type';
 import { Validate } from '../../common/type/validate.type';
 import { isAfter, isBefore } from 'date-fns';
 import { GroupRepository } from '../repository/group.repository';
+import { SubgroupService } from './subgroup.service';
 
 @Injectable()
 export class CycleService {
@@ -34,6 +35,7 @@ export class CycleService {
     private readonly trainingService: Wrapper<TrainingService>,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
+    private readonly subgroupService: SubgroupService,
     private readonly groupRepository: GroupRepository,
   ) {}
 
@@ -63,7 +65,12 @@ export class CycleService {
       populate: ['cycles'],
     });
 
-    return groups.flatMap((group) => group.cycles);
+    return groups.flatMap((group) =>
+      group.cycles.map((cycle) => ({
+        ...cycle,
+        group,
+      })),
+    );
   }
 
   async findOne(
@@ -166,6 +173,7 @@ export class CycleService {
       updatedAt: new Date(),
       weeks: this.commonService.date.weeks(input.from, input.to),
       trainings: [],
+      subgroups: [],
       group,
     };
   }
@@ -243,6 +251,11 @@ export class CycleService {
         authorize: false,
       });
     }
+
+    if (populate.includes('subgroups'))
+      cycle.subgroups = await this.subgroupService.findAll(ref, {
+        filter: { cycleId: { value: cycle.id } },
+      });
 
     return cycle;
   }

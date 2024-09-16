@@ -8,25 +8,30 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { CycleRef, FirestoreCollectionRepository, TrainingRef } from '../../common/type/firebase-firestore.type';
+import {
+  CycleRef,
+  FirestoreCollectionRepository,
+  TrainingRef,
+} from '../../common/type/firebase-firestore.type';
 import { Training } from '../entity/training.entity';
 import { CommonService } from '../../common/service/common.service';
 import { CycleRepository } from '../../group/repository/cycle.repository';
 
 @Injectable()
-export class TrainingRepository implements FirestoreCollectionRepository<Training, TrainingRef> {
+export class TrainingRepository
+  implements FirestoreCollectionRepository<Training, TrainingRef>
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly cycleRepository: CycleRepository,
-  ) {
-  }
+  ) {}
 
   async getDocs(
     ref: Required<CycleRef>,
-    query: (query: Query) => Query = query => query,
+    query: (query: Query) => Query = (query) => query,
   ): Promise<Training[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async getDoc(ref: Required<TrainingRef>): Promise<Training | null> {
@@ -35,9 +40,13 @@ export class TrainingRepository implements FirestoreCollectionRepository<Trainin
     return this.serialize(snapshot);
   }
 
-  async addDoc(ref: Required<CycleRef>, input: Partial<Training>): Promise<string> {
+  async addDoc(
+    ref: Required<CycleRef>,
+    input: Partial<Training>,
+  ): Promise<string> {
     const result = await this.collection(ref).add({
       subgroupId: input.subgroupId || null,
+      copiedFromId: input.copiedFromId || null,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
       createdAt: Timestamp.now(),
@@ -57,7 +66,9 @@ export class TrainingRepository implements FirestoreCollectionRepository<Trainin
   }
 
   collection(ref: Required<CycleRef>): CollectionReference {
-    return this.cycleRepository.doc(ref).collection(FirestoreCollection.TRAINING);
+    return this.cycleRepository
+      .doc(ref)
+      .collection(FirestoreCollection.TRAINING);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Training {
@@ -66,6 +77,7 @@ export class TrainingRepository implements FirestoreCollectionRepository<Trainin
     return {
       id: snapshot.id,
       subgroupId: data.subgroupId,
+      copiedFromId: data.copiedFromId || null,
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),
       components: [],

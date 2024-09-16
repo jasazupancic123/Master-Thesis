@@ -1,6 +1,6 @@
 import { Week } from '../../../group/entity/cycle.entity';
 import dayjs from 'dayjs';
-import { addDays, compareAsc, isAfter, isBefore, isEqual } from 'date-fns';
+import { isAfter, isBefore, isEqual } from 'date-fns';
 
 export class DateUtil {
   isBetween(date: Date, start: Date, end: Date): boolean {
@@ -51,47 +51,6 @@ export class DateUtil {
     }
 
     return weeks;
-  }
-
-  /**
-   * Returns the negated date range union.
-   *
-   * @example
-   * constant result = negateRange([
-   *  ['1st Jan', '7th Jan'],
-   *  ['10th Jan', '15th Jan'],
-   *  ['20th Jan', '25th Jan']
-   * ]);
-   *
-   * // result => [
-   * //   ['8th Jan', '9th Jan'],
-   * //   ['16th Jan', '19th Jan']
-   * // ]
-   *
-   * @param dates Array of date ranges (with start and end date)
-   */
-  negateRange(dates: Date[][]): Date[][] {
-    if (!dates.length) return [];
-
-    if (!dates.every((date) => date.length === 2))
-      throw new Error(
-        'Invalid date range provided (provide array of [start, end] dates)',
-      );
-
-    const sorted = dates.sort((a, b) => compareAsc(a[0], b[0]));
-    const negated = [];
-
-    let current = sorted[0][0]; // current start date
-    for (const [start, end] of sorted) {
-      if (isBefore(current, start))
-        // there is a gap between the current start and the next start
-        negated.push([current, addDays(start, -1)]);
-
-      // move the current start to the end of the current range
-      current = isAfter(current, end) ? current : addDays(end, 1);
-    }
-
-    return negated;
   }
 
   pretty(date: Date): string {

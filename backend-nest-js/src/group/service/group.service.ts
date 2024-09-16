@@ -110,25 +110,46 @@ export class GroupService {
   }
 
   async findOne(
-    ref: Required<GroupRef>,
+    ref: GroupRef,
     options?: FindOneOptions<Group> & { authorize?: boolean },
   ): Promise<Group | null> {
+    if (!ref.uid && !ref.groupId) return null;
+
+    if (!ref.uid) {
+      // fetch collection group because ownerId is not available
+      const group = this.groupRepository.serialize(
+        (
+          await this.userRepository
+            .collectionGroup('groups')
+            .where('id', '==', ref.groupId)
+            .get()
+        ).docs[0],
+      );
+
+      if (!group) return null;
+      ref.uid = group.ownerId;
+    }
+
+    const groupRef = { uid: ref.uid, groupId: ref.groupId };
+
     // find parent references
     await this.userService.findOneOrFail(ref.uid);
 
     // find group
-    const group = await this.groupRepository.getDoc(ref);
+    const group = await this.groupRepository.getDoc(groupRef);
     if (!group) return null;
 
     // authorize
-    if (options?.authorize && !this.canView(ref, group)) return null;
+    if (options?.authorize && !this.canView(groupRef, group)) return null;
 
-    if (options?.populate) await this.populate(ref, group, options.populate);
+    if (options?.populate)
+      await this.populate(groupRef, group, options.populate);
+
     return group;
   }
 
   async findOneOrFail(
-    ref: Required<GroupRef>,
+    ref: GroupRef,
     options?: FindOneOptions<Group> & { authorize?: boolean },
   ): Promise<Group> {
     const group = await this.findOne(ref, options);
