@@ -12,6 +12,7 @@ import { useAppContext } from '@/context/app-provider';
 import { Training } from '@/training/entity/training.entity';
 import Stack from '@mui/material/Stack';
 import TrainingDay from '@/group/components/training-day';
+import dayjs from 'dayjs';
 
 function Page() {
   const { token } = useAppContext();
@@ -35,7 +36,11 @@ function Page() {
         const groupId = selected.cycle.group.id;
         const cycleId = selected.cycle.id;
 
-        const trainings = await GroupController.findTrainings(token, groupId, cycleId);
+        const trainings = await GroupController.findTrainings(token, groupId, cycleId, {
+          from: dayjs().startOf('day').toDate(),
+          to: dayjs().endOf('day').toDate(),
+        });
+        
         setSelected(prev => ({ ...prev, trainings }));
       } catch (e) {
         console.error('Error fetching trainings:', e);

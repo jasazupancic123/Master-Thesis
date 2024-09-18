@@ -11,6 +11,18 @@ export class DateUtil {
     );
   }
 
+  isBefore(date: Date, compare: Date): boolean {
+    return isBefore(date, compare);
+  }
+
+  isAfter(date: Date, compare: Date): boolean {
+    return isAfter(date, compare);
+  }
+
+  isEqual(date: Date, compare: Date): boolean {
+    return isEqual(date, compare);
+  }
+
   /**
    * Returns an array of weeks between the start and end date. Each week
    * contains an array of days (7 days in a week), from Monday to Sunday.

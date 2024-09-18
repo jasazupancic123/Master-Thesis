@@ -133,14 +133,12 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
     );
 
     // set user custom claims to avoid waiting for function to be triggered
-    await Promise.all(
-      createdUsers.map((user) => {
-        const userData = usersData.find((u) => u.email === user.email);
-        this.firebaseService.auth.setCustomUserClaims(user.uid, {
-          role: [userData?.role || UserRole.ATHLETE],
-        });
-      }),
-    );
+    for (const user of createdUsers) {
+      const userData = usersData.find((u) => u.email === user.email);
+      await this.firebaseService.auth.setCustomUserClaims(user.uid, {
+        role: [userData?.role || UserRole.ATHLETE],
+      });
+    }
 
     // set `users` collection data to avoid waiting for function to be triggered
     const userRepository = this.app.get(UserRepository);

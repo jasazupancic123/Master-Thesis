@@ -2,21 +2,37 @@
 
 Project for managers, trainers and athletes to track their workouts more efficiently.
 
+### Research
+
+- Database denormalization - for example, when a cycle is added to a group, should group have array property `cycleIds` and be updated each time when cycles are changed? Should this be applied to all tables (like user having his own `trainingIds`, `cycleIds`, ...)?
+- Test logic when user is part of multiple groups and has many cycles in each
+
+### Minor Fixes
+
+- Athlete logic
+  - Add `trainingIds` field for easier query
+- Athlete daily view
+  - New style of components for athletes to allow him to update his own data
+  - Athlete can update his own exercise info data
+- Trainer daily view
+  - Exercise card does not refresh properly when switching to another training with same component
+  - When adding new superset, exercises cannot be added
+  - Add design to see user wellness for the current date
+  - Add ability to update athlete's bodyweight
+
 ### Trainings
 
-- Athlete training day view
 - Athlete view calendar
 
 ### Exercises
 
 - Update exercise
-- Delete exercise
+- Delete exercise (soft delete)
 
 ### Groups
 
-- Updating / adding / removing group members (removing a member should NOT remove his exercise info, it should just
-  remove him from the group and keep the info for his personal statistics)
-- Updating / adding / removing subgroup members (in subgroups, change field `membersIds` from string array to custom object array with member id and dates `entered` and `left`, because trainer can update subgroup in the middle of a cycle, or in the middle of the day and we want to keep user training data for statistics, and logic to `findAvailableMembers` changes by filtering not just subgroup `to` date field, but also all other subgroups' `left` property in `membersIds` to find potential removed athletes from subgroups, and when filtering all athlete trainings, also all subgroups have to be checked and their trainings to not miss any out, also one user can be added / removed to the subgroup multiple times, so we need to find all records for the user and get the latest one)
+- Updating / adding / removing group members (change `membersIds` field from type `string[]` to type `{ memberId: string, createdAt: Date (for adding), deletedAt (for removing) }[]`) and same member can occur multiple times in the group, in case he was added / removed multiple times. To fetch all his trainings, we need to filter cycles between these dates
+- Do the same for subgroups as above and change `findAvailableMembers` logic
 
 ### Methodology
 
@@ -34,15 +50,11 @@ Project for managers, trainers and athletes to track their workouts more efficie
 
 ### Cycles
 
-- New cycle in the same group can only be created if it doesn't overlap with any other cycle
 - Cycle events (event name, start date, end date, location, description)
-
-### Users
-
-- Trainer can add weight for all users or user can
 
 ### Future
 
+- Subscriptions
 - Write tests
 - UPDATE DOCS!
 - Add group address (gym location) for trainers so that groups with the same address get additional logic for

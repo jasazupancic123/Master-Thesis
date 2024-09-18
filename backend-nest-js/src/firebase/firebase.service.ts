@@ -1,19 +1,20 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { App } from 'firebase-admin/app';
-import * as admin from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
-import { ListUsersResult, UserIdentifier } from 'firebase-admin/auth';
+import { Auth, ListUsersResult, UserIdentifier } from 'firebase-admin/auth';
+import { Storage } from 'firebase-admin/storage';
+import { Firestore } from 'firebase-admin/firestore';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
   public readonly app: App;
-  public readonly auth: admin.auth.Auth;
-  public readonly firestore: admin.firestore.Firestore;
-  public readonly storage: admin.storage.Storage;
+  public readonly auth: Auth;
+  public readonly firestore: Firestore;
+  public readonly storage: Storage;
   private logger = new Logger(this.constructor.name);
 
   constructor(
@@ -27,10 +28,13 @@ export class FirebaseService implements OnApplicationBootstrap {
   }
 
   async findUserById(uid: string) {
-    return await this.auth.getUser(uid) as User;
+    return (await this.auth.getUser(uid)) as User;
   }
 
-  async authUsers(filter?: { ids?: string[], emails?: string[] }): Promise<User[]> {
+  async authUsers(filter?: {
+    ids?: string[];
+    emails?: string[];
+  }): Promise<User[]> {
     let users: ListUsersResult;
 
     if (filter) {
@@ -39,8 +43,7 @@ export class FirebaseService implements OnApplicationBootstrap {
       for (const id of filter.ids ?? []) identifiers.push({ uid: id });
       for (const email of filter.emails ?? []) identifiers.push({ email });
       users = await this.auth.getUsers(identifiers);
-    } else
-      users = await this.auth.listUsers();
+    } else users = await this.auth.listUsers();
 
     return users.users as User[];
   }
@@ -62,14 +65,24 @@ export class FirebaseService implements OnApplicationBootstrap {
   }
 
   async deleteCollection(collectionPath: string) {
-    await this.firestore.recursiveDelete(this.firestore.collection(collectionPath));
+    await this.firestore.recursiveDelete(
+      this.firestore.collection(collectionPath),
+    );
   }
 
   async onApplicationBootstrap() {
-    this.logger.debug(`Using Firestore Emulator: ${this.configService.get('FIRESTORE_EMULATOR_HOST')}`);
-    this.logger.debug(`Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`);
-    this.logger.debug(`Using Storage Emulator: ${this.configService.get('FIREBASE_STORAGE_EMULATOR_HOST')}`);
-    this.logger.debug(`Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`);
+    this.logger.debug(
+      `Using Firestore Emulator: ${this.configService.get('FIRESTORE_EMULATOR_HOST')}`,
+    );
+    this.logger.debug(
+      `Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`,
+    );
+    this.logger.debug(
+      `Using Storage Emulator: ${this.configService.get('FIREBASE_STORAGE_EMULATOR_HOST')}`,
+    );
+    this.logger.debug(
+      `Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`,
+    );
   }
 
   private checkRole(user: User | DecodedUser, role: UserRole): boolean {

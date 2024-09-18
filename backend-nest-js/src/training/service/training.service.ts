@@ -181,14 +181,55 @@ export class TrainingService {
       (training) => training.copiedFromId,
     );
 
-    const memberTrainings = trainings
-
+    let memberTrainings = trainings
       .filter((training) => !training.subgroupId) // keep only parent trainings
       .filter(
         (training) => !ignoreTrainingsIds.includes(training.id), // ignore copied trainings
       )
       .concat(subgroupTrainings)
       .sort((a, b) => a.from.getTime() - b.from.getTime());
+
+    // custom filter
+    if (options?.filter) {
+      memberTrainings = memberTrainings.filter((training) => {
+        if (options.filter.from && options.filter.to)
+          return this.commonService.date.isBetween(
+            training.from,
+            options.filter.from.value,
+            options.filter.to.value,
+          );
+
+        if (options.filter.from) {
+          if (options.filter.from.op === '<=' || options.filter.from.op === '<')
+            return this.commonService.date.isBefore(
+              training.from,
+              options.filter.from.value,
+            );
+
+          if (options.filter.from.op === '>=' || options.filter.from.op === '>')
+            return this.commonService.date.isAfter(
+              training.from,
+              options.filter.from.value,
+            );
+        }
+
+        if (options.filter.to) {
+          if (options.filter.to.op === '<=' || options.filter.to.op === '<')
+            return this.commonService.date.isBefore(
+              training.to,
+              options.filter.to.value,
+            );
+
+          if (options.filter.to.op === '>=' || options.filter.to.op === '>')
+            return this.commonService.date.isAfter(
+              training.to,
+              options.filter.to.value,
+            );
+        }
+
+        return true;
+      });
+    }
 
     // populate trainings
     if (options?.populate)

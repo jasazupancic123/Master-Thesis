@@ -2,8 +2,6 @@ import type { Exercise } from '@/exercise/entity/exercise.entity';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React from 'react';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { CommonService } from '@/common/service/common.service';
 
 interface Props {
   exercise: Exercise;
@@ -11,7 +9,6 @@ interface Props {
 
 export function ExerciseCard(props: Props) {
   const { exercise } = props;
-  const imageUrl = FirebaseStorageUtil.exerciseUrl(CommonService.instance.navigation.getFilenameFromPath(exercise.imageUrl || ''));
 
   return (
     <Card sx={{ maxWidth: 345, borderRadius: 5 }}>
@@ -21,7 +18,7 @@ export function ExerciseCard(props: Props) {
           height: 140,
           background: 'linear-gradient(180deg, rgba(26,43,60,1) 0%, rgba(37,53,70,1) 100%)',
         }}
-        image={exercise.imageUrl ? imageUrl : undefined}
+        image={exercise.imageUrl}
         title={exercise.name}
       />
       <CardContent>

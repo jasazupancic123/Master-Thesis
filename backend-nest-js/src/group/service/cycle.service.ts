@@ -22,9 +22,9 @@ import { CycleRef, GroupRef } from '../../common/type/firebase-firestore.type';
 import { GroupService } from './group.service';
 import { CreateCycle } from '../type/cycle.type';
 import { Validate } from '../../common/type/validate.type';
-import { isAfter, isBefore } from 'date-fns';
-import { GroupRepository } from '../repository/group.repository';
 import { SubgroupService } from './subgroup.service';
+import { Group } from '../entity/group.entity';
+import { isAfter, isBefore } from 'date-fns';
 
 @Injectable()
 export class CycleService {
@@ -36,7 +36,6 @@ export class CycleService {
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
     private readonly subgroupService: SubgroupService,
-    private readonly groupRepository: GroupRepository,
   ) {}
 
   async findAll(
@@ -58,12 +57,46 @@ export class CycleService {
 
   async findAllByMember(
     userId: string,
-    _options?: FindManyOptions<Cycle>,
+    options?: FindManyOptions<Cycle>,
   ): Promise<Cycle[]> {
     // find all active groups for the user (groups that are ongoing)
     const groups = await this.groupService.findAllByMember(userId, {
       populate: ['cycles'],
     });
+
+    // custom filter for cycles
+    if (options?.filter) {
+      const { from, to } = options.filter;
+      for (const group of groups)
+        group.cycles = group.cycles.filter((cycle) => {
+          if (from && to) {
+            if (from.op === '<' || from.op === '<=')
+              return (
+                isBefore(from.value, cycle.from) && isBefore(to.value, cycle.to)
+              );
+            if (from.op === '>' || from.op === '>=')
+              return (
+                isAfter(from.value, cycle.from) && isAfter(to.value, cycle.to)
+              );
+          }
+
+          if (from) {
+            if (from.op === '<' || from.op === '<=')
+              return isBefore(from.value, cycle.from);
+            if (from.op === '>' || from.op === '>=')
+              return isAfter(from.value, cycle.from);
+          }
+
+          if (to) {
+            if (to.op === '<' || to.op === '<=')
+              return isBefore(to.value, cycle.to);
+            if (to.op === '>' || to.op === '>=')
+              return isAfter(to.value, cycle.to);
+          }
+
+          return true;
+        });
+    }
 
     return groups.flatMap((group) =>
       group.cycles.map((cycle) => ({
@@ -139,10 +172,12 @@ export class CycleService {
 
   async create(ref: Required<GroupRef>, input: CreateCycle): Promise<Cycle> {
     // find parent references
-    const group = await this.groupService.findOneOrFail(ref);
+    const group = await this.groupService.findOneOrFail(ref, {
+      populate: ['members'],
+    });
 
     // validate data
-    const { error, message } = await this.validate(ref, input);
+    const { error, message } = await this.validate(group, input);
     if (error) throw new BadRequestException(message);
 
     // create cycle
@@ -154,18 +189,6 @@ export class CycleService {
     };
 
     const cycleId = await this.cycleRepository.addDoc(ref, data);
-
-    // update group's `from` and `to` dates if cycle extends beyond them
-    const updateGroup = {
-      ...(!group.from || isBefore(input.from, group.from)
-        ? { from: input.from }
-        : {}),
-      ...(!group.to || isAfter(input.to, group.to) ? { to: input.to } : {}),
-    };
-
-    if (Object.keys(updateGroup).length > 0)
-      await this.groupRepository.updateDoc(ref, updateGroup);
-
     return {
       id: cycleId,
       ...data,
@@ -179,10 +202,11 @@ export class CycleService {
   }
 
   private async validate(
-    ref: Required<GroupRef>,
+    group: Group,
     input: Partial<Cycle>,
   ): Promise<Validate> {
     // check that this cycle does not overlap with existing cycles in the group
+    const ref = { uid: group.ownerId, groupId: group.id };
     const cycles = await this.findAll(ref, { authorize: false });
     const overlap = cycles.find(
       (c) =>
@@ -191,7 +215,34 @@ export class CycleService {
     );
 
     if (overlap)
-      return { error: true, message: 'Cycle overlaps with existing cycle' };
+      return {
+        error: true,
+        message: 'Cycle overlaps with existing cycle in the group',
+      };
+
+    // check that all members in the group do not have any cycles in other
+    // groups that they belong to that overlap with this cycle
+    const invalidMembers = (
+      await Promise.all(
+        group.members.map(async (member) => {
+          const memberCycles = await this.findAllByMember(member.uid, {
+            filter: {
+              to: { op: '<=', value: input.from },
+            },
+          });
+
+          console.log('cycles for member', member.email, memberCycles.length);
+
+          return memberCycles.length > 0 ? member : null;
+        }),
+      )
+    ).filter((member) => member);
+
+    if (invalidMembers.length > 0)
+      return {
+        error: true,
+        message: `Members ${invalidMembers.map((m) => m.email).join(', ')} have overlapping cycles in other groups`,
+      };
 
     return { error: false };
   }
