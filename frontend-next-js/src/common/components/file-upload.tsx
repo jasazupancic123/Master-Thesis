@@ -15,8 +15,6 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
 export default function FileUpload(props: Props) {
   const { label, onFileUpload, input, initialFileUrl } = props;
-  const onFileUploadCallback = useCallback(onFileUpload, [onFileUpload]);
-
   const [preview, setPreview] = useState(() => ({
     url: initialFileUrl || '',
     error: '',
@@ -26,7 +24,6 @@ export default function FileUpload(props: Props) {
     const url = URL.createObjectURL(acceptedFiles[0]);
     setPreview(prev => ({ ...prev, url }));
   }, []);
-
 
   const maxSize = input === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
   const accept: Accept = {
@@ -51,7 +48,7 @@ export default function FileUpload(props: Props) {
     return () => {
       if (preview) URL.revokeObjectURL(preview.url);
     };
-  }, [preview]);
+  }, []);
 
   /**
    * Upload file to the server
@@ -63,14 +60,14 @@ export default function FileUpload(props: Props) {
 
     const uploadFile = async () => {
       try {
-        await onFileUploadCallback(file);
+        await onFileUpload(file);
       } catch (e: any) {
         setPreview(prev => ({ ...prev, error: e.message || 'An error occurred' }));
       }
     };
 
     uploadFile().then();
-  }, [acceptedFiles, onFileUploadCallback]);
+  }, [acceptedFiles]);
 
   return (
     <div {...getRootProps()} style={{ width: '100%', height: 150 }}>

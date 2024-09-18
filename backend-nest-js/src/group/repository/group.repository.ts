@@ -59,8 +59,6 @@ export class GroupRepository
   async updateDoc(ref: Required<GroupRef>, input: Partial<Group>) {
     await this.doc(ref).update({
       ...(input.name && { name: input.name }),
-      ...(input.from && { from: Timestamp.fromDate(input.from) }),
-      ...(input.to && { to: Timestamp.fromDate(input.to) }),
     });
   }
 
@@ -84,8 +82,6 @@ export class GroupRepository
       owner: null,
       membersIds: data.membersIds,
       availableMembersIds: [],
-      from: data.from ? (data.from as Timestamp).toDate() : null,
-      to: data.to ? (data.to as Timestamp).toDate() : null,
       members: [],
       subgroups: [],
       cycles: [],

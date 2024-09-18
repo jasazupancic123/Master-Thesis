@@ -8,13 +8,12 @@ import Box from '@mui/material/Box';
 import type { ExerciseAttribute } from '@/exercise/entity/exercise-attribute.entity';
 import FileUpload from '@/common/components/file-upload';
 import Stack from '@mui/material/Stack';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { CommonService } from '@/common/service/common.service';
 import { Exercise } from '@/exercise/entity/exercise.entity';
 import { SetState } from '@/common/type/state.type';
 import SelectAttribute from '@/exercise/components/select-attribute';
 import SelectComponent from '@/exercise/components/select-component';
 import { useAppContext } from '@/context/app-provider';
+import { CommonService } from '@/common/service/common.service';
 
 interface Props {
   data: Partial<Exercise>;
@@ -67,6 +66,18 @@ export default function ExerciseModal(props: Props) {
 
     selected[component.parents.length] = component.id;
     setSelectedComponents(selected);
+
+    async function fetchUrls() {
+      if (!data.imageUrl && !data.videoUrl) return;
+
+      setData({
+        ...data,
+        ...(data.imageUrl && { imageUrl: await CommonService.instance.firebase.storage.exerciseUrl(data.imageUrl) }),
+        ...(data.videoUrl && { videoUrl: await CommonService.instance.firebase.storage.exerciseUrl(data.videoUrl) }),
+      });
+    }
+
+    fetchUrls().then();
   }, [data?.id]);
 
   function handleSelectChange(field: string, value: string) {
@@ -87,7 +98,7 @@ export default function ExerciseModal(props: Props) {
       ...prev,
       componentsIds: [componentsIds[componentsIds.length - 1]], // only the leaf component (last one) is selected
     }));
-  }, [setData, selectedComponents]);
+  }, [selectedComponents]);
 
   return <MyModal isOpen={isOpen} setIsOpen={setIsOpen} width={500}>
     <Box>
@@ -128,12 +139,9 @@ export default function ExerciseModal(props: Props) {
               onFileUpload={async (file: File) => {
                 const path = `media/exercise/${Date.now()}-${file.name}`;
                 setData({ ...data, videoUrl: path });
-
                 await props.onFileUpload(file, path);
               }}
-              initialFileUrl={
-                data.videoUrl ? FirebaseStorageUtil.exerciseUrl(CommonService.instance.navigation.getFilenameFromPath(data.videoUrl)) : undefined
-              }
+              initialFileUrl={data.videoUrl}
             />
 
             {/*<TextField
@@ -157,9 +165,7 @@ export default function ExerciseModal(props: Props) {
 
                 await props.onFileUpload(file, path);
               }}
-              initialFileUrl={
-                data.imageUrl ? FirebaseStorageUtil.exerciseUrl(CommonService.instance.navigation.getFilenameFromPath(data.imageUrl)) : undefined
-              }
+              initialFileUrl={data.imageUrl}
               // fileUrl={data.imageUrl}
               // setFileUrl={(url) => setData({ ...data, imageUrl: url })}
             />

@@ -18,7 +18,7 @@ const auth = getAuth(app);
 if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true')
   connectAuthEmulator(getAuth(), 'http://localhost:9099');
 
-const storage = getStorage(app);
+const storage = getStorage(app, process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
 if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true')
   connectStorageEmulator(storage, 'localhost', 9199);
 

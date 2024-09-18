@@ -22,7 +22,9 @@ export interface FirebaseClientOptions {
   credential: string;
 }
 
-export function getFirebaseClient(options: FirebaseClientOptions): FirebaseClient {
+export function getFirebaseClient(
+  options: FirebaseClientOptions,
+): FirebaseClient {
   const logger = new Logger(getFirebaseClient.name);
   logger.debug('Initializing Firebase Admin SDK');
 
@@ -37,6 +39,5 @@ export function getFirebaseClient(options: FirebaseClientOptions): FirebaseClien
   const storage = getStorage(app);
 
   firestore.settings({ ignoreUndefinedProperties: true });
-
   return { app, auth, firestore, storage };
 }

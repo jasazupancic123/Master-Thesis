@@ -8,24 +8,35 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
 interface Props {
+  initialData: Wellness | null;
   onSubmit: (data: Partial<Wellness>) => void | Promise<void>;
   disabled: boolean;
 }
 
 export default function UserWellnessForm(props: Props) {
-  const [state, setState] = useState({
-    sleep: 5,
-    fatigue: 5,
-    soreness: 5,
-    comment: '',
+  const [state, setState] = useState<Wellness>(() => {
+    if (props.initialData)
+      return props.initialData;
+
+    return {
+      sleep: 5,
+      fatigue: 5,
+      soreness: 5,
+      comment: '',
+    } as Wellness;
   });
 
-  return <Stack alignItems="center">
+  return <Stack alignItems="center" height="100%" pb={15}>
+    {/* Today's date */}
+    <Typography variant="h5" sx={{ color: '#1EB980' }} m={2}>
+      {new Date().toDateString()}
+    </Typography>
+
     <Stack sx={{ height: 300 }} spacing={4} direction="row">
       {/* Sleep */}
       <UserWellnessSlider
         label="Sleep"
-        value={state.sleep}
+        value={state.sleep as number}
         setValue={(value) => setState(prev => ({ ...prev, sleep: value as number }))}
         disabled={props.disabled}
       />
@@ -33,7 +44,7 @@ export default function UserWellnessForm(props: Props) {
       {/* Fatigue */}
       <UserWellnessSlider
         label="Fatigue"
-        value={state.fatigue}
+        value={state.fatigue as number}
         setValue={(value) => setState(prev => ({ ...prev, fatigue: value as number }))}
         disabled={props.disabled}
       />
@@ -41,7 +52,7 @@ export default function UserWellnessForm(props: Props) {
       {/* Soreness */}
       <UserWellnessSlider
         label="Soreness"
-        value={state.soreness}
+        value={state.soreness as number}
         setValue={(value) => setState(prev => ({ ...prev, soreness: value as number }))}
         disabled={props.disabled}
       />

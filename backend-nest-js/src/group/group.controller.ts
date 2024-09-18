@@ -168,6 +168,10 @@ export class GroupController {
       };
 
       return await this.trainingService.findAllByMember(ref, user.uid, {
+        filter: {
+          ...(filter.from && { from: { value: filter.from, op: '>=' } }),
+          ...(filter.to && { to: { value: filter.to, op: '<=' } }),
+        },
         populate: [
           'components',
           'components.supersets',

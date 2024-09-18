@@ -9,6 +9,7 @@ import { UserController } from '@/user/user.controller';
 import { CreateWellness } from '@/user/type/wellness.type';
 import { useFetch } from '@/hook/use-fetch';
 import { Wellness } from '@/user/entity/wellness.entity';
+import Box from '@mui/material/Box';
 
 function Page() {
   const { token } = useAppContext();
@@ -28,9 +29,9 @@ function Page() {
     return <div>Loading...</div>;
 
   return (
-    <div>
-      <UserWellnessForm onSubmit={submitWellness} disabled={!!wellness.data} />
-    </div>
+    <Box height="100%">
+      <UserWellnessForm initialData={wellness.data} onSubmit={submitWellness} disabled={!!wellness.data} />
+    </Box>
   );
 }
 

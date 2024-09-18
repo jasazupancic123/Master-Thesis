@@ -31,8 +31,9 @@ export class FirebaseFirestoreUtil {
     return item;
   }
 
-  populateExercise(item: Exercise): Exercise {
+  async populateExercise(item: Exercise): Promise<Exercise> {
     item.attributeValues = CommonService.instance.object.flattenObject(item.attributeValues);
+    item.imageUrl = item.imageUrl ? await CommonService.instance.firebase.storage.exerciseUrl(item.imageUrl) : undefined;
     return item;
   }
 }

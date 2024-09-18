@@ -40,7 +40,6 @@ export class WellnessService {
     input: CreateWellness,
   ): Promise<Wellness> {
     this.logger.debug(`Creating wellness for user (${ref.uid})`);
-    const id = await this.wellnessRepository.addDoc(ref, input);
 
     const found = await this.wellnessRepository.getToday(ref);
     if (found)
@@ -48,6 +47,7 @@ export class WellnessService {
         'You already submitted your wellness for today',
       );
 
+    const id = await this.wellnessRepository.addDoc(ref, input);
     return {
       ...input,
       createdAt: new Date(),

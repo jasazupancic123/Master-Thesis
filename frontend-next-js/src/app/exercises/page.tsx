@@ -112,7 +112,13 @@ function Page() {
       };
 
       const { total, data } = await ExerciseController.findExercises(token, { ...filter, ...paginate });
-      setExercises(data.map(exercise => CommonService.instance.firebase.firestore.populateExercise(exercise)));
+
+      // populate exercises
+      const populated = await Promise.all(data.map(async (exercise) =>
+        await CommonService.instance.firebase.firestore.populateExercise(exercise),
+      ));
+
+      setExercises(populated);
       setPagination(prev => ({ ...prev, total, pages: Math.ceil(total / pagination.pageSize) }));
     }
 
