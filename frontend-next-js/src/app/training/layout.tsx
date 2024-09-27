@@ -9,7 +9,7 @@ interface Props {
 
 export default function Layout({ children }: Props) {
   return (
-    <Box bgcolor="background.paper" minHeight="100vh">
+    <Box bgcolor="background.paper" minHeight="100vh" pb={20}>
       <SidebarAthlete title="TRAINING" />
 
       <Container component="main" maxWidth="lg">

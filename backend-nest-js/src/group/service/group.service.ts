@@ -20,7 +20,11 @@ import {
   Populate,
 } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { GroupRef, UserRef } from '../../common/type/firebase-firestore.type';
+import {
+  GroupRef,
+  SubgroupRef,
+  UserRef,
+} from '../../common/type/firebase-firestore.type';
 import { GroupRepository } from '../repository/group.repository';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
 import { CycleRepository } from '../repository/cycle.repository';
@@ -31,6 +35,7 @@ import { CreateGroup } from '../type/group.type';
 import { CreateSubgroup } from '../type/subgroup.type';
 import { CreateCycle } from '../type/cycle.type';
 import { endOfDay, startOfDay } from 'date-fns';
+import { TrainingExerciseUserDataService } from '../../training/service/training-exercise-user-data.service';
 
 @Injectable()
 export class GroupService {
@@ -46,6 +51,8 @@ export class GroupService {
     private readonly subgroupService: SubgroupService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
+    @Inject(forwardRef(() => TrainingExerciseUserDataService))
+    private readonly trainingExerciseUserDataService: Wrapper<TrainingExerciseUserDataService>,
   ) {}
 
   canView(ref: Required<UserRef>, group: Group): boolean {
@@ -179,6 +186,10 @@ export class GroupService {
 
     const groupId = await this.groupRepository.addDoc(ref, data);
 
+    // for each user, add group to user's groupsIds
+    for (const member of members)
+      await this.userRepository.addGroup(member.uid, groupId);
+
     return {
       id: groupId,
       createdAt: new Date(),
@@ -192,6 +203,93 @@ export class GroupService {
       subgroups: [],
       cycles: [],
     };
+  }
+
+  async update() {
+    // TODO
+  }
+
+  async remove() {
+    // TODO
+  }
+
+  /**
+   * Adds a user to a group. The user is added to the group's membersIds and
+   * the group is added to the user's groupsIds. For each training in the group,
+   * the user's training exercise user data is created.
+   */
+  async addUserToGroup(ref: Required<GroupRef>, userId: string): Promise<void> {
+    // find parent references and user
+    const group = await this.findOneOrFail(ref, { authorize: true });
+    const user = await this.userService.findOneOrFail(userId);
+
+    // add user to group
+    await this.groupRepository.updateDoc(ref, {
+      membersIds: this.commonService.array.unique([
+        ...group.membersIds,
+        user.id,
+      ]),
+    });
+
+    // add group to user
+    await this.userRepository.addGroup(user.id, ref.groupId);
+
+    // for all trainings in group happening after now
+    const trainings = await this.trainingService.findAllByGroup(ref, {
+      authorize: false,
+      populate: [
+        'components',
+        'components.supersets',
+        'components.supersets.exercises',
+      ],
+    });
+
+    // for each training, add user's training exercise user data
+    await Promise.all(
+      trainings.map((training) => {
+        for (const component of training.components) {
+          for (const superset of component.supersets) {
+            for (const exercise of superset.exercises) {
+              this.trainingExerciseUserDataService.create(
+                {
+                  ...ref,
+                  cycleId: training.cycle.id,
+                  trainingId: training.id,
+                  subgroupId: null,
+                  componentId: component.componentId,
+                  supersetId: superset.id,
+                  exerciseId: exercise.exerciseId,
+                },
+                userId,
+                exercise.meta,
+              );
+            }
+          }
+        }
+      }),
+    );
+  }
+
+  /**
+   * Removes a user from a group by removing the user from the group's
+   * membersIds and removing the group from the user's groupsIds, but it keeps
+   * the user's training exercise user data for statistics.
+   */
+  async removeUserFromGroup(
+    ref: Required<GroupRef>,
+    userId: string,
+  ): Promise<void> {
+    // find parent references and user
+    const group = await this.findOneOrFail(ref, { authorize: true });
+    const user = await this.userService.findOneOrFail(userId);
+
+    // remove user from group
+    await this.groupRepository.updateDoc(ref, {
+      membersIds: group.membersIds.filter((memberId) => memberId !== user.id),
+    });
+
+    // remove group from user
+    await this.userRepository.removeGroup(user.id, ref.groupId);
   }
 
   async addSubgroup(
@@ -268,12 +366,59 @@ export class GroupService {
     return subgroup;
   }
 
+  async updateSubgroup() {
+    // TODO
+  }
+
+  async removeSubgroup() {
+    // TODO
+  }
+
+  /**
+   * Adds a user to a subgroup. The user is added to the subgroup's membersIds
+   * and for every training in the subgroup that is different from the parent
+   * group, the user's training exercise user data is created.
+   */
+  async addUserToSubgroup(
+    ref: Required<SubgroupRef>,
+    userId: string,
+  ): Promise<void> {
+    // find parent references and user
+    const subgroup = await this.subgroupService.findOneOrFail(ref);
+    const user = await this.userService.findOneOrFail(userId);
+
+    // TODO
+  }
+
+  /**
+   * Removes a user from a subgroup by removing the user from the subgroup's
+   * membersIds. The user's training exercise user data is kept for statistics.
+   */
+  async removeUserFromSubgroup(
+    ref: Required<SubgroupRef>,
+    userId: string,
+  ): Promise<void> {
+    // find parent references and user
+    const subgroup = await this.subgroupService.findOneOrFail(ref);
+    const user = await this.userService.findOneOrFail(userId);
+
+    // TODO
+  }
+
   async addCycle(ref: Required<GroupRef>, input: CreateCycle): Promise<Cycle> {
     this.logger.debug(
       `Adding cycle (user ${ref.uid}) for group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
 
     return await this.cycleService.create(ref, input);
+  }
+
+  async updateCycle() {
+    // TODO
+  }
+
+  async removeCycle() {
+    // TODO
   }
 
   /**

@@ -10,12 +10,13 @@ import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import HeroNavbar from '@/common/components/hero-navbar';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { LINK_PROFILE, LINKS_AUTH } from '@/common/constant/navigation.constant';
+import { LINK_GROUPS, LINK_TRAINING, LINK_USERS, LINKS_AUTH } from '@/common/constant/navigation.constant';
 import toast from 'react-hot-toast';
 import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { useLocalStorage } from 'usehooks-ts';
 import { CommonService } from '@/common/service/common.service';
+import { UserRole } from '@/user/enum/user-role.enum';
 
 export default function Page() {
   const router = useRouter();
@@ -29,11 +30,20 @@ export default function Page() {
     try {
       const result = await FirebaseAuthUtil.login(email, password);
       const tokenResult = await result.user.getIdTokenResult();
+
+      const role = tokenResult.claims.role as UserRole;
+      const mapper = {
+        [UserRole.ATHLETE]: LINK_TRAINING,
+        [UserRole.TRAINER]: LINK_GROUPS,
+        [UserRole.MANAGER]: LINK_GROUPS,
+        [UserRole.ADMIN]: LINK_USERS,
+      };
+
       setToken(tokenResult.token);
       toast.success('Logged in successfully');
 
       await CommonService.instance.generic.sleep(0.25);
-      router.push(LINK_PROFILE.href);
+      router.push(mapper[role].href);
     } catch (e: any) {
       toast.error(e.message);
     }

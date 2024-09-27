@@ -33,6 +33,6 @@ import { TrainingSupersetService } from './service/training-superset.service';
     TrainingComponentService,
     TrainingService,
   ],
-  exports: [TrainingService],
+  exports: [TrainingService, TrainingExerciseUserDataService],
 })
 export class TrainingModule {}

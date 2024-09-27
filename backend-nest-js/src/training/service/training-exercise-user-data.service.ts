@@ -144,6 +144,43 @@ export class TrainingExerciseUserDataService {
   }
 
   /**
+   * Create training exercise user data for a single user.
+   */
+  async create(
+    ref: Required<TrainingExerciseRef>,
+    userId: string,
+    input: TrainingExerciseMeta,
+  ): Promise<TrainingExerciseUserData> {
+    const bodyweight = await this.userRepository.getBodyweight(userId);
+    const userData = await this.trainingExerciseUserDataRepository.getDoc({
+      ...ref,
+      userId,
+    });
+
+    const workloadValue = this.calculateWorkloadValue(
+      input.workloadType,
+      input.workloadValue,
+      bodyweight,
+      userData ? [userData] : [],
+    );
+
+    const data: TrainingExerciseUserData = {
+      userId,
+      exerciseId: ref.exerciseId,
+      workloadValue,
+      completedSets: 0,
+    };
+
+    const docRef = this.trainingExerciseUserDataRepository.doc({
+      ...ref,
+      userId,
+    });
+
+    await docRef.set(data);
+    return data;
+  }
+
+  /**
    * Updates training exercise user data for group members. It takes exercise
    * meta, calculates individual values for each member and updates them in the
    * correct training component exercise user data document.

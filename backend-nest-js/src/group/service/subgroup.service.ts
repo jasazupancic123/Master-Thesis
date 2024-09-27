@@ -129,6 +129,7 @@ export class SubgroupService {
     const subgroupId = await this.subgroupRepository.addDoc(ref, data);
     return {
       id: subgroupId,
+      groupId: ref.groupId,
       ...data,
       createdAt: new Date(),
       updatedAt: new Date(),

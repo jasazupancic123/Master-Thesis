@@ -46,7 +46,7 @@ export class UserRepository
     const sorted = bodyweight.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
-    
+
     return sorted.length ? sorted[sorted.length - 1].weight : 0;
   }
 
@@ -90,6 +90,18 @@ export class UserRepository
     await this.doc(id).update({ ...data, updatedAt: Timestamp.now() });
   }
 
+  async addGroup(id: string, groupId: string) {
+    await this.doc(id).update({
+      groupsIds: FieldValue.arrayUnion(groupId),
+    });
+  }
+
+  async removeGroup(id: string, groupId: string) {
+    await this.doc(id).update({
+      groupsIds: FieldValue.arrayRemove(groupId),
+    });
+  }
+
   doc(id: string): DocumentReference {
     return this.collection().doc(id);
   }
@@ -114,6 +126,7 @@ export class UserRepository
     return {
       id: snapshot.id,
       level: data.level,
+      groupsIds: data.groupsIds || [],
       bodyweight: (data.bodyweight || []).map((item: any) => ({
         weight: item.weight,
         createdAt: (item.createdAt as Timestamp).toDate(),
