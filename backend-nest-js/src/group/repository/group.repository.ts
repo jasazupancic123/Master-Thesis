@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
+  CollectionGroup,
   CollectionReference,
   DocumentReference,
   DocumentSnapshot,
@@ -14,15 +15,15 @@ import {
   UserRef,
 } from '../../common/type/firebase-firestore.type';
 import { Group } from '../entity/group.entity';
-import { CommonService } from '../../common/service/common.service';
 import { UserRepository } from '../../user/repository/user.repository';
+import { FirebaseService } from '../../firebase/firebase.service';
 
 @Injectable()
 export class GroupRepository
   implements FirestoreCollectionRepository<Group, UserRef>
 {
   constructor(
-    private readonly commonService: CommonService,
+    private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
   ) {}
 
@@ -70,6 +71,12 @@ export class GroupRepository
     return this.userRepository
       .doc(ref.uid)
       .collection(FirestoreCollection.GROUP);
+  }
+
+  subgroupsCollectionGroup(): CollectionGroup {
+    return this.firebaseService.firestore.collectionGroup(
+      FirestoreCollection.SUBGROUP,
+    );
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Group {

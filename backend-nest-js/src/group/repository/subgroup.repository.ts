@@ -44,6 +44,7 @@ export class SubgroupRepository
 
   async addDoc(ref: Required<GroupRef>, input: Partial<Subgroup>) {
     const result = await this.collection(ref).add({
+      groupId: ref.groupId,
       name: input.name,
       cycleId: input.cycleId,
       membersIds: input.membersIds,
@@ -78,6 +79,7 @@ export class SubgroupRepository
       id: snapshot.id,
       name: data.name,
       cycleId: data.cycleId,
+      groupId: data.groupId,
       membersIds: data.membersIds,
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),

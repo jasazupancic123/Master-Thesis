@@ -11,11 +11,14 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/app-provider';
 import { Training } from '@/training/entity/training.entity';
 import Stack from '@mui/material/Stack';
-import TrainingDay from '@/group/components/training-day';
 import dayjs from 'dayjs';
+import Typography from '@mui/material/Typography';
+import AthleteTrainingExerciseCard from '@/training/components/athlete-training-exercise-card';
+import { Box } from '@mui/material';
+import { CommonService } from '@/common/service/common.service';
 
 function Page() {
-  const { token } = useAppContext();
+  const { token, components } = useAppContext();
   const [selected, setSelected] = useState<{
     cycle: Cycle | null,
     trainings: Training[],
@@ -40,8 +43,9 @@ function Page() {
           from: dayjs().startOf('day').toDate(),
           to: dayjs().endOf('day').toDate(),
         });
-        
-        setSelected(prev => ({ ...prev, trainings }));
+
+        const populated = trainings.map(training => CommonService.instance.firebase.firestore.populateTraining(training, components.flat));
+        setSelected(prev => ({ ...prev, trainings: populated }));
       } catch (e) {
         console.error('Error fetching trainings:', e);
       }
@@ -71,11 +75,23 @@ function Page() {
       />
 
       {/* Training set groups with set exercises */}
-      {selected.cycle?.group && <TrainingDay
-        group={selected.cycle.group}
-        cycle={selected.cycle}
-        trainings={selected.trainings}
-      />}
+      {selected.cycle?.group && <>
+        {selected.trainings.map((training, i) => (
+          <Box key={i}>
+            <Typography variant="h6">
+              {dayjs(training.from).format('DD/MM/YYYY')} - {dayjs(training.to).format('DD/MM/YYYY')}
+            </Typography>
+
+            <Stack spacing={2}>
+              {training.components.map((component) => (
+                <Box key={component.componentId}>
+                  <AthleteTrainingExerciseCard component={component} />
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        ))}
+      </>}
     </Stack>
   );
 }

@@ -12,6 +12,7 @@ import { CommonService } from '@/common/service/common.service';
 import { AppContextType } from '@/common/type/context.type';
 import { theme } from '@/app/style';
 import { ThemeProvider } from '@mui/material';
+import { TreeComponent } from '@/component/type/component.type';
 
 interface Props {
   children: React.ReactNode;
@@ -51,7 +52,7 @@ export function AppProvider({ children }: Props) {
         idPropertyName: 'id',
         parentIdPropertyName: 'parent',
         childrenPropertyName: 'children',
-      }),
+      }) as unknown as TreeComponent[],
     },
   }}>
     <ThemeProvider theme={theme}>

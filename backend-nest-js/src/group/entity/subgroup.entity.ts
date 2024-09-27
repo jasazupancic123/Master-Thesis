@@ -15,6 +15,11 @@ export class Subgroup extends BaseEntity {
   @Expose()
   cycleId: string; // cycle to which the subgroup belongs to
 
+  @IsString()
+  @ApiProperty()
+  @Expose()
+  groupId: string;
+
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @ApiProperty()

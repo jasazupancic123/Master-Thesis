@@ -10,12 +10,17 @@ import Logo from '@/common/components/logo';
 import Typography from '@mui/material/Typography';
 import { usePathname, useRouter } from 'next/navigation';
 import Stack from '@mui/material/Stack';
+import { useAuth } from '@/context/auth-provider';
+import IconButton from '@mui/material/IconButton';
+import { LogoutRounded } from '@mui/icons-material';
 
 interface Props {
   title?: string;
 }
 
 export default function SidebarAthlete(props: Props) {
+  const { logout } = useAuth();
+
   const router = useRouter();
   const path = usePathname();
   const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link) => link.href);
@@ -77,6 +82,11 @@ export default function SidebarAthlete(props: Props) {
               sx={{ color: index === i ? '#1EB980' : '#fff' }}
             />
           ))}
+
+          {/* Logout Button */}
+          <IconButton onClick={logout}>
+            <LogoutRounded />
+          </IconButton>
         </BottomNavigation>
       </Box>
     </>

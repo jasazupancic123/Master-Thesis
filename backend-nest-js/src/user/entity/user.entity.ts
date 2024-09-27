@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, ValidateNested } from 'class-validator';
+import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../common/type/firebase-auth.type';
@@ -13,6 +13,11 @@ export class UserEntity extends BaseEntity {
   @Expose()
   @ApiProperty({ example: SportLevel.BEGINNER })
   level: SportLevel;
+
+  @IsString({ each: true })
+  @Expose()
+  @ApiProperty()
+  groupsIds: string[]; // array of group ids user is member of
 
   @ValidateNested({ each: true })
   @Type(() => Bodyweight)

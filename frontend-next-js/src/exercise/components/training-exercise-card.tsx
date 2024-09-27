@@ -204,10 +204,12 @@ const sx = {
   '& .MuiSelect-icon': { display: 'none' },
   '& .MuiSelect-select': {
     padding: 0,
+    paddingLeft: '4px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     height: 25,
+    width: 75,
     fontSize: '0.7rem',
     color: 'lightgrey',
     backgroundColor: 'transparent',
@@ -227,10 +229,11 @@ interface SetExerciseAttributeProps {
   state: State;
   onChange: (data: State) => void;
   options: SetExerciseOption[];
+  disabled?: boolean;
 }
 
-function SetExerciseAttribute(props: SetExerciseAttributeProps) {
-  const { options, state, onChange } = props;
+export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
+  const { options, state, onChange, disabled = false } = props;
 
   return <Stack direction="column">
     {/* On option change */}
@@ -240,6 +243,7 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         sx={sx['& .MuiSelect-select']}
         disableUnderline={true}
         value={state.option}
+        disabled={disabled}
         onChange={(e) => {
           const value = e.target.value as string;
           const option = options.find(option => option.label === value);
@@ -266,11 +270,13 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         variant="filled"
         size="small"
         sx={sx}
+        disabled={disabled}
       >
         <Select
           variant="filled"
           sx={sx['& .MuiSelect-select']}
           value={state.value}
+          disabled={disabled}
           onChange={(e) => {
             const value = e.target.value as string;
             onChange({ ...state, value });
@@ -286,6 +292,7 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         value={state.value}
         type={state.type}
         size="small"
+        disabled={disabled}
         onChange={(e) => {
           const value = e.target.value;
           onChange({ ...state, value });
@@ -295,6 +302,7 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           mt: 0,
           bgcolor: 'transparent',
           height: sx['& .MuiSelect-select'].height,
+          width: sx['& .MuiSelect-select'].width,
           '& .MuiInputBase-root': {
             borderBottom: 'none',
             border: 'none',
@@ -302,7 +310,7 @@ function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           '& .MuiInputBase-input': {
             border: 'none',
             borderBottom: 'none',
-            padding: '2px',
+            padding: '1px',
             textAlign: 'center',
             backgroundColor: 'transparent',
             display: 'flex',

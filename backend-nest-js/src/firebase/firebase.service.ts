@@ -7,13 +7,13 @@ import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
 import { Auth, ListUsersResult, UserIdentifier } from 'firebase-admin/auth';
 import { Storage } from 'firebase-admin/storage';
-import { Firestore } from 'firebase-admin/firestore';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
   public readonly app: App;
   public readonly auth: Auth;
-  public readonly firestore: Firestore;
+  public readonly firestore: admin.firestore.Firestore;
   public readonly storage: Storage;
   private logger = new Logger(this.constructor.name);
 

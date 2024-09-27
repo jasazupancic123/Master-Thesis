@@ -9,17 +9,30 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
-import { LINK_PROFILE, LINKS_AUTH, LINKS_NAVBAR } from '@/common/constant/navigation.constant';
+import {
+  LINK_GROUPS,
+  LINK_TRAINING,
+  LINK_USERS,
+  LINKS_AUTH,
+  LINKS_NAVBAR,
+} from '@/common/constant/navigation.constant';
 import NextLink from 'next/link';
 import { Divider, Drawer } from '@mui/material';
 import Logo from '@/common/components/logo';
 import { useAuth } from '@/context/auth-provider';
-import { AuthContextType } from '@/common/type/context.type';
+import { UserRole } from '@/user/enum/user-role.enum';
 
 export default function HeroNavbar({ showLogin = true }) {
-  const { user, logout } = useAuth() as AuthContextType;
+  const { user, logout, role } = useAuth();
   const [open, setOpen] = React.useState(false);
   const toggleDrawer = (newOpen: boolean) => () => setOpen(newOpen);
+
+  const mainPageMapper = {
+    [UserRole.ATHLETE]: LINK_TRAINING,
+    [UserRole.TRAINER]: LINK_GROUPS,
+    [UserRole.MANAGER]: LINK_GROUPS,
+    [UserRole.ADMIN]: LINK_USERS,
+  };
 
   return (
     <div>
@@ -49,8 +62,8 @@ export default function HeroNavbar({ showLogin = true }) {
               </Box>
             </Box>
 
-            {user ? <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
-              <NextLink href={LINK_PROFILE.href} passHref>Training</NextLink>
+            {user && role?.[0] ? <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
+              <NextLink href={mainPageMapper[role[0]].href} passHref>Training</NextLink>
               <NextLink href="#" onClick={logout}>Sign Out</NextLink>
             </Box> : showLogin ? (
               <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>

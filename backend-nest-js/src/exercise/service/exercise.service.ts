@@ -231,6 +231,14 @@ export class ExerciseService {
     await batch.commit();
   }
 
+  async update() {
+    // TODO
+  }
+
+  async remove() {
+    // TODO
+  }
+
   /**
    * Checks if provided exercises are valid for a training. It checks that all
    * exercises' leaf components belong to the training's root components.

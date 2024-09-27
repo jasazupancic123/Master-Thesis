@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: Props) => {
 
   async function logout(): Promise<void> {
     await auth.signOut();
-    await CommonService.instance.generic.sleep(0.25);
+    await CommonService.instance.generic.sleep(0.3);
     router.push(LINKS_AUTH.login.href);
     setUser(null);
     setRole([]);

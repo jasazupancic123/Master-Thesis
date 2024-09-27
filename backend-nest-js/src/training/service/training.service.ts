@@ -32,6 +32,7 @@ import { TrainingExerciseService } from './training-exercise.service';
 import { TrainingComponentService } from './training-component.service';
 import {
   CycleRef,
+  GroupRef,
   SubgroupRef,
   TrainingComponentRef,
   TrainingExerciseRef,
@@ -52,6 +53,8 @@ import { CreateTrainingSuperset } from '../type/training-superset.type';
 import { CreateTrainingComponent } from '../type/training-component.type';
 import { Component } from '../../component/entity/component.entity';
 import { CreateTraining } from '../type/training.type';
+import { GroupRepository } from '../../group/repository/group.repository';
+import { TrainingExerciseUserDataService } from './training-exercise-user-data.service';
 
 @Injectable()
 export class TrainingService {
@@ -67,6 +70,7 @@ export class TrainingService {
     private readonly exerciseService: ExerciseService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
+    private readonly groupRepository: GroupRepository,
     @Inject(forwardRef(() => SubgroupService))
     private readonly subgroupService: Wrapper<SubgroupService>,
     @Inject(forwardRef(() => CycleService))
@@ -75,6 +79,7 @@ export class TrainingService {
     private readonly trainingExerciseService: TrainingExerciseService,
     private readonly trainingComponentService: TrainingComponentService,
     private readonly trainingSupersetService: TrainingSupersetService,
+    private readonly trainingExerciseUserDataService: TrainingExerciseUserDataService,
   ) {}
 
   async findOne(
@@ -139,6 +144,35 @@ export class TrainingService {
     return trainings;
   }
 
+  async findAllByGroup(
+    ref: Required<GroupRef>,
+    options?: FindManyOptions<Training> & { authorize?: boolean },
+  ): Promise<Training[]> {
+    const group = await this.groupService.findOneOrFail(ref, {
+      authorize: options?.authorize,
+      populate: ['cycles', 'cycles.trainings'],
+    });
+
+    // populate trainings
+    if (options?.populate)
+      await Promise.all(
+        group.cycles.map(({ id, trainings }) => {
+          trainings.map(async (training) => {
+            const trainingRef = {
+              ...ref,
+              cycleId: id,
+              trainingId: training.id,
+              subgroupId: null,
+            };
+
+            await this.populate(trainingRef, training, options.populate);
+          });
+        }),
+      );
+
+    return group.cycles.reduce((acc, cycle) => acc.concat(cycle.trainings), []);
+  }
+
   /**
    * Finds all training by member for the given cycle reference. Each member
    * can be part of the main (parent) group and many subgroups and each subgroup
@@ -158,18 +192,43 @@ export class TrainingService {
     memberId: string,
     options?: FindManyOptions<Training>,
   ): Promise<Training[]> {
-    // find cycle
-    const cycle = await this.cycleService.findOneOrFail(ref, {
+    // parent group trainings
+    const trainings = await this.findAll(ref, { filter: options?.filter });
+
+    // find all subgroups that user is part of in the given cycle
+    let query = this.groupRepository
+      .subgroupsCollectionGroup()
+      .where('groupId', '==', ref.groupId)
+      .where('membersIds', 'array-contains', memberId);
+
+    if (options?.filter) {
+      const { from, to } = options.filter;
+      if (from && to)
+        query = query
+          .where('from', '>=', Timestamp.fromDate(from.value))
+          .where('to', '<=', Timestamp.fromDate(to.value));
+      else if (from)
+        query = query.where(
+          'from',
+          from.op || '>=',
+          Timestamp.fromDate(from.value),
+        );
+      else if (to)
+        query = query.where('to', to.op || '<=', Timestamp.fromDate(to.value));
+    }
+
+    const subgroups = (await query.get()).docs.map((doc) =>
+      this.subgroupRepository.serialize(doc),
+    );
+
+    /*const cycle = await this.cycleService.findOneOrFail(ref, {
       authorize: true,
       populate: ['subgroups'],
     });
 
-    const trainings = await this.findAll(ref); // parent group trainings
-
-    // find all subgroups that user is part of in the given cycle
     const subgroups = cycle.subgroups.filter((subgroup) =>
       this.groupService.isMember(memberId, subgroup),
-    );
+    );*/
 
     // find all subgroup trainings
     const subgroupTrainings = trainings.filter((training) =>
@@ -375,6 +434,17 @@ export class TrainingService {
     };
   }
 
+  async update() {
+    // TODO
+  }
+
+  async remove() {
+    // TODO
+  }
+
+  /**
+   * For trainer to add components to the training.
+   */
   async addComponents(
     ref: Required<TrainingRef>,
     input: CreateTrainingComponent[],
@@ -416,6 +486,17 @@ export class TrainingService {
     return await this.trainingComponentService.createMany(ref, input);
   }
 
+  async updateComponent() {
+    // TODO
+  }
+
+  async removeComponent() {
+    // TODO
+  }
+
+  /**
+   * For trainer to add supersets to training component.
+   */
   async addSuperset(
     ref: Required<TrainingComponentRef>,
     input: CreateTrainingSuperset,
@@ -452,6 +533,17 @@ export class TrainingService {
     });
   }
 
+  async updateSuperset() {
+    // TODO
+  }
+
+  async removeSuperset() {
+    // TODO
+  }
+
+  /**
+   * For trainer to add exercises to training superset
+   */
   async addExercises(
     ref: Required<TrainingSupersetRef>,
     input: CreateTrainingExercise[],
@@ -495,6 +587,9 @@ export class TrainingService {
     });
   }
 
+  /**
+   * For trainer to update training exercise and its exercise data.
+   */
   async updateExercise(
     ref: Required<TrainingExerciseRef>,
     input: UpdateTrainingExercise,
@@ -525,6 +620,14 @@ export class TrainingService {
 
     // update training exercise and its user data
     return await this.trainingExerciseService.update(ref, input);
+  }
+
+  /**
+   * For trainer to remove exercise from training superset.
+   */
+  async removeExercise(ref: Required<TrainingExerciseRef>): Promise<void> {
+    this.logger.debug(`Removing exercise from training (user ${ref.uid})`);
+    // TODO
   }
 
   private filter(query: Query, filter: Filter<Training>) {
