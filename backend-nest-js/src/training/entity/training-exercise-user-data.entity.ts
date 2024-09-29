@@ -14,6 +14,24 @@ export class TrainingExerciseUserData {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
+  trainingId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  componentId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  supersetId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
   exerciseId: string;
 
   @IsStringOrNumber()

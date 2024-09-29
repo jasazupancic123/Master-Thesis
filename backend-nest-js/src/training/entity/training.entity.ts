@@ -1,28 +1,51 @@
 import { BaseEntity } from '../../common/entity/base.entity';
-import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { TrainingComponent } from './training-component.entity';
 import { Subgroup } from '../../group/entity/subgroup.entity';
-import { Cycle } from '../../group/entity/cycle.entity';
+import { Group } from '../../group/entity/group.entity';
 
 export class Training extends BaseEntity {
   @IsString()
-  @IsOptional()
-  @ApiPropertyOptional()
+  @IsNotEmpty()
+  @ApiProperty()
   @Expose()
-  subgroupId?: string | null;
-  subgroup: Subgroup | null; // virtual
-  /*if null, then it's a training for cycle's group subgroups also have date
-  until which they are valid, by default they are valid only one day, so trainer
-  can create new subgroups every day, and the next day members of subgroup are
-  already available in the parent group*/
+  groupId: string;
+  group?: Group;
 
   @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  ownerId: string; // owner of the group
+
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiProperty()
+  @Expose()
+  membersIds: string[]; // all members of the group
+
+  @IsString()
+  @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
-  copiedFromId?: string | null; // if this training is copied from another training
+  subgroupId?: string;
+  subgroup?: Subgroup;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  copiedFromId?: string; // if this training is copied from another training
 
   @IsDate()
   @ApiProperty()
@@ -41,6 +64,4 @@ export class Training extends BaseEntity {
   @ApiProperty()
   @Expose()
   components: TrainingComponent[];
-
-  cycle: Cycle | null; // virtual
 }

@@ -2,7 +2,10 @@ import { Subgroup } from '../entity/subgroup.entity';
 
 export type CreateSubgroup = Pick<
   Subgroup,
-  'name' | 'from' | 'to' | 'membersIds' | 'cycleId'
+  'name' | 'from' | 'to' | 'membersIds'
 >;
 
-export type UpdateSubgroup = Partial<Pick<Subgroup, 'name' | 'membersIds'>>;
+/**
+ * Note - `from` cannot be updated, since it is equal to `createdAt`.
+ */
+export type UpdateSubgroup = Partial<Pick<Subgroup, 'name' | 'to'>>;

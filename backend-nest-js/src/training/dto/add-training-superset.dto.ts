@@ -4,4 +4,4 @@ import { CreateTrainingSuperset } from '../type/training-superset.type';
 
 export class AddTrainingSupersetDto
   extends PickType(TrainingSuperset, ['color', 'exercises'])
-  implements CreateTrainingSuperset {}
+  implements Omit<CreateTrainingSuperset, 'exercises'> {}

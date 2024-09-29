@@ -33,6 +33,8 @@ export interface FirestoreCollectionRepository<
     input: Partial<Model> & Record<string, any>,
   ): Promise<void>;
 
+  deleteDoc(ref: Ref): Promise<void>;
+
   serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
@@ -54,6 +56,8 @@ export interface RootFirestoreCollectionRepository<Model = any> {
     input: Partial<Model> & Record<string, any>,
   ): Promise<void>;
 
+  deleteDoc(id: string): Promise<void>;
+
   serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
@@ -65,13 +69,12 @@ export type ExerciseAttributeValueRef = ExerciseRef & ExerciseAttributeRef;
 
 export type UserRef = { uid?: string }; // auth user uid
 export type WellnessRef = UserRef & { wellnessId?: string };
-export type GroupRef = UserRef & { groupId?: string };
+
+export type GroupRef = { groupId?: string };
 export type SubgroupRef = GroupRef & { subgroupId?: string };
 export type CycleRef = GroupRef & { cycleId?: string };
-export type TrainingRef = CycleRef & {
-  trainingId?: string;
-  subgroupId?: string;
-};
+
+export type TrainingRef = { trainingId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
 export type TrainingSupersetRef = TrainingComponentRef & {
   supersetId?: string;

@@ -8,67 +8,67 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import {
-  CycleRef,
-  FirestoreCollectionRepository,
-  TrainingRef,
-} from '../../common/type/firebase-firestore.type';
+import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
 import { Training } from '../entity/training.entity';
-import { CommonService } from '../../common/service/common.service';
-import { CycleRepository } from '../../group/repository/cycle.repository';
+import { FirebaseService } from '../../firebase/firebase.service';
 
 @Injectable()
 export class TrainingRepository
-  implements FirestoreCollectionRepository<Training, TrainingRef>
+  implements RootFirestoreCollectionRepository<Training>
 {
-  constructor(
-    private readonly commonService: CommonService,
-    private readonly cycleRepository: CycleRepository,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getDocs(
-    ref: Required<CycleRef>,
     query: (query: Query) => Query = (query) => query,
   ): Promise<Training[]> {
-    const snapshot = await query(this.collection(ref)).get();
+    const snapshot = await query(this.collection()).get();
     return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
-  async getDoc(ref: Required<TrainingRef>): Promise<Training | null> {
-    const snapshot = await this.doc(ref).get();
+  async getDoc(id: string): Promise<Training | null> {
+    const snapshot = await this.doc(id).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(
-    ref: Required<CycleRef>,
-    input: Partial<Training>,
-  ): Promise<string> {
-    const result = await this.collection(ref).add({
+  async addDoc(input: Partial<Training>): Promise<string> {
+    const result = await this.collection().add({
+      groupId: input.groupId,
+      ownerId: input.ownerId,
+      membersIds: input.membersIds || [],
       subgroupId: input.subgroupId || null,
       copiedFromId: input.copiedFromId || null,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      deletedAt: null,
     });
 
     return result.id;
   }
 
-  async updateDoc(ref: Required<TrainingRef>, input: Partial<Training>) {
-    const data = this.commonService.object.clean(input);
-    await this.doc(ref).update(data);
+  async updateDoc(id: string, input: Partial<Training>) {
+    await this.doc(id).update({
+      ...(input.membersIds && { membersIds: input.membersIds }),
+      ...(input.from && { from: Timestamp.fromDate(input.from) }),
+      ...(input.to && { to: Timestamp.fromDate(input.to) }),
+      updatedAt: Timestamp.now(),
+    });
   }
 
-  doc(ref: Required<TrainingRef>): DocumentReference {
-    return this.collection(ref).doc(ref.trainingId);
+  async deleteDoc(id: string) {
+    await this.doc(id).update({ deletedAt: Timestamp.now() });
   }
 
-  collection(ref: Required<CycleRef>): CollectionReference {
-    return this.cycleRepository
-      .doc(ref)
-      .collection(FirestoreCollection.TRAINING);
+  doc(id: string): DocumentReference {
+    return this.collection().doc(id);
+  }
+
+  collection(): CollectionReference {
+    return this.firebaseService.firestore.collection(
+      FirestoreCollection.TRAINING,
+    );
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Training {
@@ -76,6 +76,9 @@ export class TrainingRepository
 
     return {
       id: snapshot.id,
+      groupId: data.groupId,
+      ownerId: data.ownerId,
+      membersIds: data.membersIds,
       subgroupId: data.subgroupId,
       copiedFromId: data.copiedFromId || null,
       from: (data.from as Timestamp).toDate(),
@@ -83,6 +86,7 @@ export class TrainingRepository
       components: [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
-    } as Training;
+      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
+    };
   }
 }

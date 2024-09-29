@@ -10,6 +10,7 @@ Project for managers, trainers and athletes to track their workouts more efficie
 ### TODO
 
 - Go through new update & remove methods for multiple entities (groups, cycles, subgroups, adding/removing members to groups/subgroups, trianing components, training supersets, training exercises) and complete them
+- Change subgroups storage by adding `cycles` subcollections (same as in `groups`), so that querying for trainings will be easier
 
 ### Minor Fixes
 

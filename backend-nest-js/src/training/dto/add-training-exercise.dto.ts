@@ -7,7 +7,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AddTrainingExerciseDto
   extends PickType(TrainingExercise, ['exerciseId', 'meta', 'color'])
-  implements CreateTrainingExercise {}
+  implements Omit<CreateTrainingExercise, 'membersIds'> {}
 
 export class AddTrainingExercisesDto {
   @ValidateNested({ each: true })

@@ -5,8 +5,8 @@ import { Expose } from 'class-transformer';
 import { CreateTraining } from '../type/training.type';
 
 export class CreateTrainingDto
-  extends PickType(Training, ['subgroupId', 'from', 'to'])
-  implements CreateTraining
+  extends PickType(Training, ['groupId', 'ownerId', 'subgroupId', 'from', 'to'])
+  implements Omit<CreateTraining, 'membersIds'>
 {
   @IsString({ each: true })
   @IsNotEmpty({ each: true })

@@ -7,3 +7,7 @@ export type CreateTrainingComponent = Pick<
 > & {
   supersets?: CreateTrainingSuperset[];
 };
+
+export type UpdateTrainingComponent = Partial<
+  Pick<TrainingComponent, 'componentId' | 'color' | 'order'>
+>;

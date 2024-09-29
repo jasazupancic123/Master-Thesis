@@ -16,7 +16,7 @@ export class TrainingComponent {
   @IsNotEmpty()
   @Expose()
   componentId: string; // check that component is root component
-  component: Component | null; // virtual
+  component?: Component; // virtual
 
   @IsInt()
   @Min(0)

@@ -63,7 +63,7 @@ export class TrainingExerciseRepository
     await this.doc(ref).set({
       exerciseId: ref.exerciseId,
       order: data.order,
-      color: data.color || this.commonService.color.random(),
+      color: data.color,
       meta: {
         sets: data.meta?.sets || 3,
         setType: data.meta?.setType || SetType.REPS,
@@ -85,6 +85,10 @@ export class TrainingExerciseRepository
   ) {
     const clean = this.commonService.object.clean(data);
     await this.doc(ref).update(clean);
+  }
+
+  async deleteDoc(ref: Required<TrainingExerciseRef>) {
+    await this.doc(ref).delete();
   }
 
   doc(ref: Required<TrainingExerciseRef>): DocumentReference {

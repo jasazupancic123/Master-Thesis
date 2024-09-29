@@ -57,6 +57,6 @@ export class UserController {
     @Body() input: CreateWellnessDto,
   ) {
     const ref = { uid: user.uid };
-    return await this.userService.submitWellness(ref, input);
+    return await this.userService.addWellness(ref, input);
   }
 }

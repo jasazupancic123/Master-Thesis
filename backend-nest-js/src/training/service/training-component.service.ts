@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { TrainingComponentRepository } from '../repository/training-component.repository';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingRef } from '../../common/type/firebase-firestore.type';
+import {
+  TrainingComponentRef,
+  TrainingRef,
+} from '../../common/type/firebase-firestore.type';
 import { TrainingSuperset } from '../entity/training-superset.entity';
 import { TrainingSupersetService } from './training-superset.service';
 import { CommonService } from '../../common/service/common.service';
-import { CreateTrainingComponent } from '../type/training-component.type';
+import {
+  CreateTrainingComponent,
+  UpdateTrainingComponent,
+} from '../type/training-component.type';
 
 @Injectable()
 export class TrainingComponentService {
@@ -55,5 +61,26 @@ export class TrainingComponentService {
     }
 
     return result;
+  }
+
+  async update(
+    ref: Required<TrainingComponentRef>,
+    input: UpdateTrainingComponent,
+  ): Promise<TrainingComponent> {
+    await this.trainingComponentRepository.updateDoc(ref, input);
+    return {
+      componentId: ref.componentId,
+      color: input.color,
+      order: input.order,
+      supersets: [],
+    };
+  }
+
+  async remove(ref: Required<TrainingComponentRef>): Promise<void> {
+    const supersets = await this.trainingSupersetService.findAll(ref);
+    for (const { id: supersetId } of supersets)
+      await this.trainingSupersetService.remove({ ...ref, supersetId });
+
+    await this.trainingComponentRepository.deleteDoc(ref);
   }
 }

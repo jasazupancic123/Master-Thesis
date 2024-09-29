@@ -13,18 +13,19 @@ import {
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 
 @Injectable()
-export class ExerciseAttributeRepository implements RootFirestoreCollectionRepository<ExerciseAttribute> {
+export class ExerciseAttributeRepository
+  implements RootFirestoreCollectionRepository<ExerciseAttribute>
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-  ) {
-  }
+  ) {}
 
   async getDocs(
-    query: (query: Query) => Query = query => query,
+    query: (query: Query) => Query = (query) => query,
   ): Promise<ExerciseAttribute[]> {
     const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async getDoc(field: string): Promise<ExerciseAttribute | null> {
@@ -34,8 +35,7 @@ export class ExerciseAttributeRepository implements RootFirestoreCollectionRepos
   }
 
   async addDoc(input: Partial<ExerciseAttribute>) {
-    if (!input.field)
-      throw new Error('Exercise attribute field is required');
+    if (!input.field) throw new Error('Exercise attribute field is required');
 
     if (input.type === 'select' && !input.values?.length)
       throw new Error('Select attribute type must have values');
@@ -57,15 +57,23 @@ export class ExerciseAttributeRepository implements RootFirestoreCollectionRepos
     await this.doc(field).update(data);
   }
 
+  async deleteDoc(field: string) {
+    await this.doc(field).update({ deleted: true });
+  }
+
   doc(field: string): DocumentReference {
     return this.collection().doc(field);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(FirestoreCollection.EXERCISE_ATTRIBUTE);
+    return this.firebaseService.firestore.collection(
+      FirestoreCollection.EXERCISE_ATTRIBUTE,
+    );
   }
 
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): ExerciseAttribute {
+  serialize(
+    snapshot: DocumentSnapshot | QueryDocumentSnapshot,
+  ): ExerciseAttribute {
     const data = snapshot.data();
 
     return {
