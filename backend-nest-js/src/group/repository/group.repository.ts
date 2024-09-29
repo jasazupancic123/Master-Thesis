@@ -9,47 +9,37 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import {
-  FirestoreCollectionRepository,
-  GroupRef,
-  UserRef,
-} from '../../common/type/firebase-firestore.type';
+import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
 import { Group } from '../entity/group.entity';
-import { UserRepository } from '../../user/repository/user.repository';
 import { FirebaseService } from '../../firebase/firebase.service';
 
 @Injectable()
 export class GroupRepository
-  implements FirestoreCollectionRepository<Group, UserRef>
+  implements RootFirestoreCollectionRepository<Group>
 {
-  constructor(
-    private readonly firebaseService: FirebaseService,
-    private readonly userRepository: UserRepository,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getDocs(
-    ref: Required<UserRef>,
     query: (query: Query) => Query = (query) => query,
   ): Promise<Group[]> {
-    const snapshot = await query(this.collection(ref)).get();
+    const snapshot = await query(this.collection()).get();
     return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
-  async getDoc(ref: Required<GroupRef>): Promise<Group | null> {
-    const snapshot = await this.doc(ref).get();
+  async getDoc(id: string): Promise<Group | null> {
+    const snapshot = await this.doc(id).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(ref: Required<UserRef>, input: Partial<Group>) {
-    const result = await this.collection(ref).add({
+  async addDoc(input: Partial<Group>) {
+    const result = await this.collection().add({
       name: input.name,
       ownerId: input.ownerId,
       membersIds: input.membersIds,
-      from: null,
-      to: null,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      deletedAt: null,
     });
 
     // add group id to the document for querying by collection group
@@ -57,20 +47,22 @@ export class GroupRepository
     return result.id;
   }
 
-  async updateDoc(ref: Required<GroupRef>, input: Partial<Group>) {
-    await this.doc(ref).update({
+  async updateDoc(id: string, input: Partial<Group>) {
+    await this.doc(id).update({
       ...(input.name && { name: input.name }),
     });
   }
 
-  doc(ref: Required<GroupRef>): DocumentReference {
-    return this.collection(ref).doc(ref.groupId);
+  async deleteDoc(id: string) {
+    await this.doc(id).update({ deletedAt: Timestamp.now() });
   }
 
-  collection(ref: Required<UserRef>): CollectionReference {
-    return this.userRepository
-      .doc(ref.uid)
-      .collection(FirestoreCollection.GROUP);
+  doc(id: string): DocumentReference {
+    return this.collection().doc(id);
+  }
+
+  collection(): CollectionReference {
+    return this.firebaseService.firestore.collection(FirestoreCollection.GROUP);
   }
 
   subgroupsCollectionGroup(): CollectionGroup {
@@ -94,6 +86,7 @@ export class GroupRepository
       cycles: [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
+      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
     };
   }
 }

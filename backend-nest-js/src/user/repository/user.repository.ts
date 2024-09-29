@@ -44,7 +44,7 @@ export class UserRepository
   async getBodyweight(id: string): Promise<number> {
     const { bodyweight } = await this.getDoc(id);
     const sorted = bodyweight.sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+      (a, b) => b.date.getTime() - a.date.getTime(),
     );
 
     return sorted.length ? sorted[sorted.length - 1].weight : 0;
@@ -61,12 +61,12 @@ export class UserRepository
       bodyweight: FieldValue.arrayUnion(
         ...bodyweight.map((item) => ({
           weight: item.weight,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
+          date: Timestamp.now(),
         })),
       ),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      deletedAt: null,
     });
 
     return input.id;
@@ -81,8 +81,7 @@ export class UserRepository
       ...(input.weight && {
         bodyweight: FieldValue.arrayUnion({
           weight: input.weight,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
+          date: Timestamp.now(),
         }),
       }),
     });
@@ -90,16 +89,16 @@ export class UserRepository
     await this.doc(id).update({ ...data, updatedAt: Timestamp.now() });
   }
 
+  async deleteDoc(id: string) {
+    await this.doc(id).update({ deletedAt: Timestamp.now() });
+  }
+
   async addGroup(id: string, groupId: string) {
-    await this.doc(id).update({
-      groupsIds: FieldValue.arrayUnion(groupId),
-    });
+    await this.doc(id).update({ groupsIds: FieldValue.arrayUnion(groupId) });
   }
 
   async removeGroup(id: string, groupId: string) {
-    await this.doc(id).update({
-      groupsIds: FieldValue.arrayRemove(groupId),
-    });
+    await this.doc(id).update({ groupsIds: FieldValue.arrayRemove(groupId) });
   }
 
   doc(id: string): DocumentReference {
@@ -129,8 +128,7 @@ export class UserRepository
       groupsIds: data.groupsIds || [],
       bodyweight: (data.bodyweight || []).map((item: any) => ({
         weight: item.weight,
-        createdAt: (item.createdAt as Timestamp).toDate(),
-        updatedAt: (item.updatedAt as Timestamp).toDate(),
+        date: (item.date as Timestamp).toDate(),
       })),
       groups: data.groups || [],
       wellness: data.wellness || [],

@@ -7,6 +7,7 @@ import {
   DocumentSnapshot,
   Query,
   QueryDocumentSnapshot,
+  Timestamp,
 } from 'firebase-admin/firestore';
 import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
 import { Exercise } from '../entity/exercise.entity';
@@ -51,6 +52,10 @@ export class ExerciseRepository
   async updateDoc(exerciseId: string, input: Partial<Exercise>) {
     const data = this.commonService.object.clean(input);
     await this.doc(exerciseId).update(data);
+  }
+
+  async deleteDoc(exerciseId: string) {
+    await this.doc(exerciseId).update({ deletedAt: Timestamp.now() });
   }
 
   doc(exerciseId: string): DocumentReference {

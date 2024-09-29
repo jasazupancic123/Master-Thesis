@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { User } from '../../common/type/firebase-auth.type';
+import { Group } from './group.entity';
 
 export class Subgroup extends BaseEntity {
   @IsString()
@@ -13,12 +14,8 @@ export class Subgroup extends BaseEntity {
   @IsString()
   @ApiProperty()
   @Expose()
-  cycleId: string; // cycle to which the subgroup belongs to
-
-  @IsString()
-  @ApiProperty()
-  @Expose()
   groupId: string;
+  group?: Group; // virtual
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })

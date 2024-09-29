@@ -45,12 +45,16 @@ export class CycleRepository
     input: Partial<Cycle>,
   ): Promise<string> {
     const result = await this.collection(ref).add({
+      groupId: ref.groupId,
+      ownerId: input.ownerId,
+      membersIds: input.membersIds,
       name: input.name,
       description: input.description || null,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      deletedAt: null,
     });
 
     return result.id;
@@ -61,12 +65,18 @@ export class CycleRepository
     await this.doc(ref).update(data);
   }
 
+  async deleteDoc(ref: Required<CycleRef>) {
+    await this.doc(ref).update({ deletedAt: Timestamp.now() });
+  }
+
   doc(ref: Required<CycleRef>): DocumentReference {
     return this.collection(ref).doc(ref.cycleId);
   }
 
   collection(ref: Required<GroupRef>): CollectionReference {
-    return this.groupRepository.doc(ref).collection(FirestoreCollection.CYCLE);
+    return this.groupRepository
+      .doc(ref.groupId)
+      .collection(FirestoreCollection.CYCLE);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Cycle {
@@ -74,18 +84,20 @@ export class CycleRepository
 
     return {
       id: snapshot.id,
+      groupId: data.groupId,
+      ownerId: data.ownerId,
+      membersIds: data.membersIds,
       name: data.name,
       description: data.description || null,
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),
-      trainings: [],
       weeks: this.commonService.date.weeks(
         data.from.toDate(),
         data.to.toDate(),
       ),
-      subgroups: [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
-    } as Cycle;
+      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
+    };
   }
 }

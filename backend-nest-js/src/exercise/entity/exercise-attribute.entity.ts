@@ -1,4 +1,10 @@
-import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
@@ -8,7 +14,7 @@ export class ExerciseAttribute {
   @IsNotEmpty()
   @Expose()
   field: string; // name of the field in the database
-  
+
   @IsString()
   @ApiProperty()
   @IsNotEmpty()
@@ -37,6 +43,12 @@ export class ExerciseAttribute {
   @IsOptional()
   @Expose()
   values: (string | ExerciseAttributeSelectOption)[] | null; // possible values for select type
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  deleted?: boolean; // is attribute deleted
 }
 
 export class ExerciseAttributeSelectOption {

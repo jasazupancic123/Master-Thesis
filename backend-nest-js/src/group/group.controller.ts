@@ -60,7 +60,7 @@ export class GroupController {
   ) {
     const ref = { uid: user.uid, groupId };
     return await this.groupService.findOneOrFail(ref, {
-      authorize: true,
+      userId: user.uid,
       populate: ['members', 'availableMembersIds', 'subgroups', 'cycles'],
     });
   }
@@ -115,7 +115,7 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
   ) {
-    return await this.cycleService.findActiveCycle(user.uid);
+    return await this.cycleService.findActiveCycleByGroup(user.uid);
   }
 
   @Patch(':groupId/cycle/:cycleId')

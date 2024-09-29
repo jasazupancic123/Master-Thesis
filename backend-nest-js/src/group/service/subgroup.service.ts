@@ -22,28 +22,33 @@ import {
 } from '../../common/type/orm.type';
 import { Query, Timestamp } from 'firebase-admin/firestore';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
+import { CreateSubgroup, UpdateSubgroup } from '../type/subgroup.type';
+import { User } from '../../common/type/firebase-auth.type';
+import { TrainingService } from '../../training/service/training.service';
+import { endOfDay, startOfDay } from 'date-fns';
 
 @Injectable()
 export class SubgroupService {
   constructor(
     private readonly userService: UserService,
     private readonly subgroupRepository: SubgroupRepository,
+    @Inject(forwardRef(() => TrainingService))
+    private readonly trainingService: Wrapper<TrainingService>,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
   ) {}
 
   async findAll(
     ref: Required<GroupRef>,
-    options?: FindManyOptions<Subgroup>,
+    options?: FindManyOptions<Subgroup> & { user?: User },
   ): Promise<Subgroup[]> {
     // find parent references
-    await this.groupService.findOneOrFail(ref);
+    await this.groupService.findOneOrFail(ref, { user: options?.user });
 
     const items = await this.subgroupRepository.getDocs(ref, (collection) => {
-      let query = collection;
+      let query = collection.where('deletedAt', '==', null);
       if (options?.filter) query = this.filter(query, options.filter);
       if (options?.paginate) query = this.paginate(query, options.paginate);
-
       return query;
     });
 
@@ -65,7 +70,7 @@ export class SubgroupService {
    */
   async findAllActive(
     ref: Required<GroupRef>,
-    options?: FindManyOptions<Subgroup>,
+    options?: FindManyOptions<Subgroup> & { user?: User },
   ): Promise<Subgroup[]> {
     return await this.findAll(ref, {
       ...options,
@@ -79,24 +84,26 @@ export class SubgroupService {
 
   async findOne(
     ref: Required<SubgroupRef>,
-    options?: FindOneOptions<Subgroup> & { authorize?: boolean },
+    options?: FindOneOptions<Subgroup> & { user?: User },
   ): Promise<Subgroup> {
     // find parent references
-    await this.groupService.findOneOrFail(ref, {
-      authorize: options?.authorize,
+    const group = await this.groupService.findOneOrFail(ref, {
+      user: options?.user,
     });
 
     // find subgroup
     const subgroup = await this.subgroupRepository.getDoc(ref);
-    if (!subgroup) return null;
+    if (!subgroup || subgroup.deletedAt) return null;
 
     if (options?.populate) await this.populate(ref, subgroup, options.populate);
+
+    subgroup.group = group;
     return subgroup;
   }
 
   async findOneOrFail(
     ref: Required<SubgroupRef>,
-    options?: FindOneOptions<Subgroup> & { authorize?: boolean },
+    options?: FindOneOptions<Subgroup> & { user?: User },
   ): Promise<Subgroup> {
     const subgroup = await this.findOne(ref, options);
     if (!subgroup) throw new BadRequestException('Subgroup not found');
@@ -105,43 +112,102 @@ export class SubgroupService {
 
   async create(
     ref: Required<GroupRef>,
-    input: Partial<Subgroup>,
+    input: CreateSubgroup,
+    options: { user: User },
   ): Promise<Subgroup> {
     // find parent references
-    await this.groupService.findOneOrFail(ref);
+    const { user } = options;
+    const group = await this.groupService.findOneOrFail(ref, { user });
 
-    // validate data
-    const membersIds = await this.groupService.findAvailableMembers(ref);
+    // check if the subgroup overlaps with the existing subgroups
+    const subgroups = await this.findAllActive(ref, { user });
+    if (subgroups.length > 0)
+      throw new BadRequestException(
+        'Subgroups cannot overlap with the existing subgroups',
+      );
+
+    // check if the members are available
+    const membersIds = await this.groupService.findAvailableMembers(ref, {
+      user,
+    });
+
+    if (!membersIds.length)
+      throw new BadRequestException('No members available for subgroup');
+
     if (!input.membersIds.every((memberId) => membersIds.includes(memberId)))
       throw new BadRequestException(
         'Some members are occupied in other subgroups',
       );
 
     // create subgroup
-    const data = {
+    const subgroupId = await this.subgroupRepository.addDoc(ref, {
+      groupId: group.id,
       name: input.name,
-      cycleId: input.cycleId,
       membersIds: input.membersIds,
       from: input.from,
       to: input.to,
-    };
+    });
 
-    const subgroupId = await this.subgroupRepository.addDoc(ref, data);
+    // copy all trainings from the parent group between `from` and `to` dates
+    const trainings = await this.trainingService.findAll(user, {
+      filter: {
+        subgroupId: { value: null },
+        from: { op: '>=', value: startOfDay(input.from) },
+        to: { op: '<=', value: endOfDay(input.to) },
+      },
+    });
+
+    for (const { id: trainingId } of trainings) {
+      await this.trainingService.copy(
+        user,
+        { trainingId },
+        {
+          groupId: ref.groupId,
+          subgroupId,
+        },
+      );
+    }
+
+    // remove members from trainings in parent group
+    for (const training of trainings) {
+      const trainingRef = { trainingId: training.id };
+      await this.trainingService.update(user, trainingRef, {
+        membersIds: training.membersIds.filter(
+          (memberId) => !input.membersIds.includes(memberId),
+        ),
+      });
+    }
+
     return {
       id: subgroupId,
       groupId: ref.groupId,
-      ...data,
+      membersIds: input.membersIds,
+      name: input.name,
+      from: input.from,
+      to: input.to,
       createdAt: new Date(),
       updatedAt: new Date(),
       members: [],
     };
   }
 
+  async update(
+    ref: Required<SubgroupRef>,
+    input: UpdateSubgroup,
+    options: { user: User },
+  ) {
+    await this.findOneOrFail(ref, options);
+    await this.subgroupRepository.updateDoc(ref, input);
+  }
+
+  async remove(ref: Required<SubgroupRef>, options: { user: User }) {
+    const { user } = options;
+    await this.findOneOrFail(ref, { user });
+    await this.subgroupRepository.deleteDoc(ref);
+  }
+
   private filter(query: Query, filter: Filter<Subgroup>): Query {
     if (filter.ids) query = query.where('id', 'in', filter.ids);
-    if (filter.cycleId)
-      query = query.where('cycleId', '==', filter.cycleId.value);
-
     if (filter.membersIds)
       query = query.where(
         'membersIds',
@@ -183,7 +249,7 @@ export class SubgroupService {
   }
 
   private async populate(
-    ref: Required<SubgroupRef>,
+    _ref: Required<SubgroupRef>,
     subgroup: Subgroup,
     populate: Populate<Subgroup>[],
   ): Promise<Subgroup> {

@@ -13,6 +13,7 @@ import {
 } from '../../common/type/firebase-firestore.type';
 import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.entity';
 import { TrainingExerciseRepository } from './training-exercise.repository';
+import { Query } from 'firebase-admin/lib/firestore';
 
 @Injectable()
 export class TrainingExerciseUserDataRepository
@@ -28,8 +29,9 @@ export class TrainingExerciseUserDataRepository
 
   async getDocs(
     ref: Required<TrainingExerciseRef>,
+    query: (ref: Query) => Query = (ref) => ref,
   ): Promise<TrainingExerciseUserData[]> {
-    const snapshot = await this.collection(ref).get();
+    const snapshot = await query(this.collection(ref)).get();
     return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
@@ -63,8 +65,11 @@ export class TrainingExerciseUserDataRepository
     await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
   }
 
+  async deleteDoc(ref: Required<TrainingExerciseUserDataRef>) {
+    await this.doc(ref).delete();
+  }
+
   doc(ref: Required<TrainingExerciseUserDataRef>): DocumentReference {
-    if (!ref.userId) throw new Error('userId is required');
     return this.collection(ref).doc(ref.userId);
   }
 
@@ -82,6 +87,7 @@ export class TrainingExerciseUserDataRepository
     return {
       userId: snapshot.id,
       exerciseId: data.exerciseId,
+      trainingId: data.trainingId,
       workloadValue: data.workloadValue,
       completedSets: data.completedSets,
       completedSetTypeValue: data.completedSetTypeValue || null,

@@ -18,7 +18,7 @@ export class TrainingExercise {
   @ApiProperty()
   @Expose()
   exerciseId: string;
-  exercise: Exercise | null; // virtual
+  exercise?: Exercise;
 
   @IsInt()
   @IsOptional()

@@ -1,0 +1,293 @@
+{
+  "components": [
+    {
+      "name": "Strength",
+      "slug": "strength",
+      "parent": null
+    },
+    {
+      "name": "Olympic Weightlifting",
+      "slug": "olympic",
+      "parent": "strength"
+    },
+    {
+      "name": "Speed",
+      "slug": "speed",
+      "parent": null
+    },
+    {
+      "name": "Sprint",
+      "slug": "sprint",
+      "parent": "speed"
+    }
+  ],
+  "attributes": [
+    {
+      "field": "bool-example",
+      "name": "Boolean",
+      "type": "boolean"
+    },
+    {
+      "field": "date-example",
+      "name": "Date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "field": "number-example",
+      "name": "Number",
+      "type": "number",
+      "required": true
+    },
+    {
+      "field": "select-example",
+      "name": "Select",
+      "type": "select",
+      "values": ["S1", "S2", "S3"],
+      "required": true
+    },
+    {
+      "field": "nested-select-example",
+      "name": "Nested Select",
+      "type": "select",
+      "required": true,
+      "values": [
+        {
+          "field": "ns-1",
+          "name": "NS1",
+          "values": ["NS1-1", "NS1-2"]
+        },
+        {
+          "field": "ns-2",
+          "name": "NS2",
+          "values": ["NS2-1", "NS2-2"]
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "<id for admin@mail.com>",
+      "role": "admin",
+      "level": "beginner",
+      "createdAt": "some-date",
+      "updatedAt": "some-date",
+      "deletedAt": null,
+      "bodyweight": [
+        {
+          "weight": 70.1,
+          "date": "some-date"
+        }
+      ],
+      "wellness": [
+        {
+          "id": "<id>",
+          "sleep": 8,
+          "fatigue": 3,
+          "soreness": 5,
+          "comment": "some comment",
+          "date": "some-date"
+        },
+        {
+          "id": "<id>",
+          "createdAt": "some-date",
+          "updatedAt": "some-date",
+          "deletedAt": null
+        }
+      ]
+    },
+    {
+      "id": "<id for manager@mail.com",
+      "role": "manager",
+      "level": "intermediate",
+      "createdAt": "some-date",
+      "updatedAt": "some-date",
+      "deletedAt": null,
+      "bodyweight": [],
+      "wellness": []
+    },
+    {
+      "id": "<id for trainer@mail.com",
+      "role": "trainer",
+      "level": "advanced",
+      "createdAt": "some-date",
+      "updatedAt": "some-date",
+      "deletedAt": null,
+      "bodyweight": [],
+      "wellness": []
+    },
+    {
+      "id": "<id for athlete@mail.com>",
+      "role": "athlete",
+      "level": "beginner",
+      "createdAt": "some-date",
+      "updatedAt": "some-date",
+      "deletedAt": null,
+      "bodyweight": [],
+      "wellness": []
+    }
+  ],
+  "exercises": [
+    {
+      "id": "<exercise-1-id>",
+      "userId": "<id for admin@mail.com>",
+      "name": "Squat",
+      "componentsIds": ["olympic"],
+      "global": true,
+      "imageUrl": null,
+      "videoUrl": null,
+      "createdAt": "some-date",
+      "updatedAt": "some-date",
+      "deletedAt": null,
+      "attributes": [
+        {
+          "attributeId": "number-example",
+          "exerciseId": "<exercise-1-id>",
+          "value": 100
+        },
+        {
+          "attributeId": "select-example",
+          "exerciseId": "<exercise-1-id>",
+          "value": "S1"
+        },
+        {
+          "attributeId": "nested-select-example",
+          "exerciseId": "<exercise-1-id>",
+          "value": {
+            "ns-1": "NS1-2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "<exercise-2-id>",
+      "userId": "<id for trainer@mail.com",
+      "name": "Sprint 60m",
+      "componentsIds": ["sprint"],
+      "global": false,
+      "imageUrl": null,
+      "videoUrl": null,
+      "createdAt": "some-date",
+      "updatedAt": "some-date",
+      "deletedAt": null,
+      "attributes": []
+    }
+  ],
+  "groups": [
+    {
+      "id": "<group-1-id>",
+      "ownerId": "<id for trainer@mail.com>",
+      "name": "G1",
+      "description": "some description",
+      "membersIds": ["athlete1", "athlete2", "athlete3"],
+      "createdAt": "some-date",
+      "updatedAt": "some-date",
+      "deletedAt": null,
+      "cycles": [
+        {
+          "id": "<group-1-cycle-1-id>",
+          "groupId": "<group-1-id>",
+          "ownerId": "<id for trainer@mail.com>",
+          "membersIds": ["athlete1", "athlete2", "athlete3"],
+          "name": "G1C1",
+          "description": "some description",
+          "from": "1-jan-00:00",
+          "to": "10-jan-00:00",
+          "deletedAt": null
+        }
+      ],
+      "subgroups": [
+        {
+          "id": "<group-1-subgroup-1-id>",
+          "groupId": "<group-1-id>",
+          "membersIds": ["athlete3"],
+          "from": "1-jan-00:00",
+          "to": "5-jan-00:00",
+          "deletedAt": null
+        }
+      ]
+    }
+  ],
+  "trainings": [
+    {
+      "id": "<training-1-id>",
+      "groupId": "<group-1-id>",
+      "ownerId": "<id for trainer@mail.com>",
+      "membersIds": ["athlete1", "athlete2"],
+      "subgroupId": null,
+      "copiedFrom": null,
+      "from": "1-jan 10:00",
+      "to": "1-jan 12:00",
+      "createdAt": "some date",
+      "updatedAt": "some date",
+      "deletedAt": null,
+      "components": [
+        {
+          "componentId": "strength",
+          "order": 0,
+          "color": "red",
+          "supersets": [
+            {
+              "id": "<superset-1-id>",
+              "componentId": "strength",
+              "order": 0,
+              "color": "red",
+              "exercises": [
+                {
+                  "exerciseId": "<exercise-1-id>",
+                  "order": 0,
+                  "color": "red",
+                  "meta": {
+                    "sets": 3,
+                    "setType": "reps|distance|time|vo2",
+                    "setTypeValue": 10,
+                    "workloadType": "rm|bw|kg|int",
+                    "workloadTypeValue": 80,
+                    "tempo": "3-1-1-0",
+                    "effort": "max",
+                    "rec": 90
+                  },
+                  "data": [
+                    {
+                      "userId": "athlete1",
+                      "trainingId": "<training-1-id>",
+                      "componentId": "strength",
+                      "supersetId": "<superset-1-id>",
+                      "exerciseId": "<exercise-1-id>",
+                      "workloadValue": 80,
+                      "completedSets": 3,
+                      "completedSetTypeValue": 10,
+                      "completedWorkloadValue": 80
+                    },
+                    {
+                      "userId": "athlete2",
+                      "exerciseId": "<exercise-1-id>",
+                      "trainingId": "<training-1-id>",
+                      "workloadValue": 80,
+                      "completedSets": 3,
+                      "completedSetTypeValue": 10,
+                      "completedWorkloadValue": 80
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "<training-2-id>",
+      "groupId": "<group-1-id>",
+      "subgroupId": "<group-1-subgroup-1-id>",
+      "copiedFrom": "<training-1-id>",
+      "from": "1-jan 10:00",
+      "to": "1-jan 12:00",
+      "createdAt": "some date",
+      "updatedAt": "some date",
+      "deletedAt": null,
+      "membersIds": ["athlete3"],
+      "components": []
+    }
+  ]
+}

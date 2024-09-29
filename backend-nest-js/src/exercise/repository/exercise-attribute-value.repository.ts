@@ -66,6 +66,10 @@ export class ExerciseAttributeValueRepository
     await this.doc(ref).update(data);
   }
 
+  async deleteDoc(ref: Required<ExerciseAttributeValueRef>): Promise<void> {
+    await this.doc(ref).delete();
+  }
+
   doc(ref: Required<ExerciseAttributeValueRef>): DocumentReference {
     return this.collection(ref).doc(ref.attributeId);
   }

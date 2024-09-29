@@ -10,6 +10,7 @@ import { WellnessService } from './wellness.service';
 import { UserRef } from '../../common/type/firebase-firestore.type';
 import { CreateWellness } from '../type/wellness.type';
 import { Wellness } from '../entity/wellness.entity';
+import { Bodyweight } from '../entity/body-weight.entity';
 
 @Injectable()
 export class UserService {
@@ -81,14 +82,37 @@ export class UserService {
     });
   }
 
-  async submitWellness(
+  async addWellness(
     ref: Required<UserRef>,
     data: CreateWellness,
   ): Promise<Wellness> {
     return await this.wellnessService.create(ref, data);
   }
 
+  async addBodyweight(ref: Required<UserRef>, weight: number): Promise<void> {
+    await this.userRepository.updateDoc(ref.uid, { weight });
+  }
+
   async findTodayWellness(ref: Required<UserRef>): Promise<Wellness | null> {
     return await this.wellnessService.findToday(ref);
+  }
+
+  async findWellnessHistory(
+    ref: Required<UserRef>,
+    n = 7,
+  ): Promise<Wellness[]> {
+    return await this.wellnessService.findLastNDays(ref, n);
+  }
+
+  async findBodyweightHistory(
+    ref: Required<UserRef>,
+    n = 7,
+  ): Promise<Bodyweight[]> {
+    const { bodyweight } = await this.userRepository.getDoc(ref.uid);
+    const sorted = bodyweight.sort(
+      (a, b) => b.date.getTime() - a.date.getTime(),
+    );
+
+    return sorted.slice(0, n);
   }
 }

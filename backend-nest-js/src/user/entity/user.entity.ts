@@ -17,7 +17,7 @@ export class UserEntity extends BaseEntity {
   @IsString({ each: true })
   @Expose()
   @ApiProperty()
-  groupsIds: string[]; // array of group ids user is member of
+  groupsIds: string[]; // array of group ids user is owner or member of
 
   @ValidateNested({ each: true })
   @Type(() => Bodyweight)

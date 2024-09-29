@@ -26,10 +26,6 @@ export class ComponentService {
     private readonly exerciseService: Wrapper<ExerciseService>,
   ) {}
 
-  rootCollection() {
-    return this.componentRepository.collection();
-  }
-
   async create(data: Partial<Component>): Promise<Component> {
     this.logger.debug(`Creating component with data ${JSON.stringify(data)}`);
     const componentSlug = await this.componentRepository.addDoc(data);

@@ -23,19 +23,19 @@ import { Wrapper } from '../../common/type/wrapper.type';
 import {
   GroupRef,
   SubgroupRef,
-  UserRef,
 } from '../../common/type/firebase-firestore.type';
 import { GroupRepository } from '../repository/group.repository';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
-import { CycleRepository } from '../repository/cycle.repository';
 import { CycleService } from './cycle.service';
 import { SubgroupService } from './subgroup.service';
 import { UserRepository } from '../../user/repository/user.repository';
-import { CreateGroup } from '../type/group.type';
-import { CreateSubgroup } from '../type/subgroup.type';
+import { CreateGroup, UpdateGroup } from '../type/group.type';
+import { CreateSubgroup, UpdateSubgroup } from '../type/subgroup.type';
 import { CreateCycle } from '../type/cycle.type';
-import { endOfDay, startOfDay } from 'date-fns';
+import { endOfDay, isAfter, isSameDay, startOfDay } from 'date-fns';
 import { TrainingExerciseUserDataService } from '../../training/service/training-exercise-user-data.service';
+import { User } from '../../common/type/firebase-auth.type';
+import { FirebaseService } from '../../firebase/firebase.service';
 
 @Injectable()
 export class GroupService {
@@ -43,10 +43,10 @@ export class GroupService {
 
   constructor(
     private readonly commonService: CommonService,
+    private readonly firebaseService: FirebaseService,
     private readonly userService: UserService,
     private readonly userRepository: UserRepository,
     private readonly groupRepository: GroupRepository,
-    private readonly cycleRepository: CycleRepository,
     private readonly cycleService: CycleService,
     private readonly subgroupService: SubgroupService,
     @Inject(forwardRef(() => TrainingService))
@@ -55,8 +55,8 @@ export class GroupService {
     private readonly trainingExerciseUserDataService: Wrapper<TrainingExerciseUserDataService>,
   ) {}
 
-  canView(ref: Required<UserRef>, group: Group): boolean {
-    return this.isMember(ref.uid, group) || this.isOwner(ref.uid, group);
+  isAuthorized(user: User, group: Group): boolean {
+    return this.isMember(user.uid, group) || this.isOwner(user.uid, group);
   }
 
   isMember(userId: string, group: Group | Subgroup): boolean {
@@ -67,150 +67,136 @@ export class GroupService {
     return group.ownerId === userId;
   }
 
-  async findAllByOwner(
-    userId: string,
-    options?: FindManyOptions<Group>,
+  async findAll(
+    ref: Required<GroupRef>,
+    options?: FindManyOptions<Group> & { user?: User },
   ): Promise<Group[]> {
-    // find parent references
-    await this.userService.findOneOrFail(userId);
+    const user = options?.user;
+    if (!user) throw new BadRequestException('User not provided');
 
-    return await this.groupRepository.getDocs({ uid: userId }, (collection) => {
-      let query = collection.where('ownerId', '==', userId);
+    const isTrainer = this.firebaseService.isTrainer(user);
+    const isAthlete = this.firebaseService.isAthlete(user);
+
+    const groups = await this.groupRepository.getDocs((collection) => {
+      let query = isTrainer
+        ? collection.where('ownerId', '==', user.uid)
+        : isAthlete
+          ? collection.where('membersIds', 'array-contains', user.uid)
+          : collection;
+
+      query = query.where('deletedAt', '==', null);
       if (options?.filter) query = this.filter(query, options.filter);
-      if (options?.paginate) query = this.paginate(query, options.paginate);
 
       return query;
     });
-  }
-
-  async findAllByMember(
-    userId: string,
-    options?: FindManyOptions<Group> & { active?: boolean },
-  ): Promise<Group[]> {
-    let query = this.userRepository
-      .collectionGroup('groups')
-      .where('membersIds', 'array-contains', userId);
-
-    if (options?.active)
-      query = query
-        .where('from', '<=', Timestamp.now())
-        .where('to', '>=', Timestamp.now());
-
-    if (options?.filter) query = this.filter(query, options.filter);
-
-    const groups = await query
-      .orderBy('from', 'desc')
-      .get()
-      .then((snapshot) =>
-        snapshot.docs.map((doc) => this.groupRepository.serialize(doc)),
-      );
 
     if (options?.populate)
       await Promise.all(
-        groups.map((group) => {
-          const ref = { uid: group.ownerId, groupId: group.id };
-          return this.populate(ref, group, options.populate);
-        }),
+        groups.map((group) => this.populate(ref, group, options.populate)),
       );
 
     return groups;
   }
 
   async findOne(
-    ref: GroupRef,
-    options?: FindOneOptions<Group> & { authorize?: boolean },
+    ref: Required<GroupRef>,
+    options?: FindOneOptions<Group> & { user?: User },
   ): Promise<Group | null> {
-    if (!ref.uid && !ref.groupId) return null;
-
-    if (!ref.uid) {
-      // fetch collection group because ownerId is not available
-      const group = this.groupRepository.serialize(
-        (
-          await this.userRepository
-            .collectionGroup('groups')
-            .where('id', '==', ref.groupId)
-            .get()
-        ).docs[0],
-      );
-
-      if (!group) return null;
-      ref.uid = group.ownerId;
-    }
-
-    const groupRef = { uid: ref.uid, groupId: ref.groupId };
-
-    // find parent references
-    await this.userService.findOneOrFail(ref.uid);
-
     // find group
-    const group = await this.groupRepository.getDoc(groupRef);
-    if (!group) return null;
+    const group = await this.groupRepository.getDoc(ref.groupId);
+    if (!group || group.deletedAt) return null;
 
     // authorize
-    if (options?.authorize && !this.canView(groupRef, group)) return null;
+    if (options?.user && !this.isAuthorized(options.user, group)) return null;
 
-    if (options?.populate)
-      await this.populate(groupRef, group, options.populate);
+    // populate
+    if (options?.populate) await this.populate(ref, group, options.populate);
 
     return group;
   }
 
   async findOneOrFail(
-    ref: GroupRef,
-    options?: FindOneOptions<Group> & { authorize?: boolean },
+    ref: Required<GroupRef>,
+    options?: FindOneOptions<Group> & { user?: User },
   ): Promise<Group> {
     const group = await this.findOne(ref, options);
     if (!group) throw new BadRequestException('Group not found');
     return group;
   }
 
-  async create(ref: Required<UserRef>, input: CreateGroup): Promise<Group> {
-    // find parent references
-    await this.userService.findOneOrFail(ref.uid);
-
+  async create(user: User, input: CreateGroup): Promise<Group> {
     this.logger.debug(
-      `User ${ref.uid} is creating group: ${JSON.stringify(input)}`,
+      `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
     );
-
-    // TODO - allow only 10 groups per user for free plan?
 
     // validate members
     const members = await this.validateMembers(input.membersIds);
+    const membersIds = members.map((member) => member.uid);
 
     // create group
-    const data = {
-      ownerId: ref.uid,
+    const groupId = await this.groupRepository.addDoc({
+      ownerId: user.uid,
       name: input.name,
-      membersIds: input.membersIds,
-    };
-
-    const groupId = await this.groupRepository.addDoc(ref, data);
+      membersIds,
+    });
 
     // for each user, add group to user's groupsIds
-    for (const member of members)
-      await this.userRepository.addGroup(member.uid, groupId);
+    await Promise.all(
+      members.map((member) =>
+        this.userRepository.addGroup(member.uid, groupId),
+      ),
+    );
 
     return {
       id: groupId,
       createdAt: new Date(),
       updatedAt: new Date(),
+      ownerId: user.uid,
       name: input.name,
-      ownerId: ref.uid,
       owner: null,
-      membersIds: input.membersIds,
-      availableMembersIds: input.membersIds,
+      membersIds,
+      availableMembersIds: membersIds,
       members,
       subgroups: [],
       cycles: [],
     };
   }
 
-  async update() {
-    // TODO
+  /**
+   * Update group fields that are not sub collections or arrays. For them,
+   * special methods are provided.
+   */
+  async update(
+    ref: Required<GroupRef>,
+    input: UpdateGroup,
+    options: { user: User },
+  ): Promise<Group> {
+    // find parent references
+    const group = await this.findOneOrFail(ref, options);
+    const { user } = options;
+
+    this.logger.debug(
+      `User ${user.uid} is updating group ${ref.groupId}: ${JSON.stringify(input)}`,
+    );
+
+    // update group
+    await this.groupRepository.updateDoc(ref.groupId, input);
+
+    return {
+      id: ref.groupId,
+      ...group,
+      ...input,
+      updatedAt: new Date(),
+    };
   }
 
-  async remove() {
-    // TODO
+  /**
+   * Soft deletes a group by setting the deletedAt field to the current date.
+   */
+  async remove(ref: Required<GroupRef>): Promise<void> {
+    this.logger.debug(`User ${ref.uid} is removing group ${ref.groupId}`);
+    const group = await this.findOneOrFail(ref);
+    await this.groupRepository.deleteDoc(ref);
   }
 
   /**
@@ -218,10 +204,14 @@ export class GroupService {
    * the group is added to the user's groupsIds. For each training in the group,
    * the user's training exercise user data is created.
    */
-  async addUserToGroup(ref: Required<GroupRef>, userId: string): Promise<void> {
+  async addMember(
+    userId: string,
+    ref: Required<GroupRef>,
+    memberId: string,
+  ): Promise<void> {
     // find parent references and user
-    const group = await this.findOneOrFail(ref, { authorize: true });
-    const user = await this.userService.findOneOrFail(userId);
+    const group = await this.findOneOrFail(ref, { userId });
+    const user = await this.userService.findOneOrFail(memberId);
 
     // add user to group
     await this.groupRepository.updateDoc(ref, {
@@ -234,7 +224,7 @@ export class GroupService {
     // add group to user
     await this.userRepository.addGroup(user.id, ref.groupId);
 
-    // for all trainings in group happening after now
+    // all trainings in group
     const trainings = await this.trainingService.findAllByGroup(ref, {
       authorize: false,
       populate: [
@@ -260,7 +250,7 @@ export class GroupService {
                   supersetId: superset.id,
                   exerciseId: exercise.exerciseId,
                 },
-                userId,
+                memberId,
                 exercise.meta,
               );
             }
@@ -275,13 +265,14 @@ export class GroupService {
    * membersIds and removing the group from the user's groupsIds, but it keeps
    * the user's training exercise user data for statistics.
    */
-  async removeUserFromGroup(
-    ref: Required<GroupRef>,
+  async removeMember(
     userId: string,
+    ref: Required<GroupRef>,
+    memberId: string,
   ): Promise<void> {
     // find parent references and user
-    const group = await this.findOneOrFail(ref, { authorize: true });
-    const user = await this.userService.findOneOrFail(userId);
+    const group = await this.findOneOrFail(ref, { userId });
+    const user = await this.userService.findOneOrFail(memberId);
 
     // remove user from group
     await this.groupRepository.updateDoc(ref, {
@@ -295,36 +286,25 @@ export class GroupService {
   async addSubgroup(
     ref: Required<GroupRef>,
     input: CreateSubgroup,
+    options: { user: User },
   ): Promise<Subgroup> {
+    const { user } = options;
     this.logger.debug(
-      `Adding subgroup (user ${ref.uid}) for group ${ref.groupId}: ${JSON.stringify(input)}`,
+      `Adding subgroup (user ${user.uid}) for group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
-
-    // find parent references
-    const cycle = await this.cycleService.findOneOrFail({
-      ...ref,
-      cycleId: input.cycleId,
-    });
-
-    // validate dates
-    if (
-      !this.commonService.date.isBetween(input.from, cycle.from, cycle.to) ||
-      !this.commonService.date.isBetween(input.to, cycle.from, cycle.to)
-    )
-      throw new BadRequestException(
-        'Subgroup dates must be within the cycle dates',
-      );
 
     // validate members
     const members = await this.validateMembers(input.membersIds);
-
-    const subgroup = await this.subgroupService.create(ref, {
-      name: input.name,
-      cycleId: input.cycleId,
-      membersIds: members.map((member) => member.uid),
-      from: input.from,
-      to: input.to,
-    });
+    const subgroup = await this.subgroupService.create(
+      ref,
+      {
+        name: input.name,
+        membersIds: members.map((member) => member.uid),
+        from: input.from,
+        to: input.to,
+      },
+      { user },
+    );
 
     // copy trainings from cycle to subgroup
     const trainings = await this.trainingService.findAll(
@@ -366,43 +346,31 @@ export class GroupService {
     return subgroup;
   }
 
-  async updateSubgroup() {
-    // TODO
-  }
-
-  async removeSubgroup() {
-    // TODO
-  }
-
   /**
-   * Adds a user to a subgroup. The user is added to the subgroup's membersIds
-   * and for every training in the subgroup that is different from the parent
-   * group, the user's training exercise user data is created.
+   * Update subgroup fields that are not sub collections or arrays. For them,
+   * special methods are provided.
    */
-  async addUserToSubgroup(
-    ref: Required<SubgroupRef>,
-    userId: string,
-  ): Promise<void> {
-    // find parent references and user
+  async updateSubgroup(ref: Required<SubgroupRef>, input: UpdateSubgroup) {
+    // find parent references
     const subgroup = await this.subgroupService.findOneOrFail(ref);
-    const user = await this.userService.findOneOrFail(userId);
 
-    // TODO
+    // update subgroup
+    await this.subgroupService.update(ref, input);
+
+    // if subgroup's `to` date is updated, we need to add / update
+    // trainings and exercise data for the new period.
+    if (input.to) {
+      if (isSameDay(input.to, subgroup.to)) return;
+      if (isAfter(input.to, subgroup.to)) {
+        // TODO - extend subgroup period (copy parent group trainings)
+      } else {
+        // TODO - shorten subgroup period (remove subgroup trainings)
+      }
+    }
   }
 
-  /**
-   * Removes a user from a subgroup by removing the user from the subgroup's
-   * membersIds. The user's training exercise user data is kept for statistics.
-   */
-  async removeUserFromSubgroup(
-    ref: Required<SubgroupRef>,
-    userId: string,
-  ): Promise<void> {
-    // find parent references and user
-    const subgroup = await this.subgroupService.findOneOrFail(ref);
-    const user = await this.userService.findOneOrFail(userId);
-
-    // TODO
+  async removeSubgroup(ref: Required<SubgroupRef>) {
+    await this.subgroupService.remove(ref);
   }
 
   async addCycle(ref: Required<GroupRef>, input: CreateCycle): Promise<Cycle> {
@@ -429,8 +397,11 @@ export class GroupService {
    *
    * Formula: (all group members - union of all members in active subgroups)
    */
-  async findAvailableMembers(ref: Required<GroupRef>): Promise<string[]> {
-    const group = await this.findOneOrFail(ref);
+  async findAvailableMembers(
+    ref: Required<GroupRef>,
+    options?: { user?: User },
+  ): Promise<string[]> {
+    const group = await this.findOneOrFail(ref, options);
 
     // get all active subgroups
     const subgroups = await this.subgroupService.findAllActive(ref);
@@ -527,18 +498,6 @@ export class GroupService {
           subgroup.members = group.members.filter((member) =>
             subgroup.membersIds.includes(member.uid),
           );
-      }
-    }
-
-    if (populate.includes('cycles')) {
-      group.cycles = await this.cycleRepository.getDocs(ref);
-
-      if (populate.includes('cycles.trainings')) {
-        for (const cycle of group.cycles)
-          cycle.trainings = await this.trainingService.findAll({
-            ...ref,
-            cycleId: cycle.id,
-          });
       }
     }
   }

@@ -58,7 +58,7 @@ export class TrainingSupersetRepository
     const result = await this.collection(ref).add({
       componentId: ref.componentId,
       order: data.order,
-      color: data.color || this.commonService.color.random(),
+      color: data.color,
     });
 
     return result.id;
@@ -70,6 +70,10 @@ export class TrainingSupersetRepository
   ) {
     const data = this.commonService.object.clean(input);
     await this.doc(ref).update(data);
+  }
+
+  async deleteDoc(ref: Required<TrainingSupersetRef>) {
+    await this.doc(ref).delete();
   }
 
   doc(ref: Required<TrainingSupersetRef>): DocumentReference {

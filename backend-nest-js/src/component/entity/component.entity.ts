@@ -21,5 +21,5 @@ export class Component extends IdEntity {
   name: string;
 
   children: string[]; // virtual field of children components, cannot be Component[] because of circular dependency of Populate interface
-  parents: string[];
+  parents: string[]; // virtual field of parent components, cannot be Component[] because of circular dependency of Populate interface
 }

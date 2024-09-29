@@ -13,16 +13,19 @@ import {
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 
 @Injectable()
-export class ComponentRepository implements RootFirestoreCollectionRepository<Component> {
+export class ComponentRepository
+  implements RootFirestoreCollectionRepository<Component>
+{
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-  ) {
-  }
+  ) {}
 
-  async getDocs(query: (query: Query) => Query = query => query): Promise<Component[]> {
+  async getDocs(
+    query: (query: Query) => Query = (query) => query,
+  ): Promise<Component[]> {
     const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map(doc => this.serialize(doc));
+    return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async getDoc(slug: string): Promise<Component | null> {
@@ -48,12 +51,18 @@ export class ComponentRepository implements RootFirestoreCollectionRepository<Co
     await this.doc(slug).update(data);
   }
 
+  async deleteDoc(slug: string) {
+    await this.doc(slug).delete();
+  }
+
   doc(slug: string): DocumentReference {
     return this.collection().doc(slug);
   }
 
   collection(): CollectionReference {
-    return this.firebaseService.firestore.collection(FirestoreCollection.COMPONENT);
+    return this.firebaseService.firestore.collection(
+      FirestoreCollection.COMPONENT,
+    );
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Component {

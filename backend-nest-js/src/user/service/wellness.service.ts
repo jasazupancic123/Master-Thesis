@@ -50,18 +50,17 @@ export class WellnessService {
     const id = await this.wellnessRepository.addDoc(ref, input);
     return {
       ...input,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      date: new Date(),
       id,
     };
   }
 
   private filter(query: Query, filter: Filter<Wellness>): Query {
-    if (filter.createdAt)
+    if (filter.date)
       query = query.where(
         'createdAt',
-        filter.createdAt.op || '>=',
-        Timestamp.fromDate(filter.createdAt.value),
+        filter.date.op || '>=',
+        Timestamp.fromDate(filter.date.value),
       );
 
     return query;

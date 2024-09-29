@@ -10,7 +10,6 @@ import { Query, Timestamp } from 'firebase-admin/firestore';
 import { Training } from '../entity/training.entity';
 import { ComponentService } from '../../component/component.service';
 import { ExerciseService } from '../../exercise/service/exercise.service';
-import { CommonService } from '../../common/service/common.service';
 import {
   Filter,
   FindManyOptions,
@@ -18,7 +17,6 @@ import {
   PaginateOptions,
   Populate,
 } from '../../common/type/orm.type';
-import { Cycle } from '../../group/entity/cycle.entity';
 import { Validate } from '../../common/type/validate.type';
 import { GroupService } from '../../group/service/group.service';
 import { TrainingComponent } from '../entity/training-component.entity';
@@ -31,16 +29,12 @@ import { SubgroupRepository } from '../../group/repository/subgroup.repository';
 import { TrainingExerciseService } from './training-exercise.service';
 import { TrainingComponentService } from './training-component.service';
 import {
-  CycleRef,
-  GroupRef,
-  SubgroupRef,
   TrainingComponentRef,
   TrainingExerciseRef,
   TrainingRef,
   TrainingSupersetRef,
 } from '../../common/type/firebase-firestore.type';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
-import { CycleService } from '../../group/service/cycle.service';
 import { SubgroupService } from '../../group/service/subgroup.service';
 import { TrainingSupersetRepository } from '../repository/training-superset.repository';
 import { TrainingSuperset } from '../entity/training-superset.entity';
@@ -50,18 +44,22 @@ import {
   UpdateTrainingExercise,
 } from '../type/training-exercise.type';
 import { CreateTrainingSuperset } from '../type/training-superset.type';
-import { CreateTrainingComponent } from '../type/training-component.type';
+import {
+  CreateTrainingComponent,
+  UpdateTrainingComponent,
+} from '../type/training-component.type';
 import { Component } from '../../component/entity/component.entity';
-import { CreateTraining } from '../type/training.type';
-import { GroupRepository } from '../../group/repository/group.repository';
-import { TrainingExerciseUserDataService } from './training-exercise-user-data.service';
+import { CreateTraining, UpdateTraining } from '../type/training.type';
+import { User } from '../../common/type/firebase-auth.type';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { Group } from '../../group/entity/group.entity';
 
 @Injectable()
 export class TrainingService {
   private logger = new Logger(TrainingService.name);
 
   constructor(
-    private readonly commonService: CommonService,
+    private readonly firebaseService: FirebaseService,
     private readonly trainingRepository: TrainingRepository,
     private readonly trainingComponentRepository: TrainingComponentRepository,
     private readonly trainingSupersetRepository: TrainingSupersetRepository,
@@ -70,73 +68,75 @@ export class TrainingService {
     private readonly exerciseService: ExerciseService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
-    private readonly groupRepository: GroupRepository,
     @Inject(forwardRef(() => SubgroupService))
     private readonly subgroupService: Wrapper<SubgroupService>,
-    @Inject(forwardRef(() => CycleService))
-    private readonly cycleService: Wrapper<CycleService>,
     private readonly subgroupRepository: SubgroupRepository,
     private readonly trainingExerciseService: TrainingExerciseService,
     private readonly trainingComponentService: TrainingComponentService,
     private readonly trainingSupersetService: TrainingSupersetService,
-    private readonly trainingExerciseUserDataService: TrainingExerciseUserDataService,
   ) {}
 
   async findOne(
+    user: User,
     ref: Required<TrainingRef>,
     options?: FindOneOptions<Training> & { authorize?: boolean },
   ): Promise<Training | null> {
-    // find parent references
-    const cycle = await this.cycleService.findOneOrFail(ref, {
-      authorize: options?.authorize,
-    });
-
     // find training
-    const training = await this.trainingRepository.getDoc(ref);
+    const training = await this.trainingRepository.getDoc(ref.trainingId);
     if (!training) return null;
 
+    // authorize user
+    if (options?.authorize)
+      if (!this.isAuthorized(user, training))
+        throw new UnauthorizedException(
+          'You are not authorized to view this training',
+        );
+
+    // populate training
     if (options?.populate) await this.populate(ref, training, options.populate);
-    training.cycle = cycle;
+
     return training;
   }
 
   async findOneOrFail(
+    user: User,
     ref: Required<TrainingRef>,
     options?: FindOneOptions<Training> & { authorize?: boolean },
   ): Promise<Training> {
-    const training = await this.findOne(ref, options);
+    const training = await this.findOne(user, ref, options);
     if (!training) throw new BadRequestException('Training not found');
     return training;
   }
 
   async findAll(
-    ref: Required<CycleRef>,
+    user: User,
     options?: FindManyOptions<Training> & { authorize?: boolean },
   ): Promise<Training[]> {
-    await this.cycleService.findOneOrFail(ref, {
-      authorize: options?.authorize,
+    const isTrainer = this.firebaseService.isTrainer(user);
+    const isAthlete = this.firebaseService.isAthlete(user);
+
+    const filter = {
+      ...(options?.filter && options.filter),
+      ...(isTrainer && { ownerId: { value: user.uid } }),
+      ...(isAthlete && { membersIds: { value: user.uid } }),
+    };
+
+    let trainings = await this.trainingRepository.getDocs((collection) => {
+      let query = this.filter(collection, filter);
+      if (options?.paginate) query = this.paginate(query, options.paginate);
+      query = query.orderBy('from', 'asc');
+      return query;
     });
 
-    const trainings = await this.trainingRepository.getDocs(
-      ref,
-      (collection) => {
-        let query = collection;
-        if (options?.filter) query = this.filter(query, options.filter);
-        if (options?.paginate) query = this.paginate(query, options.paginate);
-
-        return query;
-      },
-    );
+    if (options?.authorize)
+      trainings = trainings.filter((training) =>
+        this.isAuthorized(user, training),
+      );
 
     if (options?.populate)
       await Promise.all(
         trainings.map(async (training) => {
-          const trainingRef = {
-            ...ref,
-            trainingId: training.id,
-            subgroupId: null,
-          };
-
+          const trainingRef = { trainingId: training.id };
           await this.populate(trainingRef, training, options.populate);
         }),
       );
@@ -144,275 +144,132 @@ export class TrainingService {
     return trainings;
   }
 
-  async findAllByGroup(
-    ref: Required<GroupRef>,
-    options?: FindManyOptions<Training> & { authorize?: boolean },
-  ): Promise<Training[]> {
-    const group = await this.groupService.findOneOrFail(ref, {
-      authorize: options?.authorize,
-      populate: ['cycles', 'cycles.trainings'],
-    });
-
-    // populate trainings
-    if (options?.populate)
-      await Promise.all(
-        group.cycles.map(({ id, trainings }) => {
-          trainings.map(async (training) => {
-            const trainingRef = {
-              ...ref,
-              cycleId: id,
-              trainingId: training.id,
-              subgroupId: null,
-            };
-
-            await this.populate(trainingRef, training, options.populate);
-          });
-        }),
-      );
-
-    return group.cycles.reduce((acc, cycle) => acc.concat(cycle.trainings), []);
-  }
-
-  /**
-   * Finds all training by member for the given cycle reference. Each member
-   * can be part of the main (parent) group and many subgroups and each subgroup
-   * can have different trainings than the main group.
-   *
-   * Flow:
-   * 1. Find all trainings for the main group
-   * 2. Find all subgroups for the given cycle that member is part of.
-   * 3. Filter all subgroup trainings from the main group and remember their
-   *    `copiedFromId` field.
-   * 4. Ignore all trainings in the parent group that have been copied.
-   * 5. The result is a list of trainings that are part of the main group and
-   *    subgroups that member is part of.
-   */
-  async findAllByMember(
-    ref: Required<CycleRef>,
-    memberId: string,
-    options?: FindManyOptions<Training>,
-  ): Promise<Training[]> {
-    // parent group trainings
-    const trainings = await this.findAll(ref, { filter: options?.filter });
-
-    // find all subgroups that user is part of in the given cycle
-    let query = this.groupRepository
-      .subgroupsCollectionGroup()
-      .where('groupId', '==', ref.groupId)
-      .where('membersIds', 'array-contains', memberId);
-
-    if (options?.filter) {
-      const { from, to } = options.filter;
-      if (from && to)
-        query = query
-          .where('from', '>=', Timestamp.fromDate(from.value))
-          .where('to', '<=', Timestamp.fromDate(to.value));
-      else if (from)
-        query = query.where(
-          'from',
-          from.op || '>=',
-          Timestamp.fromDate(from.value),
-        );
-      else if (to)
-        query = query.where('to', to.op || '<=', Timestamp.fromDate(to.value));
-    }
-
-    const subgroups = (await query.get()).docs.map((doc) =>
-      this.subgroupRepository.serialize(doc),
-    );
-
-    /*const cycle = await this.cycleService.findOneOrFail(ref, {
-      authorize: true,
-      populate: ['subgroups'],
-    });
-
-    const subgroups = cycle.subgroups.filter((subgroup) =>
-      this.groupService.isMember(memberId, subgroup),
-    );*/
-
-    // find all subgroup trainings
-    const subgroupTrainings = trainings.filter((training) =>
-      subgroups.some((subgroup) => training.subgroupId === subgroup.id),
-    );
-
-    // find all trainings that have been copied from subgroup trainings
-    const ignoreTrainingsIds = subgroupTrainings.map(
-      (training) => training.copiedFromId,
-    );
-
-    let memberTrainings = trainings
-      .filter((training) => !training.subgroupId) // keep only parent trainings
-      .filter(
-        (training) => !ignoreTrainingsIds.includes(training.id), // ignore copied trainings
-      )
-      .concat(subgroupTrainings)
-      .sort((a, b) => a.from.getTime() - b.from.getTime());
-
-    // custom filter
-    if (options?.filter) {
-      memberTrainings = memberTrainings.filter((training) => {
-        if (options.filter.from && options.filter.to)
-          return this.commonService.date.isBetween(
-            training.from,
-            options.filter.from.value,
-            options.filter.to.value,
-          );
-
-        if (options.filter.from) {
-          if (options.filter.from.op === '<=' || options.filter.from.op === '<')
-            return this.commonService.date.isBefore(
-              training.from,
-              options.filter.from.value,
-            );
-
-          if (options.filter.from.op === '>=' || options.filter.from.op === '>')
-            return this.commonService.date.isAfter(
-              training.from,
-              options.filter.from.value,
-            );
-        }
-
-        if (options.filter.to) {
-          if (options.filter.to.op === '<=' || options.filter.to.op === '<')
-            return this.commonService.date.isBefore(
-              training.to,
-              options.filter.to.value,
-            );
-
-          if (options.filter.to.op === '>=' || options.filter.to.op === '>')
-            return this.commonService.date.isAfter(
-              training.to,
-              options.filter.to.value,
-            );
-        }
-
-        return true;
-      });
-    }
-
-    // populate trainings
-    if (options?.populate)
-      await Promise.all(
-        memberTrainings.map(async (training) => {
-          const trainingRef = {
-            ...ref,
-            trainingId: training.id,
-            subgroupId: null,
-          };
-
-          await this.populate(trainingRef, training, options.populate);
-        }),
-      );
-
-    return memberTrainings;
-  }
-
-  async create(
-    ref: Required<CycleRef>,
-    input: CreateTraining,
-  ): Promise<Training> {
+  async create(user: User, input: CreateTraining): Promise<Training> {
     this.logger.debug(
-      `Creating training (user ${ref.uid}): ${JSON.stringify(input)}`,
+      `Creating training (user ${user.uid}): ${JSON.stringify(input)}`,
     );
+
+    if (!this.firebaseService.isTrainer(user))
+      throw new UnauthorizedException(
+        'You are not authorized to create training',
+      );
 
     // find parent references
-    const cycle = await this.cycleService.findOne(ref, {
-      authorize: true,
+    const group = await this.groupService.findOneOrFail({
+      groupId: input.groupId,
+    });
+
+    const availableMembers = await this.groupService.findAvailableMembers({
+      groupId: group.id,
     });
 
     // validate data
-    await this.componentService.findAllOrFail({
-      filter: {
-        ...(input.componentIds.length > 0 && { ids: input.componentIds }),
-      },
-    });
-
-    const data = {
+    const data: CreateTraining = {
+      groupId: group.id,
+      ownerId: user.uid,
+      membersIds: availableMembers,
       subgroupId: input.subgroupId || null,
+      componentIds: input.componentIds,
       from: input.from,
       to: input.to,
     };
 
-    const { error, message } = await this.validate(ref.uid, cycle, data);
+    const { error, message } = await this.validate(user.uid, group, data);
     if (error) throw new BadRequestException(message);
 
     // create training
-    const trainingId = await this.trainingRepository.addDoc(ref, data);
-
-    // create training components
-    const trainingRef = { ...ref, trainingId, subgroupId: data.subgroupId };
-    const training = await this.findOneOrFail(trainingRef);
+    const trainingId = await this.trainingRepository.addDoc(data);
+    const training: Training = {
+      id: trainingId,
+      ...data,
+      components: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
     training.components = await this.trainingComponentService.createMany(
-      trainingRef,
-      input.componentIds.map((componentId) => ({ componentId })),
+      { trainingId },
+      input.componentIds.map((componentId) => ({
+        componentId,
+        membersIds: availableMembers,
+      })),
     );
 
     return training;
   }
 
   async copy(
-    source: Required<TrainingRef>,
-    destination: Required<CycleRef & SubgroupRef>,
+    user: User,
+    source: { trainingId: string },
+    destination: { groupId: string; subgroupId: string | null },
   ): Promise<Training> {
     this.logger.debug(
-      `Copying training ${source.trainingId} (user ${source.uid})`,
+      `Copying training ${source.trainingId} (user ${user.uid})`,
     );
 
-    if (source.uid !== destination.uid)
+    // copy all training data from source to destination
+    const sourceTraining = await this.findOneOrFail(
+      user,
+      { trainingId: source.trainingId },
+      {
+        authorize: true,
+        populate: [
+          'subgroup',
+          'components',
+          'components.supersets',
+          'components.supersets.exercises',
+        ],
+      },
+    );
+
+    const group = await this.groupService.findOneOrFail(
+      { groupId: destination.groupId },
+      { populate: ['availableMembersIds'] },
+    );
+
+    if (user.uid !== group.ownerId)
       throw new UnauthorizedException(
         'You are not authorized to copy training',
       );
 
-    // copy all training data from source to destination
-    const sourceTraining = await this.findOneOrFail(source, {
-      authorize: true,
-      populate: [
-        'components',
-        'components.supersets',
-        'components.supersets.exercises',
-      ],
-    });
-
-    const destinationCycle = await this.cycleService.findOneOrFail(
-      destination,
-      { authorize: true },
-    );
-
-    const destinationSubgroup = destination.subgroupId
+    const subgroup = destination.subgroupId
       ? await this.subgroupService.findOneOrFail(destination)
       : null;
 
-    // validate that user is authorized to create training for the destination
-    // group and cycle with given training data
-    const data = {
-      subgroupId: destinationSubgroup?.id || null,
-      copiedFromId: sourceTraining.id,
+    const membersIds = subgroup
+      ? subgroup.membersIds
+      : group.availableMembersIds;
+
+    // validate data
+    const data: CreateTraining = {
+      groupId: group.id,
+      ownerId: group.ownerId,
+      membersIds,
+      subgroupId: subgroup?.id || null,
+      componentIds: [],
+      copiedFromId: subgroup ? sourceTraining.id : null,
       from: sourceTraining.from,
       to: sourceTraining.to,
     };
 
-    const { error, message } = await this.validate(
-      source.uid,
-      destinationCycle,
-      data,
-    );
-
+    const { error, message } = await this.validate(user.uid, group, data);
     if (error) throw new BadRequestException(message);
 
     // create new training with the same data as the source
-    const trainingId = await this.trainingRepository.addDoc(destination, data);
+    const trainingId = await this.trainingRepository.addDoc(data);
 
     // create training components
-    const componentRef = { ...destination, trainingId, subgroupId: null };
     const components = await this.trainingComponentService.createMany(
-      componentRef,
+      source,
       sourceTraining.components.map((component) => ({
+        membersIds,
         componentId: component.componentId,
         color: component.color,
         supersets: component.supersets.map((superset) => ({
+          membersIds,
           color: superset.color,
           exercises: superset.exercises.map((exercise) => ({
+            membersIds,
             exerciseId: exercise.exerciseId,
             meta: exercise.meta,
             color: exercise.color,
@@ -423,10 +280,10 @@ export class TrainingService {
 
     return {
       id: trainingId,
+      group,
+      subgroup,
       ...data,
       components,
-      cycle: destinationCycle,
-      subgroup: destinationSubgroup,
       from: data.from,
       to: data.to,
       createdAt: new Date(),
@@ -434,27 +291,55 @@ export class TrainingService {
     };
   }
 
-  async update() {
-    // TODO
+  async update(user: User, ref: Required<TrainingRef>, input: UpdateTraining) {
+    this.logger.debug(
+      `Updating training ${ref.trainingId} (user ${user.uid}): ${JSON.stringify(
+        input,
+      )}`,
+    );
+
+    // find training
+    const training = await this.findOneOrFail(user, ref, { authorize: true });
+
+    if (input.from || input.to) {
+      // check that training doesn't overlap with other trainings
+      const trainings = await this.findAll(user, {
+        filter: {
+          groupId: { value: training.groupId },
+          from: { op: '>', value: input.to },
+          to: { op: '<', value: input.from },
+        },
+      });
+
+      if (trainings.length > 0)
+        throw new BadRequestException('Training overlaps with other training');
+    }
+
+    await this.trainingRepository.updateDoc(ref.trainingId, input);
+    return {
+      ...training,
+      ...input,
+      updatedAt: new Date(),
+    };
   }
 
-  async remove() {
-    // TODO
+  async remove(user: User, ref: Required<TrainingRef>): Promise<void> {
+    this.logger.debug(`Removing training ${ref.trainingId} (user ${user.uid})`);
+    await this.findOneOrFail(user, ref, { authorize: true });
+    await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  /**
-   * For trainer to add components to the training.
-   */
   async addComponents(
+    user: User,
     ref: Required<TrainingRef>,
     input: CreateTrainingComponent[],
   ): Promise<TrainingComponent[]> {
     this.logger.debug(
-      `Adding component to training (user ${ref.uid}): ${JSON.stringify(input)}`,
+      `Adding component to training (user ${user.uid}): ${JSON.stringify(input)}`,
     );
 
     // find parent references
-    const training = await this.findOneOrFail(ref, {
+    const training = await this.findOneOrFail(user, ref, {
       authorize: true,
       populate: ['components'],
     });
@@ -486,27 +371,40 @@ export class TrainingService {
     return await this.trainingComponentService.createMany(ref, input);
   }
 
-  async updateComponent() {
-    // TODO
+  async updateComponent(
+    user: User,
+    ref: Required<TrainingComponentRef>,
+    input: UpdateTrainingComponent,
+  ): Promise<TrainingComponent> {
+    this.logger.debug(
+      `Updating component in training (user ${user.uid}): ${JSON.stringify(input)}`,
+    );
+
+    // find parent references
+    await this.findOneOrFail(user, ref, { authorize: true });
+    return await this.trainingComponentService.update(ref, input);
   }
 
-  async removeComponent() {
-    // TODO
+  async removeComponent(
+    user: User,
+    ref: Required<TrainingComponentRef>,
+  ): Promise<void> {
+    this.logger.debug(`Removing component from training (user ${user.uid})`);
+    await this.findOneOrFail(user, ref, { authorize: true });
+    await this.trainingComponentService.remove(ref);
   }
 
-  /**
-   * For trainer to add supersets to training component.
-   */
   async addSuperset(
+    user: User,
     ref: Required<TrainingComponentRef>,
     input: CreateTrainingSuperset,
   ): Promise<TrainingSuperset> {
     this.logger.debug(
-      `Adding superset to training (user ${ref.uid}): ${JSON.stringify(input)}`,
+      `Adding superset to training (user ${user.uid}): ${JSON.stringify(input)}`,
     );
 
     // find parent references
-    await this.findOneOrFail(ref, { authorize: true });
+    await this.findOneOrFail(user, ref, { authorize: true });
     const component = await this.trainingComponentRepository.getDoc(ref);
     if (!component)
       throw new BadRequestException('Training component not found');
@@ -514,7 +412,7 @@ export class TrainingService {
     // validate exercises
     if (input.exercises?.length) {
       const exerciseIds = input.exercises.map((e) => e.exerciseId);
-      const exercises = await this.exerciseService.findAll(ref, {
+      const exercises = await this.exerciseService.findAll(user, {
         filter: { ids: exerciseIds },
       });
 
@@ -533,33 +431,46 @@ export class TrainingService {
     });
   }
 
-  async updateSuperset() {
-    // TODO
+  async updateSuperset(
+    user: User,
+    ref: Required<TrainingSupersetRef>,
+    input: CreateTrainingSuperset,
+  ): Promise<TrainingSuperset> {
+    this.logger.debug(
+      `Updating superset in training (user ${user.uid}): ${JSON.stringify(input)}`,
+    );
+
+    // find parent references
+    await this.findOneOrFail(user, ref, { authorize: true });
+    return await this.trainingSupersetService.update(ref, input);
   }
 
-  async removeSuperset() {
-    // TODO
+  async removeSuperset(
+    user: User,
+    ref: Required<TrainingSupersetRef>,
+  ): Promise<void> {
+    this.logger.debug(`Removing superset from training (user ${user.uid})`);
+    await this.findOneOrFail(user, ref, { authorize: true });
+    await this.trainingSupersetService.remove(ref);
   }
 
-  /**
-   * For trainer to add exercises to training superset
-   */
   async addExercises(
+    user: User,
     ref: Required<TrainingSupersetRef>,
     input: CreateTrainingExercise[],
   ): Promise<TrainingExercise[]> {
     this.logger.debug(
-      `Adding exercise to training (user ${ref.uid}): ${JSON.stringify(input)}`,
+      `Adding exercise to training (user ${user.uid}): ${JSON.stringify(input)}`,
     );
 
     // find parent references
-    await this.findOneOrFail(ref, { authorize: true });
+    await this.findOneOrFail(user, ref, { authorize: true });
     const superset = await this.trainingSupersetRepository.getDoc(ref);
     if (!superset) throw new BadRequestException('Training superset not found');
 
     // find all exercises
     const exerciseIds = input.map((e) => e.exerciseId);
-    const exercises = await this.exerciseService.findAll(ref, {
+    const exercises = await this.exerciseService.findAll(user, {
       filter: { ids: exerciseIds },
     });
 
@@ -587,19 +498,17 @@ export class TrainingService {
     });
   }
 
-  /**
-   * For trainer to update training exercise and its exercise data.
-   */
   async updateExercise(
+    user: User,
     ref: Required<TrainingExerciseRef>,
     input: UpdateTrainingExercise,
   ): Promise<TrainingExercise> {
     this.logger.debug(
-      `Updating exercise in training (user ${ref.uid}): ${JSON.stringify(input)}`,
+      `Updating exercise in training (user ${user.uid}): ${JSON.stringify(input)}`,
     );
 
     // find parent references
-    await this.findOneOrFail(ref, { authorize: true });
+    await this.findOneOrFail(user, ref, { authorize: true });
     const trainingExercise = await this.trainingExerciseRepository.getDoc(ref);
     if (!trainingExercise)
       throw new BadRequestException('Training exercise not found');
@@ -607,7 +516,7 @@ export class TrainingService {
     // make sure user has access to the exercise
     const exerciseRef = { exerciseId: trainingExercise.exerciseId };
     const exercise = await this.exerciseService.findOneOrFail(exerciseRef, {
-      userId: ref.uid,
+      userId: user.uid,
     });
 
     // validate exercise
@@ -622,16 +531,31 @@ export class TrainingService {
     return await this.trainingExerciseService.update(ref, input);
   }
 
-  /**
-   * For trainer to remove exercise from training superset.
-   */
-  async removeExercise(ref: Required<TrainingExerciseRef>): Promise<void> {
-    this.logger.debug(`Removing exercise from training (user ${ref.uid})`);
-    // TODO
+  async removeExercise(
+    user: User,
+    ref: Required<TrainingExerciseRef>,
+  ): Promise<void> {
+    this.logger.debug(`Removing exercise from training (user ${user.uid})`);
+    await this.findOneOrFail(user, ref, { authorize: true });
+    await this.trainingExerciseService.remove(ref);
   }
 
   private filter(query: Query, filter: Filter<Training>) {
     if (filter.ids) query = query.where('id', 'in', filter.ids);
+
+    if (filter.groupId)
+      query = query.where('groupId', '==', filter.groupId.value);
+
+    if (filter.ownerId)
+      query = query.where('ownerId', '==', filter.ownerId.value);
+
+    if (filter.membersIds)
+      query = query.where(
+        'membersIds',
+        'array-contains',
+        filter.membersIds.value,
+      );
+
     if (filter.subgroupId)
       query = query.where(
         'subgroupId',
@@ -736,6 +660,7 @@ export class TrainingService {
     if (populate.includes('subgroup') && training.subgroupId) {
       training.subgroup = await this.subgroupRepository.getDoc({
         ...ref,
+        groupId: training.groupId,
         subgroupId: training.subgroupId,
       });
     }
@@ -743,32 +668,41 @@ export class TrainingService {
 
   private async validate(
     userId: string,
-    cycle: Cycle,
-    data: Partial<Training>,
+    group: Group,
+    data: CreateTraining,
   ): Promise<Validate> {
+    const components = await this.componentService.findAllFlat({
+      filter: {
+        ...(data.componentIds.length > 0 && { ids: data.componentIds }),
+      },
+    });
+
+    if (components.length !== data.componentIds.length)
+      return { error: true, message: 'Some components do not exist' };
+
     // check that user is owner of the group
-    if (!this.groupService.isOwner(userId, cycle.group))
+    if (!this.groupService.isOwner(userId, group))
       return {
         error: true,
-        message: 'You are not authorized to create training for this cycle',
+        message: 'You are not authorized to perform this action',
       };
 
     // check that subgroup exists within cycle's parent group
-    const subgroupRef = {
-      uid: userId,
-      groupId: cycle.group.id,
-      subgroupId: data.subgroupId,
-    };
+    if (data.subgroupId) {
+      const subgroup = await this.subgroupService.findOne({
+        groupId: group.id,
+        subgroupId: data.subgroupId,
+      });
 
-    if (data.subgroupId) await this.subgroupService.findOneOrFail(subgroupRef);
-
-    // check time
-    if (!this.commonService.date.isBetween(data.from, cycle.from, cycle.to))
-      return {
-        error: true,
-        message: 'Training must be within cycle start and end date',
-      };
+      if (!subgroup) return { error: true, message: 'Subgroup does not exist' };
+    }
 
     return { error: false };
+  }
+
+  private isAuthorized(user: User, training: Training): boolean {
+    return (
+      training.ownerId === user.uid || training.membersIds.includes(user.uid)
+    );
   }
 }

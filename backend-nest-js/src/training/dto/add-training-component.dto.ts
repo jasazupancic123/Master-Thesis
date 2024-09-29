@@ -7,7 +7,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AddTrainingComponentDto
   extends PickType(TrainingComponent, ['componentId', 'color', 'supersets'])
-  implements CreateTrainingComponent {}
+  implements Omit<CreateTrainingComponent, 'supersets'> {}
 
 export class AddTrainingComponentsDto {
   @ValidateNested({ each: true })

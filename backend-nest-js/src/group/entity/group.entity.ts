@@ -28,8 +28,13 @@ export class Group extends BaseEntity {
   @ApiProperty()
   @Expose()
   membersIds: string[]; // all members of the group
-  availableMembersIds: string[]; // (virtual) all members that can be added to the group
   members: User[] | null;
+
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiProperty()
+  @Expose()
+  availableMembersIds: string[]; // all members that can be added to the group
 
   @ValidateNested({ each: true })
   @Type(() => Subgroup)

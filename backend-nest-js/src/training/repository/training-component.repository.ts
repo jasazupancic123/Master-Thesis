@@ -73,7 +73,11 @@ export class TrainingComponentRepository
     input: Partial<TrainingComponent>,
   ) {
     const data = this.commonService.object.clean(input);
-    await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
+    await this.doc(ref).update(data);
+  }
+
+  async deleteDoc(ref: Required<TrainingComponentRef>) {
+    await this.doc(ref).delete();
   }
 
   doc(ref: Required<TrainingComponentRef>): DocumentReference {
@@ -82,7 +86,7 @@ export class TrainingComponentRepository
 
   collection(ref: Required<TrainingRef>): CollectionReference {
     return this.trainingRepository
-      .doc(ref)
+      .doc(ref.trainingId)
       .collection(FirestoreCollection.TRAINING_COMPONENT);
   }
 
@@ -96,6 +100,6 @@ export class TrainingComponentRepository
       order: +data.order,
       color: data.color,
       supersets: [],
-    } as TrainingComponent;
+    };
   }
 }

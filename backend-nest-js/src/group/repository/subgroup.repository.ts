@@ -52,6 +52,7 @@ export class SubgroupRepository
       to: Timestamp.fromDate(input.to),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      deletedAt: null,
     });
 
     return result.id;
@@ -62,13 +63,17 @@ export class SubgroupRepository
     await this.doc(ref).update(data);
   }
 
+  async deleteDoc(ref: Required<SubgroupRef>) {
+    await this.doc(ref).update({ deletedAt: Timestamp.now() });
+  }
+
   doc(ref: Required<SubgroupRef>): DocumentReference {
     return this.collection(ref).doc(ref.subgroupId);
   }
 
   collection(ref: Required<GroupRef>): CollectionReference {
     return this.groupRepository
-      .doc(ref)
+      .doc(ref.groupId)
       .collection(FirestoreCollection.SUBGROUP);
   }
 
@@ -81,10 +86,12 @@ export class SubgroupRepository
       cycleId: data.cycleId,
       groupId: data.groupId,
       membersIds: data.membersIds,
+      members: [],
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
-    } as Subgroup;
+      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
+    };
   }
 }

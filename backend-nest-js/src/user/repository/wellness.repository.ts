@@ -60,6 +60,7 @@ export class WellnessRepository
       comment: input.comment || null,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
+      deletedAt: null,
     });
 
     return document.id;
@@ -74,6 +75,10 @@ export class WellnessRepository
       ...data,
       updatedAt: Timestamp.now(),
     });
+  }
+
+  async deleteDoc(ref: Required<WellnessRef>): Promise<void> {
+    await this.doc(ref).update({ deletedAt: Timestamp.now() });
   }
 
   doc(ref: Required<WellnessRef>) {

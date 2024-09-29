@@ -1,11 +1,16 @@
-import { TimestampEntity } from '../../common/entity/timestamp.entity';
-import { IsNumber } from 'class-validator';
+import { IsDate, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 
-export class Bodyweight extends TimestampEntity {
+export class Bodyweight {
   @IsNumber()
   @ApiProperty()
   @Expose()
   weight: number;
+
+  @IsDate()
+  @ApiProperty()
+  @Transform(({ value }) => new Date(value))
+  @Expose()
+  date: Date;
 }

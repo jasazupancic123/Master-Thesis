@@ -21,14 +21,12 @@ import { Validate } from '../../common/type/validate.type';
 import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
 import { ExerciseRepository } from '../repository/exercise.repository';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
-import {
-  ExerciseRef,
-  UserRef,
-} from '../../common/type/firebase-firestore.type';
+import { ExerciseRef } from '../../common/type/firebase-firestore.type';
 import { ExerciseAttributeService } from './exercise-attribute.service';
 import { ExerciseAttributeValueService } from './exercise-attribute-value.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { UserService } from '../../user/service/user.service';
+import { User } from '../../common/type/firebase-auth.type';
 
 @Injectable()
 export class ExerciseService {
@@ -46,14 +44,14 @@ export class ExerciseService {
   ) {}
 
   async countAll(
-    ref: Required<UserRef>,
+    user: User,
     options?: FindManyOptions<Exercise>,
   ): Promise<number> {
     let query = this.exerciseRepository.collection() as Query;
 
     // necessary filter either by `global` or `userId`
     if (options?.filter?.global) query = query.where('global', '==', true);
-    else query = query.where('userId', '==', ref.uid);
+    else query = query.where('userId', '==', user.uid);
 
     const components = await this.componentService.findAllFlat();
     if (options?.filter) query = this.filter(query, options.filter, components);
@@ -64,14 +62,14 @@ export class ExerciseService {
   }
 
   async findAllByUser(
-    ref: Required<UserRef>,
+    user: User,
     options?: FindManyOptions<Exercise>,
   ): Promise<Exercise[]> {
     let query = this.exerciseRepository.collection() as Query;
 
     // necessary filter either by `global` or `userId`
     if (options?.filter?.global) query = query.where('global', '==', true);
-    else query = query.where('userId', '==', ref.uid);
+    else query = query.where('userId', '==', user.uid);
 
     const components = await this.componentService.findAllFlat();
     if (options?.filter) query = this.filter(query, options.filter, components);
@@ -98,17 +96,17 @@ export class ExerciseService {
    * For internal use to find all exercises without pagination.
    */
   async findAll(
-    ref: Required<UserRef>,
+    user: User,
     options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
   ): Promise<Exercise[]> {
-    const userExercises = await this.findAllByUser(ref, {
+    const userExercises = await this.findAllByUser(user, {
       ...options,
       paginate: undefined,
       populate: options?.populate,
       filter: { ...options?.filter, global: false },
     });
 
-    const globalExercises = await this.findAllByUser(ref, {
+    const globalExercises = await this.findAllByUser(user, {
       ...options,
       paginate: undefined,
       populate: options?.populate,
@@ -156,8 +154,8 @@ export class ExerciseService {
     return exercise;
   }
 
-  async create(userId: string, data: Partial<Exercise>) {
-    this.logger.debug(`Creating new exercise for user ${userId}`);
+  async create(user: User, data: Partial<Exercise>) {
+    this.logger.debug(`Creating new exercise for user ${user.uid}`);
 
     // validate exercise attributes
     await this.exerciseAttributeService.validate(data.attributeValues || {});
@@ -180,9 +178,8 @@ export class ExerciseService {
     }
 
     // create exercise
-    const user = await this.userService.findOneBy('id', userId);
     const exerciseId = await this.exerciseRepository.addDoc({
-      userId,
+      userId: user.uid,
       name: data.name,
       componentsIds: data.componentsIds,
       global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
@@ -191,7 +188,7 @@ export class ExerciseService {
     });
 
     // create attribute values from provided nested object
-    const exerciseAttributeRef = { uid: userId, exerciseId };
+    const exerciseAttributeRef = { uid: user.uid, exerciseId };
     await this.exerciseAttributeValueService.createMany(
       exerciseAttributeRef,
       data.attributeValues || {},
@@ -208,7 +205,7 @@ export class ExerciseService {
    * the component id of the exercise).
    */
   async move(
-    ref: Required<UserRef>,
+    user: User,
     exerciseIds: string[],
     componentId: string,
   ): Promise<void> {
