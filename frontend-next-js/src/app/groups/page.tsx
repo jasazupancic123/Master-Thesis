@@ -19,10 +19,9 @@ import { Subgroup } from '@/group/entity/subgroup.entity';
 import { CommonService } from '@/common/service/common.service';
 import TrainerPageRouter from '@/app/groups/components/trainer-page-router';
 import { FilterType } from '@/group/type/filter.type';
+import { TrainingController } from '@/training/training.controller';
 
 function Page() {
-  // const router = useRouter();
-  // const searchParams = useSearchParams();
   // context
   const { role } = useAuth() as AuthContextType;
   const { token, components } = useAppContext() as AppContextType;
@@ -31,6 +30,7 @@ function Page() {
   const [loading, setLoading] = useState(false);
   const users = useFetch<User[]>(UserController.URL.users());
   const groups = useFetch<Group[]>(GroupController.URL.groups());
+
   const [filter, setFilter] = useState<FilterType>('year');
   const [date, setDate] = useState({
     start: dayjs().startOf('year'),
@@ -68,8 +68,7 @@ function Page() {
         return;
       }
 
-      const group = selected.group;
-
+      const { group } = selected;
       try {
         const response = await GroupController.findGroup(token, group.id);
         setSelected({ group: response, subgroup: null, cycle: null });
@@ -82,22 +81,6 @@ function Page() {
     fetchGroup().then();
   }, [selected.group?.id, token]);
 
-  // TODO - get initial data based on query params
-
-  /**
-   * Add query to url when selected items change
-   */
-  /*useEffect(() => {
-    const params = new URLSearchParams();
-
-    if (selected.group) params.set('groupId', selected.group.id);
-    if (selected.subgroup) params.set('subgroupId', selected.subgroup.id);
-    if (selected.cycle) params.set('cycleId', selected.cycle.id);
-    params.set('filter', filter);
-
-    router.replace(`?${params.toString()}`);
-  }, [selected.group?.id, selected.subgroup?.id, selected.cycle?.id, filter]);*/
-
   /**
    * Filter date range based on provided filters
    */
@@ -109,21 +92,26 @@ function Page() {
 
     switch (filter) {
       case 'year':
+        props.setSelected(prev => ({ ...prev, subgroup: null }));
         start = today.startOf('year');
         end = today.endOf('year');
         break;
       case 'cycle':
+        props.setSelected(prev => ({ ...prev, subgroup: null }));
+
         if (!props.selected.cycle) {
           const week = CommonService.instance.date.getWeekDays();
           start = week[0].date.startOf('day');
           end = week[6].date.endOf('day');
         } else {
-          start = dayjs(props.selected.cycle.from).startOf('day');
-          end = dayjs(props.selected.cycle.to).endOf('day');
+          start = dayjs(props.selected.cycle.from).startOf('week');
+          end = dayjs(props.selected.cycle.to).endOf('week');
         }
 
         break;
       case 'week':
+        props.setSelected(prev => ({ ...prev, subgroup: null }));
+
         if (!props.selected.cycle) {
           start = today.startOf('week');
           end = today.endOf('week');
@@ -152,21 +140,19 @@ function Page() {
   }, [filter, selected.cycle?.id, props.selected.cycle?.id]);
 
   /**
-   * Filter trainings
+   * Filter trainings and subgroups
    */
   useEffect(() => {
-    if (!selected.group || !selected.cycle)
-      return;
-
-    const group = selected.group;
-    const cycle = selected.cycle;
-    const subgroup = selected.subgroup;
+    const { group, cycle, subgroup } = selected;
+    if (!group || !cycle) return;
 
     async function fetchTrainings() {
       setLoading(true);
 
       try {
-        const response = await GroupController.findTrainings(token, group.id, cycle.id, {
+        const response = await TrainingController.findTrainings(token, {
+          groupId: group!.id,
+          cycleId: cycle!.id,
           subgroupId: subgroup?.id || null,
           from: date.start.toDate(),
           to: date.end.toDate(),
@@ -181,8 +167,49 @@ function Page() {
       }
     }
 
+    async function fetchSubgroups() {
+      const { group } = selected;
+      if (!group) return;
+
+      if (!date.start.startOf('day').isSame(date.end.startOf('day'))) {
+        setSelected(prev => ({ ...prev, group: { ...prev.group!, subgroups: [] } }));
+        return;
+      }
+
+      try {
+        const response = await GroupController.findSubgroups(token, group.id, {
+          from: date.start,
+          to: date.end,
+        });
+
+        setSelected(prev => ({
+          ...prev,
+          group: {
+            ...prev.group!,
+            subgroups: response,
+          },
+        }));
+      } catch (e: any) {
+        console.error(e);
+        toast.error(e.message || 'Error fetching subgroups');
+      }
+    }
+
     fetchTrainings().then();
-  }, [date.custom, date.start, date.end, selected.subgroup?.id]);
+    fetchSubgroups().then();
+  }, [
+    date.start,
+    date.end,
+    token,
+    selected.group?.id,
+    selected.cycle?.id,
+    selected.subgroup?.id,
+  ]);
+
+  useEffect(() => {
+    if (selected.subgroup && date.custom)
+      setSelected(prev => ({ ...prev, subgroup: null }));
+  }, [date.start, date.end]);
 
   if (users.loading || groups.loading)
     return <div>Loading...</div>;

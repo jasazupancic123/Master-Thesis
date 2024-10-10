@@ -1,4 +1,11 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { FirebaseAuthError } from '../enum/firebase-auth-error.enum';
 
@@ -6,8 +13,7 @@ import { FirebaseAuthError } from '../enum/firebase-auth-error.enum';
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {
-  }
+  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: any, host: ArgumentsHost): void {
     this.logger.error(JSON.stringify(exception), exception.stack);
@@ -15,18 +21,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // log error and send same response
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = exception instanceof HttpException ? exception.getResponse() : 'Internal Server Error';
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+    let message =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : 'Internal Server Error';
 
-    if (typeof message === 'string') {
-      if (message.includes(FirebaseAuthError.ID_TOKEN_EXPIRED))
-        message = 'Please login again';
+    if ('code' in exception) {
+      if (exception.code?.includes(FirebaseAuthError.ID_TOKEN_EXPIRED))
+        message = 'Please refresh the page or login again';
 
-      if (message.includes(FirebaseAuthError.USER_NOT_FOUND))
+      if (exception.code?.includes(FirebaseAuthError.USER_NOT_FOUND))
         message = 'User not found';
 
       response.status(status).send({ message });
-    } else
-      response.status(status).send(message);
+    } else response.status(status).send(message);
   }
 }

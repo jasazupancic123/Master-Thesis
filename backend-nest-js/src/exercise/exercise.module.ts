@@ -10,27 +10,16 @@ import { ExerciseAttributeService } from './service/exercise-attribute.service';
 import { ExerciseAttributeValueService } from './service/exercise-attribute-value.service';
 
 @Module({
-  imports: [
-    UserModule,
-    forwardRef(() => ComponentModule),
-  ],
+  imports: [UserModule, forwardRef(() => ComponentModule)],
   controllers: [ExerciseController],
   providers: [
     ExerciseAttributeRepository,
-    ExerciseAttributeValueRepository,
-    ExerciseRepository,
     ExerciseAttributeService,
+    ExerciseAttributeValueRepository,
     ExerciseAttributeValueService,
+    ExerciseRepository,
     ExerciseService,
   ],
-  exports: [
-    ExerciseAttributeRepository,
-    ExerciseAttributeValueRepository,
-    ExerciseRepository,
-    ExerciseAttributeService,
-    ExerciseAttributeValueService,
-    ExerciseService,
-  ],
+  exports: [ExerciseAttributeService, ExerciseService],
 })
-export class ExerciseModule {
-}
+export class ExerciseModule {}

@@ -11,6 +11,7 @@ import { Expose, Transform, Type } from 'class-transformer';
 import { TrainingComponent } from './training-component.entity';
 import { Subgroup } from '../../group/entity/subgroup.entity';
 import { Group } from '../../group/entity/group.entity';
+import { Cycle } from '../../group/entity/cycle.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -19,6 +20,13 @@ export class Training extends BaseEntity {
   @Expose()
   groupId: string;
   group?: Group;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  cycleId: string;
+  cycle?: Cycle;
 
   @IsString()
   @IsNotEmpty()

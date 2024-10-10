@@ -19,7 +19,7 @@ export default function TrainingWeek(props: {
   training: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs },
   addTraining: (data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs }) => void,
   addTrainingComponent: (trainingId: string, data: CreateTrainingComponent[]) => void,
-  // deleteTraining: (trainingId: string) => Promise<void>,
+  deleteTraining: (trainingId: string) => Promise<void>,
 }) {
   function getFilteredTrainings(date: Dayjs) {
     date = dayjs(date);
@@ -101,6 +101,7 @@ export default function TrainingWeek(props: {
                       training={training}
                       components={props.components}
                       addTrainingComponent={props.addTrainingComponent}
+                      deleteTraining={props.deleteTraining}
                     />
                   </Box>
               ))}

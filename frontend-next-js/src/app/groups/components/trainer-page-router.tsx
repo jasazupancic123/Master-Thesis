@@ -2,7 +2,7 @@
 
 import React, { ReactNode, useState } from 'react';
 import Box from '@mui/material/Box';
-import { SpeedDial, SpeedDialAction, SpeedDialIcon, TextField, ToggleButtonGroup } from '@mui/material';
+import { TextField, ToggleButtonGroup, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import MyModal from '@/common/components/modal';
 import { CreateGroup } from '@/group/type/group.type';
@@ -10,46 +10,35 @@ import { useAppContext } from '@/context/app-provider';
 import toast from 'react-hot-toast';
 import SelectData from '@/common/components/select-data';
 import { User } from '@/user/type/user.type';
-import CreateCycleModal from '@/group/components/create-cycle-modal';
-import { CreateCycle } from '@/group/type/cycle.type';
 import FilterButton from '@/app/groups/components/filter-button';
 import TrainerDayView from '@/app/groups/components/trainer-day-view';
 import TrainerCycleView from '@/app/groups/components/trainer-cycle-view';
 import TrainerYearView from '@/app/groups/components/trainer-year-view';
 import TrainerWeekView from '@/app/groups/components/trainer-week-view';
 import GroupIcon from '@mui/icons-material/Group';
-import GroupsIcon from '@mui/icons-material/Groups';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SelectInput from '@/app/groups/components/select-input';
-import dayjs from 'dayjs';
 import { AppContextType } from '@/common/type/context.type';
 import { GroupPageProps } from '@/group/type/props.type';
 import { GroupController } from '@/group/group.controller';
-import { CreateSubgroup } from '@/group/type/subgroup.type';
 import { Group } from '@/group/entity/group.entity';
-import { Subgroup } from '@/group/entity/subgroup.entity';
 import { Cycle } from '@/group/entity/cycle.entity';
 import { FilterType } from '@/group/type/filter.type';
-
-const TEST_SUBGROUP_DURATION_VALUE = 1000;
+import SettingsIcon from '@mui/icons-material/Settings';
+import { GroupSettings } from '@/group/components/group-settings';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import AddIcon from '@mui/icons-material/Add';
 
 export default function TrainerPageRouter(props: GroupPageProps) {
   // context
   const { token } = useAppContext() as AppContextType;
 
   // modal
-  const [modal, setModal] = useState({
-    group: false,
-    subgroup: false,
-    cycle: false,
-  });
+  const [modal, setModal] = useState({ group: false, editGroup: false, subgroup: false });
 
   // group to create or update
-  const [create, setCreate] = useState({
-    group: { name: '', membersIds: [] },
-    subgroup: { name: '', membersIds: [], to: 0 }, // `to` is duration in days
-    // cycle modal is a separate component
-  });
+  const [create, setCreate] = useState({ group: { name: '', membersIds: [] } });
 
   const mapper: Record<FilterType, ReactNode> = {
     day: <TrainerDayView {...props} />,
@@ -57,28 +46,6 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     cycle: <TrainerCycleView {...props} />,
     year: <TrainerYearView {...props} />,
   };
-
-  // actions to add group, subgroup or cycle
-  const actions = [
-    {
-      icon: <GroupIcon />,
-      title: 'Add group',
-      onClick: () => setModal({ ...modal, group: true }),
-      show: (_props: GroupPageProps['selected']): boolean => true,
-    },
-    {
-      icon: <GroupsIcon />,
-      title: 'Add subgroup',
-      onClick: () => setModal({ ...modal, subgroup: true }),
-      show: (props: GroupPageProps['selected']): boolean => !!props.group,
-    },
-    {
-      icon: <RotateRightIcon />,
-      title: 'Add cycle',
-      onClick: () => setModal({ ...modal, cycle: true }),
-      show: (props: GroupPageProps['selected']): boolean => !!props.group,
-    },
-  ];
 
   async function createGroup(group: CreateGroup) {
     try {
@@ -100,121 +67,6 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       setCreate({ ...create, group: { name: '', membersIds: [] } });
     } catch (e: any) {
       toast.error(e.message);
-    } finally {
-      props.setLoading(false);
-    }
-  }
-
-  async function createSubgroup(subgroup: CreateSubgroup) {
-    const group = props.selected.group;
-    const cycle = props.selected.cycle;
-    if (!group || !cycle) {
-      toast.error('Group or cycle not selected');
-      return;
-    }
-
-    try {
-      props.setLoading(true);
-
-      // check that all members are available in group
-      if (!subgroup.membersIds.every(id => group.availableMembersIds?.includes(id))) {
-        toast.error('Some members are occupied in other subgroups');
-        return;
-      }
-
-      const days = subgroup.to as unknown as number;
-      const to = days === 0 ? dayjs(cycle.to) : dayjs().add(days, 'd');
-
-      const response = await GroupController.addSubgroup(token, group.id, {
-        cycleId: cycle.id,
-        membersIds: subgroup.membersIds,
-        name: subgroup.name,
-        from: dayjs().toISOString() as unknown as Date,
-        to: days === TEST_SUBGROUP_DURATION_VALUE
-          ? dayjs().add(10, 's').toISOString() as unknown as Date
-          : to.toISOString() as unknown as Date,
-      });
-
-      // fetch subgroup trainings
-      const trainings = await GroupController.findTrainings(token, group.id, cycle.id, {
-        subgroupId: response.id,
-        from: props.date.start.toDate() || cycle.from,
-        to: props.date.end.toDate() || cycle.to,
-      });
-
-      // remove members that are in subgroup from main group's available members
-      props.setSelected(prev => ({
-        ...prev,
-        group: {
-          ...prev.group!,
-          subgroups: [...(prev.group!.subgroups || []), response],
-          availableMembersIds: group.availableMembersIds
-            ?.filter(id => !subgroup.membersIds.includes(id)) || [],
-        },
-        subgroup: response,
-        cycle: {
-          ...prev.cycle!,
-          trainings,
-        },
-      }));
-
-      // add subgroup to all groups list
-      props.groups.setData(prev => {
-        const groups = prev || [];
-        const found = groups.find(g => g.id === group.id);
-        if (!found) return groups;
-
-        found.subgroups = [...(found.subgroups || []), response];
-        found.availableMembersIds = found.availableMembersIds
-          ?.filter(id => !subgroup.membersIds.includes(id)) || [];
-
-        return groups;
-      });
-
-      setModal({ ...modal, subgroup: false });
-      setCreate({ ...create, subgroup: { name: '', membersIds: [], to: 0 } });
-      toast.success('Successfully created subgroup');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to create subgroup');
-    } finally {
-      props.setLoading(false);
-    }
-  }
-
-  /**
-   * Create cycle
-   */
-  async function createCycle(cycle: CreateCycle) {
-    const group = props.selected.group;
-    if (!group)
-      return;
-
-    try {
-      props.setLoading(true);
-
-      const response = await GroupController.addCycle(token, group.id, cycle);
-      if (!response) {
-        toast.error('Failed to create cycle');
-        return;
-      }
-
-      // add cycle to group
-      props.setSelected(prev => ({
-        ...prev,
-        group: {
-          ...prev.group!,
-          cycles: [...(prev.group!.cycles || []), response],
-        },
-        cycle: {
-          ...response,
-          trainings: [],
-        },
-      }));
-
-      setModal({ ...modal, cycle: false });
-      toast.success('Successfully created cycle');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to create cycle');
     } finally {
       props.setLoading(false);
     }
@@ -250,6 +102,16 @@ export default function TrainerPageRouter(props: GroupPageProps) {
             justifyContent="space-between"
           >
             <Box>
+              {/* Add new group */}
+              <Tooltip title="Add group">
+                <IconButton
+                  onClick={() => setModal({ ...modal, group: true })}
+                  sx={{ height: 50, width: 50 }}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+
               {/* Select group */}
               <SelectInput<Group>
                 label="Group"
@@ -270,7 +132,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
               />
 
               {/* Select subgroup */}
-              {props.selected.group &&
+              {/*{props.selected.group &&
                 <SelectInput<Subgroup>
                   label="Subgroup"
                   icon={<GroupsIcon />}
@@ -283,7 +145,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                   itemKey="id"
                   itemName="name"
                 />
-              }
+              }*/}
 
               {/* Select cycle */}
               {props.selected.group &&
@@ -303,24 +165,19 @@ export default function TrainerPageRouter(props: GroupPageProps) {
               }
             </Box>
 
-            {/* Buttons to add group, subgroup or cycle */}
-            <SpeedDial
-              icon={<SpeedDialIcon />}
-              direction="left"
-              ariaLabel="add-group-subgroup-cycle"
-            >
-              {actions.map((action, i) => {
-                if (action.show(props.selected))
-                  return <SpeedDialAction
-                    key={i}
-                    icon={action.icon}
-                    tooltipTitle={action.title}
-                    onClick={action.onClick}
-                  />;
-
-                return null;
-              })}
-            </SpeedDial>
+            <Stack direction="row" spacing={1}>
+              {/* Edit group settings */}
+              {props.selected.group &&
+                <Tooltip title="Edit group">
+                  <IconButton
+                    onClick={() => setModal({ ...modal, editGroup: true })}
+                    sx={{ height: 50, width: 50 }}
+                  >
+                    <SettingsIcon />
+                  </IconButton>
+                </Tooltip>
+              }
+            </Stack>
           </Box>
         </Box>
 
@@ -358,68 +215,16 @@ export default function TrainerPageRouter(props: GroupPageProps) {
           />
         </MyModal>
 
-        {/* Create subgroup modal */}
         {props.selected.group && <>
+          {/* Edit group modal */}
           <MyModal
-            isOpen={modal.subgroup}
-            setIsOpen={(open) => setModal({ ...modal, subgroup: open })}
-            onCancel={() => setModal({ ...modal, subgroup: false })}
-            onConfirm={() => createSubgroup(create.subgroup as unknown as CreateSubgroup)}
+            isOpen={modal.editGroup}
+            setIsOpen={(open) => setModal({ ...modal, editGroup: open })}
+            onCancel={() => setModal({ ...modal, editGroup: false })}
+            cancelText="Close"
           >
-            <Typography variant="h6" mb={2}>Create Subgroup</Typography>
-
-            <Box mt={2} />
-
-            <TextField
-              sx={{ mb: 2 }}
-              label="Name"
-              fullWidth
-              value={create.subgroup?.name || ''}
-              onChange={(event) =>
-                setCreate({ ...create, subgroup: { ...create.subgroup, name: event.target.value } })
-              }
-            />
-
-            <SelectData<User>
-              // NOTE - selected group member ids can be null, if group has all users in its subgroups, but selected group
-              // members are fetched from all subgroups, so we need to filter out members that are not in selected group
-              multiple
-              data={(props.selected.group.availableMembersIds || []).map(id => (props.selected.group!.members || []).find(user => user.uid === id) as User)}
-              dataKeyProp="uid"
-              dataValueProp="email"
-              label="Members"
-              value={create.subgroup.membersIds || []}
-              onChange={(membersIds) =>
-                setCreate({ ...create, subgroup: { ...create.subgroup, membersIds } })
-              }
-            />
-
-            <Box mt={2} />
-
-            {/* Subgroup duration */}
-            <SelectData<{ label: string, value: number }>
-              data={[
-                { label: '10 seconds', value: TEST_SUBGROUP_DURATION_VALUE }, // TODO - only for testing, remove later
-                { label: '1 day', value: 1 },
-                { label: '1 week', value: 7 },
-                { label: 'Cycle', value: 0 },
-              ]}
-              dataKeyProp="value"
-              dataValueProp="label"
-              label="Duration"
-              value={create.subgroup.to || 0}
-              onChange={(value) => {
-                setCreate({ ...create, subgroup: { ...create.subgroup, to: value } });
-              }}
-            />
+            <GroupSettings {...props} />
           </MyModal>
-
-          {/* Create cycle modal */}
-          <CreateCycleModal
-            open={modal.cycle}
-            setOpen={(open) => setModal({ ...modal, cycle: open })}
-            onConfirm={(data) => createCycle(data)}
-          />
         </>
         }
       </Box>

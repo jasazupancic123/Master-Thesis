@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../common/type/firebase-auth.type';
+import { CustomClaims, User } from '../../common/type/firebase-auth.type';
 import { Group } from '../../group/entity/group.entity';
 import { Wellness } from './wellness.entity';
 import { Bodyweight } from './body-weight.entity';
@@ -43,4 +43,4 @@ export class UserEntity extends BaseEntity {
 
 export type CreateUser = Pick<User, 'email' | 'displayName'> & {
   password: string;
-};
+} & { customClaims: CustomClaims };

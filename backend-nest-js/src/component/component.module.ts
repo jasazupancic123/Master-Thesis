@@ -7,8 +7,7 @@ import { ComponentRepository } from './repository/component.repository';
 @Module({
   imports: [forwardRef(() => ExerciseModule)],
   controllers: [ComponentController],
-  providers: [ComponentService, ComponentRepository],
+  providers: [ComponentRepository, ComponentService],
   exports: [ComponentService],
 })
-export class ComponentModule {
-}
+export class ComponentModule {}

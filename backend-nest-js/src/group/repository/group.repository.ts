@@ -50,6 +50,7 @@ export class GroupRepository
   async updateDoc(id: string, input: Partial<Group>) {
     await this.doc(id).update({
       ...(input.name && { name: input.name }),
+      ...(input.membersIds && { membersIds: input.membersIds }),
     });
   }
 

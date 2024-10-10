@@ -14,8 +14,7 @@ import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import { Exercise } from '../../exercise/entity/exercise.entity';
 import { UserEntity } from '../../user/entity/user.entity';
 import { Group } from '../../group/entity/group.entity';
-import { addDays, addHours } from 'date-fns';
-import { TrainingComponent } from '../../training/entity/training-component.entity';
+import { addDays } from 'date-fns';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Component } from '../../component/entity/component.entity';
 import { UserRepository } from '../../user/repository/user.repository';
@@ -49,29 +48,26 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
       password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
       displayName: 'Admin',
+      customClaims: { role: [UserRole.ADMIN] },
     });
 
     if (options?.dev) {
       // delete all data
-      const foundUsers = await this.userService.findAll();
-      for (const user of foundUsers) {
-        await this.firebaseService.deleteCollection(
-          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.GROUP}`,
-        );
-
-        await this.firebaseService.deleteCollection(
-          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`,
-        );
-      }
-
+      await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
       await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
+      await this.firebaseService.deleteCollection(
+        FirestoreCollection.EXERCISE_ATTRIBUTE,
+      );
       await this.firebaseService.deleteCollection(
         FirestoreCollection.COMPONENT,
       );
 
-      await this.firebaseService.deleteCollection(
-        FirestoreCollection.EXERCISE_ATTRIBUTE,
-      );
+      const foundUsers = await this.userService.findAll();
+      for (const user of foundUsers) {
+        await this.firebaseService.deleteCollection(
+          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`,
+        );
+      }
 
       try {
         await this.import('data.json');
@@ -128,6 +124,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
           email: user.email,
           displayName: user.displayName,
           password: 'password',
+          customClaims: { role: [user.role || UserRole.ATHLETE] },
         }),
       ),
     );
@@ -148,13 +145,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
         userRepository.addDoc({
           id: user.uid,
           level: userData?.level || SportLevel.BEGINNER,
-          bodyweight: [
-            {
-              weight: userData?.weight,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            },
-          ],
+          bodyweight: [{ weight: userData?.weight, date: new Date() }],
         });
       }),
     );
@@ -182,7 +173,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
           continue;
         }
 
-        await this.exerciseService.create(user.uid, {
+        await this.exerciseService.create(user, {
           name: exercise.name,
           componentsIds: [component.id],
           attributeValues: exercise.attributes,
@@ -194,17 +185,22 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
       const groups =
         (usersData.find((u) => u.email === user.email)?.groups as (Group &
           Record<string, any>)[]) || [];
-      for (const { name, membersEmails: emails, cycles } of groups) {
+
+      for (const { name, membersEmails: emails } of groups) {
         const members = await this.userService.findAll({ emails });
         const membersIds = members.map((m) => m.uid);
-        const group = await this.groupService.create(ref, { name, membersIds });
+        const group = await this.groupService.create(user, {
+          name,
+          membersIds,
+          ownerId: user.uid,
+        });
 
         // import cycles
         let from = new Date();
         let to = addDays(from, 10);
 
         const groupRef = { ...ref, groupId: group.id };
-        for (const { name, description, trainings } of cycles) {
+        /*for (const { name, description } of cycles) {
           const cycle = await this.groupService.addCycle(groupRef, {
             name,
             description,
@@ -283,7 +279,7 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
 
           from = addDays(to, 1);
           to = addDays(from, 10);
-        }
+        }*/
       }
     }
   }

@@ -34,7 +34,7 @@ export class UserService {
 
   async upsert(data: CreateUser): Promise<User> {
     const { auth } = this.firebaseService;
-    const { email, password, displayName } = data;
+    const { email, password, displayName, customClaims } = data;
 
     let user: UserRecord;
     try {
@@ -42,6 +42,8 @@ export class UserService {
     } catch (e) {
       this.logger.log(`Creating user (${email}, ${JSON.stringify(data)})`);
       user = await auth.createUser({ email, password, displayName });
+    } finally {
+      await auth.setCustomUserClaims(user.uid, customClaims);
     }
 
     return (await auth.getUser(user.uid)) as User;
@@ -59,6 +61,7 @@ export class UserService {
   }
 
   async findAll(filter?: FilterUserQueryDto): Promise<User[]> {
+    if (filter?.ids?.length === 0 || filter?.emails?.length === 0) return [];
     return await this.firebaseService.authUsers(filter);
   }
 
@@ -82,6 +85,14 @@ export class UserService {
     });
   }
 
+  async addGroup(userId: string, groupId: string): Promise<void> {
+    await this.userRepository.addGroup(userId, groupId);
+  }
+
+  async removeGroup(userId: string, groupId: string): Promise<void> {
+    await this.userRepository.removeGroup(userId, groupId);
+  }
+
   async addWellness(
     ref: Required<UserRef>,
     data: CreateWellness,
@@ -91,6 +102,12 @@ export class UserService {
 
   async addBodyweight(ref: Required<UserRef>, weight: number): Promise<void> {
     await this.userRepository.updateDoc(ref.uid, { weight });
+  }
+
+  async getBodyweight(user: User | string): Promise<number> {
+    return await this.userRepository.getBodyweight(
+      typeof user === 'string' ? user : user.uid,
+    );
   }
 
   async findTodayWellness(ref: Required<UserRef>): Promise<Wellness | null> {

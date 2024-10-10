@@ -1,7 +1,7 @@
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
 
-export type CreateTrainingExercise = Pick<Training, 'membersIds'> &
+export type CreateTrainingExercise = Partial<Pick<Training, 'membersIds'>> &
   Pick<TrainingExercise, 'exerciseId' | 'meta' | 'color'>;
 
 export type UpdateTrainingExercise = Partial<

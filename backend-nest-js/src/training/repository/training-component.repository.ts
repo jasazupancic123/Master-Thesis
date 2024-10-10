@@ -61,6 +61,7 @@ export class TrainingComponentRepository
   ) {
     await this.doc(ref).set({
       componentId: ref.componentId,
+      trainingId: ref.trainingId,
       order: data.order,
       color: data.color || this.commonService.color.random(),
     });
@@ -97,6 +98,7 @@ export class TrainingComponentRepository
 
     return {
       componentId: snapshot.id,
+      trainingId: data.trainingId,
       order: +data.order,
       color: data.color,
       supersets: [],

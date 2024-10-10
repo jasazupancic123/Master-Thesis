@@ -2,7 +2,6 @@ import { useAppContext } from '@/context/app-provider';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Component } from '@/component/entity/component.entity';
 import { CreateTraining } from '@/training/type/training.type';
-import { Training } from '@/training/entity/training.entity';
 import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
 import Box from '@mui/material/Box';
@@ -14,10 +13,10 @@ import Typography from '@mui/material/Typography';
 import { Alert } from '@mui/material';
 import { AppContextType } from '@/common/type/context.type';
 import { GroupPageProps } from '@/group/type/props.type';
-import { GroupController } from '@/group/group.controller';
 import { CreateTrainingComponent } from '@/training/type/training-component.type';
 import { CommonService } from '@/common/service/common.service';
 import TrainingWeek from '@/app/groups/components/training-cycle-view-week';
+import { TrainingController } from '@/training/training.controller';
 
 export default function TrainerCycleView(props: GroupPageProps) {
   // context
@@ -32,25 +31,22 @@ export default function TrainerCycleView(props: GroupPageProps) {
     },
   });
 
-  const group = props.selected.group;
-  const cycle = props.selected.cycle;
-
   /**
    * Set date to cycle start and end when opening the page
    */
   useEffect(() => {
-    if (!cycle)
-      return;
-
+    if (!props.selected.cycle) return;
     props.setDate({
-      start: dayjs(cycle.from).startOf('day'),
-      end: dayjs(cycle.to).endOf('day'),
+      start: dayjs(props.selected.cycle.from).startOf('week'),
+      end: dayjs(props.selected.cycle.to).endOf('week'),
       custom: false,
     });
-  }, [cycle?.id]);
+  }, [props.selected.cycle?.id]);
 
-  async function addTraining(data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs }) {
-    if (!cycle || !group) {
+  async function createTraining(
+    data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs },
+  ) {
+    if (!props.selected.cycle || !props.selected.group) {
       toast.error('Please select a group and cycle');
       return;
     }
@@ -78,7 +74,9 @@ export default function TrainerCycleView(props: GroupPageProps) {
       .set('second', data.to.second());
 
     try {
-      const response = await GroupController.addTraining(token, group.id, cycle.id, {
+      const response = await TrainingController.addTraining(token, {
+        groupId: props.selected.group!.id,
+        cycleId: props.selected.cycle!.id,
         subgroupId: props.selected.subgroup?.id || null,
         componentIds: selected.map(c => c.id),
         from,
@@ -99,28 +97,28 @@ export default function TrainerCycleView(props: GroupPageProps) {
         },
       }));
 
-      toast.success('Training created');
+      setSelected([]);
     } catch (e: any) {
       toast.error(e.message || 'Failed to create training');
     }
   }
 
   async function addTrainingComponents(trainingId: string, data: CreateTrainingComponent[]) {
-    if (!cycle || !group) {
+    if (!props.selected.cycle || !props.selected.group) {
       toast.error('Please select a group and cycle');
       return;
     }
 
     try {
       // const responses = await Promise.all(data.map(item => GroupController.addTrainingComponent(token, group.id, cycle.id, trainingId, item)));
-      const response = await GroupController.addTrainingComponents(token, group.id, cycle.id, trainingId, data);
+      const response = await TrainingController.addTrainingComponents(token, trainingId, data);
 
       // update training
       props.setSelected(prev => ({
         ...prev,
         cycle: {
-          ...cycle,
-          trainings: cycle.trainings.map(training => {
+          ...props.selected.cycle!,
+          trainings: props.selected.cycle!.trainings.map(training => {
             if (training.id === trainingId)
               return {
                 ...training,
@@ -136,15 +134,28 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
   }
 
-  async function deleteTraining(_training: Training) {
-    toast('Deleting training ...');
+  async function deleteTraining(trainingId: string) {
+    try {
+      await TrainingController.deleteTraining(token, trainingId);
+
+      // update selected trainings
+      props.setSelected(prev => ({
+        ...prev,
+        cycle: {
+          ...prev.cycle!,
+          trainings: prev.cycle?.trainings?.filter(t => t.id !== trainingId) || [],
+        },
+      }));
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to delete training');
+    }
   }
 
-  if (!group || !cycle)
+  if (!props.selected.group || !props.selected.cycle)
     return <Typography variant="body1" mt={2}>No cycle selected</Typography>;
 
   return (
-    <Box>
+    <Box pb={10}>
       <Box>
         {/* Exercises */}
         <Box
@@ -161,8 +172,6 @@ export default function TrainerCycleView(props: GroupPageProps) {
           }}
         >
           <ExerciseChips
-            global={global}
-            setGlobal={setGlobal}
             noSelectionLabel="None"
             selected={selected}
             setSelected={(component) => setSelected(component as Component[])}
@@ -204,15 +213,15 @@ export default function TrainerCycleView(props: GroupPageProps) {
         {/* Cycle name and weeks count */}
         <Stack direction="row" spacing={5} alignItems="center">
           <Typography variant="h6" color="primary" fontWeight="bold">
-            {cycle.name}
+            {props.selected.cycle!.name}
           </Typography>
 
           <Typography variant="body1" fontSize={20}>
-            {cycle.weeks?.length || 0} weeks
+            {props.selected.cycle!.weeks?.length || 0} weeks
           </Typography>
 
           <Typography variant="body1" fontSize={16}>
-            {CommonService.instance.date.format(cycle.from)} - {CommonService.instance.date.format(cycle.to)}
+            {CommonService.instance.date.format(props.selected.cycle!.from)} - {CommonService.instance.date.format(props.selected.cycle!.to)}
           </Typography>
         </Stack>
 
@@ -220,16 +229,17 @@ export default function TrainerCycleView(props: GroupPageProps) {
         {props.loading
           ? <Typography>Loading ...</Typography>
           : <Stack spacing={1} mt={2}>
-            {cycle.weeks.map((week, i) => (
+            {props.selected.cycle!.weeks.map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
                   index={i}
                   week={week.map(({ date }) => dayjs(date!))}
-                  trainings={cycle.trainings || []}
+                  trainings={props.selected.cycle!.trainings || []}
                   components={selected}
                   training={create.training}
-                  addTraining={addTraining}
+                  addTraining={createTraining}
                   addTrainingComponent={addTrainingComponents}
+                  deleteTraining={deleteTraining}
                 />
               </Fragment>
             ))}

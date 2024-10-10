@@ -4,24 +4,15 @@ Project for managers, trainers and athletes to track their workouts more efficie
 
 ### Research
 
-- Database denormalization - for example, when a cycle is added to a group, should group have array property `cycleIds` and be updated each time when cycles are changed? Should this be applied to all tables (like user having his own `trainingIds`, `cycleIds`, ...)?
-- Test logic for active cycle when user is part of multiple groups and has many cycles in each
-
 ### TODO
 
-- Go through new update & remove methods for multiple entities (groups, cycles, subgroups, adding/removing members to groups/subgroups, trianing components, training supersets, training exercises) and complete them
-- Change subgroups storage by adding `cycles` subcollections (same as in `groups`), so that querying for trainings will be easier
-
-### Minor Fixes
-
+- Delete group
+- When adding exercise to training, show checkbox to show user's custom exercises
+- Exercise video
+- Exercise video in background
 - Athlete daily view
   - New style of components for athletes to allow him to update his own data
   - Athlete can update his own exercise info data
-- Trainer daily view
-  - Exercise card does not refresh properly when switching to another training with same component
-  - When adding new superset, exercises cannot be added
-  - Add design to see user wellness for the current date
-  - Add ability to update athlete's bodyweight
 
 ### Components
 

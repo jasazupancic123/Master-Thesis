@@ -13,8 +13,6 @@ import { CommonService } from '@/common/service/common.service';
 
 export default function TrainerYearView(props: GroupPageProps) {
   const group = props.selected.group;
-  const cycle = props.selected.cycle;
-
   if (!group)
     return <Typography variant="body1" mt={2}>No group selected</Typography>;
 
@@ -77,12 +75,18 @@ export default function TrainerYearView(props: GroupPageProps) {
           </Grid2>
         ))}
       </Grid2>
-    </> : cycle ? <>
-      <Typography variant="h6" mr={2}>
-        {CommonService.instance.date.format(dayjs(cycle.from))}
-        <ArrowCircleRight sx={{ mx: 1 }} />
-        {CommonService.instance.date.format(dayjs(cycle.to))}
+    </> : props.selected.cycle ? <Stack direction="row" m={1}>
+      <Typography variant="h6" m={1}>
+        {CommonService.instance.date.format(dayjs(props.selected.cycle.from))}
       </Typography>
-    </> : null}
+
+      <Typography variant="h6" m={1}>
+        -
+      </Typography>
+
+      <Typography variant="h6" m={1}>
+        {CommonService.instance.date.format(dayjs(props.selected.cycle.to))}
+      </Typography>
+    </Stack> : null}
   </>;
 }

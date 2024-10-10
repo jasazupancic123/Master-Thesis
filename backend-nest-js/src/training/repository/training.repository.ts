@@ -34,6 +34,7 @@ export class TrainingRepository
   async addDoc(input: Partial<Training>): Promise<string> {
     const result = await this.collection().add({
       groupId: input.groupId,
+      cycleId: input.cycleId,
       ownerId: input.ownerId,
       membersIds: input.membersIds || [],
       subgroupId: input.subgroupId || null,
@@ -77,6 +78,7 @@ export class TrainingRepository
     return {
       id: snapshot.id,
       groupId: data.groupId,
+      cycleId: data.cycleId,
       ownerId: data.ownerId,
       membersIds: data.membersIds,
       subgroupId: data.subgroupId,

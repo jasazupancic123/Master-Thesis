@@ -8,10 +8,15 @@ import Stack from '@mui/material/Stack';
 import Circles from '@/app/groups/components/circles';
 import { GroupPageProps } from '@/group/type/props.type';
 import { CommonService } from '@/common/service/common.service';
+import { TrainingController } from '@/training/training.controller';
+import { useAppContext } from '@/context/app-provider';
+import { UpdateTraining } from '@/training/type/training.type';
+import toast from 'react-hot-toast';
 
 const commonService = CommonService.instance;
 
 export default function TrainerWeekView(props: GroupPageProps) {
+  const { token } = useAppContext();
   const [index, setIndex] = useState(0); // week index
   const cycle = props.selected.cycle;
   const weeks = cycle?.weeks || [commonService.date.getWeekDays()];
@@ -20,6 +25,26 @@ export default function TrainerWeekView(props: GroupPageProps) {
   const getWeek = (index: number) => weeks[index];
   const getWeekStart = (index: number) => dayjs(weeks[index][0].date)!.startOf('day');
   const getWeekEnd = (index: number) => dayjs(weeks[index][6].date)!.endOf('day');
+
+  async function updateTraining(training: Training, input: UpdateTraining) {
+    if (!cycle) return;
+    if (!Object.keys(input).length) return;
+
+    try {
+      const updated = await TrainingController.updateTraining(token, training.id, input);
+
+      // update trainings state
+      props.setSelected(prev => ({
+        ...prev,
+        cycle: {
+          ...prev.cycle!,
+          trainings: (prev.cycle!.trainings || []).map(t => t.id === updated.id ? updated : t),
+        },
+      }));
+    } catch (e: any) {
+      toast.error(e.message || 'Error updating training');
+    }
+  }
 
   /**
    * Set date to cycle start and end when opening the page
@@ -76,7 +101,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               {filtered.map((training) => (
                 <Fragment key={training.id}>
-                  <TrainingItem training={training} />
+                  <TrainingItem training={training} updateTraining={updateTraining} />
                 </Fragment>
               ))}
             </Box>
@@ -87,12 +112,22 @@ export default function TrainerWeekView(props: GroupPageProps) {
   </Box>;
 }
 
-function TrainingItem(props: { training: Training }) {
-  const { training } = props;
+function TrainingItem(props: {
+  training: Training,
+  updateTraining: (training: Training, input: UpdateTraining) => Promise<void>
+}) {
+  const { training, updateTraining } = props;
   const [date, setDate] = useState(() => ({
-    start: dayjs(training.from).format('HH:mm'),
-    end: dayjs(training.to).format('HH:mm'),
+    from: dayjs(training.from).format('HH:mm'),
+    to: dayjs(training.to).format('HH:mm'),
   }));
+
+  async function onChange(key: 'from' | 'to', value: string) {
+    const [hours, minutes] = value.split(':');
+    const date = dayjs(training.from).set('hour', parseInt(hours)).set('minute', parseInt(minutes));
+    await updateTraining(training, { [key]: date.toDate() });
+    setDate(prev => ({ ...prev, [key]: value }));
+  }
 
   return <Box>
     {/* Training components */}
@@ -100,8 +135,8 @@ function TrainingItem(props: { training: Training }) {
       <Stack spacing={1}>
         <input
           type="time"
-          value={date.start}
-          onChange={(e) => setDate({ ...date, start: e.target.value })}
+          value={date.from}
+          onChange={(e) => onChange('from', e.target.value)}
           style={{
             color: '#fff',
             backgroundColor: '#303E4A',
@@ -114,8 +149,8 @@ function TrainingItem(props: { training: Training }) {
 
         <input
           type="time"
-          value={date.end}
-          onChange={(e) => setDate({ ...date, end: e.target.value })}
+          value={date.to}
+          onChange={(e) => onChange('to', e.target.value)}
           style={{
             color: '#fff',
             backgroundColor: '#303E4A',

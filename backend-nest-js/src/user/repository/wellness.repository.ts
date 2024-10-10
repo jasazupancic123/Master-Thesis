@@ -58,8 +58,7 @@ export class WellnessRepository
       fatigue: input.fatigue || null,
       soreness: input.soreness || null,
       comment: input.comment || null,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
+      date: Timestamp.now(),
       deletedAt: null,
     });
 
@@ -96,8 +95,7 @@ export class WellnessRepository
 
     return {
       id: snapshot.id,
-      createdAt: (data.createdAt as Timestamp).toDate(),
-      updatedAt: (data.updatedAt as Timestamp).toDate(),
+      date: (data.date as Timestamp).toDate(),
       sleep: data.sleep || null,
       fatigue: data.fatigue || null,
       soreness: data.soreness || null,

@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { CommonService } from '../../common/service/common.service';
 import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
@@ -20,22 +21,19 @@ import { Wrapper } from '../../common/type/wrapper.type';
 import { CycleRef, GroupRef } from '../../common/type/firebase-firestore.type';
 import { GroupService } from './group.service';
 import { CreateCycle, UpdateCycle } from '../type/cycle.type';
-import { Validate } from '../../common/type/validate.type';
-import { Group } from '../entity/group.entity';
 import { User } from '../../common/type/firebase-auth.type';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { SubgroupService } from './subgroup.service';
 
 @Injectable()
 export class CycleService {
+  private readonly logger = new Logger(CycleService.name);
+
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly cycleRepository: CycleRepository,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
-    @Inject(forwardRef(() => SubgroupService))
-    private readonly subgroupService: Wrapper<SubgroupService>,
   ) {}
 
   async findOne(
@@ -68,19 +66,20 @@ export class CycleService {
     ref: Required<GroupRef>,
     options?: FindManyOptions<Cycle> & { user?: User },
   ): Promise<Cycle[]> {
-    const user = options?.user;
-    if (!user) throw new BadRequestException('User not found');
-
-    await this.groupService.findOneOrFail(ref, { user });
-    const isTrainer = this.firebaseService.isTrainer(user);
-    const isAthlete = this.firebaseService.isAthlete(user);
+    if (options?.user)
+      await this.groupService.findOneOrFail(ref, { user: options.user });
 
     return await this.cycleRepository.getDocs(ref, (collection) => {
-      let query = isTrainer
-        ? collection.where('ownerId', '==', user.uid)
-        : isAthlete
-          ? collection.where('membersIds', 'array-contains', user.uid)
-          : collection;
+      let query =
+        options?.user && this.firebaseService.isTrainer(options!.user)
+          ? collection.where('ownerId', '==', options!.user.uid)
+          : options?.user && this.firebaseService.isAthlete(options!.user)
+            ? collection.where(
+                'membersIds',
+                'array-contains',
+                options!.user.uid,
+              )
+            : collection;
 
       query = query.where('deletedAt', '==', null);
       if (options?.filter) query = this.filter(query, options.filter);
@@ -98,7 +97,7 @@ export class CycleService {
   async findActiveCycleByGroup(
     ref: Required<GroupRef>,
     date = new Date(),
-    options?: FindOneOptions<Cycle> & { user?: User },
+    options: FindOneOptions<Cycle> & { user: User },
   ): Promise<Cycle | null> {
     // find all active groups for the user (groups that are ongoing)
     const cycles = await this.findAll(ref, {
@@ -110,8 +109,8 @@ export class CycleService {
     });
 
     if (cycles.length === 0) return null;
-
     const cycle = cycles[0];
+
     if (options?.populate)
       await this.populate(
         { ...ref, cycleId: cycle.id },
@@ -122,15 +121,33 @@ export class CycleService {
     return cycle;
   }
 
-  async create(ref: Required<GroupRef>, input: CreateCycle): Promise<Cycle> {
+  async create(
+    ref: Required<GroupRef>,
+    input: CreateCycle,
+    options: { user: User },
+  ): Promise<Cycle> {
     // find parent references
     const group = await this.groupService.findOneOrFail(ref, {
       populate: ['members'],
     });
 
+    this.logger.debug(
+      `Creating cycle (user ${options.user.uid}) with data: ${JSON.stringify(input)}`,
+    );
+
     // validate data
-    const { error, message } = await this.validate(group, input);
-    if (error) throw new BadRequestException(message);
+    const cycles = await this.findAll(
+      { groupId: group.id },
+      {
+        user: options.user,
+        filter: {
+          from: { op: '<=', value: input.to },
+          to: { op: '>=', value: input.from },
+        },
+      },
+    );
+
+    if (cycles.length > 0) throw new BadRequestException('Cycle overlap');
 
     // create cycle
     const data: CreateCycle = {
@@ -157,77 +174,48 @@ export class CycleService {
   async update(
     ref: Required<CycleRef>,
     input: UpdateCycle,
-    options?: { user?: User },
+    options: { user: User },
   ): Promise<Cycle> {
-    const user = options?.user;
-    if (!user) throw new BadRequestException('User not found');
-
     // find parent references
-    const cycle = await this.findOneOrFail(ref, { user });
+    const cycle = await this.findOneOrFail(ref, options);
     const group = cycle.group;
 
-    // validate data
-    const { error, message } = await this.validate(group, input);
-    if (error) throw new BadRequestException(message);
+    this.logger.debug(
+      `Updating cycle (user ${options.user.uid}) with data: ${JSON.stringify(input)}`,
+    );
+
+    // check that no other cycle overlaps with the new cycle
+    if (input.from || input.to) {
+      const cycles = await this.findAll(
+        { groupId: group.id },
+        {
+          user: options.user,
+          filter: {
+            from: { op: '<=', value: input.to || cycle.to },
+            to: { op: '>=', value: input.from || cycle.from },
+          },
+        },
+      );
+
+      const cyclesWithoutCurrent = cycles.filter((c) => c.id !== ref.cycleId);
+      if (cyclesWithoutCurrent.length > 0)
+        throw new BadRequestException('Cycle overlap');
+    }
 
     // update cycle
-    await this.cycleRepository.updateDoc(ref, {
-      name: input.name,
-      description: input.description,
-      from: input.from,
-      to: input.to,
-    });
+    await this.cycleRepository.updateDoc(ref, input);
 
-    return {
-      id: ref.cycleId,
-      groupId: ref.groupId,
-      ownerId: cycle.ownerId,
-      membersIds: cycle.membersIds,
-      name: input.name || cycle.name,
-      description: input.description || cycle.description,
-      from: input.from || cycle.from,
-      to: input.to || cycle.to,
-      createdAt: cycle.createdAt,
-      updatedAt: new Date(),
-      weeks: this.commonService.date.weeks(input.from, input.to),
-      group,
-    };
+    return await this.findOne(ref, { ...options, populate: ['weeks'] });
   }
 
   async remove(
     ref: Required<CycleRef>,
-    options?: { user?: User },
+    options: { user: User },
   ): Promise<void> {
-    const user = options?.user;
-    if (!user) throw new BadRequestException('User not found');
-    const cycle = await this.findOneOrFail(ref, { user });
-
-    // remove all subgroups within the cycles
-    const subgroups = await this.subgroupService.findAll(ref, {
-      user,
-      filter: {
-        from: { op: '>=', value: cycle.from },
-        to: { op: '<=', value: cycle.to },
-      },
-    });
-
-    for (const { id: subgroupId } of subgroups)
-      await this.subgroupService.remove({ ...ref, subgroupId }, { user });
-
+    const { user } = options;
+    this.logger.debug(`Deleting cycle (user ${user.uid})`);
+    await this.findOneOrFail(ref, { user });
     await this.cycleRepository.deleteDoc(ref);
-  }
-
-  private async validate(
-    group: Group,
-    input: Partial<Cycle>,
-  ): Promise<Validate> {
-    // check that this cycle does not overlap with existing cycles in the group
-    const ref = { groupId: group.id };
-    const activeCycle = await this.findActiveCycleByGroup(ref);
-    if (activeCycle)
-      return { error: true, message: 'Cycle cannot overlap with other cycles' };
-
-    return { error: false };
   }
 
   private filter(query: Query, filter: Filter<Cycle>): Query {

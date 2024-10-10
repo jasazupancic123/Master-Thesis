@@ -86,8 +86,10 @@ export class TrainingExerciseUserDataRepository
 
     return {
       userId: snapshot.id,
-      exerciseId: data.exerciseId,
       trainingId: data.trainingId,
+      componentId: data.componentId,
+      supersetId: data.supersetId,
+      exerciseId: data.exerciseId,
       workloadValue: data.workloadValue,
       completedSets: data.completedSets,
       completedSetTypeValue: data.completedSetTypeValue || null,
