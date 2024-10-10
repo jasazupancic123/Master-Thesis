@@ -11,6 +11,7 @@ import { Expose, Type } from 'class-transformer';
 import { TrainingExerciseMeta } from './training-exercise-meta.entity';
 import { TrainingExerciseUserData } from './training-exercise-user-data.entity';
 import { Exercise } from '../../exercise/entity/exercise.entity';
+import { TrainingSuperset } from './training-superset.entity';
 
 export class TrainingExercise {
   @IsString()
@@ -45,4 +46,6 @@ export class TrainingExercise {
   @ApiProperty()
   @Expose()
   data: TrainingExerciseUserData[];
+
+  superset?: TrainingSuperset;
 }

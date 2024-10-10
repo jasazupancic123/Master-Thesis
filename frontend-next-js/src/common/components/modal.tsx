@@ -10,6 +10,7 @@ export interface Props {
   title?: string;
   onCancel?: () => void;
   onConfirm?: () => void;
+  cancelText?: string;
   width?: number;
   sx?: SxProps;
 }
@@ -22,6 +23,7 @@ export default function MyModal(props: Props) {
     actions,
     children,
     onCancel,
+    cancelText = 'Cancel',
     onConfirm,
     width,
     sx,
@@ -48,7 +50,7 @@ export default function MyModal(props: Props) {
 
           {(onConfirm || onCancel) && <DialogActions>
             {onConfirm && <Button onClick={onConfirm} color="primary">Confirm</Button>}
-            {onCancel && <Button onClick={handleClose} color="secondary">Cancel</Button>}
+            {onCancel && <Button onClick={handleClose} color="secondary">{cancelText}</Button>}
           </DialogActions>}
         </DialogContent>
       </Dialog>}

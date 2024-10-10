@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -15,41 +16,35 @@ import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddCycleDto } from './dto/add-cycle.dto';
 import { AddSubgroupDto } from './dto/add-subgroup.dto';
-import { FirebaseService } from '../firebase/firebase.service';
-import { FilterTrainingQueryDto } from '../training/dto/filter-training-query.dto';
-import { CreateTrainingDto } from '../training/dto/create-training.dto';
-import { AddTrainingComponentsDto } from '../training/dto/add-training-component.dto';
-import { AddTrainingExercisesDto } from '../training/dto/add-training-exercise.dto';
-import { UpdateTrainingExerciseDto } from '../training/dto/update-training-exercise.dto';
 import { CycleService } from './service/cycle.service';
 import { SubgroupService } from './service/subgroup.service';
-import { TrainingService } from '../training/service/training.service';
-import { AddTrainingSupersetDto } from '../training/dto/add-training-superset.dto';
+import { UpdateSubgroupDto } from './dto/update-subgroup.dto';
+import { UpdateCycleDto } from './dto/update-cycle.dto';
+import { UpdateGroupDto } from './dto/update-group.dto';
+import { DateFilterDto } from '../common/dto/date-filter.dto';
+import { endOfDay, startOfDay } from 'date-fns';
 
 @Controller('group')
 export class GroupController {
   constructor(
-    private readonly firebaseService: FirebaseService,
     private readonly groupService: GroupService,
     private readonly cycleService: CycleService,
     private readonly subgroupService: SubgroupService,
-    private readonly trainingService: TrainingService,
   ) {}
 
   @Get()
   @Auth()
   async findAllGroups(@RequestUser() user: User) {
-    if (this.firebaseService.isAthlete(user))
-      return await this.groupService.findAllByMember(user.uid);
-
-    return await this.groupService.findAllByOwner(user.uid);
+    return await this.groupService.findAll({
+      user,
+      populate: ['subgroups'],
+    });
   }
 
   @Post()
   @Auth([UserRole.TRAINER, UserRole.MANAGER, UserRole.ADMIN])
-  async createGroup(@RequestUser() user: User, @Body() data: CreateGroupDto) {
-    const ref = { uid: user.uid };
-    return await this.groupService.create(ref, data);
+  async createGroup(@RequestUser() user: User, @Body() body: CreateGroupDto) {
+    return await this.groupService.create(user, { ...body, ownerId: user.uid });
   }
 
   @Get(':groupId')
@@ -58,21 +53,23 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
   ) {
-    const ref = { uid: user.uid, groupId };
+    const ref = { groupId };
     return await this.groupService.findOneOrFail(ref, {
-      userId: user.uid,
-      populate: ['members', 'availableMembersIds', 'subgroups', 'cycles'],
+      user,
+      populate: ['members', 'availableMembersIds', 'cycles'],
     });
   }
 
-  @Get(':groupId/available-members')
+  @Get(':groupId/availableMembers')
   @Auth()
   async findAvailableMembers(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
+    @Query() query: DateFilterDto,
   ) {
-    const ref = { uid: user.uid, groupId };
-    return await this.groupService.findAvailableMembers(ref);
+    const ref = { groupId };
+    const date = query.from || new Date();
+    return await this.groupService.findAvailableMembers(ref, date, { user });
   }
 
   @Patch(':groupId')
@@ -80,9 +77,10 @@ export class GroupController {
   async updateGroup(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Body() data: any,
+    @Body() body: UpdateGroupDto,
   ) {
-    return {};
+    const ref = { groupId };
+    return await this.groupService.update(ref, body, { user });
   }
 
   @Get(':groupId/cycle')
@@ -91,11 +89,8 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
   ) {
-    if (this.firebaseService.isAthlete(user))
-      return await this.cycleService.findAllByMember(user.uid);
-
-    const ref = { uid: user.uid, groupId };
-    return await this.cycleService.findAll(ref);
+    const ref = { groupId };
+    return await this.cycleService.findAll(ref, { user });
   }
 
   @Post(':groupId/cycle')
@@ -105,8 +100,18 @@ export class GroupController {
     @Param('groupId') groupId: string,
     @Body() data: AddCycleDto,
   ) {
-    const ref = { uid: user.uid, groupId };
-    return await this.groupService.addCycle(ref, data);
+    const ref = { groupId };
+    const group = await this.groupService.findOneOrFail(ref, { user });
+    return await this.cycleService.create(
+      ref,
+      {
+        ...data,
+        groupId,
+        ownerId: group.ownerId,
+        membersIds: group.membersIds,
+      },
+      { user },
+    );
   }
 
   @Get(':groupId/cycle/active')
@@ -115,7 +120,10 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
   ) {
-    return await this.cycleService.findActiveCycleByGroup(user.uid);
+    const ref = { groupId };
+    return await this.cycleService.findActiveCycleByGroup(ref, new Date(), {
+      user,
+    });
   }
 
   @Patch(':groupId/cycle/:cycleId')
@@ -124,8 +132,40 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
+    @Body() body: UpdateCycleDto,
   ) {
-    return {};
+    const ref = { groupId, cycleId };
+    return await this.cycleService.update(ref, body, { user });
+  }
+
+  @Delete(':groupId/cycle/:cycleId')
+  @Auth()
+  async deleteCycle(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Param('cycleId') cycleId: string,
+  ) {
+    const ref = { groupId, cycleId };
+    await this.cycleService.remove(ref, { user });
+    return { message: 'Cycle deleted successfully' };
+  }
+
+  @Get(':groupId/subgroup')
+  @Auth()
+  async findAllSubgroups(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Query() query: DateFilterDto,
+  ) {
+    const ref = { groupId };
+    return await this.subgroupService.findAll(ref, {
+      user,
+      filter: {
+        groupId: { value: groupId },
+        from: { op: '>=', value: query.from || startOfDay(new Date()) },
+        to: { op: '<=', value: query.to || endOfDay(new Date()) },
+      },
+    });
   }
 
   @Post(':groupId/subgroup')
@@ -133,10 +173,10 @@ export class GroupController {
   async addSubgroup(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Body() data: AddSubgroupDto,
+    @Body() body: AddSubgroupDto,
   ) {
-    const ref = { uid: user.uid, groupId, subgroupId: null };
-    return await this.groupService.addSubgroup(ref, data);
+    const ref = { groupId };
+    return await this.subgroupService.create(ref, body, { user });
   }
 
   @Patch(':groupId/subgroup/:subgroupId')
@@ -145,204 +185,21 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('subgroupId') subgroupId: string,
-    @Body() data: any,
+    @Body() body: UpdateSubgroupDto,
   ) {
-    return {};
+    const ref = { groupId, subgroupId };
+    return await this.subgroupService.update(ref, body, { user });
   }
 
-  @Get(':groupId/cycle/:cycleId/training')
+  @Delete(':groupId/subgroup/:subgroupId')
   @Auth()
-  async findTrainings(
+  async deleteSubgroup(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Query() filter: FilterTrainingQueryDto,
+    @Param('subgroupId') subgroupId: string,
   ) {
-    if (this.firebaseService.isAthlete(user)) {
-      // find group without provided ownerId
-      const group = await this.groupService.findOneOrFail({ groupId });
-      const ref = {
-        uid: group.ownerId,
-        groupId,
-        cycleId,
-      };
-
-      return await this.trainingService.findAllByMember(ref, user.uid, {
-        filter: {
-          ...(filter.from && { from: { value: filter.from, op: '>=' } }),
-          ...(filter.to && { to: { value: filter.to, op: '<=' } }),
-        },
-        populate: [
-          'components',
-          'components.supersets',
-          'components.supersets.exercises',
-          'components.supersets.exercises.exercise',
-        ],
-      });
-    }
-
-    // return await this.trainingService.findAllByMember(user.uid);
-
-    const ref = {
-      uid: user.uid,
-      groupId,
-      cycleId,
-      subgroupId: filter.subgroupId || null,
-    };
-
-    return await this.trainingService.findAll(ref, {
-      filter: {
-        subgroupId: { value: filter.subgroupId || null, op: '==' },
-        ...(filter.from && { from: { value: filter.from, op: '>=' } }),
-        ...(filter.to && { to: { value: filter.to, op: '<=' } }),
-      },
-      populate: [
-        'components',
-        'components.supersets',
-        'components.supersets.exercises',
-        'components.supersets.exercises.exercise',
-      ],
-    });
-  }
-
-  @Post(':groupId/cycle/:cycleId/training')
-  @Auth()
-  async addTraining(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Body() data: CreateTrainingDto,
-  ) {
-    const ref = {
-      uid: user.uid,
-      groupId,
-      cycleId,
-      subgroupId: data.subgroupId || null,
-    };
-
-    return await this.trainingService.create(ref, data);
-  }
-
-  @Patch(':groupId/cycle/:cycleId/training/:trainingId')
-  @Auth()
-  async updateTraining(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Param('trainingId') trainingId: string,
-    @Body() data: any,
-  ) {
-    return {};
-  }
-
-  @Post(':groupId/cycle/:cycleId/training/:trainingId/component')
-  @Auth()
-  async addComponents(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Param('trainingId') trainingId: string,
-    @Body() data: AddTrainingComponentsDto,
-  ) {
-    const ref = {
-      uid: user.uid,
-      groupId,
-      cycleId,
-      trainingId,
-      subgroupId: null,
-    };
-
-    return await this.trainingService.addComponents(ref, data.components);
-  }
-
-  @Patch(':groupId/cycle/:cycleId/training/:trainingId/component/:componentId')
-  @Auth()
-  async updateComponent(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-    @Body() data: any,
-  ) {
-    return {};
-  }
-
-  @Post(
-    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/superset',
-  )
-  @Auth()
-  async addSuperset(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-    @Body() input: AddTrainingSupersetDto,
-  ) {
-    const ref = {
-      uid: user.uid,
-      groupId,
-      cycleId,
-      trainingId,
-      componentId,
-      subgroupId: null,
-    };
-
-    return await this.trainingService.addSuperset(ref, input);
-  }
-
-  @Post(
-    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/superset/:supersetId/exercise',
-  )
-  @Auth()
-  async addExercises(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-    @Param('supersetId') supersetId: string,
-    @Body() input: AddTrainingExercisesDto,
-  ) {
-    const ref = {
-      uid: user.uid,
-      groupId,
-      cycleId,
-      trainingId,
-      componentId,
-      supersetId,
-      subgroupId: null,
-    };
-
-    return await this.trainingService.addExercises(ref, input.exercises);
-  }
-
-  @Patch(
-    ':groupId/cycle/:cycleId/training/:trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId',
-  )
-  @Auth()
-  async updateExercise(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-    @Param('supersetId') supersetId: string,
-    @Param('exerciseId') exerciseId: string,
-    @Body() data: UpdateTrainingExerciseDto,
-  ) {
-    const ref = {
-      uid: user.uid,
-      groupId,
-      cycleId,
-      trainingId,
-      componentId,
-      supersetId,
-      exerciseId,
-      subgroupId: null,
-    };
-
-    return await this.trainingService.updateExercise(ref, data);
+    const ref = { groupId, subgroupId };
+    await this.subgroupService.remove(ref, { user });
+    return { id: subgroupId };
   }
 }

@@ -3,11 +3,15 @@ import Box from '@mui/material/Box';
 import { SxProps, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React from 'react';
+import IconButton from '@mui/material/IconButton';
+import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 
 interface Props {
   items: { label: string; value: string; sublabel?: string; }[];
   value: string;
   setValue: (value: string) => void;
+  arrows?: boolean;
+  onArrowClick?: (direction: 'left' | 'right') => void;
   getBackgroundColor?: (value: string, itemValue: string) => string;
   sx?: SxProps;
 }
@@ -23,6 +27,17 @@ export default function Circles(props: Props) {
     ...props.sx,
   }}>
     <Stack direction="row" spacing={1}>
+      {props.arrows && (
+        <Tooltip title="Previous">
+          <IconButton onClick={() => props.onArrowClick?.('left')} sx={{
+            width: 40,
+            height: 40,
+          }}>
+            <ArrowLeftIcon />
+          </IconButton>
+        </Tooltip>
+      )}
+
       {props.items.map((item, i) => (
         <Box key={i}>
           <Tooltip title={item.label}>
@@ -53,6 +68,17 @@ export default function Circles(props: Props) {
           )}
         </Box>
       ))}
+
+      {props.arrows && (
+        <Tooltip title="Next">
+          <IconButton onClick={() => props.onArrowClick?.('right')} sx={{
+            width: 40,
+            height: 40,
+          }}>
+            <ArrowRightIcon />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
   </Box>;
 }

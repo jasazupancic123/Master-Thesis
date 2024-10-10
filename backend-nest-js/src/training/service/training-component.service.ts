@@ -1,4 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { TrainingComponentRepository } from '../repository/training-component.repository';
 import { TrainingComponent } from '../entity/training-component.entity';
 import {
@@ -12,14 +18,52 @@ import {
   CreateTrainingComponent,
   UpdateTrainingComponent,
 } from '../type/training-component.type';
+import { ComponentService } from '../../component/component.service';
+import { Component } from '../../component/entity/component.entity';
+import { User } from '../../common/type/firebase-auth.type';
+import { TrainingService } from './training.service';
+import { Training } from '../entity/training.entity';
+import { Wrapper } from '../../common/type/wrapper.type';
 
 @Injectable()
 export class TrainingComponentService {
+  private readonly logger = new Logger(TrainingComponentService.name);
+
   constructor(
     private readonly commonService: CommonService,
+    private readonly componentService: ComponentService,
     private readonly trainingSupersetService: TrainingSupersetService,
     private readonly trainingComponentRepository: TrainingComponentRepository,
+    @Inject(forwardRef(() => TrainingService))
+    private readonly trainingService: Wrapper<TrainingService>,
   ) {}
+
+  async findOne(
+    ref: Required<TrainingComponentRef>,
+    options?: { user?: User },
+  ): Promise<TrainingComponent> {
+    let training: Training;
+    if (options?.user)
+      training = await this.trainingService.findOneOrFail(ref, options);
+
+    const component = await this.trainingComponentRepository.getDoc(ref);
+    if (!component) return null;
+    component.training = training;
+
+    const supersets = await this.trainingSupersetService.findAll(ref);
+    return { ...component, supersets };
+  }
+
+  async findOneOrFail(
+    ref: Required<TrainingComponentRef>,
+    options?: { user?: User },
+  ): Promise<TrainingComponent> {
+    const component = await this.findOne(ref, options);
+    if (!component)
+      throw new BadRequestException('Training component not found');
+
+    return component;
+  }
 
   /**
    * Adds training components to training. If exercises for a training component
@@ -29,7 +73,34 @@ export class TrainingComponentService {
   async createMany(
     ref: Required<TrainingRef>,
     input: CreateTrainingComponent[],
+    options: { user: User },
   ): Promise<TrainingComponent[]> {
+    const training = await this.trainingService.findOneOrFail(ref, {
+      user: options.user,
+      populate: ['components'],
+    });
+
+    // make sure all components exist
+    const componentIds = input.map((item) => item.componentId);
+    const components = await this.componentService.findAllFlat({
+      filter: { ids: componentIds },
+    });
+
+    // training components must be unique
+    const duplicates: Component[] = [];
+    for (const component of components) {
+      const exists = training.components.find(
+        (c) => c.componentId === component.id,
+      );
+
+      if (exists) duplicates.push(component);
+    }
+
+    if (duplicates.length)
+      throw new BadRequestException(
+        `Components ${duplicates.map((c) => c.name.toLowerCase()).join(', ')} already exist in the training`,
+      );
+
     const result: TrainingComponent[] = [];
     const lastOrder = await this.trainingComponentRepository.getLastOrder(ref);
 
@@ -55,9 +126,15 @@ export class TrainingComponentService {
             color: superset.color || data.color,
             exercises: superset.exercises,
           })),
+          options,
         );
 
-      result.push({ ...data, supersets, component: null });
+      result.push({
+        ...data,
+        trainingId: training.id,
+        supersets,
+        component: null,
+      });
     }
 
     return result;
@@ -66,20 +143,36 @@ export class TrainingComponentService {
   async update(
     ref: Required<TrainingComponentRef>,
     input: UpdateTrainingComponent,
+    options?: { user?: User },
   ): Promise<TrainingComponent> {
+    await this.findOneOrFail(ref, options);
     await this.trainingComponentRepository.updateDoc(ref, input);
+
     return {
       componentId: ref.componentId,
+      trainingId: ref.trainingId,
       color: input.color,
       order: input.order,
       supersets: [],
     };
   }
 
-  async remove(ref: Required<TrainingComponentRef>): Promise<void> {
+  async remove(
+    ref: Required<TrainingComponentRef>,
+    options: { user: User },
+  ): Promise<void> {
+    this.logger.debug(
+      `Removing training component ${ref.componentId} (user ${options.user.uid})`,
+    );
+
+    await this.trainingService.findOneOrFail(ref, options);
+
     const supersets = await this.trainingSupersetService.findAll(ref);
     for (const { id: supersetId } of supersets)
-      await this.trainingSupersetService.remove({ ...ref, supersetId });
+      await this.trainingSupersetService.remove(
+        { ...ref, supersetId },
+        options,
+      );
 
     await this.trainingComponentRepository.deleteDoc(ref);
   }

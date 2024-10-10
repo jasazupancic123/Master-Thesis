@@ -15,7 +15,7 @@ export default function GroupMembersStack(props: Props) {
   const { members } = group;
 
   return (
-    <Stack spacing={2} direction="row">
+    <Stack direction="row" spacing={1} my={4} sx={{ cursor: 'pointer' }}>
       {members && members.map(member => (
         <Box key={member.uid} onClick={() => onClick(member)} sx={{ cursor: 'pointer' }}>
           <Tooltip title={member.email}>

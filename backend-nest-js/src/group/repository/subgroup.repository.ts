@@ -46,7 +46,6 @@ export class SubgroupRepository
     const result = await this.collection(ref).add({
       groupId: ref.groupId,
       name: input.name,
-      cycleId: input.cycleId,
       membersIds: input.membersIds,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
@@ -83,7 +82,6 @@ export class SubgroupRepository
     return {
       id: snapshot.id,
       name: data.name,
-      cycleId: data.cycleId,
       groupId: data.groupId,
       membersIds: data.membersIds,
       members: [],

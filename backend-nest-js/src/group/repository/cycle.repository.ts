@@ -61,8 +61,14 @@ export class CycleRepository
   }
 
   async updateDoc(ref: Required<CycleRef>, input: Partial<Cycle>) {
-    const data = this.commonService.object.clean(input);
-    await this.doc(ref).update(data);
+    await this.doc(ref).update({
+      ...(input.name && { name: input.name }),
+      ...(input.description && { description: input.description }),
+      ...(input.from && { from: Timestamp.fromDate(input.from) }),
+      ...(input.to && { to: Timestamp.fromDate(input.to) }),
+      ...(input.membersIds && { membersIds: input.membersIds }),
+      updatedAt: Timestamp.now(),
+    });
   }
 
   async deleteDoc(ref: Required<CycleRef>) {

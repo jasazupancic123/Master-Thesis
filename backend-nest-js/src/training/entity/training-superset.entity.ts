@@ -10,12 +10,14 @@ import {
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TrainingExercise } from './training-exercise.entity';
+import { TrainingComponent } from './training-component.entity';
 
 export class TrainingSuperset extends IdEntity {
   @IsString()
   @IsNotEmpty()
   @Expose()
   componentId: string; // training component id
+  component?: TrainingComponent;
 
   @IsInt()
   @Min(0)

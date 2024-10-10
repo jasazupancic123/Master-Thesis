@@ -4,4 +4,4 @@ import { CreateGroup } from '../type/group.type';
 
 export class CreateGroupDto
   extends PickType(Group, ['name', 'membersIds'])
-  implements CreateGroup {}
+  implements Omit<CreateGroup, 'ownerId'> {}

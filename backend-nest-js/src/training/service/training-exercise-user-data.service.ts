@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { TrainingExerciseUserDataRepository } from '../repository/training-exercise-user-data.repository';
 import { TrainingExerciseMeta } from '../entity/training-exercise-meta.entity';
 import { TrainingExerciseRepository } from '../repository/training-exercise.repository';
@@ -6,22 +6,32 @@ import { FirebaseService } from '../../firebase/firebase.service';
 import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.entity';
 import { WorkloadType } from '../enum/workload-type.enum';
 import { CommonService } from '../../common/service/common.service';
-import { TrainingExerciseRef } from '../../common/type/firebase-firestore.type';
-import { UserRepository } from '../../user/repository/user.repository';
+import {
+  TrainingExerciseRef,
+  TrainingRef,
+} from '../../common/type/firebase-firestore.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   CreateTrainingExerciseUserData,
   UpdateTrainingExerciseUserData,
 } from '../type/training-exercise-user-data.type';
+import { User } from '../../common/type/firebase-auth.type';
+import { TrainingService } from './training.service';
+import { Wrapper } from '../../common/type/wrapper.type';
+import { UserService } from '../../user/service/user.service';
 
 @Injectable()
 export class TrainingExerciseUserDataService {
+  private logger = new Logger(TrainingExerciseUserDataService.name);
+
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
     private readonly trainingExerciseRepository: TrainingExerciseRepository,
     private readonly trainingExerciseUserDataRepository: TrainingExerciseUserDataRepository,
+    @Inject(forwardRef(() => TrainingService))
+    private readonly trainingService: Wrapper<TrainingService>,
   ) {}
 
   /**
@@ -61,7 +71,7 @@ export class TrainingExerciseUserDataService {
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
-      const bodyweight = await this.userRepository.getBodyweight(member.uid);
+      const bodyweight = await this.userService.getBodyweight(member.uid);
       const userData = allUsersData.filter(
         (item) => item.userId === member.uid,
       );
@@ -104,7 +114,7 @@ export class TrainingExerciseUserDataService {
     userId: string,
     input: TrainingExerciseMeta,
   ): Promise<TrainingExerciseUserData> {
-    const bodyweight = await this.userRepository.getBodyweight(userId);
+    const bodyweight = await this.userService.getBodyweight(userId);
     const userData = await this.trainingExerciseUserDataRepository.getDoc({
       ...ref,
       userId,
@@ -134,6 +144,48 @@ export class TrainingExerciseUserDataService {
 
     await docRef.set(data);
     return data;
+  }
+
+  /**
+   * Creates exercise user data for specified user for all exercises in the
+   * provided training.
+   */
+  async createByTraining(
+    ref: Required<TrainingRef>,
+    input: { memberId: string },
+    options: { user: User },
+  ) {
+    this.logger.debug(
+      `Creating training exercise user data ${JSON.stringify(ref)} for user ${input.memberId}`,
+    );
+
+    // find all trainings
+    const training = await this.trainingService.findOneOrFail(ref, {
+      user: options.user,
+      populate: [
+        'components',
+        'components.supersets',
+        'components.supersets.exercises',
+      ],
+    });
+
+    await Promise.all(
+      training.components.map((component) => {
+        component.supersets.map((superset) => {
+          superset.exercises.map((exercise) => {
+            const exerciseRef = {
+              trainingId: training.id,
+              componentId: component.componentId,
+              supersetId: superset.id,
+              exerciseId: exercise.exerciseId,
+            };
+
+            // create training exercise user data
+            this.create(exerciseRef, input.memberId, exercise.meta);
+          });
+        });
+      }),
+    );
   }
 
   /**
@@ -172,7 +224,7 @@ export class TrainingExerciseUserDataService {
     // for each member, calculate individual values for exercise user data
     const batch = this.firebaseService.firestore.batch();
     for (const member of members) {
-      const bodyweight = await this.userRepository.getBodyweight(member);
+      const bodyweight = await this.userService.getBodyweight(member);
       const userData = allUsersData.filter((item) => item.userId === member);
 
       const workloadValue = this.calculateWorkloadValue(

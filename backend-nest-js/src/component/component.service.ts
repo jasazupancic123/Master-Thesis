@@ -12,7 +12,6 @@ import { ComponentRepository } from './repository/component.repository';
 import { ExerciseService } from '../exercise/service/exercise.service';
 import { Wrapper } from '../common/type/wrapper.type';
 import { FieldPath, Query } from 'firebase-admin/firestore';
-import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class ComponentService {
@@ -20,7 +19,6 @@ export class ComponentService {
 
   constructor(
     private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
     private readonly componentRepository: ComponentRepository,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
@@ -82,7 +80,7 @@ export class ComponentService {
   async findAllTree(
     options?: FindManyOptions<Component>,
   ): Promise<Component[]> {
-    if (options?.populate.includes('children'))
+    if (options?.populate?.includes('children'))
       // remove 'children' from populate, as it will be populated in the tree
       options.populate = options.populate.filter((p) => p !== 'children');
 

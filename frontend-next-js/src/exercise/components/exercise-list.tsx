@@ -1,13 +1,10 @@
 import type { Exercise } from '@/exercise/entity/exercise.entity';
 import Typography from '@mui/material/Typography';
 import { Card, CardContent, CardMedia } from '@mui/material';
-import React from 'react';
+import React, { useState } from 'react';
 import Stack from '@mui/material/Stack';
-import { SetState } from '@/common/type/state.type';
 
 interface Props {
-  global: boolean;
-  setGlobal: SetState<boolean>;
   exercises: Exercise[];
   selectedExercises: Exercise[];
   setSelectedExercises: (exercises: Exercise[]) => void;
@@ -15,6 +12,7 @@ interface Props {
 
 export default function ExerciseList(props: Props) {
   const { exercises, selectedExercises, setSelectedExercises } = props;
+  const [global, setGlobal] = useState(true);
 
   return (
     <Stack direction="row" spacing={1} mt={5}>

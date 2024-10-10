@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { UserService } from '../../user/service/user.service';
 import { SubgroupRepository } from '../repository/subgroup.repository';
@@ -29,6 +30,8 @@ import { endOfDay, startOfDay } from 'date-fns';
 
 @Injectable()
 export class SubgroupService {
+  private logger = new Logger(SubgroupService.name);
+
   constructor(
     private readonly userService: UserService,
     private readonly subgroupRepository: SubgroupRepository,
@@ -70,14 +73,15 @@ export class SubgroupService {
    */
   async findAllActive(
     ref: Required<GroupRef>,
+    date: Date,
     options?: FindManyOptions<Subgroup> & { user?: User },
   ): Promise<Subgroup[]> {
     return await this.findAll(ref, {
       ...options,
       filter: {
         ...(options?.filter || {}),
-        from: { op: '<=', value: new Date() },
-        to: { op: '>=', value: new Date() },
+        from: { op: '<=', value: date },
+        to: { op: '>=', value: date },
       },
     });
   }
@@ -119,17 +123,26 @@ export class SubgroupService {
     const { user } = options;
     const group = await this.groupService.findOneOrFail(ref, { user });
 
-    // check if the subgroup overlaps with the existing subgroups
-    const subgroups = await this.findAllActive(ref, { user });
+    this.logger.debug(
+      `User ${user.uid} is creating subgroup: ${JSON.stringify(input)}`,
+    );
+
+    // check if the subgroup overlaps with the existing subgroups with the same members
+    const subgroups = await this.findAllActive(ref, startOfDay(input.from), {
+      user,
+      filter: { membersIds: { value: input.membersIds } },
+    });
+
     if (subgroups.length > 0)
       throw new BadRequestException(
         'Subgroups cannot overlap with the existing subgroups',
       );
 
     // check if the members are available
-    const membersIds = await this.groupService.findAvailableMembers(ref, {
-      user,
-    });
+    const membersIds = await this.groupService.findAvailableMembers(
+      ref,
+      input.from,
+    );
 
     if (!membersIds.length)
       throw new BadRequestException('No members available for subgroup');
@@ -149,33 +162,36 @@ export class SubgroupService {
     });
 
     // copy all trainings from the parent group between `from` and `to` dates
-    const trainings = await this.trainingService.findAll(user, {
+    const trainings = await this.trainingService.findAll({
+      user,
       filter: {
+        groupId: { value: ref.groupId },
         subgroupId: { value: null },
         from: { op: '>=', value: startOfDay(input.from) },
         to: { op: '<=', value: endOfDay(input.to) },
       },
     });
 
-    for (const { id: trainingId } of trainings) {
+    for (const { id: trainingId, cycleId } of trainings) {
       await this.trainingService.copy(
-        user,
         { trainingId },
-        {
-          groupId: ref.groupId,
-          subgroupId,
-        },
+        { groupId: ref.groupId, cycleId, subgroupId },
+        { user },
       );
     }
 
     // remove members from trainings in parent group
     for (const training of trainings) {
       const trainingRef = { trainingId: training.id };
-      await this.trainingService.update(user, trainingRef, {
-        membersIds: training.membersIds.filter(
-          (memberId) => !input.membersIds.includes(memberId),
-        ),
-      });
+      await this.trainingService.update(
+        trainingRef,
+        {
+          membersIds: training.membersIds.filter(
+            (memberId) => !input.membersIds.includes(memberId),
+          ),
+        },
+        { user },
+      );
     }
 
     return {
@@ -196,23 +212,92 @@ export class SubgroupService {
     input: UpdateSubgroup,
     options: { user: User },
   ) {
-    await this.findOneOrFail(ref, options);
+    const { user } = options;
+    this.logger.debug(
+      `User ${user.uid} is updating subgroup ${ref.subgroupId}`,
+    );
+
+    // find parent references
+    const subgroup = await this.findOneOrFail(ref, options);
+
+    // if subgroup's `to` date is updated, we need to add / update
+    // trainings and exercise data for the new period.
+    /*if (input.to) {
+      if (isAfter(input.to, subgroup.to)) {
+        // extend subgroup period (copy new parent group trainings)
+        const trainings = await this.trainingService.findAll({
+          user,
+          filter: {
+            subgroupId: { value: null },
+            from: { op: '>', value: subgroup.to },
+            to: { op: '<=', value: input.to },
+          },
+        });
+
+        for (const { id: trainingId } of trainings)
+          await this.trainingService.copy({ trainingId }, ref, { user });
+      } else {
+        // shorten subgroup period (remove excess subgroup trainings)
+        const trainings = await this.trainingService.findAll({
+          user,
+          filter: {
+            subgroupId: { value: ref.subgroupId },
+            from: { op: '>', value: input.to },
+          },
+        });
+
+        for (const { id: trainingId } of trainings)
+          await this.trainingService.remove({ trainingId }, { user });
+      }
+    }*/
+
+    if (input.membersIds) {
+      const trainings = await this.trainingService.findAll({
+        user,
+        filter: {
+          subgroupId: { value: ref.subgroupId },
+        },
+      });
+
+      for (const { id: trainingId } of trainings)
+        await this.trainingService.update(
+          { trainingId },
+          { membersIds: input.membersIds },
+          { user },
+        );
+    }
+
     await this.subgroupRepository.updateDoc(ref, input);
+
+    return await this.findOne(ref, { user });
   }
 
   async remove(ref: Required<SubgroupRef>, options: { user: User }) {
     const { user } = options;
     await this.findOneOrFail(ref, { user });
+
+    this.logger.debug(
+      `User ${user.uid} is deleting subgroup ${ref.subgroupId}`,
+    );
+
+    const trainings = await this.trainingService.findAll({
+      user,
+      filter: { subgroupId: { value: ref.subgroupId } },
+    });
+
+    for (const { id: trainingId } of trainings)
+      await this.trainingService.remove({ trainingId }, { user });
+
     await this.subgroupRepository.deleteDoc(ref);
   }
 
   private filter(query: Query, filter: Filter<Subgroup>): Query {
-    if (filter.ids) query = query.where('id', 'in', filter.ids);
-    if (filter.membersIds)
+    if (filter.ids?.length) query = query.where('id', 'in', filter.ids);
+    if (filter.membersIds && Array.isArray(filter.membersIds.value))
       query = query.where(
         'membersIds',
         'array-contains-any',
-        filter.membersIds,
+        filter.membersIds.value,
       );
 
     if (filter.name)

@@ -13,6 +13,7 @@ import { TrainingComponentService } from './service/training-component.service';
 import { UserModule } from '../user/user.module';
 import { TrainingSupersetRepository } from './repository/training-superset.repository';
 import { TrainingSupersetService } from './service/training-superset.service';
+import { TrainingController } from './training.controller';
 
 @Module({
   imports: [
@@ -22,17 +23,18 @@ import { TrainingSupersetService } from './service/training-superset.service';
     forwardRef(() => GroupModule),
   ],
   providers: [
+    TrainingService,
     TrainingRepository,
     TrainingComponentRepository,
+    TrainingComponentService,
     TrainingSupersetRepository,
+    TrainingSupersetService,
     TrainingExerciseRepository,
+    TrainingExerciseService,
     TrainingExerciseUserDataRepository,
     TrainingExerciseUserDataService,
-    TrainingExerciseService,
-    TrainingSupersetService,
-    TrainingComponentService,
-    TrainingService,
   ],
-  exports: [TrainingService, TrainingExerciseUserDataService],
+  controllers: [TrainingController],
+  exports: [TrainingService],
 })
 export class TrainingModule {}

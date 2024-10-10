@@ -5,7 +5,7 @@ import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
-import { Auth, ListUsersResult, UserIdentifier } from 'firebase-admin/auth';
+import { Auth, UserIdentifier } from 'firebase-admin/auth';
 import { Storage } from 'firebase-admin/storage';
 import * as admin from 'firebase-admin';
 
@@ -35,17 +35,16 @@ export class FirebaseService implements OnApplicationBootstrap {
     ids?: string[];
     emails?: string[];
   }): Promise<User[]> {
-    let users: ListUsersResult;
+    let identifiers: UserIdentifier[] = [];
+    if (filter?.ids) for (const id of filter.ids) identifiers.push({ uid: id });
+    if (filter?.emails)
+      for (const email of filter.emails) identifiers.push({ email });
 
-    if (filter) {
-      // https://firebase.google.com/docs/auth/admin/manage-users#bulk_retrieve_user_data
-      const identifiers: UserIdentifier[] = [];
-      for (const id of filter.ids ?? []) identifiers.push({ uid: id });
-      for (const email of filter.emails ?? []) identifiers.push({ email });
-      users = await this.auth.getUsers(identifiers);
-    } else users = await this.auth.listUsers();
+    const users = identifiers.length
+      ? ((await this.auth.getUsers(identifiers)).users as User[])
+      : ((await this.auth.listUsers()).users as User[]);
 
-    return users.users as User[];
+    return users.map(this.cleanUser) as User[];
   }
 
   isAdmin(user: User | DecodedUser): boolean {
@@ -88,6 +87,17 @@ export class FirebaseService implements OnApplicationBootstrap {
   private checkRole(user: User | DecodedUser, role: UserRole): boolean {
     if (isUser(user)) return user.customClaims.role.includes(role);
     return user.role.includes(role);
+  }
+
+  private cleanUser(user: User): Partial<User> {
+    return {
+      uid: user.uid,
+      email: user.email,
+      customClaims: user.customClaims,
+      phoneNumber: user.phoneNumber,
+      photoURL: user.photoURL,
+      displayName: user.displayName,
+    };
   }
 }
 

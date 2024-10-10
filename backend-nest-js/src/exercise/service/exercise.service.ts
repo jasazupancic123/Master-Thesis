@@ -25,7 +25,6 @@ import { ExerciseRef } from '../../common/type/firebase-firestore.type';
 import { ExerciseAttributeService } from './exercise-attribute.service';
 import { ExerciseAttributeValueService } from './exercise-attribute-value.service';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { UserService } from '../../user/service/user.service';
 import { User } from '../../common/type/firebase-auth.type';
 
 @Injectable()
@@ -33,14 +32,13 @@ export class ExerciseService {
   private logger = new Logger(ExerciseService.name);
 
   constructor(
+    private readonly exerciseRepository: ExerciseRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly exerciseRepository: ExerciseRepository,
-    @Inject(forwardRef(() => ComponentService))
-    private readonly componentService: Wrapper<ComponentService>,
-    private readonly userService: UserService,
     private readonly exerciseAttributeService: ExerciseAttributeService,
     private readonly exerciseAttributeValueService: ExerciseAttributeValueService,
+    @Inject(forwardRef(() => ComponentService))
+    private readonly componentService: Wrapper<ComponentService>,
   ) {}
 
   async countAll(
@@ -97,7 +95,7 @@ export class ExerciseService {
    */
   async findAll(
     user: User,
-    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
+    options?: FindManyOptions<Exercise>,
   ): Promise<Exercise[]> {
     const userExercises = await this.findAllByUser(user, {
       ...options,

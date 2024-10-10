@@ -2,13 +2,7 @@ import { Training } from '../entity/training.entity';
 
 export type CreateTraining = Pick<
   Training,
-  | 'groupId'
-  | 'ownerId'
-  | 'membersIds'
-  | 'subgroupId'
-  | 'from'
-  | 'to'
-  | 'copiedFromId'
+  'groupId' | 'ownerId' | 'subgroupId' | 'from' | 'to' | 'copiedFromId'
 > & {
   componentIds: string[];
 };

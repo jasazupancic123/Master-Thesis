@@ -5,4 +5,6 @@ export type CreateCycle = Pick<
   'groupId' | 'ownerId' | 'membersIds' | 'name' | 'description' | 'from' | 'to'
 >;
 
-export type UpdateCycle = Partial<CreateCycle>;
+export type UpdateCycle = Partial<
+  Pick<Cycle, 'membersIds' | 'name' | 'description' | 'from' | 'to'>
+>;

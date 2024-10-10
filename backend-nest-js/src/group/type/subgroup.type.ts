@@ -8,4 +8,4 @@ export type CreateSubgroup = Pick<
 /**
  * Note - `from` cannot be updated, since it is equal to `createdAt`.
  */
-export type UpdateSubgroup = Partial<Pick<Subgroup, 'name' | 'to'>>;
+export type UpdateSubgroup = Partial<CreateSubgroup>;

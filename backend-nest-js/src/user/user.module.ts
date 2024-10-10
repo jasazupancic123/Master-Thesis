@@ -7,7 +7,7 @@ import { WellnessService } from './service/wellness.service';
 
 @Module({
   controllers: [UserController],
-  providers: [UserRepository, WellnessRepository, WellnessService, UserService],
-  exports: [UserRepository, UserService],
+  providers: [WellnessRepository, WellnessService, UserRepository, UserService],
+  exports: [UserService],
 })
 export class UserModule {}
