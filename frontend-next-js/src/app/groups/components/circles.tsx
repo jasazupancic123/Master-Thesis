@@ -19,6 +19,7 @@ interface Props {
 export default function Circles(props: Props) {
   return <Box sx={{
     pb: 3,
+    pt: 0,
     display: 'flex',
     justifyContent: 'center',
     borderBottomRightRadius: '20px',
@@ -51,20 +52,25 @@ export default function Circles(props: Props) {
                 justifyContent: 'center',
                 borderRadius: '50%',
                 cursor: 'pointer',
-                backgroundColor: props.getBackgroundColor ? props.getBackgroundColor(props.value, item.value) : (props.value === item.value ? '#1EB980' : 'rgba(255, 255, 255, 0.1)'),
+                backgroundColor: props.getBackgroundColor
+                  ? props.getBackgroundColor(props.value, item.value)
+                  : props.value === item.value
+                    ? '#1EB980'
+                    : 'rgba(255, 255, 255, 0.1)',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                 },
+                userSelect: 'none', // Prevent text selection
               }}
             >
-              <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>{item.label}</Typography>
+              <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>
+                {item.label}
+              </Typography>
             </Box>
           </Tooltip>
 
           {item.sublabel && (
-            <Typography variant="caption">
-              {item.sublabel}
-            </Typography>
+            <Typography variant="caption">{item.sublabel}</Typography>
           )}
         </Box>
       ))}

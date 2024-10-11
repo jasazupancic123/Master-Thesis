@@ -10,11 +10,12 @@ import YearDateRangeSlider from '@/common/components/year-date-range-slider';
 import Stack from '@mui/material/Stack';
 import { GroupPageProps } from '@/group/type/props.type';
 import { CommonService } from '@/common/service/common.service';
+import Warning from '@/common/components/warning';
 
 export default function TrainerYearView(props: GroupPageProps) {
   const group = props.selected.group;
   if (!group)
-    return <Typography variant="body1" mt={2}>No group selected</Typography>;
+    return <Warning title="Select group" topBorder />;
 
   return <>
     <Stack

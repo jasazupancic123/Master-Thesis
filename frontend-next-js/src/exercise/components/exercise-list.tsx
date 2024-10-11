@@ -33,7 +33,7 @@ export default function ExerciseList(props: Props) {
           }}
         >
           <CardMedia
-            sx={{ height: 60 }}
+            sx={{ height: 160 }}
             image={exercise.imageUrl ?? 'https://mui.com/static/images/cards/contemplative-reptile.jpg'}
             title={exercise.name}
           />

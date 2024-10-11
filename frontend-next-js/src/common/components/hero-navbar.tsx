@@ -72,7 +72,7 @@ export default function HeroNavbar({ showLogin = true }) {
             ) : null}
 
             <Box sx={{ display: { md: 'none' } }}>
-              <Button variant="text" color="primary" onClick={toggleDrawer(true)}>
+              <Button variant="text" color="secondary" onClick={toggleDrawer(true)}>
                 <MenuIcon />
               </Button>
 

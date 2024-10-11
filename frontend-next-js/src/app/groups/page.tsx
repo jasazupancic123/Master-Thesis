@@ -11,7 +11,6 @@ import type { Cycle } from '@/group/entity/cycle.entity';
 import { useAppContext } from '@/context/app-provider';
 import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
-import type { AppContextType, AuthContextType } from '@/common/type/context.type';
 import type { GroupPageProps } from '@/group/type/props.type';
 import { UserController } from '@/user/user.controller';
 import { GroupController } from '@/group/group.controller';
@@ -20,11 +19,12 @@ import { CommonService } from '@/common/service/common.service';
 import TrainerPageRouter from '@/app/groups/components/trainer-page-router';
 import { FilterType } from '@/group/type/filter.type';
 import { TrainingController } from '@/training/training.controller';
+import AthletePageRouter from '@/app/groups/components/athlete-page-router';
 
 function Page() {
   // context
-  const { role } = useAuth() as AuthContextType;
-  const { token, components } = useAppContext() as AppContextType;
+  const { role } = useAuth();
+  const { token } = useAppContext();
 
   // state
   const [loading, setLoading] = useState(false);
@@ -221,7 +221,7 @@ function Page() {
     [UserRole.ADMIN]: <div>Admin</div>,
     [UserRole.MANAGER]: <div>Manager</div>,
     [UserRole.TRAINER]: <TrainerPageRouter {...props} />,
-    [UserRole.ATHLETE]: <div>Athlete</div>,
+    [UserRole.ATHLETE]: <AthletePageRouter {...props} />,
   };
 
   return mapper[role[0]];

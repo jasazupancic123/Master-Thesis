@@ -21,7 +21,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @Auth([UserRole.TRAINER, UserRole.MANAGER, UserRole.ADMIN])
+  @Auth()
   async findAll(@Query() query: FilterUserQueryDto) {
     return await this.userService.findAll(query);
   }

@@ -17,6 +17,7 @@ import { CreateTrainingComponent } from '@/training/type/training-component.type
 import { CommonService } from '@/common/service/common.service';
 import TrainingWeek from '@/app/groups/components/training-cycle-view-week';
 import { TrainingController } from '@/training/training.controller';
+import Warning from '@/common/components/warning';
 
 export default function TrainerCycleView(props: GroupPageProps) {
   // context
@@ -52,7 +53,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
 
     if (!selected.length) {
-      toast.error('Select at least one components');
+      toast.error('Select at least one component');
       return;
     }
 
@@ -110,7 +111,6 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
 
     try {
-      // const responses = await Promise.all(data.map(item => GroupController.addTrainingComponent(token, group.id, cycle.id, trainingId, item)));
       const response = await TrainingController.addTrainingComponents(token, trainingId, data);
 
       // update training
@@ -152,7 +152,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
   }
 
   if (!props.selected.group || !props.selected.cycle)
-    return <Typography variant="body1" mt={2}>No cycle selected</Typography>;
+    return <Warning title="Select cycle" topBorder />;
 
   return (
     <Box pb={10}>

@@ -1,15 +1,4 @@
 export const FIREBASE_COOKIE_NAME = 'firebaseIdToken';
 export const SITE_MAIL = 'info@fitcode.fit';
 export const SITE_URL = 'https://fitcode.fit/';
-export const COLOR = [
-  '#FF5733',
-  '#FFEB33',
-  '#FF33A1',
-  '#33FF57',
-  '#3357FF',
-  '#33FFF3',
-  '#FF8C33',
-  '#8C33FF',
-  '#33FF8C',
-  '#FF3333',
-];
+export const COLOR = ['#FF6859', '#FFCF44', '#B15DFF', '#72DEFF', '#1E90FF', '#FF69B4', '#32CD32', '#FFA500'];

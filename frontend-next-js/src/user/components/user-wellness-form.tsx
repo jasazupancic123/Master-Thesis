@@ -1,6 +1,6 @@
 import { Wellness } from '@/user/entity/wellness.entity';
 import { SetState } from '@/common/type/state.type';
-import { Slider } from '@mui/material';
+import { Slider, useMediaQuery, useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { useState } from 'react';
@@ -11,6 +11,7 @@ interface Props {
   initialData: Wellness | null;
   onSubmit: (data: Partial<Wellness>) => void | Promise<void>;
   disabled: boolean;
+  setDisabled: SetState<boolean>;
 }
 
 export default function UserWellnessForm(props: Props) {
@@ -26,13 +27,26 @@ export default function UserWellnessForm(props: Props) {
     } as Wellness;
   });
 
-  return <Stack alignItems="center" height="100%" pb={15}>
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  return <Stack
+    alignItems="center"
+    height="100%"
+    pb={15}
+    px={isMobile ? 2 : 4}
+  >
     {/* Today's date */}
     <Typography variant="h5" sx={{ color: '#1EB980' }} m={2}>
       {new Date().toDateString()}
     </Typography>
 
-    <Stack sx={{ height: 300 }} spacing={4} direction="row">
+    <Stack
+      sx={{ height: 300, width: '100%', maxWidth: isMobile ? '90%' : '60%' }}
+      spacing={4}
+      direction="row"
+      justifyContent="center"
+    >
       {/* Sleep */}
       <UserWellnessSlider
         label="Sleep"
@@ -66,14 +80,22 @@ export default function UserWellnessForm(props: Props) {
       onChange={(event) => setState(prev => ({ ...prev, comment: event.target.value }))}
       multiline
       rows={2}
-      sx={{ marginTop: 4, width: '50%', backgroundColor: '#303E4A', borderRadius: '10px' }}
+      sx={{
+        mt: 4,
+        width: isMobile ? '90%' : '30%',
+        backgroundColor: '#303E4A',
+        borderRadius: '10px',
+      }}
       disabled={props.disabled}
     />
 
     {/* Submit button*/}
     <Button
       variant="contained"
-      onClick={() => props.onSubmit(state)}
+      onClick={() => {
+        props.onSubmit(state);
+        props.setDisabled(true);
+      }}
       sx={{ mt: 4, backgroundColor: '#1EB980', color: '#ffffff' }}
       disabled={props.disabled}
     >
@@ -102,12 +124,12 @@ function UserWellnessSlider(props: {
           backgroundColor: '#303E4A',
         },
         '& .MuiSlider-thumb': {
-          width: 40,
-          height: 40,
+          width: 30,
+          height: 30,
           backgroundColor: props.disabled ? 'gray' : '#1EB980',
         },
         '& .MuiSlider-rail': {
-          backgroundColor: '#ffffff', // Non-selected part of the slider
+          backgroundColor: '#ffffff',
         },
       }}
       disabled={props.disabled}

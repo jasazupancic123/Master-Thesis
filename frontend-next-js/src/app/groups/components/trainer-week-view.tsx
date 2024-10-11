@@ -12,6 +12,7 @@ import { TrainingController } from '@/training/training.controller';
 import { useAppContext } from '@/context/app-provider';
 import { UpdateTraining } from '@/training/type/training.type';
 import toast from 'react-hot-toast';
+import Warning from '@/common/components/warning';
 
 const commonService = CommonService.instance;
 
@@ -66,18 +67,35 @@ export default function TrainerWeekView(props: GroupPageProps) {
   }, [index]);
 
   if (!cycle)
-    return <Typography variant="body1" mt={2}>No cycle selected</Typography>;
+    return <Warning title="Select cycle" topBorder />;
 
-  return <Box>
+  return <Box sx={{
+    backgroundColor: '#1A2B3C', // Set a consistent background color
+    padding: '12px',
+    pb: '20px',
+    borderRadius: '8px', // Optional: can add more style based on the overall design
+  }}>
     {/* Week selector */}
-    <Circles
-      items={weeks.map((_, i) => ({ label: `W${i + 1}`, value: i.toString() }))}
-      value={index.toString()}
-      setValue={(value) => setIndex(parseInt(value))}
-    />
+    <Box sx={{ padding: '0', backgroundColor: 'inherit', marginBottom: '20px' }}>
+      <Circles
+        arrows
+        onArrowClick={(direction) => {
+          if (
+            direction === 'left' && index === 0 ||
+            direction === 'right' && index === weeks.length - 1
+          )
+            return;
+
+          setIndex((prev) => direction === 'left' ? prev - 1 : prev + 1);
+        }}
+        items={weeks.map((_, i) => ({ label: `W${i + 1}`, value: i.toString() }))}
+        value={index.toString()}
+        setValue={(value) => setIndex(parseInt(value))}
+      />
+    </Box>
 
     {/* Trainings */}
-    <Box p={2}>
+    <Box pt={4} px={1}>
       <Grid container spacing={2} display="flex" justifyContent="space-between">
         {getWeek(index)?.map(({ date }, i) => {
           const day = dayjs(date);
