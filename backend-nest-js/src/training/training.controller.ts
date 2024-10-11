@@ -25,10 +25,14 @@ import { UpdateTrainingDto } from './dto/update-training.dto';
 import { UpdateTrainingComponentDto } from './dto/update-training-component.dto';
 import { UpdateTrainingSupersetDto } from './dto/update-training-superset.dto';
 import { IdsDto } from '../common/dto/id.dto';
+import { FirebaseService } from '../firebase/firebase.service';
+import { Populate } from '../common/type/orm.type';
+import { Training } from './entity/training.entity';
 
 @Controller('training')
 export class TrainingController {
   constructor(
+    private readonly firebaseService: FirebaseService,
     private readonly trainingService: TrainingService,
     private readonly trainingComponentService: TrainingComponentService,
     private readonly trainingSupersetService: TrainingSupersetService,
@@ -41,6 +45,17 @@ export class TrainingController {
     @RequestUser() user: User,
     @Query() filter: FilterTrainingQueryDto,
   ) {
+    const isAthlete = this.firebaseService.isAthlete(user);
+    const populate = (
+      isAthlete
+        ? [
+            'components',
+            'components.supersets',
+            'components.supersets.exercises',
+          ]
+        : ['components']
+    ) as Populate<Training>[];
+
     return await this.trainingService.findAll({
       user,
       filter: {
@@ -50,7 +65,7 @@ export class TrainingController {
         ...(filter.from && { from: { value: filter.from, op: '>=' } }),
         ...(filter.to && { to: { value: filter.to, op: '<=' } }),
       },
-      populate: ['components'],
+      populate,
     });
   }
 

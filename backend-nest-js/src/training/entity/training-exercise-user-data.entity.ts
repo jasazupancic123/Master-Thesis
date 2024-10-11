@@ -59,4 +59,30 @@ export class TrainingExerciseUserData {
   @ApiPropertyOptional()
   @Expose()
   completedWorkloadValue?: string | number; // actual user kg / % / ... completed
+
+  /*@ValidateNested({ each: true })
+  @Expose()
+  sets: ExerciseSetData[];*/
+}
+
+export class ExerciseSetData {
+  @IsInt()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  setNumber: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  @ApiPropertyOptional()
+  @Expose()
+  completedSetTypeValue?: number; // actual user reps / distance / time / ... completed
+
+  @IsStringOrNumber()
+  @IsOptional()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  completedWorkloadValue?: string | number; // actual user kg completed
 }

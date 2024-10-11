@@ -29,7 +29,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
 
           <Stack spacing={2} direction="row">
             {superset.exercises.map((exercise, i) => {
-              return <Stack>
+              return <Stack key={i} spacing={1}>
                 <Typography variant="body1">{exercise.exercise?.name}</Typography>
 
                 {/* Target (exercise meta) */}
@@ -98,7 +98,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                 {/* Completed data */}
                 {new Array(exercise.meta.sets).fill(0).map((_, i) => {
                   return <Grid2 container key={i} width="100%">
-                    <Grid2 xs={4} width={75} display="flex" alignItems="center" justifyContent="center">
+                    <Grid2 xs={4} display="flex" alignItems="center" justifyContent="center" flexGrow={1}>
                       {i + 1}.
                     </Grid2>
 

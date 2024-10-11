@@ -7,7 +7,6 @@ import MenuItem from '@mui/material/MenuItem';
 import { FormControl, TextField } from '@mui/material';
 import {
   SetExerciseOption,
-  TRAINING_EXERCISE_EFFORT,
   TRAINING_EXERCISE_RECOVERY,
   TRAINING_EXERCISE_SET,
   TRAINING_EXERCISE_SET_TYPE,
@@ -60,8 +59,27 @@ export default function TrainingExerciseCard(props: Props) {
     onChange(data);
   }, [exercise.meta, exercise.order, state, onChange]);
 
-  return <Stack direction="column" spacing={1} p={1}>
-    <Typography variant="body1" fontWeight="bold" textTransform="uppercase">
+  return <Stack
+    direction="column"
+    spacing={2}
+    p={1}
+    sx={{
+      backgroundColor: 'rgba(255, 255, 255, 0.05)', // White background with 5% transparency
+      padding: '10px', // Internal padding for each drill
+      borderRadius: '0px',
+      boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)', // Optional: Add slight shadow for visual separation
+      marginBottom: '5px', // Vertical gap between exercises
+    }}
+  >
+    <Typography
+      variant="body1"
+      fontWeight="bold"
+      textTransform="uppercase"
+      sx={{
+        color: 'white', // Set text color to white
+        textAlign: 'center', // Align text to the center
+      }}
+    >
       {exercise.exercise?.name}
     </Typography>
 
@@ -139,7 +157,7 @@ export default function TrainingExerciseCard(props: Props) {
       />
 
       {/* Effort */}
-      <SetExerciseAttribute
+      {/*<SetExerciseAttribute
         options={TRAINING_EXERCISE_EFFORT}
         state={(() => {
           const option = TRAINING_EXERCISE_EFFORT.find(option => option.label === 'effort')!;
@@ -155,7 +173,7 @@ export default function TrainingExerciseCard(props: Props) {
           const effort = state.value as TrainingExerciseMeta['effort'];
           setState(prev => ({ ...prev, effort }));
         }}
-      />
+      />*/}
 
       {/* Tempo */}
       {/*<SetExerciseAttribute
@@ -199,14 +217,21 @@ export default function TrainingExerciseCard(props: Props) {
 }
 
 const sx = {
+  border: 'none',
+  size: 'small',
+  backgroundColor: 'transparent',
   '& .MuiSelect-icon': { display: 'none' },
   '& .MuiSelect-select': {
+    padding: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 25,
     fontSize: '0.7rem',
     color: 'lightgrey',
     backgroundColor: 'transparent',
-    height: 30,
+    borderBottom: 'none',
   },
-  p: '5px',
 };
 
 interface State {
@@ -281,7 +306,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
       </FormControl>
     ) : (
       <TextField
-        variant="standard"
+        variant="filled"
         value={state.value}
         type={state.type}
         size="small"
@@ -292,13 +317,24 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         }}
         InputLabelProps={{ shrink: true }}
         sx={{
-          '& .MuiInputBase-input': {
-            fontSize: '0.7rem',
-            pl: 1,
-            pt: 1,
-            height: 22,
-          },
+          mt: 0,
+          bgcolor: 'transparent',
+          height: sx['& .MuiSelect-select'].height,
           width: 70,
+          '& .MuiInputBase-root': {
+            borderBottom: 'none',
+            border: 'none',
+          },
+          '& .MuiInputBase-input': {
+            border: 'none',
+            borderBottom: 'none',
+            padding: '1px',
+            textAlign: 'center',
+            backgroundColor: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
         }}
       />
     )}

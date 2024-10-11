@@ -38,7 +38,7 @@ export default function SelectInput<T>(props: Props<T>) {
         '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
       }}
     >
-      <MenuItem value="">
+      <MenuItem value="" sx={{ minHeight: 20 }}>
         <em>None</em>
       </MenuItem>
 

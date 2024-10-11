@@ -17,7 +17,7 @@ import TrainerYearView from '@/app/groups/components/trainer-year-view';
 import TrainerWeekView from '@/app/groups/components/trainer-week-view';
 import GroupIcon from '@mui/icons-material/Group';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
-import SelectInput from '@/app/groups/components/select-input';
+import SelectInput from '@/common/components/select-input';
 import { AppContextType } from '@/common/type/context.type';
 import { GroupPageProps } from '@/group/type/props.type';
 import { GroupController } from '@/group/group.controller';
@@ -230,7 +230,19 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       </Box>
 
       {/* Render selected filter */}
-      {mapper[props.filter]}
+      {mapper[props.filter] || <Box
+        sx={{
+          backgroundColor: '#1A2B3C',
+          height: '30px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderTopRightRadius: '0px',
+          borderTopLeftRadius: '0px',
+          borderBottomRightRadius: '20px',
+          borderBottomLeftRadius: '20px',
+        }}
+      />}
     </>
   );
 }

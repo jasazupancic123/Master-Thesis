@@ -10,10 +10,12 @@ import { CreateWellness } from '@/user/type/wellness.type';
 import { useFetch } from '@/hook/use-fetch';
 import { Wellness } from '@/user/entity/wellness.entity';
 import Box from '@mui/material/Box';
+import { useEffect, useState } from 'react';
 
 function Page() {
   const { token } = useAppContext();
   const wellness = useFetch<Wellness>(UserController.URL.wellness());
+  const [disabled, setDisabled] = useState(false);
 
   async function submitWellness(data: CreateWellness) {
     try {
@@ -25,12 +27,22 @@ function Page() {
     }
   }
 
+  useEffect(() => {
+    if (wellness?.data)
+      setDisabled(true);
+  }, [wellness.data]);
+
   if (wellness.loading)
     return <div>Loading...</div>;
 
   return (
     <Box height="100%">
-      <UserWellnessForm initialData={wellness.data} onSubmit={submitWellness} disabled={!!wellness.data} />
+      <UserWellnessForm
+        initialData={wellness.data}
+        onSubmit={submitWellness}
+        disabled={disabled}
+        setDisabled={setDisabled}
+      />
     </Box>
   );
 }

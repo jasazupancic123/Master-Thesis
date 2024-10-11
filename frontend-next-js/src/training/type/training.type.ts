@@ -1,7 +1,7 @@
 import { Training } from '../entity/training.entity';
 import { Dayjs } from 'dayjs';
 
-export type FilterTrainingQuery = Pick<Training, 'groupId' | 'cycleId' | 'subgroupId' | 'from' | 'to'>;
+export type FilterTrainingQuery = Pick<Training, 'groupId' | 'cycleId' | 'subgroupId' | 'from' | 'to'>
 
 export type CreateTraining = {
   groupId: string,

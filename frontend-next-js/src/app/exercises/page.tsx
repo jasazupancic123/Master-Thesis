@@ -126,7 +126,7 @@ function Page() {
   }, [pagination.page, pagination.pageSize, component?.id, token, global]);
 
   return (
-    <Box py={2}>
+    <Box py={12}>
       <Box display="flex" justifyContent="space-between" my={2}>
         <ExerciseChips
           global={global}
@@ -160,7 +160,7 @@ function Page() {
       <Stack direction="row" justifyContent="center" my={2}>
         <Pagination
           count={pagination.pages}
-          color="secondary"
+          color="primary"
           onChange={(_, page) => setPagination({ ...pagination, page })}
           page={pagination.page}
         />

@@ -6,12 +6,11 @@ Project for managers, trainers and athletes to track their workouts more efficie
 
 ### TODO
 
+- Add `ExerciseSetData` to `TrainingExerciseUserData` to track user's progress
 - Delete group
 - When adding exercise to training, show checkbox to show user's custom exercises
-- Exercise video
-- Exercise video in background
+- Exercise video + in background of exercise
 - Athlete daily view
-  - New style of components for athletes to allow him to update his own data
   - Athlete can update his own exercise info data
 
 ### Components

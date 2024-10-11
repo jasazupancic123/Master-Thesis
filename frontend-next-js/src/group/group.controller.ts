@@ -18,6 +18,7 @@ export class GroupController {
     }) => `/group/${groupId}/availableMembers?from=${filter.from.toISOString()}`,
     cycles: (groupId: string) => `/group/${groupId}/cycle`,
     cycleById: (groupId: string, cycleId: string) => `/group/${groupId}/cycle/${cycleId}`,
+    activeCycle: (groupId: string) => `/group/${groupId}/cycle/active`,
     subgroups: (groupId: string, filter?: { from: Dayjs, to: Dayjs }) =>
       `/group/${groupId}/subgroup` + (filter ? `?from=${filter.from.toISOString()}&to=${filter.to.toISOString()}` : ''),
     subgroupById: (groupId: string, subgroupId: string) => `/group/${groupId}/subgroup/${subgroupId}`,
@@ -37,6 +38,10 @@ export class GroupController {
 
   static async findAvailableMembers(token: string, groupId: string, filter: { from: Dayjs }) {
     return await commonService.api.fetch<string[]>(this.URL.groupAvailableMembers(groupId, filter), { token });
+  }
+
+  static async findActiveCycle(token: string, groupId: string) {
+    return await commonService.api.fetch<Cycle>(this.URL.activeCycle(groupId), { token });
   }
 
   static async deleteCycle(token: string, groupId: string, cycleId: string) {

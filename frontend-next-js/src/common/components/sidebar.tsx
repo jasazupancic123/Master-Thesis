@@ -95,7 +95,7 @@ export default function Sidebar({ title }: Props) {
         <Box
           sx={{
             height: '100%',
-            bgcolor: '#121212',
+            bgcolor: 'none',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',

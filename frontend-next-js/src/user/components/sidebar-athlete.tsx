@@ -56,7 +56,8 @@ export default function SidebarAthlete(props: Props) {
         width="100%"
         display="flex"
         justifyContent="center"
-        mb={4}
+        mb={6}
+        zIndex={1000}
       >
         <BottomNavigation
           value={index}

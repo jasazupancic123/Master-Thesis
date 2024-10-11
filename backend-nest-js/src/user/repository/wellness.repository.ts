@@ -41,7 +41,7 @@ export class WellnessRepository
 
   async getToday(ref: Required<UserRef>): Promise<Wellness | null> {
     const snapshot = await this.collection(ref)
-      .where('createdAt', '>=', Timestamp.fromDate(startOfDay(new Date())))
+      .where('date', '>=', Timestamp.fromDate(startOfDay(new Date())))
       .limit(1)
       .get();
 
@@ -58,7 +58,7 @@ export class WellnessRepository
       fatigue: input.fatigue || null,
       soreness: input.soreness || null,
       comment: input.comment || null,
-      date: Timestamp.now(),
+      date: Timestamp.fromDate(startOfDay(new Date())),
       deletedAt: null,
     });
 
