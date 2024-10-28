@@ -43,10 +43,10 @@ export class UserService {
       this.logger.log(`Creating user (${email}, ${JSON.stringify(data)})`);
       user = await auth.createUser({ email, password, displayName });
     } finally {
-      await auth.setCustomUserClaims(user.uid, customClaims);
+      if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
     }
 
-    return (await auth.getUser(user.uid)) as User;
+    return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
   async findOneBy(key: 'id' | 'email', value: string): Promise<User> {

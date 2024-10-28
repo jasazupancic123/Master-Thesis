@@ -43,15 +43,15 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
   async setup(options: { dev: boolean }) {
     const time = performance.now();
 
-    // create / update admin user
-    await this.userService.upsert({
-      email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
-      password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
-      displayName: 'Admin',
-      customClaims: { role: [UserRole.ADMIN] },
-    });
-
     if (options?.dev) {
+      // create / update admin user
+      await this.userService.upsert({
+        email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
+        password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
+        displayName: 'Admin',
+        customClaims: { role: [UserRole.ADMIN] },
+      });
+
       // delete all data
       await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
       await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
