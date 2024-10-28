@@ -1,9 +1,16 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
 import { FirebaseMiddleware } from './firebase.middleware';
-import { FIREBASE_ADMIN, FirebaseClient, FirebaseClientOptions, getFirebaseClient } from './get-firebase-client';
+import {
+  FIREBASE_ADMIN,
+  FirebaseClient,
+  getFirebaseClient,
+} from './get-firebase-client';
 import { ConfigService } from '@nestjs/config';
-import { getEntityMetadata, getRepositoryToken } from '../common/decorator/entity.decorator';
+import {
+  getEntityMetadata,
+  getRepositoryToken,
+} from '../common/decorator/entity.decorator';
 import { FirestoreRepository } from './firestore.repository';
 import { BaseEntity } from '../common/entity/base.entity';
 import { CommonService } from '../common/service/common.service';
@@ -11,7 +18,7 @@ import { CommonService } from '../common/service/common.service';
 @Global()
 @Module({})
 export class FirebaseModule {
-  static forRoot(options: FirebaseClientOptions): DynamicModule {
+  static forRoot(): DynamicModule {
     return {
       module: FirebaseModule,
       providers: [
@@ -19,14 +26,17 @@ export class FirebaseModule {
           provide: FIREBASE_ADMIN,
           inject: [ConfigService, CommonService],
           useFactory: async (
-            _configService: ConfigService,
+            configService: ConfigService,
             commonService: CommonService,
           ) => {
-            const client = getFirebaseClient(options);
-            if (commonService.env.isProd())
-              await client.storage.bucket('media').makePublic();
+            const credential = JSON.parse(
+              configService.get('FIREBASE_CREDENTIALS'),
+            );
 
-            return client;
+            // if (commonService.env.isProd())
+            //   await client.storage.bucket('media').makePublic();
+
+            return getFirebaseClient({ credential });
           },
         },
         FirebaseService,
@@ -37,19 +47,19 @@ export class FirebaseModule {
   }
 
   static forFeature<T extends BaseEntity>(entities: T[] = []): DynamicModule {
-    const providers = entities.map(entity => {
+    const providers = entities.map((entity) => {
       const name = getEntityMetadata(entity as any);
-      if (!name)
-        throw new Error(`Entity ${entity} has no collection name`);
+      if (!name) throw new Error(`Entity ${entity} has no collection name`);
 
       return {
         provide: getRepositoryToken(entity as any),
         inject: [FIREBASE_ADMIN],
-        useFactory: (firebase: FirebaseClient) => new class extends FirestoreRepository<T> {
-          constructor() {
-            super(firebase, name);
-          }
-        },
+        useFactory: (firebase: FirebaseClient) =>
+          new (class extends FirestoreRepository<T> {
+            constructor() {
+              super(firebase, name);
+            }
+          })(),
       };
     });
 
