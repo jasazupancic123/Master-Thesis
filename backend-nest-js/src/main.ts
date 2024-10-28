@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { Environment } from './config/environment-validation-schema';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { SwaggerSetup } from './common/setup/swagger.setup';
-import { DataSetup } from './common/setup/data.setup';
 import { AllExceptionsFilter } from './common/filter/all-exception.filter';
 import { CommonService } from './common/service/common.service';
 
@@ -14,7 +13,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService<Environment>);
   const commonService = app.get(CommonService);
   const httpAdapter = app.get(HttpAdapterHost);
-  const isDev = commonService.env.isDev();
+  // const isDev = commonService.env.isDev();
 
   // config
   app.enableCors();
@@ -29,7 +28,7 @@ async function bootstrap() {
 
   // setups
   new SwaggerSetup(app).setup();
-  await new DataSetup(app).setup({ dev: isDev });
+  // await new DataSetup(app).setup({ dev: false });
 
   // start server
   const port = configService.get('PORT');
