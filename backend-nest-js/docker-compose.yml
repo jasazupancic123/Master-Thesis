@@ -10,4 +10,4 @@ services:
     volumes:
       - .:/app  # Sync the current directory with the container
       - /app/node_modules  # Exclude node_modules from being overwritten by the volume
-    command: npm run start
+    command: npm run start:prod
