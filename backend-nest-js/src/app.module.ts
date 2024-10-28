@@ -16,7 +16,7 @@ import { CommonModule } from './common/common.module';
   imports: [
     CommonModule,
     ConfigModule.forRoot({ isGlobal: true, validationSchema }),
-    FirebaseModule.forRoot({ credential: 'service-account.json' }),
+    FirebaseModule.forRoot(),
     UserModule,
     ComponentModule,
     ExerciseModule,

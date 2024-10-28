@@ -402,6 +402,3 @@ dist
 # Firebase
 service-account.json
 *debug.log
-
-# Multer
-uploads/
