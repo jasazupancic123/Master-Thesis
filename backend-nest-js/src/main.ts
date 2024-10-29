@@ -14,10 +14,15 @@ async function bootstrap() {
   const configService = app.get(ConfigService<Environment>);
   const commonService = app.get(CommonService);
   const httpAdapter = app.get(HttpAdapterHost);
+  
   const isDev = commonService.env.isDev();
 
   // config
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -25,6 +30,7 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter.httpAdapter as any));
 
   // setups
