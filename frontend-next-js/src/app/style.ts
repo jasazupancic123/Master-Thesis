@@ -17,6 +17,17 @@ export const theme = createTheme({
   },
 });
 
+export const signInUpTheme = createTheme({
+  ...theme,
+  palette: {
+    ...theme.palette,
+    mode: 'light',
+    text: {
+      primary: '#333333',
+    },
+  },
+});
+
 export const buttonStyle = {
   p: 2,
   bgcolor: 'rgba(255, 255, 255, 0.1)',
