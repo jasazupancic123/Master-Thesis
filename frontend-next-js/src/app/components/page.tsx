@@ -14,7 +14,6 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Tree, { TreeItem } from '@/common/components/tree';
 import { useAppContext } from '@/context/app-provider';
-import SelectData from '@/common/components/select-data';
 import { ComponentController } from '@/component/component.controller';
 
 const DEFAULT_COMPONENT: Component = { id: '', slug: '', name: '', parent: null, children: [], parents: [] };
@@ -115,14 +114,14 @@ function Page() {
             onChange={(e) => setComponent({ ...component, name: e.target.value })}
           />
 
-          <SelectData<Component>
+          {/*<SelectData<Component>
             data={components.tree}
             dataKeyProp="id"
             dataValueProp="name"
             label="Parent"
             value={component.parent || ''}
             onChange={(parent) => setComponent({ ...component, parent })}
-          />
+          />*/}
         </Box>
       </MyModal>
     </Box>
