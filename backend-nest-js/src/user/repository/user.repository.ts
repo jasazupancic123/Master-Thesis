@@ -42,7 +42,7 @@ export class UserRepository
    * Returns last bodyweight of the user.
    */
   async getBodyweight(id: string): Promise<number> {
-    const { bodyweight } = await this.getDoc(id);
+    const { bodyweight } = (await this.getDoc(id)) || { bodyweight: [] };
     const sorted = bodyweight.sort(
       (a, b) => b.date.getTime() - a.date.getTime(),
     );
