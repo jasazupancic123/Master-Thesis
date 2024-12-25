@@ -6,6 +6,7 @@ Project for managers, trainers and athletes to track their workouts more efficie
 
 ### TODO
 
+- TODO - new role for fitness place to login at fitnes?
 - Add `ExerciseSetData` to `TrainingExerciseUserData` to track user's progress
 - Delete group
 - When adding exercise to training, show checkbox to show user's custom exercises
@@ -21,6 +22,7 @@ Project for managers, trainers and athletes to track their workouts more efficie
 - Adding leaf components (move all exercises to the new leaf component)
 - Deleting internal components (no special case)
 - Deleting leaf components (move all exercises to the first parent)
+- Multi selection of components
 
 ### Future
 
