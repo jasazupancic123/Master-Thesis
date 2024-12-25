@@ -31,11 +31,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : 'Internal Server Error';
 
     if ('code' in exception) {
-      if (exception.code?.includes(FirebaseAuthError.ID_TOKEN_EXPIRED))
-        message = 'Please refresh the page or login again';
+      if (typeof exception.code === 'string') {
+        if (exception.code.includes(FirebaseAuthError.ID_TOKEN_EXPIRED))
+          message = 'Please refresh the page or login again';
 
-      if (exception.code?.includes(FirebaseAuthError.USER_NOT_FOUND))
-        message = 'User not found';
+        if (exception.code.includes(FirebaseAuthError.USER_NOT_FOUND))
+          message = 'User not found';
+      }
 
       response.status(status).send({ message });
     } else response.status(status).send(message);
