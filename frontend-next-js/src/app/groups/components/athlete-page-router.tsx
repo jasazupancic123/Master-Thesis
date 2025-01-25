@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import AthleteTrainingExerciseCard from '@/training/components/athlete-training-exercise-card';
 import { CommonService } from '@/common/service/common.service';
+import { Divider } from '@mui/material';
 
 export default function AthletePageRouter(props: GroupPageProps) {
   const { token } = useAppContext();
@@ -26,6 +27,22 @@ export default function AthletePageRouter(props: GroupPageProps) {
 
       try {
         const cycle = await GroupController.findActiveCycle(token, group.id);
+        props.setSelected(prev => ({ ...prev, cycle }));
+      } catch (e) {
+        console.error(e);
+        toast.error('Error fetching active cycle');
+      }
+    }
+
+    fetchActiveCycle().then();
+  }, [props.selected.group?.id, token]);
+
+  useEffect(() => {
+    async function fetchActiveCycleTrainings() {
+      const { group, cycle } = props.selected;
+      if (!group || !cycle) return;
+
+      try {
         const trainings = await TrainingController.findTrainings(token, {
           groupId: group.id,
           cycleId: cycle.id,
@@ -35,19 +52,16 @@ export default function AthletePageRouter(props: GroupPageProps) {
 
         props.setSelected(prev => ({
           ...prev,
-          cycle: {
-            ...cycle,
-            trainings: trainings.sort((a, b) => dayjs(a.from).diff(dayjs(b.from))),
-          },
+          cycle: { ...cycle, trainings },
         }));
       } catch (e) {
         console.error(e);
-        toast.error('Error fetching active cycle & trainings');
+        toast.error('Error fetching active cycle');
       }
     }
 
-    fetchActiveCycle().then();
-  }, [props.selected.group?.id, token]);
+    fetchActiveCycleTrainings().then();
+  }, [props.selected.cycle?.id, token]);
 
   return <>
     <Box>
@@ -82,24 +96,71 @@ export default function AthletePageRouter(props: GroupPageProps) {
     </Box>
 
     {/* Trainings */}
-    <Box p={2}>
-      {props.selected.cycle && <>
-        {props.selected.cycle.trainings.map((training, i) => (
-          <Box key={i}>
-            <Typography variant="h6">
-              ({CommonService.instance.date.formatTime(dayjs(training.from))} - {CommonService.instance.date.formatTime(dayjs(training.to))})
+    <Stack p={2} sx={{ borderRadius: 2 }} spacing={3}>
+      {props.selected.cycle && (
+        <>
+          {props.selected.cycle?.trainings?.length === 0 ? (
+            <Typography variant="body1" sx={{ textAlign: 'center', color: 'text.secondary' }}>
+              Loading trainings...
             </Typography>
+          ) : (
+            props.selected.cycle.trainings?.map((training, i) => (
+              <Box
+                key={i}
+                sx={{ borderRadius: 2, p: 3 }}
+              >
+                {/* Training Time Header */}
+                <Stack direction="row" sx={{ borderRadius: 5 }}>
+                  <Box
+                    sx={{
+                      width: 25,
+                      height: 25,
+                      backgroundColor: 'background.default',
+                      borderBottomLeftRadius: 5,
+                      borderTopLeftRadius: 5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: 3,
+                    }}
+                  />
 
-            <Stack spacing={2}>
-              {training.components.map((component) => (
-                <Box key={component.componentId}>
-                  <AthleteTrainingExerciseCard component={component} />
-                </Box>
-              ))}
-            </Stack>
-          </Box>
-        ))}
-      </>}
-    </Box>
+                  <Stack direction="row" spacing={3}
+                         sx={{
+                           backgroundColor: '#025c59',
+                           px: 1,
+                           borderTopRightRadius: 5,
+                           borderBottomRightRadius: 5,
+                         }}
+                  >
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {CommonService.instance.date.formatTime(dayjs(training.from))} -{' '}
+                      {CommonService.instance.date.formatTime(dayjs(training.to))}
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                      {CommonService.instance.date.format(new Date())}
+                    </Typography>
+                  </Stack>
+                </Stack>
+
+                <Divider sx={{ my: 0.5, mb: 2 }} />
+
+                {/* Components */}
+                <Stack spacing={3}>
+                  {training.components.map((component) => (
+                    <Box
+                      key={component.componentId}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <AthleteTrainingExerciseCard component={component} trainingId={training.id} />
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+            ))
+          )}
+        </>
+      )}
+    </Stack>
   </>;
 }

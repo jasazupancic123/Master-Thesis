@@ -1,4 +1,11 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsStringOrNumber } from '../../common/decorator/is-string-or-number.decorator';
@@ -40,34 +47,14 @@ export class TrainingExerciseUserData {
   @Expose()
   workloadValue: string | number; // calculated value prescribed by trainer
 
-  @IsInt()
-  @Min(0)
-  @ApiProperty()
+  @ValidateNested({ each: true })
   @Expose()
-  completedSets: number;
-
-  @IsInt()
-  @IsOptional()
-  @Min(0)
-  @ApiPropertyOptional()
-  @Expose()
-  completedSetTypeValue?: number; // actual user reps / distance / time / ... completed
-
-  @IsStringOrNumber()
-  @IsOptional()
-  @IsNotEmpty()
-  @ApiPropertyOptional()
-  @Expose()
-  completedWorkloadValue?: string | number; // actual user kg / % / ... completed
-
-  /*@ValidateNested({ each: true })
-  @Expose()
-  sets: ExerciseSetData[];*/
+  sets: ExerciseSetData[];
 }
 
 export class ExerciseSetData {
   @IsInt()
-  @Min(0)
+  @Min(1)
   @ApiProperty()
   @Expose()
   setNumber: number;
@@ -77,12 +64,12 @@ export class ExerciseSetData {
   @Min(0)
   @ApiPropertyOptional()
   @Expose()
-  completedSetTypeValue?: number; // actual user reps / distance / time / ... completed
+  setTypeValue?: number; // actual user reps / distance / time / ... completed
 
   @IsStringOrNumber()
   @IsOptional()
   @IsNotEmpty()
   @ApiPropertyOptional()
   @Expose()
-  completedWorkloadValue?: string | number; // actual user kg completed
+  workloadValue?: string | number; // actual user kg completed
 }

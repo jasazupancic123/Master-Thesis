@@ -131,8 +131,6 @@ export class TrainingExerciseService {
         data,
       );
 
-      this.logger.debug('created training exercise user data', userData);
-
       result.push({
         ...data,
         data: userData,

@@ -6,7 +6,11 @@ import { CreateTrainingComponent, UpdateTrainingComponent } from '@/training/typ
 import { TrainingComponent } from '@/training/entity/training-component.entity';
 import { CreateTrainingSuperset, UpdateTrainingSuperset } from '@/training/type/training-superset.type';
 import { TrainingSuperset } from '@/training/entity/training-superset.entity';
-import { CreateTrainingExercise, UpdateTrainingExercise } from '@/training/type/training-exercise.type';
+import {
+  CreateTrainingExercise,
+  UpdateTrainingExercise,
+  UpdateTrainingExerciseUserData,
+} from '@/training/type/training-exercise.type';
 import { TrainingExercise } from '@/training/entity/training-exercise.entity';
 
 const commonService = CommonService.instance;
@@ -32,6 +36,7 @@ export class TrainingController {
     trainingSupersetById: (trainingId: string, componentId: string, supersetId: string) => `/training/${trainingId}/component/${componentId}/superset/${supersetId}`,
     trainingExercises: (trainingId: string, componentId: string, supersetId: string) => `/training/${trainingId}/component/${componentId}/superset/${supersetId}/exercise`,
     trainingExerciseById: (trainingId: string, componentId: string, supersetId: string, exerciseId: string) => `/training/${trainingId}/component/${componentId}/superset/${supersetId}/exercise/${exerciseId}`,
+    trainingExerciseSet: (trainingId: string, componentId: string, supersetId: string, exerciseId: string) => `/training/${trainingId}/component/${componentId}/superset/${supersetId}/exercise/${exerciseId}/set`,
   };
 
 
@@ -156,6 +161,16 @@ export class TrainingController {
     }>(this.URL.trainingExerciseById(trainingId, componentId, supersetId, exerciseId), {
       token,
       method: 'DELETE',
+    });
+  }
+
+  static async updateAthleteSetData(token: string, trainingId: string, componentId: string, supersetId: string, exerciseId: string, body: UpdateTrainingExerciseUserData) {
+    return await commonService.api.fetch<{
+      id: string
+    }>(this.URL.trainingExerciseSet(trainingId, componentId, supersetId, exerciseId), {
+      token,
+      method: 'PATCH',
+      body: { sets: body },
     });
   }
 }

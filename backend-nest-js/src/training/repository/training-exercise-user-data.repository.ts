@@ -4,6 +4,7 @@ import {
   CollectionReference,
   DocumentReference,
   DocumentSnapshot,
+  FieldValue,
   QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 import {
@@ -11,9 +12,14 @@ import {
   TrainingExerciseRef,
   TrainingExerciseUserDataRef,
 } from '../../common/type/firebase-firestore.type';
-import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.entity';
+import {
+  ExerciseSetData,
+  TrainingExerciseUserData,
+} from '../entity/training-exercise-user-data.entity';
 import { TrainingExerciseRepository } from './training-exercise.repository';
 import { Query } from 'firebase-admin/lib/firestore';
+import { CommonService } from '../../common/service/common.service';
+import { SetStatus } from '../enum/set-status.enum';
 
 @Injectable()
 export class TrainingExerciseUserDataRepository
@@ -24,6 +30,7 @@ export class TrainingExerciseUserDataRepository
     >
 {
   constructor(
+    private readonly commonService: CommonService,
     private readonly trainingExerciseRepository: TrainingExerciseRepository,
   ) {}
 
@@ -50,9 +57,7 @@ export class TrainingExerciseUserDataRepository
     await this.doc(ref).set({
       userId: ref.userId,
       workloadValue: data.workloadValue || null,
-      completedSets: data.completedSets || 0,
-      completedSetTypeValue: data.completedSetTypeValue || null,
-      completedWorkloadValue: data.completedWorkloadValue || null,
+      sets: FieldValue.arrayUnion(...data.sets),
     });
 
     return ref.userId;
@@ -63,6 +68,20 @@ export class TrainingExerciseUserDataRepository
     data: Partial<TrainingExerciseUserData>,
   ) {
     await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
+  }
+
+  async updateSetData(
+    ref: Required<TrainingExerciseUserDataRef>,
+    input: Partial<ExerciseSetData>[],
+  ) {
+    const data = input.map((item) => ({
+      status: SetStatus.COMPLETED,
+      setNumber: item.setNumber,
+      setTypeValue: item.setTypeValue,
+      workloadValue: item.workloadValue,
+    }));
+
+    await this.doc(ref).update({ sets: data });
   }
 
   async deleteDoc(ref: Required<TrainingExerciseUserDataRef>) {
@@ -91,9 +110,7 @@ export class TrainingExerciseUserDataRepository
       supersetId: data.supersetId,
       exerciseId: data.exerciseId,
       workloadValue: data.workloadValue,
-      completedSets: data.completedSets,
-      completedSetTypeValue: data.completedSetTypeValue || null,
-      completedWorkloadValue: data.completedWorkloadValue || null,
+      sets: data.sets || [],
     };
   }
 }
