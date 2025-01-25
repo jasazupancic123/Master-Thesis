@@ -115,7 +115,7 @@ export class CycleService {
       await this.populate(
         { ...ref, cycleId: cycle.id },
         cycle,
-        options.populate,
+        options?.populate,
       );
 
     return cycle;

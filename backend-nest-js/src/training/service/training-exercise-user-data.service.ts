@@ -3,11 +3,15 @@ import { TrainingExerciseUserDataRepository } from '../repository/training-exerc
 import { TrainingExerciseMeta } from '../entity/training-exercise-meta.entity';
 import { TrainingExerciseRepository } from '../repository/training-exercise.repository';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { TrainingExerciseUserData } from '../entity/training-exercise-user-data.entity';
+import {
+  ExerciseSetData,
+  TrainingExerciseUserData,
+} from '../entity/training-exercise-user-data.entity';
 import { WorkloadType } from '../enum/workload-type.enum';
 import { CommonService } from '../../common/service/common.service';
 import {
   TrainingExerciseRef,
+  TrainingExerciseUserDataRef,
   TrainingRef,
 } from '../../common/type/firebase-firestore.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
@@ -19,6 +23,7 @@ import { User } from '../../common/type/firebase-auth.type';
 import { TrainingService } from './training.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { UserService } from '../../user/service/user.service';
+import { SetStatus } from '../enum/set-status.enum';
 
 @Injectable()
 export class TrainingExerciseUserDataService {
@@ -80,7 +85,7 @@ export class TrainingExerciseUserDataService {
         input.meta.workloadType,
         input.meta.workloadValue,
         bodyweight,
-        userData,
+        userData.map((data) => data.sets).flat(),
       );
 
       const data: TrainingExerciseUserData = {
@@ -90,7 +95,12 @@ export class TrainingExerciseUserDataService {
         supersetId: ref.supersetId,
         exerciseId: ref.exerciseId,
         workloadValue,
-        completedSets: 0,
+        sets: Array.from({ length: input.meta.sets }).map((_, set) => ({
+          status: SetStatus.NOT_STARTED,
+          setNumber: set + 1,
+          setTypeValue: null,
+          workloadValue: null,
+        })),
       };
 
       const docRef = this.trainingExerciseUserDataRepository.doc({
@@ -124,7 +134,7 @@ export class TrainingExerciseUserDataService {
       input.workloadType,
       input.workloadValue,
       bodyweight,
-      userData ? [userData] : [],
+      userData ? userData.sets : [],
     );
 
     const data: TrainingExerciseUserData = {
@@ -134,7 +144,12 @@ export class TrainingExerciseUserDataService {
       supersetId: ref.supersetId,
       exerciseId: ref.exerciseId,
       workloadValue,
-      completedSets: 0,
+      sets: Array.from({ length: input.sets }).map((_, set) => ({
+        status: SetStatus.NOT_STARTED,
+        setNumber: set + 1,
+        setTypeValue: null,
+        workloadValue: null,
+      })),
     };
 
     const docRef = this.trainingExerciseUserDataRepository.doc({
@@ -231,7 +246,7 @@ export class TrainingExerciseUserDataService {
         input.workloadType || meta.workloadType,
         input.workloadValue || meta.workloadValue,
         bodyweight,
-        userData,
+        userData.map((item) => item.sets).flat(),
       );
 
       const data: TrainingExerciseUserData = {
@@ -241,7 +256,13 @@ export class TrainingExerciseUserDataService {
         supersetId: ref.supersetId,
         exerciseId: ref.exerciseId,
         workloadValue,
-        completedSets: 0,
+        // TODO - fix this to keep old set data
+        sets: Array.from({ length: input.sets }).map((_, set) => ({
+          status: SetStatus.NOT_STARTED,
+          setNumber: set + 1,
+          setTypeValue: null,
+          workloadValue: null,
+        })),
       };
 
       const docRef = this.trainingExerciseUserDataRepository.doc({
@@ -255,6 +276,13 @@ export class TrainingExerciseUserDataService {
 
     await batch.commit();
     return result;
+  }
+
+  async updateAthleteSetData(
+    ref: Required<TrainingExerciseUserDataRef>,
+    input: ExerciseSetData[],
+  ) {
+    await this.trainingExerciseUserDataRepository.updateSetData(ref, input);
   }
 
   async removeAll(ref: Required<TrainingExerciseRef>) {
@@ -272,17 +300,15 @@ export class TrainingExerciseUserDataService {
     workloadType: WorkloadType,
     workloadValue: number,
     bodyweight: number,
-    data: TrainingExerciseUserData[],
+    data: ExerciseSetData[],
   ) {
     switch (workloadType) {
       case WorkloadType.RM:
         // fetch 1RM from last month of user exercises, use formula and save value as KG
-        const values = data.map(
-          ({ completedSetTypeValue, completedWorkloadValue }) => ({
-            reps: completedSetTypeValue,
-            weight: +completedWorkloadValue,
-          }),
-        );
+        const values = data.map(({ setTypeValue, workloadValue }) => ({
+          reps: setTypeValue,
+          weight: +workloadValue,
+        }));
 
         return this.commonService.number.rm(values);
       case WorkloadType.BW:

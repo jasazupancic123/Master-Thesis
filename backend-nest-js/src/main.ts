@@ -14,7 +14,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService<Environment>);
   const commonService = app.get(CommonService);
   const httpAdapter = app.get(HttpAdapterHost);
-  
+
   const isDev = commonService.env.isDev();
 
   // config

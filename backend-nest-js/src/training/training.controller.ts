@@ -28,6 +28,8 @@ import { IdsDto } from '../common/dto/id.dto';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Populate } from '../common/type/orm.type';
 import { Training } from './entity/training.entity';
+import { TrainingExerciseUserDataService } from './service/training-exercise-user-data.service';
+import { UpdateAthleteSetDataDto } from './dto/update-athlete-set-data.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -37,6 +39,7 @@ export class TrainingController {
     private readonly trainingComponentService: TrainingComponentService,
     private readonly trainingSupersetService: TrainingSupersetService,
     private readonly trainingExerciseService: TrainingExerciseService,
+    private readonly trainingExerciseUserDataService: TrainingExerciseUserDataService,
   ) {}
 
   @Get()
@@ -52,6 +55,7 @@ export class TrainingController {
             'components',
             'components.supersets',
             'components.supersets.exercises',
+            'components.supersets.exercises.exercise',
           ]
         : ['components']
     ) as Populate<Training>[];
@@ -238,6 +242,34 @@ export class TrainingController {
   ) {
     const ref = { trainingId, componentId, supersetId, exerciseId };
     await this.trainingExerciseService.remove(ref, { user });
+    return { id: exerciseId };
+  }
+
+  @Patch(
+    ':trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId/set',
+  )
+  @Auth()
+  async updateAthleteSetData(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('componentId') componentId: string,
+    @Param('supersetId') supersetId: string,
+    @Param('exerciseId') exerciseId: string,
+    @Body() data: UpdateAthleteSetDataDto,
+  ) {
+    const ref = {
+      trainingId,
+      componentId,
+      supersetId,
+      exerciseId,
+      userId: user.uid,
+    };
+
+    await this.trainingExerciseUserDataService.updateAthleteSetData(
+      ref,
+      data.sets,
+    );
+
     return { id: exerciseId };
   }
 }

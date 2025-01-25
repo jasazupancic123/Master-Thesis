@@ -9,13 +9,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
-import {
-  LINK_GROUPS,
-  LINK_TRAINING,
-  LINK_USERS,
-  LINKS_AUTH,
-  LINKS_NAVBAR,
-} from '@/common/constant/navigation.constant';
+import { LINK_GROUPS, LINK_USERS, LINKS_AUTH, LINKS_NAVBAR } from '@/common/constant/navigation.constant';
 import NextLink from 'next/link';
 import { Divider, Drawer } from '@mui/material';
 import Logo from '@/common/components/logo';
@@ -28,7 +22,7 @@ export default function HeroNavbar({ showLogin = true }) {
   const toggleDrawer = (newOpen: boolean) => () => setOpen(newOpen);
 
   const mainPageMapper = {
-    [UserRole.ATHLETE]: LINK_TRAINING,
+    [UserRole.ATHLETE]: LINK_GROUPS,
     [UserRole.TRAINER]: LINK_GROUPS,
     [UserRole.MANAGER]: LINK_GROUPS,
     [UserRole.ADMIN]: LINK_USERS,

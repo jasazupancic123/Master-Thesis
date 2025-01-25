@@ -10,81 +10,81 @@ function getValues(length: number, hop: number = 1) {
   return [''].concat(values);
 }
 
-const SET_OPTIONS: SetExerciseOption = {
+export const SET_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'sets',
   values: getValues(10),
   format: (value) => value,
 };
 
-const REP_OPTIONS: SetExerciseOption = {
+export const REP_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'reps',
   values: getValues(20),
   format: (value) => value,
 };
 
-const DISTANCE_OPTIONS: SetExerciseOption = {
+export const DISTANCE_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'distance',
   values: getValues(36, 5),
   format: (value) => `${value} m`,
 };
 
-const TIME_OPTIONS: SetExerciseOption = {
+export const TIME_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'time',
   values: getValues(36, 5),
   format: (value) => `${value} s`,
 };
 
-const VO2_OPTIONS: SetExerciseOption = {
+export const VO2_OPTIONS: SetExerciseOption = {
   type: 'string',
   label: 'vo2',
   format: (value) => value,
 };
 
-const RM_OPTIONS: SetExerciseOption = {
+export const RM_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'rm',
   values: getValues(15, 1),
   format: (value) => `${value} RM`,
 };
 
-const BW_OPTIONS: SetExerciseOption = {
+export const BW_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'bw',
   values: getValues(25, 10),
   format: (value) => `${value} %`,
 };
 
-const INT_OPTIONS: SetExerciseOption = {
+export const INT_OPTIONS: SetExerciseOption = {
   type: 'number',
   label: 'int',
   format: (value) => value,
 };
 
-const KG_OPTIONS: SetExerciseOption = {
+export const KG_OPTIONS: SetExerciseOption = {
   type: 'number',
   label: 'kg',
   format: (value) => value,
 };
 
-const TEMPO_OPTIONS: SetExerciseOption = {
+export const TEMPO_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'tempo',
   values: ['0:0:0', '1:0:1', '2:0:1', '1:1:1', '1:2:1', '3:0:1'],
   format: (value) => value,
 };
 
-const EFFORT_OPTIONS: SetExerciseOption = {
+export const EFFORT_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'effort',
   values: ['easy', 'moderate', 'hard', 'max'],
   format: (value) => value,
 };
 
-const REC_OPTIONS: SetExerciseOption = {
+export const REC_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'rec',
   values: getValues(36, 5),

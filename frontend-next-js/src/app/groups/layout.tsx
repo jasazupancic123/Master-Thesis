@@ -24,7 +24,7 @@ export default function Layout({ children }: Props) {
     <Box bgcolor={bgcolor} minHeight={minHeight}>
       {isAthlete && <SidebarAthlete />}
 
-      <Container component="main" maxWidth="lg">
+      <Container component="main" maxWidth="lg" sx={{ pb: 12 }}>
         {isTrainer && <Sidebar />}
 
         <Box mt="64px">

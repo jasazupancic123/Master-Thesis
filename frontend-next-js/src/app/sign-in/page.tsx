@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
 import HeroNavbar from '@/common/components/hero-navbar';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { LINK_GROUPS, LINK_TRAINING, LINK_USERS, LINKS_AUTH } from '@/common/constant/navigation.constant';
+import { LINK_GROUPS, LINK_USERS, LINKS_AUTH } from '@/common/constant/navigation.constant';
 import toast from 'react-hot-toast';
 import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
@@ -33,7 +33,7 @@ export default function Page() {
 
       const role = tokenResult.claims.role as UserRole;
       const mapper = {
-        [UserRole.ATHLETE]: LINK_TRAINING,
+        [UserRole.ATHLETE]: LINK_GROUPS,
         [UserRole.TRAINER]: LINK_GROUPS,
         [UserRole.MANAGER]: LINK_GROUPS,
         [UserRole.ADMIN]: LINK_USERS,

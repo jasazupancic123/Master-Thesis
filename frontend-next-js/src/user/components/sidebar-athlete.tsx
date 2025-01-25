@@ -56,8 +56,7 @@ export default function SidebarAthlete(props: Props) {
         width="100%"
         display="flex"
         justifyContent="center"
-        mb={6}
-        zIndex={1000}
+        zIndex={10001}
       >
         <BottomNavigation
           value={index}
@@ -68,11 +67,9 @@ export default function SidebarAthlete(props: Props) {
           showLabels
           sx={{
             backgroundColor: '#303E4A',
-            height: '50px',
-            width: { xs: '100%', md: '33%' }, // Centered and one-third of the width on larger screens
-            '& .Mui-selected': {
-              color: '#1EB980 !important',
-            },
+            height: '70px',
+            width: { xs: '100%', md: '50%' }, // Centered and one-third of the width on larger screens
+            '& .Mui-selected': { color: '#1EB980 !important' },
           }}
         >
           {Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link, i) => (
@@ -80,7 +77,7 @@ export default function SidebarAthlete(props: Props) {
               key={i}
               label={link.label}
               icon={link.icon || <></>}
-              sx={{ color: index === i ? '#1EB980' : '#fff' }}
+              sx={{ color: index === i ? '#1EB980' : '#fff', p: 1 }}
             />
           ))}
 
