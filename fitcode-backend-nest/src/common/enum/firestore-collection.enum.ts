@@ -1,4 +1,7 @@
 export enum FirestoreCollection {
+  // local development
+  LOCAL_DEV = 'local-dev',
+
   // root hierarchy
   USER = 'users',
   COMPONENT = 'components',
