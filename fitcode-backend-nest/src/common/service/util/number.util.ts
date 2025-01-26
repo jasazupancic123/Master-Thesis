@@ -1,7 +1,7 @@
 export class NumberUtil {
   /**
    * Converts value to percent between min and max. For example,
-   * procentFromValue(50, { min: 0, max: 100 }) returns 0.5.
+   * percent(50, { min: 0, max: 100 }) returns 0.5.
    */
   percent(value: number, limit = { min: 0, max: 100 }): number {
     return (value - limit.min) / (limit.max - limit.min);

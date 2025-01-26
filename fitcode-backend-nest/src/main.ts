@@ -15,8 +15,6 @@ async function bootstrap() {
   const commonService = app.get(CommonService);
   const httpAdapter = app.get(HttpAdapterHost);
 
-  const isDev = commonService.env.isDev();
-
   // config
   app.enableCors({
     origin: '*',
@@ -35,7 +33,7 @@ async function bootstrap() {
 
   // setups
   new SwaggerSetup(app).setup();
-  if (isDev) await new DataSetup(app).setup({ dev: false });
+  if (commonService.env.isDev()) await new DataSetup(app).setup();
 
   // start server
   const port = configService.get('PORT');

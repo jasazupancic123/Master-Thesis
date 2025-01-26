@@ -19,7 +19,7 @@ import { FirebaseService } from '../../firebase/firebase.service';
 import { Component } from '../../component/entity/component.entity';
 import { UserRepository } from '../../user/repository/user.repository';
 
-export class DataSetup extends BaseSetup<{ dev: boolean }> {
+export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
   private readonly userService: UserService;
   private readonly componentService: ComponentService;
@@ -40,45 +40,57 @@ export class DataSetup extends BaseSetup<{ dev: boolean }> {
     this.trainingService = app.get(TrainingService);
   }
 
-  async setup(options: { dev: boolean }) {
+  /**
+   * A special collection for local dev is used to check if data has been
+   * inserted or not. If the flag is `false`, data is imported and flag
+   * set to `true`, else if the flag is `true`, nothing gets imported.
+   */
+  async setup() {
     const time = performance.now();
 
-    if (options?.dev) {
-      // create / update admin user
-      await this.userService.upsert({
-        email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
-        password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
-        displayName: 'Admin',
-        customClaims: { role: [UserRole.ADMIN] },
-      });
+    const localDevCollection = this.firebaseService.firestore.collection(
+      FirestoreCollection.LOCAL_DEV,
+    );
 
-      // delete all data
-      await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
-      await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
+    const inserted =
+      (await localDevCollection.get()).docs?.[0]?.data()?.inserted || false;
+
+    if (inserted) return;
+
+    // create / update admin user
+    await this.userService.upsert({
+      email: this.configService.getOrThrow('FIREBASE_ADMIN_EMAIL'),
+      password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
+      displayName: 'Admin',
+      customClaims: { role: [UserRole.ADMIN] },
+    });
+
+    // delete all data
+    await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
+    await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
+    await this.firebaseService.deleteCollection(
+      FirestoreCollection.EXERCISE_ATTRIBUTE,
+    );
+    await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
+
+    const foundUsers = await this.userService.findAll();
+    for (const user of foundUsers) {
       await this.firebaseService.deleteCollection(
-        FirestoreCollection.EXERCISE_ATTRIBUTE,
+        `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`,
       );
-      await this.firebaseService.deleteCollection(
-        FirestoreCollection.COMPONENT,
-      );
-
-      const foundUsers = await this.userService.findAll();
-      for (const user of foundUsers) {
-        await this.firebaseService.deleteCollection(
-          `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`,
-        );
-      }
-
-      try {
-        await this.import('data.json');
-        this.logger.debug(
-          `Data setup took ${(performance.now() - time) / 1000}s`,
-        );
-      } catch (e) {
-        this.logger.error('Failed to import data');
-        console.error(e);
-      }
     }
+
+    try {
+      await this.import('data.json');
+      this.logger.debug(
+        `Data setup took ${(performance.now() - time) / 1000}s`,
+      );
+    } catch (e) {
+      this.logger.error('Failed to import data');
+      console.error(e);
+    }
+
+    await localDevCollection.add({ inserted: true });
   }
 
   private async import(filename: string) {
