@@ -1,4 +1,4 @@
-app = 'backend-nest-js'
+app = 'fitcode-backend-nest'
 primary_region = 'fra'
 
 [build]
