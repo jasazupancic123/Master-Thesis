@@ -3,7 +3,7 @@
 import React, { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Grid, TextField } from '@mui/material';
+import { Grid, TextField, ThemeProvider } from '@mui/material';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -13,6 +13,7 @@ import { LINKS_AUTH } from '@/common/constant/navigation.constant';
 import toast from 'react-hot-toast';
 import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 import { CommonService } from '@/common/service/common.service';
+import { signInUpTheme } from '../style';
 
 export default function Page() {
   const router = useRouter();
@@ -25,7 +26,11 @@ export default function Page() {
     e.preventDefault();
 
     try {
-      await FirebaseAuthUtil.register(email, password, `${firstName} ${lastName}`);
+      await FirebaseAuthUtil.register(
+        email,
+        password,
+        `${firstName} ${lastName}`
+      );
       toast.success('Account created successfully');
 
       await CommonService.instance.generic.sleep(0.25);
@@ -36,86 +41,117 @@ export default function Page() {
   }
 
   return (
-    <>
-      <Box display="flex" flexDirection="column" alignItems="center" mt={16}>
-        <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}><LockOutlinedIcon /></Avatar>
-        <Typography component="h1" variant="h5">{LINKS_AUTH.register.label}</Typography>
-
-        <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                autoComplete="given-name"
-                name="firstName"
-                required
-                fullWidth
-                id="firstName"
-                label="First Name"
-                autoFocus
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                id="lastName"
-                label="Last Name"
-                name="lastName"
-                autoComplete="family-name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                required
-                fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Grid>
-          </Grid>
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
+    <ThemeProvider theme={signInUpTheme}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100dvh',
+          justifyContent: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            justifyItems: 'center',
+            backgroundColor: '#FFFFFF',
+            padding: 4,
+            borderRadius: 3,
+          }}
+        >
+          <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5">
             {LINKS_AUTH.register.label}
-          </Button>
+          </Typography>
 
-          <Grid container justifyContent="flex-end">
-            <Grid item>
-              <Link href={LINKS_AUTH.login.href} style={{ textDecoration: 'none', color: '#1976d2' }}>
-                Already have an account? Sign in
-              </Link>
+          <Box
+            component="form"
+            noValidate
+            onSubmit={handleSubmit}
+            sx={{ mt: 3 }}
+          >
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  autoComplete="given-name"
+                  name="firstName"
+                  required
+                  fullWidth
+                  id="firstName"
+                  label="First Name"
+                  autoFocus
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="lastName"
+                  label="Last Name"
+                  name="lastName"
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </Grid>
             </Grid>
-          </Grid>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2, px: 2, py: 2 }}
+            >
+              {LINKS_AUTH.register.label}
+            </Button>
+
+            <Grid container sx={{ justifyContent: 'center' }}>
+              <Grid item>
+                <Typography>
+                  Already have an account?{' '}
+                  <Link
+                    href={LINKS_AUTH.login.href}
+                    style={{ textDecoration: 'none', color: '#0f9d58' }}
+                  >
+                    Sign in
+                  </Link>
+                </Typography>
+              </Grid>
+            </Grid>
+          </Box>
         </Box>
       </Box>
-    </>
+    </ThemeProvider>
   );
 }
