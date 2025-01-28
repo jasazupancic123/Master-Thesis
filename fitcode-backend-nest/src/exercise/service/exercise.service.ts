@@ -41,27 +41,42 @@ export class ExerciseService {
     private readonly componentService: Wrapper<ComponentService>,
   ) {}
 
-  async countAll(
-    user: User,
-    options?: FindManyOptions<Exercise>,
-  ): Promise<number> {
-    let query = this.exerciseRepository.collection() as Query;
-
-    // necessary filter either by `global` or `userId`
-    if (options?.filter?.global) query = query.where('global', '==', true);
-    else query = query.where('userId', '==', user.uid);
+  /**
+   * Finds all exercises by user. Admin can create global exercises, and
+   * every user can create his own exercises. Since Firestore does not support
+   * OR queries, these two conditions for user must be queried separately.
+   * Therefore, pagination must be performed in plain JS, not Firestore.
+   */
+  async findAllGlobal(
+    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
+  ): Promise<Exercise[]> {
+    let query = this.exerciseRepository
+      .collection()
+      .where('global', '==', true);
 
     const components = await this.componentService.findAllFlat();
     if (options?.filter) query = this.filter(query, options.filter, components);
-    return await query
-      .count()
+
+    const exercises = await query
       .get()
-      .then((snapshot) => snapshot.data().count);
+      .then((snapshot) =>
+        snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
+      );
+
+    gif(options?.populate);
+    for (const exercise of exercises)
+      await this.populate(
+        { exerciseId: exercise.id },
+        exercise,
+        options.populate,
+      );
+
+    return exercises;
   }
 
   async findAllByUser(
     user: User,
-    options?: FindManyOptions<Exercise>,
+    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
   ): Promise<Exercise[]> {
     let query = this.exerciseRepository.collection() as Query;
 
@@ -71,7 +86,6 @@ export class ExerciseService {
 
     const components = await this.componentService.findAllFlat();
     if (options?.filter) query = this.filter(query, options.filter, components);
-    if (options?.paginate) query = this.paginate(query, options.paginate);
 
     const exercises = await query
       .get()
@@ -99,14 +113,12 @@ export class ExerciseService {
   ): Promise<Exercise[]> {
     const userExercises = await this.findAllByUser(user, {
       ...options,
-      paginate: undefined,
       populate: options?.populate,
       filter: { ...options?.filter, global: false },
     });
 
     const globalExercises = await this.findAllByUser(user, {
       ...options,
-      paginate: undefined,
       populate: options?.populate,
       filter: { ...options?.filter, global: true },
     });
@@ -115,6 +127,34 @@ export class ExerciseService {
       ...userExercises,
       ...globalExercises,
     ]);
+  }
+
+  async findAllPagination(
+    user: User,
+    options?: FindManyOptions<Exercise>,
+  ): Promise<{ data: Exercise[]; total: number }> {
+    const userExercises = await this.findAllByUser(user, {
+      ...options,
+      populate: options?.populate,
+      filter: { ...options?.filter, global: false },
+    });
+
+    const globalExercises = await this.findAllByUser(user, {
+      ...options,
+      populate: options?.populate,
+      filter: { ...options?.filter, global: true },
+    });
+
+    let exercises = this.commonService.array.unique([
+      ...userExercises,
+      ...globalExercises,
+    ]);
+
+    const total = exercises.length;
+    if (options?.paginate)
+      exercises = this.paginate(exercises, options?.paginate);
+
+    return { data: exercises, total };
   }
 
   async findOne(
@@ -297,8 +337,6 @@ export class ExerciseService {
     if (filter.ids?.length)
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
 
-    if (filter.global) query = query.where('global', '==', filter.global);
-
     if (filter.componentsIds) {
       // for each component id, find all children and filter by them
       const componentsIds: string[] = [];
@@ -353,15 +391,15 @@ export class ExerciseService {
     return query;
   }
 
-  private paginate(query: Query, paginate: PaginateOptions<Exercise>): Query {
-    const orderBy = paginate.orderBy || { field: 'createdAt', value: 'desc' };
-    const page = paginate.page || 1;
-    const pageSize = paginate.pageSize || DEFAULT_PAGE_SIZE;
-
-    return query
-      .orderBy(orderBy.field, orderBy.value)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
+  private paginate(
+    data: Exercise[],
+    paginate: PaginateOptions<Exercise>,
+  ): Exercise[] {
+    return this.commonService.generic.paginate(data, {
+      orderBy: paginate.orderBy || { field: 'createdAt', value: 'desc' },
+      page: paginate.page || 1,
+      pageSize: paginate.pageSize || DEFAULT_PAGE_SIZE,
+    });
   }
 
   private async populate(

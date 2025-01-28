@@ -11,12 +11,15 @@ import { UserRef } from '../../common/type/firebase-firestore.type';
 import { CreateWellness } from '../type/wellness.type';
 import { Wellness } from '../entity/wellness.entity';
 import { Bodyweight } from '../entity/body-weight.entity';
+import { ConfigService } from '@nestjs/config';
+import { Environment } from '../../config/environment-validation-schema';
 
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
 
   constructor(
+    private readonly configService: ConfigService<Environment>,
     private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
     private readonly wellnessService: WellnessService,
@@ -74,6 +77,14 @@ export class UserService {
     }
 
     return users;
+  }
+
+  async getAdminId(): Promise<string> {
+    const users = await this.findAll({
+      emails: [this.configService.get('FIREBASE_ADMIN_EMAIL')],
+    });
+
+    return users[0].uid;
   }
 
   async updateClaims(uid: string, claims: UpdateUserClaimsDto): Promise<void> {
