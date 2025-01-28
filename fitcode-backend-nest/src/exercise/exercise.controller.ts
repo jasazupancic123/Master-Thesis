@@ -60,9 +60,7 @@ export class ExerciseController {
     if (Object.keys(options.filter).length === 0) delete options.filter;
     if (Object.keys(options.paginate).length === 0) delete options.paginate;
 
-    const total = await this.exerciseService.countAll(user, options);
-    const data = await this.exerciseService.findAllByUser(user, options);
-    return { total, data };
+    return await this.exerciseService.findAllPagination(user, options);
   }
 
   @Get(':exerciseId')
