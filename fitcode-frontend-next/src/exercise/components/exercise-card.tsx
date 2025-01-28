@@ -1,7 +1,7 @@
 import type { Exercise } from '@/exercise/entity/exercise.entity';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface Props {
   exercise: Exercise;
@@ -13,13 +13,21 @@ export function ExerciseCard(props: Props) {
   return (
     <Card sx={{ maxWidth: 345, borderRadius: 5 }}>
       <CardMedia
-        // components="img"
+        // components="video" or "img"
+        component={
+          exercise.videoUrl ? 'video' : exercise.imageUrl ? 'img' : 'div'
+        }
         sx={{
           height: 140,
-          background: 'linear-gradient(180deg, rgba(26,43,60,1) 0%, rgba(37,53,70,1) 100%)',
+          background:
+            'linear-gradient(180deg, rgba(26,43,60,1) 0%, rgba(37,53,70,1) 100%)',
         }}
-        image={exercise.imageUrl}
+        src={exercise.videoUrl || exercise.imageUrl}
         title={exercise.name}
+        controls={exercise.videoUrl ? true : undefined}
+        muted={exercise.videoUrl ? true : undefined}
+        autoPlay={exercise.videoUrl ? true : undefined}
+        loop={exercise.videoUrl ? true : undefined}
       />
       <CardContent>
         <Typography
