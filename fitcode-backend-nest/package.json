@@ -83,6 +83,11 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
     "*": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   }
