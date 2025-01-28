@@ -2,17 +2,23 @@ import { CommonService } from '@/common/service/common.service';
 import { Exercise } from './entity/exercise.entity';
 import { FilterExerciseQuery } from '@/exercise/type/exercise.type';
 import { AppContextType } from '@/common/type/context.type';
+import { TreeComponent } from '@/component/type/component.type';
+import { Component } from '@/component/entity/component.entity';
 
 const commonService = CommonService.instance;
 
 export class ExerciseService {
-  static filter(data: Exercise[], options: FilterExerciseQuery, components: AppContextType['components']): Exercise[] {
+  static filter(
+    data: Exercise[],
+    options: FilterExerciseQuery,
+    components: AppContextType['components']
+  ): Exercise[] {
     const { ids, componentsIds, name, attributeValues } = options;
 
     let filtered = data;
 
     if (ids?.length)
-      filtered = data.filter(exercise => ids.includes(exercise.id));
+      filtered = data.filter((exercise) => ids.includes(exercise.id));
 
     if (componentsIds?.length) {
       const allComponentsIds: string[] = [];
@@ -38,17 +44,30 @@ export class ExerciseService {
       }
 
       if (allComponentsIds.length)
-        filtered = filtered.filter(exercise =>
-          allComponentsIds.some(id => exercise.componentsIds.includes(id)),
+        filtered = filtered.filter((exercise) =>
+          allComponentsIds.some((id) => exercise.componentsIds.includes(id))
         );
     }
 
     if (name)
-      filtered = filtered.filter(exercise => exercise.name.toLowerCase().includes(name.toLowerCase()));
+      filtered = filtered.filter((exercise) =>
+        exercise.name.toLowerCase().includes(name.toLowerCase())
+      );
 
-    if (attributeValues)
-      throw new Error('not implemented yet');
+    if (attributeValues) throw new Error('not implemented yet');
 
     return filtered;
+  }
+
+  static populate(item: Exercise, components: Component[]): Exercise {
+    item.attributeValues = CommonService.instance.object.flattenObject(
+      item.attributeValues
+    );
+
+    item.components = components.filter(({ id }) =>
+      item.componentsIds.includes(id)
+    );
+
+    return item;
   }
 }

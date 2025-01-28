@@ -9,7 +9,6 @@ export enum FirestoreCollection {
 
   // exercise hierarchy
   EXERCISE = 'exercises',
-  EXERCISE_ATTRIBUTE_VALUE = 'values',
 
   // user hierarchy
   WELLNESS = 'wellness',

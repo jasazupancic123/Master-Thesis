@@ -9,7 +9,7 @@ import {
 } from '../../common/service/util';
 
 export class FilterExerciseDto implements Filter<Exercise> {
-  @IsOptional()
+  /* @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   @Transform(({ value }) => parseQueryCondition(value))
@@ -24,7 +24,7 @@ export class FilterExerciseDto implements Filter<Exercise> {
       ? { ...result, value: parseQueryArray(result?.value) }
       : undefined;
   })
-  componentsIds?: Filter<Exercise>['componentsIds'];
+  componentsIds?: Filter<Exercise>['componentsIds']; */
 
   @IsString({ each: true })
   @IsOptional()

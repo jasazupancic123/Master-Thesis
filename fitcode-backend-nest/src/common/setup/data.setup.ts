@@ -174,21 +174,24 @@ export class DataSetup extends BaseSetup {
       const exercises =
         (usersData.find((u) => u.email === user.email)?.exercises as (Exercise &
           Record<string, any>)[]) || [];
+
       for (const exercise of exercises) {
         const component = await this.componentService.findOneBySlug(
           exercise.component,
         );
+
         if (!component) {
           this.logger.error(
             `Component with slug ${exercise.component} not found`,
           );
+
           continue;
         }
 
         await this.exerciseService.create(user, {
           name: exercise.name,
           componentsIds: [component.id],
-          attributeValues: exercise.attributes,
+          values: exercise.attributes,
         });
       }
 
