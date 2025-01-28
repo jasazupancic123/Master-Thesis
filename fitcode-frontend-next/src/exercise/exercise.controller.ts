@@ -10,19 +10,12 @@ export class ExerciseController {
     attributes: () => '/exercise/attribute',
     exercises: (filter?: FilterExerciseQuery) => {
       const query = {
-        ...(filter?.global && { global: filter.global ? 'true' : 'false' }),
         ...(filter?.ids && { ids: filter.ids.join(',') }),
         ...(filter?.componentsIds && { componentsIds: `:in:${filter.componentsIds.join(',')}` }),
         ...(filter?.name && { name: `:==:${filter.name}` }),
       };
 
-      const paginate = {
-        ...(filter?.orderBy && { orderBy: `${filter.orderBy.field}:${filter.orderBy.value}` }),
-        ...(filter?.page && { page: filter.page }),
-        ...(filter?.pageSize && { pageSize: filter.pageSize }),
-      };
-
-      return `/exercise${commonService.api.query({ ...query, ...paginate })}`;
+      return `/exercise${commonService.api.query(query)}`;
     },
     exerciseById: (id: string) => `/exercise/${id}`,
   };
@@ -32,7 +25,7 @@ export class ExerciseController {
   }
 
   static async findExercises(token: string, filter?: FilterExerciseQuery) {
-    return await commonService.api.fetch<{ total: number, data: Exercise[] }>(this.URL.exercises(filter), { token });
+    return await commonService.api.fetch<Exercise[]>(this.URL.exercises(filter), { token });
   }
 
   static async findExercise(token: string, id: string) {

@@ -10,9 +10,9 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 | Type | Title                                                                                                         | Status      |
 | ---- | ------------------------------------------------------------------------------------------------------------- | ----------- |
 | Docs | [Database Queries](#database-queries)                                                                         | Not Started |
+| Fix  | [Save Training Ids (Athlete View)](#save-training-ids-athlete-view)                                           | Not Started |
+| Fix  | [Refresh Firebase Token](#refresh-firebase-token)                                                             | Not Started |
 | Fix  | [Stale Trainings (Trainer View)](#stale-trainings-trainer-view)                                               | Not Started |
-| Fix  | [Exercise Image And Video](#exercise-image-and-video)                                                         | Not Started |
-| Fix  | [Join Custom And Global Exercises](#join-custom-and-global-exercises)                                         | Not Started |
 | Feat | [Filter Exercises By Custom Attributes](#filter-exercises-by-custom-attributes)                               | Not Started |
 | Feat | [Methodologies](#methodologies)                                                                               | Not Started |
 | Feat | [Athlete Calendar](#athlete-calendar)                                                                         | Not Started |
@@ -34,7 +34,7 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 
 ## 📝 Docs
 
-**Description**: Write all possible cases of queries for each user role into a document.
+**Description**: Write all possible cases of queries for each user role into a document. Also update queries so that they will be batched, transactions will be used and there will be less total calls to the database for performance.
 
 ---
 
@@ -129,6 +129,14 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 
 ## 🐛 Bugs
 
+### Save Training Ids (Athlete View)
+
+**Description**: Save `trainingIds` to `users` collection for each athlete to make querying trainings for calendar easier.
+
+### Refresh Firebase Token
+
+**Description**: After 1 hour, access token on frontend for Firebase auth expires, refresh token must be used.
+
 ### Stale Trainings (Trainer View)
 
 **Description**: Trainings' state is not correctly updated when switching between daily, weekly, cycle and yearly view.
@@ -137,14 +145,6 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 
 - [ ] Correctly update state
 - [ ] Check if there are too many queries and if they can be combined in backend (for example, now we manually fetch cycle and then manually fetch all its trainings, maybe it would be more efficient to return it all from backend in one query)
-
-### Exercise Image And Video
-
-**Description**: Upload exercise image or video and keep video background playing for exercise card.
-
-### Join Custom And Global Exercises
-
-**Description**: Join custom and global exercises in backend in plain JS, since there is no `OR` query in Firestore.
 
 ---
 
