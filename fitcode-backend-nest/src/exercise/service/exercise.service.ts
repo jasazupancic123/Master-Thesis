@@ -63,6 +63,7 @@ export class ExerciseService {
         snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
       );
 
+    // test
     if (options?.populate)
       for (const exercise of exercises)
         await this.populate(
