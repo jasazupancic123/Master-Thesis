@@ -84,8 +84,6 @@
     "testEnvironment": "node"
   },
   "lint-staged": {
-    "*.js": "eslint --fix",
-    "*.ts": "eslint --fix",
-    "*.tsx": "eslint --fix"
+    "*": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   }
 }
