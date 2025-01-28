@@ -15,11 +15,14 @@ import type { Component } from '@/component/entity/component.entity';
 import toast from 'react-hot-toast';
 import IconButton from '@mui/material/IconButton';
 import ExerciseChips from '@/exercise/components/exercise-chips';
-import { PaginateOptions } from '@/common/type/paginate.type';
 import Stack from '@mui/material/Stack';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
 import { ExerciseController } from '@/exercise/exercise.controller';
+import { useFetch } from '@/hook/use-fetch';
+import { ExerciseService } from '@/exercise/exercise.service';
+
+const commonService = CommonService.instance;
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -30,9 +33,9 @@ const DEFAULT_EXERCISE: Partial<Exercise> = {
 function Page() {
   // context
   const { token, components, attributes } = useAppContext();
+  const allExercises = useFetch<Exercise[]>(ExerciseController.URL.exercises(), { authorization: true });
 
   // filter exercises
-  const [global, setGlobal] = useState(true);
   const [component, setComponent] = useState<Component | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState({ name: '' });
@@ -75,7 +78,6 @@ function Page() {
 
       // delete all keys with undefined values
       Object.keys(attributeValues).forEach((key) => attributeValues[key] === undefined && delete attributeValues[key]);
-
       const response = await ExerciseController.createExercise(token, {
         name: item.name,
         componentsIds: item.componentsIds,
@@ -89,6 +91,8 @@ function Page() {
       const { id, rootComponentIds } = response;
       if (!component || component && rootComponentIds.includes(component.id))
         setExercises([...exercises, { ...item, id } as Exercise]);
+
+      allExercises.setData(prev => [...prev, { ...item, id } as Exercise]);
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || 'An error occurred');
@@ -99,38 +103,42 @@ function Page() {
    * Filter exercises
    */
   useEffect(() => {
+    if (allExercises.loading || allExercises.error || !allExercises.data) return;
+
     async function fetchExercises() {
       const filter = {
-        global,
         ...(component?.id && { componentsIds: [component?.id || ''] }),
+        ...(search.name && { name: search.name }),
       };
 
-      const paginate: PaginateOptions<Exercise> = {
-        orderBy: { field: 'name', value: 'asc' },
-        page: pagination.page,
+      let exercises = ExerciseService.filter(allExercises.data!, filter, components);
+      const total = exercises.length;
+
+      // paginate
+      const pages = Math.ceil(total / pagination.pageSize);
+      const page = pages < pagination.pages ? 1 : pagination.page;
+      exercises = commonService.generic.paginate(exercises, {
+        page,
         pageSize: pagination.pageSize,
-      };
-
-      const { total, data } = await ExerciseController.findExercises(token, { ...filter, ...paginate });
+        orderBy: { field: 'name', value: 'asc' },
+      });
 
       // populate exercises
-      const populated = await Promise.all(data.map(async (exercise) =>
+      const populated = await Promise.all(exercises.map(async (exercise) =>
         await CommonService.instance.firebase.firestore.populateExercise(exercise),
       ));
 
       setExercises(populated);
-      setPagination(prev => ({ ...prev, total, pages: Math.ceil(total / pagination.pageSize) }));
+      setPagination(prev => ({ ...prev, page, total, pages }));
     }
 
     fetchExercises().then();
-  }, [pagination.page, pagination.pageSize, component?.id, token, global]);
+  }, [pagination.page, pagination.pageSize, component?.id, token, allExercises.loading, search.name]);
 
   return (
     <Box py={12}>
       <Box display="flex" justifyContent="space-between" my={2}>
         <ExerciseChips
-          global={global}
-          setGlobal={setGlobal}
           noSelectionLabel="All"
           selected={component}
           setSelected={(component) => setComponent(component as Component)}

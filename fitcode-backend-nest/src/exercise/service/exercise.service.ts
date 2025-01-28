@@ -54,55 +54,18 @@ export class ExerciseService {
       .collection()
       .where('global', '==', true);
 
-    const components = await this.componentService.findAllFlat();
-    if (options?.filter) query = this.filter(query, options.filter, components);
-
-    const exercises = await query
-      .get()
-      .then((snapshot) =>
-        snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
-      );
-
-    // test
-    if (options?.populate)
-      for (const exercise of exercises)
-        await this.populate(
-          { exerciseId: exercise.id },
-          exercise,
-          options.populate,
-        );
-
-    return exercises;
+    return this.findAllByQuery(query, options);
   }
 
   async findAllByUser(
     user: User,
     options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
   ): Promise<Exercise[]> {
-    let query = this.exerciseRepository.collection() as Query;
+    const query = this.exerciseRepository
+      .collection()
+      .where('userId', '==', user.uid);
 
-    // necessary filter either by `global` or `userId`
-    if (options?.filter?.global) query = query.where('global', '==', true);
-    else query = query.where('userId', '==', user.uid);
-
-    const components = await this.componentService.findAllFlat();
-    if (options?.filter) query = this.filter(query, options.filter, components);
-
-    const exercises = await query
-      .get()
-      .then((snapshot) =>
-        snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
-      );
-
-    if (options?.populate)
-      for (const exercise of exercises)
-        await this.populate(
-          { exerciseId: exercise.id },
-          exercise,
-          options.populate,
-        );
-
-    return exercises;
+    return this.findAllByQuery(query, options);
   }
 
   /**
@@ -110,52 +73,15 @@ export class ExerciseService {
    */
   async findAll(
     user: User,
-    options?: FindManyOptions<Exercise>,
+    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
   ): Promise<Exercise[]> {
-    const userExercises = await this.findAllByUser(user, {
-      ...options,
-      populate: options?.populate,
-      filter: { ...options?.filter, global: false },
-    });
-
-    const globalExercises = await this.findAllByUser(user, {
-      ...options,
-      populate: options?.populate,
-      filter: { ...options?.filter, global: true },
-    });
+    const userExercises = await this.findAllByUser(user, options);
+    const globalExercises = await this.findAllGlobal(options);
 
     return this.commonService.array.unique([
       ...userExercises,
       ...globalExercises,
     ]);
-  }
-
-  async findAllPagination(
-    user: User,
-    options?: FindManyOptions<Exercise>,
-  ): Promise<{ data: Exercise[]; total: number }> {
-    const userExercises = await this.findAllByUser(user, {
-      ...options,
-      populate: options?.populate,
-      filter: { ...options?.filter, global: false },
-    });
-
-    const globalExercises = await this.findAllByUser(user, {
-      ...options,
-      populate: options?.populate,
-      filter: { ...options?.filter, global: true },
-    });
-
-    let exercises = this.commonService.array.unique([
-      ...userExercises,
-      ...globalExercises,
-    ]);
-
-    const total = exercises.length;
-    if (options?.paginate)
-      exercises = this.paginate(exercises, options?.paginate);
-
-    return { data: exercises, total };
   }
 
   async findOne(
@@ -172,16 +98,6 @@ export class ExerciseService {
 
     if (options?.populate) await this.populate(ref, exercise, options.populate);
     return exercise;
-  }
-
-  async findOneByName(name: string): Promise<Exercise | null> {
-    const query = this.exerciseRepository
-      .collection()
-      .where('name', '==', name);
-
-    const snapshot = await query.get();
-    if (snapshot.empty) return null;
-    return this.exerciseRepository.serialize(snapshot.docs[0]);
   }
 
   async findOneOrFail(
@@ -252,6 +168,7 @@ export class ExerciseService {
     const components = await this.componentService.findAllFlat({
       populate: ['children', 'parents'],
     });
+
     const leafs = this.componentService.leafsFromFlat(components);
 
     const leaf = this.componentService.getLeafBySlug(componentId, leafs);
@@ -290,6 +207,7 @@ export class ExerciseService {
     const components = await this.componentService.findAllFlat({
       populate: ['children', 'parents'],
     });
+
     const leafs = this.componentService.leafsFromFlat(components);
 
     // check that parents of leaf are in training's root component ids
@@ -307,6 +225,30 @@ export class ExerciseService {
       }
 
     return { error: false };
+  }
+
+  private async findAllByQuery(
+    query: Query,
+    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
+  ): Promise<Exercise[]> {
+    const components = await this.componentService.findAllFlat();
+    if (options?.filter) query = this.filter(query, options.filter, components);
+
+    const exercises = await query
+      .get()
+      .then((snapshot) =>
+        snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
+      );
+
+    if (options?.populate)
+      for (const exercise of exercises)
+        await this.populate(
+          { exerciseId: exercise.id },
+          exercise,
+          options.populate,
+        );
+
+    return exercises;
   }
 
   private async validate(data: Partial<Exercise>): Promise<Validate> {

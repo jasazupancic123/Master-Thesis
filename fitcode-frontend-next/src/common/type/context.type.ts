@@ -3,6 +3,7 @@ import { UserRole } from '@/user/enum/user-role.enum';
 import type { ExerciseAttribute } from '@/exercise/entity/exercise-attribute.entity';
 import type { Component } from '@/component/entity/component.entity';
 import { TreeComponent } from '@/component/type/component.type';
+import { Exercise } from '@/exercise/entity/exercise.entity';
 
 export type AppContextType = {
   token: string
@@ -20,3 +21,7 @@ export type AuthContextType = {
   role: UserRole[];
   logout: () => Promise<void>;
 };
+
+export type TrainerContextType = {
+  exercises: Exercise[]
+}
