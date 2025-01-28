@@ -115,6 +115,7 @@ function Page() {
         if (!props.selected.cycle) {
           start = today.startOf('week');
           end = today.endOf('week');
+          const a = 'test123';
         } else {
           const week =
             props.selected.cycle.weeks?.[0] ||
