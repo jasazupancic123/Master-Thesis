@@ -63,13 +63,13 @@ export class ExerciseService {
         snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
       );
 
-    gif(options?.populate);
-    for (const exercise of exercises)
-      await this.populate(
-        { exerciseId: exercise.id },
-        exercise,
-        options.populate,
-      );
+    if (options?.populate)
+      for (const exercise of exercises)
+        await this.populate(
+          { exerciseId: exercise.id },
+          exercise,
+          options.populate,
+        );
 
     return exercises;
   }
