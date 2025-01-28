@@ -28,6 +28,7 @@ const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentsIds: [],
   attributeValues: {},
+  action_type: 'create',
 };
 
 function Page() {
@@ -39,7 +40,12 @@ function Page() {
   const [component, setComponent] = useState<Component | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState({ name: '' });
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 6, pages: 1, total: 0 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 6,
+    pages: 1,
+    total: 0,
+  });
 
   // add and edit modals and exercise state
   const [modal, setModal] = useState({ add: false, edit: false });
@@ -56,28 +62,43 @@ function Page() {
 
   async function addExercise(item: Partial<Exercise>) {
     if (!item.name) return toast.error('Name is required');
-    if (!item.componentsIds?.length) return toast.error('Select at least one component');
+    if (!item.componentsIds?.length)
+      return toast.error('Select at least one component');
 
     try {
       const attributeValues: Record<string, any> = {};
 
       // find all nested select attributes and convert them to a multi-level object
       const nestedSelectAttributes = attributes
-        .filter((attribute) => attribute.type === 'select' && typeof attribute.values?.[0] === 'object')
+        .filter(
+          (attribute) =>
+            attribute.type === 'select' &&
+            typeof attribute.values?.[0] === 'object',
+        )
         .map((attribute) => attribute.field);
 
       for (const key of nestedSelectAttributes) {
-        const nested = CommonService.instance.object.nestObject(item.attributeValues || {}, key);
+        const nested = CommonService.instance.object.nestObject(
+          item.attributeValues || {},
+          key,
+        );
         if (nested) attributeValues[key] = nested;
       }
 
       // add all other attributes
-      const otherAttributes = attributes.filter((attribute) => !nestedSelectAttributes.includes(attribute.field));
+      const otherAttributes = attributes.filter(
+        (attribute) => !nestedSelectAttributes.includes(attribute.field),
+      );
       for (const attribute of otherAttributes)
-        attributeValues[attribute.field] = item.attributeValues?.[attribute.field];
+        attributeValues[attribute.field] =
+          item.attributeValues?.[attribute.field];
 
       // delete all keys with undefined values
-      Object.keys(attributeValues).forEach((key) => attributeValues[key] === undefined && delete attributeValues[key]);
+      Object.keys(attributeValues).forEach(
+        (key) =>
+          attributeValues[key] === undefined && delete attributeValues[key],
+      );
+
       const response = await ExerciseController.createExercise(token, {
         name: item.name,
         componentsIds: item.componentsIds,
@@ -89,10 +110,10 @@ function Page() {
       toast.success('Exercise added');
 
       const { id, rootComponentIds } = response;
-      if (!component || component && rootComponentIds.includes(component.id))
+      if (!component || (component && rootComponentIds.includes(component.id)))
         setExercises([...exercises, { ...item, id } as Exercise]);
 
-      allExercises.setData(prev => [...prev, { ...item, id } as Exercise]);
+      allExercises.setData(prev => [...prev!, { ...item, id } as Exercise]);
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || 'An error occurred');
@@ -156,10 +177,12 @@ function Page() {
           />
 
           {/* Add Button */}
-          <IconButton onClick={() => {
-            setModal({ ...modal, add: true });
-            setExercise(DEFAULT_EXERCISE);
-          }}>
+          <IconButton
+            onClick={() => {
+              setModal({ ...modal, add: true });
+              setExercise(DEFAULT_EXERCISE);
+            }}
+          >
             <AddIcon />
           </IconButton>
         </Box>
@@ -199,28 +222,32 @@ function Page() {
         setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
         title={'Add Exercise'}
         onFileUpload={onFileUpload}
-        icons={<>
-          <IconButton onClick={() => addExercise(exercise)}>
-            <AddIcon />
-          </IconButton>
-        </>}
+        icons={
+          <>
+            <IconButton onClick={() => addExercise(exercise)}>
+              <AddIcon />
+            </IconButton>
+          </>
+        }
       />
 
       {/* Edit Exercise Modal */}
       <ExerciseModal
-        data={exercise}
+        data={{ ...exercise, action_type: 'update' }}
         setData={setExercise}
         attributes={attributes}
         isOpen={modal.edit}
         setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
         title={'Update Exercise'}
         onFileUpload={onFileUpload}
-        icons={<>
-          <IconButton onClick={() => {
-          }}>
-            <AddIcon />
-          </IconButton>
-        </>}
+        icons={
+          <>
+            <IconButton onClick={() => {
+            }}>
+              <AddIcon />
+            </IconButton>
+          </>
+        }
       />
     </Box>
   );

@@ -13,4 +13,5 @@ export type Exercise = IdEntity & TimestampEntity & {
   videoUrl?: string;
   attributes: ExerciseAttributeValue[];
   attributeValues: Record<string, any>;
+  action_type: string;
 }
