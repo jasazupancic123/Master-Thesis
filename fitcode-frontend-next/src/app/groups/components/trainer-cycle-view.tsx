@@ -45,7 +45,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
   }, [props.selected.cycle?.id]);
 
   async function createTraining(
-    data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs },
+    data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs }
   ) {
     if (!props.selected.cycle || !props.selected.group) {
       toast.error('Please select a group and cycle');
@@ -79,7 +79,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
         groupId: props.selected.group!.id,
         cycleId: props.selected.cycle!.id,
         subgroupId: props.selected.subgroup?.id || null,
-        componentIds: selected.map(c => c.id),
+        componentIds: selected.map((c) => c.id),
         from,
         to,
       });
@@ -90,7 +90,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
       }
 
       // update selected trainings
-      props.setSelected(prev => ({
+      props.setSelected((prev) => ({
         ...prev,
         cycle: {
           ...prev.cycle!,
@@ -104,21 +104,28 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
   }
 
-  async function addTrainingComponents(trainingId: string, data: CreateTrainingComponent[]) {
+  async function addTrainingComponents(
+    trainingId: string,
+    data: CreateTrainingComponent[]
+  ) {
     if (!props.selected.cycle || !props.selected.group) {
       toast.error('Please select a group and cycle');
       return;
     }
 
     try {
-      const response = await TrainingController.addTrainingComponents(token, trainingId, data);
+      const response = await TrainingController.addTrainingComponents(
+        token,
+        trainingId,
+        data
+      );
 
       // update training
-      props.setSelected(prev => ({
+      props.setSelected((prev) => ({
         ...prev,
         cycle: {
           ...props.selected.cycle!,
-          trainings: props.selected.cycle!.trainings.map(training => {
+          trainings: props.selected.cycle!.trainings.map((training) => {
             if (training.id === trainingId)
               return {
                 ...training,
@@ -139,11 +146,12 @@ export default function TrainerCycleView(props: GroupPageProps) {
       await TrainingController.deleteTraining(token, trainingId);
 
       // update selected trainings
-      props.setSelected(prev => ({
+      props.setSelected((prev) => ({
         ...prev,
         cycle: {
           ...prev.cycle!,
-          trainings: prev.cycle?.trainings?.filter(t => t.id !== trainingId) || [],
+          trainings:
+            prev.cycle?.trainings?.filter((t) => t.id !== trainingId) || [],
         },
       }));
     } catch (e: any) {
@@ -178,34 +186,45 @@ export default function TrainerCycleView(props: GroupPageProps) {
             components={components.tree}
           />
 
-          {selected.length > 0 && <LocalizationProvider dateAdapter={AdapterDayjs as any}>
-            <Box display="flex" justifyContent="center" alignItems="center" mt={5}>
-              {/* Start time */}
-              <TimePicker
-                label="Start Time"
-                value={create.training.from}
-                onChange={(date) => setCreate({
-                  ...create,
-                  training: { ...create.training, from: date! },
-                })}
-                sx={{ mr: 1 }}
-              />
+          {selected.length > 0 && (
+            <LocalizationProvider dateAdapter={AdapterDayjs as any}>
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                mt={5}
+              >
+                {/* Start time */}
+                <TimePicker
+                  label="Start Time"
+                  value={create.training.from}
+                  onChange={(date) =>
+                    setCreate({
+                      ...create,
+                      training: { ...create.training, from: date! },
+                    })
+                  }
+                  sx={{ mr: 1 }}
+                />
 
-              {/* End time */}
-              <TimePicker
-                label="End Time"
-                value={create.training.to}
-                onChange={(date) => setCreate({
-                  ...create,
-                  training: { ...create.training, to: date! },
-                })}
-              />
-            </Box>
+                {/* End time */}
+                <TimePicker
+                  label="End Time"
+                  value={create.training.to}
+                  onChange={(date) =>
+                    setCreate({
+                      ...create,
+                      training: { ...create.training, to: date! },
+                    })
+                  }
+                />
+              </Box>
 
-            <Alert severity="info" sx={{ mt: 2, alignSelf: 'flex-end' }}>
-              Select time and click on a day below to create a training
-            </Alert>
-          </LocalizationProvider>}
+              <Alert severity="info" sx={{ mt: 2, alignSelf: 'flex-end' }}>
+                Select time and click on a day below to create a training
+              </Alert>
+            </LocalizationProvider>
+          )}
         </Box>
       </Box>
 
@@ -221,14 +240,16 @@ export default function TrainerCycleView(props: GroupPageProps) {
           </Typography>
 
           <Typography variant="body1" fontSize={16}>
-            {CommonService.instance.date.format(props.selected.cycle!.from)} - {CommonService.instance.date.format(props.selected.cycle!.to)}
+            {CommonService.instance.date.format(props.selected.cycle!.from)} -{' '}
+            {CommonService.instance.date.format(props.selected.cycle!.to)}
           </Typography>
         </Stack>
 
         {/* Training weeks */}
-        {props.loading
-          ? <Typography>Loading ...</Typography>
-          : <Stack spacing={1} mt={2}>
+        {props.loading ? (
+          <Typography>Loading ...</Typography>
+        ) : (
+          <Stack spacing={1} mt={2}>
             {props.selected.cycle!.weeks.map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
@@ -243,10 +264,9 @@ export default function TrainerCycleView(props: GroupPageProps) {
                 />
               </Fragment>
             ))}
-          </Stack>}
+          </Stack>
+        )}
       </Box>
     </Box>
   );
 }
-
-
