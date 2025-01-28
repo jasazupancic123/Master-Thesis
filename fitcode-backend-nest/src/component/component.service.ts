@@ -45,6 +45,7 @@ export class ComponentService {
         parent: component.id,
         children: child.children as unknown as Component[],
       };
+
       await this.createFromTree(childData);
     }
 
@@ -92,15 +93,6 @@ export class ComponentService {
     });
   }
 
-  async findAllLeafs(options?: FindManyOptions<Component>) {
-    const components = await this.findAllFlat({
-      ...options,
-      populate: ['children', 'parents'],
-    });
-
-    return this.leafsFromFlat(components);
-  }
-
   leafsFromFlat(components: Component[]): Component[] {
     if (components.every((component) => !component.children.length))
       throw new Error(
@@ -110,27 +102,20 @@ export class ComponentService {
     return components.filter((c) => !c.children.length);
   }
 
-  async findAllOrFail(
-    options?: FindManyOptions<Component>,
-  ): Promise<Component[]> {
-    const components = await this.findAllFlat(options);
-    if (
-      options?.filter?.ids?.length &&
-      components.length !== options?.filter.ids.length
-    )
-      throw new BadRequestException('Invalid components');
-
-    return components;
+  /**
+   * Finds leaf component by slug
+   * @param slug - component slug
+   * @param components - leaf components
+   */
+  getLeafBySlug(slug: string, components: Component[]): Component | null {
+    return components.find((c) => c.slug === slug) || null;
   }
 
-  async getLeafBySlug(
-    slug: string,
-    leafs?: Component[],
-  ): Promise<Component | null> {
-    if (!leafs) leafs = await this.findAllLeafs();
-    return leafs.find((c) => c.slug === slug) || null;
-  }
-
+  /**
+   * Finds root of component by traversing parents tree.
+   * @param component - component to find the root of
+   * @param components - components populated with `parents` array
+   */
   getRoot(component: Component, components: Component[]): Component | null {
     if (component.parents.length === 0) return component;
 

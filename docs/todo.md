@@ -10,9 +10,11 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 | Type | Title                                                                                                         | Status      |
 | ---- | ------------------------------------------------------------------------------------------------------------- | ----------- |
 | Docs | [Database Queries](#database-queries)                                                                         | Not Started |
+| Docs | [Firebase Storage Pricing per video bandwidth per day](#firebase-storage-pricing-per-video-bandwidth-per-day) | Not Started |
 | Fix  | [Save Training Ids (Athlete View)](#save-training-ids-athlete-view)                                           | Not Started |
 | Fix  | [Refresh Firebase Token](#refresh-firebase-token)                                                             | Not Started |
 | Fix  | [Stale Trainings (Trainer View)](#stale-trainings-trainer-view)                                               | Not Started |
+| Feat | [Firebase Read, Write, Delete Counter (Backend)](#firebase-read-write-delete-counter-backend)                 | Not Started |
 | Feat | [Filter Exercises By Custom Attributes](#filter-exercises-by-custom-attributes)                               | Not Started |
 | Feat | [Methodologies](#methodologies)                                                                               | Not Started |
 | Feat | [Athlete Calendar](#athlete-calendar)                                                                         | Not Started |
@@ -34,11 +36,21 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 
 ## 📝 Docs
 
+### Database Queries
+
 **Description**: Write all possible cases of queries for each user role into a document. Also update queries so that they will be batched, transactions will be used and there will be less total calls to the database for performance.
+
+### Firebase Storage Pricing per video bandwidth per day
+
+**Description**: Informational
 
 ---
 
 ## 🛠️ Features
+
+### Firestore Read, Write, Delete Counter (Backend)
+
+**Description**: Implement FirestoreCounter global module and service and update it in every repository when queries are made and analyze query usage.
 
 ### Filter Exercises By Custom Attributes
 

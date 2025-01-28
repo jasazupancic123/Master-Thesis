@@ -8,6 +8,6 @@ import { ComponentRepository } from './repository/component.repository';
   imports: [forwardRef(() => ExerciseModule)],
   controllers: [ComponentController],
   providers: [ComponentRepository, ComponentService],
-  exports: [ComponentService],
+  exports: [ComponentRepository, ComponentService],
 })
 export class ComponentModule {}

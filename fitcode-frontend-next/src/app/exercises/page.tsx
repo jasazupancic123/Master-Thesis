@@ -28,13 +28,15 @@ const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentsIds: [],
   attributeValues: {},
-  action_type: 'create',
 };
 
 function Page() {
   // context
   const { token, components, attributes } = useAppContext();
-  const allExercises = useFetch<Exercise[]>(ExerciseController.URL.exercises(), { authorization: true });
+  const allExercises = useFetch<Exercise[]>(
+    ExerciseController.URL.exercises(),
+    { authorization: true }
+  );
 
   // filter exercises
   const [component, setComponent] = useState<Component | null>(null);
@@ -73,22 +75,24 @@ function Page() {
         .filter(
           (attribute) =>
             attribute.type === 'select' &&
-            typeof attribute.values?.[0] === 'object',
+            typeof attribute.values?.[0] === 'object'
         )
         .map((attribute) => attribute.field);
 
       for (const key of nestedSelectAttributes) {
         const nested = CommonService.instance.object.nestObject(
           item.attributeValues || {},
-          key,
+          key
         );
+
         if (nested) attributeValues[key] = nested;
       }
 
       // add all other attributes
       const otherAttributes = attributes.filter(
-        (attribute) => !nestedSelectAttributes.includes(attribute.field),
+        (attribute) => !nestedSelectAttributes.includes(attribute.field)
       );
+
       for (const attribute of otherAttributes)
         attributeValues[attribute.field] =
           item.attributeValues?.[attribute.field];
@@ -96,7 +100,7 @@ function Page() {
       // delete all keys with undefined values
       Object.keys(attributeValues).forEach(
         (key) =>
-          attributeValues[key] === undefined && delete attributeValues[key],
+          attributeValues[key] === undefined && delete attributeValues[key]
       );
 
       const response = await ExerciseController.createExercise(token, {
@@ -113,7 +117,7 @@ function Page() {
       if (!component || (component && rootComponentIds.includes(component.id)))
         setExercises([...exercises, { ...item, id } as Exercise]);
 
-      allExercises.setData(prev => [...prev!, { ...item, id } as Exercise]);
+      allExercises.setData((prev) => [...prev!, { ...item, id } as Exercise]);
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || 'An error occurred');
@@ -124,7 +128,8 @@ function Page() {
    * Filter exercises
    */
   useEffect(() => {
-    if (allExercises.loading || allExercises.error || !allExercises.data) return;
+    if (allExercises.loading || allExercises.error || !allExercises.data)
+      return;
 
     async function fetchExercises() {
       const filter = {
@@ -132,7 +137,12 @@ function Page() {
         ...(search.name && { name: search.name }),
       };
 
-      let exercises = ExerciseService.filter(allExercises.data!, filter, components);
+      let exercises = ExerciseService.filter(
+        allExercises.data!,
+        filter,
+        components
+      );
+
       const total = exercises.length;
 
       // paginate
@@ -145,16 +155,27 @@ function Page() {
       });
 
       // populate exercises
-      const populated = await Promise.all(exercises.map(async (exercise) =>
-        await CommonService.instance.firebase.firestore.populateExercise(exercise),
-      ));
+      exercises = exercises.map((exercise) =>
+        ExerciseService.populate(exercise, components.flat)
+      );
 
-      setExercises(populated);
-      setPagination(prev => ({ ...prev, page, total, pages }));
+      setExercises(exercises);
+      setPagination((prev) => ({ ...prev, page, total, pages }));
     }
 
     fetchExercises().then();
-  }, [pagination.page, pagination.pageSize, component?.id, token, allExercises.loading, search.name]);
+  }, [
+    pagination.page,
+    pagination.pageSize,
+    component?.id,
+    token,
+    allExercises.loading,
+    search.name,
+    allExercises.error,
+    allExercises.data,
+    components,
+    pagination.pages,
+  ]);
 
   return (
     <Box py={12}>
@@ -215,7 +236,7 @@ function Page() {
 
       {/* Add Exercise Modal*/}
       <ExerciseModal
-        data={exercise}
+        data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
         setData={setExercise}
         attributes={attributes}
         isOpen={modal.add}
@@ -233,7 +254,7 @@ function Page() {
 
       {/* Edit Exercise Modal */}
       <ExerciseModal
-        data={{ ...exercise, action_type: 'update' }}
+        data={exercise}
         setData={setExercise}
         attributes={attributes}
         isOpen={modal.edit}
@@ -242,8 +263,7 @@ function Page() {
         onFileUpload={onFileUpload}
         icons={
           <>
-            <IconButton onClick={() => {
-            }}>
+            <IconButton onClick={() => {}}>
               <AddIcon />
             </IconButton>
           </>
