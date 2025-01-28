@@ -97,6 +97,7 @@ export class ComponentService {
       ...options,
       populate: ['children', 'parents'],
     });
+
     return this.leafsFromFlat(components);
   }
 
@@ -126,8 +127,7 @@ export class ComponentService {
     slug: string,
     leafs?: Component[],
   ): Promise<Component | null> {
-    if (!leafs)
-      leafs = await this.findAllLeafs({ populate: ['children', 'parents'] });
+    if (!leafs) leafs = await this.findAllLeafs();
     return leafs.find((c) => c.slug === slug) || null;
   }
 
