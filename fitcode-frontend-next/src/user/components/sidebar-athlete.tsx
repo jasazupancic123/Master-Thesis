@@ -13,17 +13,21 @@ import Stack from '@mui/material/Stack';
 import { useAuth } from '@/context/auth-provider';
 import IconButton from '@mui/material/IconButton';
 import { LogoutRounded } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
 interface Props {
   title?: string;
 }
 
 export default function SidebarAthlete(props: Props) {
+  const theme = useTheme();
   const { logout } = useAuth();
 
   const router = useRouter();
   const path = usePathname();
-  const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link) => link.href);
+  const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map(
+    (link) => link.href
+  );
 
   const [index, setIndex] = useState(() => {
     const index = mapper.findIndex((href) => path === href);
@@ -38,17 +42,31 @@ export default function SidebarAthlete(props: Props) {
         bgcolor="background.default"
         width="100%"
         height={64}
+        sx={{
+          [theme.breakpoints.down('sm')]: {
+            height: 40,
+          },
+        }}
         justifyContent="center"
         alignItems="center"
       >
         <Logo width={80} height={40} />
       </Stack>
 
-      {props.title && <Box display="flex" justifyContent="center" pb={3} bgcolor="background.paper">
-        <Box bgcolor="background.default" borderRadius="0 0 50px 50px">
-          <Typography variant="h5" component="h1" py={1} px={8}>{props.title}</Typography>
+      {props.title && (
+        <Box
+          display="flex"
+          justifyContent="center"
+          pb={3}
+          bgcolor="background.paper"
+        >
+          <Box bgcolor="background.default" borderRadius="0 0 50px 50px">
+            <Typography variant="h5" component="h1" py={1} px={8}>
+              {props.title}
+            </Typography>
+          </Box>
         </Box>
-      </Box>}
+      )}
 
       <Box
         position="fixed"
