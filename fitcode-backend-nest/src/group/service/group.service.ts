@@ -19,15 +19,16 @@ import {
   Populate,
 } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { GroupRef } from '../../common/type/firebase-firestore.type';
+import { CycleRef, GroupRef } from '../../common/type/firebase-firestore.type';
 import { GroupRepository } from '../repository/group.repository';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
-import { CycleService } from './cycle.service';
 import { SubgroupService } from './subgroup.service';
 import { CreateGroup, UpdateGroup } from '../type/group.type';
 import { User } from '../../common/type/firebase-auth.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { endOfDay, startOfDay } from 'date-fns';
+import { CreateCycle, UpdateCycle } from '../type/cycle.type';
+import { Cycle } from '../entity/cycle.entity';
 
 @Injectable()
 export class GroupService {
@@ -38,7 +39,6 @@ export class GroupService {
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly userService: UserService,
-    private readonly cycleService: CycleService,
     private readonly subgroupService: SubgroupService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
@@ -62,13 +62,10 @@ export class GroupService {
     const user = options?.user;
     if (!user) throw new BadRequestException('User not provided');
 
-    const isTrainer = this.firebaseService.isTrainer(user);
-    const isAthlete = this.firebaseService.isAthlete(user);
-
     const groups = await this.groupRepository.getDocs((collection) => {
-      let query = isTrainer
+      let query = this.firebaseService.isTrainer(user)
         ? collection.where('ownerId', '==', user.uid)
-        : isAthlete
+        : this.firebaseService.isAthlete(user)
           ? collection.where('membersIds', 'array-contains', user.uid)
           : collection;
 
@@ -114,8 +111,18 @@ export class GroupService {
     return group;
   }
 
+  getActiveCycle(group: Group, date = new Date()): Cycle | null {
+    return (
+      group.cycles.find(
+        (cycle) =>
+          this.commonService.date.isBefore(date, cycle.to) &&
+          this.commonService.date.isAfter(date, cycle.from),
+      ) || null
+    );
+  }
+
   async create(user: User, input: CreateGroup): Promise<Group> {
-    this.logger.debug(
+    this.logger.log(
       `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
     );
 
@@ -141,7 +148,6 @@ export class GroupService {
       updatedAt: new Date(),
       ownerId: user.uid,
       name: input.name,
-      owner: null,
       membersIds,
       availableMembersIds: [],
       members,
@@ -159,7 +165,7 @@ export class GroupService {
     const group = await this.findOneOrFail(ref, options);
     const { user } = options;
 
-    this.logger.debug(
+    this.logger.log(
       `User ${user.uid} is updating group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
 
@@ -177,22 +183,6 @@ export class GroupService {
         trainings.map((training) =>
           this.trainingService.update(
             { trainingId: training.id },
-            { membersIds: input.membersIds },
-            { user },
-          ),
-        ),
-      );
-
-      // update all cycle members
-      const cycles = await this.cycleService.findAll(ref, {
-        user,
-        filter: { groupId: { value: ref.groupId } },
-      });
-
-      await Promise.all(
-        cycles.map((cycle) =>
-          this.cycleService.update(
-            { ...ref, cycleId: cycle.id },
             { membersIds: input.membersIds },
             { user },
           ),
@@ -221,7 +211,7 @@ export class GroupService {
     const group = await this.findOneOrFail(ref);
 
     // delete all subgroups
-    const subgroups = await this.subgroupService.findAll(ref);
+    /* const subgroups = await this.subgroupService.findAll(ref);
 
     await Promise.all(
       subgroups.map((subgroup) =>
@@ -230,10 +220,10 @@ export class GroupService {
           options,
         ),
       ),
-    );
+    ); */
 
-    // delete all trainings
-    const trainings = await this.trainingService.findAll({
+    // TODO - delete all trainings
+    /* const trainings = await this.trainingService.findAll({
       user,
       filter: { groupId: { value: ref.groupId } },
     });
@@ -242,19 +232,7 @@ export class GroupService {
       trainings.map((training) =>
         this.trainingService.remove({ trainingId: training.id }, options),
       ),
-    );
-
-    // delete all cycles
-    const cycles = await this.cycleService.findAll(ref, options);
-
-    await Promise.all(
-      cycles.map((cycle) =>
-        this.cycleService.remove(
-          { groupId: ref.groupId, cycleId: cycle.id },
-          options,
-        ),
-      ),
-    );
+    ); */
 
     // remove group from all members
     await Promise.all(
@@ -268,6 +246,72 @@ export class GroupService {
 
     // soft delete group
     await this.groupRepository.deleteDoc(ref.groupId);
+  }
+
+  async addCycle(
+    ref: Required<GroupRef>,
+    user: User,
+    input: CreateCycle,
+  ): Promise<Cycle> {
+    this.logger.log(
+      `User ${user.uid} adding cycle to group ${ref.groupId}: ${JSON.stringify(input)}`,
+    );
+    const group = await this.findOneOrFail(ref, { user });
+
+    // check that current group cycles don't overlap with the new one
+    if (this.isOverlappingCycle(group.cycles, input as Cycle))
+      throw new BadRequestException('Cycle overlap');
+
+    const id = await this.groupRepository.addCycle(group.id, input);
+    return {
+      id,
+      weeks: this.commonService.date.weeks(input.from, input.to),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...input,
+    };
+  }
+
+  async updateCycle(
+    ref: Required<CycleRef>,
+    user: User,
+    cycleId: string,
+    input: UpdateCycle,
+  ): Promise<Cycle> {
+    this.logger.log(
+      `User ${user.uid} updating cycle ${ref.cycleId}: ${JSON.stringify(input)}`,
+    );
+
+    const group = await this.findOneOrFail(ref, { user });
+    const cycle = group.cycles.find((cycle) => cycle.id === cycleId);
+    if (!cycle) throw new BadRequestException('Cycle does not exist');
+
+    const update = this.commonService.object.clean(input);
+
+    // check that current group cycles don't overlap with the new one
+    update.from = input.from || cycle.from;
+    update.to = input.to || cycle.to;
+
+    if (
+      this.isOverlappingCycle(
+        group.cycles.filter((c) => c.id !== cycle.id),
+        update as Cycle,
+      )
+    )
+      throw new BadRequestException('Cycle overlap');
+
+    await this.groupRepository.updateCycle(group.id, cycleId, update);
+    return { ...cycle, ...update };
+  }
+
+  async deleteCycle(ref: Required<CycleRef>, user: User) {
+    this.logger.log(`User ${user.uid} removing cycle ${ref.cycleId}:}`);
+
+    const group = await this.findOneOrFail(ref, { user });
+    const cycle = group.cycles.find((cycle) => cycle.id === ref.cycleId);
+    if (!cycle) throw new BadRequestException('Cycle does not exist');
+
+    await this.groupRepository.deleteCycle(ref.groupId, ref.cycleId);
   }
 
   /**
@@ -346,6 +390,17 @@ export class GroupService {
     return query;
   }
 
+  private isOverlappingCycle(
+    existingCycles: Cycle[],
+    newCycle: Cycle,
+  ): boolean {
+    return existingCycles.some(
+      (cycle) =>
+        this.commonService.date.isBefore(newCycle.from, cycle.to) &&
+        this.commonService.date.isAfter(newCycle.to, cycle.from),
+    );
+  }
+
   private paginate(query: Query, paginate: PaginateOptions<Group>): Query {
     const orderBy = paginate.orderBy || { field: 'createdAt', value: 'desc' };
     const page = paginate.page || 1;
@@ -362,9 +417,6 @@ export class GroupService {
     group: Group,
     populate: Populate<Group>[],
   ) {
-    if (populate.includes('owner'))
-      group.owner = await this.userService.findOneBy('id', group.ownerId);
-
     if (populate.includes('members'))
       group.members = await this.userService.findAll({ ids: group.membersIds });
 
@@ -392,8 +444,5 @@ export class GroupService {
           );
       }
     }
-
-    if (populate.includes('cycles'))
-      group.cycles = await this.cycleService.findAll(ref);
   }
 }
