@@ -191,7 +191,7 @@ export class DataSetup extends BaseSetup {
         await this.exerciseService.create(user, {
           name: exercise.name,
           componentsIds: [component.id],
-          values: exercise.attributes,
+          attributeValues: exercise.attributes,
         });
       }
 
