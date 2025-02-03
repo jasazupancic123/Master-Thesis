@@ -14,7 +14,7 @@ import { UpdateUserClaimsDto } from './dto/update-user.dto';
 import { UserService } from './service/user.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import type { User } from '../common/type/firebase-auth.type';
-import { CreateWellnessDto } from './dto/create-wellness.dto';
+import { CreateUserMetaDto } from './dto/create-user-meta.dto';
 
 @Controller('user')
 export class UserController {
@@ -43,20 +43,23 @@ export class UserController {
     return { id };
   }
 
-  @Get('me/wellness')
+  @Get('me/meta')
   @Auth([UserRole.ATHLETE])
-  async getWellness(@RequestUser() user: User) {
+  async getMeta(@RequestUser() user: User) {
     const ref = { uid: user.uid };
-    return await this.userService.findTodayWellness(ref);
+    return await this.userService.getLastMeta(ref);
   }
 
-  @Post('me/wellness')
+  @Post('me/meta')
   @Auth([UserRole.ATHLETE])
-  async createWellness(
+  async createMeta(
     @RequestUser() user: User,
-    @Body() input: CreateWellnessDto,
+    @Body() input: CreateUserMetaDto,
   ) {
-    const ref = { uid: user.uid };
-    return await this.userService.addWellness(ref, input);
+    const ref = { uid: user.uid, date: new Date() };
+    return await this.userService.addMeta(user, ref, {
+      ...input,
+      date: ref.date,
+    });
   }
 }

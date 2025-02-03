@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   CollectionReference,
@@ -10,105 +10,88 @@ import {
 import {
   FirestoreCollectionRepository,
   TrainingExerciseRef,
-  TrainingExerciseUserDataRef,
+  TrainingWorkloadRef,
 } from '../../common/type/firebase-firestore.type';
-import {
-  ExerciseSetData,
-  TrainingExerciseUserData,
-} from '../entity/training-exercise-user-data.entity';
-import { TrainingExerciseRepository } from './training-exercise.repository';
+import { SetData, TrainingWorkload } from '../entity/training-workload.entity';
 import { Query } from 'firebase-admin/lib/firestore';
 import { CommonService } from '../../common/service/common.service';
 import { SetStatus } from '../enum/set-status.enum';
+import { FirebaseService } from 'src/firebase/firebase.service';
+import { TrainingService } from '../service/training.service';
+import { Wrapper } from 'src/common/type/wrapper.type';
+import { TrainingRepository } from './training.repository';
 
 @Injectable()
-export class TrainingExerciseUserDataRepository
+export class TrainingWorkloadRepository
   implements
-    FirestoreCollectionRepository<
-      TrainingExerciseUserData,
-      TrainingExerciseUserDataRef
-    >
+    FirestoreCollectionRepository<TrainingWorkload, TrainingWorkloadRef>
 {
   constructor(
     private readonly commonService: CommonService,
-    private readonly trainingExerciseRepository: TrainingExerciseRepository,
+    private readonly firebaseService: FirebaseService,
+    @Inject(forwardRef(() => TrainingRepository))
+    private readonly trainingRepository: Wrapper<TrainingRepository>,
   ) {}
 
   async getDocs(
     ref: Required<TrainingExerciseRef>,
     query: (ref: Query) => Query = (ref) => ref,
-  ): Promise<TrainingExerciseUserData[]> {
+  ): Promise<TrainingWorkload[]> {
     const snapshot = await query(this.collection(ref)).get();
     return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
   async getDoc(
-    ref: Required<TrainingExerciseUserDataRef>,
-  ): Promise<TrainingExerciseUserData | null> {
+    ref: Required<TrainingWorkloadRef>,
+  ): Promise<TrainingWorkload | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
-  async addDoc(
-    ref: Required<TrainingExerciseUserDataRef>,
-    data: TrainingExerciseUserData,
-  ) {
+  async addDoc(ref: Required<TrainingWorkloadRef>, data: TrainingWorkload) {
     await this.doc(ref).set({
       userId: ref.userId,
       workloadValue: data.workloadValue || null,
-      sets: FieldValue.arrayUnion(...data.sets),
+      sets: data.sets || [],
     });
 
     return ref.userId;
   }
 
   async updateDoc(
-    ref: Required<TrainingExerciseUserDataRef>,
-    data: Partial<TrainingExerciseUserData>,
+    ref: Required<TrainingWorkloadRef>,
+    data: Partial<TrainingWorkload>,
   ) {
     await this.doc(ref).update(data); // NOTE - updates only provided data fields in the document
   }
 
-  async updateSetData(
-    ref: Required<TrainingExerciseUserDataRef>,
-    input: Partial<ExerciseSetData>[],
-  ) {
-    const data = input.map((item) => ({
-      status: SetStatus.COMPLETED,
-      setNumber: item.setNumber,
-      setTypeValue: item.setTypeValue,
-      workloadValue: item.workloadValue,
-    }));
-
-    await this.doc(ref).update({ sets: data });
-  }
-
-  async deleteDoc(ref: Required<TrainingExerciseUserDataRef>) {
+  async deleteDoc(ref: Required<TrainingWorkloadRef>) {
     await this.doc(ref).delete();
   }
 
-  doc(ref: Required<TrainingExerciseUserDataRef>): DocumentReference {
+  doc(ref: Required<TrainingWorkloadRef>): DocumentReference {
     return this.collection(ref).doc(ref.userId);
   }
 
   collection(ref: Required<TrainingExerciseRef>): CollectionReference {
-    return this.trainingExerciseRepository
-      .doc(ref)
-      .collection(FirestoreCollection.TRAINING_EXERCISE_USER_DATA);
+    return this.trainingRepository
+      .doc(ref.trainingId)
+      .collection(FirestoreCollection.TRAINING_WORKLOAD);
   }
 
   serialize(
     snapshot: DocumentSnapshot | QueryDocumentSnapshot,
-  ): TrainingExerciseUserData {
+  ): TrainingWorkload {
     const data = snapshot.data();
 
     return {
       userId: snapshot.id,
       trainingId: data.trainingId,
       componentId: data.componentId,
-      supersetId: data.supersetId,
+      superset: data.superset,
       exerciseId: data.exerciseId,
+      workloadType: data.workloadType,
       workloadValue: data.workloadValue,
       sets: data.sets || [],
     };

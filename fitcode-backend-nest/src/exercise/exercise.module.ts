@@ -5,18 +5,15 @@ import { ComponentModule } from '../component/component.module';
 import { ExerciseRepository } from './repository/exercise.repository';
 import { UserModule } from '../user/user.module';
 import { ExerciseAttributeRepository } from './repository/exercise-attribute.repository';
-import { ExerciseAttributeValueRepository } from './repository/exercise-attribute-value.repository';
 import { ExerciseAttributeService } from './service/exercise-attribute.service';
-import { ExerciseAttributeValueService } from './service/exercise-attribute-value.service';
+import { CacheManagerModule } from 'src/cache-manager/cache-manager.module';
 
 @Module({
-  imports: [UserModule, forwardRef(() => ComponentModule)],
+  imports: [forwardRef(() => UserModule), forwardRef(() => ComponentModule)],
   controllers: [ExerciseController],
   providers: [
     ExerciseAttributeRepository,
     ExerciseAttributeService,
-    ExerciseAttributeValueRepository,
-    ExerciseAttributeValueService,
     ExerciseRepository,
     ExerciseService,
   ],

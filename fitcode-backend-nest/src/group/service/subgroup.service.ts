@@ -33,12 +33,13 @@ export class SubgroupService {
   private logger = new Logger(SubgroupService.name);
 
   constructor(
-    private readonly userService: UserService,
     private readonly subgroupRepository: SubgroupRepository,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: Wrapper<UserService>,
   ) {}
 
   async findAll(

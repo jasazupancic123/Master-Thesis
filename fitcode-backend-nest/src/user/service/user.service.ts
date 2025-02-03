@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { CreateUser, UserEntity } from '../entity/user.entity';
 import { UpdateUserClaimsDto } from '../dto/update-user.dto';
@@ -6,20 +12,30 @@ import { User } from '../../common/type/firebase-auth.type';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
 import { UserRepository } from '../repository/user.repository';
-import { WellnessService } from './wellness.service';
-import { UserRef } from '../../common/type/firebase-firestore.type';
-import { CreateWellness } from '../type/wellness.type';
-import { Wellness } from '../entity/wellness.entity';
-import { Bodyweight } from '../entity/body-weight.entity';
+import {
+  UserMetaRef,
+  UserRef,
+} from '../../common/type/firebase-firestore.type';
+import { UserMeta } from '../entity/user-meta.entity';
+import { ConfigService } from '@nestjs/config';
+import { Environment } from '../../config/environment-validation-schema';
+import { UserMetaRepository } from '../repository/user-meta.repository';
+import { TrainingService } from 'src/training/service/training.service';
+import { Wrapper } from 'src/common/type/wrapper.type';
+import { startOfDay } from 'date-fns';
+import { FieldPath } from 'firebase-admin/firestore';
 
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
 
   constructor(
+    private readonly configService: ConfigService<Environment>,
     private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
-    private readonly wellnessService: WellnessService,
+    private readonly userMetaRepository: UserMetaRepository,
+    @Inject(forwardRef(() => TrainingService))
+    private readonly trainingService: Wrapper<TrainingService>,
   ) {}
 
   async findOne(id: string): Promise<UserEntity | null> {
@@ -76,9 +92,18 @@ export class UserService {
     return users;
   }
 
+  async getAdminId(): Promise<string> {
+    const users = await this.findAll({
+      emails: [this.configService.get('FIREBASE_ADMIN_EMAIL')],
+    });
+
+    return users[0].uid;
+  }
+
   async updateClaims(uid: string, claims: UpdateUserClaimsDto): Promise<void> {
     const customClaims = (await this.firebaseService.auth.getUser(uid))
       .customClaims;
+
     await this.firebaseService.auth.setCustomUserClaims(uid, {
       ...customClaims,
       ...claims,
@@ -93,43 +118,60 @@ export class UserService {
     await this.userRepository.removeGroup(userId, groupId);
   }
 
-  async addWellness(
-    ref: Required<UserRef>,
-    data: CreateWellness,
-  ): Promise<Wellness> {
-    return await this.wellnessService.create(ref, data);
+  async getMeta(ref: Required<UserMetaRef>): Promise<UserMeta> {
+    return await this.userMetaRepository.getDoc(ref);
   }
 
-  async addBodyweight(ref: Required<UserRef>, weight: number): Promise<void> {
-    await this.userRepository.updateDoc(ref.uid, { weight });
+  async addMeta(
+    user: User,
+    ref: Required<UserMetaRef>,
+    input: UserMeta,
+  ): Promise<UserMeta> {
+    if (input.weight) {
+      // add last bodyweight for member to all his active trainings
+      const trainings = await this.trainingService.findAll({
+        user,
+        filter: {
+          from: { value: startOfDay(ref.date) },
+        },
+      });
+
+      if (trainings.length > 0) {
+        this.logger.log(
+          `User ${user.uid} updating recent bodyweight for ${trainings.length} active trainings`,
+        );
+
+        await this.firebaseService.firestore.runTransaction(
+          async (transaction) => {
+            this.trainingService.updateMemberBodyweight(
+              transaction,
+              user.uid,
+              trainings.map(({ id }) => id),
+              input.weight,
+            );
+
+            const docRef = this.userMetaRepository.doc(ref);
+            transaction.set(docRef, input);
+          },
+        );
+      } else await this.userMetaRepository.addDoc(ref, input);
+    }
+
+    return input;
   }
 
-  async getBodyweight(user: User | string): Promise<number> {
-    return await this.userRepository.getBodyweight(
-      typeof user === 'string' ? user : user.uid,
-    );
+  async updateMeta(ref: Required<UserMetaRef>, input: UserMeta): Promise<void> {
+    return await this.userMetaRepository.updateDoc(ref, input);
   }
 
-  async findTodayWellness(ref: Required<UserRef>): Promise<Wellness | null> {
-    return await this.wellnessService.findToday(ref);
-  }
+  async getLastMeta(ref: Required<UserRef>): Promise<UserMeta> {
+    const snapshot = await this.userMetaRepository
+      .collection(ref)
+      .orderBy('date', 'desc')
+      .limit(1)
+      .get();
 
-  async findWellnessHistory(
-    ref: Required<UserRef>,
-    n = 7,
-  ): Promise<Wellness[]> {
-    return await this.wellnessService.findLastNDays(ref, n);
-  }
-
-  async findBodyweightHistory(
-    ref: Required<UserRef>,
-    n = 7,
-  ): Promise<Bodyweight[]> {
-    const { bodyweight } = await this.userRepository.getDoc(ref.uid);
-    const sorted = bodyweight.sort(
-      (a, b) => b.date.getTime() - a.date.getTime(),
-    );
-
-    return sorted.slice(0, n);
+    if (snapshot.empty) return null;
+    return this.userMetaRepository.serialize(snapshot.docs[0]);
   }
 }

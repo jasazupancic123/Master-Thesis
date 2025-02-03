@@ -1,6 +1,8 @@
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Min,
@@ -9,8 +11,10 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsStringOrNumber } from '../../common/decorator/is-string-or-number.decorator';
+import { SetStatus } from '../enum/set-status.enum';
+import { WorkloadType } from '../enum/workload-type.enum';
 
-export class TrainingExerciseUserData {
+export class TrainingWorkload {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -29,17 +33,22 @@ export class TrainingExerciseUserData {
   @Expose()
   componentId: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
   @ApiProperty()
   @Expose()
-  supersetId: string;
+  superset: number;
 
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
   exerciseId: string;
+
+  @IsEnum(WorkloadType)
+  @ApiProperty()
+  @Expose()
+  workloadType: WorkloadType;
 
   @IsStringOrNumber()
   @IsNotEmpty()
@@ -49,15 +58,21 @@ export class TrainingExerciseUserData {
 
   @ValidateNested({ each: true })
   @Expose()
-  sets: ExerciseSetData[];
+  sets: SetData[];
 }
 
-export class ExerciseSetData {
-  @IsInt()
+export class SetData {
+  /* @IsInt()
   @Min(1)
   @ApiProperty()
   @Expose()
-  setNumber: number;
+  setNumber: number; */
+
+  @IsEnum(SetStatus)
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  status: SetStatus;
 
   @IsInt()
   @IsOptional()
@@ -72,4 +87,10 @@ export class ExerciseSetData {
   @ApiPropertyOptional()
   @Expose()
   workloadValue?: string | number; // actual user kg completed
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  notes?: string;
 }
