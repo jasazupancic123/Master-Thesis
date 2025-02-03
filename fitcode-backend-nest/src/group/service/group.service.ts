@@ -38,10 +38,11 @@ export class GroupService {
     private readonly groupRepository: GroupRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly userService: UserService,
     private readonly subgroupService: SubgroupService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: Wrapper<UserService>,
   ) {}
 
   isAuthorized(user: User, group: Group): boolean {

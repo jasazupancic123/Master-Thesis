@@ -66,9 +66,6 @@ export class ExerciseService {
     return this.findAllByQuery(query, options);
   }
 
-  /**
-   * For internal use to find all exercises without pagination.
-   */
   async findAll(
     user: User,
     options?: Omit<FindManyOptions<Exercise>, 'paginate'>,

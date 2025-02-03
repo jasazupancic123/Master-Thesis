@@ -2,8 +2,11 @@ import { BaseEntity } from '../../common/entity/base.entity';
 import {
   IsDate,
   IsNotEmpty,
+  IsNumber,
+  IsObject,
   IsOptional,
   IsString,
+  Validate,
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -12,6 +15,7 @@ import { TrainingComponent } from './training-component.entity';
 import { Subgroup } from '../../group/entity/subgroup.entity';
 import { Group } from '../../group/entity/group.entity';
 import { Cycle } from '../../group/entity/cycle.entity';
+import { IdEntity } from 'src/common/entity/id.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -40,6 +44,14 @@ export class Training extends BaseEntity {
   @Expose()
   membersIds: string[]; // all members of the group
 
+  @IsObject()
+  @ApiProperty()
+  @Expose()
+  bw: {
+    // members' bodyweights used to calculate workloads
+    [userId: string]: number;
+  };
+
   @IsString()
   @IsNotEmpty()
   @IsOptional()
@@ -67,9 +79,10 @@ export class Training extends BaseEntity {
   @Transform(({ value }) => new Date(value))
   to: Date;
 
-  @ValidateNested({ each: true })
-  @Type(() => TrainingComponent)
+  @IsObject()
   @ApiProperty()
   @Expose()
-  components: TrainingComponent[];
+  components: {
+    [componentId: string]: TrainingComponent;
+  };
 }

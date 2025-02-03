@@ -1,14 +1,18 @@
 import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Expose, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IdEntity } from '../../common/entity/id.entity';
+import { Expose, Transform } from 'class-transformer';
 
-export class Wellness extends IdEntity {
-  @IsDate()
+export class UserMeta {
+  /* @IsDate()
   @ApiProperty()
   @Transform(({ value }) => new Date(value))
   @Expose()
-  date: Date;
+  date: Date; */
+
+  @IsNumber()
+  @ApiProperty()
+  @Expose()
+  weight?: number;
 
   @IsOptional()
   @IsNumber()
