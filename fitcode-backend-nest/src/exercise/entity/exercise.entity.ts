@@ -29,7 +29,7 @@ export class Exercise extends BaseEntity {
   @Expose()
   @ApiProperty()
   componentsIds: string[];
-  components: Component[];
+  // components: Component[]; // populated on frontend
 
   @IsBoolean()
   @IsOptional()
@@ -56,7 +56,6 @@ export class Exercise extends BaseEntity {
   @Type(() => ExerciseAttributeValue)
   @ApiProperty()
   @Expose()
-  attributes: ExerciseAttributeValue[]; // sub collection where each document has attribute id and value
-
-  attributeValues: Record<string, any>; // for frontend to use
+  values: ExerciseAttributeValue[]; // sub collection where each document has attribute id and value
+  attributeValues: Record<string, any>; // for nested object display for frontend
 }

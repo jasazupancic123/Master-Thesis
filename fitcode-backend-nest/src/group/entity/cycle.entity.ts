@@ -10,25 +10,6 @@ export interface Week {
 
 export class Cycle extends BaseEntity {
   @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  groupId: string;
-  group?: Group;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  ownerId: string; // owner of the group
-
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  membersIds: string[]; // all members of the group
-
-  @IsString()
   @ApiProperty()
   @Expose()
   name: string;

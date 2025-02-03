@@ -70,16 +70,16 @@ export class FirebaseService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
-    this.logger.debug(
+    this.logger.verbose(
       `Using Firestore Emulator: ${this.configService.get('FIRESTORE_EMULATOR_HOST')}`,
     );
-    this.logger.debug(
+    this.logger.verbose(
       `Using Auth Emulator: ${this.configService.get('FIREBASE_AUTH_EMULATOR_HOST')}`,
     );
-    this.logger.debug(
+    this.logger.verbose(
       `Using Storage Emulator: ${this.configService.get('FIREBASE_STORAGE_EMULATOR_HOST')}`,
     );
-    this.logger.debug(
+    this.logger.verbose(
       `Using Cloud Functions Emulator: ${this.configService.get('EVENTARC_EMULATOR')}`,
     );
   }

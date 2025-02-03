@@ -1,6 +1,7 @@
 import {
   IsInt,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   Min,
@@ -11,20 +12,10 @@ import { Expose, Type } from 'class-transformer';
 import { Component } from '../../component/entity/component.entity';
 import { TrainingSuperset } from './training-superset.entity';
 import { Training } from './training.entity';
+import { TrainingExercise } from './training-exercise.entity';
+import { IdEntity } from 'src/common/entity/id.entity';
 
-export class TrainingComponent {
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  trainingId: string;
-  training?: Training;
-
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  componentId: string; // check that component is root component
-  component?: Component; // virtual
-
+export class TrainingComponent extends IdEntity {
   @IsInt()
   @Min(0)
   @ApiProperty()
@@ -38,8 +29,7 @@ export class TrainingComponent {
   @Expose()
   color?: string;
 
-  @ValidateNested({ each: true })
-  @Type(() => TrainingSuperset)
+  @IsObject()
   @ApiProperty()
   @Expose()
   supersets: TrainingSuperset[];

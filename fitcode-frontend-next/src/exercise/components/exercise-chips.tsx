@@ -1,4 +1,4 @@
-import { Checkbox, Chip, FormControlLabel, SxProps } from '@mui/material';
+import { Chip, SxProps } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 import { Component } from '@/component/entity/component.entity';
@@ -7,8 +7,6 @@ import { SetState } from '@/common/type/state.type';
 
 interface Props {
   components: (Component | TreeComponent)[];
-  global?: boolean; // state whether to global exercises or just user exercises
-  setGlobal?: SetState<boolean>;
   noSelectionLabel?: string; // for all / no selection
   selected?: null | Component | TreeComponent | (Component | TreeComponent)[];
   setSelected?: SetState<Props['selected']>;
@@ -21,8 +19,6 @@ interface Props {
 export default function ExerciseChips(props: Props) {
   const {
     selected,
-    global,
-    setGlobal,
     noSelectionLabel,
     components,
     setSelected,
@@ -84,24 +80,5 @@ export default function ExerciseChips(props: Props) {
       }}
       size={small ? 'small' : 'medium' as any}
     />)}
-
-    {/* My exercises */}
-    {global !== undefined && setGlobal !== undefined &&
-      <FormControlLabel
-        label="My exercises"
-        sx={{
-          '& .MuiTypography-root': { fontSize: '0.8rem' },
-          '& .MuiCheckbox-root': { padding: 0.4 },
-        }}
-        color="secondary"
-        control={<Checkbox
-          checked={!global}
-          onChange={(e) => setGlobal(!e.target.checked)}
-          color="secondary"
-          size="small"
-          sx={{ '&.Mui-checked': { color: 'secondary.main' } }}
-        />}
-      />
-    }
   </Stack>;
 }

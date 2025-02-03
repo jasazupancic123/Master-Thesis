@@ -68,7 +68,7 @@ export type ExerciseAttributeRef = { attributeId?: string };
 export type ExerciseAttributeValueRef = ExerciseRef & ExerciseAttributeRef;
 
 export type UserRef = { uid?: string }; // auth user uid
-export type WellnessRef = UserRef & { wellnessId?: string };
+export type UserMetaRef = UserRef & { date: Date };
 
 export type GroupRef = { groupId?: string };
 export type SubgroupRef = GroupRef & { subgroupId?: string };
@@ -77,10 +77,10 @@ export type CycleRef = GroupRef & { cycleId?: string };
 export type TrainingRef = { trainingId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
 export type TrainingSupersetRef = TrainingComponentRef & {
-  supersetId?: string;
+  superset?: number;
 };
 export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
-export type TrainingExerciseUserDataRef = TrainingExerciseRef & {
+export type TrainingWorkloadRef = TrainingExerciseRef & {
   userId?: string;
 };
 

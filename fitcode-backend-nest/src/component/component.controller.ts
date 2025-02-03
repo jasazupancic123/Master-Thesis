@@ -6,12 +6,13 @@ import { UserRole } from '../user/enum/user-role.enum';
 
 @Controller('component')
 export class ComponentController {
-  constructor(private readonly componentService: ComponentService) {
-  }
+  constructor(private readonly componentService: ComponentService) {}
 
   @Get()
   async findAll() {
-    return await this.componentService.findAllFlat({ populate: ['parents', 'children'] });
+    return await this.componentService.findAllFlat({
+      populate: ['parents', 'children'],
+    });
   }
 
   // TODO - create components and move exercises to new components

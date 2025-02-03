@@ -4,7 +4,7 @@ import { useFetch } from '@/hook/use-fetch';
 import type { User } from '@/user/type/user.type';
 import { UserRole } from '@/user/enum/user-role.enum';
 import withAuth from '@/common/components/with-auth';
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/context/auth-provider';
 import type { Group } from '@/group/entity/group.entity';
 import type { Cycle } from '@/group/entity/cycle.entity';
@@ -20,11 +20,19 @@ import TrainerPageRouter from '@/app/groups/components/trainer-page-router';
 import { FilterType } from '@/group/type/filter.type';
 import { TrainingController } from '@/training/training.controller';
 import AthletePageRouter from '@/app/groups/components/athlete-page-router';
+import { TrainingService } from '@/training/training.service';
+import { ExerciseService } from '@/exercise/exercise.service';
+import { Exercise } from '@/exercise/entity/exercise.entity';
+import { ExerciseController } from '@/exercise/exercise.controller';
 
 function Page() {
   // context
   const { role } = useAuth();
-  const { token } = useAppContext();
+  const { token, components } = useAppContext();
+  const allExercises = useFetch<Exercise[]>(
+    ExerciseController.URL.exercises(),
+    { authorization: true }
+  );
 
   // state
   const [loading, setLoading] = useState(false);
@@ -92,12 +100,12 @@ function Page() {
 
     switch (filter) {
       case 'year':
-        props.setSelected(prev => ({ ...prev, subgroup: null }));
+        props.setSelected((prev) => ({ ...prev, subgroup: null }));
         start = today.startOf('year');
         end = today.endOf('year');
         break;
       case 'cycle':
-        props.setSelected(prev => ({ ...prev, subgroup: null }));
+        props.setSelected((prev) => ({ ...prev, subgroup: null }));
 
         if (!props.selected.cycle) {
           const week = CommonService.instance.date.getWeekDays();
@@ -110,13 +118,15 @@ function Page() {
 
         break;
       case 'week':
-        props.setSelected(prev => ({ ...prev, subgroup: null }));
+        props.setSelected((prev) => ({ ...prev, subgroup: null }));
 
         if (!props.selected.cycle) {
           start = today.startOf('week');
           end = today.endOf('week');
         } else {
-          const week = props.selected.cycle.weeks?.[0] || CommonService.instance.date.getWeekDays();
+          const week =
+            props.selected.cycle.weeks?.[0] ||
+            CommonService.instance.date.getWeekDays();
           start = dayjs(week[0].date!).startOf('day');
           end = dayjs(week[6].date!).endOf('day');
         }
@@ -137,7 +147,7 @@ function Page() {
     }
 
     setDate({ ...date, start, end });
-  }, [filter, selected.cycle?.id, props.selected.cycle?.id]);
+  }, [filter, selected.cycle?.id]);
 
   /**
    * Filter trainings and subgroups
@@ -150,7 +160,7 @@ function Page() {
       setLoading(true);
 
       try {
-        const response = await TrainingController.findTrainings(token, {
+        let response = await TrainingController.findTrainings(token, {
           groupId: group!.id,
           cycleId: cycle!.id,
           subgroupId: subgroup?.id || null,
@@ -158,7 +168,17 @@ function Page() {
           to: date.end.toDate(),
         });
 
-        setSelected(prev => ({ ...prev, cycle: { ...prev.cycle!, trainings: response } }));
+        response = response.map((training) =>
+          TrainingService.map(training, {
+            components: components.flat,
+            exercises: allExercises.data!,
+          })
+        );
+
+        setSelected((prev) => ({
+          ...prev,
+          cycle: { ...prev.cycle!, trainings: response },
+        }));
       } catch (e: any) {
         console.error(e);
         toast.error(e.message || 'Error fetching trainings');
@@ -172,7 +192,10 @@ function Page() {
       if (!group) return;
 
       if (!date.start.startOf('day').isSame(date.end.startOf('day'))) {
-        setSelected(prev => ({ ...prev, group: { ...prev.group!, subgroups: [] } }));
+        setSelected((prev) => ({
+          ...prev,
+          group: { ...prev.group!, subgroups: [] },
+        }));
         return;
       }
 
@@ -182,7 +205,7 @@ function Page() {
           to: date.end,
         });
 
-        setSelected(prev => ({
+        setSelected((prev) => ({
           ...prev,
           group: {
             ...prev.group!,
@@ -208,14 +231,12 @@ function Page() {
 
   useEffect(() => {
     if (selected.subgroup && date.custom)
-      setSelected(prev => ({ ...prev, subgroup: null }));
+      setSelected((prev) => ({ ...prev, subgroup: null }));
   }, [date.start, date.end]);
 
-  if (users.loading || groups.loading)
-    return <div>Loading...</div>;
+  if (users.loading || groups.loading) return <div>Loading...</div>;
 
-  if (users.error || groups.error)
-    return <div>Error</div>;
+  if (users.error || groups.error) return <div>Error</div>;
 
   const mapper: Record<UserRole, ReactNode> = {
     [UserRole.ADMIN]: <div>Admin</div>,
