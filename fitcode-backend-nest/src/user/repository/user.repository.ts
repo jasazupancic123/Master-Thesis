@@ -52,18 +52,9 @@ export class UserRepository
     return input.id;
   }
 
-  async updateDoc(
-    id: string,
-    input: Omit<Partial<UserEntity>, 'bodyweight'> & { weight: number },
-  ) {
+  async updateDoc(id: string, input: Partial<UserEntity>) {
     const data = this.commonService.object.clean({
       level: input.level,
-      ...(input.weight && {
-        bodyweight: FieldValue.arrayUnion({
-          weight: input.weight,
-          date: Timestamp.now(),
-        }),
-      }),
     });
 
     await this.doc(id).update({ ...data, updatedAt: Timestamp.now() });

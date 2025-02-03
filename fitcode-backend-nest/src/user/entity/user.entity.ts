@@ -1,4 +1,10 @@
-import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { CustomClaims, User } from '../../common/type/firebase-auth.type';
@@ -23,7 +29,7 @@ export class UserEntity extends BaseEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  groups: Group[]; // sub collection
+  groups: Group[];
 }
 
 export type CreateUser = Pick<User, 'email' | 'displayName'> & {

@@ -166,6 +166,7 @@ export class DataSetup extends BaseSetup {
           user,
           { uid: user.uid, date: new Date() },
           {
+            date: new Date(),
             weight: userData.weight,
             sleep: 5,
             fatigue: 5,

@@ -74,7 +74,7 @@ export class TrainingWorkloadService {
       const workloadValue = this.calculateWorkloadValue(
         input.meta.workloadType,
         input.meta.workloadValue,
-        training.bw[userId],
+        training.meta[userId].weight || 0,
         userData.map((data) => data.sets).flat(),
       );
 
@@ -121,7 +121,7 @@ export class TrainingWorkloadService {
     const workloadValue = this.calculateWorkloadValue(
       input.workloadType,
       input.workloadValue,
-      training.bw[ref.userId],
+      training.meta[ref.userId].weight || 0,
       workloadData.map((item) => item.sets).flat(),
     );
 
@@ -206,7 +206,7 @@ export class TrainingWorkloadService {
       const workloadValue = this.calculateWorkloadValue(
         input.meta?.workloadType || meta.workloadType,
         input.meta?.workloadValue || meta.workloadValue,
-        training.bw[userId] || 60,
+        training.meta[userId].weight || 0,
         (allUsersData[userId] || []).map((item) => item.sets).flat(),
       );
 

@@ -10,25 +10,18 @@ import {
 } from 'firebase-admin/firestore';
 import {
   RootFirestoreCollectionRepository,
-  TrainingComponentRef,
   TrainingExerciseRef,
-  TrainingRef,
   TrainingSupersetRef,
 } from '../../common/type/firebase-firestore.type';
 import { Training } from '../entity/training.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { CommonService } from 'src/common/service/common.service';
 
 @Injectable()
 export class TrainingRepository
   implements RootFirestoreCollectionRepository<Training>
 {
-  constructor(
-    private readonly firebaseService: FirebaseService,
-    private readonly commonService: CommonService,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -57,7 +50,7 @@ export class TrainingRepository
       updatedAt: Timestamp.now(),
       deletedAt: null,
       components: input.components || {},
-      bw: input.bw || {},
+      meta: input.meta || {},
     });
 
     return result.id;
@@ -122,7 +115,7 @@ export class TrainingRepository
       updatedAt: (data.updatedAt as Timestamp).toDate(),
       deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
       components: data.components || {},
-      bw: data.bw || {},
+      meta: data.meta || {},
     };
   }
 }

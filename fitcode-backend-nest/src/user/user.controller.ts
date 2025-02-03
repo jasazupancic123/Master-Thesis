@@ -57,6 +57,9 @@ export class UserController {
     @Body() input: CreateUserMetaDto,
   ) {
     const ref = { uid: user.uid, date: new Date() };
-    return await this.userService.addMeta(user, ref, input);
+    return await this.userService.addMeta(user, ref, {
+      ...input,
+      date: ref.date,
+    });
   }
 }

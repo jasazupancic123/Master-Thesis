@@ -43,8 +43,12 @@ export class UserMetaRepository
     return this.serialize(snapshot);
   }
 
-  async addDoc(ref: Required<UserMetaRef>, input: UserMeta): Promise<string> {
+  async addDoc(
+    ref: Required<UserMetaRef>,
+    input: Omit<UserMeta, 'date'>,
+  ): Promise<string> {
     await this.doc(ref).set({
+      date: startOfDay(ref.date),
       weight: input.weight || null,
       sleep: input.sleep || null,
       fatigue: input.fatigue || null,
@@ -80,6 +84,8 @@ export class UserMetaRepository
     const data = snapshot.data();
 
     return {
+      date: (data.date as Timestamp).toDate(),
+      weight: data.weight || null,
       sleep: data.sleep || null,
       fatigue: data.fatigue || null,
       soreness: data.soreness || null,
