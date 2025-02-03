@@ -8,15 +8,27 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
+import {
+  RootFirestoreCollectionRepository,
+  TrainingComponentRef,
+  TrainingExerciseRef,
+  TrainingRef,
+  TrainingSupersetRef,
+} from '../../common/type/firebase-firestore.type';
 import { Training } from '../entity/training.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { CommonService } from 'src/common/service/common.service';
 
 @Injectable()
 export class TrainingRepository
   implements RootFirestoreCollectionRepository<Training>
 {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly commonService: CommonService,
+  ) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -33,9 +45,9 @@ export class TrainingRepository
 
   async addDoc(input: Partial<Training>): Promise<string> {
     const result = await this.collection().add({
+      ownerId: input.ownerId,
       groupId: input.groupId,
       cycleId: input.cycleId,
-      ownerId: input.ownerId,
       membersIds: input.membersIds || [],
       subgroupId: input.subgroupId || null,
       copiedFromId: input.copiedFromId || null,
@@ -44,14 +56,35 @@ export class TrainingRepository
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       deletedAt: null,
+      components: input.components || {},
+      bw: input.bw || {},
     });
 
     return result.id;
   }
 
+  async addSuperset(
+    ref: Required<TrainingSupersetRef>,
+    data: Partial<TrainingSupersetRef>,
+  ) {
+    await this.doc(ref.trainingId).update({
+      [`components.${ref.componentId}.supersets[${ref.superset}]`]: data,
+    });
+  }
+
+  async addExercise(
+    ref: Required<TrainingExerciseRef>,
+    data: Partial<TrainingExercise>,
+  ) {
+    await this.doc(ref.trainingId).update({
+      [`components.${ref.componentId}.supersets[${ref.superset}].exercises.${ref.exerciseId}`]:
+        data,
+    });
+  }
+
   async updateDoc(id: string, input: Partial<Training>) {
     await this.doc(id).update({
-      ...(input.membersIds && { membersIds: input.membersIds }),
+      ...input,
       ...(input.from && { from: Timestamp.fromDate(input.from) }),
       ...(input.to && { to: Timestamp.fromDate(input.to) }),
       updatedAt: Timestamp.now(),
@@ -85,10 +118,11 @@ export class TrainingRepository
       copiedFromId: data.copiedFromId || null,
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),
-      components: [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
       deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
+      components: data.components || {},
+      bw: data.bw || {},
     };
   }
 }

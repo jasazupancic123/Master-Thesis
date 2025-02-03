@@ -8,7 +8,7 @@ import { SubgroupRepository } from './repository/subgroup.repository';
 import { SubgroupService } from './service/subgroup.service';
 
 @Module({
-  imports: [UserModule, forwardRef(() => TrainingModule)],
+  imports: [forwardRef(() => UserModule), forwardRef(() => TrainingModule)],
   controllers: [GroupController],
   providers: [
     GroupRepository,

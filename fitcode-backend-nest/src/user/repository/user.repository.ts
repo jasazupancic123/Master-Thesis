@@ -38,32 +38,12 @@ export class UserRepository
     return this.serialize(snapshot);
   }
 
-  /**
-   * Returns last bodyweight of the user.
-   */
-  async getBodyweight(id: string): Promise<number> {
-    const { bodyweight } = (await this.getDoc(id)) || { bodyweight: [] };
-    const sorted = bodyweight.sort(
-      (a, b) => b.date.getTime() - a.date.getTime(),
-    );
-
-    return sorted.length ? sorted[sorted.length - 1].weight : 0;
-  }
-
   async addDoc(input: Partial<UserEntity>) {
     if (!input.id) throw new Error('User ID is required');
-
-    const bodyweight = input.bodyweight || [];
 
     await this.doc(input.id).set({
       id: input.id,
       level: input.level || SportLevel.BEGINNER,
-      bodyweight: FieldValue.arrayUnion(
-        ...bodyweight.map((item) => ({
-          weight: item.weight,
-          date: Timestamp.now(),
-        })),
-      ),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       deletedAt: null,
@@ -126,12 +106,7 @@ export class UserRepository
       id: snapshot.id,
       level: data.level,
       groupsIds: data.groupsIds || [],
-      bodyweight: (data.bodyweight || []).map((item: any) => ({
-        weight: item.weight,
-        date: (item.date as Timestamp).toDate(),
-      })),
       groups: data.groups || [],
-      wellness: data.wellness || [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
     };

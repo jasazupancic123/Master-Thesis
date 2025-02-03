@@ -18,6 +18,7 @@ import { addDays } from 'date-fns';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Component } from '../../component/entity/component.entity';
 import { UserRepository } from '../../user/repository/user.repository';
+import { UserMetaRepository } from 'src/user/repository/user-meta.repository';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
@@ -71,12 +72,13 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(
       FirestoreCollection.EXERCISE_ATTRIBUTE,
     );
+
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
 
     const foundUsers = await this.userService.findAll();
     for (const user of foundUsers) {
       await this.firebaseService.deleteCollection(
-        `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.WELLNESS}`,
+        `${FirestoreCollection.USER}/${user.uid}/${FirestoreCollection.USER_META}`,
       );
     }
 
@@ -151,14 +153,26 @@ export class DataSetup extends BaseSetup {
 
     // set `users` collection data to avoid waiting for function to be triggered
     const userRepository = this.app.get(UserRepository);
+
     await Promise.all(
       createdUsers.map((user) => {
         const userData = usersData.find((u) => u.email === user.email);
         userRepository.addDoc({
           id: user.uid,
           level: userData?.level || SportLevel.BEGINNER,
-          bodyweight: [{ weight: userData?.weight, date: new Date() }],
         });
+
+        this.userService.addMeta(
+          user,
+          { uid: user.uid, date: new Date() },
+          {
+            weight: userData.weight,
+            sleep: 5,
+            fatigue: 5,
+            soreness: 5,
+            comment: 'Average day today',
+          },
+        );
       }),
     );
 

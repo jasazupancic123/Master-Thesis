@@ -9,18 +9,12 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { TrainingExerciseMeta } from './training-exercise-meta.entity';
-import { TrainingExerciseUserData } from './training-exercise-user-data.entity';
+import { TrainingWorkload } from './training-workload.entity';
 import { Exercise } from '../../exercise/entity/exercise.entity';
 import { TrainingSuperset } from './training-superset.entity';
+import { IdEntity } from 'src/common/entity/id.entity';
 
-export class TrainingExercise {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  exerciseId: string;
-  exercise?: Exercise;
-
+export class TrainingExercise extends IdEntity {
   @IsInt()
   @IsOptional()
   @Min(0)
@@ -40,12 +34,4 @@ export class TrainingExercise {
   @ApiProperty()
   @Expose()
   meta: TrainingExerciseMeta;
-
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExerciseUserData)
-  @ApiProperty()
-  @Expose()
-  data: TrainingExerciseUserData[];
-
-  superset?: TrainingSuperset;
 }

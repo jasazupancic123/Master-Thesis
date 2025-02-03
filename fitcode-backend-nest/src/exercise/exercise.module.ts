@@ -9,7 +9,7 @@ import { ExerciseAttributeService } from './service/exercise-attribute.service';
 import { CacheManagerModule } from 'src/cache-manager/cache-manager.module';
 
 @Module({
-  imports: [UserModule, forwardRef(() => ComponentModule)],
+  imports: [forwardRef(() => UserModule), forwardRef(() => ComponentModule)],
   controllers: [ExerciseController],
   providers: [
     ExerciseAttributeRepository,

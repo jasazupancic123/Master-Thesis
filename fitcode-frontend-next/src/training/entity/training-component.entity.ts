@@ -2,9 +2,9 @@ import { Component } from '@/component/entity/component.entity';
 import { TrainingSuperset } from '@/training/entity/training-superset.entity';
 
 export type TrainingComponent = {
-  componentId: string;
+  id: string;
   component: Component | null;
   order: number;
-  color: string;
+  color?: string;
   supersets: TrainingSuperset[];
-}
+};

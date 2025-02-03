@@ -1,7 +1,6 @@
 import { ApiUtil } from '@/common/service/util/api.util';
 import { DateUtil } from '@/common/service/util/date.util';
 import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
-import { FirebaseFirestoreUtil } from '@/common/service/util/firebase-firestore.util';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { ObjectUtil } from '@/common/service/util/object.util';
 import { NavigationUtil } from '@/common/service/util/navigation.util';
@@ -11,7 +10,6 @@ import { TreeUtil } from '@/common/service/util/tree.util';
 export class CommonService {
   readonly firebase: {
     readonly auth: FirebaseAuthUtil;
-    readonly firestore: FirebaseFirestoreUtil;
     readonly storage: FirebaseStorageUtil;
   };
 
@@ -25,7 +23,6 @@ export class CommonService {
   constructor() {
     this.firebase = {
       auth: new FirebaseAuthUtil(),
-      firestore: new FirebaseFirestoreUtil(),
       storage: new FirebaseStorageUtil(),
     };
 
