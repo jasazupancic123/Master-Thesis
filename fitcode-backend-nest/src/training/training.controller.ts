@@ -29,6 +29,7 @@ import { TrainingWorkloadService } from './service/training-workload.service';
 import { UpdateAthleteSetDataDto } from './dto/update-athlete-set-data.dto';
 import { CreateTrainingExercise } from './type/training-exercise.type';
 import { TrainingExercise } from './entity/training-exercise.entity';
+import { UserRole } from 'src/user/enum/user-role.enum';
 
 @Controller('training')
 export class TrainingController {
@@ -44,29 +45,31 @@ export class TrainingController {
     @RequestUser() user: User,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    const isAthlete = this.firebaseService.isAthlete(user);
-    const populate = (
-      isAthlete
-        ? [
-            'components',
-            'components.supersets',
-            'components.supersets.exercises',
-            'components.supersets.exercises.exercise',
-          ]
-        : ['components']
-    ) as Populate<Training>[];
+    let trainings: Training[] = [];
 
-    const trainings = await this.trainingService.findAll({
-      user,
-      filter: {
-        groupId: { value: filter.groupId },
-        cycleId: { value: filter.cycleId },
-        subgroupId: { value: filter.subgroupId || null },
-        ...(filter.from && { from: { value: filter.from, op: '>=' } }),
-        ...(filter.to && { to: { value: filter.to, op: '<=' } }),
-      },
-      populate,
-    });
+    switch (user.customClaims.role[0]) {
+      case UserRole.TRAINER: {
+        trainings = await this.trainingService.findAll({
+          user,
+          filter: {
+            groupId: { value: filter.groupId },
+            cycleId: { value: filter.cycleId },
+            subgroupId: { value: filter.subgroupId || null },
+            ...(filter.from && { from: { value: filter.from, op: '>=' } }),
+            ...(filter.to && { to: { value: filter.to, op: '<=' } }),
+          },
+        });
+      }
+      case UserRole.ATHLETE: {
+        trainings = await this.trainingService.findAll({
+          user,
+          filter: {
+            ...(filter.from && { from: { value: filter.from, op: '>=' } }),
+            ...(filter.to && { to: { value: filter.to, op: '<=' } }),
+          },
+        });
+      }
+    }
 
     return trainings.map(this.trainingService.map);
   }

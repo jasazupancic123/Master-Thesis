@@ -9,4 +9,4 @@ export class CreateUserMetaDto
     'soreness',
     'comment',
   ])
-  implements UserMeta {}
+  implements Omit<UserMeta, 'date'> {}

@@ -72,7 +72,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
     const values = setValues[exerciseId] || [];
 
     try {
-      await TrainingController.updateAthleteSetData(
+      /* await TrainingController.updateAthleteSetData(
         token,
         trainingId,
         componentId,
@@ -83,7 +83,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
           setTypeValue: +val.setValue,
           workloadValue: val.workloadValue,
         }))
-      );
+      ); */
 
       toast.success('Successfully updated sets!');
     } catch (e: any) {

@@ -11,12 +11,12 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | Docs | [Database Queries](#database-queries)                                                                                                                                      | Not Started |
 | Docs | [Firebase Storage Pricing per video bandwidth per day](#firebase-storage-pricing-per-video-bandwidth-per-day)                                                              | Not Started |
-| Fix  | [Save Training Ids (Athlete View)](#save-training-ids-athlete-view)                                                                                                        | Not Started |
 | Fix  | [Refresh Firebase Token](#refresh-firebase-token)                                                                                                                          | Not Started |
+| Fix  | [(FE) Fetch all trainings for cycle and filter on FE]()                                                                                                                    | Not Started |
 | Fix  | [(BE) When updating training workload data for users (example increasing sets by 1, keep all old set data for all users and just extend new set, don't change old sets)]() | Not Started |
 | Feat | [Component And Training Icons](#asd)                                                                                                                                       | Not Started |
 | Feat | [Generate training PDF](#asd)                                                                                                                                              | Not Started |
-| Feat | [Firebase Read, Write, Delete Counter (Backend)](#firebase-read-write-delete-counter-backend)                                                                              | Not Started |
+| Feat | [Firebase Read, Write, Delete Counter (Backend)]()                                                                                                                         | Not Started |
 | Feat | [Filter Exercises By Custom Attributes](#filter-exercises-by-custom-attributes)                                                                                            | Not Started |
 | Feat | [Methodologies](#methodologies)                                                                                                                                            | Not Started |
 | Feat | [Athlete Calendar](#athlete-calendar)                                                                                                                                      | Not Started |

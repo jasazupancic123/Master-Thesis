@@ -16,6 +16,7 @@ import { Subgroup } from '../../group/entity/subgroup.entity';
 import { Group } from '../../group/entity/group.entity';
 import { Cycle } from '../../group/entity/cycle.entity';
 import { IdEntity } from 'src/common/entity/id.entity';
+import { UserMeta } from 'src/user/entity/user-meta.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -47,9 +48,9 @@ export class Training extends BaseEntity {
   @IsObject()
   @ApiProperty()
   @Expose()
-  bw: {
-    // members' bodyweights used to calculate workloads
-    [userId: string]: number;
+  meta: {
+    // members' meta used to calculate workloads
+    [userId: string]: UserMeta;
   };
 
   @IsString()

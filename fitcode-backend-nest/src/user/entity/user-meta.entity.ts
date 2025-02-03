@@ -3,11 +3,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 
 export class UserMeta {
-  /* @IsDate()
+  @IsDate()
   @ApiProperty()
   @Transform(({ value }) => new Date(value))
   @Expose()
-  date: Date; */
+  date: Date;
 
   @IsNumber()
   @ApiProperty()

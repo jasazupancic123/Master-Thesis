@@ -111,11 +111,18 @@ export class TrainingService {
     let filter = options?.filter || {};
 
     if (options?.user) {
-      if (this.firebaseService.isTrainer(options.user))
-        filter.ownerId = { value: options.user.uid };
+      if (this.firebaseService.isTrainer(options.user)) {
+        if (!filter.groupId || !filter.cycleId)
+          throw new BadRequestException('Group ID or cycle ID are missing');
 
-      if (this.firebaseService.isAthlete(options.user))
+        filter.ownerId = { value: options.user.uid };
+      }
+
+      if (this.firebaseService.isAthlete(options.user)) {
+        const { groupsIds } = await this.userService.findOne(options.user.uid);
         filter.membersIds = { value: options.user.uid };
+        filter.groupId = { op: 'in', value: groupsIds };
+      }
     }
 
     let trainings = await this.trainingRepository.getDocs((collection) => {
@@ -190,7 +197,7 @@ export class TrainingService {
       from: input.from,
       to: input.to,
       components: componentsInput,
-      bw,
+      meta: bw,
     });
 
     return {
@@ -207,7 +214,7 @@ export class TrainingService {
       from: input.from,
       to: input.to,
       components: componentsInput,
-      bw,
+      meta: bw,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -369,20 +376,11 @@ export class TrainingService {
     ref: Required<TrainingRef>,
     options: { user: User },
   ): Promise<void> {
-    const { user } = options;
-    this.logger.debug(`Removing training ${ref.trainingId} (user ${user.uid})`);
-    const training = await this.findOneOrFail(ref, {
-      ...options,
-      populate: ['components'],
-    });
+    this.logger.log(
+      `User ${options.user.uid} is removing training ${ref.trainingId}`,
+    );
 
-    // delete training components
-    /* await Promise.all(
-      training.components.map(({ componentId }) =>
-        this.trainingComponentService.remove({ ...ref, componentId }, options),
-      ),
-    ); */
-
+    await this.findOneOrFail(ref, options);
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
@@ -980,7 +978,11 @@ export class TrainingService {
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
 
     if (filter.groupId)
-      query = query.where('groupId', '==', filter.groupId.value);
+      query = query.where(
+        'groupId',
+        filter.groupId?.op || '==',
+        filter.groupId.value,
+      );
 
     if (filter.cycleId)
       query = query.where('cycleId', '==', filter.cycleId.value);

@@ -23,6 +23,7 @@ import { UserMetaRepository } from '../repository/user-meta.repository';
 import { TrainingService } from 'src/training/service/training.service';
 import { Wrapper } from 'src/common/type/wrapper.type';
 import { startOfDay } from 'date-fns';
+import { FieldPath } from 'firebase-admin/firestore';
 
 @Injectable()
 export class UserService {
