@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { TextField, ToggleButtonGroup, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -20,6 +20,7 @@ import RotateRightIcon from '@mui/icons-material/RotateRight';
 import SelectInput from '@/common/components/select-input';
 import { AppContextType } from '@/common/type/context.type';
 import { GroupPageProps } from '@/group/type/props.type';
+import { GroupPageSidebarProps } from '@/group/type/sidebar.type';
 import { GroupController } from '@/group/group.controller';
 import { Group } from '@/group/entity/group.entity';
 import { Cycle } from '@/group/entity/cycle.entity';
@@ -29,13 +30,42 @@ import { GroupSettings } from '@/group/components/group-settings';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import AddIcon from '@mui/icons-material/Add';
+import GroupsSidebar from '@/common/components/groups-sidebar';
+import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
+import { Subgroups } from '@/group/components/subgroups';
 
 export default function TrainerPageRouter(props: GroupPageProps) {
   // context
   const { token } = useAppContext() as AppContextType;
 
   // modal
-  const [modal, setModal] = useState({ group: false, editGroup: false, subgroup: false });
+  const [modal, setModal] = useState({
+    add_group: false,
+    members: false,
+    subgroups: false,
+    settings: false,
+  });
+
+  const sidebarProps = { ...props, setModal } as GroupPageSidebarProps;
+
+  useEffect(() => {
+    const storedGroupId = localStorage.getItem(
+      LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID
+    );
+
+    if (storedGroupId && !props.selected.group) {
+      const group = props.groups.data?.find((g) => g.id === storedGroupId);
+
+      if (group) {
+        props.setSelected((prev) => ({
+          ...prev,
+          group,
+          cycle: null,
+          subgroup: null,
+        }));
+      }
+    }
+  }, [props.groups.data, props.selected.group]);
 
   // group to create or update
   const [create, setCreate] = useState({ group: { name: '', membersIds: [] } });
@@ -51,20 +81,22 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     try {
       props.setLoading(true);
       const response = await GroupController.createGroup(token, group);
-      setModal({ ...modal, group: false });
 
       // populate available members
       if (!response.availableMembersIds)
         response.availableMembersIds = group.membersIds;
 
+      props.groups.setData((prev) => [...(prev || []), response]);
       props.setSelected({
         group: response,
         subgroup: null,
         cycle: null,
       });
-
-      props.groups.setData(prev => [...(prev || []), response]);
       setCreate({ ...create, group: { name: '', membersIds: [] } });
+      localStorage.setItem(
+        LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID,
+        response.id as string
+      );
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -72,7 +104,9 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     }
   }
 
-  return (<>
+  return (
+    <>
+      {/* <GroupsSidebar {...sidebarProps} /> */}
       <Box
         bgcolor="background.paper"
         sx={{
@@ -95,41 +129,19 @@ export default function TrainerPageRouter(props: GroupPageProps) {
           </ToggleButtonGroup>
 
           {/* Dropdowns to select group, subgroup and cycle */}
-          <Box
-            p={2}
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-          >
+          <Box p={2} alignItems="center" justifyContent="space-between">
             <Box>
-              {/* Add new group */}
-              <Tooltip title="Add group">
-                <IconButton
-                  onClick={() => setModal({ ...modal, group: true })}
-                  sx={{ height: 50, width: 50 }}
-                >
-                  <AddIcon />
-                </IconButton>
-              </Tooltip>
-
               {/* Select group */}
-              <SelectInput<Group>
-                label="Group"
-                icon={<GroupIcon />}
-                value={props.selected.group?.id || ''}
-                setValue={(value) => {
-                  const group = props.groups.data?.find((group) => group.id === value);
-                  props.setSelected(prev => ({
-                    ...prev,
-                    group: group || null,
-                    cycle: null,
-                    subgroup: null,
-                  }));
-                }}
-                items={props.groups.data || []}
-                itemKey="id"
-                itemName="name"
-              />
+              {!props.selected.group && (
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  m={5}
+                >
+                  <Typography variant="h6">Select a group</Typography>
+                </Box>
+              )}
 
               {/* Select subgroup */}
               {/*{props.selected.group &&
@@ -148,47 +160,38 @@ export default function TrainerPageRouter(props: GroupPageProps) {
               }*/}
 
               {/* Select cycle */}
-              {props.selected.group &&
+              {props.selected.group && (
                 <SelectInput<Cycle>
                   label="Cycle"
                   icon={<RotateRightIcon />}
                   value={props.selected.cycle?.id || ''}
                   setValue={(value) => {
                     const cycles = props.selected.group!.cycles || [];
-                    const cycle = cycles.find(cycle => cycle.id === value);
-                    props.setSelected(prev => ({ ...prev, cycle: cycle || null }));
+                    const cycle = cycles.find((cycle) => cycle.id === value);
+                    props.setSelected((prev) => ({
+                      ...prev,
+                      cycle: cycle || null,
+                    }));
                   }}
                   items={props.selected.group!.cycles || []}
                   itemKey="id"
                   itemName="name"
                 />
-              }
+              )}
             </Box>
-
-            <Stack direction="row" spacing={1}>
-              {/* Edit group settings */}
-              {props.selected.group &&
-                <Tooltip title="Edit group">
-                  <IconButton
-                    onClick={() => setModal({ ...modal, editGroup: true })}
-                    sx={{ height: 50, width: 50 }}
-                  >
-                    <SettingsIcon />
-                  </IconButton>
-                </Tooltip>
-              }
-            </Stack>
           </Box>
         </Box>
 
         {/* Create group modal */}
         <MyModal
-          isOpen={modal.group}
-          setIsOpen={(open) => setModal({ ...modal, group: open })}
-          onCancel={() => setModal({ ...modal, group: false })}
+          isOpen={modal.add_group}
+          setIsOpen={(open) => setModal({ ...modal, add_group: open })}
+          onCancel={() => setModal({ ...modal, add_group: false })}
           onConfirm={() => createGroup(create.group)}
         >
-          <Typography variant="h6" mb={2}>Create Group</Typography>
+          <Typography variant="h6" mb={2}>
+            Create Group
+          </Typography>
 
           <Box mt={2} />
 
@@ -198,7 +201,10 @@ export default function TrainerPageRouter(props: GroupPageProps) {
             fullWidth
             value={create.group.name || ''}
             onChange={(event) =>
-              setCreate({ ...create, group: { ...create.group, name: event.target.value } })
+              setCreate({
+                ...create,
+                group: { ...create.group, name: event.target.value },
+              })
             }
           />
 
@@ -215,34 +221,54 @@ export default function TrainerPageRouter(props: GroupPageProps) {
           />
         </MyModal>
 
-        {props.selected.group && <>
-          {/* Edit group modal */}
-          <MyModal
-            isOpen={modal.editGroup}
-            setIsOpen={(open) => setModal({ ...modal, editGroup: open })}
-            onCancel={() => setModal({ ...modal, editGroup: false })}
-            cancelText="Close"
-          >
-            <GroupSettings {...props} />
-          </MyModal>
-        </>
-        }
+        {props.selected.group && (
+          <>
+            {/* Subgroups modal */}
+            <MyModal
+              isOpen={modal.subgroups}
+              setIsOpen={(open) => setModal({ ...modal, subgroups: open })}
+              onCancel={() => setModal({ ...modal, subgroups: false })}
+              cancelText="Close"
+            >
+              <Subgroups
+                members={props.users.data || []}
+                subgroups={props.selected.group.subgroups || []}
+              />
+            </MyModal>
+          </>
+        )}
+
+        {props.selected.group && (
+          <>
+            {/* Group Settings modal */}
+            <MyModal
+              isOpen={modal.settings}
+              setIsOpen={(open) => setModal({ ...modal, settings: open })}
+              onCancel={() => setModal({ ...modal, settings: false })}
+              cancelText="Close"
+            >
+              <GroupSettings {...props} />
+            </MyModal>
+          </>
+        )}
       </Box>
 
       {/* Render selected filter */}
-      {mapper[props.filter] || <Box
-        sx={{
-          backgroundColor: '#1A2B3C',
-          height: '30px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderTopRightRadius: '0px',
-          borderTopLeftRadius: '0px',
-          borderBottomRightRadius: '20px',
-          borderBottomLeftRadius: '20px',
-        }}
-      />}
+      {mapper[props.filter] || (
+        <Box
+          sx={{
+            backgroundColor: '#1A2B3C',
+            height: '30px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderTopRightRadius: '0px',
+            borderTopLeftRadius: '0px',
+            borderBottomRightRadius: '20px',
+            borderBottomLeftRadius: '20px',
+          }}
+        />
+      )}
     </>
   );
 }

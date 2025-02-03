@@ -442,7 +442,7 @@ export default function TrainerDayView(props: GroupPageProps) {
   }, [token, group?.id, props.date.start, props.date.custom]);
 
   if (!group || !cycle)
-    return <Warning title="Select cycle" topBorder />;
+    return <></>;
 
   return <Box>
     <Circles

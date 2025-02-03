@@ -16,11 +16,54 @@ export const LINK_SIGN_IN: ILink = { label: 'Sign In', href: '/sign-in', id: '#s
 export const LINK_SIGN_UP: ILink = { label: 'Sign Up', href: '/sign-up', id: '#sign-up' };
 export const LINK_PROFILE: ILink = { label: 'Profile', href: '/profile', id: '#profile' };
 export const LINK_USERS: ILink = { label: 'Users', href: '/users', id: '#users' };
-export const LINK_COMPONENTS: ILink = { label: 'Components', href: '/components', id: '#components' };
-export const LINK_EXERCISES: ILink = { label: 'Exercises', href: '/exercises', id: '#exercises' };
-export const LINK_GROUPS: ILink = { label: 'Trainings', href: '/groups', id: '#groups', icon: <FitnessCenterIcon /> };
-export const LINK_CHART: ILink = { label: 'Chart', href: '/chart', id: '#chart', icon: <BarChartIcon /> };
-export const LINK_WELLNESS: ILink = { label: 'Wellness', href: '/wellness', id: '#wellness', icon: <SpaIcon /> };
+export const LINK_MEMBERS: ILink = {
+  label: 'Members',
+  href: '/members',
+  id: '#members',
+};
+export const LINK_SUBGROUPS: ILink = {
+  label: 'Subgroups',
+  href: '/subgroups',
+  id: '#subgroups',
+};
+export const LINK_ADD_GROUP: ILink = {
+  label: 'Add Group',
+  href: '/add-group',
+  id: '#add-group',
+};
+export const LINK_SETTINGS: ILink = {
+  label: 'Settings',
+  href: '/settings',
+  id: '#settings',
+};
+export const LINK_COMPONENTS: ILink = {
+  label: 'Components',
+  href: '/components',
+  id: '#components',
+};
+export const LINK_EXERCISES: ILink = {
+  label: 'Exercises',
+  href: '/exercises',
+  id: '#exercises',
+};
+export const LINK_GROUPS: ILink = {
+  label: 'Trainings',
+  href: '/groups',
+  id: '#groups',
+  icon: <FitnessCenterIcon />,
+};
+export const LINK_CHART: ILink = {
+  label: 'Chart',
+  href: '/chart',
+  id: '#chart',
+  icon: <BarChartIcon />,
+};
+export const LINK_WELLNESS: ILink = {
+  label: 'Wellness',
+  href: '/wellness',
+  id: '#wellness',
+  icon: <SpaIcon />,
+};
 export const LINK_TRAINING: ILink = {
   label: 'Training',
   href: '/training',
@@ -57,8 +100,11 @@ export const LINKS_SIDEBAR = {
     wellness: LINK_WELLNESS,
   },
   [UserRole.TRAINER]: {
+    home: LINK_GROUPS,
     exercises: LINK_EXERCISES,
-    groups: LINK_GROUPS,
+    members: LINK_MEMBERS,
+    add: LINK_ADD_GROUP,
+    settings: LINK_SETTINGS,
   },
   [UserRole.MANAGER]: {
     groups: LINK_GROUPS,
