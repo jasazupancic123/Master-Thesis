@@ -205,160 +205,270 @@ export function GroupSettings(props: GroupPageProps) {
 
   if (!group) return <Typography variant="body1">No group selected</Typography>;
 
-  return <>
-    <Typography variant="h6" mb={2}>Group Settings</Typography>
+  return (
+    <>
+      <Typography variant="h6" mb={2}>
+        Group Settings
+      </Typography>
 
-    <TextField
-      label="Name"
-      value={name}
-      onChange={e => setName(e.target.value)}
-      onBlur={() => updateName(name)}
-      fullWidth
-    />
+      <TextField
+        label="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onBlur={() => updateName(name)}
+        fullWidth
+      />
 
-    <Box mt={4} />
-    <Divider>Members</Divider>
+      <Box mt={4} />
+      <Divider sx={{ mb: 1 }}>Cycles</Divider>
 
-    {/* List of all group members */}
-    <Stack direction="row" spacing={2} p={1} my={1} flexWrap="wrap">
-      {group.members?.length ? group.members!.map(member => (
-        <Box
-          key={member.uid}
-          position="relative"
-        >
-          <Tooltip title={member.email}>
-            <Avatar>{member.email[0]}</Avatar>
-          </Tooltip>
+      {/* Table of cycles */}
+      {group.cycles?.length === 0 ? (
+        <Typography variant="body2" p={1}>
+          No cycles
+        </Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>From</TableCell>
+                <TableCell>To</TableCell>
+                <TableCell sx={{ width: 50 }}></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {group.cycles.map((cycle) => (
+                <TableRow key={cycle.id}>
+                  <TableCell>
+                    <TextField
+                      value={cycle.name}
+                      onBlur={(e) =>
+                        updateCycle(cycle, { name: e.target.value })
+                      }
+                      onChange={(e) =>
+                        props.setSelected({
+                          ...props.selected,
+                          group: {
+                            ...group,
+                            cycles: group.cycles.map((c) =>
+                              c.id === cycle.id
+                                ? { ...c, name: e.target.value }
+                                : c
+                            ),
+                          },
+                        })
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      type="date"
+                      value={dayjs(cycle.from).format('YYYY-MM-DD')}
+                      onBlur={(e) =>
+                        updateCycle(cycle, {
+                          from: e.target.value as unknown as Date,
+                        })
+                      }
+                      onChange={(e) => {
+                        props.setSelected({
+                          ...props.selected,
+                          group: {
+                            ...group,
+                            cycles: group.cycles.map((c) =>
+                              c.id === cycle.id
+                                ? {
+                                    ...c,
+                                    from: dayjs(e.target.value).toDate(),
+                                  }
+                                : c
+                            ),
+                          },
+                        });
+                      }}
+                      sx={{ maxWidth: 150 }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      type="date"
+                      value={dayjs(cycle.to).format('YYYY-MM-DD')}
+                      onBlur={(e) =>
+                        updateCycle(cycle, {
+                          to: e.target.value as unknown as Date,
+                        })
+                      }
+                      onChange={(e) => {
+                        props.setSelected({
+                          ...props.selected,
+                          group: {
+                            ...group,
+                            cycles: group.cycles.map((c) =>
+                              c.id === cycle.id
+                                ? {
+                                    ...c,
+                                    to: dayjs(e.target.value).toDate(),
+                                  }
+                                : c
+                            ),
+                          },
+                        });
+                      }}
+                      sx={{ maxWidth: 150 }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ width: 50 }}>
+                    <IconButton
+                      onClick={() => deleteCycle(cycle.id)}
+                      size="small"
+                    >
+                      <DeleteIcon color="secondary" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-          <RemoveIcon
-            onClick={() => removeGroupMember(member.uid)}
-            sx={{
-              position: 'absolute',
-              top: -5,
-              right: -5,
-              cursor: 'pointer',
-              bgcolor: 'red',
-              borderRadius: '50%',
-              height: 15,
-              width: 15,
-            }}
-          />
-        </Box>
-      )) : <Typography variant="body2">No members</Typography>}
-    </Stack>
+      {/* Add new cycle button */}
+      <IconButton
+        onClick={() => setShowAddCycle((prev) => !prev)}
+        sx={{ borderRadius: 20 }}
+      >
+        <AddIcon />
+      </IconButton>
 
-    {/* Add new member button */}
-    <IconButton
-      onClick={() => setShowAddMember(prev => !prev)}
-      sx={{ borderRadius: 20 }}
-    >
-      <AddIcon />
-    </IconButton>
+      {showAddCycle && (
+        <Grid2 container mt={2} width={300} spacing={2}>
+          <Grid2 xs={12}>
+            <TextField
+              label="Name"
+              value={createCycle.name}
+              onChange={(e) =>
+                setCreateCycle({ ...createCycle, name: e.target.value })
+              }
+              fullWidth
+            />
+          </Grid2>
 
-    {showAddMember && <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Email</TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {users.filter(user => !group.membersIds.includes(user.uid)).map(user => (
-            <TableRow key={user.uid}>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <IconButton
-                  onClick={() => addGroupMember(user.uid)}
-                  size="small"
-                >
-                  <AddIcon />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>}
+          <Grid2 xs={12}>
+            <TextField
+              multiline
+              label="Description"
+              minRows={3}
+              value={createCycle.description}
+              onChange={(e) =>
+                setCreateCycle({ ...createCycle, description: e.target.value })
+              }
+              fullWidth
+            />
+          </Grid2>
 
-    <Box mt={4} />
-    <Divider sx={{ mb: 1 }}>Cycles</Divider>
+          <Grid2 xs={6}>
+            <TextField
+              label="From"
+              type="date"
+              value={createCycle.from}
+              onChange={(e) =>
+                setCreateCycle({
+                  ...createCycle,
+                  from: e.target.value as unknown as Date,
+                })
+              }
+              fullWidth
+            />
+          </Grid2>
 
-    {/* Table of cycles */}
-    {group.cycles?.length === 0
-      ? <Typography variant="body2" p={1}>No cycles</Typography>
-      : <TableContainer component={Paper}>
+          <Grid2 xs={6}>
+            <TextField
+              label="To"
+              type="date"
+              value={createCycle.to}
+              onChange={(e) =>
+                setCreateCycle({
+                  ...createCycle,
+                  to: e.target.value as unknown as Date,
+                })
+              }
+              fullWidth
+            />
+          </Grid2>
+
+          <Grid2 xs={12}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => addCycle(createCycle)}
+            >
+              Add Cycle
+            </Button>
+          </Grid2>
+        </Grid2>
+      )}
+
+      {/* Subgroups */}
+      <Box mt={4} />
+      <Divider sx={{ mb: 1 }}>Subgroups</Divider>
+
+      <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>From</TableCell>
-              <TableCell>To</TableCell>
+              <TableCell>Members</TableCell>
               <TableCell sx={{ width: 50 }}></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {group.cycles.map(cycle => (
-              <TableRow key={cycle.id}>
+            {group.subgroups?.map((subgroup) => (
+              <TableRow key={subgroup.id}>
+                <TableCell>{subgroup.name}</TableCell>
                 <TableCell>
-                  <TextField
-                    value={cycle.name}
-                    onBlur={e => updateCycle(cycle, { name: e.target.value })}
-                    onChange={e => props.setSelected({
-                      ...props.selected,
-                      group: {
-                        ...group,
-                        cycles: group.cycles.map(c => c.id === cycle.id ? { ...c, name: e.target.value } : c),
-                      },
+                  <Stack direction="row" flexWrap="wrap" spacing={1}>
+                    {subgroup.membersIds?.map((uid) => {
+                      const member = group.members?.find((m) => m.uid === uid);
+                      if (!member) return null;
+
+                      return (
+                        <Box key={member.uid} position="relative">
+                          <Tooltip title={member.email}>
+                            <Avatar>{member.email[0]}</Avatar>
+                          </Tooltip>
+
+                          <RemoveIcon
+                            onClick={() =>
+                              removeSubgroupMember(
+                                subgroup.id,
+                                subgroup.membersIds,
+                                member.uid
+                              )
+                            }
+                            sx={{
+                              position: 'absolute',
+                              top: -5,
+                              right: -5,
+                              cursor: 'pointer',
+                              bgcolor: 'red',
+                              borderRadius: '50%',
+                              height: 15,
+                              width: 15,
+                            }}
+                          />
+                        </Box>
+                      );
                     })}
-                  />
+                  </Stack>
                 </TableCell>
                 <TableCell>
-                  <TextField
-                    type="date"
-                    value={dayjs(cycle.from).format('YYYY-MM-DD')}
-                    onBlur={e =>
-                      updateCycle(cycle, { from: e.target.value as unknown as Date })
+                  <IconButton
+                    onClick={() =>
+                      removeSubgroup(subgroup.id, subgroup.membersIds)
                     }
-                    onChange={e => {
-                      props.setSelected({
-                        ...props.selected,
-                        group: {
-                          ...group,
-                          cycles: group.cycles.map(c => c.id === cycle.id ? {
-                            ...c,
-                            from: dayjs(e.target.value).toDate(),
-                          } : c),
-                        },
-                      });
-                    }}
-                    sx={{ maxWidth: 150 }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    type="date"
-                    value={dayjs(cycle.to).format('YYYY-MM-DD')}
-                    onBlur={e =>
-                      updateCycle(cycle, { to: e.target.value as unknown as Date })
-                    }
-                    onChange={e => {
-                      props.setSelected({
-                        ...props.selected,
-                        group: {
-                          ...group,
-                          cycles: group.cycles.map(c => c.id === cycle.id ? {
-                            ...c,
-                            to: dayjs(e.target.value).toDate(),
-                          } : c),
-                        },
-                      });
-                    }}
-                    sx={{ maxWidth: 150 }}
-                  />
-                </TableCell>
-                <TableCell sx={{ width: 50 }}>
-                  <IconButton onClick={() => deleteCycle(cycle.id)} size="small">
+                    size="small"
+                  >
                     <DeleteIcon color="secondary" />
                   </IconButton>
                 </TableCell>
@@ -367,125 +477,6 @@ export function GroupSettings(props: GroupPageProps) {
           </TableBody>
         </Table>
       </TableContainer>
-    }
-
-    {/* Add new cycle button */}
-    <IconButton
-      onClick={() => setShowAddCycle(prev => !prev)}
-      sx={{ borderRadius: 20 }}
-    >
-      <AddIcon />
-    </IconButton>
-
-    {showAddCycle && <Grid2 container mt={2} width={300} spacing={2}>
-      <Grid2 xs={12}>
-        <TextField
-          label="Name"
-          value={createCycle.name}
-          onChange={e => setCreateCycle({ ...createCycle, name: e.target.value })}
-          fullWidth
-        />
-      </Grid2>
-
-      <Grid2 xs={12}>
-        <TextField
-          multiline
-          label="Description"
-          minRows={3}
-          value={createCycle.description}
-          onChange={e => setCreateCycle({ ...createCycle, description: e.target.value })}
-          fullWidth
-        />
-      </Grid2>
-
-      <Grid2 xs={6}>
-        <TextField
-          label="From"
-          type="date"
-          value={createCycle.from}
-          onChange={e => setCreateCycle({ ...createCycle, from: e.target.value as unknown as Date })}
-          fullWidth
-        />
-      </Grid2>
-
-      <Grid2 xs={6}>
-        <TextField
-          label="To"
-          type="date"
-          value={createCycle.to}
-          onChange={e => setCreateCycle({ ...createCycle, to: e.target.value as unknown as Date })}
-          fullWidth
-        />
-      </Grid2>
-
-      <Grid2 xs={12}>
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={() => addCycle(createCycle)}
-        >
-          Add Cycle
-        </Button>
-      </Grid2>
-    </Grid2>}
-
-    {/* Subgroups */}
-    <Box mt={4} />
-    <Divider sx={{ mb: 1 }}>Subgroups</Divider>
-
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Members</TableCell>
-            <TableCell sx={{ width: 50 }}></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {group.subgroups?.map(subgroup => (
-            <TableRow key={subgroup.id}>
-              <TableCell>{subgroup.name}</TableCell>
-              <TableCell>
-                <Stack direction="row" flexWrap="wrap" spacing={1}>
-                  {subgroup.membersIds?.map(uid => {
-                    const member = group.members?.find(m => m.uid === uid);
-                    if (!member) return null;
-
-                    return <Box
-                      key={member.uid}
-                      position="relative"
-                    >
-                      <Tooltip title={member.email}>
-                        <Avatar>{member.email[0]}</Avatar>
-                      </Tooltip>
-
-                      <RemoveIcon
-                        onClick={() => removeSubgroupMember(subgroup.id, subgroup.membersIds, member.uid)}
-                        sx={{
-                          position: 'absolute',
-                          top: -5,
-                          right: -5,
-                          cursor: 'pointer',
-                          bgcolor: 'red',
-                          borderRadius: '50%',
-                          height: 15,
-                          width: 15,
-                        }}
-                      />
-                    </Box>;
-                  })}
-                </Stack>
-              </TableCell>
-              <TableCell>
-                <IconButton onClick={() => removeSubgroup(subgroup.id, subgroup.membersIds)} size="small">
-                  <DeleteIcon color="secondary" />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  </>;
+    </>
+  );
 }

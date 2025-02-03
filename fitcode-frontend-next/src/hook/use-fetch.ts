@@ -31,6 +31,7 @@ export function useFetch<T>(url: string, options?: UseFetchOptions) {
       headers['Authorization'] = `Bearer ${token}`;
 
     try {
+      console.log('URL', `${BASE_URL}${url}`);
       const response = await fetch(`${BASE_URL}${url}`, {
         method,
         headers,

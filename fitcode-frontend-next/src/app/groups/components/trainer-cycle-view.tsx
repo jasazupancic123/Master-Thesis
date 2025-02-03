@@ -152,7 +152,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
   }
 
   if (!props.selected.group || !props.selected.cycle)
-    return <Warning title="Select cycle" topBorder />;
+    return <></>;
 
   return (
     <Box pb={10}>

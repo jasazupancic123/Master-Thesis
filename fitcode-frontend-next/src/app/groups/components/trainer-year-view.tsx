@@ -15,7 +15,7 @@ import Warning from '@/common/components/warning';
 export default function TrainerYearView(props: GroupPageProps) {
   const group = props.selected.group;
   if (!group)
-    return <Warning title="Select group" topBorder />;
+    return <></>;
 
   return <>
     <Stack
