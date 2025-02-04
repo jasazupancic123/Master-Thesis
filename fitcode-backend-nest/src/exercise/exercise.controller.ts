@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  forwardRef,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -16,53 +18,30 @@ import { User } from '../common/type/firebase-auth.type';
 import { ExerciseAttributeService } from './service/exercise-attribute.service';
 import { FindManyOptions } from '../common/type/orm.type';
 import { Exercise } from './entity/exercise.entity';
+import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+import { Wrapper } from 'src/common/type/wrapper.type';
 
 @Controller('exercise')
 export class ExerciseController {
   constructor(
+    @Inject(forwardRef(() => CacheManagerService))
+    private readonly cacheManagerService: Wrapper<CacheManagerService>,
     private readonly exerciseAttributeService: ExerciseAttributeService,
     private readonly exerciseService: ExerciseService,
   ) {}
 
   @Get('attribute')
   async findAllAttributes() {
-    return await this.exerciseAttributeService.findAll();
+    return await this.cacheManagerService.getAttributes();
   }
 
   @Get()
   @Auth()
   async findExercises(
     @RequestUser() user: User,
-    @Query() query: FilterExerciseDto,
+    // @Query() query: FilterExerciseDto, // NOTE - filtering is done on frontend
   ) {
-    const ref = { uid: user.uid };
-    const options: FindManyOptions<Exercise> = {
-      filter: {},
-      paginate: {},
-      populate: ['attributeValues'],
-    };
-
-    if (query) {
-      // filter
-      const { ids, name, componentsIds, global } = query;
-      if (ids && ids.length > 0) options.filter.ids = ids;
-      if (name) options.filter.name = name;
-      if (componentsIds) options.filter.componentsIds = componentsIds;
-      if (global) options.filter.global = global;
-
-      // paginate
-      const { orderBy, page, pageSize } = query;
-      if (orderBy) options.paginate.orderBy = orderBy;
-      if (page) options.paginate.page = page;
-      if (pageSize) options.paginate.pageSize = pageSize;
-    }
-
-    if (Object.keys(options.filter).length === 0) delete options.filter;
-    if (Object.keys(options.paginate).length === 0) delete options.paginate;
-
-    const total = await this.exerciseService.countAll(user, options);
-    const data = await this.exerciseService.findAllByUser(user, options);
-    return { total, data };
+    return await this.exerciseService.findAll(user);
   }
 
   @Get(':exerciseId')

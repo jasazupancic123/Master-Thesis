@@ -6,36 +6,58 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
+import {
+  FieldPath,
+  FieldValue,
+  Query,
+  Timestamp,
+  Transaction,
+} from 'firebase-admin/firestore';
 import { Training } from '../entity/training.entity';
-import { ComponentService } from '../../component/component.service';
 import { ExerciseService } from '../../exercise/service/exercise.service';
 import {
   Filter,
   FindManyOptions,
   FindOneOptions,
   PaginateOptions,
-  Populate,
 } from '../../common/type/orm.type';
 import { GroupService } from '../../group/service/group.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { TrainingRepository } from '../repository/training.repository';
-import { TrainingComponentRepository } from '../repository/training-component.repository';
-import { TrainingExerciseRepository } from '../repository/training-exercise.repository';
-import { TrainingComponentService } from './training-component.service';
 import {
   SubgroupRef,
+  TrainingComponentRef,
+  TrainingExerciseRef,
   TrainingRef,
+  TrainingSupersetRef,
+  UserMetaRef,
 } from '../../common/type/firebase-firestore.type';
 import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
 import { SubgroupService } from '../../group/service/subgroup.service';
-import { TrainingSupersetRepository } from '../repository/training-superset.repository';
-import { CreateTraining, UpdateTraining } from '../type/training.type';
+import {
+  CreateTraining,
+  MappedTraining,
+  UpdateTraining,
+} from '../type/training.type';
 import { User } from '../../common/type/firebase-auth.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Group } from '../../group/entity/group.entity';
-import { TrainingExerciseUserDataService } from './training-exercise-user-data.service';
-import { isAfter, isBefore } from 'date-fns';
+import { TrainingWorkloadService } from './training-workload.service';
+import { isAfter, isBefore, startOfDay } from 'date-fns';
+import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+import { Component } from 'src/component/entity/component.entity';
+import { CommonService } from 'src/common/service/common.service';
+import { UpdateTrainingComponent } from '../type/training-component.type';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingSuperset } from '../entity/training-superset.entity';
+import {
+  CreateTrainingExercise,
+  UpdateTrainingExercise,
+} from '../type/training-exercise.type';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { UserService } from 'src/user/service/user.service';
+import { TrainingWorkload } from '../entity/training-workload.entity';
+import { UserMeta } from 'src/user/entity/user-meta.entity';
 
 @Injectable()
 export class TrainingService {
@@ -43,18 +65,17 @@ export class TrainingService {
 
   constructor(
     private readonly firebaseService: FirebaseService,
+    private readonly cacheManagerService: CacheManagerService,
+    private readonly commonService: CommonService,
     private readonly trainingRepository: TrainingRepository,
-    private readonly trainingComponentRepository: TrainingComponentRepository,
-    private readonly trainingSupersetRepository: TrainingSupersetRepository,
-    private readonly trainingExerciseRepository: TrainingExerciseRepository,
-    private readonly componentService: ComponentService,
     private readonly exerciseService: ExerciseService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
     @Inject(forwardRef(() => SubgroupService))
     private readonly subgroupService: Wrapper<SubgroupService>,
-    private readonly trainingComponentService: TrainingComponentService,
-    private readonly trainingExerciseUserDataService: TrainingExerciseUserDataService,
+    private readonly trainingWorkloadService: TrainingWorkloadService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: Wrapper<UserService>,
   ) {}
 
   async findOne(
@@ -71,9 +92,6 @@ export class TrainingService {
         throw new UnauthorizedException(
           'You are not authorized to view this training',
         );
-
-    // populate training
-    if (options?.populate) await this.populate(ref, training, options.populate);
 
     return training;
   }
@@ -93,11 +111,19 @@ export class TrainingService {
     let filter = options?.filter || {};
 
     if (options?.user) {
-      if (this.firebaseService.isTrainer(options.user))
-        filter.ownerId = { value: options.user.uid };
+      if (this.firebaseService.isTrainer(options.user)) {
+        //   if (!filter.groupId || !filter.cycleId)
+        //     throw new BadRequestException('Group ID or cycle ID are missing');
 
-      if (this.firebaseService.isAthlete(options.user))
+        filter.ownerId = { value: options.user.uid };
+      }
+
+      if (this.firebaseService.isAthlete(options.user)) {
+        const user = await this.userService.findOne(options.user.uid);
+        if ((user?.groupsIds || []).length > 0)
+          filter.groupId = { op: 'in', value: user.groupsIds };
         filter.membersIds = { value: options.user.uid };
+      }
     }
 
     let trainings = await this.trainingRepository.getDocs((collection) => {
@@ -107,14 +133,6 @@ export class TrainingService {
       return query;
     });
 
-    if (options?.populate)
-      await Promise.all(
-        trainings.map(async (training) => {
-          const trainingRef = { trainingId: training.id };
-          await this.populate(trainingRef, training, options.populate);
-        }),
-      );
-
     return trainings;
   }
 
@@ -123,8 +141,8 @@ export class TrainingService {
     options: { user: User },
   ): Promise<Training> {
     const { user } = options;
-    this.logger.debug(
-      `Creating training (user ${user.uid}): ${JSON.stringify(input)}`,
+    this.logger.log(
+      `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
     );
 
     // find parent references
@@ -134,10 +152,11 @@ export class TrainingService {
     );
 
     // validate data
+    const components = await this.cacheManagerService.getComponents();
     this.validateTime(input.from, input.to);
-    await this.validateTrainer(user);
-    await this.validateOwner(user.uid, group);
-    await this.validateComponents(input.componentIds);
+    this.validateTrainer(user);
+    this.validateOwner(user.uid, group);
+    this.validateComponents(input.componentIds, components);
     await this.validateOverlap(group.id, input.from, input.to);
     await this.validateSubgroup({
       groupId: group.id,
@@ -145,6 +164,31 @@ export class TrainingService {
     });
 
     // create training
+    const componentsInput = Object.fromEntries(
+      input.componentIds.map((componentId) => [
+        componentId,
+        {
+          id: componentId,
+          order: 0,
+          supersets: [
+            {
+              order: 0,
+              exercises: {},
+            },
+          ],
+        },
+      ]),
+    );
+
+    const bw = Object.fromEntries(
+      await Promise.all(
+        group.membersIds.map(async (id) => [
+          id,
+          await this.userService.getLastMeta({ uid: id }),
+        ]),
+      ),
+    );
+
     const trainingId = await this.trainingRepository.addDoc({
       groupId: group.id,
       ownerId: user.uid,
@@ -153,16 +197,28 @@ export class TrainingService {
       subgroupId: input.subgroupId || null,
       from: input.from,
       to: input.to,
+      components: componentsInput,
+      meta: bw,
     });
 
-    const training = await this.findOneOrFail({ trainingId }, { user });
-    training.components = await this.trainingComponentService.createMany(
-      { trainingId },
-      input.componentIds.map((componentId) => ({ componentId })),
-      options,
-    );
-
-    return training;
+    return {
+      id: trainingId,
+      groupId: group.id,
+      group: group,
+      cycleId: input.cycleId,
+      cycle: null,
+      ownerId: user.uid,
+      membersIds: group.membersIds,
+      subgroupId: input.subgroupId || null,
+      subgroup: null,
+      copiedFromId: input.copiedFromId || null,
+      from: input.from,
+      to: input.to,
+      components: componentsInput,
+      meta: bw,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   async copy(
@@ -173,8 +229,8 @@ export class TrainingService {
       subgroupId: string | null;
     },
     options: { user: User },
-  ): Promise<Training> {
-    const { user } = options;
+  ) {
+    /* const { user } = options;
     this.logger.debug(
       `Copying training ${source.trainingId} (user ${user.uid})`,
     );
@@ -261,7 +317,7 @@ export class TrainingService {
       from: sourceTraining.from,
       to: sourceTraining.to,
       components,
-    };
+    }; */
   }
 
   async update(
@@ -269,10 +325,8 @@ export class TrainingService {
     input: UpdateTraining,
     options: { user: User },
   ): Promise<Training> {
-    this.logger.debug(
-      `Updating training ${ref.trainingId} (user ${options.user.uid}): ${JSON.stringify(
-        input,
-      )}`,
+    this.logger.log(
+      `User ${options.user.uid} is updating training: ${JSON.stringify(input)}`,
     );
 
     // find training
@@ -303,40 +357,580 @@ export class TrainingService {
     return await this.findOneOrFail(ref, options);
   }
 
+  async updateMemberBodyweight(
+    transaction: Transaction,
+    userId: string,
+    trainingIds: string[],
+    weight: number,
+  ) {
+    await Promise.all(
+      trainingIds.map((trainingId) => {
+        const docRef = this.trainingRepository.doc(trainingId);
+        transaction.update(docRef, {
+          [`bw.${userId}`]: weight,
+        });
+      }),
+    );
+  }
+
   async remove(
     ref: Required<TrainingRef>,
     options: { user: User },
   ): Promise<void> {
-    const { user } = options;
-    this.logger.debug(`Removing training ${ref.trainingId} (user ${user.uid})`);
-    const training = await this.findOneOrFail(ref, {
-      ...options,
-      populate: ['components'],
-    });
-
-    // delete training components
-    await Promise.all(
-      training.components.map(({ componentId }) =>
-        this.trainingComponentService.remove({ ...ref, componentId }, options),
-      ),
+    this.logger.log(
+      `User ${options.user.uid} is removing training ${ref.trainingId}`,
     );
 
+    await this.findOneOrFail(ref, options);
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  private async validateComponents(componentsIds: string[]): Promise<void> {
-    const components = await this.componentService.findAllTree({
-      filter: {
-        ...(componentsIds.length > 0 && { ids: componentsIds }),
+  async addComponents(
+    ref: Required<TrainingRef>,
+    input: [string, TrainingComponent][], // [componentId, component input][]
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is adding component to training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    // find training
+    const training = await this.findOneOrFail(ref, { user });
+
+    // find all components
+    const components = await this.cacheManagerService.getComponents();
+    const inputComponentsIds = input.map(([componentId]) => componentId);
+    if (
+      !components.some((component) => inputComponentsIds.includes(component.id))
+    )
+      throw new BadRequestException('Some components are invalid');
+
+    // components must be unique
+    const duplicates: Component[] = [];
+    for (const componentId of inputComponentsIds)
+      if (Object.keys(training.components).find((cId) => cId === componentId))
+        duplicates.push(components.find((c) => c.id === componentId));
+
+    if (duplicates.length)
+      throw new BadRequestException(
+        `Components ${duplicates.map((c) => c.name.toLowerCase()).join(', ')} already exist in the training`,
+      );
+
+    const addComponentsInput = Object.fromEntries(
+      input.map(([componentId, trainingComponent]) => [
+        `components.${componentId}`,
+        {
+          id: componentId,
+          order:
+            trainingComponent.order || Object.keys(training.components).length,
+          color: trainingComponent.color || this.commonService.color.random(),
+          supersets: trainingComponent.supersets?.length
+            ? trainingComponent.supersets.map((superset) => ({
+                order: superset.order,
+                color: superset.color,
+                exercises: superset.exercises,
+              }))
+            : [
+                {
+                  color: this.commonService.color.random(),
+                  exercises: {},
+                },
+              ],
+        },
+      ]),
+    );
+
+    await this.trainingRepository.updateDoc(training.id, addComponentsInput);
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        ...Object.fromEntries(
+          Object.entries(addComponentsInput).map(([componentId, data]) => [
+            componentId.replace(/^components\./, ''),
+            data,
+          ]),
+        ),
       },
+    };
+  }
+
+  async updateComponent(
+    ref: Required<TrainingComponentRef>,
+    input: UpdateTrainingComponent,
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is updating component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    // find training component
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId))
+      throw new BadRequestException('Training component not found');
+
+    await this.trainingRepository.updateDoc(training.id, {
+      ...(input.color && {
+        [`components.${ref.componentId}.color`]: input.color,
+      }),
+      ...(input.order && {
+        [`components.${ref.componentId}.order`]: input.order,
+      }),
+      ...(input.supersets && {
+        [`components.${ref.componentId}.supersets`]: input.supersets,
+      }),
     });
 
-    for (const component of components)
-      if (component.parent)
-        throw new BadRequestException(`Component ${component.id} is not root`);
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        [ref.componentId]: {
+          ...training.components[ref.componentId],
+          ...input,
+        },
+      },
+    };
+  }
 
-    if (components.length !== componentsIds.length)
-      throw new BadRequestException('Some components do not exist');
+  async deleteComponent(
+    ref: Required<TrainingComponentRef>,
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is deleting component ${ref.componentId} from training ${ref.trainingId}`,
+    );
+
+    // find training
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId)) {
+      throw new BadRequestException('Training component not found');
+    }
+
+    // delete component from training
+    await this.trainingRepository.updateDoc(training.id, {
+      [`components.${ref.componentId}`]: FieldValue.delete(),
+    });
+
+    // remove component from the returned object
+    const { [ref.componentId]: _, ...updatedComponents } = training.components;
+
+    return {
+      ...training,
+      components: updatedComponents,
+    };
+  }
+
+  async addSupersets(
+    ref: Required<TrainingComponentRef>,
+    input: TrainingSuperset[],
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is adding supersets to component ${ref.componentId} in training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    // find training component
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId))
+      throw new BadRequestException('Training component not found');
+
+    // validate exercises
+    const exerciseIds = input.map((item) => Object.keys(item.exercises)).flat();
+    if (exerciseIds.length)
+      await this.validateTrainingExercises(ref, exerciseIds, user);
+
+    // add supersets to component
+    const supersets = training.components[ref.componentId].supersets || [];
+    const addSupersets = [
+      ...supersets,
+      ...input.map((item) => ({
+        color: item.color,
+        exercises: item.exercises,
+      })),
+    ];
+
+    await this.trainingRepository.updateDoc(training.id, {
+      [`components.${ref.componentId}.supersets`]: addSupersets,
+    });
+
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        [ref.componentId]: {
+          ...training.components[ref.componentId],
+          supersets: addSupersets,
+        },
+      },
+    };
+  }
+
+  async updateSuperset(
+    ref: Required<TrainingSupersetRef>,
+    input: Partial<TrainingSuperset>,
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is updating superset ${ref.superset} in component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    // find training component
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId))
+      throw new BadRequestException('Training component not found');
+
+    let supersets = training.components[ref.componentId].supersets || [];
+    if (ref.superset < 0 || ref.superset >= supersets.length)
+      throw new BadRequestException('Superset index out of bounds');
+
+    // update superset
+    const updatedSuperset = { ...supersets[ref.superset], ...input };
+    supersets = supersets.filter((_, i) => i !== ref.superset); // Remove old superset
+
+    // insert at new index if 'order' is specified, otherwise keep the same index
+    const newIndex = input.order !== undefined ? input.order : ref.superset;
+    supersets.splice(newIndex, 0, updatedSuperset);
+
+    await this.trainingRepository.updateDoc(training.id, {
+      [`components.${ref.componentId}.supersets`]: supersets,
+    });
+
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        [ref.componentId]: {
+          ...training.components[ref.componentId],
+          supersets,
+        },
+      },
+    };
+  }
+
+  async deleteSuperset(
+    ref: Required<TrainingSupersetRef>,
+    user: User,
+  ): Promise<Training> {
+    const index = ref.superset;
+    this.logger.log(
+      `User ${user.uid} is deleting superset ${index} from component ${ref.componentId} in training ${ref.trainingId}`,
+    );
+
+    // find training component
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId))
+      throw new BadRequestException('Training component not found');
+
+    let supersets = training.components[ref.componentId].supersets || [];
+    if (index < 0 || index >= supersets.length)
+      throw new BadRequestException('Superset index out of bounds');
+
+    // remove superset
+    supersets = supersets.filter((_, i) => i !== index);
+    await this.trainingRepository.updateDoc(training.id, {
+      [`components.${ref.componentId}.supersets`]: supersets,
+    });
+
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        [ref.componentId]: {
+          ...training.components[ref.componentId],
+          supersets,
+        },
+      },
+    };
+  }
+
+  async addExercises(
+    ref: Required<TrainingSupersetRef>,
+    input: [string, CreateTrainingExercise][], // [exerciseId, exercise][]
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is adding exercises to superset ${ref.superset} in component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    // find training component
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId))
+      throw new BadRequestException('Training component not found');
+
+    // check superset
+    const supersets = training.components[ref.componentId].supersets || [];
+    if (ref.superset < 0 || ref.superset >= supersets.length)
+      throw new BadRequestException('Superset index out of bounds');
+
+    // find all exercises
+    const exerciseIds = input.map(([id]) => id);
+    const exercises = await this.exerciseService.findAll(user, {
+      filter: { ids: exerciseIds },
+    });
+
+    if (exercises.length !== exerciseIds.length)
+      throw new BadRequestException('Some exercises are invalid');
+
+    // validate exercises
+    const { error, message } = await this.exerciseService.validateExercises(
+      ref.componentId,
+      exercises,
+    );
+
+    if (error) throw new BadRequestException(message);
+
+    // add exercises
+    let order = Object.keys(supersets[ref.superset].exercises).length;
+    supersets[ref.superset].exercises = {
+      ...supersets[ref.superset].exercises,
+      ...input
+        .map(([id, data]) => ({
+          [id]: {
+            id,
+            order: order++,
+            color: data.color || this.commonService.color.random(),
+            meta: { ...data.meta },
+          },
+        }))
+        .reduce((acc, curr) => ({ ...acc, ...curr }), {}),
+    };
+
+    // get data for all users (reads must be executed before writes for transactions)
+    for (const exerciseId of exerciseIds) {
+      // get data for all users
+      const allUsersDataRaw = await Promise.all(
+        training.membersIds.map(async (userId) => ({
+          userId,
+          data: await this.trainingWorkloadService.findAll({
+            ...ref,
+            exerciseId,
+            userId,
+          }),
+        })),
+      );
+
+      const allUsersData = allUsersDataRaw.reduce(
+        (acc, { userId, data }) => {
+          acc[userId] = data;
+          return acc;
+        },
+        {} as Record<string, TrainingWorkload[]>,
+      );
+
+      await this.firebaseService.firestore.runTransaction(
+        async (transaction) => {
+          const docRef = this.trainingRepository.doc(training.id);
+          transaction.update(docRef, {
+            [`components.${ref.componentId}.supersets`]: supersets,
+          });
+
+          await Promise.all(
+            input.map(([id, { meta }]) =>
+              this.trainingWorkloadService.createMany(
+                training,
+                { ...ref, exerciseId: id },
+                { meta },
+                allUsersData,
+                transaction,
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        [ref.componentId]: {
+          ...training.components[ref.componentId],
+          supersets,
+        },
+      },
+    };
+  }
+
+  async updateExercise(
+    ref: Required<TrainingExerciseRef>,
+    input: Partial<UpdateTrainingExercise>,
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is updating exercise ${ref.exerciseId} in superset ${ref.superset} for component ${ref.componentId} in training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    // find training component
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId))
+      throw new BadRequestException('Training component not found');
+
+    // check superset
+    const supersets = training.components[ref.componentId].supersets || [];
+    if (ref.superset < 0 || ref.superset >= supersets.length)
+      throw new BadRequestException('Superset index out of bounds');
+
+    const superset = supersets[ref.superset];
+    const exercises = superset.exercises || {};
+    if (!exercises[ref.exerciseId])
+      throw new BadRequestException('Exercise not found in superset');
+
+    // update exercise
+    const exercise = superset.exercises[ref.exerciseId];
+    const currentOrder = exercise.order;
+    const newOrder = input.order ?? currentOrder;
+
+    // Validate new order
+    const exerciseIds = Object.keys(exercises);
+    if (newOrder < 0 || newOrder >= exerciseIds.length)
+      throw new BadRequestException('New order index out of bounds');
+
+    // Sort exercises by order
+    const sortedExercises = exerciseIds
+      .map((id) => ({ id, ...exercises[id] }))
+      .sort((a, b) => a.order - b.order);
+
+    // Remove the exercise being updated
+    const filteredExercises = sortedExercises.filter(
+      (e) => e.id !== ref.exerciseId,
+    );
+
+    // Insert the updated exercise at the new order position
+    filteredExercises.splice(newOrder, 0, {
+      id: exercise.id,
+      color: input.color ?? exercise.color,
+      order: newOrder,
+      meta: { ...(input.meta ? input.meta : exercise.meta) },
+    });
+
+    // Reassign sequential order values to avoid duplicates
+    const updatedExercises = filteredExercises.reduce(
+      (acc, e, order) => {
+        acc[e.id] = { ...e, order };
+        return acc;
+      },
+      {} as Record<string, TrainingExercise>,
+    );
+
+    // get data for all users
+    const allUsersDataRaw = await Promise.all(
+      training.membersIds.map(async (userId) => ({
+        userId,
+        data: await this.trainingWorkloadService.findAll({ ...ref, userId }),
+      })),
+    );
+
+    const allUsersData = allUsersDataRaw.reduce(
+      (acc, { userId, data }) => {
+        acc[userId] = data;
+        return acc;
+      },
+      {} as Record<string, TrainingWorkload[]>,
+    );
+
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      const docRef = this.trainingRepository.doc(training.id);
+
+      // update training workload
+      if (input.meta)
+        await this.trainingWorkloadService.updateMany(
+          training,
+          ref,
+          { meta: input.meta },
+          allUsersData,
+          transaction,
+        );
+
+      // update supersets
+      supersets[ref.superset].exercises = updatedExercises;
+      transaction.update(docRef, {
+        [`components.${ref.componentId}.supersets`]: supersets,
+      });
+    });
+
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        [ref.componentId]: {
+          ...training.components[ref.componentId],
+          supersets,
+        },
+      },
+    };
+  }
+
+  async deleteExercise(
+    ref: Required<TrainingExerciseRef>,
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is deleting exercise ${ref.exerciseId} from superset ${ref.superset} in component ${ref.componentId} for training ${ref.trainingId}`,
+    );
+
+    // find training component
+    const training = await this.findOneOrFail(ref, { user });
+    if (!Object.keys(training.components).includes(ref.componentId))
+      throw new BadRequestException('Training component not found');
+
+    // check superset
+    const supersets = training.components[ref.componentId].supersets || [];
+    if (ref.superset < 0 || ref.superset >= supersets.length)
+      throw new BadRequestException('Superset index out of bounds');
+
+    const exercises = supersets[ref.superset].exercises || {};
+    if (!exercises[ref.exerciseId])
+      throw new BadRequestException('Exercise not found in superset');
+
+    // remove exercise
+    const { [ref.exerciseId]: _, ...updatedExercises } = exercises;
+    supersets[ref.superset].exercises = updatedExercises;
+
+    await this.trainingRepository.updateDoc(training.id, {
+      [`components.${ref.componentId}.supersets`]: supersets,
+    });
+
+    // TODO - keep user data for users that already completed the exercise
+
+    return {
+      ...training,
+      components: {
+        ...training.components,
+        [ref.componentId]: {
+          ...training.components[ref.componentId],
+          supersets,
+        },
+      },
+    };
+  }
+
+  map(training: Training): MappedTraining {
+    return {
+      ...training,
+      components: Object.entries(training.components).map(
+        ([componentId, component]) => ({
+          id: componentId,
+          color: component.color,
+          order: component.order,
+          supersets: component.supersets?.map((superset, i) => ({
+            color: superset.color,
+            order: i,
+            componentId,
+            exercises: Object.entries(superset.exercises).map(
+              ([id, exercise]) => ({
+                id,
+                componentId,
+                supersetId: i.toString(),
+                order: exercise.order,
+                color: exercise.color,
+                meta: exercise.meta,
+              }),
+            ),
+          })),
+        }),
+      ),
+    };
   }
 
   private async addMembers(
@@ -353,7 +947,7 @@ export class TrainingService {
         // add exercise data for new members
         await Promise.all(
           membersIds.map(async (memberId) => {
-            await this.trainingExerciseUserDataService.createByTraining(
+            await this.trainingWorkloadService.createByTraining(
               { trainingId },
               { memberId },
               options,
@@ -385,7 +979,11 @@ export class TrainingService {
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
 
     if (filter.groupId)
-      query = query.where('groupId', '==', filter.groupId.value);
+      query = query.where(
+        'groupId',
+        filter.groupId?.op || '==',
+        filter.groupId.value,
+      );
 
     if (filter.cycleId)
       query = query.where('cycleId', '==', filter.cycleId.value);
@@ -447,80 +1045,6 @@ export class TrainingService {
       .offset((page - 1) * pageSize);
   }
 
-  private async populate(
-    ref: Required<TrainingRef>,
-    training: Training,
-    populate: Populate<Training>[],
-  ) {
-    if (populate.includes('components')) {
-      training.components = await this.trainingComponentRepository.getDocs(ref);
-
-      if (populate.includes('components.component')) {
-        await Promise.all(
-          training.components.map(async (component) => {
-            component.component =
-              await this.componentService.findOneBySlugOrFail(
-                component.componentId,
-              );
-          }),
-        );
-      }
-
-      if (populate.includes('components.supersets')) {
-        await Promise.all(
-          training.components.map(async (component) => {
-            const componentRef = {
-              ...ref,
-              componentId: component.componentId,
-            };
-
-            component.supersets =
-              await this.trainingSupersetRepository.getDocs(componentRef);
-
-            if (populate.includes('components.supersets.exercises'))
-              await Promise.all(
-                component.supersets.map(async (superset) => {
-                  const supersetRef = {
-                    ...ref,
-                    componentId: component.componentId,
-                    supersetId: superset.id,
-                  };
-
-                  superset.exercises =
-                    await this.trainingExerciseRepository.getDocs(supersetRef);
-
-                  if (
-                    populate.includes('components.supersets.exercises.exercise')
-                  )
-                    await Promise.all(
-                      superset.exercises.map(async (exercise) => {
-                        exercise.exercise = await this.exerciseService.findOne({
-                          ...ref,
-                          exerciseId: exercise.exerciseId,
-                        });
-                      }),
-                    );
-
-                  if (
-                    populate.includes('components.supersets.exercises.data')
-                  ) {
-                    // TODO: populate exercise data
-                  }
-                }),
-              );
-          }),
-        );
-      }
-    }
-
-    if (populate.includes('subgroup') && training.subgroupId)
-      training.subgroup = await this.subgroupService.findOne({
-        ...ref,
-        groupId: training.groupId,
-        subgroupId: training.subgroupId,
-      });
-  }
-
   private async validateSubgroup(ref: Required<SubgroupRef>): Promise<void> {
     if (ref.subgroupId) {
       const subgroup = await this.subgroupService.findOne({
@@ -532,18 +1056,37 @@ export class TrainingService {
     }
   }
 
-  private async validateTrainer(user: User): Promise<void> {
+  private isAuthorized(user: User, training: Training): boolean {
+    return (
+      training.ownerId === user.uid || training.membersIds.includes(user.uid)
+    );
+  }
+
+  private validateTime(from: Date, to: Date) {
+    if (this.commonService.date.isAfter(from, to))
+      throw new BadRequestException('Invalid training time');
+  }
+
+  private validateTrainer(user: User) {
     if (!this.firebaseService.isTrainer(user))
       throw new UnauthorizedException(
         'You are not authorized to perform this action',
       );
   }
 
-  private async validateOwner(userId: string, group: Group): Promise<void> {
+  private validateOwner(userId: string, group: Group) {
     if (!this.groupService.isOwner(userId, group))
       throw new UnauthorizedException(
         'You are not authorized to perform this action',
       );
+  }
+
+  private validateComponents(componentsIds: string[], components: Component[]) {
+    for (const componentId of componentsIds) {
+      const component = components.find((c) => c.id === componentId);
+      if (component.parent)
+        throw new BadRequestException(`Component ${component.id} is not root`);
+    }
   }
 
   private async validateOverlap(
@@ -558,31 +1101,35 @@ export class TrainingService {
 
     const isOverlap = trainings
       .filter((training) => training.id !== trainingId)
-      .some((training) => {
-        if (isBefore(from, training.from) && isAfter(to, training.to))
-          return true;
-        if (isAfter(from, training.from) && isBefore(to, training.to))
-          return true;
-        if (isBefore(from, training.to) && isAfter(to, training.from))
-          return true;
-        if (isAfter(from, training.from) && isBefore(to, training.to))
-          return true;
-        // else
-        return false;
-      });
+      .some(
+        (training) =>
+          (isBefore(from, training.from) && isAfter(to, training.to)) ||
+          (isAfter(from, training.from) && isBefore(to, training.to)) ||
+          (isBefore(from, training.to) && isAfter(to, training.from)) ||
+          (isAfter(from, training.from) && isBefore(to, training.to)),
+      );
 
     if (isOverlap)
       throw new BadRequestException('Training overlaps with other training');
   }
 
-  private validateTime(from: Date, to: Date) {
-    if (from >= to) throw new BadRequestException('Invalid training time');
-  }
+  private async validateTrainingExercises(
+    ref: Required<TrainingComponentRef>,
+    exerciseIds: string[],
+    user: User,
+  ): Promise<void> {
+    if (!exerciseIds.length) return;
 
-  private isAuthorized(user: User, training: Training): boolean {
-    return (
-      training.ownerId === user.uid || training.membersIds.includes(user.uid)
+    const exercises = await this.exerciseService.findAll(user, {
+      filter: { ids: exerciseIds },
+    });
+
+    const { error, message } = await this.exerciseService.validateExercises(
+      ref.componentId,
+      exercises,
     );
+
+    if (error) throw new BadRequestException(message);
   }
 
   private validateAvailableMembersIds(

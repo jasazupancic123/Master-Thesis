@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   CollectionGroup,
@@ -9,15 +9,25 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
+import {
+  GroupRef,
+  RootFirestoreCollectionRepository,
+} from '../../common/type/firebase-firestore.type';
 import { Group } from '../entity/group.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
+import { Cycle } from '../entity/cycle.entity';
+import { FieldValue } from '@google-cloud/firestore';
+import { CommonService } from 'src/common/service/common.service';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class GroupRepository
   implements RootFirestoreCollectionRepository<Group>
 {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly commonService: CommonService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -40,11 +50,30 @@ export class GroupRepository
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       deletedAt: null,
+      cycles: input.cycles ?? [],
     });
 
     // add group id to the document for querying by collection group
     await result.update({ id: result.id });
     return result.id;
+  }
+
+  async addCycle(id: string, input: Partial<Cycle>) {
+    const cycleId = v4();
+    await this.doc(id).update({
+      cycles: FieldValue.arrayUnion({
+        id: cycleId,
+        name: input.name,
+        description: input.description || null,
+        from: Timestamp.fromDate(input.from),
+        to: Timestamp.fromDate(input.to),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        deletedAt: null,
+      }),
+    });
+
+    return cycleId;
   }
 
   async updateDoc(id: string, input: Partial<Group>) {
@@ -54,8 +83,100 @@ export class GroupRepository
     });
   }
 
+  async updateCycle(id: string, cycleId: string, input: Partial<Cycle>) {
+    // https://www.reddit.com/r/Firebase/comments/15xeiac/how_to_update_an_item_in_an_array_with_firebase/ :/
+    const ref = this.doc(id);
+
+    try {
+      await this.firebaseService.firestore.runTransaction(
+        async (transaction) => {
+          const doc = await transaction.get(ref);
+          if (!doc.exists)
+            throw new BadRequestException('Group does not exist');
+
+          const group = doc.data() as Group;
+          const cycle = group.cycles.find((cycle) => cycle.id === cycleId);
+          if (!cycle) throw new BadRequestException('Cycle does not exist');
+
+          const updatedCycle = {
+            ...cycle,
+            ...(input.name && { name: input.name }),
+            ...(input.description && { description: input.description }),
+            ...(input.from && { from: Timestamp.fromDate(input.from) }),
+            ...(input.to && { to: Timestamp.fromDate(input.to) }),
+          };
+
+          transaction.update(ref, {
+            ...group,
+            updatedAt: Timestamp.now(),
+            cycles: [
+              ...group.cycles.filter((c) => c.id !== cycle.id),
+              updatedCycle,
+            ],
+          });
+        },
+      );
+    } catch (e) {
+      console.error('updateCycle transaction failed:', e);
+    }
+  }
+
   async deleteDoc(id: string) {
-    await this.doc(id).update({ deletedAt: Timestamp.now() });
+    const ref = this.doc(id);
+
+    try {
+      await this.firebaseService.firestore.runTransaction(
+        async (transaction) => {
+          const doc = await transaction.get(ref);
+          if (!doc.exists)
+            throw new BadRequestException('Document does not exist');
+
+          const group = doc.data() as Group;
+
+          // delete all cycles
+          const updatedCycles = [];
+          /* const updatedCycles = group.cycles.map((cycle) => ({
+            ...cycle,
+            deletedAt: Timestamp.now(),
+          })); */
+
+          // delete group
+          transaction.update(ref, {
+            deletedAt: Timestamp.now(),
+            cycles: updatedCycles,
+          });
+        },
+      );
+    } catch (e) {
+      console.error('deleteDoc transaction failed:', e);
+    }
+  }
+
+  async deleteCycle(id: string, cycleId: string) {
+    const ref = this.doc(id);
+
+    try {
+      await this.firebaseService.firestore.runTransaction(
+        async (transaction) => {
+          const doc = await transaction.get(ref);
+          if (!doc.exists)
+            throw new BadRequestException('Group does not exist');
+
+          const group = doc.data() as Group;
+          const cycle = group.cycles.find((cycle) => cycle.id === cycleId);
+          if (!cycle) throw new BadRequestException('Cycle does not exist');
+
+          transaction.update(ref, {
+            ...group,
+            updatedAt: Timestamp.now(),
+            cycles: group.cycles.filter((c) => c.id !== cycle.id),
+            // cycles: [...group.cycles, { ...cycle, deletedAt: Timestamp.now() }],
+          });
+        },
+      );
+    } catch (e) {
+      console.error('deleteCycle transaction failed:', e);
+    }
   }
 
   doc(id: string): DocumentReference {
@@ -79,12 +200,23 @@ export class GroupRepository
       id: snapshot.id,
       name: data.name,
       ownerId: data.ownerId,
-      owner: null,
       membersIds: data.membersIds,
       availableMembersIds: [],
       members: [],
       subgroups: [],
-      cycles: [],
+      cycles: (data.cycles ?? []).map((cycle: any) => ({
+        id: cycle.id,
+        name: cycle.name,
+        description: cycle.description || null,
+        from: (cycle.from as Timestamp).toDate(),
+        to: (cycle.to as Timestamp).toDate(),
+        createdAt: (cycle.createdAt as Timestamp).toDate(),
+        updatedAt: (cycle.updatedAt as Timestamp).toDate(),
+        weeks: this.commonService.date.weeks(
+          cycle.from.toDate(),
+          cycle.to.toDate(),
+        ),
+      })),
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
       deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,

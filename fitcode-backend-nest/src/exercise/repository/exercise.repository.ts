@@ -44,6 +44,7 @@ export class ExerciseRepository
       global: input.global ?? false,
       imageUrl: input.imageUrl ?? null,
       videoUrl: input.videoUrl ?? null,
+      values: !input.values?.length ? [] : input.values,
     });
 
     return result.id;
@@ -68,12 +69,6 @@ export class ExerciseRepository
     );
   }
 
-  attributeValuesCollectionGroup(): CollectionGroup {
-    return this.firebaseService.firestore.collectionGroup(
-      FirestoreCollection.EXERCISE_ATTRIBUTE_VALUE,
-    );
-  }
-
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Exercise {
     const data = snapshot.data();
 
@@ -85,6 +80,20 @@ export class ExerciseRepository
       global: data.global ?? false,
       imageUrl: data.imageUrl ?? null,
       videoUrl: data.videoUrl ?? null,
+      values: data.values ?? [],
+      attributeValues: this.attributesToObject(data as Exercise),
     } as Exercise;
+  }
+
+  /**
+   * Convert exercise's attribute values to nested object for frontend.
+   */
+  private attributesToObject(exercise: Exercise): Record<string, any> {
+    // convert found attributes and attribute values to nested object for frontend
+    const nested: Record<string, any> = {};
+    for (const { attributeId, value } of exercise.values)
+      nested[attributeId] = value;
+
+    return nested;
   }
 }

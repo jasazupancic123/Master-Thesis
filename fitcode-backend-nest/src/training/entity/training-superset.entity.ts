@@ -2,6 +2,7 @@ import { IdEntity } from '../../common/entity/id.entity';
 import {
   IsInt,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
   Min,
@@ -12,29 +13,25 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TrainingExercise } from './training-exercise.entity';
 import { TrainingComponent } from './training-component.entity';
 
-export class TrainingSuperset extends IdEntity {
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  componentId: string; // training component id
-  component?: TrainingComponent;
-
+export class TrainingSuperset {
   @IsInt()
+  @IsOptional()
   @Min(0)
-  @ApiProperty()
+  @ApiPropertyOptional()
   @Expose()
-  order: number;
+  order?: number;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
+  @IsNotEmpty()
   @ApiPropertyOptional()
   @Expose()
   color?: string;
 
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExercise)
+  @IsObject()
   @ApiProperty()
   @Expose()
-  exercises: TrainingExercise[];
+  exercises: {
+    [exerciseId: string]: TrainingExercise;
+  };
 }

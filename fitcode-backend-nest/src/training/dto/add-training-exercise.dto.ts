@@ -6,7 +6,7 @@ import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AddTrainingExerciseDto
-  extends PickType(TrainingExercise, ['exerciseId', 'meta', 'color'])
+  extends PickType(TrainingExercise, ['id', 'meta', 'color'])
   implements Omit<CreateTrainingExercise, 'membersIds'> {}
 
 export class AddTrainingExercisesDto {

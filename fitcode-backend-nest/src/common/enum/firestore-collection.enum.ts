@@ -9,16 +9,11 @@ export enum FirestoreCollection {
 
   // exercise hierarchy
   EXERCISE = 'exercises',
-  EXERCISE_ATTRIBUTE_VALUE = 'values',
 
   // user hierarchy
-  WELLNESS = 'wellness',
+  USER_META = 'user-meta',
   GROUP = 'groups',
   SUBGROUP = 'subgroups',
-  CYCLE = 'cycles',
   TRAINING = 'trainings',
-  TRAINING_COMPONENT = 'training-components',
-  TRAINING_SUPERSET = 'training-supersets',
-  TRAINING_EXERCISE = 'training-exercises',
-  TRAINING_EXERCISE_USER_DATA = 'user-data',
+  TRAINING_WORKLOAD = 'training-workload',
 }

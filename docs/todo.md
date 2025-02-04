@@ -7,38 +7,52 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 
 ## 📑 List
 
-| Type | Title                                                                                                         | Status      |
-| ---- | ------------------------------------------------------------------------------------------------------------- | ----------- |
-| Docs | [Database Queries](#database-queries)                                                                         | Not Started |
-| Fix  | [Stale Trainings (Trainer View)](#stale-trainings-trainer-view)                                               | Not Started |
-| Fix  | [Exercise Image And Video](#exercise-image-and-video)                                                         | Not Started |
-| Fix  | [Join Custom And Global Exercises](#join-custom-and-global-exercises)                                         | Not Started |
-| Feat | [Filter Exercises By Custom Attributes](#filter-exercises-by-custom-attributes)                               | Not Started |
-| Feat | [Methodologies](#methodologies)                                                                               | Not Started |
-| Feat | [Athlete Calendar](#athlete-calendar)                                                                         | Not Started |
-| Feat | [Athlete Progress Visualization](#athlete-progress-visualization)                                             | Not Started |
-| Feat | [Increasing Training Loads](#increasing-training-loads)                                                       | Not Started |
-| Feat | [Delete Group](#delete-group)                                                                                 | Not Started |
-| Feat | [Admin View](#admin-view)                                                                                     | Not Started |
-| Feat | [Methodology Tags](#methodology-tags)                                                                         | Not Started |
-| Feat | [Generated Training Plan Based On Sport And Fit Level](#generated-training-plan-based-on-sport-and-fit-level) | Not Started |
-| Feat | [Components CRUD](#components-crud)                                                                           | Not Started |
-| Feat | [Production Branch](#production-branch)                                                                       | Not Started |
-| Feat | [Subscriptions](#subscriptions)                                                                               | Not Started |
-| Feat | [Undo Button](#undo-button)                                                                                   | Not Started |
-| Feat | [Manager Role](#manager-role)                                                                                 | Not Started |
-| Test | [Testing](#testing)                                                                                           | Not Started |
-| Feat | [Fitness Role](#fitness-role)                                                                                 | Not Started |
+| Type | Title                                                                                                                                                                      | Status      |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Docs | [Database Queries](#database-queries)                                                                                                                                      | Not Started |
+| Docs | [Firebase Storage Pricing per video bandwidth per day](#firebase-storage-pricing-per-video-bandwidth-per-day)                                                              | Not Started |
+| Fix  | [Refresh Firebase Token](#refresh-firebase-token)                                                                                                                          | Not Started |
+| Fix  | [(FE) Fetch all trainings for cycle and filter on FE]()                                                                                                                    | Not Started |
+| Fix  | [(BE) When updating training workload data for users (example increasing sets by 1, keep all old set data for all users and just extend new set, don't change old sets)]() | Not Started |
+| Feat | [Component And Training Icons](#asd)                                                                                                                                       | Not Started |
+| Feat | [Generate training PDF](#asd)                                                                                                                                              | Not Started |
+| Feat | [Firebase Read, Write, Delete Counter (Backend)]()                                                                                                                         | Not Started |
+| Feat | [Filter Exercises By Custom Attributes](#filter-exercises-by-custom-attributes)                                                                                            | Not Started |
+| Feat | [Methodologies](#methodologies)                                                                                                                                            | Not Started |
+| Feat | [Athlete Calendar](#athlete-calendar)                                                                                                                                      | Not Started |
+| Feat | [Athlete Progress Visualization](#athlete-progress-visualization)                                                                                                          | Not Started |
+| Feat | [Increasing Training Loads](#increasing-training-loads)                                                                                                                    | Not Started |
+| Feat | [Delete Group](#delete-group)                                                                                                                                              | Not Started |
+| Feat | [Admin View](#admin-view)                                                                                                                                                  | Not Started |
+| Feat | [Methodology Tags](#methodology-tags)                                                                                                                                      | Not Started |
+| Feat | [Generated Training Plan Based On Sport And Fit Level](#generated-training-plan-based-on-sport-and-fit-level)                                                              | Not Started |
+| Feat | [Components CRUD](#components-crud)                                                                                                                                        | Not Started |
+| Feat | [Production Branch](#production-branch)                                                                                                                                    | Not Started |
+| Feat | [Subscriptions](#subscriptions)                                                                                                                                            | Not Started |
+| Feat | [Undo Button](#undo-button)                                                                                                                                                | Not Started |
+| Feat | [Manager Role](#manager-role)                                                                                                                                              | Not Started |
+| Test | [Testing](#testing)                                                                                                                                                        | Not Started |
+| Feat | [Fitness Role](#fitness-role)                                                                                                                                              | Not Started |
 
 ---
 
 ## 📝 Docs
 
-**Description**: Write all possible cases of queries for each user role into a document.
+### Database Queries
+
+**Description**: Write all possible cases of queries for each user role into a document. Also update queries so that they will be batched, transactions will be used and there will be less total calls to the database for performance.
+
+### Firebase Storage Pricing per video bandwidth per day
+
+**Description**: Informational
 
 ---
 
 ## 🛠️ Features
+
+### Firestore Read, Write, Delete Counter (Backend)
+
+**Description**: Implement FirestoreCounter global module and service and update it in every repository when queries are made and analyze query usage.
 
 ### Filter Exercises By Custom Attributes
 
@@ -129,6 +143,60 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 
 ## 🐛 Bugs
 
+### Save Training Ids (Athlete View)
+
+**Description**: Save `trainingIds` to `users` collection for each athlete to make querying trainings for calendar easier.
+
+- Idea (https://stackoverflow.com/a/62626994):
+
+```json
+Training {
+    "id": "1st-training-uid",
+    "groupId": "uid",
+    "cycleId": "uid",
+    "memberIds": [3],
+    "from": "date",
+    "to": "date",
+    "trainingComponents": {
+        "strength": {
+            "order": 1,
+            "color": "",
+            // no need for training id and componentId
+            "supersets": {
+                "1": {
+                    "color": "",
+                    "exercises": { // training exercises
+                        "squat-uid": {
+                            "order": 1,
+                            "color": "",
+                            "meta": {
+                                "sets": 3,
+                                "reps": 12,
+                            },
+                        }
+                    }
+                }
+            }
+        },
+        "speed": {
+            // ...
+        }
+    }
+}
+
+Group {
+    "id": "...",
+    "cycles": [],
+    "memberIds": [20]
+}
+
+// allows query trainingComponents.strength.supersets.1.exercises.squat-id
+```
+
+### Refresh Firebase Token
+
+**Description**: After 1 hour, access token on frontend for Firebase auth expires, refresh token must be used.
+
 ### Stale Trainings (Trainer View)
 
 **Description**: Trainings' state is not correctly updated when switching between daily, weekly, cycle and yearly view.
@@ -137,14 +205,6 @@ This document tracks all features to be implemented and bugs to be fixed in the 
 
 - [ ] Correctly update state
 - [ ] Check if there are too many queries and if they can be combined in backend (for example, now we manually fetch cycle and then manually fetch all its trainings, maybe it would be more efficient to return it all from backend in one query)
-
-### Exercise Image And Video
-
-**Description**: Upload exercise image or video and keep video background playing for exercise card.
-
-### Join Custom And Global Exercises
-
-**Description**: Join custom and global exercises in backend in plain JS, since there is no `OR` query in Firestore.
 
 ---
 

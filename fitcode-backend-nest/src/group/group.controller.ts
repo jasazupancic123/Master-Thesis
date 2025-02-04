@@ -16,7 +16,6 @@ import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddCycleDto } from './dto/add-cycle.dto';
 import { AddSubgroupDto } from './dto/add-subgroup.dto';
-import { CycleService } from './service/cycle.service';
 import { SubgroupService } from './service/subgroup.service';
 import { UpdateSubgroupDto } from './dto/update-subgroup.dto';
 import { UpdateCycleDto } from './dto/update-cycle.dto';
@@ -28,7 +27,6 @@ import { endOfDay, startOfDay } from 'date-fns';
 export class GroupController {
   constructor(
     private readonly groupService: GroupService,
-    private readonly cycleService: CycleService,
     private readonly subgroupService: SubgroupService,
   ) {}
 
@@ -83,47 +81,15 @@ export class GroupController {
     return await this.groupService.update(ref, body, { user });
   }
 
-  @Get(':groupId/cycle')
-  @Auth()
-  async findAllCycles(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-  ) {
-    const ref = { groupId };
-    return await this.cycleService.findAll(ref, { user });
-  }
-
   @Post(':groupId/cycle')
   @Auth()
   async addCycle(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Body() data: AddCycleDto,
+    @Body() input: AddCycleDto,
   ) {
     const ref = { groupId };
-    const group = await this.groupService.findOneOrFail(ref, { user });
-    return await this.cycleService.create(
-      ref,
-      {
-        ...data,
-        groupId,
-        ownerId: group.ownerId,
-        membersIds: group.membersIds,
-      },
-      { user },
-    );
-  }
-
-  @Get(':groupId/cycle/active')
-  @Auth()
-  async findActiveCycle(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-  ) {
-    const ref = { groupId };
-    return await this.cycleService.findActiveCycleByGroup(ref, new Date(), {
-      user,
-    });
+    return await this.groupService.addCycle(ref, user, input);
   }
 
   @Patch(':groupId/cycle/:cycleId')
@@ -132,10 +98,10 @@ export class GroupController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
-    @Body() body: UpdateCycleDto,
+    @Body() input: UpdateCycleDto,
   ) {
     const ref = { groupId, cycleId };
-    return await this.cycleService.update(ref, body, { user });
+    return await this.groupService.updateCycle(ref, user, cycleId, input);
   }
 
   @Delete(':groupId/cycle/:cycleId')
@@ -146,7 +112,7 @@ export class GroupController {
     @Param('cycleId') cycleId: string,
   ) {
     const ref = { groupId, cycleId };
-    await this.cycleService.remove(ref, { user });
+    await this.groupService.deleteCycle(ref, user);
     return { message: 'Cycle deleted successfully' };
   }
 
