@@ -25,9 +25,6 @@ export interface FirebaseClientOptions {
 export function getFirebaseClient(
   options: FirebaseClientOptions,
 ): FirebaseClient {
-  const logger = new Logger(getFirebaseClient.name);
-  logger.debug('Initializing Firebase Admin SDK');
-
   const apps = getApps();
   const config = {
     credential: admin.credential.cert(options.credential),

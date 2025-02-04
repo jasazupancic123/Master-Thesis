@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
 import { ExerciseAttribute } from '../entity/exercise-attribute.entity';
 import { CommonService } from '../../common/service/common.service';
@@ -16,6 +16,8 @@ import { FirestoreCollection } from '../../common/enum/firestore-collection.enum
 export class ExerciseAttributeRepository
   implements RootFirestoreCollectionRepository<ExerciseAttribute>
 {
+  private logger = new Logger(ExerciseAttributeRepository.name);
+
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
@@ -25,6 +27,7 @@ export class ExerciseAttributeRepository
     query: (query: Query) => Query = (query) => query,
   ): Promise<ExerciseAttribute[]> {
     const snapshot = await query(this.collection()).get();
+    this.logger.debug(`Read ${snapshot.docs.length} docs`);
     return snapshot.docs.map((doc) => this.serialize(doc));
   }
 

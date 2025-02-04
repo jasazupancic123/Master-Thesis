@@ -48,9 +48,13 @@ export function GroupSettings(props: GroupPageProps) {
     if (!group) return;
 
     try {
-      const response = await GroupController.updateGroup(token, group.id, { name });
+      const response = await GroupController.updateGroup(token, group.id, {
+        name,
+      });
       props.setSelected({ ...props.selected, group: response });
-      props.groups.setData(groups => (groups || []).map(g => g.id === response.id ? response : g));
+      props.groups.setData((groups) =>
+        (groups || []).map((g) => (g.id === response.id ? response : g))
+      );
     } catch (e: any) {
       toast.error(e.message || 'Failed to update group name');
     }
@@ -60,7 +64,7 @@ export function GroupSettings(props: GroupPageProps) {
     if (!group) return;
     try {
       const response = await GroupController.updateGroup(token, group.id, {
-        membersIds: group.membersIds.filter(id => id !== memberId),
+        membersIds: group.membersIds.filter((id) => id !== memberId),
       });
 
       props.setSelected({ ...props.selected, group: response });
@@ -112,14 +116,19 @@ export function GroupSettings(props: GroupPageProps) {
       };
 
       if (Object.keys(body).length === 0) return;
-      const updated = await GroupController.updateCycle(token, group.id, cycle.id, body);
+      const updated = await GroupController.updateCycle(
+        token,
+        group.id,
+        cycle.id,
+        body
+      );
 
       props.setSelected({
         ...props.selected,
         ...(cycle.id === props.selected.cycle?.id && { cycle: updated }),
         group: {
           ...group,
-          cycles: group.cycles.map(c => c.id === cycle.id ? updated : c),
+          cycles: group.cycles.map((c) => (c.id === cycle.id ? updated : c)),
         },
       });
 
@@ -146,7 +155,7 @@ export function GroupSettings(props: GroupPageProps) {
         ...(props.selected.cycle?.id === cycleId && { cycle: null }),
         group: {
           ...group,
-          cycles: group.cycles.filter(cycle => cycle.id !== cycleId),
+          cycles: group.cycles.filter((cycle) => cycle.id !== cycleId),
         },
       });
     } catch (e: any) {
@@ -154,25 +163,36 @@ export function GroupSettings(props: GroupPageProps) {
     }
   }
 
-  async function removeSubgroupMember(subgroupId: string, subgroupMembers: string[], memberId: string) {
+  async function removeSubgroupMember(
+    subgroupId: string,
+    subgroupMembers: string[],
+    memberId: string
+  ) {
     if (!group) return;
 
     try {
-      const response = await GroupController.updateSubgroup(token, group.id, subgroupId, {
-        membersIds: subgroupMembers.filter(id => id !== memberId),
-      });
+      const response = await GroupController.updateSubgroup(
+        token,
+        group.id,
+        subgroupId,
+        {
+          membersIds: subgroupMembers.filter((id) => id !== memberId),
+        }
+      );
 
-      props.setSelected(prev => ({
+      props.setSelected((prev) => ({
         ...prev,
         group: {
           ...prev.group!,
           availableMembersIds: [...prev.group!.availableMembersIds!, memberId],
-          subgroups: prev.group!.subgroups?.map(subgroup => subgroup.id === subgroupId ? response : subgroup),
+          subgroups: prev.group!.subgroups?.map((subgroup) =>
+            subgroup.id === subgroupId ? response : subgroup
+          ),
         },
       }));
 
       if (props.selected.subgroup?.id === subgroupId)
-        props.setSelected(prev => ({
+        props.setSelected((prev) => ({
           ...prev,
           subgroup: response,
         }));
@@ -194,8 +214,13 @@ export function GroupSettings(props: GroupPageProps) {
         ...props.selected,
         group: {
           ...group,
-          availableMembersIds: [...group.availableMembersIds!, ...subgroupMembers],
-          subgroups: group.subgroups?.filter(subgroup => subgroup.id !== subgroupId),
+          availableMembersIds: [
+            ...group.availableMembersIds!,
+            ...subgroupMembers,
+          ],
+          subgroups: group.subgroups?.filter(
+            (subgroup) => subgroup.id !== subgroupId
+          ),
         },
       });
     } catch (e: any) {

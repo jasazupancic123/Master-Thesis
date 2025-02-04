@@ -4,7 +4,7 @@ import { useFetch } from '@/hook/use-fetch';
 import type { User } from '@/user/type/user.type';
 import { UserRole } from '@/user/enum/user-role.enum';
 import withAuth from '@/common/components/with-auth';
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/context/auth-provider';
 import type { Group } from '@/group/entity/group.entity';
 import type { Cycle } from '@/group/entity/cycle.entity';
@@ -22,12 +22,19 @@ import { TrainingController } from '@/training/training.controller';
 import AthletePageRouter from '@/app/groups/components/athlete-page-router';
 import { useRouter } from 'next/navigation';
 import { LINK_GROUPS } from '@/common/constant/navigation.constant';
+import { Exercise } from '@/exercise/entity/exercise.entity';
+import { ExerciseController } from '@/exercise/exercise.controller';
+import { TrainingService } from '@/training/training.service';
 
 function Page() {
   // context
   const { role } = useAuth();
-  const { token } = useAppContext();
   const router = useRouter();
+  const { token, components } = useAppContext();
+  const allExercises = useFetch<Exercise[]>(
+    ExerciseController.URL.exercises(),
+    { authorization: true }
+  );
 
   // state
   const [loading, setLoading] = useState(false);
@@ -142,7 +149,7 @@ function Page() {
     }
 
     setDate({ ...date, start, end });
-  }, [filter, selected.cycle?.id, props.selected.cycle?.id]);
+  }, [filter, selected.cycle?.id]);
 
   /**
    * Filter trainings and subgroups
@@ -155,13 +162,20 @@ function Page() {
       setLoading(true);
 
       try {
-        const response = await TrainingController.findTrainings(token, {
+        let response = await TrainingController.findTrainings(token, {
           groupId: group!.id,
           cycleId: cycle!.id,
           subgroupId: subgroup?.id || null,
           from: date.start.toDate(),
           to: date.end.toDate(),
         });
+
+        response = response.map((training) =>
+          TrainingService.map(training, {
+            components: components.flat,
+            exercises: allExercises.data!,
+          })
+        );
 
         setSelected((prev) => ({
           ...prev,

@@ -3,10 +3,10 @@ import { TrainingExerciseMeta } from '@/training/entity/training-exercise-meta.e
 import { TrainingExerciseUserData } from '@/training/entity/training-exercise-user-data.entity';
 
 export type TrainingExercise = {
-  exerciseId: string;
+  id: string;
   exercise: Exercise | null;
   order: number;
   color: string;
   meta: TrainingExerciseMeta;
   data: TrainingExerciseUserData[];
-}
+};

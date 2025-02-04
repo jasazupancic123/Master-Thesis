@@ -21,7 +21,6 @@ export class Group extends BaseEntity {
   @ApiProperty()
   @Expose()
   ownerId: string; // owner of the group
-  owner: User | null;
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
@@ -30,19 +29,19 @@ export class Group extends BaseEntity {
   membersIds: string[]; // all members of the group
   members: User[] | null;
 
-  availableMembersIds: string[];
-
-  @ValidateNested({ each: true })
-  @Type(() => Subgroup)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  subgroups: Subgroup[];
+  availableMembersIds: string[]; // available members for subgroups
 
   @ValidateNested({ each: true })
   @Type(() => Cycle)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  cycles: Cycle[];
+  cycles: Cycle[]; // array
+
+  @ValidateNested({ each: true })
+  @Type(() => Subgroup)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  subgroups: Subgroup[]; // sub-collection
 }

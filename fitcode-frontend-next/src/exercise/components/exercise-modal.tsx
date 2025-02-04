@@ -71,13 +71,6 @@ export default function ExerciseModal(props: Props) {
       setExistingImageUrl(null);
       setExistingVideoUrl(null);
 
-      if (data.action_type !== 'update') {
-        // if creating a new exercise, no need to fetch urls
-        setVideoState(ContentState.NONE);
-        setImageState(ContentState.NONE);
-        return;
-      }
-
       if (!data.imageUrl && !data.videoUrl) {
         setVideoState(ContentState.NONE);
         setImageState(ContentState.NONE);
@@ -201,11 +194,8 @@ export default function ExerciseModal(props: Props) {
                           }}
                           initialFileUrl={
                             videoState == ContentState.LOADED &&
-                            data.action_type === 'update' &&
                             existingVideoUrl
                               ? existingVideoUrl
-                              : data.action_type === 'update'
-                              ? undefined
                               : data.videoUrl
                           }
                         />
@@ -262,11 +252,8 @@ export default function ExerciseModal(props: Props) {
                           }}
                           initialFileUrl={
                             imageState == ContentState.LOADED &&
-                            data.action_type === 'update' &&
                             existingImageUrl
                               ? existingImageUrl
-                              : data.action_type === 'update'
-                              ? undefined
                               : data.imageUrl
                           }
                         />
