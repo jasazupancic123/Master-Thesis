@@ -10,6 +10,8 @@ import {
 import {
   FirestoreCollectionRepository,
   TrainingExerciseRef,
+  TrainingRef,
+  TrainingWorkloadExerciseRef,
   TrainingWorkloadRef,
 } from '../../common/type/firebase-firestore.type';
 import { SetData, TrainingWorkload } from '../entity/training-workload.entity';
@@ -23,8 +25,7 @@ import { TrainingRepository } from './training.repository';
 
 @Injectable()
 export class TrainingWorkloadRepository
-  implements
-    FirestoreCollectionRepository<TrainingWorkload, TrainingWorkloadRef>
+  implements FirestoreCollectionRepository<TrainingWorkload, TrainingRef>
 {
   constructor(
     private readonly commonService: CommonService,
@@ -34,7 +35,7 @@ export class TrainingWorkloadRepository
   ) {}
 
   async getDocs(
-    ref: Required<TrainingExerciseRef>,
+    ref: Required<TrainingRef>,
     query: (ref: Query) => Query = (ref) => ref,
   ): Promise<TrainingWorkload[]> {
     const snapshot = await query(this.collection(ref)).get();
@@ -52,8 +53,8 @@ export class TrainingWorkloadRepository
   async addDoc(ref: Required<TrainingWorkloadRef>, data: TrainingWorkload) {
     await this.doc(ref).set({
       userId: ref.userId,
-      workloadValue: data.workloadValue || null,
-      sets: data.sets || [],
+      trainingId: data.trainingId,
+      exercises: data.exercises,
     });
 
     return ref.userId;
@@ -74,7 +75,7 @@ export class TrainingWorkloadRepository
     return this.collection(ref).doc(ref.userId);
   }
 
-  collection(ref: Required<TrainingExerciseRef>): CollectionReference {
+  collection(ref: Required<TrainingRef>): CollectionReference {
     return this.trainingRepository
       .doc(ref.trainingId)
       .collection(FirestoreCollection.TRAINING_WORKLOAD);
@@ -88,12 +89,7 @@ export class TrainingWorkloadRepository
     return {
       userId: snapshot.id,
       trainingId: data.trainingId,
-      componentId: data.componentId,
-      superset: data.superset,
-      exerciseId: data.exerciseId,
-      workloadType: data.workloadType,
-      workloadValue: data.workloadValue,
-      sets: data.sets || [],
+      exercises: data.exercises || {},
     };
   }
 }

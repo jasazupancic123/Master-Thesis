@@ -1,3 +1,4 @@
+import { TrainingComponent } from '../entity/training-component.entity';
 import { Training } from '../entity/training.entity';
 import { Dayjs } from 'dayjs';
 
@@ -8,10 +9,11 @@ export type FilterTrainingQuery = Partial<
 export type CreateTraining = {
   groupId: string;
   cycleId: string;
-  componentIds: string[];
   from: Dayjs;
   to: Dayjs;
-  subgroupId: string | null;
+  components: {
+    [id: string]: TrainingComponent;
+  };
 };
 
 export type UpdateTraining = Partial<Pick<Training, 'from' | 'to'>>;

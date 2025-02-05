@@ -167,7 +167,7 @@ export class SubgroupService {
       user,
       filter: {
         groupId: { value: ref.groupId },
-        subgroupId: { value: null },
+        // subgroupId: { value: null },
         from: { op: '>=', value: startOfDay(input.from) },
         to: { op: '<=', value: endOfDay(input.to) },
       },
@@ -256,7 +256,7 @@ export class SubgroupService {
       const trainings = await this.trainingService.findAll({
         user,
         filter: {
-          subgroupId: { value: ref.subgroupId },
+          // subgroupId: { value: ref.subgroupId },
         },
       });
 
@@ -283,7 +283,7 @@ export class SubgroupService {
 
     const trainings = await this.trainingService.findAll({
       user,
-      filter: { subgroupId: { value: ref.subgroupId } },
+      // filter: { subgroupId: { value: ref.subgroupId } },
     });
 
     for (const { id: trainingId } of trainings)

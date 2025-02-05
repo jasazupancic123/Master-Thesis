@@ -3,6 +3,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Min,
@@ -19,7 +20,7 @@ export class TrainingWorkload {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  userId: string;
+  userId: string; // document id
 
   @IsString()
   @IsNotEmpty()
@@ -27,24 +28,15 @@ export class TrainingWorkload {
   @Expose()
   trainingId: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsObject()
   @ApiProperty()
   @Expose()
-  componentId: string;
+  exercises: {
+    [exerciseId: string]: Workload;
+  };
+}
 
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  superset: number;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  exerciseId: string;
-
+export class Workload {
   @IsEnum(WorkloadType)
   @ApiProperty()
   @Expose()
@@ -62,12 +54,6 @@ export class TrainingWorkload {
 }
 
 export class SetData {
-  /* @IsInt()
-  @Min(1)
-  @ApiProperty()
-  @Expose()
-  setNumber: number; */
-
   @IsEnum(SetStatus)
   @IsNotEmpty()
   @ApiProperty()

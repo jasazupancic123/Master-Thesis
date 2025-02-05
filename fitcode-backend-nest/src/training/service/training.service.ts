@@ -25,6 +25,7 @@ import { GroupService } from '../../group/service/group.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { TrainingRepository } from '../repository/training.repository';
 import {
+  CycleRef,
   SubgroupRef,
   TrainingComponentRef,
   TrainingExerciseRef,
@@ -56,7 +57,7 @@ import {
 } from '../type/training-exercise.type';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { UserService } from 'src/user/service/user.service';
-import { TrainingWorkload } from '../entity/training-workload.entity';
+import { TrainingWorkload, Workload } from '../entity/training-workload.entity';
 import { UserMeta } from 'src/user/entity/user-meta.entity';
 
 @Injectable()
@@ -111,28 +112,23 @@ export class TrainingService {
     let filter = options?.filter || {};
 
     if (options?.user) {
-      if (this.firebaseService.isTrainer(options.user)) {
-        if (!filter.groupId || !filter.cycleId)
-          throw new BadRequestException('Group ID or cycle ID are missing');
-
+      if (this.firebaseService.isTrainer(options.user))
         filter.ownerId = { value: options.user.uid };
-      }
 
       if (this.firebaseService.isAthlete(options.user)) {
-        const { groupsIds } = await this.userService.findOne(options.user.uid);
+        const user = await this.userService.findOne(options.user.uid);
+        if (user?.groupsIds.length > 0)
+          filter.groupId = { op: 'in', value: user.groupsIds };
+
         filter.membersIds = { value: options.user.uid };
-        filter.groupId = { op: 'in', value: groupsIds };
       }
     }
 
-    let trainings = await this.trainingRepository.getDocs((collection) => {
+    return await this.trainingRepository.getDocs((collection) => {
       let query = this.filter(collection, filter);
-      if (options?.paginate) query = this.paginate(query, options.paginate);
       query = query.where('deletedAt', '==', null).orderBy('from', 'asc');
       return query;
     });
-
-    return trainings;
   }
 
   async create(
@@ -140,46 +136,35 @@ export class TrainingService {
     options: { user: User },
   ): Promise<Training> {
     const { user } = options;
+    const { groupId, cycleId } = input;
     this.logger.log(
       `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
     );
 
-    // find parent references
-    const group = await this.groupService.findOneOrFail(
-      { groupId: input.groupId },
-      { user, populate: ['availableMembersIds'] },
-    );
+    // validate parent references
+    const group = await this.groupService.findOneOrFail({ groupId }, { user });
+    const cycle = group.cycles.find((c) => c.id === cycleId);
+    if (!cycle) throw new BadRequestException('Cycle not found');
 
-    // validate data
-    const components = await this.cacheManagerService.getComponents();
-    this.validateTime(input.from, input.to);
+    // validate trainer and owner
     this.validateTrainer(user);
     this.validateOwner(user.uid, group);
-    this.validateComponents(input.componentIds, components);
-    await this.validateOverlap(group.id, input.from, input.to);
-    await this.validateSubgroup({
-      groupId: group.id,
-      subgroupId: input.subgroupId,
+
+    // validate new trainings time and components
+    const components = await this.cacheManagerService.getComponents();
+    this.validateTime(input.from, input.to);
+    this.validateComponents(Object.keys(input.components), components);
+
+    // check overlap between all other trainings
+    const groupTrainings = await this.findAll({
+      filter: { groupId: { value: groupId } },
     });
 
-    // create training
-    const componentsInput = Object.fromEntries(
-      input.componentIds.map((componentId) => [
-        componentId,
-        {
-          id: componentId,
-          order: 0,
-          supersets: [
-            {
-              order: 0,
-              exercises: {},
-            },
-          ],
-        },
-      ]),
-    );
+    this.validateOverlap(input.from, input.to, groupTrainings);
 
-    const bw = Object.fromEntries(
+    // TODO - validate subgroup
+
+    const meta: { [userId: string]: UserMeta } = Object.fromEntries(
       await Promise.all(
         group.membersIds.map(async (id) => [
           id,
@@ -188,33 +173,30 @@ export class TrainingService {
       ),
     );
 
+    // create training
     const trainingId = await this.trainingRepository.addDoc({
       groupId: group.id,
       ownerId: user.uid,
       cycleId: input.cycleId,
       membersIds: group.membersIds,
-      subgroupId: input.subgroupId || null,
       from: input.from,
       to: input.to,
-      components: componentsInput,
-      meta: bw,
+      components: input.components,
+      meta,
     });
 
     return {
       id: trainingId,
       groupId: group.id,
-      group: group,
       cycleId: input.cycleId,
-      cycle: null,
       ownerId: user.uid,
       membersIds: group.membersIds,
-      subgroupId: input.subgroupId || null,
-      subgroup: null,
       copiedFromId: input.copiedFromId || null,
       from: input.from,
       to: input.to,
-      components: componentsInput,
-      meta: bw,
+      components: input.components,
+      meta,
+      subgroups: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -335,8 +317,16 @@ export class TrainingService {
       const from = input.from || training.from;
       const to = input.to || training.to;
 
+      const groupTrainings = await this.findAll({
+        filter: { groupId: { value: training.groupId } },
+      });
+
       this.validateTime(from, to);
-      await this.validateOverlap(training.groupId, from, to, training.id);
+      this.validateOverlap(
+        from,
+        to,
+        groupTrainings.filter((t) => t.id !== training.id),
+      );
     }
 
     if (input.membersIds) {
@@ -425,14 +415,13 @@ export class TrainingService {
           color: trainingComponent.color || this.commonService.color.random(),
           supersets: trainingComponent.supersets?.length
             ? trainingComponent.supersets.map((superset) => ({
-                order: superset.order,
-                color: superset.color,
                 exercises: superset.exercises,
+                color: superset.color,
               }))
             : [
                 {
-                  color: this.commonService.color.random(),
                   exercises: {},
+                  color: this.commonService.color.random(),
                 },
               ],
         },
@@ -474,9 +463,6 @@ export class TrainingService {
       }),
       ...(input.order && {
         [`components.${ref.componentId}.order`]: input.order,
-      }),
-      ...(input.supersets && {
-        [`components.${ref.componentId}.supersets`]: input.supersets,
       }),
     });
 
@@ -522,7 +508,7 @@ export class TrainingService {
 
   async addSupersets(
     ref: Required<TrainingComponentRef>,
-    input: TrainingSuperset[],
+    input: Omit<TrainingSuperset, 'exercises'>[],
     user: User,
   ): Promise<Training> {
     this.logger.log(
@@ -534,18 +520,13 @@ export class TrainingService {
     if (!Object.keys(training.components).includes(ref.componentId))
       throw new BadRequestException('Training component not found');
 
-    // validate exercises
-    const exerciseIds = input.map((item) => Object.keys(item.exercises)).flat();
-    if (exerciseIds.length)
-      await this.validateTrainingExercises(ref, exerciseIds, user);
-
     // add supersets to component
     const supersets = training.components[ref.componentId].supersets || [];
     const addSupersets = [
       ...supersets,
       ...input.map((item) => ({
         color: item.color,
-        exercises: item.exercises,
+        exercises: {},
       })),
     ];
 
@@ -679,6 +660,15 @@ export class TrainingService {
 
     if (error) throw new BadRequestException(message);
 
+    // check that exercise is not in other supersets
+    if (
+      supersets.some((superset) => {
+        for (const exercise of Object.keys(superset?.exercises || {}))
+          if (exerciseIds.includes(exercise)) return true;
+      })
+    )
+      throw new BadRequestException('Exercise already exists');
+
     // add exercises
     let order = Object.keys(supersets[ref.superset].exercises).length;
     supersets[ref.superset].exercises = {
@@ -696,6 +686,15 @@ export class TrainingService {
     };
 
     // get data for all users (reads must be executed before writes for transactions)
+    const trainingWorkload = (
+      await this.trainingWorkloadService.findAllByTraining({
+        trainingId: training.id,
+      })
+    ).reduce((acc, item) => {
+      acc[item.userId] = item;
+      return acc;
+    }, {});
+
     for (const exerciseId of exerciseIds) {
       // get data for all users
       const allUsersDataRaw = await Promise.all(
@@ -726,11 +725,12 @@ export class TrainingService {
 
           await Promise.all(
             input.map(([id, { meta }]) =>
-              this.trainingWorkloadService.createMany(
+              this.trainingWorkloadService.createByTraining(
                 training,
                 { ...ref, exerciseId: id },
                 { meta },
                 allUsersData,
+                trainingWorkload,
                 transaction,
               ),
             ),
@@ -828,16 +828,27 @@ export class TrainingService {
       {} as Record<string, TrainingWorkload[]>,
     );
 
+    // get data for all users (reads must be executed before writes for transactions)
+    const trainingWorkload = (
+      await this.trainingWorkloadService.findAllByTraining({
+        trainingId: training.id,
+      })
+    ).reduce((acc, item) => {
+      acc[item.userId] = item;
+      return acc;
+    }, {});
+
     await this.firebaseService.firestore.runTransaction(async (transaction) => {
       const docRef = this.trainingRepository.doc(training.id);
 
       // update training workload
       if (input.meta)
-        await this.trainingWorkloadService.updateMany(
+        await this.trainingWorkloadService.updateByTraining(
           training,
           ref,
           { meta: input.meta },
           allUsersData,
+          trainingWorkload,
           transaction,
         );
 
@@ -944,7 +955,7 @@ export class TrainingService {
     await Promise.all(
       trainingIds.map(async (trainingId) => {
         // add exercise data for new members
-        await Promise.all(
+        /* await Promise.all(
           membersIds.map(async (memberId) => {
             await this.trainingWorkloadService.createByTraining(
               { trainingId },
@@ -952,7 +963,7 @@ export class TrainingService {
               options,
             );
           }),
-        );
+        ); */
 
         // update training members
         await this.trainingRepository.updateDoc(trainingId, { membersIds });
@@ -977,14 +988,14 @@ export class TrainingService {
     if (filter.ids?.length)
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
 
-    if (filter.groupId)
+    if (filter.groupId?.value)
       query = query.where(
         'groupId',
         filter.groupId?.op || '==',
         filter.groupId.value,
       );
 
-    if (filter.cycleId)
+    if (filter.cycleId?.value)
       query = query.where('cycleId', '==', filter.cycleId.value);
 
     if (filter.ownerId)
@@ -997,12 +1008,12 @@ export class TrainingService {
         filter.membersIds.value,
       );
 
-    if (filter.subgroupId)
+    /* if (filter.subgroupId?.value)
       query = query.where(
         'subgroupId',
         filter.subgroupId.op || '==',
         filter.subgroupId.value,
-      );
+      ); */
 
     if (filter.copiedFromId)
       query = query.where(
@@ -1089,24 +1100,17 @@ export class TrainingService {
   }
 
   private async validateOverlap(
-    groupId: string,
     from: Date,
     to: Date,
-    trainingId?: string, // exclude training with this id
+    trainings: Pick<Training, 'from' | 'to'>[],
   ): Promise<void> {
-    const trainings = await this.findAll({
-      filter: { groupId: { value: groupId } },
-    });
-
-    const isOverlap = trainings
-      .filter((training) => training.id !== trainingId)
-      .some(
-        (training) =>
-          (isBefore(from, training.from) && isAfter(to, training.to)) ||
-          (isAfter(from, training.from) && isBefore(to, training.to)) ||
-          (isBefore(from, training.to) && isAfter(to, training.from)) ||
-          (isAfter(from, training.from) && isBefore(to, training.to)),
-      );
+    const isOverlap = trainings.some(
+      (training) =>
+        (isBefore(from, training.from) && isAfter(to, training.to)) ||
+        (isAfter(from, training.from) && isBefore(to, training.to)) ||
+        (isBefore(from, training.to) && isAfter(to, training.from)) ||
+        (isAfter(from, training.from) && isBefore(to, training.to)),
+    );
 
     if (isOverlap)
       throw new BadRequestException('Training overlaps with other training');

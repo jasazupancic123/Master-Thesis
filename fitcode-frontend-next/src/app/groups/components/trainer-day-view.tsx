@@ -39,7 +39,7 @@ import { GroupController } from '@/group/group.controller';
 import MyModal from '@/common/components/modal';
 import SelectInput from '@/common/components/select-input';
 import { Subgroup } from '@/group/entity/subgroup.entity';
-import { Groups, Update } from '@mui/icons-material';
+import { Groups, Save, Update } from '@mui/icons-material';
 import Warning from '@/common/components/warning';
 import { useFetch } from '@/hook/use-fetch';
 import { ExerciseService } from '@/exercise/exercise.service';
@@ -383,6 +383,15 @@ export default function TrainerDayView(props: GroupPageProps) {
       );
     } catch (e: any) {
       toast.error(e.message || 'Failed to delete exercise');
+    }
+  }
+
+  async function handleSave() {
+    console.log('handle save:', trainings);
+
+    try {
+    } catch (e: any) {
+      console.log(e?.message);
     }
   }
 

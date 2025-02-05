@@ -176,7 +176,7 @@ export class GroupService {
         user,
         filter: {
           groupId: { value: group.id },
-          subgroupId: { value: null },
+          // subgroupId: { value: null },
         },
       });
 

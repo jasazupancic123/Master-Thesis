@@ -54,7 +54,7 @@ export class TrainingController {
           filter: {
             groupId: { value: filter.groupId },
             cycleId: { value: filter.cycleId },
-            subgroupId: { value: filter.subgroupId || null },
+            // subgroupId: { value: filter.subgroupId || null },
             ...(filter.from && { from: { value: filter.from, op: '>=' } }),
             ...(filter.to && { to: { value: filter.to, op: '<=' } }),
           },
@@ -97,12 +97,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Body() body: CreateTrainingDto,
   ) {
-    const { groupId } = body;
-    const training = await this.trainingService.create(
-      { groupId, ownerId: user.uid, ...body },
-      { user },
-    );
-
+    const training = await this.trainingService.create(body, { user });
     return this.trainingService.map(training);
   }
 

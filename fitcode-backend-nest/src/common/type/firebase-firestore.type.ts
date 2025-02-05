@@ -80,9 +80,9 @@ export type TrainingSupersetRef = TrainingComponentRef & {
   superset?: number;
 };
 export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
-export type TrainingWorkloadRef = TrainingExerciseRef & {
-  userId?: string;
-};
+
+export type TrainingWorkloadRef = TrainingRef & { userId?: string };
+export type TrainingWorkloadExerciseRef = TrainingWorkloadRef & ExerciseRef;
 
 // root collections
 export type DatabaseSchema = {
