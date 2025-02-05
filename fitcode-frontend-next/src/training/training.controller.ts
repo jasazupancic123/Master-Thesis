@@ -38,6 +38,8 @@ export class TrainingController {
 
       return `/training${commonService.api.query(query)}`;
     },
+    createTrainings: (groupId: string, cycleId: string) =>
+      `/training/group/${groupId}/cycle/${cycleId}`,
     trainingsByIds: () => `/training/ids`,
     trainingById: (trainingId: string) => `/training/${trainingId}`,
     trainingComponents: (trainingId: string) =>
@@ -96,10 +98,9 @@ export class TrainingController {
     const body = {
       groupId: input.groupId,
       cycleId: input.cycleId,
-      subgroupId: input.subgroupId || null,
       from: dayjs(input.from).toISOString(),
       to: dayjs(input.to).toISOString(),
-      componentIds: input.componentIds,
+      components: input.components,
     };
 
     return await commonService.api.fetch<Training>(this.URL.trainings(), {

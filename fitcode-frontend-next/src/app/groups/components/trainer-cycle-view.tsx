@@ -22,6 +22,9 @@ import TrainingWeek from '@/app/groups/components/training-cycle-view-week';
 import { TrainingController } from '@/training/training.controller';
 import Warning from '@/common/components/warning';
 import { TrainingService } from '@/training/training.service';
+import { Training } from '@/training/entity/training.entity';
+import { Save } from '@mui/icons-material';
+import { TrainingComponent } from '@/training/entity/training-component.entity';
 
 export default function TrainerCycleView(props: GroupPageProps) {
   // context
@@ -81,10 +84,16 @@ export default function TrainerCycleView(props: GroupPageProps) {
       const response = await TrainingController.addTraining(token, {
         groupId: props.selected.group!.id,
         cycleId: props.selected.cycle!.id,
-        subgroupId: props.selected.subgroup?.id || null,
-        componentIds: selected.map((c) => c.id),
         from,
         to,
+        components: selected.reduce((acc, c, i) => {
+          acc[c.id] = {
+            id: c.id,
+            order: i,
+            supersets: [{ exercises: {}, order: 0 }],
+          };
+          return acc;
+        }, {} as Record<string, any>),
       });
 
       if (!response) {
@@ -245,6 +254,38 @@ export default function TrainerCycleView(props: GroupPageProps) {
       toast.error(e.message || 'Failed to delete training');
     }
   }
+
+  /**
+   * Fetch trainings' details
+   */
+  useEffect(() => {
+    async function fetchTrainings() {
+      try {
+        let response = await TrainingController.findTrainings(token, {
+          from: props.date.start.toDate(),
+          to: props.date.end.toDate(),
+        });
+
+        response = response.map((training) =>
+          TrainingService.map(training, {
+            components: components.flat,
+          })
+        );
+
+        props.setSelected((prev) => ({
+          ...prev,
+          cycle: {
+            ...prev.cycle!,
+            trainings: response,
+          },
+        }));
+      } catch (e: any) {
+        toast.error(e.message || 'Failed to fetch trainings');
+      }
+    }
+
+    fetchTrainings().then();
+  }, [token, props.date.start, props.date.end, props.date.custom]);
 
   if (!props.selected.group || !props.selected.cycle)
     return <Warning title="Select cycle" topBorder />;

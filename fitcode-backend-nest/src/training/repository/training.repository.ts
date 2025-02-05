@@ -38,11 +38,10 @@ export class TrainingRepository
 
   async addDoc(input: Partial<Training>): Promise<string> {
     const result = await this.collection().add({
-      ownerId: input.ownerId,
       groupId: input.groupId,
       cycleId: input.cycleId,
+      ownerId: input.ownerId,
       membersIds: input.membersIds || [],
-      subgroupId: input.subgroupId || null,
       copiedFromId: input.copiedFromId || null,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
@@ -51,6 +50,7 @@ export class TrainingRepository
       deletedAt: null,
       components: input.components || {},
       meta: input.meta || {},
+      subgroups: input.subgroups || [],
     });
 
     return result.id;
@@ -107,7 +107,6 @@ export class TrainingRepository
       cycleId: data.cycleId,
       ownerId: data.ownerId,
       membersIds: data.membersIds,
-      subgroupId: data.subgroupId,
       copiedFromId: data.copiedFromId || null,
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),
@@ -116,6 +115,7 @@ export class TrainingRepository
       deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
       components: data.components || {},
       meta: data.meta || {},
+      subgroups: data.subgroups || [],
     };
   }
 }

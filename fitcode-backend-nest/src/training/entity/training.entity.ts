@@ -24,14 +24,12 @@ export class Training extends BaseEntity {
   @ApiProperty()
   @Expose()
   groupId: string;
-  group?: Group;
 
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
   cycleId: string;
-  cycle?: Cycle;
 
   @IsString()
   @IsNotEmpty()
@@ -45,29 +43,6 @@ export class Training extends BaseEntity {
   @Expose()
   membersIds: string[]; // all members of the group
 
-  @IsObject()
-  @ApiProperty()
-  @Expose()
-  meta: {
-    // members' meta used to calculate workloads
-    [userId: string]: UserMeta;
-  };
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  subgroupId?: string;
-  subgroup?: Subgroup;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  copiedFromId?: string; // if this training is copied from another training
-
   @IsDate()
   @ApiProperty()
   @Expose()
@@ -80,10 +55,53 @@ export class Training extends BaseEntity {
   @Transform(({ value }) => new Date(value))
   to: Date;
 
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  copiedFromId?: string; // if this training is copied from another training
+
   @IsObject()
   @ApiProperty()
   @Expose()
   components: {
+    [componentId: string]: TrainingComponent;
+  };
+
+  @ValidateNested({ each: true })
+  @Type(() => TrainingSubgroup)
+  @ApiProperty()
+  @Expose()
+  subgroups: TrainingSubgroup[];
+
+  @IsObject()
+  @ApiProperty()
+  @Expose()
+  meta: {
+    // members' meta used to calculate workloads
+    [userId: string]: UserMeta;
+  };
+}
+
+export class TrainingSubgroup extends BaseEntity {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  name: string;
+
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiProperty()
+  @Expose()
+  membersIds: string[]; // all members of the sub-training (at least 1)
+
+  @IsObject()
+  @ApiProperty()
+  @Expose()
+  components: {
+    // separate training plan, initially copied from parent training
     [componentId: string]: TrainingComponent;
   };
 }

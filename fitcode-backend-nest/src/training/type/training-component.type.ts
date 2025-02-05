@@ -5,4 +5,6 @@ export type CreateTrainingComponent = Pick<
   'order' | 'color' | 'supersets'
 >;
 
-export type UpdateTrainingComponent = Partial<CreateTrainingComponent>;
+export type UpdateTrainingComponent = Partial<
+  Omit<CreateTrainingComponent, 'supersets'>
+>;

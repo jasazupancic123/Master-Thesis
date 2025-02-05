@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { TrainingWorkloadRepository } from '../repository/training-workload.repository';
-import { TrainingExerciseMeta } from '../entity/training-exercise-meta.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { SetData, TrainingWorkload } from '../entity/training-workload.entity';
 import { WorkloadType } from '../enum/workload-type.enum';
@@ -9,6 +8,7 @@ import {
   TrainingExerciseRef,
   TrainingWorkloadRef,
   TrainingRef,
+  TrainingWorkloadExerciseRef,
 } from '../../common/type/firebase-firestore.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
@@ -20,7 +20,7 @@ import { TrainingService } from './training.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { UserService } from '../../user/service/user.service';
 import { SetStatus } from '../enum/set-status.enum';
-import { FieldPath, FieldValue, Transaction } from 'firebase-admin/firestore';
+import { Transaction } from 'firebase-admin/firestore';
 import { TrainingRepository } from '../repository/training.repository';
 import { Training } from '../entity/training.entity';
 
@@ -42,11 +42,21 @@ export class TrainingWorkloadService {
   /**
    * Gets all training workload data for all trainings for a user by exercise id.
    */
-  async findAll(ref: Required<TrainingWorkloadRef>) {
+  async findAll(ref: Required<TrainingWorkloadExerciseRef>) {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', '==', ref.userId)
-      .where('exerciseId', '==', ref.exerciseId)
+      .where(`exercises.${ref.exerciseId}`, '!=', null)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) => this.trainingWorkloadRepository.serialize(doc)),
+      );
+  }
+
+  async findAllByTraining(ref: Required<TrainingRef>) {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('trainingId', '==', ref.trainingId)
       .get()
       .then(({ docs }) =>
         docs.map((doc) => this.trainingWorkloadRepository.serialize(doc)),
@@ -54,15 +64,28 @@ export class TrainingWorkloadService {
   }
 
   /**
+   * Update athlete's set data.
+   */
+  async updateSets(
+    ref: Required<TrainingWorkloadExerciseRef>,
+    input: SetData[],
+  ) {
+    await this.trainingWorkloadRepository.updateDoc(ref, {
+      [`exercises.${ref.exerciseId}.sets`]: input,
+    });
+  }
+
+  /**
    * Creates training workload data for group members. It takes exercise
    * meta, calculates individual values for each member and saves them to the
    * correct training component exercise user data document.
    */
-  async createMany(
+  async createByTraining(
     training: Training,
     ref: Required<TrainingExerciseRef>,
     input: CreateTrainingExerciseUserData,
-    allUsersData: { [userId: string]: TrainingWorkload[] },
+    allUsersData: { [userId: string]: TrainingWorkload[] }, // data from all users for current exercise
+    trainingWorkloads: { [userId: string]: TrainingWorkload }, // data from all users for current training (all exercises)
     transaction?: Transaction,
   ): Promise<TrainingWorkload[]> {
     const result: TrainingWorkload[] = [];
@@ -70,28 +93,40 @@ export class TrainingWorkloadService {
     // for each member, calculate individual values for exercise user data
     const batch = transaction ? null : this.firebaseService.firestore.batch();
     for (const userId of training.membersIds) {
-      const userData = allUsersData[userId] || [];
+      const trainingWorkloadExercises =
+        trainingWorkloads[userId]?.exercises || {};
+
+      const userWorkloads = allUsersData[userId] || [];
+      const userData = userWorkloads.flatMap((item) =>
+        Object.values(item.exercises?.[ref.exerciseId] || []).flatMap(
+          (v) => v.sets,
+        ),
+      );
+
       const workloadValue = this.calculateWorkloadValue(
         input.meta.workloadType,
         input.meta.workloadValue,
         training.meta[userId].weight || 0,
-        userData.map((data) => data.sets).flat(),
+        userData,
       );
 
       const data: TrainingWorkload = {
         userId,
-        trainingId: training.id,
-        componentId: ref.componentId,
-        superset: ref.superset,
-        exerciseId: ref.exerciseId,
-        workloadType: input.meta.workloadType,
-        workloadValue,
-        sets: Array.from({ length: input.meta.sets }).map(() => ({
-          status: SetStatus.NOT_STARTED,
-          setTypeValue: null,
-          workloadValue: null,
-          notes: null,
-        })),
+        trainingId: ref.trainingId,
+        exercises: {
+          ...trainingWorkloadExercises,
+          [ref.exerciseId]: {
+            ...(trainingWorkloadExercises[ref.exerciseId] || {}),
+            workloadType: input.meta.workloadType,
+            workloadValue,
+            sets: Array.from({ length: input.meta.sets }).map(() => ({
+              status: SetStatus.NOT_STARTED,
+              setTypeValue: null,
+              workloadValue: null,
+              notes: null,
+            })),
+          },
+        },
       };
 
       const docRef = this.trainingWorkloadRepository.doc({
@@ -110,77 +145,16 @@ export class TrainingWorkloadService {
   }
 
   /**
-   * Create training exercise user data for a single user.
-   */
-  async create(
-    training: Training,
-    ref: Required<TrainingWorkloadRef>,
-    input: TrainingExerciseMeta,
-    workloadData: TrainingWorkload[],
-  ): Promise<TrainingWorkload> {
-    const workloadValue = this.calculateWorkloadValue(
-      input.workloadType,
-      input.workloadValue,
-      training.meta[ref.userId].weight || 0,
-      workloadData.map((item) => item.sets).flat(),
-    );
-
-    const data: TrainingWorkload = {
-      userId: ref.userId,
-      trainingId: ref.trainingId,
-      componentId: ref.componentId,
-      superset: ref.superset,
-      exerciseId: ref.exerciseId,
-      workloadType: input.workloadType,
-      workloadValue,
-      sets: Array.from({ length: input.sets }).map(() => ({
-        status: SetStatus.NOT_STARTED,
-        setTypeValue: null,
-        workloadValue: null,
-        notes: null,
-      })),
-    };
-
-    const docRef = this.trainingWorkloadRepository.doc({
-      ...ref,
-      userId: ref.userId,
-    });
-
-    await docRef.set(data);
-    return data;
-  }
-
-  /**
-   * Creates exercise user data for specified user for all exercises in the
-   * provided training.
-   */
-  async createByTraining(
-    ref: Required<TrainingRef>,
-    input: { memberId: string },
-    options: { user: User },
-  ) {
-    // TODO
-  }
-
-  /**
-   * Update athlete's set data.
-   */
-  async updateSets(ref: Required<TrainingWorkloadRef>, input: SetData[]) {
-    await this.trainingWorkloadRepository.updateDoc(ref, {
-      sets: input,
-    });
-  }
-
-  /**
    * Updates training exercise user data for group members. It takes exercise
    * meta, calculates individual values for each member and updates them in the
    * correct training component exercise user data document.
    */
-  async updateMany(
+  async updateByTraining(
     training: Training,
     ref: Required<TrainingExerciseRef>,
     input: UpdateTrainingExerciseUserData,
-    allUsersData: { [userId: string]: TrainingWorkload[] },
+    allUsersData: { [userId: string]: TrainingWorkload[] }, // data from all users for current exercise
+    trainingWorkloads: { [userId: string]: TrainingWorkload }, // data from all users for current training (all exercises)
     transaction: Transaction,
   ): Promise<TrainingWorkload[]> {
     const result: TrainingWorkload[] = [];
@@ -203,28 +177,41 @@ export class TrainingWorkloadService {
     // for each member, calculate individual values for exercise user data
     const batch = transaction ? null : this.firebaseService.firestore.batch();
     for (const userId of training.membersIds) {
+      const trainingWorkloadExercises =
+        trainingWorkloads[userId]?.exercises || {};
+
+      const userWorkloads = allUsersData[userId] || [];
+      const userData = userWorkloads.flatMap((item) =>
+        Object.values(item.exercises?.[ref.exerciseId] || []).flatMap(
+          (v) => v.sets,
+        ),
+      );
+
       const workloadValue = this.calculateWorkloadValue(
         input.meta?.workloadType || meta.workloadType,
         input.meta?.workloadValue || meta.workloadValue,
         training.meta[userId].weight || 0,
-        (allUsersData[userId] || []).map((item) => item.sets).flat(),
+        userData,
       );
 
       const data: TrainingWorkload = {
         userId,
         trainingId: ref.trainingId,
-        componentId: ref.componentId,
-        superset: ref.superset,
-        exerciseId: ref.exerciseId,
-        workloadType: input.meta?.workloadType || meta.workloadType,
-        workloadValue,
-        // TODO - fix this to keep old set data
-        sets: Array.from({ length: input.meta?.sets }).map(() => ({
-          status: SetStatus.NOT_STARTED,
-          setTypeValue: null,
-          workloadValue: null,
-          notes: null,
-        })),
+        exercises: {
+          ...trainingWorkloadExercises,
+          [ref.exerciseId]: {
+            ...(trainingWorkloadExercises[ref.exerciseId] || {}),
+            workloadType: input.meta?.workloadType || meta.workloadType,
+            workloadValue,
+            // TODO - fix this to keep old set data
+            sets: Array.from({ length: input.meta?.sets }).map(() => ({
+              status: SetStatus.NOT_STARTED,
+              setTypeValue: null,
+              workloadValue: null,
+              notes: null,
+            })),
+          },
+        },
       };
 
       const docRef = this.trainingWorkloadRepository.doc({
@@ -251,10 +238,12 @@ export class TrainingWorkloadService {
     switch (workloadType) {
       case WorkloadType.RM:
         // fetch 1RM from last month of user exercises, use formula and save value as KG
-        const values = data.map(({ setTypeValue, workloadValue }) => ({
-          reps: setTypeValue,
-          weight: +workloadValue,
-        }));
+        const values = data
+          .filter((set) => !!set)
+          .map(({ setTypeValue, workloadValue }) => ({
+            reps: setTypeValue,
+            weight: +workloadValue,
+          }));
 
         // find max weight lifted
         const { reps, weight } = values.sort(
