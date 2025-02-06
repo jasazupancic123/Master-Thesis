@@ -23,7 +23,8 @@ import { UserMetaRepository } from '../repository/user-meta.repository';
 import { TrainingService } from 'src/training/service/training.service';
 import { Wrapper } from 'src/common/type/wrapper.type';
 import { startOfDay } from 'date-fns';
-import { FieldPath } from 'firebase-admin/firestore';
+import { FieldPath, FieldValue, Transaction } from 'firebase-admin/firestore';
+import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
 
 @Injectable()
 export class UserService {
@@ -110,61 +111,34 @@ export class UserService {
     });
   }
 
-  async addGroup(userId: string, groupId: string): Promise<void> {
-    await this.userRepository.addGroup(userId, groupId);
+  async addGroup(transaction: Transaction, userId: string, groupId: string) {
+    const docRef = this.userRepository.doc(userId);
+    transaction.update(docRef, { groupsIds: FieldValue.arrayUnion(groupId) });
   }
 
-  async removeGroup(userId: string, groupId: string): Promise<void> {
-    await this.userRepository.removeGroup(userId, groupId);
+  async removeGroup(transaction: Transaction, userId: string, groupId: string) {
+    const docRef = this.userRepository.doc(userId);
+    transaction.update(docRef, { groupsIds: FieldValue.arrayRemove(groupId) });
   }
 
-  async getMeta(ref: Required<UserMetaRef>): Promise<UserMeta> {
+  async getMeta(ref: UserMetaRef): Promise<UserMeta> {
     return await this.userMetaRepository.getDoc(ref);
   }
 
   async addMeta(
     user: User,
-    ref: Required<UserMetaRef>,
+    ref: UserMetaRef,
     input: UserMeta,
   ): Promise<UserMeta> {
-    if (input.weight) {
-      // add last bodyweight for member to all his active trainings
-      const trainings = await this.trainingService.findAll({
-        user,
-        filter: {
-          from: { value: startOfDay(ref.date) },
-        },
-      });
-
-      if (trainings.length > 0) {
-        this.logger.log(
-          `User ${user.uid} updating recent bodyweight for ${trainings.length} active trainings`,
-        );
-
-        await this.firebaseService.firestore.runTransaction(
-          async (transaction) => {
-            this.trainingService.updateMemberBodyweight(
-              transaction,
-              user.uid,
-              trainings.map(({ id }) => id),
-              input.weight,
-            );
-
-            const docRef = this.userMetaRepository.doc(ref);
-            transaction.set(docRef, input);
-          },
-        );
-      } else await this.userMetaRepository.addDoc(ref, input);
-    }
-
+    await this.userMetaRepository.addDoc(ref, input);
     return input;
   }
 
-  async updateMeta(ref: Required<UserMetaRef>, input: UserMeta): Promise<void> {
+  async updateMeta(ref: UserMetaRef, input: UserMeta): Promise<void> {
     return await this.userMetaRepository.updateDoc(ref, input);
   }
 
-  async getLastMeta(ref: Required<UserRef>): Promise<UserMeta> {
+  async getLastMeta(ref: UserRef): Promise<UserMeta> {
     const snapshot = await this.userMetaRepository
       .collection(ref)
       .orderBy('date', 'desc')
@@ -173,5 +147,22 @@ export class UserService {
 
     if (snapshot.empty) return null;
     return this.userMetaRepository.serialize(snapshot.docs[0]);
+  }
+
+  async getLastMetas(
+    userIds: string[],
+  ): Promise<{ [userId: string]: UserMeta }> {
+    const metas = await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.USER_META)
+      .where('userId', 'in', userIds)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) => this.userMetaRepository.serialize(doc)),
+      );
+
+    return metas.reduce((acc, meta) => {
+      acc[meta.userId] = meta;
+      return acc;
+    }, {});
   }
 }

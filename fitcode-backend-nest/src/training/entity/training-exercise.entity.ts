@@ -8,10 +8,10 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { TrainingExerciseMeta } from './training-exercise-meta.entity';
-import { TrainingWorkload } from './training-workload.entity';
+import { ExerciseMeta } from './exercise-meta.entity';
+import { UserWorkload } from './user-workload.entity';
 import { Exercise } from '../../exercise/entity/exercise.entity';
-import { TrainingSuperset } from './training-superset.entity';
+import { Superset } from './superset.entity';
 import { IdEntity } from 'src/common/entity/id.entity';
 
 export class TrainingExercise extends IdEntity {
@@ -30,8 +30,8 @@ export class TrainingExercise extends IdEntity {
   color?: string;
 
   @ValidateNested()
-  @Type(() => TrainingExerciseMeta)
+  @Type(() => ExerciseMeta)
   @ApiProperty()
   @Expose()
-  meta: TrainingExerciseMeta;
+  meta: ExerciseMeta;
 }

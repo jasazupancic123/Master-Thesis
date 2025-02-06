@@ -9,10 +9,7 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import {
-  GroupRef,
-  RootFirestoreCollectionRepository,
-} from '../../common/type/firebase-firestore.type';
+import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
 import { Group } from '../entity/group.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Cycle } from '../entity/cycle.entity';
@@ -53,13 +50,12 @@ export class GroupRepository
       cycles: input.cycles ?? [],
     });
 
-    // add group id to the document for querying by collection group
-    await result.update({ id: result.id });
     return result.id;
   }
 
   async addCycle(id: string, input: Partial<Cycle>) {
     const cycleId = v4();
+
     await this.doc(id).update({
       cycles: FieldValue.arrayUnion({
         id: cycleId,
@@ -77,10 +73,7 @@ export class GroupRepository
   }
 
   async updateDoc(id: string, input: Partial<Group>) {
-    await this.doc(id).update({
-      ...(input.name && { name: input.name }),
-      ...(input.membersIds && { membersIds: input.membersIds }),
-    });
+    await this.doc(id).update(this.commonService.object.clean(input));
   }
 
   async updateCycle(id: string, cycleId: string, input: Partial<Cycle>) {
@@ -131,16 +124,16 @@ export class GroupRepository
           if (!doc.exists)
             throw new BadRequestException('Document does not exist');
 
-          const group = doc.data() as Group;
-
           // delete all cycles
-          const updatedCycles = [];
-          /* const updatedCycles = group.cycles.map((cycle) => ({
+          /*
+          const group = doc.data() as Group; 
+          const updatedCycles = group.cycles.map((cycle) => ({
             ...cycle,
             deletedAt: Timestamp.now(),
           })); */
 
           // delete group
+          const updatedCycles = [];
           transaction.update(ref, {
             deletedAt: Timestamp.now(),
             cycles: updatedCycles,
@@ -187,12 +180,6 @@ export class GroupRepository
     return this.firebaseService.firestore.collection(FirestoreCollection.GROUP);
   }
 
-  subgroupsCollectionGroup(): CollectionGroup {
-    return this.firebaseService.firestore.collectionGroup(
-      FirestoreCollection.SUBGROUP,
-    );
-  }
-
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Group {
     const data = snapshot.data();
 
@@ -201,9 +188,9 @@ export class GroupRepository
       name: data.name,
       ownerId: data.ownerId,
       membersIds: data.membersIds,
-      availableMembersIds: [],
-      members: [],
-      subgroups: [],
+      createdAt: (data.createdAt as Timestamp).toDate(),
+      updatedAt: (data.updatedAt as Timestamp).toDate(),
+      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
       cycles: (data.cycles ?? []).map((cycle: any) => ({
         id: cycle.id,
         name: cycle.name,
@@ -217,9 +204,6 @@ export class GroupRepository
           cycle.to.toDate(),
         ),
       })),
-      createdAt: (data.createdAt as Timestamp).toDate(),
-      updatedAt: (data.updatedAt as Timestamp).toDate(),
-      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
     };
   }
 }

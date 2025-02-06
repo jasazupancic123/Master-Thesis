@@ -1,6 +1,6 @@
 import { ValidateNested } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
-import { SetData } from '../entity/training-workload.entity';
+import { SetData } from '../entity/set-data';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateAthleteSetDataDto {

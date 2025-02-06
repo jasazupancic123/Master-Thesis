@@ -7,7 +7,7 @@ import { Effort } from '../enum/effort.enum';
 
 // NOTE - any values that are represented in % are NOT normalized between 0 and 1 (BW, INT, RM, ...)
 
-export class TrainingExerciseMeta {
+export class ExerciseMeta {
   @IsInt()
   @Min(0)
   @ApiProperty()

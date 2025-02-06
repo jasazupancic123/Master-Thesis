@@ -72,6 +72,47 @@ export class ObjectUtil {
     return false;
   }
 
+  /**
+   * Removes key prefix from each object key. For example:
+   *
+   * ```ts
+   * const obj = { 'john.first': 'John', 'john.last': 'Doe', 'john.age': 40 }
+   * const newObj = removeKeyPrefix(obj, 'john')
+   * // => { first: 'John', last: 'Doe', age: 40 }
+   * ```
+   */
+  removeKeyPrefix<T>(
+    obj: { [key: string]: T },
+    prefix: string,
+  ): { [key: string]: T } {
+    const prefixRegex = new RegExp(`^${prefix}\\.`);
+
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [
+        key.replace(prefixRegex, ''),
+        value,
+      ]),
+    );
+  }
+
+  /**
+   * Adds key prefix for each object key. For example:
+   *
+   * ```ts
+   * const obj = { first: 'John', last: 'Doe', age: 40 }
+   * const newObj = addKeyPrefix(obj, 'john')
+   * // => { 'john.first': 'John', 'john.last': 'Doe', 'john.age': 40 }
+   * ```
+   */
+  addKeyPrefix<T>(
+    obj: { [key: string]: T },
+    prefix: string,
+  ): { [key: string]: T } {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [`${prefix}.${key}`, value]),
+    );
+  }
+
   private checkSelectOptions(
     options: (string | ExerciseAttributeSelectOption)[],
     value: any,

@@ -13,7 +13,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TrainingExercise } from './training-exercise.entity';
 import { TrainingComponent } from './training-component.entity';
 
-export class TrainingSuperset {
+export class Superset {
   @IsInt()
   @IsOptional()
   @Min(0)

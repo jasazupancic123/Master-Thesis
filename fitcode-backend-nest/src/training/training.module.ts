@@ -3,11 +3,13 @@ import { TrainingService } from './service/training.service';
 import { ComponentModule } from '../component/component.module';
 import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
-import { TrainingWorkloadRepository } from './repository/training-workload.repository';
+import { UserWorkloadRepository } from './repository/user-workload.repository';
 import { TrainingRepository } from './repository/training.repository';
-import { TrainingWorkloadService } from './service/training-workload.service';
+import { UserWorkloadService } from './service/user-workload.service';
 import { UserModule } from '../user/user.module';
 import { TrainingController } from './training.controller';
+import { SubgroupService } from './service/subgroup.service';
+import { TrainingPlanService } from './service/training-plan.service';
 
 @Module({
   imports: [
@@ -17,10 +19,12 @@ import { TrainingController } from './training.controller';
     forwardRef(() => GroupModule),
   ],
   providers: [
-    TrainingService,
+    UserWorkloadRepository,
     TrainingRepository,
-    TrainingWorkloadRepository,
-    TrainingWorkloadService,
+    SubgroupService,
+    UserWorkloadService,
+    TrainingPlanService,
+    TrainingService,
   ],
   controllers: [TrainingController],
   exports: [TrainingService],
