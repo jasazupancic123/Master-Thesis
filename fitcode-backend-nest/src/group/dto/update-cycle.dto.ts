@@ -8,4 +8,4 @@ export class UpdateCycleDto
     PartialType(PickType(Cycle, ['name', 'description'] as const)),
     DateFilterDto,
   )
-  implements Omit<UpdateCycle, 'membersIds'> {}
+  implements UpdateCycle {}

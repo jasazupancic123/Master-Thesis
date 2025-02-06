@@ -10,7 +10,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { Component } from '../../component/entity/component.entity';
-import { TrainingSuperset } from './training-superset.entity';
+import { Superset } from './superset.entity';
 import { Training } from './training.entity';
 import { TrainingExercise } from './training-exercise.entity';
 import { IdEntity } from 'src/common/entity/id.entity';
@@ -32,5 +32,5 @@ export class TrainingComponent extends IdEntity {
   @IsObject()
   @ApiProperty()
   @Expose()
-  supersets: TrainingSuperset[];
+  supersets: Superset[];
 }

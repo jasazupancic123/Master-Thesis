@@ -21,23 +21,16 @@ import { UpdateTrainingExerciseDto } from './dto/update-training-exercise.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { UpdateTrainingComponentDto } from './dto/update-training-component.dto';
 import { UpdateTrainingSupersetDto } from './dto/update-training-superset.dto';
-import { IdsDto } from '../common/dto/id.dto';
 import { FirebaseService } from '../firebase/firebase.service';
-import { Populate } from '../common/type/orm.type';
 import { Training } from './entity/training.entity';
-import { TrainingWorkloadService } from './service/training-workload.service';
+import { UserWorkloadService } from './service/user-workload.service';
 import { UpdateAthleteSetDataDto } from './dto/update-athlete-set-data.dto';
-import { CreateTrainingExercise } from './type/training-exercise.type';
 import { TrainingExercise } from './entity/training-exercise.entity';
 import { UserRole } from 'src/user/enum/user-role.enum';
 
 @Controller('training')
 export class TrainingController {
-  constructor(
-    private readonly firebaseService: FirebaseService,
-    private readonly trainingService: TrainingService,
-    private readonly trainingWorkloadService: TrainingWorkloadService,
-  ) {}
+  constructor(private readonly trainingService: TrainingService) {}
 
   @Get()
   @Auth()
@@ -49,8 +42,7 @@ export class TrainingController {
 
     switch (user.customClaims.role[0]) {
       case UserRole.TRAINER: {
-        trainings = await this.trainingService.findAll({
-          user,
+        trainings = await this.trainingService.findAll(user, {
           filter: {
             groupId: { value: filter.groupId },
             cycleId: { value: filter.cycleId },
@@ -61,8 +53,7 @@ export class TrainingController {
         });
       }
       case UserRole.ATHLETE: {
-        trainings = await this.trainingService.findAll({
-          user,
+        trainings = await this.trainingService.findAll(user, {
           filter: {
             ...(filter.from && { from: { value: filter.from, op: '>=' } }),
             ...(filter.to && { to: { value: filter.to, op: '<=' } }),
@@ -74,30 +65,13 @@ export class TrainingController {
     return trainings.map(this.trainingService.map);
   }
 
-  @Post('ids')
-  @Auth()
-  async populateTrainings(@RequestUser() user: User, @Body() { ids }: IdsDto) {
-    const trainings = await this.trainingService.findAll({
-      user,
-      filter: { ids },
-      populate: [
-        'components',
-        'components.supersets',
-        'components.supersets.exercises',
-        'components.supersets.exercises.exercise',
-      ],
-    });
-
-    return trainings.map(this.trainingService.map);
-  }
-
   @Post()
   @Auth()
   async createTraining(
     @RequestUser() user: User,
     @Body() body: CreateTrainingDto,
   ) {
-    const training = await this.trainingService.create(body, { user });
+    const training = await this.trainingService.create(user, body);
     return this.trainingService.map(training);
   }
 
@@ -109,7 +83,7 @@ export class TrainingController {
     @Body() body: UpdateTrainingDto,
   ) {
     const ref = { trainingId };
-    return await this.trainingService.update(ref, body, { user });
+    return await this.trainingService.update(user, ref, body);
   }
 
   @Delete(':trainingId')
@@ -119,7 +93,7 @@ export class TrainingController {
     @Param('trainingId') trainingId: string,
   ) {
     const ref = { trainingId };
-    await this.trainingService.remove(ref, { user });
+    await this.trainingService.remove(user, ref);
     return { id: trainingId };
   }
 
@@ -132,12 +106,12 @@ export class TrainingController {
   ) {
     const ref = { trainingId };
     const training = await this.trainingService.addComponents(
+      user,
       ref,
       components.map((c) => [
         c.id,
         { ...c, supersets: [{ order: 0, exercises: {} }] },
       ]),
-      user,
     );
 
     return this.trainingService.map(training);
@@ -153,9 +127,9 @@ export class TrainingController {
   ) {
     const ref = { trainingId, componentId };
     const training = await this.trainingService.updateComponent(
+      user,
       ref,
       data,
-      user,
     );
 
     return this.trainingService.map(training);
@@ -267,14 +241,14 @@ export class TrainingController {
   ) {
     const ref = { trainingId, componentId, superset, exerciseId };
     await this.trainingService.deleteExercise(ref, user);
-    return { id: exerciseId };
+    return {};
   }
 
   @Patch(
     ':trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId/set',
   )
   @Auth()
-  async updateSet(
+  async updateAthleteWorkload(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
@@ -290,7 +264,7 @@ export class TrainingController {
       userId: user.uid,
     };
 
-    await this.trainingWorkloadService.updateSets(ref, data.sets);
-    return { id: exerciseId };
+    await this.trainingService.updateAthleteWorkload(ref, data.sets, user);
+    return {};
   }
 }

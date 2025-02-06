@@ -48,6 +48,7 @@ export class UserMetaRepository
     input: Omit<UserMeta, 'date'>,
   ): Promise<string> {
     await this.doc(ref).set({
+      userId: ref.uid,
       date: startOfDay(ref.date),
       weight: input.weight || null,
       sleep: input.sleep || null,
@@ -84,6 +85,7 @@ export class UserMetaRepository
     const data = snapshot.data();
 
     return {
+      userId: data.userId,
       date: (data.date as Timestamp).toDate(),
       weight: data.weight || null,
       sleep: data.sleep || null,

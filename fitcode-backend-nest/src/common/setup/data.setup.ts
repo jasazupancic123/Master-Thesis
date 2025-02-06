@@ -165,6 +165,7 @@ export class DataSetup extends BaseSetup {
           user,
           { uid: user.uid, date: new Date() },
           {
+            userId: user.uid,
             date: new Date(),
             weight: userData.weight,
             sleep: 5,
@@ -221,7 +222,6 @@ export class DataSetup extends BaseSetup {
         const group = await this.groupService.create(user, {
           name,
           membersIds,
-          ownerId: user.uid,
         });
 
         // import cycles

@@ -4,18 +4,11 @@ import { GroupController } from './group.controller';
 import { UserModule } from '../user/user.module';
 import { TrainingModule } from '../training/training.module';
 import { GroupRepository } from './repository/group.repository';
-import { SubgroupRepository } from './repository/subgroup.repository';
-import { SubgroupService } from './service/subgroup.service';
 
 @Module({
   imports: [forwardRef(() => UserModule), forwardRef(() => TrainingModule)],
   controllers: [GroupController],
-  providers: [
-    GroupRepository,
-    SubgroupRepository,
-    SubgroupService,
-    GroupService,
-  ],
-  exports: [GroupRepository, SubgroupRepository, SubgroupService, GroupService],
+  providers: [GroupRepository, GroupService],
+  exports: [GroupRepository, GroupService],
 })
 export class GroupModule {}

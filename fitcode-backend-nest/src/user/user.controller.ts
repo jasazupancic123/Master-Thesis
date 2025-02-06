@@ -59,6 +59,7 @@ export class UserController {
     const ref = { uid: user.uid, date: new Date() };
     return await this.userService.addMeta(user, ref, {
       ...input,
+      userId: user.uid,
       date: ref.date,
     });
   }

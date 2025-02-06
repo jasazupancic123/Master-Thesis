@@ -56,25 +56,6 @@ export class TrainingRepository
     return result.id;
   }
 
-  async addSuperset(
-    ref: Required<TrainingSupersetRef>,
-    data: Partial<TrainingSupersetRef>,
-  ) {
-    await this.doc(ref.trainingId).update({
-      [`components.${ref.componentId}.supersets[${ref.superset}]`]: data,
-    });
-  }
-
-  async addExercise(
-    ref: Required<TrainingExerciseRef>,
-    data: Partial<TrainingExercise>,
-  ) {
-    await this.doc(ref.trainingId).update({
-      [`components.${ref.componentId}.supersets[${ref.superset}].exercises.${ref.exerciseId}`]:
-        data,
-    });
-  }
-
   async updateDoc(id: string, input: Partial<Training>) {
     await this.doc(id).update({
       ...input,
@@ -115,7 +96,7 @@ export class TrainingRepository
       deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
       components: data.components || {},
       meta: data.meta || {},
-      subgroups: data.subgroups || [],
+      subgroups: data.subgroups || {},
     };
   }
 }
