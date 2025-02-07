@@ -2,7 +2,7 @@
 
 import React, { ReactNode, useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { TextField, ToggleButtonGroup, Tooltip } from '@mui/material';
+import { Button, TextField, ToggleButtonGroup, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import MyModal from '@/common/components/modal';
 import { CreateGroup } from '@/group/type/group.type';
@@ -33,6 +33,7 @@ import AddIcon from '@mui/icons-material/Add';
 import GroupsSidebar from '@/common/components/groups-sidebar';
 import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
 import { Subgroups } from '@/group/components/subgroups';
+import AddCycleModal from '../[group_id]/settings/components/add-cycle-modal';
 
 export default function TrainerPageRouter(props: GroupPageProps) {
   // context
@@ -44,9 +45,8 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     members: false,
     subgroups: false,
     settings: false,
+    add_cycle: false,
   });
-
-  const sidebarProps = { ...props, setModal } as GroupPageSidebarProps;
 
   useEffect(() => {
     const storedGroupId = localStorage.getItem(
@@ -161,22 +161,41 @@ export default function TrainerPageRouter(props: GroupPageProps) {
 
               {/* Select cycle */}
               {props.selected.group && (
-                <SelectInput<Cycle>
-                  label="Cycle"
-                  icon={<RotateRightIcon />}
-                  value={props.selected.cycle?.id || ''}
-                  setValue={(value) => {
-                    const cycles = props.selected.group!.cycles || [];
-                    const cycle = cycles.find((cycle) => cycle.id === value);
-                    props.setSelected((prev) => ({
-                      ...prev,
-                      cycle: cycle || null,
-                    }));
-                  }}
-                  items={props.selected.group!.cycles || []}
-                  itemKey="id"
-                  itemName="name"
-                />
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  mt={2}
+                >
+                  {props.filter !== 'year' && (
+                    <SelectInput<Cycle>
+                      label="Cycle"
+                      icon={<RotateRightIcon />}
+                      value={props.selected.cycle?.id || ''}
+                      setValue={(value) => {
+                        const cycles = props.selected.group!.cycles || [];
+                        const cycle = cycles.find(
+                          (cycle) => cycle.id === value
+                        );
+                        props.setSelected((prev) => ({
+                          ...prev,
+                          cycle: cycle || null,
+                        }));
+                      }}
+                      items={props.selected.group!.cycles || []}
+                      itemKey="id"
+                      itemName="name"
+                    />
+                  )}
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ mt: 2, mb: 2 }}
+                    onClick={() => setModal({ ...modal, add_cycle: true })}
+                  >
+                    Add Cycle
+                  </Button>
+                </Box>
               )}
             </Box>
           </Box>
@@ -242,12 +261,16 @@ export default function TrainerPageRouter(props: GroupPageProps) {
           <>
             {/* Group Settings modal */}
             <MyModal
-              isOpen={modal.settings}
-              setIsOpen={(open) => setModal({ ...modal, settings: open })}
-              onCancel={() => setModal({ ...modal, settings: false })}
+              isOpen={modal.add_cycle}
+              setIsOpen={(open) => setModal({ ...modal, add_cycle: open })}
+              onCancel={() => setModal({ ...modal, add_cycle: false })}
               cancelText="Close"
             >
-              <GroupSettings {...props} />
+              <AddCycleModal
+                onClose={() => setModal({ ...modal, add_cycle: false })}
+                selected={props.selected}
+                setSelected={props.setSelected}
+              />
             </MyModal>
           </>
         )}

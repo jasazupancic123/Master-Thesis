@@ -2,18 +2,21 @@
 
 import { useState } from 'react';
 import { useGroupSidebar } from '@/context/groups-sidebar-provider';
-import { Box, Typography, TextField, Button } from '@mui/material';
+import { Box, Typography, TextField, Button, Slider } from '@mui/material';
 import toast from 'react-hot-toast';
 import { GroupController } from '@/group/group.controller';
 import { useAppContext } from '@/context/app-provider';
 import { useRouter } from 'next/navigation';
 import { LINK_GROUPS } from '@/common/constant/navigation.constant';
 import PageTitle from '../../components/page-title';
+import MyModal from '@/common/components/modal';
+import AddCycleModal from './components/add-cycle-modal';
 
 export default function GroupSettings() {
   const { selected, setSelected } = useGroupSidebar();
   const { token } = useAppContext();
   const [groupName, setGroupName] = useState(selected.group?.name || '');
+  const [showCycleModal, setShowCyclesModal] = useState(false);
   const router = useRouter();
 
   const handleUpdateGroup = async () => {
@@ -51,6 +54,16 @@ export default function GroupSettings() {
     }
   };
 
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+  };
+
+  const cycleColors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#A633FF'];
+
   return (
     <Box
       display="flex"
@@ -70,6 +83,62 @@ export default function GroupSettings() {
       <Typography variant="h6" gutterBottom mt={3}>
         *HERE ADD TRAINER LIST IF THERE CAN BE MULTIPLE TRAINERS IN A GROUP*
       </Typography>
+
+      <Typography variant="h6" gutterBottom mt={3}>
+        Cycles
+      </Typography>
+
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{ mt: 2, mb: 2 }}
+        onClick={() => setShowCyclesModal(true)}
+      >
+        Add Cycle
+      </Button>
+
+      {showCycleModal && (
+        <MyModal
+          isOpen={showCycleModal}
+          setIsOpen={(open) => setShowCyclesModal(open)}
+          onCancel={() => setShowCyclesModal(false)}
+          cancelText="Close"
+        >
+          <AddCycleModal
+            onClose={() => setShowCyclesModal(false)}
+            selected={selected}
+            setSelected={setSelected}
+          />
+        </MyModal>
+      )}
+
+      {selected.group?.cycles?.length ? (
+        <Slider {...sliderSettings} style={{ width: '80%', maxWidth: '600px' }}>
+          {selected.group.cycles.map((cycle, index) => (
+            <Box
+              key={cycle.id}
+              sx={{
+                backgroundColor: cycleColors[index % cycleColors.length],
+                padding: 3,
+                borderRadius: 2,
+                color: 'white',
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="h6">{cycle.name}</Typography>
+              <Typography variant="body2">{cycle.description}</Typography>
+              <Typography variant="body2">
+                From: {new Date(cycle.from).toLocaleDateString()}
+              </Typography>
+              <Typography variant="body2">
+                To: {new Date(cycle.to).toLocaleDateString()}
+              </Typography>
+            </Box>
+          ))}
+        </Slider>
+      ) : (
+        <Typography>No cycles available.</Typography>
+      )}
 
       <Button
         variant="contained"

@@ -246,8 +246,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
   }
 
-  if (!props.selected.group || !props.selected.cycle)
-    return <></>;
+  if (!props.selected.group || !props.selected.cycle) return <></>;
 
   return (
     <Box pb={10}>

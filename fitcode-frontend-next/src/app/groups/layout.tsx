@@ -8,6 +8,9 @@ import { useAuth } from '@/context/auth-provider';
 import { UserRole } from '@/user/enum/user-role.enum';
 import SidebarAthlete from '@/user/components/sidebar-athlete';
 import MiniSidebar from '@/common/components/groups-sidebar';
+import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
+import { useRouter } from 'next/navigation';
+import { LINK_GROUPS } from '@/common/constant/navigation.constant';
 
 interface Props {
   children: ReactNode;
@@ -15,11 +18,21 @@ interface Props {
 
 export default function Layout({ children }: Props) {
   const { role } = useAuth();
+  const router = useRouter();
   const isAthlete = role[0] === UserRole.ATHLETE;
   const isTrainer = role[0] === UserRole.TRAINER;
 
   const bgcolor = isTrainer ? 'background.default' : 'background.paper';
   const minHeight = `calc(100vh - ${isTrainer ? 64 : 0}px)`;
+
+  //redirect to /id of group if it exists in local storage
+  if (localStorage.getItem(LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID)) {
+    router.push(
+      LINK_GROUPS.href +
+        '/' +
+        localStorage.getItem(LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID)
+    );
+  }
 
   return (
     <Box bgcolor={bgcolor} minHeight={minHeight}>
@@ -27,8 +40,15 @@ export default function Layout({ children }: Props) {
 
       <Container
         component="main"
-        maxWidth="lg"
-        sx={{ display: 'flex', flexDirection: 'column', pb: 0 }}
+        maxWidth={false}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          p: 0,
+          pb: 2,
+          mx: 0,
+          width: '100%',
+        }}
       >
         <Box mt="49px">{children}</Box>
       </Container>

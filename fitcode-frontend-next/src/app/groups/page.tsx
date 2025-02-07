@@ -89,7 +89,7 @@ function Page() {
     }
 
     fetchGroup().then();
-  }, [selected.group?.id, token]);
+  }, [selected.group?.id, token, selected.group?.cycles]);
 
   /**
    * Filter date range based on provided filters
