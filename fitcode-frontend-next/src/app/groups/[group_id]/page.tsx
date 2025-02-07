@@ -22,6 +22,7 @@ import { TrainingController } from '@/training/training.controller';
 import AthletePageRouter from '@/app/groups/components/athlete-page-router';
 import { useRouter } from 'next/navigation';
 import { LINK_GROUPS } from '@/common/constant/navigation.constant';
+import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
 
 function Page() {
   // context

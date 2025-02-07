@@ -27,7 +27,7 @@ export default function Layout({ children }: Props) {
 
       <Container
         component="main"
-        maxWidth="lg"
+        maxWidth={false}
         sx={{ display: 'flex', flexDirection: 'column' }}
       >
         <Box mt={2}>{children}</Box>

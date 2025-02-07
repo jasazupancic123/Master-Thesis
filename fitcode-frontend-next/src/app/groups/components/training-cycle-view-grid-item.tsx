@@ -32,6 +32,7 @@ interface Props {
 export function TrainingGridItem(props: Props) {
   const { components } = useAppContext() as AppContextType;
   const training = TrainingService.map(props.training, components.flat);
+  console.log('training.components', training.components);
 
   return (
     <Box px={1}>
@@ -57,14 +58,12 @@ export function TrainingGridItem(props: Props) {
 
       <>
         {training.components.map(({ component }) => (
-          <div key={component!.id}>
-            {component!.name}
-
+          <div key={component.id}>
             <IconButton
               size="small"
               onClick={async (e) => {
                 e.stopPropagation();
-                await props.deleteTrainingComponent(training.id, component!.id);
+                await props.deleteTrainingComponent(training.id, component.id);
               }}
             >
               <DeleteIcon />
