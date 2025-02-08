@@ -78,7 +78,7 @@ export class GroupService {
     return groups;
   }
 
-  async findOne(user: User, ref: Required<GroupRef>): Promise<Group | null> {
+  async findById(user: User, ref: GroupRef): Promise<Group | null> {
     // find group
     const group = await this.groupRepository.getDoc(ref.groupId);
     if (!group || group.deletedAt) return null;
@@ -88,8 +88,8 @@ export class GroupService {
     return group;
   }
 
-  async findOneOrFail(user: User, ref: Required<GroupRef>): Promise<Group> {
-    const group = await this.findOne(user, ref);
+  async findByIdOrFail(user: User, ref: GroupRef): Promise<Group> {
+    const group = await this.findById(user, ref);
     if (!group) throw new BadRequestException('Group not found');
     return group;
   }
@@ -130,16 +130,12 @@ export class GroupService {
     };
   }
 
-  async update(
-    user: User,
-    ref: Required<GroupRef>,
-    input: UpdateGroup,
-  ): Promise<Group> {
+  async update(user: User, ref: GroupRef, input: UpdateGroup): Promise<Group> {
     this.logger.log(
       `User ${user.uid} is updating group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
 
-    const group = await this.findOneOrFail(user, ref);
+    const group = await this.findByIdOrFail(user, ref);
 
     // update members and name
     if (input.membersIds) {
@@ -167,9 +163,9 @@ export class GroupService {
   /**
    * Soft deletes a group by setting the deletedAt field to the current date.
    */
-  async remove(user: User, ref: Required<GroupRef>): Promise<void> {
+  async delete(user: User, ref: GroupRef): Promise<void> {
     this.logger.log(`User ${user.uid} is removing group ${ref.groupId}`);
-    const group = await this.findOneOrFail(user, ref);
+    const group = await this.findByIdOrFail(user, ref);
 
     await this.firebaseService.firestore.runTransaction(async (transaction) => {
       // remove group from all members
@@ -198,14 +194,14 @@ export class GroupService {
 
   async addCycle(
     user: User,
-    ref: Required<GroupRef>,
+    ref: GroupRef,
     input: CreateCycle,
   ): Promise<Cycle> {
     this.logger.log(
       `User ${user.uid} adding cycle to group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
 
-    const group = await this.findOneOrFail(user, ref);
+    const group = await this.findByIdOrFail(user, ref);
 
     // check cycle overlap
     this.checkCycleOverlap(group.cycles, input as Cycle);
@@ -224,14 +220,14 @@ export class GroupService {
 
   async updateCycle(
     user: User,
-    ref: Required<CycleRef>,
+    ref: CycleRef,
     input: UpdateCycle,
   ): Promise<Cycle> {
     this.logger.log(
       `User ${user.uid} updating cycle ${ref.cycleId}: ${JSON.stringify(input)}`,
     );
 
-    const group = await this.findOneOrFail(user, ref);
+    const group = await this.findByIdOrFail(user, ref);
     const cycle = this.findCycleOrFail(ref.cycleId, group);
 
     if (input.from || input.to)
@@ -247,9 +243,9 @@ export class GroupService {
     return { ...cycle, ...input };
   }
 
-  async deleteCycle(ref: Required<CycleRef>, user: User) {
+  async deleteCycle(ref: CycleRef, user: User) {
     this.logger.log(`User ${user.uid} removing cycle ${ref.cycleId}`);
-    const group = await this.findOneOrFail(user, ref);
+    const group = await this.findByIdOrFail(user, ref);
     this.findCycleOrFail(ref.cycleId, group);
     await this.groupRepository.deleteCycle(ref.groupId, ref.cycleId);
   }

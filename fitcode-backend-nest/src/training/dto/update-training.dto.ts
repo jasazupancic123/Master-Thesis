@@ -11,15 +11,3 @@ export class UpdateTrainingDto extends DateFilterDto implements UpdateTraining {
   @Expose()
   components?: { [componentId: string]: TrainingComponent };
 }
-
-export class UpdateTrainingsDto {
-  @ValidateNested({ each: true })
-  @Type(() => UpdateTrainingDto)
-  @ApiProperty()
-  @Expose()
-  trainings: UpdateTrainingDto[];
-}
-
-const a: UpdateTrainingsDto = {
-  trainings: [{}],
-};

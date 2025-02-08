@@ -3,7 +3,7 @@ import { Training } from '../entity/training.entity';
 
 export type CreateTraining = Pick<
   Training,
-  'groupId' | 'cycleId' | 'from' | 'to' | 'copiedFromId' | 'components'
+  'groupId' | 'cycleId' | 'from' | 'to' | 'components'
 >;
 
 export type UpdateTraining = Partial<

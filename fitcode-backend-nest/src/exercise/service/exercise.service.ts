@@ -24,6 +24,8 @@ import { Wrapper } from '../../common/type/wrapper.type';
 import { User } from '../../common/type/firebase-auth.type';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { ExerciseAttributeService } from './exercise-attribute.service';
+import { CreateExerciseDto } from '../dto/create-exercise.dto';
+import { UpdateExerciseDto } from '../dto/update-exercise.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -79,35 +81,33 @@ export class ExerciseService {
     ]);
   }
 
-  async findOne(
+  async findById(
+    user: User,
     ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise> & { userId?: string },
   ): Promise<Exercise | null> {
     // find exercise
     const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
     if (!exercise) return null;
 
     // authorize
-    if (options?.userId)
-      if (!exercise.global && exercise.userId !== options.userId) return null;
-
+    if (!exercise.global && exercise.userId !== user.uid) return null;
     return exercise;
   }
 
-  async findOneOrFail(
+  async findByIdOrFail(
+    user: User,
     ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise> & { userId?: string },
   ): Promise<Exercise> {
-    const exercise = await this.findOne(ref, options);
+    const exercise = await this.findById(user, ref);
     if (!exercise) throw new BadRequestException('Exercise does not exist');
     return exercise;
   }
 
-  async create(user: User, data: Partial<Exercise>) {
+  async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
     this.logger.log(`Creating new exercise for user ${user.uid}`);
 
     // validate exercise attributes
-    await this.exerciseAttributeService.validate(data.values || {});
+    await this.exerciseAttributeService.validate(data.attributeValues || {});
 
     // validate exercise data
     // at least one component must be selected
@@ -122,14 +122,6 @@ export class ExerciseService {
       const component = this.componentService.getLeafBySlug(slug, leafs);
       if (!component)
         throw new BadRequestException(`Component ${slug} does not exist`);
-    }
-
-    // find all root components of selected leaf components
-    const roots: Component[] = [];
-    for (const componentId of data.componentsIds) {
-      const component = leafs.find((c) => c.id === componentId)!;
-      const root = this.componentService.getRoot(component, components);
-      roots.push(root);
     }
 
     // create exercise
@@ -147,9 +139,17 @@ export class ExerciseService {
     });
 
     return {
+      ...data,
       id: exerciseId,
-      rootComponentIds: roots.map(({ id }) => id), // for frontend
-    };
+      userId: user.uid,
+      global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      values: Object.entries(data.attributeValues).map(([field, value]) => ({
+        attributeId: field,
+        value,
+      })),
+    } as Exercise;
   }
 
   /**
@@ -164,12 +164,12 @@ export class ExerciseService {
     // TODO
   }
 
-  async update() {
-    // TODO
+  async update(user: User, ref: ExerciseRef, input: UpdateExerciseDto) {
+    return {} as Exercise;
   }
 
-  async remove() {
-    // TODO
+  async delete(user: User, ref: ExerciseRef) {
+    return {};
   }
 
   /**

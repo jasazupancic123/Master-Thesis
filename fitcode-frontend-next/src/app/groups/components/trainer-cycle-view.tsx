@@ -20,9 +20,9 @@ import {
 import { CommonService } from '@/common/service/common.service';
 import TrainingWeek from '@/app/groups/components/training-cycle-view-week';
 import { TrainingController } from '@/training/training.controller';
-import Warning from '@/common/components/warning';
+import Warning from '@/components/warning';
 import { TrainingService } from '@/training/training.service';
-import { Training } from '@/training/entity/training.entity';
+import { Training } from '@/training/type/training.entity';
 import { Save } from '@mui/icons-material';
 import { TrainingComponent } from '@/training/entity/training-component.entity';
 

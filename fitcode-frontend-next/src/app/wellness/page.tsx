@@ -1,25 +1,24 @@
 'use client';
 
 import toast from 'react-hot-toast';
-import UserWellnessForm from '@/user/components/user-wellness-form';
-import withAuth from '@/common/components/with-auth';
-import { UserRole } from '@/user/enum/user-role.enum';
+import UserWellnessForm from '@/components/user-wellness-form';
+import withAuth from '@/components/with-auth';
 import { useAppContext } from '@/context/app-provider';
-import { UserController } from '@/user/user.controller';
-import { CreateWellness } from '@/user/type/wellness.type';
 import { useFetch } from '@/hook/use-fetch';
-import { Wellness } from '@/user/entity/wellness.entity';
 import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
+import { UserMeta } from '@/controller/user/type/user-meta.type';
+import { UserController } from '@/controller/user/user.controller';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 function Page() {
   const { token } = useAppContext();
-  const wellness = useFetch<Wellness>(UserController.URL.wellness());
+  const wellness = useFetch<UserMeta>('/user/me/meta');
   const [disabled, setDisabled] = useState(false);
 
-  async function submitWellness(data: CreateWellness) {
+  async function submitWellness(data: Omit<UserMeta, 'userId'>) {
     try {
-      await UserController.submitWellness(token, data);
+      await UserController.saveMeta(token, data);
       toast.success('Successfully submitted wellness');
     } catch (e: any) {
       console.error(e);
@@ -28,12 +27,10 @@ function Page() {
   }
 
   useEffect(() => {
-    if (wellness?.data)
-      setDisabled(true);
+    if (wellness?.data) setDisabled(true);
   }, [wellness.data]);
 
-  if (wellness.loading)
-    return <div>Loading...</div>;
+  if (wellness.loading) return <div>Loading...</div>;
 
   return (
     <Box height="100%">

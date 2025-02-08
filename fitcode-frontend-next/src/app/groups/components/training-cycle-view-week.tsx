@@ -1,5 +1,5 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { Training } from '@/training/entity/training.entity';
+import { Training } from '@/training/type/training.entity';
 import { CreateTraining } from '@/training/type/training.type';
 import { Component } from '@/component/entity/component.entity';
 import Box from '@mui/material/Box';

@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { useLocalStorage } from 'usehooks-ts';
-import { BASE_URL } from '@/common/constant/api.constant';
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 
 interface UseFetchOptions {
   method?: string;
-  authorization?: boolean;
+  auth?: boolean;
   body?: object;
 }
 
 export function useFetch<T>(url: string, options?: UseFetchOptions) {
-  const {
-    method = 'GET',
-    authorization = true,
-    body,
-  } = options || {};
+  const { method = 'GET', auth: auth = true, body } = options || {};
 
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -22,16 +18,15 @@ export function useFetch<T>(url: string, options?: UseFetchOptions) {
   const [token] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
 
   const fetchData = useCallback(async () => {
-    if (authorization && !token) return;
+    if (auth && !token) return;
     setLoading(true);
 
     // Add authorization header if `authorization` is true
     const headers = {} as Record<string, string>;
-    if (authorization)
-      headers['Authorization'] = `Bearer ${token}`;
+    if (auth) headers['Authorization'] = `Bearer ${token}`;
 
     try {
-      const response = await fetch(`${BASE_URL}${url}`, {
+      const response = await fetch(`${BACKEND_API_BASE_URL}${url}`, {
         method,
         headers,
         body: JSON.stringify(body),
@@ -51,7 +46,7 @@ export function useFetch<T>(url: string, options?: UseFetchOptions) {
     } finally {
       setLoading(false);
     }
-  }, [url, method, authorization, body, token]);
+  }, [url, method, auth, body, token]);
 
   useEffect(() => {
     fetchData().then();

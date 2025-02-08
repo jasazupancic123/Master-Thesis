@@ -5,7 +5,7 @@ interface TreeOptions<T> {
   rootId?: string | null;
 }
 
-type TreeItem = Record<string, any>
+type TreeItem = Record<string, any>;
 
 export class TreeUtil {
   fromArray<T extends TreeItem>(items: T[], options: TreeOptions<T>): T[] {
@@ -28,12 +28,10 @@ export class TreeUtil {
       const itemId = item[idPropertyName];
       const parentId = item[parentIdPropertyName];
 
-      if (parentId === rootId)
-        roots.push(map.get(itemId)!);
+      if (parentId === rootId) roots.push(map.get(itemId)!);
       else {
         const parent = map.get(parentId);
-        if (parent)
-          parent[childrenPropertyName].push(map.get(itemId));
+        if (parent) parent[childrenPropertyName].push(map.get(itemId));
       }
     }
 
@@ -43,20 +41,47 @@ export class TreeUtil {
   forEach<T extends TreeItem = any, Result = any>(
     items: T[],
     childrenPropertyName: keyof T,
-    callback: (item: T, parent?: T, previousResult?: Result) => Result | Promise<Result>,
+    callback: (
+      item: T,
+      parent?: T,
+      previousResult?: Result
+    ) => Result | Promise<Result>,
     parent?: T,
-    result?: Result,
+    result?: Result
   ) {
     for (const item of items) {
       const cb = callback(item, parent, result);
 
       if (cb instanceof Promise)
-        cb
-          .then((result) => this.forEach(item[childrenPropertyName], childrenPropertyName, callback, item, result))
-          .catch((e) => console.error(e));
+        cb.then((result) =>
+          this.forEach(
+            item[childrenPropertyName],
+            childrenPropertyName,
+            callback,
+            item,
+            result
+          )
+        ).catch((e) => console.error(e));
       else
-        this.forEach(item[childrenPropertyName], childrenPropertyName, callback, item, cb);
+        this.forEach(
+          item[childrenPropertyName],
+          childrenPropertyName,
+          callback,
+          item,
+          cb
+        );
     }
+  }
+
+  getRoot<T extends TreeItem>(item: T, items: T[]): T {
+    let current: T = item;
+    while (current.parents.length > 0) {
+      const parent = items.find((i) => i.id === current.parents[0]);
+      if (!parent) break;
+      current = parent;
+    }
+
+    return current;
   }
 
   isLeaf<T extends TreeItem>(item: T, childrenPropertyName: keyof T): boolean {

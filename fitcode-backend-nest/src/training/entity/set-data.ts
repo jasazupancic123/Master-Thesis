@@ -33,7 +33,6 @@ export class SetData {
   @Expose()
   workloadValue?: string | number; // actual user kg completed
 
-  // actual user kg completed
   @IsString()
   @IsOptional()
   @ApiPropertyOptional()

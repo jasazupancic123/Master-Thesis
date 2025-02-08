@@ -1,39 +1,55 @@
-import { UserRole } from '@/user/enum/user-role.enum';
 import { ILink } from '@/common/type/link.type';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import SpaIcon from '@mui/icons-material/Spa';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import slugify from 'slugify';
+import { ReactNode } from 'react';
 
-export const LINK_INDEX: ILink = { label: 'Home', href: '/', id: '' };
-export const LINK_SOLUTIONS: ILink = { label: 'Solutions', href: '#solutions', id: '#solutions' };
-export const LINK_PRODUCTS: ILink = { label: 'Products', href: '#products', id: '#products' };
-export const LINK_FEATURES: ILink = { label: 'Features', href: '#features', id: '#features' };
-export const LINK_TRADEMARK: ILink = { label: 'Trademark', href: '#trademark', id: '#trademark' };
-export const LINK_HIGHLIGHTS: ILink = { label: 'Highlights', href: '#highlights', id: '#highlights' };
-export const LINK_ABOUT: ILink = { label: 'Our Vision', href: '#about', id: '#about-us' };
-export const LINK_SIGN_IN: ILink = { label: 'Sign In', href: '/sign-in', id: '#sign-in' };
-export const LINK_SIGN_UP: ILink = { label: 'Sign Up', href: '/sign-up', id: '#sign-up' };
-export const LINK_PROFILE: ILink = { label: 'Profile', href: '/profile', id: '#profile' };
-export const LINK_USERS: ILink = { label: 'Users', href: '/users', id: '#users' };
-export const LINK_COMPONENTS: ILink = { label: 'Components', href: '/components', id: '#components' };
-export const LINK_EXERCISES: ILink = { label: 'Exercises', href: '/exercises', id: '#exercises' };
-export const LINK_GROUPS: ILink = { label: 'Trainings', href: '/groups', id: '#groups', icon: <FitnessCenterIcon /> };
-export const LINK_CHART: ILink = { label: 'Chart', href: '/chart', id: '#chart', icon: <BarChartIcon /> };
-export const LINK_WELLNESS: ILink = { label: 'Wellness', href: '/wellness', id: '#wellness', icon: <SpaIcon /> };
-export const LINK_TRAINING: ILink = {
-  label: 'Training',
-  href: '/training',
-  id: '#training',
-  icon: <FitnessCenterIcon />,
-};
-export const LINK_CALENDAR: ILink = {
-  label: 'Calendar',
-  href: '/calendar',
-  id: '#calendar',
-  icon: <CalendarTodayIcon />,
-};
+function link(
+  label: string,
+  href: string,
+  icon?: ReactNode,
+  id?: string
+): ILink {
+  return {
+    label,
+    href,
+    icon,
+    id: id ? id : slugify(label),
+  };
+}
 
+// all standalone app links
+export const LINK_INDEX = link('Home', '/', null, '');
+export const LINK_SOLUTIONS = link('Solutions', '#solutions');
+export const LINK_PRODUCTS = link('Products', '#products');
+export const LINK_FEATURES = link('Features', '#features');
+export const LINK_TRADEMARK = link('Trademark', '#trademark');
+export const LINK_HIGHLIGHTS = link('Highlights', '#highlights');
+export const LINK_ABOUT = link('Our Vision', '#about');
+export const LINK_SIGN_IN = link('Sign In', '/sign-in');
+export const LINK_SIGN_UP = link('Sign Up', '/sign-up');
+export const LINK_PROFILE = link('Profile', '/profile');
+export const LINK_USERS = link('Users', '/users');
+export const LINK_COMPONENTS = link('Components', '/components');
+export const LINK_EXERCISES = link('Exercises', '/exercises');
+export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
+export const LINK_CHART = link('Chart', '/chart', <BarChartIcon />);
+export const LINK_META = link('Wellness', '/wellness', <SpaIcon />);
+export const LINK_TRAINING = link(
+  'Training',
+  '/training',
+  <FitnessCenterIcon />
+);
+export const LINK_CALENDAR = link(
+  'Calendar',
+  '/calendar',
+  <CalendarTodayIcon />
+);
+
+// grouped linked (for utility)
 export const LINKS_AUTH = {
   login: LINK_SIGN_IN,
   register: LINK_SIGN_UP,
@@ -54,7 +70,7 @@ export const LINKS_SIDEBAR = {
     groups: LINK_GROUPS,
     chart: LINK_CHART,
     calendar: LINK_CALENDAR,
-    wellness: LINK_WELLNESS,
+    wellness: LINK_META,
   },
   [UserRole.TRAINER]: {
     exercises: LINK_EXERCISES,
