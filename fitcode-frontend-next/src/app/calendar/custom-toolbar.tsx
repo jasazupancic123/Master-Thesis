@@ -5,13 +5,17 @@ import { ArrowBack, ArrowForward } from '@mui/icons-material';
 import { CalendarEvent } from './calendar-evet';
 import { format } from 'date-fns';
 import { useTheme } from '@mui/material/styles';
+import { useMediaQuery } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
   label,
   date,
   onNavigate,
 }) => {
+  const screenSize = useScreenSize();
   const theme = useTheme();
+
   let formattedLabel = format(date, 'MMM. yyyy').toUpperCase();
   if (formattedLabel.split(' ')[1] === new Date().getFullYear().toString()) {
     formattedLabel = formattedLabel.split(' ')[0];
@@ -23,10 +27,11 @@ const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '10px',
+        padding: screenSize.isLandscapeMobile ? 1 : '10px',
         [theme.breakpoints.down('sm')]: {
           backgroundColor: theme.palette.background.default,
         },
+        maxHeight: screenSize.isLandscapeMobile ? 30 : undefined,
       }}
     >
       {/* Back Button */}
@@ -34,6 +39,10 @@ const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
         onClick={() => onNavigate('PREV')}
         startIcon={<ArrowBack />}
         variant="contained"
+        sx={{
+          maxHeight: screenSize.isLandscapeMobile ? 19 : undefined,
+          maxWidth: screenSize.isLandscapeMobile ? 25 : undefined,
+        }}
       >
         Back
       </Button>
@@ -48,6 +57,10 @@ const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
         onClick={() => onNavigate('NEXT')}
         endIcon={<ArrowForward />}
         variant="contained"
+        sx={{
+          maxHeight: screenSize.isLandscapeMobile ? 19 : undefined,
+          maxWidth: screenSize.isLandscapeMobile ? 25 : undefined,
+        }}
       >
         Next
       </Button>

@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import Container from '@mui/material/Container';
 import Sidebar from '@/common/components/sidebar';
 import Box from '@mui/material/Box';
+import SidebarAthlete from '@/user/components/sidebar-athlete';
 
 interface Props {
   children: ReactNode;
@@ -9,13 +10,10 @@ interface Props {
 
 export default function Layout({ children }: Props) {
   return (
-    <Box bgcolor="background.paper" minHeight="calc(100vh - 64px)">
+    <Box bgcolor="background.paper" minHeight="100vh">
+      <SidebarAthlete />
       <Container component="main" maxWidth="lg">
-        <Sidebar title="PROFILE" />
-
-        <Box mt="64px">
-          {children}
-        </Box>
+        <Box>{children}</Box>
       </Container>
     </Box>
   );
