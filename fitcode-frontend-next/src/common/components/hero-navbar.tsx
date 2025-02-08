@@ -30,7 +30,10 @@ export default function HeroNavbar({ showLogin = true }) {
 
   return (
     <div>
-      <AppBar position="fixed" sx={{ bgcolor: '#121212', backgroundImage: 'none' }}>
+      <AppBar
+        position="fixed"
+        sx={{ bgcolor: '#121212', backgroundImage: 'none' }}
+      >
         <Container maxWidth="lg">
           <Toolbar
             variant="regular"
@@ -45,37 +48,77 @@ export default function HeroNavbar({ showLogin = true }) {
               <Logo width={80} height={40} />
               <Box mr={4} />
 
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+              <Box
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  alignItems: 'center',
+                }}
+              >
                 {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
                   <MenuItem key={id} sx={{ py: 0, px: 2 }}>
                     <NextLink href={`/public#${id}`} passHref>
-                      <Typography variant="body2" color="text.primary">{label}</Typography>
+                      <Typography variant="body2" color="text.primary">
+                        {label}
+                      </Typography>
                     </NextLink>
                   </MenuItem>
                 ))}
               </Box>
             </Box>
 
-            {user && role?.[0] ? <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
-              <NextLink href={mainPageMapper[role[0]].href} passHref>Training</NextLink>
-              <NextLink href="#" onClick={logout}>Sign Out</NextLink>
-            </Box> : showLogin ? (
-              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: 'center' }}>
-                <NextLink href={LINKS_AUTH.login.href} passHref>{LINKS_AUTH.login.label}</NextLink>
+            {user && role?.[0] ? (
+              <Box
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <NextLink href={mainPageMapper[role[0]].href} passHref>
+                  Training
+                </NextLink>
+                <NextLink href="#" onClick={logout}>
+                  Sign Out
+                </NextLink>
+              </Box>
+            ) : showLogin ? (
+              <Box
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <NextLink href={LINKS_AUTH.login.href} passHref>
+                  {LINKS_AUTH.login.label}
+                </NextLink>
               </Box>
             ) : null}
 
             <Box sx={{ display: { md: 'none' } }}>
-              <Button variant="text" color="secondary" onClick={toggleDrawer(true)}>
+              <Button
+                variant="text"
+                color="secondary"
+                onClick={toggleDrawer(true)}
+              >
                 <MenuIcon />
               </Button>
 
               <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
-                <Box sx={{ minWidth: '60dvw', p: 2, backgroundColor: 'background.paper', flexGrow: 1 }}>
+                <Box
+                  sx={{
+                    minWidth: '60dvw',
+                    p: 2,
+                    backgroundColor: 'background.paper',
+                    flexGrow: 1,
+                  }}
+                >
                   {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
                     <MenuItem key={id} sx={{ p: 1 }}>
                       <NextLink href={`/public#${id}`} passHref>
-                        <Typography variant="body2" color="text.primary">{label}</Typography>
+                        <Typography variant="body2" color="text.primary">
+                          {label}
+                        </Typography>
                       </NextLink>
                     </MenuItem>
                   ))}
@@ -83,7 +126,9 @@ export default function HeroNavbar({ showLogin = true }) {
                   <Divider />
 
                   <MenuItem>
-                    <NextLink href={LINKS_AUTH.login.href}>{LINKS_AUTH.login.label}</NextLink>
+                    <NextLink href={LINKS_AUTH.login.href}>
+                      {LINKS_AUTH.login.label}
+                    </NextLink>
                   </MenuItem>
                 </Box>
               </Drawer>

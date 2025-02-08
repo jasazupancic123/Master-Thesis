@@ -10,12 +10,10 @@ interface Props {
 export default function Layout({ children }: Props) {
   return (
     <Box bgcolor="background.paper" minHeight="100vh">
-      <SidebarAthlete title="WELLNESS" />
+      <SidebarAthlete />
 
       <Container component="main" maxWidth="lg">
-        <Box>
-          {children}
-        </Box>
+        <Box>{children}</Box>
       </Container>
     </Box>
   );

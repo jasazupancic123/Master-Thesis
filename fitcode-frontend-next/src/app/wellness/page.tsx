@@ -11,8 +11,10 @@ import { useFetch } from '@/hook/use-fetch';
 import { Wellness } from '@/user/entity/wellness.entity';
 import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 function Page() {
+  const screenSize = useScreenSize();
   const { token } = useAppContext();
   const wellness = useFetch<Wellness>(UserController.URL.wellness());
   const [disabled, setDisabled] = useState(false);
@@ -28,15 +30,13 @@ function Page() {
   }
 
   useEffect(() => {
-    if (wellness?.data)
-      setDisabled(true);
+    if (wellness?.data) setDisabled(true);
   }, [wellness.data]);
 
-  if (wellness.loading)
-    return <div>Loading...</div>;
+  if (wellness.loading) return <div>Loading...</div>;
 
   return (
-    <Box height="100%">
+    <Box height="100%" marginTop={screenSize.isLandscapeMobile ? 1 : 3}>
       <UserWellnessForm
         initialData={wellness.data}
         onSubmit={submitWellness}

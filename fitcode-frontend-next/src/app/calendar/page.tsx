@@ -32,6 +32,8 @@ import { CalendarEvent } from './calendar-evet';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './styles.css';
 import { TrainingController } from '@/training/training.controller';
+import { useMediaQuery } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 const events = [
   {
@@ -60,6 +62,8 @@ function Page() {
   const { token } = useAppContext();
   const localizer = momentLocalizer(moment);
   const theme = useTheme();
+  const screenSize = useScreenSize();
+
   const [currentDate, setCurrentDate] = useState(new Date()); // Track current month
   const [trainings, setTrainings] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,6 +103,7 @@ function Page() {
           color: theme.palette.background.paper,
           alignItems: 'center',
           justifyContent: 'center',
+          margin: 1,
         },
       }}
     >
@@ -108,8 +113,8 @@ function Page() {
           width: '90%',
           height: '75vh',
           maxWidth: '1200px',
-          marginTop: 5,
-          padding: 3,
+          marginTop: screenSize.isLandscapeMobile ? 1 : 5,
+          padding: screenSize.isLandscapeMobile ? 1 : 3,
           backgroundColor: theme.palette.background.paper, // Match card background
           borderRadius: 2,
           [theme.breakpoints.down('sm')]: {
@@ -140,10 +145,12 @@ function Page() {
             height: '100%',
             color: theme.palette.text.primary,
             backgroundColor: theme.palette.background.paper,
+            fontSize: screenSize.isLandscapeMobile ? '0.7rem' : undefined,
             borderRadius: '10px',
             paddingLeft: '5%',
             paddingRight: '5%',
             paddingTop: '0',
+            padding: screenSize.isLandscapeMobile ? 0 : undefined,
           }}
           views={['month', 'week', 'day']}
           defaultView="month"

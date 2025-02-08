@@ -2,7 +2,7 @@
 
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { UserRole } from '@/user/enum/user-role.enum';
-import { BottomNavigation, BottomNavigationAction } from '@mui/material';
+import BottomNavigation from '@/common/components/bottom-navigation';
 import Box from '@mui/material/Box';
 import * as React from 'react';
 import { useState } from 'react';
@@ -14,6 +14,9 @@ import { useAuth } from '@/context/auth-provider';
 import IconButton from '@mui/material/IconButton';
 import { LogoutRounded } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useMediaQuery } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
+import Sidebar from '@/common/components/sidebar';
 
 interface Props {
   title?: string;
@@ -21,7 +24,7 @@ interface Props {
 
 export default function SidebarAthlete(props: Props) {
   const theme = useTheme();
-  const { logout } = useAuth();
+  const screenSize = useScreenSize();
 
   const router = useRouter();
   const path = usePathname();
@@ -41,32 +44,15 @@ export default function SidebarAthlete(props: Props) {
         spacing={2}
         bgcolor="background.default"
         width="100%"
-        height={64}
-        sx={{
-          [theme.breakpoints.down('sm')]: {
-            height: 40,
-          },
-        }}
+        height={screenSize.isLandscapeMobile || screenSize.isMobile ? 50 : 64}
         justifyContent="center"
         alignItems="center"
       >
-        <Logo width={80} height={40} />
+        <Logo
+          width={screenSize.isLandscapeMobile || screenSize.isMobile ? 80 : 120}
+          height={screenSize.isLandscapeMobile || screenSize.isMobile ? 40 : 60}
+        />
       </Stack>
-
-      {props.title && (
-        <Box
-          display="flex"
-          justifyContent="center"
-          pb={3}
-          bgcolor="background.paper"
-        >
-          <Box bgcolor="background.default" borderRadius="0 0 50px 50px">
-            <Typography variant="h5" component="h1" py={1} px={8}>
-              {props.title}
-            </Typography>
-          </Box>
-        </Box>
-      )}
 
       <Box
         position="fixed"
@@ -76,34 +62,11 @@ export default function SidebarAthlete(props: Props) {
         justifyContent="center"
         zIndex={10001}
       >
-        <BottomNavigation
-          value={index}
-          onChange={(_, newValue) => {
-            setIndex(newValue);
-            router.push(mapper[newValue]);
-          }}
-          showLabels
-          sx={{
-            backgroundColor: '#303E4A',
-            height: '70px',
-            width: { xs: '100%', md: '50%' }, // Centered and one-third of the width on larger screens
-            '& .Mui-selected': { color: '#1EB980 !important' },
-          }}
-        >
-          {Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link, i) => (
-            <BottomNavigationAction
-              key={i}
-              label={link.label}
-              icon={link.icon || <></>}
-              sx={{ color: index === i ? '#1EB980' : '#fff', p: 1 }}
-            />
-          ))}
-
-          {/* Logout Button */}
-          <IconButton onClick={logout}>
-            <LogoutRounded />
-          </IconButton>
-        </BottomNavigation>
+        {screenSize.isLandscapeMobile || screenSize.isMobile ? (
+          <Sidebar />
+        ) : (
+          <BottomNavigation index={index} setIndex={setIndex} mapper={mapper} />
+        )}
       </Box>
     </>
   );
