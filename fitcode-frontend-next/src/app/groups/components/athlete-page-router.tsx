@@ -2,7 +2,7 @@
 
 import { GroupPageProps } from '@/group/type/props.type';
 import Box from '@mui/material/Box';
-import SelectInput from '@/common/components/select-input';
+import SelectInput from '@/components/select-input';
 import { Group } from '@/group/entity/group.entity';
 import GroupIcon from '@mui/icons-material/Group';
 import React, { useEffect, useState } from 'react';
@@ -16,7 +16,7 @@ import Stack from '@mui/material/Stack';
 import AthleteTrainingExerciseCard from '@/training/components/athlete-training-exercise-card';
 import { CommonService } from '@/common/service/common.service';
 import { Divider } from '@mui/material';
-import { Training } from '@/training/entity/training.entity';
+import { Training } from '@/training/type/training.entity';
 import { TrainingService } from '@/training/training.service';
 import { Exercise } from '@/exercise/entity/exercise.entity';
 import { ExerciseController } from '@/exercise/exercise.controller';
@@ -26,7 +26,7 @@ export default function AthletePageRouter(props: GroupPageProps) {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const { token, components } = useAppContext();
   const exercises = useFetch<Exercise[]>(ExerciseController.URL.exercises(), {
-    authorization: true,
+    auth: true,
   });
 
   useEffect(() => {

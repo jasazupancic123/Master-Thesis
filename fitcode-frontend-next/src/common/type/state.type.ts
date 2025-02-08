@@ -1,1 +1,3 @@
-export type SetState<T = any> = (state: T | ((state: T) => T)) => void | Promise<void>;
+export type SetState<T = any> = (
+  state: T | ((state: T) => T)
+) => void | Promise<void>;

@@ -1,4 +1,4 @@
-import { Training } from '@/training/entity/training.entity';
+import { Training } from '@/training/type/training.entity';
 import { Component } from '@/component/entity/component.entity';
 import { useAppContext } from '@/context/app-provider';
 import { AppContextType } from '@/common/type/context.type';

@@ -6,7 +6,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/common/config/firebase.config';
 import { FirebaseError } from 'firebase/app';
-import { UserRole } from '@/user/enum/user-role.enum';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export const isAdmin = (role: UserRole[]) => role.includes(UserRole.ADMIN);
 export const isManager = (role: UserRole[]) => role.includes(UserRole.MANAGER);
@@ -41,11 +41,18 @@ export class FirebaseAuthUtil {
     }
   }
 
-  static async register(email: string, password: string, displayName?: string): Promise<UserCredential> {
+  static async register(
+    email: string,
+    password: string,
+    displayName?: string
+  ): Promise<UserCredential> {
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      if (displayName)
-        await updateProfile(result.user, { displayName });
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      if (displayName) await updateProfile(result.user, { displayName });
 
       return result;
     } catch (e: any) {
@@ -68,4 +75,3 @@ export class FirebaseAuthUtil {
     }
   }
 }
-

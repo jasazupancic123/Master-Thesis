@@ -19,7 +19,7 @@ import {
 } from 'src/common/type/firebase-firestore.type';
 import { Subgroup } from '../entity/subgroup.entity';
 import { v4 } from 'uuid';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp, Transaction } from 'firebase-admin/firestore';
 import { Training } from '../entity/training.entity';
 
 /**
@@ -115,6 +115,35 @@ export class SubgroupService {
       );
     } catch (e) {
       console.error('deleteSubgroup transaction failed:', e);
+    }
+  }
+
+  updateMembersByTraining(
+    transaction: Transaction,
+    training: Training,
+    membersIds: string[],
+  ) {
+    const trainingRef = this.trainingRepository.doc(training.id);
+
+    // `removed` indicates members that were removed from parent training
+    const removed = training.membersIds.filter(
+      (id) => !membersIds.includes(id),
+    );
+
+    // remove all removed members from parent training from all subgroups
+    const subgroups = training.subgroups || {};
+    for (const subgroupId in subgroups) {
+      const subgroup = subgroups[subgroupId];
+
+      if (subgroup.membersIds.some((id) => removed.includes(id))) {
+        const updatedMembersIds = subgroup.membersIds.filter(
+          (id) => !removed.includes(id),
+        );
+
+        transaction.update(trainingRef, {
+          [`subgroups.${subgroupId}.membersIds`]: updatedMembersIds,
+        });
+      }
     }
   }
 }

@@ -14,11 +14,7 @@ import {
 } from 'firebase-admin/firestore';
 import { Training } from '../entity/training.entity';
 import { ExerciseService } from '../../exercise/service/exercise.service';
-import {
-  Filter,
-  FindManyOptions,
-  FindOneOptions,
-} from '../../common/type/orm.type';
+import { Filter, FindManyOptions } from '../../common/type/orm.type';
 import { GroupService } from '../../group/service/group.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { TrainingRepository } from '../repository/training.repository';
@@ -45,7 +41,6 @@ import { Component } from 'src/component/entity/component.entity';
 import { CommonService } from 'src/common/service/common.service';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { UserService } from 'src/user/service/user.service';
-import { UserMeta } from 'src/user/entity/user-meta.entity';
 import { SubgroupService } from './subgroup.service';
 import { TrainingPlanService } from './training-plan.service';
 import { UpdateTrainingComponent } from '../type/training-component.type';
@@ -57,7 +52,6 @@ import {
 import { SetData } from '../entity/set-data';
 import { CreateSubgroup, UpdateSubgroup } from '../type/subgroup.type';
 import { Subgroup } from '../entity/subgroup.entity';
-import { UserWorkload } from '../entity/user-workload.entity';
 import { ExerciseMeta } from '../entity/exercise-meta.entity';
 
 @Injectable()
@@ -174,7 +168,7 @@ export class TrainingService {
     );
 
     // validate parent references
-    const group = await this.groupService.findOneOrFail(user, { groupId });
+    const group = await this.groupService.findByIdOrFail(user, { groupId });
     this.groupService.findCycle(cycleId, group);
 
     // validate trainer and owner
@@ -209,7 +203,7 @@ export class TrainingService {
       cycleId: input.cycleId,
       ownerId: user.uid,
       membersIds: group.membersIds,
-      copiedFromId: input.copiedFromId || null,
+      copiedFromId: null,
       from: input.from,
       to: input.to,
       components: input.components,
@@ -238,19 +232,21 @@ export class TrainingService {
     // find training
     const training = await this.findOneOrFail(user, ref);
 
+    // validate training times
     if (input.from || input.to) {
       const from = input.from || training.from;
       const to = input.to || training.to;
-      this.validateTime(from, to);
+      const trainings = await this.getDocsByGroup(training.groupId);
 
-      const groupTrainings = await this.getDocsByGroup(training.groupId);
+      this.validateTime(from, to);
       this.validateOverlap(
         from,
         to,
-        groupTrainings.filter((t) => t.id !== training.id),
+        trainings.filter((t) => t.id !== training.id),
       );
     }
 
+    // add / remove members from training (and its subgroups) and calculate workloads if needed
     if (input.membersIds) {
       const futureTrainings = await this.getDocs((query) =>
         query.where('from', '>=', Timestamp.now()),
@@ -258,16 +254,32 @@ export class TrainingService {
         docs.map((doc) => this.trainingRepository.serialize(doc)),
       );
 
-      await this.updateMembers(
-        training,
-        ref,
-        input.membersIds,
-        futureTrainings,
-      );
-    }
+      await this.firebaseService.firestore.runTransaction(
+        async (transaction) => {
+          const trainingRef = this.trainingRepository.doc(training.id);
 
-    await this.trainingRepository.updateDoc(ref.trainingId, input);
-    return await this.findOneOrFail(user, ref);
+          // calculate workloads for future trainings
+          await this.updateMembers(
+            transaction,
+            training,
+            ref,
+            input.membersIds,
+            futureTrainings,
+          );
+
+          // remove all subgroup members if members are removed from parent training
+          this.subgroupService.updateMembersByTraining(
+            transaction,
+            training,
+            input.membersIds,
+          );
+
+          transaction.update(trainingRef, input);
+        },
+      );
+    } else await this.trainingRepository.updateDoc(ref.trainingId, input);
+
+    return { ...training, ...input };
   }
 
   async remove(user: User, ref: Required<TrainingRef>): Promise<void> {
@@ -286,7 +298,7 @@ export class TrainingService {
     user: User,
     ref: TrainingRef,
     input: Omit<CreateSubgroup, 'components'>,
-  ) {
+  ): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is creating training subgroup: ${JSON.stringify(input)}`,
     );
@@ -295,51 +307,97 @@ export class TrainingService {
     const training = await this.findOneOrFail(user, ref);
     this.validateTrainer(user);
     this.validateOwner(user.uid, training);
-
-    // validate that all members belong to training
     this.validateTrainingMembers(training, input.membersIds);
 
     // create subgroup
-    await this.subgroupService.create(ref, {
+    const subgroupId = await this.subgroupService.create(ref, {
       ...input,
       components: training.components, // components are copied from parent training
     });
 
     // NOTE - no need to calculate workloads, because they already exist from parent training
+
+    return {
+      ...training,
+      subgroups: {
+        ...(training.subgroups || {}),
+        [subgroupId]: {
+          ...input,
+          id: subgroupId,
+          components: training.components,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      },
+    };
   }
 
   async updateSubgroup(
     user: User,
     ref: Required<SubgroupRef>,
-    input: UpdateSubgroup,
-  ) {
+    input: Omit<UpdateSubgroup, 'components'>,
+  ): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is updating training subgroup ${ref.subgroupId}: ${JSON.stringify(input)}`,
     );
 
     // validate parent references and ownership
     const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
-    this.validateOwner(user.uid, training);
-
     const subgroup = this.subgroupService.findByIdOrFail(
       ref.subgroupId,
       training,
     );
 
     // validate that all members belong to training
+    this.validateTrainer(user);
+    this.validateOwner(user.uid, training);
     this.validateTrainingMembers(training, input.membersIds);
+
+    // update members
+    if (input.membersIds) {
+      await this.firebaseService.firestore.runTransaction(
+        async (transaction) => {
+          await this.updateMembers(
+            transaction,
+            training,
+            ref,
+            input.membersIds,
+            [], // subgroup is "alive" only for one training, don't update other trainings
+          );
+        },
+      );
+    }
+
+    await this.subgroupService.update(ref, input);
+
+    return {
+      ...training,
+      subgroups: {
+        ...(training.subgroups || {}),
+        [ref.subgroupId]: { ...subgroup, ...input },
+      },
+    };
   }
 
-  async deleteSubgroup(user: User, ref: Required<SubgroupRef>) {
+  async deleteSubgroup(
+    user: User,
+    ref: Required<SubgroupRef>,
+  ): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is deleting training subgroup ${ref.subgroupId}`,
     );
 
     // validate parent references and ownership
     const training = await this.findOneOrFail(user, ref);
+    this.subgroupService.findByIdOrFail(ref.subgroupId, training);
+
     this.validateTrainer(user);
     this.validateOwner(user.uid, training);
+
+    await this.subgroupService.delete(ref);
+    const { [ref.subgroupId]: _, ...subgroups } = training.subgroups;
+
+    return { ...training, subgroups };
   }
 
   async addComponents(
@@ -834,6 +892,7 @@ export class TrainingService {
   }
 
   private async updateMembers(
+    transaction: Transaction,
     training: Training,
     ref: SubgroupRef,
     newMemberIds: string[],
@@ -852,44 +911,40 @@ export class TrainingService {
     );
 
     const metas = await this.userService.getLastMetas(added);
-    await this.firebaseService.firestore.runTransaction(async (transaction) => {
-      // update members
-      const docRef = this.trainingRepository.doc(training.id);
-      transaction.update(docRef, { [prefix]: newMemberIds });
 
-      // for each added user, create new workload for trainings in the future
-      await Promise.all(
-        trainings.map(async (training) => {
-          const exercises = this.getAllTrainingExercises(training);
-          const trainingWorkloads =
-            await this.userWorkloadService.findAllByTraining(training.id);
+    // update members
+    const docRef = this.trainingRepository.doc(training.id);
+    transaction.update(docRef, { [prefix]: newMemberIds });
 
-          exercises.map(async ({ componentId, superset, exerciseId, meta }) => {
-            const exerciseRef = { ...ref, componentId, superset, exerciseId };
-            const membersWorkloads =
-              await this.userWorkloadService.findAllByMembers(
-                exerciseId,
-                added,
-              );
+    // for each added user, create new workload for trainings in the future
+    await Promise.all(
+      [training, ...trainings].map(async (training) => {
+        const exercises = this.getAllTrainingExercises(training);
+        const trainingWorkloads =
+          await this.userWorkloadService.findAllByTraining(training.id);
 
-            const membersData = {};
-            for (const userId of added)
-              membersData[userId] = {
-                weight: metas[userId].weight || 0,
-                workloads: membersWorkloads[userId] || [],
-              };
+        exercises.map(async ({ componentId, superset, exerciseId, meta }) => {
+          const exerciseRef = { ...ref, componentId, superset, exerciseId };
+          const membersWorkloads =
+            await this.userWorkloadService.findAllByMembers(exerciseId, added);
 
-            this.userWorkloadService.createForTraining(
-              transaction,
-              exerciseRef,
-              membersData,
-              { meta },
-              trainingWorkloads,
-            );
-          });
-        }),
-      );
-    });
+          const membersData = {};
+          for (const userId of added)
+            membersData[userId] = {
+              weight: metas[userId].weight || 0,
+              workloads: membersWorkloads[userId] || [],
+            };
+
+          await this.userWorkloadService.createForTraining(
+            transaction,
+            exerciseRef,
+            membersData,
+            { meta },
+            trainingWorkloads,
+          );
+        });
+      }),
+    );
   }
 
   /**

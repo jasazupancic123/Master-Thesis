@@ -5,54 +5,32 @@ import Avatar from '@mui/material/Avatar';
 import Circles from '@/app/groups/components/circles';
 import dayjs from 'dayjs';
 import { TextField, Tooltip } from '@mui/material';
-import { GroupPageProps } from '@/group/type/props.type';
 import { CommonService } from '@/common/service/common.service';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import Grid from '@mui/material/Unstable_Grid2';
 import Grid2 from '@mui/material/Unstable_Grid2';
-import TrainingExerciseCard from '@/exercise/components/training-exercise-card';
 import { useAppContext } from '@/context/app-provider';
-import BorderColor from '@/group/components/border-color';
 import { Day } from '@/common/service/util/date.util';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { TrainingController } from '@/training/training.controller';
 import toast from 'react-hot-toast';
-import {
-  CreateTrainingSuperset,
-  UpdateTrainingSuperset,
-} from '@/training/type/training-superset.type';
-import { Training } from '@/training/entity/training.entity';
 import { COLOR } from '@/common/constant/browser.constant';
-import { Exercise } from '@/exercise/entity/exercise.entity';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
-import { PaginateOptions } from '@/common/type/paginate.type';
-import { ExerciseController } from '@/exercise/exercise.controller';
 import Button from '@mui/material/Button';
-import { SetType } from '@/training/enum/set-type.enum';
-import { WorkloadType } from '@/training/enum/workload-type.enum';
-import { Effort } from '@/training/enum/effort.enum';
-import { UpdateTrainingExercise } from '@/training/type/training-exercise.type';
-import { CreateSubgroup } from '@/group/type/subgroup.type';
-import { GroupController } from '@/group/group.controller';
-import MyModal from '@/common/components/modal';
-import SelectInput from '@/common/components/select-input';
-import { Subgroup } from '@/group/entity/subgroup.entity';
-import { Groups, Save, Update } from '@mui/icons-material';
-import Warning from '@/common/components/warning';
+import MyModal from '@/components/modal';
+import SelectInput from '@/components/select-input';
+import { Groups, Update } from '@mui/icons-material';
+import Warning from '@/components/warning';
 import { useFetch } from '@/hook/use-fetch';
-import { ExerciseService } from '@/exercise/exercise.service';
-import { TrainingService } from '@/training/training.service';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Training } from '@/controller/training/type/training.type';
 
 const commonService = CommonService.instance;
 
-export default function TrainerDayView(props: GroupPageProps) {
+export default function TrainerDayView(props: any) {
   const { token, components } = useAppContext();
-  const allExercises = useFetch<Exercise[]>(
-    ExerciseController.URL.exercises(),
-    { authorization: true }
-  );
+  const allExercises = useFetch<Exercise[]>('/exercise');
 
   const { group, cycle } = props.selected;
   const [trainings, setTrainings] = useState<Training[]>([]);
@@ -71,7 +49,7 @@ export default function TrainerDayView(props: GroupPageProps) {
     subgroup: {
       name: '',
       membersIds: [],
-    } as Omit<CreateSubgroup, 'from' | 'to'>,
+    },
   });
 
   const [exercises, setExercises] = useState({

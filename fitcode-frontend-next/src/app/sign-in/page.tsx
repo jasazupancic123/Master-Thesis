@@ -8,11 +8,10 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Avatar from '@mui/material/Avatar';
-import HeroNavbar from '@/common/components/hero-navbar';
+import HeroNavbar from '@/components/hero-navbar';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {
   LINK_GROUPS,
-  LINK_TRAINING,
   LINK_USERS,
   LINKS_AUTH,
 } from '@/common/constant/navigation.constant';
@@ -21,8 +20,8 @@ import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { useLocalStorage } from 'usehooks-ts';
 import { CommonService } from '@/common/service/common.service';
-import { UserRole } from '@/user/enum/user-role.enum';
 import { signInUpTheme } from '../style';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export default function Page() {
   const router = useRouter();

@@ -9,6 +9,6 @@ import { GroupRepository } from './repository/group.repository';
   imports: [forwardRef(() => UserModule), forwardRef(() => TrainingModule)],
   controllers: [GroupController],
   providers: [GroupRepository, GroupService],
-  exports: [GroupRepository, GroupService],
+  exports: [GroupService],
 })
 export class GroupModule {}

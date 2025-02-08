@@ -14,7 +14,7 @@ import { UpdateUserClaimsDto } from './dto/update-user.dto';
 import { UserService } from './service/user.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import type { User } from '../common/type/firebase-auth.type';
-import { CreateUserMetaDto } from './dto/create-user-meta.dto';
+import { SaveUserMetaDto } from './dto/save-user-meta.dto';
 
 @Controller('user')
 export class UserController {
@@ -28,36 +28,33 @@ export class UserController {
 
   @Get(':id')
   @Auth([UserRole.TRAINER, UserRole.MANAGER, UserRole.ADMIN])
-  async findOneById(@RequestUser() user: User, @Param('id') id: string) {
+  async findById(@RequestUser() user: User, @Param('id') id: string) {
     if (id === 'me') return await this.userService.findOneBy('id', user.uid);
     return await this.userService.findOneBy('id', id);
   }
 
   @Patch(':id')
   @Auth([UserRole.ADMIN])
-  async updateUserClaims(
+  async updateClaims(
     @Param('id') id: string,
     @Body() data: UpdateUserClaimsDto,
   ) {
     await this.userService.updateClaims(id, data);
-    return { id };
+    return {};
   }
 
   @Get('me/meta')
   @Auth([UserRole.ATHLETE])
-  async getMeta(@RequestUser() user: User) {
+  async getMyMeta(@RequestUser() user: User) {
     const ref = { uid: user.uid };
     return await this.userService.getLastMeta(ref);
   }
 
   @Post('me/meta')
   @Auth([UserRole.ATHLETE])
-  async createMeta(
-    @RequestUser() user: User,
-    @Body() input: CreateUserMetaDto,
-  ) {
+  async saveMeta(@RequestUser() user: User, @Body() input: SaveUserMetaDto) {
     const ref = { uid: user.uid, date: new Date() };
-    return await this.userService.addMeta(user, ref, {
+    return await this.userService.addOrUpdateMeta(ref, {
       ...input,
       userId: user.uid,
       date: ref.date,

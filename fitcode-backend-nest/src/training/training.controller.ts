@@ -21,12 +21,13 @@ import { UpdateTrainingExerciseDto } from './dto/update-training-exercise.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { UpdateTrainingComponentDto } from './dto/update-training-component.dto';
 import { UpdateTrainingSupersetDto } from './dto/update-training-superset.dto';
-import { FirebaseService } from '../firebase/firebase.service';
 import { Training } from './entity/training.entity';
-import { UserWorkloadService } from './service/user-workload.service';
 import { UpdateAthleteSetDataDto } from './dto/update-athlete-set-data.dto';
 import { TrainingExercise } from './entity/training-exercise.entity';
 import { UserRole } from 'src/user/enum/user-role.enum';
+import { SubgroupIdDto } from 'src/common/dto/subgroup-id.dto';
+import { AddSubgroupDto } from './dto/add-subgroup.dto';
+import { UpdateSubgroupDto } from './dto/update-subgroup.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -34,50 +35,29 @@ export class TrainingController {
 
   @Get()
   @Auth()
-  async findTrainings(
+  async findAll(
     @RequestUser() user: User,
     @Query() filter: FilterTrainingQueryDto,
   ) {
-    let trainings: Training[] = [];
-
-    switch (user.customClaims.role[0]) {
-      case UserRole.TRAINER: {
-        trainings = await this.trainingService.findAll(user, {
-          filter: {
-            groupId: { value: filter.groupId },
-            cycleId: { value: filter.cycleId },
-            // subgroupId: { value: filter.subgroupId || null },
-            ...(filter.from && { from: { value: filter.from, op: '>=' } }),
-            ...(filter.to && { to: { value: filter.to, op: '<=' } }),
-          },
-        });
-      }
-      case UserRole.ATHLETE: {
-        trainings = await this.trainingService.findAll(user, {
-          filter: {
-            ...(filter.from && { from: { value: filter.from, op: '>=' } }),
-            ...(filter.to && { to: { value: filter.to, op: '<=' } }),
-          },
-        });
-      }
-    }
-
-    return trainings.map(this.trainingService.map);
+    return this.trainingService.findAll(user, {
+      filter: {
+        groupId: { value: filter.groupId },
+        cycleId: { value: filter.cycleId },
+        ...(filter.from && { from: { value: filter.from, op: '>=' } }),
+        ...(filter.to && { to: { value: filter.to, op: '<=' } }),
+      },
+    });
   }
 
   @Post()
   @Auth()
-  async createTraining(
-    @RequestUser() user: User,
-    @Body() body: CreateTrainingDto,
-  ) {
-    const training = await this.trainingService.create(user, body);
-    return this.trainingService.map(training);
+  async create(@RequestUser() user: User, @Body() body: CreateTrainingDto) {
+    return this.trainingService.create(user, body);
   }
 
   @Patch(':trainingId')
   @Auth()
-  async updateTraining(
+  async update(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Body() body: UpdateTrainingDto,
@@ -88,13 +68,47 @@ export class TrainingController {
 
   @Delete(':trainingId')
   @Auth()
-  async deleteTraining(
+  async delete(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
   ) {
     const ref = { trainingId };
     await this.trainingService.remove(user, ref);
-    return { id: trainingId };
+    return {};
+  }
+
+  @Post(':trainingId/subgroup')
+  @Auth()
+  async addSubgroup(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() body: AddSubgroupDto,
+  ) {
+    const ref = { trainingId };
+    return await this.trainingService.addSubgroup(user, ref, body);
+  }
+
+  @Patch(':trainingId/subgroup/:subgroupId')
+  @Auth()
+  async updateSubgroup(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('subgroupId') subgroupId: string,
+    @Body() body: UpdateSubgroupDto,
+  ) {
+    const ref = { trainingId, subgroupId };
+    return await this.trainingService.updateSubgroup(user, ref, body);
+  }
+
+  @Delete(':trainingId/subgroup/:subgroupId')
+  @Auth()
+  async deleteSubgroup(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('subgroupId') subgroupId: string,
+  ) {
+    const ref = { trainingId, subgroupId };
+    return await this.trainingService.deleteSubgroup(user, ref);
   }
 
   @Post(':trainingId/component')
@@ -102,19 +116,17 @@ export class TrainingController {
   async addComponents(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() { components }: AddTrainingComponentsDto,
+    @Body() body: AddTrainingComponentsDto,
   ) {
-    const ref = { trainingId };
-    const training = await this.trainingService.addComponents(
+    const ref = { trainingId, subgroupId: body.subgroupId };
+    return await this.trainingService.addComponents(
       user,
       ref,
-      components.map((c) => [
+      body.components.map((c) => [
         c.id,
         { ...c, supersets: [{ order: 0, exercises: {} }] },
       ]),
     );
-
-    return this.trainingService.map(training);
   }
 
   @Patch(':trainingId/component/:componentId')
@@ -125,14 +137,8 @@ export class TrainingController {
     @Param('componentId') componentId: string,
     @Body() data: UpdateTrainingComponentDto,
   ) {
-    const ref = { trainingId, componentId };
-    const training = await this.trainingService.updateComponent(
-      user,
-      ref,
-      data,
-    );
-
-    return this.trainingService.map(training);
+    const ref = { trainingId, componentId, subgroupId: data.subgroupId };
+    return await this.trainingService.updateComponent(user, ref, data);
   }
 
   @Delete(':trainingId/component/:componentId')
@@ -141,10 +147,10 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
+    @Body() body: SubgroupIdDto,
   ) {
-    const ref = { trainingId, componentId };
-    await this.trainingService.deleteComponent(ref, user);
-    return { id: componentId };
+    const ref = { trainingId, componentId, subgroupId: body.subgroupId };
+    return await this.trainingService.deleteComponent(ref, user);
   }
 
   @Post(':trainingId/component/:componentId/superset')
@@ -153,95 +159,118 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Body() input: AddTrainingSupersetDto,
+    @Body() body: AddTrainingSupersetDto,
   ) {
-    const ref = { trainingId, componentId };
-    const training = await this.trainingService.addSupersets(
-      ref,
-      [input],
-      user,
-    );
-
-    return this.trainingService.map(training);
+    const ref = { trainingId, componentId, subgroupId: body.subgroupId };
+    return await this.trainingService.addSupersets(ref, [body], user);
   }
 
-  @Patch(':trainingId/component/:componentId/superset/:supersetId')
+  @Patch(':trainingId/component/:componentId/superset/:superset')
   @Auth()
   async updateSuperset(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('supersetId') superset: number,
-    @Body() data: UpdateTrainingSupersetDto,
+    @Param('superset') superset: number,
+    @Body() body: UpdateTrainingSupersetDto,
   ) {
-    const ref = { trainingId, componentId, superset };
-    const training = await this.trainingService.updateSuperset(ref, data, user);
-    return this.trainingService.map(training);
+    const ref = {
+      trainingId,
+      componentId,
+      superset,
+      subgroupId: body.subgroupId,
+    };
+
+    return await this.trainingService.updateSuperset(ref, body, user);
   }
 
-  @Delete(':trainingId/component/:componentId/superset/:supersetId')
+  @Delete(':trainingId/component/:componentId/superset/:superset')
   @Auth()
   async deleteSuperset(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('supersetId') superset: number,
+    @Param('superset') superset: number,
+    @Body() body: SubgroupIdDto,
   ) {
-    const ref = { trainingId, componentId, superset };
-    await this.trainingService.deleteSuperset(ref, user);
-    return { id: superset };
+    const ref = {
+      trainingId,
+      componentId,
+      superset,
+      subgroupId: body.subgroupId,
+    };
+
+    return await this.trainingService.deleteSuperset(ref, user);
   }
 
-  @Post(':trainingId/component/:componentId/superset/:supersetId/exercise')
+  @Post(':trainingId/component/:componentId/superset/:superset/exercise')
   @Auth()
   async addExercises(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('supersetId') superset: number,
-    @Body() input: AddTrainingExercisesDto,
+    @Param('superset') superset: number,
+    @Body() body: AddTrainingExercisesDto,
   ) {
-    const ref = { trainingId, componentId, superset };
-    const data = input.exercises.map((item) => [item.id, item]) as [
+    const ref = {
+      trainingId,
+      componentId,
+      superset,
+      subgroupId: body.subgroupId,
+    };
+
+    const data = body.exercises.map((item) => [item.id, item]) as [
       string,
       TrainingExercise,
     ][];
 
-    const training = await this.trainingService.addExercises(ref, data, user);
-    return this.trainingService.map(training);
+    return await this.trainingService.addExercises(ref, data, user);
   }
 
   @Patch(
-    ':trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId',
+    ':trainingId/component/:componentId/superset/:superset/exercise/:exerciseId',
   )
   @Auth()
   async updateExercise(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('supersetId') superset: number,
+    @Param('superset') superset: number,
     @Param('exerciseId') exerciseId: string,
-    @Body() data: UpdateTrainingExerciseDto,
+    @Body() body: UpdateTrainingExerciseDto,
   ) {
-    const ref = { trainingId, componentId, superset, exerciseId };
-    const training = await this.trainingService.updateExercise(ref, data, user);
-    return this.trainingService.map(training);
+    const ref = {
+      trainingId,
+      componentId,
+      superset,
+      exerciseId,
+      subgroupId: body.subgroupId,
+    };
+
+    return await this.trainingService.updateExercise(ref, body, user);
   }
 
   @Delete(
-    ':trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId',
+    ':trainingId/component/:componentId/superset/:superset/exercise/:exerciseId',
   )
   @Auth()
   async deleteExercise(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('supersetId') superset: number,
+    @Param('superset') superset: number,
     @Param('exerciseId') exerciseId: string,
+    @Body() body: SubgroupIdDto,
   ) {
-    const ref = { trainingId, componentId, superset, exerciseId };
-    await this.trainingService.deleteExercise(ref, user);
-    return {};
+    const ref = {
+      trainingId,
+      componentId,
+      superset,
+      exerciseId,
+      subgroupId: body.subgroupId,
+    };
+
+    return this.trainingService.deleteExercise(ref, user);
   }
 
   @Patch(
@@ -254,7 +283,7 @@ export class TrainingController {
     @Param('componentId') componentId: string,
     @Param('supersetId') superset: number,
     @Param('exerciseId') exerciseId: string,
-    @Body() data: UpdateAthleteSetDataDto,
+    @Body() body: UpdateAthleteSetDataDto,
   ) {
     const ref = {
       trainingId,
@@ -262,9 +291,10 @@ export class TrainingController {
       superset,
       exerciseId,
       userId: user.uid,
+      subgroupId: body.subgroupId,
     };
 
-    await this.trainingService.updateAthleteWorkload(ref, data.sets, user);
+    await this.trainingService.updateAthleteWorkload(ref, body.sets, user);
     return {};
   }
 }

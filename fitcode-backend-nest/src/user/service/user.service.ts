@@ -125,12 +125,12 @@ export class UserService {
     return await this.userMetaRepository.getDoc(ref);
   }
 
-  async addMeta(
-    user: User,
-    ref: UserMetaRef,
-    input: UserMeta,
-  ): Promise<UserMeta> {
-    await this.userMetaRepository.addDoc(ref, input);
+  async addOrUpdateMeta(ref: UserMetaRef, input: UserMeta): Promise<UserMeta> {
+    const meta = await this.userMetaRepository.getDoc(ref);
+
+    if (!meta) await this.userMetaRepository.addDoc(ref, input);
+    else await this.userMetaRepository.updateDoc(ref, input);
+
     return input;
   }
 

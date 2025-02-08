@@ -1,7 +1,8 @@
-import { PickType } from '@nestjs/mapped-types';
+import { IntersectionType, PickType } from '@nestjs/mapped-types';
 import { Superset } from '../entity/superset.entity';
 import { CreateSuperset } from '../type/superset.type';
+import { SubgroupIdDto } from 'src/common/dto/subgroup-id.dto';
 
 export class AddTrainingSupersetDto
-  extends PickType(Superset, ['color', 'exercises'])
+  extends IntersectionType(PickType(Superset, ['color']), SubgroupIdDto)
   implements Omit<CreateSuperset, 'exercises'> {}

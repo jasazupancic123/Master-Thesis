@@ -1,26 +1,25 @@
 'use client';
 
-import withAuth from '@/common/components/with-auth';
+import withAuth from '@/components/with-auth';
 import React, { useEffect, useState } from 'react';
 import { Pagination, TextField } from '@mui/material';
-import type { Exercise } from '@/exercise/entity/exercise.entity';
-import type { CreateExercise } from '@/exercise/type/exercise.type';
 import Box from '@mui/material/Box';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import ExerciseModal from '@/exercise/components/exercise-modal';
 import Grid from '@mui/material/Unstable_Grid2';
-import { ExerciseCard } from '@/exercise/components/exercise-card';
 import { useAppContext } from '@/context/app-provider';
-import type { Component } from '@/component/entity/component.entity';
 import toast from 'react-hot-toast';
 import IconButton from '@mui/material/IconButton';
-import ExerciseChips from '@/exercise/components/exercise-chips';
 import Stack from '@mui/material/Stack';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { CommonService } from '@/common/service/common.service';
-import { ExerciseController } from '@/exercise/exercise.controller';
 import { useFetch } from '@/hook/use-fetch';
-import { ExerciseService } from '@/exercise/exercise.service';
+import { ExerciseCard } from '@/components/exercise-card';
+import ExerciseChips from '@/components/exercise-chips';
+import ExerciseModal from '@/components/exercise-modal';
+import { ExerciseController } from '@/controller/exercise/exercise.controller';
+import { ExerciseService } from '@/controller/exercise/exercise.service';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Component } from '@/controller/component/type/component.type';
 
 const commonService = CommonService.instance;
 
@@ -33,10 +32,7 @@ const DEFAULT_EXERCISE: Partial<Exercise> = {
 function Page() {
   // context
   const { token, components, attributes } = useAppContext();
-  const allExercises = useFetch<Exercise[]>(
-    ExerciseController.URL.exercises(),
-    { authorization: true }
-  );
+  const allExercises = useFetch<Exercise[]>('/exercise');
 
   // filter exercises
   const [component, setComponent] = useState<Component | null>(null);
@@ -103,7 +99,7 @@ function Page() {
           attributeValues[key] === undefined && delete attributeValues[key]
       );
 
-      const response = await ExerciseController.createExercise(token, {
+      const response = await ExerciseController.create(token, {
         name: item.name,
         componentsIds: item.componentsIds,
         imageUrl: item.imageUrl,
@@ -113,8 +109,16 @@ function Page() {
 
       toast.success('Exercise added');
 
-      const { id, rootComponentIds } = response;
-      if (!component || (component && rootComponentIds.includes(component.id)))
+      const id = response.id;
+      const rootComponents = item.componentsIds.map((cId) => {
+        const component = components.flat.find((c) => c.id === cId)!;
+        return commonService.tree.getRoot(component, components.flat);
+      });
+
+      if (
+        !component ||
+        (component && rootComponents.map((c) => c.id).includes(component.id))
+      )
         setExercises([...exercises, { ...item, id } as Exercise]);
 
       allExercises.setData((prev) => [...prev!, { ...item, id } as Exercise]);
@@ -137,29 +141,30 @@ function Page() {
         ...(search.name && { name: search.name }),
       };
 
-      let exercises = ExerciseService.filter(
+      let filtered = ExerciseService.filter(
         allExercises.data!,
         filter,
-        components
+        components.flat
       );
 
-      const total = exercises.length;
+      const total = filtered.length;
 
       // paginate
       const pages = Math.ceil(total / pagination.pageSize);
       const page = pages < pagination.pages ? 1 : pagination.page;
-      exercises = commonService.generic.paginate(exercises, {
+      filtered = commonService.generic.paginate(filtered, {
         page,
         pageSize: pagination.pageSize,
         orderBy: { field: 'name', value: 'asc' },
       });
 
       // populate exercises
-      exercises = exercises.map((exercise) =>
-        ExerciseService.populate(exercise, components.flat)
-      );
+      filtered.map((exercise) => {
+        ExerciseService.mapAttributes(exercise);
+        ExerciseService.mapComponents(exercise, components.flat);
+      });
 
-      setExercises(exercises);
+      setExercises(filtered);
       setPagination((prev) => ({ ...prev, page, total, pages }));
     }
 
@@ -226,7 +231,7 @@ function Page() {
             sx={{ cursor: 'pointer' }}
             onClick={() => {
               setModal({ ...modal, edit: true });
-              setExercise(exercise as CreateExercise);
+              setExercise(exercise);
             }}
           >
             <ExerciseCard exercise={exercise} />

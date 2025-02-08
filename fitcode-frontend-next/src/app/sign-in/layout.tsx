@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import HeroNavbar from '@/common/components/hero-navbar';
+import HeroNavbar from '@/components/hero-navbar';
 import Container from '@mui/material/Container';
 
 interface Props {
