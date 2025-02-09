@@ -3,7 +3,7 @@ import { FormControl } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 import Box from '@mui/material/Box';
 import { SetState } from '@/common/type/state.type';
-import { TreeComponent } from '@/component/type/component.type';
+import { TreeComponent } from '@/controller/component/type/component.type';
 
 interface Props {
   selectedComponents: { [key: number]: string };
@@ -59,7 +59,9 @@ export default function SelectComponent(props: Props) {
             fullWidth
             variant="outlined"
           >
-            <MenuItem value=""><em>None</em></MenuItem>
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
 
             {nodes.map((node) => (
               <MenuItem key={node.id} value={node.id}>

@@ -5,16 +5,16 @@ import Grid from '@mui/material/Unstable_Grid2';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
-import type { ExerciseAttribute } from '@/exercise/entity/exercise-attribute.entity';
 import FileUpload from '@/components/file-upload';
 import Stack from '@mui/material/Stack';
-import { Exercise } from '@/exercise/entity/exercise.entity';
 import { SetState } from '@/common/type/state.type';
-import SelectAttribute from '@/exercise/components/select-attribute';
-import SelectComponent from '@/exercise/components/select-component';
 import { useAppContext } from '@/context/app-provider';
 import { CommonService } from '@/common/service/common.service';
 import { ContentState } from '@/common/enum/video-state.enum';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
+import SelectComponent from './select-component';
+import SelectAttribute from './select-attribute';
 
 interface Props {
   data: Partial<Exercise>;

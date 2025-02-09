@@ -15,21 +15,21 @@ import {
 import Avatar from '@mui/material/Avatar';
 import Stack from '@mui/material/Stack';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { GroupController } from '@/group/group.controller';
 import { useAppContext } from '@/context/app-provider';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
-import { GroupPageProps } from '@/group/type/props.type';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
-import { CreateCycle, UpdateCycle } from '@/group/type/cycle.type';
 import dayjs from 'dayjs';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import Button from '@mui/material/Button';
-import { Cycle } from '@/group/entity/cycle.entity';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { GroupController } from '@/controller/group/group.controller';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { User } from '@/controller/user/type/user.type';
 
-export function GroupSettings(props: GroupPageProps) {
+export function GroupSettings(props: any) {
   const { token } = useAppContext();
   const { group } = props.selected;
   const users = props.users?.data || [];
@@ -37,7 +37,7 @@ export function GroupSettings(props: GroupPageProps) {
   const [name, setName] = useState(() => group?.name || '');
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddCycle, setShowAddCycle] = useState(false);
-  const [createCycle, setCreateCycle] = useState<CreateCycle>({
+  const [createCycle, setCreateCycle] = useState<any>({
     name: '',
     description: '',
     from: dayjs().format('YYYY-MM-DD') as unknown as Date,
@@ -48,11 +48,12 @@ export function GroupSettings(props: GroupPageProps) {
     if (!group) return;
 
     try {
-      const response = await GroupController.updateGroup(token, group.id, {
+      const response = await GroupController.update(token, group.id, {
         name,
       });
+
       props.setSelected({ ...props.selected, group: response });
-      props.groups.setData((groups) =>
+      props.groups.setData((groups: any[]) =>
         (groups || []).map((g) => (g.id === response.id ? response : g))
       );
     } catch (e: any) {
@@ -63,8 +64,8 @@ export function GroupSettings(props: GroupPageProps) {
   async function removeGroupMember(memberId: string) {
     if (!group) return;
     try {
-      const response = await GroupController.updateGroup(token, group.id, {
-        membersIds: group.membersIds.filter((id) => id !== memberId),
+      const response = await GroupController.update(token, group.id, {
+        membersIds: group.membersIds.filter((id: string) => id !== memberId),
       });
 
       props.setSelected({ ...props.selected, group: response });
@@ -77,7 +78,7 @@ export function GroupSettings(props: GroupPageProps) {
     if (!group) return;
 
     try {
-      const response = await GroupController.updateGroup(token, group.id, {
+      const response = await GroupController.update(token, group.id, {
         membersIds: [...group.membersIds, memberId],
       });
 
@@ -87,7 +88,7 @@ export function GroupSettings(props: GroupPageProps) {
     }
   }
 
-  async function addCycle(cycle: CreateCycle) {
+  async function addCycle(cycle: any) {
     if (!group) return;
 
     try {
@@ -104,7 +105,7 @@ export function GroupSettings(props: GroupPageProps) {
     }
   }
 
-  async function updateCycle(cycle: Cycle, input: UpdateCycle) {
+  async function updateCycle(cycle: Cycle, input: any) {
     if (!group) return;
 
     try {
@@ -128,7 +129,9 @@ export function GroupSettings(props: GroupPageProps) {
         ...(cycle.id === props.selected.cycle?.id && { cycle: updated }),
         group: {
           ...group,
-          cycles: group.cycles.map((c) => (c.id === cycle.id ? updated : c)),
+          cycles: group.cycles.map((c: Cycle) =>
+            c.id === cycle.id ? updated : c
+          ),
         },
       });
 
@@ -155,76 +158,11 @@ export function GroupSettings(props: GroupPageProps) {
         ...(props.selected.cycle?.id === cycleId && { cycle: null }),
         group: {
           ...group,
-          cycles: group.cycles.filter((cycle) => cycle.id !== cycleId),
+          cycles: group.cycles.filter((cycle: Cycle) => cycle.id !== cycleId),
         },
       });
     } catch (e: any) {
       toast.error(e.message || 'Failed to delete cycle');
-    }
-  }
-
-  async function removeSubgroupMember(
-    subgroupId: string,
-    subgroupMembers: string[],
-    memberId: string
-  ) {
-    if (!group) return;
-
-    try {
-      const response = await GroupController.updateSubgroup(
-        token,
-        group.id,
-        subgroupId,
-        {
-          membersIds: subgroupMembers.filter((id) => id !== memberId),
-        }
-      );
-
-      props.setSelected((prev) => ({
-        ...prev,
-        group: {
-          ...prev.group!,
-          availableMembersIds: [...prev.group!.availableMembersIds!, memberId],
-          subgroups: prev.group!.subgroups?.map((subgroup) =>
-            subgroup.id === subgroupId ? response : subgroup
-          ),
-        },
-      }));
-
-      if (props.selected.subgroup?.id === subgroupId)
-        props.setSelected((prev) => ({
-          ...prev,
-          subgroup: response,
-        }));
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to remove member');
-    }
-  }
-
-  async function removeSubgroup(subgroupId: string, subgroupMembers: string[]) {
-    if (!group) return;
-
-    try {
-      await GroupController.deleteSubgroup(token, group.id, subgroupId);
-
-      if (props.selected.subgroup?.id === subgroupId)
-        props.setSelected({ ...props.selected, subgroup: null });
-
-      props.setSelected({
-        ...props.selected,
-        group: {
-          ...group,
-          availableMembersIds: [
-            ...group.availableMembersIds!,
-            ...subgroupMembers,
-          ],
-          subgroups: group.subgroups?.filter(
-            (subgroup) => subgroup.id !== subgroupId
-          ),
-        },
-      });
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to remove subgroup');
     }
   }
 
@@ -250,7 +188,7 @@ export function GroupSettings(props: GroupPageProps) {
       {/* List of all group members */}
       <Stack direction="row" spacing={2} p={1} my={1} flexWrap="wrap">
         {group.members?.length ? (
-          group.members!.map((member) => (
+          group.members!.map((member: User) => (
             <Box key={member.uid} position="relative">
               <Tooltip title={member.email}>
                 <Avatar>{member.email[0]}</Avatar>
@@ -295,8 +233,8 @@ export function GroupSettings(props: GroupPageProps) {
             </TableHead>
             <TableBody>
               {users
-                .filter((user) => !group.membersIds.includes(user.uid))
-                .map((user) => (
+                .filter((user: User) => !group.membersIds.includes(user.uid))
+                .map((user: User) => (
                   <TableRow key={user.uid}>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
@@ -334,7 +272,7 @@ export function GroupSettings(props: GroupPageProps) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {group.cycles.map((cycle) => (
+              {group.cycles.map((cycle: Cycle) => (
                 <TableRow key={cycle.id}>
                   <TableCell>
                     <TextField
@@ -347,7 +285,7 @@ export function GroupSettings(props: GroupPageProps) {
                           ...props.selected,
                           group: {
                             ...group,
-                            cycles: group.cycles.map((c) =>
+                            cycles: group.cycles.map((c: Cycle) =>
                               c.id === cycle.id
                                 ? { ...c, name: e.target.value }
                                 : c
@@ -371,7 +309,7 @@ export function GroupSettings(props: GroupPageProps) {
                           ...props.selected,
                           group: {
                             ...group,
-                            cycles: group.cycles.map((c) =>
+                            cycles: group.cycles.map((c: Cycle) =>
                               c.id === cycle.id
                                 ? {
                                     ...c,
@@ -399,7 +337,7 @@ export function GroupSettings(props: GroupPageProps) {
                           ...props.selected,
                           group: {
                             ...group,
-                            cycles: group.cycles.map((c) =>
+                            cycles: group.cycles.map((c: Cycle) =>
                               c.id === cycle.id
                                 ? {
                                     ...c,
@@ -503,75 +441,6 @@ export function GroupSettings(props: GroupPageProps) {
           </Grid2>
         </Grid2>
       )}
-
-      {/* Subgroups */}
-      <Box mt={4} />
-      <Divider sx={{ mb: 1 }}>Subgroups</Divider>
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Members</TableCell>
-              <TableCell sx={{ width: 50 }}></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {group.subgroups?.map((subgroup) => (
-              <TableRow key={subgroup.id}>
-                <TableCell>{subgroup.name}</TableCell>
-                <TableCell>
-                  <Stack direction="row" flexWrap="wrap" spacing={1}>
-                    {subgroup.membersIds?.map((uid) => {
-                      const member = group.members?.find((m) => m.uid === uid);
-                      if (!member) return null;
-
-                      return (
-                        <Box key={member.uid} position="relative">
-                          <Tooltip title={member.email}>
-                            <Avatar>{member.email[0]}</Avatar>
-                          </Tooltip>
-
-                          <RemoveIcon
-                            onClick={() =>
-                              removeSubgroupMember(
-                                subgroup.id,
-                                subgroup.membersIds,
-                                member.uid
-                              )
-                            }
-                            sx={{
-                              position: 'absolute',
-                              top: -5,
-                              right: -5,
-                              cursor: 'pointer',
-                              bgcolor: 'red',
-                              borderRadius: '50%',
-                              height: 15,
-                              width: 15,
-                            }}
-                          />
-                        </Box>
-                      );
-                    })}
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={() =>
-                      removeSubgroup(subgroup.id, subgroup.membersIds)
-                    }
-                    size="small"
-                  >
-                    <DeleteIcon color="secondary" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
     </>
   );
 }

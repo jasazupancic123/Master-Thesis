@@ -1,5 +1,3 @@
-import { Training } from '@/training/type/training.entity';
-import { Component } from '@/component/entity/component.entity';
 import { useAppContext } from '@/context/app-provider';
 import { AppContextType } from '@/common/type/context.type';
 import Box from '@mui/material/Box';
@@ -7,21 +5,18 @@ import { Button, Divider } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ExerciseChips from '@/exercise/components/exercise-chips';
 import { AddCircle } from '@mui/icons-material';
 import React from 'react';
-import { CreateTrainingComponent } from '@/training/type/training-component.type';
 import { CommonService } from '@/common/service/common.service';
-import { TrainingService } from '@/training/training.service';
+import { Component } from '@/controller/component/type/component.type';
+import { Training } from '@/controller/training/type/training.type';
+import { TrainingService } from '@/controller/training/training.service';
 
 interface Props {
   training: Training;
   components: Component[];
   order: number;
-  addTrainingComponent: (
-    trainingId: string,
-    data: CreateTrainingComponent[]
-  ) => void;
+  addTrainingComponent: (trainingId: string, data: any[]) => void;
   deleteTraining: (trainingId: string) => Promise<void>;
   deleteTrainingComponent: (
     trainingId: string,
@@ -31,7 +26,8 @@ interface Props {
 
 export function TrainingGridItem(props: Props) {
   const { components } = useAppContext() as AppContextType;
-  const training = TrainingService.map(props.training, components.flat);
+  const training = props.training;
+  TrainingService.mapComponents(training, components.flat);
 
   return (
     <Box px={1}>
@@ -56,7 +52,7 @@ export function TrainingGridItem(props: Props) {
       </Box>
 
       <>
-        {training.components.map(({ component }) => (
+        {Object.values(training.components).map(({ component }) => (
           <div key={component!.id}>
             {component!.name}
 

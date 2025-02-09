@@ -32,9 +32,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(FirebaseMiddleware)
-      .exclude('/')
-      .exclude('component')
-      .exclude('exercise/attribute')
+      .exclude('/', '/component', '/exercise/attribute')
       .forRoutes('*');
   }
 }

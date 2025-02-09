@@ -1,4 +1,3 @@
-import { TrainingComponent } from '@/training/entity/training-component.entity';
 import Typography from '@mui/material/Typography';
 import Grid2 from '@mui/material/Unstable_Grid2';
 import Card from '@mui/material/Card';
@@ -14,8 +13,6 @@ import {
   Select,
   TextField,
 } from '@mui/material';
-import { TrainingExercise } from '../entity/training-exercise.entity';
-import { SetType } from '@/training/enum/set-type.enum';
 import {
   DISTANCE_OPTIONS,
   REP_OPTIONS,
@@ -23,8 +20,12 @@ import {
   VO2_OPTIONS,
 } from '@/common/constant/training-exercise.constant';
 import toast from 'react-hot-toast';
-import { TrainingController } from '@/training/training.controller';
+import {
+  TrainingComponent,
+  TrainingExercise,
+} from '@/controller/training/type/training-plan.type';
 import { useAppContext } from '@/context/app-provider';
+import { SetType } from '@/controller/training/enum/set-type.enum';
 
 interface Props {
   trainingId: string;
@@ -51,7 +52,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
       if (!updatedValues[exerciseId]) {
         updatedValues[exerciseId] = Array(
           component.supersets
-            .flatMap((superset) => superset.exercises)
+            .flatMap((superset) => Object.values(superset.exercises))
             .find((exercise) => exercise.id === exerciseId)?.meta.sets || 0
         ).fill({ setValue: '', workloadValue: '' });
       }
@@ -66,7 +67,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
 
   async function handleSaveSets(
     componentId: string,
-    supersetId: string,
+    superset: number,
     exerciseId: string
   ) {
     const values = setValues[exerciseId] || [];
@@ -116,7 +117,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
     > = {};
 
     component.supersets.forEach((superset) => {
-      superset.exercises.forEach((exercise) => {
+      Object.values(superset.exercises).forEach((exercise) => {
         initialSetValues[exercise.id] = Array.from(
           { length: exercise.meta.sets },
           () => ({
@@ -167,7 +168,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
             {component.supersets
               .sort((a, b) => a.order - b.order)
               .map((superset) => (
-                <Grid2 xs={12} key={superset.id}>
+                <Grid2 xs={12} key={superset.order}>
                   <Card
                     sx={{
                       borderRadius: 2,
@@ -177,7 +178,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                     }}
                   >
                     <CardContent sx={{ fontWeight: 'bold', mb: 0 }}>
-                      {superset.exercises.map((exercise) => {
+                      {Object.values(superset.exercises).map((exercise) => {
                         const options = getOptions(exercise);
 
                         return (
@@ -310,7 +311,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                                   onClick={() =>
                                     handleSaveSets(
                                       component.id,
-                                      superset.id,
+                                      superset.order,
                                       exercise.id
                                     )
                                   }

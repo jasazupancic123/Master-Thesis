@@ -1,8 +1,8 @@
-import type { Exercise } from '@/exercise/entity/exercise.entity';
 import Typography from '@mui/material/Typography';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import React, { useState } from 'react';
 import Stack from '@mui/material/Stack';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
 
 interface Props {
   exercises: Exercise[];
@@ -24,22 +24,33 @@ export default function ExerciseList(props: Props) {
             cursor: 'pointer',
           }}
           onClick={() => {
-            const index = selectedExercises.findIndex(e => e.id === exercise.id);
+            const index = selectedExercises.findIndex(
+              (e) => e.id === exercise.id
+            );
             if (index === -1) {
               setSelectedExercises([...selectedExercises, exercise]);
             } else {
-              setSelectedExercises(selectedExercises.filter(e => e.id !== exercise.id));
+              setSelectedExercises(
+                selectedExercises.filter((e) => e.id !== exercise.id)
+              );
             }
           }}
         >
           <CardMedia
             sx={{ height: 160 }}
-            image={exercise.imageUrl ?? 'https://mui.com/static/images/cards/contemplative-reptile.jpg'}
+            image={
+              exercise.imageUrl ??
+              'https://mui.com/static/images/cards/contemplative-reptile.jpg'
+            }
             title={exercise.name}
           />
           <CardContent
             sx={{
-              backgroundColor: selectedExercises.find(e => e.id === exercise.id) ? 'primary.main' : '#1A2B3C',
+              backgroundColor: selectedExercises.find(
+                (e) => e.id === exercise.id
+              )
+                ? 'primary.main'
+                : '#1A2B3C',
             }}
           >
             <Typography gutterBottom variant="caption" component="div">
