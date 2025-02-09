@@ -1,4 +1,4 @@
-import type { Exercise } from '@/exercise/entity/exercise.entity';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React, { useEffect } from 'react';

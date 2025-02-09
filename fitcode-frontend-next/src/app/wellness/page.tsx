@@ -36,7 +36,7 @@ function Page() {
     <Box height="100%">
       <UserWellnessForm
         initialData={wellness.data}
-        onSubmit={submitWellness}
+        onSubmit={(data) => {}}
         disabled={disabled}
         setDisabled={setDisabled}
       />

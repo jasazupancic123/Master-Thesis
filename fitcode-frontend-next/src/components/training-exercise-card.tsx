@@ -13,8 +13,10 @@ import {
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
 import { useEffect, useState } from 'react';
-import type { TrainingExercise } from '@/training/entity/training-exercise.entity';
-import type { ExerciseMeta } from '@/training/type/exercise-meta.type';
+import {
+  ExerciseMeta,
+  TrainingExercise,
+} from '@/controller/training/type/training-plan.type';
 
 interface Props {
   exercise: TrainingExercise;

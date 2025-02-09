@@ -1,7 +1,6 @@
 'use client';
 
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
-import { UserRole } from '@/user/enum/user-role.enum';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
 import Box from '@mui/material/Box';
 import * as React from 'react';
@@ -13,6 +12,7 @@ import Stack from '@mui/material/Stack';
 import { useAuth } from '@/context/auth-provider';
 import IconButton from '@mui/material/IconButton';
 import { LogoutRounded } from '@mui/icons-material';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 interface Props {
   title?: string;

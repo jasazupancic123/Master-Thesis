@@ -19,7 +19,7 @@ import NextLink from 'next/link';
 import { Divider, Drawer } from '@mui/material';
 import Logo from '@/components/logo';
 import { useAuth } from '@/context/auth-provider';
-import { UserRole } from '@/user/enum/user-role.enum';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export default function HeroNavbar({ showLogin = true }) {
   const { user, logout, role } = useAuth();
@@ -79,7 +79,10 @@ export default function HeroNavbar({ showLogin = true }) {
                   alignItems: 'center',
                 }}
               >
-                <NextLink href={mainPageMapper[role[0]].href} passHref>
+                <NextLink
+                  href={mainPageMapper[role[0] as UserRole].href}
+                  passHref
+                >
                   Training
                 </NextLink>
                 <NextLink href="#" onClick={logout}>

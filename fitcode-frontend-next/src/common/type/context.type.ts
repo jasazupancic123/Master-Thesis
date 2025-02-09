@@ -1,19 +1,21 @@
+import {
+  Component,
+  TreeComponent,
+} from '@/controller/component/type/component.type';
+import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { User } from 'firebase/auth';
-import { UserRole } from '@/user/enum/user-role.enum';
-import type { ExerciseAttribute } from '@/exercise/entity/exercise-attribute.entity';
-import type { Component } from '@/component/entity/component.entity';
-import { TreeComponent } from '@/component/type/component.type';
-import { Exercise } from '@/exercise/entity/exercise.entity';
 
 export type AppContextType = {
-  token: string
-  attributes: ExerciseAttribute[],
+  token: string;
+  attributes: ExerciseAttribute[];
   components: {
-    tree: TreeComponent[]
-    flat: Component[]
-    leafs: Component[]
-  }
-}
+    tree: TreeComponent[];
+    flat: Component[];
+    leafs: Component[];
+  };
+};
 
 export type AuthContextType = {
   loading: boolean;
@@ -23,5 +25,5 @@ export type AuthContextType = {
 };
 
 export type TrainerContextType = {
-  exercises: Exercise[]
-}
+  exercises: Exercise[];
+};

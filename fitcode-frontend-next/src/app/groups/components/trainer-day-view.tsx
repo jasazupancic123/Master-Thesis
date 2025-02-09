@@ -19,12 +19,19 @@ import { COLOR } from '@/common/constant/browser.constant';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 import Button from '@mui/material/Button';
 import MyModal from '@/components/modal';
-import SelectInput from '@/components/select-input';
-import { Groups, Update } from '@mui/icons-material';
+import { Update } from '@mui/icons-material';
 import Warning from '@/components/warning';
 import { useFetch } from '@/hook/use-fetch';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Training } from '@/controller/training/type/training.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { SetType } from '@/controller/training/enum/set-type.enum';
+import { WorkloadType } from '@/controller/training/enum/workload-type.enum';
+import { Effort } from '@/controller/training/enum/effort.enum';
+import { ExerciseService } from '@/controller/exercise/exercise.service';
+import BorderColor from '@/components/border-color';
+import TrainingExerciseCard from '@/components/training-exercise-card';
 
 const commonService = CommonService.instance;
 
@@ -66,23 +73,21 @@ export default function TrainerDayView(props: any) {
     if (!group) return;
 
     try {
-      const subgroup = await GroupController.addSubgroup(token, group.id, {
+      const subgroup = await TrainingController.addSubgroup(token, group.id, {
         name: create.subgroup.name,
         membersIds: create.subgroup.membersIds,
-        from: props.date.start.toDate(),
-        to: props.date.end.toDate(),
       });
 
       // set selected subgroup
-      props.setSelected((prev) => ({ ...prev, subgroup }));
+      props.setSelected((prev: any) => ({ ...prev, subgroup }));
 
       // add subgroup to selected group
-      props.setSelected((prev) => ({
+      props.setSelected((prev: any) => ({
         ...prev,
         group: {
           ...prev.group!,
           availableMembersIds: (prev.group!.availableMembersIds || []).filter(
-            (id) => !subgroup.membersIds.includes(id)
+            (id: string) => !subgroup.membersIds.includes(id)
           ),
           subgroups: [...prev.group!.subgroups, subgroup],
         },
@@ -97,19 +102,19 @@ export default function TrainerDayView(props: any) {
 
   async function deleteComponent(trainingId: string, componentId: string) {
     try {
-      await TrainingController.deleteTrainingComponent(
+      await TrainingController.deleteComponent(
         token,
         trainingId,
-        componentId
+        componentId,
+        {}
       );
 
       // update training components
       setTrainings((prev) =>
         prev.map((training) => {
           if (training.id === trainingId) {
-            training.components = training.components?.filter(
-              (c) => c.id !== componentId
-            );
+            const { [componentId]: _, ...rest } = training.components;
+            training.components = rest;
           }
 
           return training;
@@ -123,7 +128,7 @@ export default function TrainerDayView(props: any) {
   async function addSuperset(
     trainingId: string,
     componentId: string,
-    input: CreateTrainingSuperset
+    input: any
   ) {
     try {
       let response = await TrainingController.addSuperset(
@@ -133,23 +138,12 @@ export default function TrainerDayView(props: any) {
         { ...input, exercises: {} as [] }
       );
 
-      response = TrainingService.map(response, {
-        components: components.flat,
-        exercises: allExercises.data!,
-      });
+      TrainingService.mapComponents(response, components.flat);
+      TrainingService.mapExercises(response, allExercises.data!);
 
       setTrainings((prev) =>
         prev.map((training) =>
-          training.id === trainingId
-            ? {
-                ...training,
-                components: training.components?.map((component) =>
-                  component.id === componentId
-                    ? response.components.find((c) => c.id === componentId)!
-                    : component
-                ),
-              }
-            : training
+          training.id === trainingId ? response : training
         )
       );
     } catch (e: any) {
@@ -161,7 +155,7 @@ export default function TrainerDayView(props: any) {
     trainingId: string,
     componentId: string,
     superset: number,
-    input: UpdateTrainingSuperset
+    input: any
   ) {
     try {
       let response = await TrainingController.updateSuperset(
@@ -172,23 +166,12 @@ export default function TrainerDayView(props: any) {
         input
       );
 
-      response = TrainingService.map(response, {
-        components: components.flat,
-        exercises: allExercises.data!,
-      });
+      TrainingService.mapComponents(response, components.flat);
+      TrainingService.mapExercises(response, allExercises.data!);
 
       setTrainings((prev) =>
         prev.map((training) =>
-          training.id === trainingId
-            ? {
-                ...training,
-                components: training.components?.map((component) =>
-                  component.id === componentId
-                    ? response.components.find((c) => c.id === componentId)!
-                    : component
-                ),
-              }
-            : training
+          training.id === trainingId ? response : training
         )
       );
     } catch (e: any) {
@@ -206,10 +189,11 @@ export default function TrainerDayView(props: any) {
         token,
         trainingId,
         componentId,
-        superset
+        superset,
+        {}
       );
 
-      setTrainings((prev) =>
+      /* setTrainings((prev) =>
         prev.map((training) =>
           training.id === trainingId
             ? {
@@ -227,7 +211,7 @@ export default function TrainerDayView(props: any) {
               }
             : training
         )
-      );
+      ); */
     } catch (e: any) {
       toast.error(e.message || 'Failed to delete superset');
     }
@@ -240,45 +224,36 @@ export default function TrainerDayView(props: any) {
     exerciseId: string
   ) {
     try {
-      let response = await TrainingController.addTrainingExercises(
+      let response = await TrainingController.addExercises(
         token,
         trainingId,
         componentId,
         superset,
-        [
-          {
-            id: exerciseId,
-            meta: {
-              sets: 3,
-              setType: SetType.REPS,
-              setTypeValue: 10,
-              workloadType: WorkloadType.KG,
-              workloadValue: 20,
-              rec: 60,
-              tempo: '0:0:0',
-              effort: Effort.MODERATE,
+        {
+          exercises: [
+            {
+              id: exerciseId,
+              meta: {
+                sets: 3,
+                setType: SetType.REPS,
+                setTypeValue: 10,
+                workloadType: WorkloadType.KG,
+                workloadValue: 20,
+                rec: 60,
+                tempo: '0:0:0',
+                effort: Effort.MODERATE,
+              },
             },
-          },
-        ]
+          ],
+        }
       );
 
-      response = TrainingService.map(response, {
-        components: components.flat,
-        exercises: allExercises.data!,
-      });
+      TrainingService.mapComponents(response, components.flat);
+      TrainingService.mapExercises(response, allExercises.data!);
 
       setTrainings((prev) =>
         prev.map((training) =>
-          training.id === trainingId
-            ? {
-                ...training,
-                components: training.components?.map((component) =>
-                  component.id === componentId
-                    ? response.components.find((c) => c.id === componentId)!
-                    : component
-                ),
-              }
-            : training
+          training.id === trainingId ? response : training
         )
       );
     } catch (e: any) {
@@ -291,7 +266,7 @@ export default function TrainerDayView(props: any) {
     componentId: string,
     superset: number,
     exerciseId: string,
-    input: UpdateTrainingExercise
+    input: any
   ) {
     try {
       let response = await TrainingController.updateExercise(
@@ -303,10 +278,8 @@ export default function TrainerDayView(props: any) {
         input
       );
 
-      response = TrainingService.map(response, {
-        components: components.flat,
-        exercises: allExercises.data!,
-      });
+      TrainingService.mapComponents(response, components.flat);
+      TrainingService.mapExercises(response, allExercises.data!);
 
       setTrainings((prev) =>
         prev.map((training) =>
@@ -330,10 +303,11 @@ export default function TrainerDayView(props: any) {
         trainingId,
         componentId,
         superset,
-        exerciseId
+        exerciseId,
+        {}
       );
 
-      setTrainings((prev) =>
+      /* setTrainings((prev) =>
         prev.map((training) =>
           training.id === trainingId
             ? {
@@ -358,7 +332,7 @@ export default function TrainerDayView(props: any) {
               }
             : training
         )
-      );
+      ); */
     } catch (e: any) {
       toast.error(e.message || 'Failed to delete exercise');
     }
@@ -380,28 +354,15 @@ export default function TrainerDayView(props: any) {
     if (!allExercises.data) return;
 
     async function fetchTrainings() {
-      const trainingIds =
-        props.selected.cycle?.trainings?.map((t) => t.id) || [];
-
-      if (!trainingIds.length) {
-        setTrainings([]);
-        return;
-      }
-
       try {
-        let response = await TrainingController.findTrainingsByIds(
-          token,
-          trainingIds
-        );
+        let response = await TrainingController.findAll(token, {});
 
-        response = response.map((training) =>
-          TrainingService.map(training, {
-            components: components.flat,
-            exercises: allExercises.data!,
-          })
-        );
+        response.map((t) => {
+          TrainingService.mapComponents(t, components.flat);
+          TrainingService.mapExercises(t, allExercises.data!);
+        });
 
-        setTrainings(
+        /* setTrainings(
           response.map((training) => ({
             ...training,
             exercises: training.components.map((component) => ({
@@ -412,7 +373,7 @@ export default function TrainerDayView(props: any) {
               data: [],
             })),
           }))
-        );
+        ); */
       } catch (e: any) {
         toast.error(e.message || 'Failed to fetch trainings');
       }
@@ -445,7 +406,7 @@ export default function TrainerDayView(props: any) {
       let filtered = ExerciseService.filter(
         allExercises.data!,
         filter,
-        components
+        components.flat
       );
 
       const total = filtered.length;
@@ -461,9 +422,10 @@ export default function TrainerDayView(props: any) {
       });
 
       // populate exercises
-      filtered = filtered.map((exercise) =>
-        ExerciseService.populate(exercise, components.flat)
-      );
+      filtered.map((exercise) => {
+        ExerciseService.mapComponents(exercise, components.flat);
+        ExerciseService.mapAttributes(exercise);
+      });
 
       setExercises((prev) => ({
         ...prev,
@@ -504,40 +466,6 @@ export default function TrainerDayView(props: any) {
       },
     }));
   }, [props.date.start, props.date.end, props.date.custom]);
-
-  /**
-   * Fetch available members for group
-   */
-  useEffect(() => {
-    async function fetchAvailableMembers() {
-      if (!group || !props.date.custom) return;
-
-      try {
-        props.setLoading(true);
-        const response = await GroupController.findAvailableMembers(
-          token,
-          group.id,
-          {
-            from: props.date.start,
-          }
-        );
-
-        props.setSelected((prev) => ({
-          ...prev,
-          group: {
-            ...prev.group!,
-            availableMembersIds: response,
-          },
-        }));
-      } catch (e: any) {
-        console.error(e);
-      } finally {
-        props.setLoading(false);
-      }
-    }
-
-    fetchAvailableMembers().then();
-  }, [token, group?.id, props.date.start, props.date.end, props.date.custom]);
 
   if (!group || !cycle) return <Warning title="Select cycle" topBorder />;
 
@@ -588,121 +516,6 @@ export default function TrainerDayView(props: any) {
         }}
       />
 
-      {/* Group Member Avatars */}
-      <Stack
-        direction="row"
-        p={3}
-        pb={2}
-        px={2}
-        sx={{
-          borderBottomRightRadius: '20px',
-          borderBottomLeftRadius: '20px',
-          bgcolor: 'background.paper',
-        }}
-      >
-        {!props.loading && (
-          <Stack direction="row" spacing={1}>
-            {group.availableMembersIds
-              ?.map((id) => group.members?.find((m) => m.uid === id))
-              .map(
-                (member) =>
-                  member && (
-                    <Box
-                      key={member.uid}
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() =>
-                        props.setSelected((prev) => ({
-                          ...prev,
-                          subgroup: null,
-                        }))
-                      }
-                    >
-                      <Tooltip title={member.email}>
-                        <Avatar sx={{ width: 60, height: 60 }}>
-                          {member.email[0].toUpperCase()}
-                        </Avatar>
-                      </Tooltip>
-                    </Box>
-                  )
-              )}
-
-            {group.subgroups.map((subgroup, i) => {
-              const members = subgroup.membersIds?.map((id) =>
-                group.members?.find((m) => m.uid === id)
-              );
-
-              return (
-                <Stack
-                  key={subgroup.id}
-                  direction="row"
-                  spacing={1}
-                  my={4}
-                  onClick={() =>
-                    props.setSelected((prev) => ({ ...prev, subgroup }))
-                  }
-                  sx={{ cursor: 'pointer' }}
-                >
-                  {members.map(
-                    (member) =>
-                      member && (
-                        <Box key={member.uid}>
-                          <Tooltip title={member.email}>
-                            <Avatar
-                              sx={{
-                                width: 60,
-                                height: 60,
-                                border: `2px solid ${COLOR[i % COLOR.length]}`,
-                              }}
-                            >
-                              {member.email[0].toUpperCase()}
-                            </Avatar>
-                          </Tooltip>
-                        </Box>
-                      )
-                  )}
-                </Stack>
-              );
-            })}
-
-            {/* Add subgroup button */}
-            {group.availableMembersIds!.length > 0 && (
-              <IconButton
-                size="small"
-                sx={{ width: 40, height: 40 }}
-                onClick={() =>
-                  setModal((prev) => ({ ...prev, subgroup: true }))
-                }
-              >
-                <AddIcon />
-              </IconButton>
-            )}
-          </Stack>
-        )}
-      </Stack>
-
-      {/* Select subgroup */}
-      {props.selected.subgroup && (
-        <Box mt={2}>
-          <SelectInput<Subgroup>
-            label="Subgroup"
-            icon={<Groups />}
-            value={props.selected.subgroup.id}
-            setValue={(value) => {
-              const subgroup = group.subgroups?.find(
-                (subgroup) => subgroup.id === value
-              );
-              props.setSelected((prev) => ({
-                ...prev,
-                subgroup: subgroup || null,
-              }));
-            }}
-            items={group.subgroups || []}
-            itemKey="id"
-            itemName="name"
-          />
-        </Box>
-      )}
-
       {/* Training set groups with set exercises */}
       {trainings.length === 0 ? (
         <Warning title="No session for current date" />
@@ -724,7 +537,7 @@ export default function TrainerDayView(props: any) {
                 {CommonService.instance.date.formatTime(training.to)})
               </Typography>
 
-              {training?.components?.map((component, i) => {
+              {Object.values(training?.components)?.map((component, i) => {
                 return (
                   <Fragment key={i}>
                     {/* Exercise list */}
@@ -933,77 +746,79 @@ export default function TrainerDayView(props: any) {
                                   />
 
                                   <Box>
-                                    {superset?.exercises?.map((exercise, k) => (
-                                      <Box
-                                        key={`${i}-${exercise.id}-${k}`}
-                                        position="relative"
-                                      >
+                                    {Object.values(superset?.exercises)?.map(
+                                      (exercise, k) => (
                                         <Box
-                                          position="absolute"
-                                          top={0}
-                                          right={0}
+                                          key={`${i}-${exercise.id}-${k}`}
+                                          position="relative"
                                         >
-                                          <Tooltip
-                                            title="Delete exercise"
-                                            placement="left"
+                                          <Box
+                                            position="absolute"
+                                            top={0}
+                                            right={0}
                                           >
-                                            <IconButton
-                                              size="small"
-                                              onClick={() =>
-                                                deleteExercise(
-                                                  training.id,
-                                                  component.id,
-                                                  i,
-                                                  exercise.id
-                                                )
-                                              }
+                                            <Tooltip
+                                              title="Delete exercise"
+                                              placement="left"
                                             >
-                                              <DeleteIcon />
-                                            </IconButton>
-                                          </Tooltip>
+                                              <IconButton
+                                                size="small"
+                                                onClick={() =>
+                                                  deleteExercise(
+                                                    training.id,
+                                                    component.id,
+                                                    i,
+                                                    exercise.id
+                                                  )
+                                                }
+                                              >
+                                                <DeleteIcon />
+                                              </IconButton>
+                                            </Tooltip>
 
-                                          <Tooltip
-                                            title="Update exercise"
-                                            placement="left"
-                                          >
-                                            <IconButton
-                                              size="small"
-                                              onClick={() =>
-                                                updateExercise(
-                                                  training.id,
-                                                  component.id,
-                                                  i,
-                                                  exercise.id,
-                                                  {
-                                                    color: `#${Math.floor(
-                                                      Math.random() * 16777215
-                                                    )
-                                                      .toString(16)
-                                                      .padStart(6, '0')}`,
-                                                    order: 0,
-                                                  }
-                                                )
-                                              }
+                                            <Tooltip
+                                              title="Update exercise"
+                                              placement="left"
                                             >
-                                              <Update />
-                                            </IconButton>
-                                          </Tooltip>
+                                              <IconButton
+                                                size="small"
+                                                onClick={() =>
+                                                  updateExercise(
+                                                    training.id,
+                                                    component.id,
+                                                    i,
+                                                    exercise.id,
+                                                    {
+                                                      color: `#${Math.floor(
+                                                        Math.random() * 16777215
+                                                      )
+                                                        .toString(16)
+                                                        .padStart(6, '0')}`,
+                                                      order: 0,
+                                                    }
+                                                  )
+                                                }
+                                              >
+                                                <Update />
+                                              </IconButton>
+                                            </Tooltip>
+                                          </Box>
+
+                                          <TrainingExerciseCard
+                                            exercise={exercise}
+                                            onChange={async (meta) => {
+                                              await updateExercise(
+                                                training.id,
+                                                component.id,
+                                                i,
+                                                exercise.id,
+                                                { meta }
+                                              );
+                                            }}
+                                          />
                                         </Box>
-
-                                        <TrainingExerciseCard
-                                          exercise={exercise}
-                                          onChange={async (meta) => {
-                                            await updateExercise(
-                                              training.id,
-                                              component.id,
-                                              i,
-                                              exercise.id,
-                                              { meta }
-                                            );
-                                          }}
-                                        />
-                                      </Box>
-                                    ))}
+                                      )
+                                    )}
                                   </Box>
 
                                   <BorderColor
@@ -1153,48 +968,6 @@ export default function TrainerDayView(props: any) {
             }))}
           />
         </Stack>*/}
-
-          {/* Members from group's available members */}
-          <Stack direction="row" spacing={1}>
-            {group.availableMembersIds
-              ?.map((id) => group.members?.find((m) => m.uid === id))
-              .map(
-                (member) =>
-                  member && (
-                    <Stack key={member.uid} direction="row" spacing={1}>
-                      <Box position="relative">
-                        <Avatar>{member.email[0].toUpperCase()}</Avatar>
-
-                        <IconButton
-                          sx={{ position: 'absolute', top: -10, right: -10 }}
-                          size="small"
-                          onClick={() =>
-                            setCreate((prev) => ({
-                              ...prev,
-                              subgroup: {
-                                ...prev.subgroup,
-                                membersIds: prev.subgroup.membersIds.includes(
-                                  member.uid
-                                )
-                                  ? prev.subgroup.membersIds.filter(
-                                      (id) => id !== member.uid
-                                    )
-                                  : [...prev.subgroup.membersIds, member.uid],
-                              },
-                            }))
-                          }
-                        >
-                          {create.subgroup.membersIds.includes(member.uid) ? (
-                            <DeleteIcon />
-                          ) : (
-                            <AddIcon />
-                          )}
-                        </IconButton>
-                      </Box>
-                    </Stack>
-                  )
-              )}
-          </Stack>
         </Stack>
       </MyModal>
     </Box>
