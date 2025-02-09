@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import Container from '@mui/material/Container';
-import Sidebar from '@/common/components/sidebar';
+import Sidebar from '@/components/sidebar';
 import Box from '@mui/material/Box';
 
 interface Props {
@@ -13,9 +13,7 @@ export default function Layout({ children }: Props) {
       <Container component="main" maxWidth="lg">
         <Sidebar title="EXERCISES" />
 
-        <Box mt="136px">
-          {children}
-        </Box>
+        <Box mt="136px">{children}</Box>
       </Container>
     </Box>
   );

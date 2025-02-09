@@ -1,6 +1,0 @@
-export type TrainingExerciseUserData = {
-  userId: string;
-  setNumber: number;
-  setTypeValue?: number; // reps / distance / time / ...
-  workloadValue?: string | number; // kg / % bw / ...
-}

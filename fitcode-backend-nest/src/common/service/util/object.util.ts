@@ -47,45 +47,105 @@ export class ObjectUtil {
    * ```
    */
   isValidValue(attribute: Partial<ExerciseAttribute>, value: any): boolean {
-    if (attribute.type === 'string')
-      return typeof value === 'string' && value.length > 0;
+    if (attribute.required && (value === null || value === undefined))
+      return false;
 
-    if (attribute.type === 'number') return typeof value === 'number';
+    switch (attribute.type) {
+      case 'string':
+        return typeof value === 'string' && value.length > 0;
+      case 'number':
+        return typeof value === 'number' && !isNaN(value);
+      case 'boolean':
+        return Boolean(value);
+      case 'date':
+        return value instanceof Date && !isNaN(value.getTime());
+      case 'select':
+        if (!attribute.values) return false;
 
-    if (attribute.type === 'boolean') return Boolean(value);
+        // single-level select
+        if (typeof attribute.values[0] === 'string') {
+          console.log('single level', attribute.values, value);
+          return (attribute.values as string[]).includes(value);
+        }
 
-    if (attribute.type === 'date') return value instanceof Date;
-
-    if (
-      attribute.type === 'select' &&
-      attribute.values &&
-      typeof attribute.values[0] === 'string'
-    )
-      // single-level select
-      return attribute.values.includes(value);
-
-    if (attribute.values) {
-      // TODO multi-level select
-      return true;
+        // multi-level select
+        const values = attribute.values as ExerciseAttributeSelectOption[];
+        return this.validateNestedSelect(values, value[attribute.field]);
+      default:
+        return true; // if type not defined, allow any value
     }
-
-    return false;
   }
 
-  private checkSelectOptions(
-    options: (string | ExerciseAttributeSelectOption)[],
-    value: any,
+  /**
+   * Removes key prefix from each object key. For example:
+   *
+   * ```ts
+   * const obj = { 'john.first': 'John', 'john.last': 'Doe', 'john.age': 40 }
+   * const newObj = removeKeyPrefix(obj, 'john')
+   * // => { first: 'John', last: 'Doe', age: 40 }
+   * ```
+   */
+  removeKeyPrefix<T>(
+    obj: { [key: string]: T },
+    prefix: string,
+  ): { [key: string]: T } {
+    const prefixRegex = new RegExp(`^${prefix}\\.`);
+
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [
+        key.replace(prefixRegex, ''),
+        value,
+      ]),
+    );
+  }
+
+  /**
+   * Adds key prefix for each object key. For example:
+   *
+   * ```ts
+   * const obj = { first: 'John', last: 'Doe', age: 40 }
+   * const newObj = addKeyPrefix(obj, 'john')
+   * // => { 'john.first': 'John', 'john.last': 'Doe', 'john.age': 40 }
+   * ```
+   */
+  addKeyPrefix<T>(
+    obj: { [key: string]: T },
+    prefix: string,
+  ): { [key: string]: T } {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [`${prefix}.${key}`, value]),
+    );
+  }
+
+  private validateNestedSelect(
+    options: ExerciseAttributeSelectOption[],
+    value: Record<string, any>,
   ): boolean {
-    for (const option of options) {
-      if (typeof option === 'string' && option === value) return true;
+    if (typeof value !== 'object' || value === null) return false;
 
-      const { field, values } = option as ExerciseAttributeSelectOption;
-      const nestedValue = value[field];
+    for (const key in value) {
+      const selectedOption = options.find((opt) => opt.field === key);
+      if (!selectedOption) return false;
 
-      if (nestedValue && values.length > 0) {
-        if (typeof values[0] === 'string') return values.includes(nestedValue); // single-level select of strings
-        return this.checkSelectOptions(values, nestedValue); // multi-level select
+      const selectedValue = value[key];
+      if (typeof selectedValue === 'object') {
+        if (!selectedOption.values || !Array.isArray(selectedOption.values))
+          return false;
+
+        return this.validateNestedSelect(
+          selectedOption.values as ExerciseAttributeSelectOption[],
+          selectedValue,
+        );
       }
+
+      // leaf, validate against available values
+      if (
+        !selectedOption.values ||
+        !(selectedOption.values as string[]).includes(selectedValue)
+      )
+        return false;
     }
+
+    return true;
   }
 }

@@ -1,12 +1,14 @@
 export interface SetExerciseOption {
-  type: 'select' | 'string' | 'number',
-  label: string,
+  type: 'select' | 'string' | 'number';
+  label: string;
   values?: string[];
   format: (value: string) => string;
 }
 
 function getValues(length: number, hop: number = 1) {
-  const values = new Array(length).fill(0).map((_, i) => ((i + 1) * hop).toString());
+  const values = new Array(length)
+    .fill(0)
+    .map((_, i) => ((i + 1) * hop).toString());
   return [''].concat(values);
 }
 
@@ -91,9 +93,14 @@ export const REC_OPTIONS: SetExerciseOption = {
   format: (value) => `${value} s`,
 };
 
-export const TRAINING_EXERCISE_SET = [SET_OPTIONS];
-export const TRAINING_EXERCISE_SET_TYPE = [REP_OPTIONS, DISTANCE_OPTIONS, TIME_OPTIONS, VO2_OPTIONS];
-export const TRAINING_EXERCISE_WORKLOAD = [RM_OPTIONS, BW_OPTIONS, INT_OPTIONS, KG_OPTIONS];
-export const TRAINING_EXERCISE_EFFORT = [EFFORT_OPTIONS];
-export const TRAINING_EXERCISE_TEMPO = [TEMPO_OPTIONS];
-export const TRAINING_EXERCISE_RECOVERY = [REC_OPTIONS];
+export const WORKLOAD = [RM_OPTIONS, BW_OPTIONS, INT_OPTIONS, KG_OPTIONS];
+export const EFFORT = [EFFORT_OPTIONS];
+export const TEMPO = [TEMPO_OPTIONS];
+export const RECOVERY = [REC_OPTIONS];
+export const SET = [SET_OPTIONS];
+export const SET_TYPE = [
+  REP_OPTIONS,
+  DISTANCE_OPTIONS,
+  TIME_OPTIONS,
+  VO2_OPTIONS,
+];

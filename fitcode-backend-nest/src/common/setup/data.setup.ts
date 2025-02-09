@@ -19,6 +19,7 @@ import { FirebaseService } from '../../firebase/firebase.service';
 import { Component } from '../../component/entity/component.entity';
 import { UserRepository } from '../../user/repository/user.repository';
 import { UserMetaRepository } from 'src/user/repository/user-meta.repository';
+import { User } from '../type/firebase-auth.type';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
@@ -132,23 +133,21 @@ export class DataSetup extends BaseSetup {
       (data[FirestoreCollection.USER] as (UserEntity &
         Record<string, any>)[]) || [];
 
-    const createdUsers = await Promise.all(
-      usersData.map((user) =>
-        this.userService.upsert({
-          email: user.email,
-          displayName: user.displayName,
-          password: 'password',
-          customClaims: { role: [user.role || UserRole.ATHLETE] },
-        }),
-      ),
-    );
+    let createdUsers: User[] = [];
+    for (const userData of usersData) {
+      const upserted = await this.userService.upsert({
+        email: userData.email,
+        displayName: userData.displayName,
+        password: 'password',
+        customClaims: { role: [userData.role || UserRole.ATHLETE] },
+      });
 
-    // set user custom claims to avoid waiting for function to be triggered
-    for (const user of createdUsers) {
-      const userData = usersData.find((u) => u.email === user.email);
-      await this.firebaseService.auth.setCustomUserClaims(user.uid, {
+      // set user custom claims to avoid waiting for function to be triggered
+      await this.firebaseService.auth.setCustomUserClaims(upserted.uid, {
         role: [userData?.role || UserRole.ATHLETE],
       });
+
+      createdUsers.push(upserted);
     }
 
     // set `users` collection data to avoid waiting for function to be triggered
@@ -162,10 +161,10 @@ export class DataSetup extends BaseSetup {
           level: userData?.level || SportLevel.BEGINNER,
         });
 
-        this.userService.addMeta(
-          user,
+        this.userService.addOrUpdateMeta(
           { uid: user.uid, date: new Date() },
           {
+            userId: user.uid,
             date: new Date(),
             weight: userData.weight,
             sleep: 5,
@@ -222,7 +221,6 @@ export class DataSetup extends BaseSetup {
         const group = await this.groupService.create(user, {
           name,
           membersIds,
-          ownerId: user.uid,
         });
 
         // import cycles

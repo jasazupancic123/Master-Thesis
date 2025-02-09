@@ -3,20 +3,18 @@ import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Unstable_Grid2';
-import { Training } from '@/training/entity/training.entity';
 import Stack from '@mui/material/Stack';
 import Circles from '@/app/groups/components/circles';
-import { GroupPageProps } from '@/group/type/props.type';
 import { CommonService } from '@/common/service/common.service';
-import { TrainingController } from '@/training/training.controller';
 import { useAppContext } from '@/context/app-provider';
-import { UpdateTraining } from '@/training/type/training.type';
 import toast from 'react-hot-toast';
-import Warning from '@/common/components/warning';
+import Warning from '@/components/warning';
+import { Training } from '@/controller/training/type/training.type';
+import { TrainingController } from '@/controller/training/training.controller';
 
 const commonService = CommonService.instance;
 
-export default function TrainerWeekView(props: GroupPageProps) {
+export default function TrainerWeekView(props: any) {
   const { token } = useAppContext();
   const [index, setIndex] = useState(0); // week index
   const cycle = props.selected.cycle;
@@ -29,23 +27,23 @@ export default function TrainerWeekView(props: GroupPageProps) {
   const getWeekEnd = (index: number) =>
     dayjs(weeks[index][6].date)!.endOf('day');
 
-  async function updateTraining(training: Training, input: UpdateTraining) {
+  async function updateTraining(training: Training, input: any) {
     if (!cycle) return;
     if (!Object.keys(input).length) return;
 
     try {
-      const updated = await TrainingController.updateTraining(
+      const updated = await TrainingController.update(
         token,
         training.id,
         input
       );
 
       // update trainings state
-      props.setSelected((prev) => ({
+      props.setSelected((prev: any) => ({
         ...prev,
         cycle: {
           ...prev.cycle!,
-          trainings: (prev.cycle!.trainings || []).map((t) =>
+          trainings: (prev.cycle!.trainings || []).map((t: any) =>
             t.id === updated.id ? updated : t
           ),
         },
@@ -100,7 +98,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
 
             setIndex((prev) => (direction === 'left' ? prev - 1 : prev + 1));
           }}
-          items={weeks.map((_, i) => ({
+          items={weeks.map((_: any, i: number) => ({
             label: `W${i + 1}`,
             value: i.toString(),
           }))}
@@ -117,9 +115,9 @@ export default function TrainerWeekView(props: GroupPageProps) {
           display="flex"
           justifyContent="space-between"
         >
-          {getWeek(index)?.map(({ date }, i) => {
+          {getWeek(index)?.map(({ date }: { date: Date }, i: number) => {
             const day = dayjs(date);
-            const filtered = trainings.filter((t) =>
+            const filtered = trainings.filter((t: any) =>
               commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to))
             );
 
@@ -149,7 +147,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
                     justifyContent: 'space-between',
                   }}
                 >
-                  {filtered.map((training) => (
+                  {filtered.map((training: any) => (
                     <Fragment key={training.id}>
                       <TrainingItem
                         training={training}
@@ -169,7 +167,7 @@ export default function TrainerWeekView(props: GroupPageProps) {
 
 function TrainingItem(props: {
   training: Training;
-  updateTraining: (training: Training, input: UpdateTraining) => Promise<void>;
+  updateTraining: (training: Training, input: any) => Promise<void>;
 }) {
   const { training, updateTraining } = props;
   const [date, setDate] = useState(() => ({
@@ -228,7 +226,7 @@ function TrainingItem(props: {
           />
         </Stack>
 
-        {training.components.map((c) => (
+        {(training.components as any).map((c: any) => (
           <Box
             key={c.id}
             sx={{

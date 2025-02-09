@@ -2,11 +2,11 @@
 
 import React, { ReactNode } from 'react';
 import Container from '@mui/material/Container';
-import Sidebar from '@/common/components/sidebar';
+import Sidebar from '@/components/sidebar';
 import Box from '@mui/material/Box';
 import { useAuth } from '@/context/auth-provider';
-import { UserRole } from '@/user/enum/user-role.enum';
-import SidebarAthlete from '@/user/components/sidebar-athlete';
+import SidebarAthlete from '@/components/sidebar-athlete';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 interface Props {
   children: ReactNode;
@@ -27,9 +27,7 @@ export default function Layout({ children }: Props) {
       <Container component="main" maxWidth="lg" sx={{ pb: 12 }}>
         {isTrainer && <Sidebar />}
 
-        <Box mt="64px">
-          {children}
-        </Box>
+        <Box mt="64px">{children}</Box>
       </Container>
     </Box>
   );

@@ -10,25 +10,17 @@ import { UserService } from '../../user/service/user.service';
 import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
 import { TrainingService } from '../../training/service/training.service';
 import { CommonService } from '../../common/service/common.service';
-import { Subgroup } from '../entity/subgroup.entity';
-import {
-  Filter,
-  FindManyOptions,
-  FindOneOptions,
-  PaginateOptions,
-  Populate,
-} from '../../common/type/orm.type';
+import { Subgroup } from '../../training/entity/subgroup.entity';
+import { Filter, FindManyOptions } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { CycleRef, GroupRef } from '../../common/type/firebase-firestore.type';
 import { GroupRepository } from '../repository/group.repository';
-import { DEFAULT_PAGE_SIZE } from '../../common/constant/pagination.constant';
-import { SubgroupService } from './subgroup.service';
 import { CreateGroup, UpdateGroup } from '../type/group.type';
 import { User } from '../../common/type/firebase-auth.type';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { endOfDay, startOfDay } from 'date-fns';
 import { CreateCycle, UpdateCycle } from '../type/cycle.type';
 import { Cycle } from '../entity/cycle.entity';
+import { Training } from 'src/training/entity/training.entity';
 
 @Injectable()
 export class GroupService {
@@ -38,7 +30,6 @@ export class GroupService {
     private readonly groupRepository: GroupRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly subgroupService: SubgroupService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
     @Inject(forwardRef(() => UserService))
@@ -53,16 +44,24 @@ export class GroupService {
     return group.membersIds.includes(userId);
   }
 
-  isOwner(userId: string, group: Group): boolean {
-    return group.ownerId === userId;
+  isOwner(userId: string, groupOrTraining: Group | Training): boolean {
+    return groupOrTraining.ownerId === userId;
+  }
+
+  getActiveCycle(group: Group, date = new Date()): Cycle | null {
+    return (
+      group.cycles.find(
+        (cycle) =>
+          this.commonService.date.isBefore(date, cycle.to) &&
+          this.commonService.date.isAfter(date, cycle.from),
+      ) || null
+    );
   }
 
   async findAll(
-    options?: FindManyOptions<Group> & { user?: User },
+    user: User,
+    options?: FindManyOptions<Group>,
   ): Promise<Group[]> {
-    const user = options?.user;
-    if (!user) throw new BadRequestException('User not provided');
-
     const groups = await this.groupRepository.getDocs((collection) => {
       let query = this.firebaseService.isTrainer(user)
         ? collection.where('ownerId', '==', user.uid)
@@ -76,50 +75,23 @@ export class GroupService {
       return query;
     });
 
-    if (options?.populate)
-      await Promise.all(
-        groups.map((group) =>
-          this.populate({ groupId: group.id }, group, options.populate),
-        ),
-      );
-
     return groups;
   }
 
-  async findOne(
-    ref: Required<GroupRef>,
-    options?: FindOneOptions<Group> & { user?: User },
-  ): Promise<Group | null> {
+  async findById(user: User, ref: GroupRef): Promise<Group | null> {
     // find group
     const group = await this.groupRepository.getDoc(ref.groupId);
     if (!group || group.deletedAt) return null;
 
     // authorize
-    if (options?.user && !this.isAuthorized(options.user, group)) return null;
-
-    // populate
-    if (options?.populate) await this.populate(ref, group, options.populate);
-
+    if (!this.isAuthorized(user, group)) return null;
     return group;
   }
 
-  async findOneOrFail(
-    ref: Required<GroupRef>,
-    options?: FindOneOptions<Group> & { user?: User },
-  ): Promise<Group> {
-    const group = await this.findOne(ref, options);
+  async findByIdOrFail(user: User, ref: GroupRef): Promise<Group> {
+    const group = await this.findById(user, ref);
     if (!group) throw new BadRequestException('Group not found');
     return group;
-  }
-
-  getActiveCycle(group: Group, date = new Date()): Cycle | null {
-    return (
-      group.cycles.find(
-        (cycle) =>
-          this.commonService.date.isBefore(date, cycle.to) &&
-          this.commonService.date.isAfter(date, cycle.from),
-      ) || null
-    );
   }
 
   async create(user: User, input: CreateGroup): Promise<Group> {
@@ -128,142 +100,115 @@ export class GroupService {
     );
 
     // validate members
-    const members = await this.validateMembers(input.membersIds);
-    const membersIds = members.map((member) => member.uid);
+    await this.validateMembers(input.membersIds);
 
-    // create group
-    const groupId = await this.groupRepository.addDoc({
-      ownerId: user.uid,
-      name: input.name,
-      membersIds,
+    let groupId: string;
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      // add group
+      const docRef = this.groupRepository.collection().doc();
+      transaction.set(docRef, {
+        ownerId: user.uid,
+        name: input.name,
+        membersIds: input.membersIds,
+      });
+
+      // add group to all members and trainer
+      groupId = docRef.id;
+      [...input.membersIds, user.uid].map((userId) =>
+        this.userService.addGroup(transaction, userId, groupId),
+      );
     });
-
-    // for each user, add group to user's groupsIds
-    await Promise.all(
-      members.map((member) => this.userService.addGroup(member.uid, groupId)),
-    );
 
     return {
       id: groupId,
+      name: input.name,
+      ownerId: user.uid,
+      membersIds: input.membersIds,
+      cycles: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      ownerId: user.uid,
-      name: input.name,
-      membersIds,
-      availableMembersIds: [],
-      members,
-      subgroups: [],
-      cycles: [],
     };
   }
 
-  async update(
-    ref: Required<GroupRef>,
-    input: UpdateGroup,
-    options: { user: User },
-  ): Promise<Group> {
-    // find parent references
-    const group = await this.findOneOrFail(ref, options);
-    const { user } = options;
-
+  async update(user: User, ref: GroupRef, input: UpdateGroup): Promise<Group> {
     this.logger.log(
       `User ${user.uid} is updating group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
 
+    const group = await this.findByIdOrFail(user, ref);
+
+    // update members and name
     if (input.membersIds) {
-      // update members for all trainings in the parent group
-      const trainings = await this.trainingService.findAll({
-        user,
-        filter: {
-          groupId: { value: group.id },
-          subgroupId: { value: null },
-        },
-      });
-
-      await Promise.all(
-        trainings.map((training) =>
-          this.trainingService.update(
-            { trainingId: training.id },
-            { membersIds: input.membersIds },
-            { user },
-          ),
-        ),
+      const trainingDocs = await this.trainingService.getDocs((query) =>
+        query.where('groupId', '==', ref.groupId),
       );
-    }
 
-    // update group
-    await this.groupRepository.updateDoc(ref.groupId, input);
+      await this.firebaseService.firestore.runTransaction(
+        async (transaction) => {
+          trainingDocs.forEach((doc) => {
+            transaction.update(doc.ref, { membersIds: input.membersIds });
+          });
 
-    return await this.findOneOrFail(ref, {
-      user,
-      populate: ['members', 'availableMembersIds', 'cycles', 'subgroups'],
-    });
+          const docRef = this.groupRepository.doc(ref.groupId);
+          transaction.update(docRef, input);
+        },
+      );
+    } else if (input.name)
+      // update only name
+      await this.groupRepository.updateDoc(ref.groupId, input);
+
+    return { ...group, ...input };
   }
 
   /**
    * Soft deletes a group by setting the deletedAt field to the current date.
    */
-  async remove(
-    ref: Required<GroupRef>,
-    options: { user: User },
-  ): Promise<void> {
-    const { user } = options;
-    this.logger.debug(`User ${user.uid} is removing group ${ref.groupId}`);
-    const group = await this.findOneOrFail(ref);
+  async delete(user: User, ref: GroupRef): Promise<void> {
+    this.logger.log(`User ${user.uid} is removing group ${ref.groupId}`);
+    const group = await this.findByIdOrFail(user, ref);
 
-    // delete all subgroups
-    /* const subgroups = await this.subgroupService.findAll(ref);
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      // remove group from all members
+      group.membersIds.map((userId) =>
+        this.userService.removeGroup(transaction, userId, group.id),
+      );
 
-    await Promise.all(
-      subgroups.map((subgroup) =>
-        this.subgroupService.remove(
-          { groupId: ref.groupId, subgroupId: subgroup.id },
-          options,
-        ),
-      ),
-    ); */
+      // remove group from owner
+      this.userService.removeGroup(transaction, user.uid, group.id);
 
-    // TODO - delete all trainings
-    /* const trainings = await this.trainingService.findAll({
-      user,
-      filter: { groupId: { value: ref.groupId } },
+      // soft delete group
+      const docRef = this.groupRepository.doc(group.id);
+      transaction.set(docRef, { deletedAt: Timestamp.now() });
     });
+  }
 
-    await Promise.all(
-      trainings.map((training) =>
-        this.trainingService.remove({ trainingId: training.id }, options),
-      ),
-    ); */
+  findCycle(cycleId: string, group: Group) {
+    return group.cycles.find((cycle) => cycle.id === cycleId);
+  }
 
-    // remove group from all members
-    await Promise.all(
-      group.membersIds.map((memberId) =>
-        this.userService.removeGroup(memberId, ref.groupId),
-      ),
-    );
-
-    // remove group from owner
-    await this.userService.removeGroup(group.ownerId, ref.groupId);
-
-    // soft delete group
-    await this.groupRepository.deleteDoc(ref.groupId);
+  findCycleOrFail(cycleId: string, group: Group) {
+    const cycle = this.findCycle(cycleId, group);
+    if (!cycle) throw new BadRequestException('Cycle does not exist');
+    return cycle;
   }
 
   async addCycle(
-    ref: Required<GroupRef>,
     user: User,
+    ref: GroupRef,
     input: CreateCycle,
   ): Promise<Cycle> {
     this.logger.log(
       `User ${user.uid} adding cycle to group ${ref.groupId}: ${JSON.stringify(input)}`,
     );
-    const group = await this.findOneOrFail(ref, { user });
 
-    // check that current group cycles don't overlap with the new one
-    if (this.isOverlappingCycle(group.cycles, input as Cycle))
-      throw new BadRequestException('Cycle overlap');
+    const group = await this.findByIdOrFail(user, ref);
 
+    // check cycle overlap
+    this.checkCycleOverlap(group.cycles, input as Cycle);
+
+    // add cycle to group
     const id = await this.groupRepository.addCycle(group.id, input);
+
     return {
       id,
       weeks: this.commonService.date.weeks(input.from, input.to),
@@ -274,81 +219,53 @@ export class GroupService {
   }
 
   async updateCycle(
-    ref: Required<CycleRef>,
     user: User,
-    cycleId: string,
+    ref: CycleRef,
     input: UpdateCycle,
   ): Promise<Cycle> {
     this.logger.log(
       `User ${user.uid} updating cycle ${ref.cycleId}: ${JSON.stringify(input)}`,
     );
 
-    const group = await this.findOneOrFail(ref, { user });
-    const cycle = group.cycles.find((cycle) => cycle.id === cycleId);
-    if (!cycle) throw new BadRequestException('Cycle does not exist');
+    const group = await this.findByIdOrFail(user, ref);
+    const cycle = this.findCycleOrFail(ref.cycleId, group);
 
-    const update = this.commonService.object.clean(input);
-
-    // check that current group cycles don't overlap with the new one
-    update.from = input.from || cycle.from;
-    update.to = input.to || cycle.to;
-
-    if (
-      this.isOverlappingCycle(
+    if (input.from || input.to)
+      this.checkCycleOverlap(
         group.cycles.filter((c) => c.id !== cycle.id),
-        update as Cycle,
-      )
-    )
-      throw new BadRequestException('Cycle overlap');
+        {
+          from: input.from || cycle.from,
+          to: input.to || cycle.to,
+        } as Cycle,
+      );
 
-    await this.groupRepository.updateCycle(group.id, cycleId, update);
-    return { ...cycle, ...update };
+    await this.groupRepository.updateCycle(group.id, ref.cycleId, input);
+    return { ...cycle, ...input };
   }
 
-  async deleteCycle(ref: Required<CycleRef>, user: User) {
-    this.logger.log(`User ${user.uid} removing cycle ${ref.cycleId}:}`);
-
-    const group = await this.findOneOrFail(ref, { user });
-    const cycle = group.cycles.find((cycle) => cycle.id === ref.cycleId);
-    if (!cycle) throw new BadRequestException('Cycle does not exist');
-
+  async deleteCycle(ref: CycleRef, user: User) {
+    this.logger.log(`User ${user.uid} removing cycle ${ref.cycleId}`);
+    const group = await this.findByIdOrFail(user, ref);
+    this.findCycleOrFail(ref.cycleId, group);
     await this.groupRepository.deleteCycle(ref.groupId, ref.cycleId);
   }
 
-  /**
-   * Finds all available members for a group for the current day.
-   */
-  async findAvailableMembers(
-    ref: Required<GroupRef>,
-    date: Date,
-    options?: { user?: User },
-  ): Promise<string[]> {
-    const group = await this.findOneOrFail(ref, options);
-    const subgroups = await this.subgroupService.findAll(ref, {
-      user: options?.user,
-      filter: {
-        groupId: { value: ref.groupId },
-        from: { value: startOfDay(date), op: '<=' },
-        to: { value: endOfDay(date), op: '>=' },
-      },
-    });
+  private filter(query: Query, filter: Filter<Group>) {
+    if (filter.ids)
+      query = query.where(FieldPath.documentId(), 'in', filter.ids);
 
-    // find all active subgroups for the provided date
-    const activeSubgroups = subgroups.filter((subgroup) =>
-      this.commonService.date.isBetween(date, subgroup.from, subgroup.to),
+    if (filter.ownerId) query = query.where('ownerId', '==', filter.ownerId);
+    return query;
+  }
+
+  private checkCycleOverlap(existingCycles: Cycle[], newCycle: Cycle) {
+    const overlap = existingCycles.some(
+      (cycle) =>
+        this.commonService.date.isBefore(newCycle.from, cycle.to) &&
+        this.commonService.date.isAfter(newCycle.to, cycle.from),
     );
 
-    // members that are part of active subgroups are not available
-    const unavailableMembers = activeSubgroups.flatMap(
-      (subgroup) => subgroup.membersIds,
-    );
-
-    // return unique(all members - unavailableMembers)
-    const availableMembers = group.membersIds.filter(
-      (memberId) => !unavailableMembers.includes(memberId),
-    );
-
-    return this.commonService.array.unique(availableMembers);
+    if (overlap) throw new BadRequestException('Cycle overlap');
   }
 
   private async validateMembers(membersIds: string[]) {
@@ -361,89 +278,5 @@ export class GroupService {
       throw new BadRequestException('Invalid members provided');
 
     return members;
-  }
-
-  private filter(query: Query, filter: Filter<Group>) {
-    if (filter.ids)
-      query = query.where(FieldPath.documentId(), 'in', filter.ids);
-
-    if (filter.ownerId) query = query.where('ownerId', '==', filter.ownerId);
-
-    if (filter.name)
-      query = query
-        .where('name', '>=', filter.name)
-        .where('name', '<=', filter.name + '\uf8ff');
-
-    if (filter.createdAt)
-      query = query.where(
-        'createdAt',
-        filter.createdAt.op || '>=',
-        Timestamp.fromDate(filter.createdAt.value),
-      );
-
-    if (filter.updatedAt)
-      query = query.where(
-        'updatedAt',
-        filter.updatedAt.op || '>=',
-        Timestamp.fromDate(filter.updatedAt.value),
-      );
-
-    return query;
-  }
-
-  private isOverlappingCycle(
-    existingCycles: Cycle[],
-    newCycle: Cycle,
-  ): boolean {
-    return existingCycles.some(
-      (cycle) =>
-        this.commonService.date.isBefore(newCycle.from, cycle.to) &&
-        this.commonService.date.isAfter(newCycle.to, cycle.from),
-    );
-  }
-
-  private paginate(query: Query, paginate: PaginateOptions<Group>): Query {
-    const orderBy = paginate.orderBy || { field: 'createdAt', value: 'desc' };
-    const page = paginate.page || 1;
-    const pageSize = paginate.pageSize || DEFAULT_PAGE_SIZE;
-
-    return query
-      .orderBy(orderBy.field, orderBy.value)
-      .limit(pageSize)
-      .offset((page - 1) * pageSize);
-  }
-
-  private async populate(
-    ref: Required<GroupRef>,
-    group: Group,
-    populate: Populate<Group>[],
-  ) {
-    if (populate.includes('members'))
-      group.members = await this.userService.findAll({ ids: group.membersIds });
-
-    if (populate.includes('availableMembersIds'))
-      group.availableMembersIds = await this.findAvailableMembers(
-        ref,
-        startOfDay(new Date()),
-      );
-
-    if (populate.includes('subgroups')) {
-      group.subgroups = await this.subgroupService.findAllActive(
-        ref,
-        startOfDay(new Date()),
-      );
-
-      if (populate.includes('subgroups.members')) {
-        if (!populate.includes('members'))
-          throw new Error(
-            'Cannot populate subgroup members without populating group members',
-          );
-
-        for (const subgroup of group.subgroups)
-          subgroup.members = group.members.filter((member) =>
-            subgroup.membersIds.includes(member.uid),
-          );
-      }
-    }
   }
 }
