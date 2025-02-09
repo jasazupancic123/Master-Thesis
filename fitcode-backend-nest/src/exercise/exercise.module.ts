@@ -6,7 +6,6 @@ import { ExerciseRepository } from './repository/exercise.repository';
 import { UserModule } from '../user/user.module';
 import { ExerciseAttributeRepository } from './repository/exercise-attribute.repository';
 import { ExerciseAttributeService } from './service/exercise-attribute.service';
-import { CacheManagerModule } from 'src/cache-manager/cache-manager.module';
 
 @Module({
   imports: [forwardRef(() => UserModule), forwardRef(() => ComponentModule)],

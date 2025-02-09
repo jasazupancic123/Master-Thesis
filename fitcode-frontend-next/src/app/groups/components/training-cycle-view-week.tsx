@@ -1,29 +1,22 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { Training } from '@/training/entity/training.entity';
-import { CreateTraining } from '@/training/type/training.type';
-import { Component } from '@/component/entity/component.entity';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import React from 'react';
-import { CreateTrainingComponent } from '@/training/type/training-component.type';
 import { CommonService } from '@/common/service/common.service';
 import { TrainingGridItem } from '@/app/groups/components/training-cycle-view-grid-item';
+import { Component } from '@/controller/component/type/component.type';
+import { Training } from '@/controller/training/type/training.type';
 
 export default function TrainingWeek(props: {
   index: number;
   week: Dayjs[];
   trainings: Training[];
   components: Component[];
-  training: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs };
-  addTraining: (
-    data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs }
-  ) => void;
-  addTrainingComponent: (
-    trainingId: string,
-    data: CreateTrainingComponent[]
-  ) => void;
+  training: any;
+  addTraining: (data: any) => void;
+  addTrainingComponent: (trainingId: string, data: any[]) => void;
   deleteTraining: (trainingId: string) => Promise<void>;
   deleteTrainingComponent: (
     trainingId: string,

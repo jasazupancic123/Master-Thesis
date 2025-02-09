@@ -1,22 +1,29 @@
 'use client';
 
-import withAuth from '@/common/components/with-auth';
+import withAuth from '@/components/with-auth';
 import React, { useState } from 'react';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
-import { Component } from '@/component/entity/component.entity';
 import EditIcon from '@mui/icons-material/Edit';
-import { UserRole } from '@/user/enum/user-role.enum';
 import toast from 'react-hot-toast';
 import Button from '@mui/material/Button';
-import MyModal from '@/common/components/modal';
+import MyModal from '@/components/modal';
 import { TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Tree, { TreeItem } from '@/common/components/tree';
+import Tree, { TreeItem } from '@/components/tree';
 import { useAppContext } from '@/context/app-provider';
-import { ComponentController } from '@/component/component.controller';
+import { Component } from '@/controller/component/type/component.type';
+import { ComponentController } from '@/controller/component/component.controller';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
-const DEFAULT_COMPONENT: Component = { id: '', slug: '', name: '', parent: null, children: [], parents: [] };
+const DEFAULT_COMPONENT: Component = {
+  id: '',
+  slug: '',
+  name: '',
+  parent: null,
+  children: [],
+  parents: [],
+};
 
 function Page() {
   // context
@@ -29,9 +36,9 @@ function Page() {
 
   async function editComponent(id: string) {
     try {
-      await ComponentController.updateComponent(token, id, component);
+      // await ComponentController.update(token, id, component);
       toast.success('Successfully edited components');
-      setModal(prev => ({ ...prev, edit: false }));
+      setModal((prev) => ({ ...prev, edit: false }));
     } catch (e) {
       toast.error('Failed to edit components');
     }
@@ -44,7 +51,9 @@ function Page() {
       headerName: 'Parent',
       width: 150,
       valueGetter: (_, row: Component) => {
-        const found = components.flat.find((component) => component.id === row.parent);
+        const found = components.flat.find(
+          (component) => component.id === row.parent
+        );
         return (found || DEFAULT_COMPONENT).name;
       },
       valueSetter: (params) => params.value,
@@ -55,11 +64,18 @@ function Page() {
       width: 100,
       getActions: ({ id }) => {
         return [
-          <GridActionsCellItem key={0} icon={<EditIcon />} label="Edit" onClick={() => {
-            const found = components.flat.find((component) => component.id === id);
-            setComponent(found || DEFAULT_COMPONENT);
-            setModal(prev => ({ ...prev, edit: true }));
-          }} />,
+          <GridActionsCellItem
+            key={0}
+            icon={<EditIcon />}
+            label="Edit"
+            onClick={() => {
+              const found = components.flat.find(
+                (component) => component.id === id
+              );
+              setComponent(found || DEFAULT_COMPONENT);
+              setModal((prev) => ({ ...prev, edit: true }));
+            }}
+          />,
         ];
       },
     },
@@ -73,29 +89,42 @@ function Page() {
         </Button>
       </Box>
 
-      {isTreeView && components.tree.length > 0
-        ? <Tree data={components.tree as TreeItem[]} />
-        : components.flat ?
-          <Box height={600}>
-            <DataGrid
-              rows={components.flat}
-              columns={columns}
-              rowSelection={false}
-            />
-          </Box>
-          : <Typography>Loading...</Typography>
-      }
+      {isTreeView && components.tree.length > 0 ? (
+        <Tree data={components.tree as TreeItem[]} />
+      ) : components.flat ? (
+        <Box height={600}>
+          <DataGrid
+            rows={components.flat}
+            columns={columns}
+            rowSelection={false}
+          />
+        </Box>
+      ) : (
+        <Typography>Loading...</Typography>
+      )}
 
       <Box mt={10} />
 
       {/* Edit Modal */}
       <MyModal
         isOpen={modal.edit}
-        setIsOpen={() => setModal(prev => ({ ...prev, edit: false }))}
-        actions={<>
-          <Button onClick={() => editComponent(component.id as string)} color="primary">Edit</Button>
-          <Button onClick={() => setModal(prev => ({ ...prev, edit: false }))} color="secondary">Cancel</Button>
-        </>}
+        setIsOpen={() => setModal((prev) => ({ ...prev, edit: false }))}
+        actions={
+          <>
+            <Button
+              onClick={() => editComponent(component.id as string)}
+              color="primary"
+            >
+              Edit
+            </Button>
+            <Button
+              onClick={() => setModal((prev) => ({ ...prev, edit: false }))}
+              color="secondary"
+            >
+              Cancel
+            </Button>
+          </>
+        }
       >
         <Typography variant="h5">Edit Component</Typography>
 
@@ -111,7 +140,9 @@ function Page() {
             label="Name"
             variant="outlined"
             value={component.name}
-            onChange={(e) => setComponent({ ...component, name: e.target.value })}
+            onChange={(e) =>
+              setComponent({ ...component, name: e.target.value })
+            }
           />
 
           {/*<SelectData<Component>

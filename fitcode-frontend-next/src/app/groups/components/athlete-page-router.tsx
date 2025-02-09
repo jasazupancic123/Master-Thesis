@@ -1,50 +1,42 @@
 'use client';
 
-import { GroupPageProps } from '@/group/type/props.type';
 import Box from '@mui/material/Box';
-import SelectInput from '@/common/components/select-input';
-import { Group } from '@/group/entity/group.entity';
+import SelectInput from '@/components/select-input';
 import GroupIcon from '@mui/icons-material/Group';
 import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/app-provider';
-import { GroupController } from '@/group/group.controller';
-import { TrainingController } from '@/training/training.controller';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
-import AthleteTrainingExerciseCard from '@/training/components/athlete-training-exercise-card';
 import { CommonService } from '@/common/service/common.service';
 import { Divider } from '@mui/material';
-import { Training } from '@/training/entity/training.entity';
-import { TrainingService } from '@/training/training.service';
-import { Exercise } from '@/exercise/entity/exercise.entity';
-import { ExerciseController } from '@/exercise/exercise.controller';
 import { useFetch } from '@/hook/use-fetch';
+import { Training } from '@/controller/training/type/training.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import AthleteTrainingExerciseCard from '@/components/athlete-training-exercise-card';
 
-export default function AthletePageRouter(props: GroupPageProps) {
+export default function AthletePageRouter(props: any) {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const { token, components } = useAppContext();
-  const exercises = useFetch<Exercise[]>(ExerciseController.URL.exercises(), {
-    authorization: true,
-  });
+  const exercises = useFetch<Exercise[]>('/exercise', { auth: true });
 
   useEffect(() => {
     async function fetchTrainings() {
       if (!exercises.data) return;
 
       try {
-        let trainings = await TrainingController.findTrainings(token, {
+        let trainings = await TrainingController.findAll(token, {
           from: dayjs().startOf('day').toDate(),
           to: dayjs().endOf('day').toDate(),
         });
 
-        trainings = trainings.map((training) =>
-          TrainingService.map(training, {
-            components: components.flat,
-            exercises: exercises.data!,
-          })
-        );
+        trainings.map((t) => {
+          TrainingService.mapComponents(t, components.flat);
+          TrainingService.mapExercises(t, exercises.data!);
+        });
 
         setTrainings(trainings);
       } catch (e) {
@@ -106,7 +98,7 @@ export default function AthletePageRouter(props: GroupPageProps) {
 
               {/* Components */}
               <Stack spacing={3}>
-                {training.components.map((component) => (
+                {Object.values(training.components).map((component) => (
                   <Box key={component.id} sx={{ borderRadius: 2 }}>
                     <AthleteTrainingExerciseCard
                       component={component}

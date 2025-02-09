@@ -1,5 +1,5 @@
-import { UserRole } from '@/user/enum/user-role.enum';
-import { SportLevel } from '@/user/enum/sport-level.enum';
+import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export const ALL_ROLES = [
   UserRole.ATHLETE,

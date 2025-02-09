@@ -1,29 +1,25 @@
 import { useAppContext } from '@/context/app-provider';
 import React, { Fragment, useEffect, useState } from 'react';
-import { Component } from '@/component/entity/component.entity';
-import { CreateTraining } from '@/training/type/training.type';
 import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
 import Box from '@mui/material/Box';
-import ExerciseChips from '@/exercise/components/exercise-chips';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Alert } from '@mui/material';
 import { AppContextType } from '@/common/type/context.type';
-import { GroupPageProps } from '@/group/type/props.type';
-import {
-  CreateTrainingComponent,
-  UpdateTrainingComponent,
-} from '@/training/type/training-component.type';
 import { CommonService } from '@/common/service/common.service';
 import TrainingWeek from '@/app/groups/components/training-cycle-view-week';
-import { TrainingController } from '@/training/training.controller';
-import Warning from '@/common/components/warning';
-import { TrainingService } from '@/training/training.service';
+import Warning from '@/components/warning';
+import { Component } from '@/controller/component/type/component.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { Training } from '@/controller/training/type/training.type';
+import ExerciseChips from '@/components/exercise-chips';
+import { Week } from '@/controller/group/type/cycle.type';
 
-export default function TrainerCycleView(props: GroupPageProps) {
+export default function TrainerCycleView(props: any) {
   // context
   const { token, components } = useAppContext() as AppContextType;
   const [selected, setSelected] = useState<Component[]>([]);
@@ -47,9 +43,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
     });
   }, [props.selected.cycle?.id]);
 
-  async function createTraining(
-    data: Pick<CreateTraining, 'from' | 'to'> & { date: Dayjs }
-  ) {
+  async function createTraining(data: any & { date: Dayjs }) {
     if (!props.selected.cycle || !props.selected.group) {
       toast.error('Please select a group and cycle');
       return;
@@ -78,13 +72,19 @@ export default function TrainerCycleView(props: GroupPageProps) {
       .set('second', data.to.second());
 
     try {
-      const response = await TrainingController.addTraining(token, {
+      const response = await TrainingController.create(token, {
         groupId: props.selected.group!.id,
         cycleId: props.selected.cycle!.id,
-        subgroupId: props.selected.subgroup?.id || null,
-        componentIds: selected.map((c) => c.id),
         from,
         to,
+        components: selected.reduce((acc, c, i) => {
+          acc[c.id] = {
+            id: c.id,
+            order: i,
+            supersets: [{ exercises: {}, order: 0 }],
+          };
+          return acc;
+        }, {} as Record<string, any>),
       });
 
       if (!response) {
@@ -93,15 +93,13 @@ export default function TrainerCycleView(props: GroupPageProps) {
       }
 
       // update selected trainings
-      const mapped = TrainingService.map(response, {
-        components: components.flat,
-      });
+      TrainingService.mapComponents(response, components.flat);
 
-      props.setSelected((prev) => ({
+      props.setSelected((prev: any) => ({
         ...prev,
         cycle: {
           ...prev.cycle!,
-          trainings: [...(prev.cycle?.trainings || []), mapped],
+          trainings: [...(prev.cycle?.trainings || []), response],
         },
       }));
 
@@ -111,33 +109,30 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
   }
 
-  async function addTrainingComponents(
-    trainingId: string,
-    data: CreateTrainingComponent[]
-  ) {
+  async function addTrainingComponents(trainingId: string, data: any[]) {
     if (!props.selected.cycle || !props.selected.group) {
       toast.error('Please select a group and cycle');
       return;
     }
 
     try {
-      const response = await TrainingController.addTrainingComponents(
+      const response = await TrainingController.addComponents(
         token,
         trainingId,
-        data
+        {
+          components: data,
+        }
       );
 
       // update training
-      const mapped = TrainingService.map(response, {
-        components: components.flat,
-      });
+      TrainingService.mapComponents(response, components.flat);
 
-      props.setSelected((prev) => ({
+      props.setSelected((prev: any) => ({
         ...prev,
         cycle: {
           ...props.selected.cycle!,
-          trainings: props.selected.cycle!.trainings.map((t) => {
-            if (t.id === trainingId) return mapped;
+          trainings: props.selected.cycle!.trainings.map((t: Training) => {
+            if (t.id === trainingId) return response;
             return t;
           }),
         },
@@ -150,7 +145,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
   async function updateTrainingComponent(
     trainingId: string,
     componentId: string,
-    input: UpdateTrainingComponent
+    input: any
   ) {
     if (!props.selected.cycle || !props.selected.group) {
       toast.error('Please select a group and cycle');
@@ -158,7 +153,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
 
     try {
-      const response = await TrainingController.updateTrainingComponent(
+      const response = await TrainingController.updateComponent(
         token,
         trainingId,
         componentId,
@@ -166,23 +161,21 @@ export default function TrainerCycleView(props: GroupPageProps) {
       );
 
       // update training
-      props.setSelected((prev) => ({
+      props.setSelected((prev: any) => ({
         ...prev,
         cycle: {
           ...props.selected.cycle!,
-          trainings: props.selected.cycle!.trainings.map((training) => {
-            if (training.id === trainingId)
-              return {
-                ...training,
-                components: [
-                  ...(training.components.filter((c) => c.id !== response.id) ||
-                    []),
-                  response,
-                ].sort((a, b) => a.order - b.order),
-              };
+          trainings: props.selected.cycle!.trainings.map(
+            (training: Training) => {
+              if (training.id === trainingId)
+                return {
+                  ...training,
+                  components: response,
+                };
 
-            return training;
-          }),
+              return training;
+            }
+          ),
         },
       }));
     } catch (e: any) {
@@ -200,27 +193,32 @@ export default function TrainerCycleView(props: GroupPageProps) {
     }
 
     try {
-      const response = await TrainingController.deleteTrainingComponent(
+      const response = await TrainingController.deleteComponent(
         token,
         trainingId,
-        componentId
+        componentId,
+        {}
       );
 
       // update training
-      props.setSelected((prev) => ({
+      props.setSelected((prev: any) => ({
         ...prev,
         cycle: {
           ...props.selected.cycle!,
-          trainings: props.selected.cycle!.trainings.map((training) => {
-            if (training.id === trainingId)
-              return {
-                ...training,
-                components:
-                  training.components.filter((c) => c.id !== response.id) || [],
-              };
+          trainings: props.selected.cycle!.trainings.map(
+            (training: Training) => {
+              if (training.id === trainingId)
+                return {
+                  ...training,
+                  components:
+                    Object.values(training.components).filter(
+                      (c) => c.id !== response.id
+                    ) || [],
+                };
 
-            return training;
-          }),
+              return training;
+            }
+          ),
         },
       }));
     } catch (e: any) {
@@ -230,21 +228,53 @@ export default function TrainerCycleView(props: GroupPageProps) {
 
   async function deleteTraining(trainingId: string) {
     try {
-      await TrainingController.deleteTraining(token, trainingId);
+      await TrainingController.delete(token, trainingId);
 
       // update selected trainings
-      props.setSelected((prev) => ({
+      props.setSelected((prev: any) => ({
         ...prev,
         cycle: {
           ...prev.cycle!,
           trainings:
-            prev.cycle?.trainings?.filter((t) => t.id !== trainingId) || [],
+            prev.cycle?.trainings?.filter(
+              (t: Training) => t.id !== trainingId
+            ) || [],
         },
       }));
     } catch (e: any) {
       toast.error(e.message || 'Failed to delete training');
     }
   }
+
+  /**
+   * Fetch trainings' details
+   */
+  useEffect(() => {
+    async function fetchTrainings() {
+      try {
+        let response = await TrainingController.findAll(token, {
+          from: props.date.start.toDate(),
+          to: props.date.end.toDate(),
+        });
+
+        response.map((training) => {
+          TrainingService.mapComponents(training, components.flat);
+        });
+
+        props.setSelected((prev: any) => ({
+          ...prev,
+          cycle: {
+            ...prev.cycle!,
+            trainings: response,
+          },
+        }));
+      } catch (e: any) {
+        toast.error(e.message || 'Failed to fetch trainings');
+      }
+    }
+
+    fetchTrainings().then();
+  }, [token, props.date.start, props.date.end, props.date.custom]);
 
   if (!props.selected.group || !props.selected.cycle)
     return <Warning title="Select cycle" topBorder />;
@@ -337,7 +367,7 @@ export default function TrainerCycleView(props: GroupPageProps) {
           <Typography>Loading ...</Typography>
         ) : (
           <Stack spacing={1} mt={2}>
-            {props.selected.cycle!.weeks.map((week, i) => (
+            {props.selected.cycle!.weeks.map((week: Week[], i: number) => (
               <Fragment key={i}>
                 <TrainingWeek
                   index={i}

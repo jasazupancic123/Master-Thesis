@@ -1,9 +1,9 @@
 'use client';
 
-import withAuth from '@/common/components/with-auth';
+import withAuth from '@/components/with-auth';
 
 function Page() {
-  return <>Profile</>
+  return <>Profile</>;
 }
 
 export default withAuth(Page);

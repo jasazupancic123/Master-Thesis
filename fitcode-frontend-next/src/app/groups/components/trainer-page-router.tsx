@@ -4,12 +4,10 @@ import React, { ReactNode, useState } from 'react';
 import Box from '@mui/material/Box';
 import { TextField, ToggleButtonGroup, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import MyModal from '@/common/components/modal';
-import { CreateGroup } from '@/group/type/group.type';
+import MyModal from '@/components/modal';
 import { useAppContext } from '@/context/app-provider';
 import toast from 'react-hot-toast';
-import SelectData from '@/common/components/select-data';
-import { User } from '@/user/type/user.type';
+import SelectData from '@/components/select-data';
 import FilterButton from '@/app/groups/components/filter-button';
 import TrainerDayView from '@/app/groups/components/trainer-day-view';
 import TrainerCycleView from '@/app/groups/components/trainer-cycle-view';
@@ -17,20 +15,20 @@ import TrainerYearView from '@/app/groups/components/trainer-year-view';
 import TrainerWeekView from '@/app/groups/components/trainer-week-view';
 import GroupIcon from '@mui/icons-material/Group';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
-import SelectInput from '@/common/components/select-input';
+import SelectInput from '@/components/select-input';
 import { AppContextType } from '@/common/type/context.type';
-import { GroupPageProps } from '@/group/type/props.type';
-import { GroupController } from '@/group/group.controller';
-import { Group } from '@/group/entity/group.entity';
-import { Cycle } from '@/group/entity/cycle.entity';
-import { FilterType } from '@/group/type/filter.type';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { GroupSettings } from '@/group/components/group-settings';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import AddIcon from '@mui/icons-material/Add';
+import { FilterType } from '@/common/type/filter.type';
+import { GroupController } from '@/controller/group/group.controller';
+import { Group } from '@/controller/group/type/group.type';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { User } from '@/controller/user/type/user.type';
+import { GroupSettings } from '@/components/group-settings';
 
-export default function TrainerPageRouter(props: GroupPageProps) {
+export default function TrainerPageRouter(props: any) {
   // context
   const { token } = useAppContext() as AppContextType;
 
@@ -51,15 +49,11 @@ export default function TrainerPageRouter(props: GroupPageProps) {
     year: <TrainerYearView {...props} />,
   };
 
-  async function createGroup(group: CreateGroup) {
+  async function createGroup(group: any) {
     try {
       props.setLoading(true);
-      const response = await GroupController.createGroup(token, group);
+      const response = await GroupController.create(token, group);
       setModal({ ...modal, group: false });
-
-      // populate available members
-      if (!response.availableMembersIds)
-        response.availableMembersIds = group.membersIds;
 
       props.setSelected({
         group: response,
@@ -67,7 +61,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
         cycle: null,
       });
 
-      props.groups.setData((prev) => [...(prev || []), response]);
+      props.groups.setData((prev: any) => [...(prev || []), response]);
       setCreate({ ...create, group: { name: '', membersIds: [] } });
     } catch (e: any) {
       toast.error(e.message);
@@ -124,9 +118,9 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                 value={props.selected.group?.id || ''}
                 setValue={(value) => {
                   const group = props.groups.data?.find(
-                    (group) => group.id === value
+                    (group: Group) => group.id === value
                   );
-                  props.setSelected((prev) => ({
+                  props.setSelected((prev: any) => ({
                     ...prev,
                     group: group || null,
                     cycle: null,
@@ -162,8 +156,10 @@ export default function TrainerPageRouter(props: GroupPageProps) {
                   value={props.selected.cycle?.id || ''}
                   setValue={(value) => {
                     const cycles = props.selected.group!.cycles || [];
-                    const cycle = cycles.find((cycle) => cycle.id === value);
-                    props.setSelected((prev) => ({
+                    const cycle = cycles.find(
+                      (cycle: Cycle) => cycle.id === value
+                    );
+                    props.setSelected((prev: any) => ({
                       ...prev,
                       cycle: cycle || null,
                     }));
@@ -246,7 +242,7 @@ export default function TrainerPageRouter(props: GroupPageProps) {
       </Box>
 
       {/* Render selected filter */}
-      {mapper[props.filter] || (
+      {mapper[props.filter as FilterType] || (
         <Box
           sx={{
             backgroundColor: '#1A2B3C',

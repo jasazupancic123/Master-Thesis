@@ -1,8 +1,7 @@
 'use client';
 
-import withAuth from '@/common/components/with-auth';
+import withAuth from '@/components/with-auth';
 import React, { useState } from 'react';
-import { User } from '@/user/type/user.type';
 import Box from '@mui/material/Box';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
@@ -18,18 +17,19 @@ import {
   GridRowModesModel,
 } from '@mui/x-data-grid';
 import { ALL_LEVELS, ALL_ROLES } from '@/common/constant/user.constant';
-import { UserRole } from '@/user/enum/user-role.enum';
 import toast from 'react-hot-toast';
-import { CustomClaims } from '@/user/type/custom-claims.type';
-import { UserController } from '@/user/user.controller';
+import { User } from '@/controller/user/type/user.type';
+import { UserController } from '@/controller/user/user.controller';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { CustomClaims } from '@/controller/user/type/custom-claims.type';
 
 function Page() {
-  const users = useFetch<User[]>(UserController.URL.users());
+  const users = useFetch<User[]>('user');
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
   async function updateUserClaims(uid: string, claims: Partial<CustomClaims>) {
     try {
-      await UserController.updateUserClaims(uid, claims);
+      // await UserController.updateUserClaims(uid, claims);
       toast.success('Successfully updated user role');
     } catch (e: any) {
       toast.error(e.message);
@@ -45,7 +45,7 @@ function Page() {
       field: 'emailVerified',
       headerName: 'Verified',
       width: 80,
-      renderCell: ({ value }) => value ? '✅' : '❌',
+      renderCell: ({ value }) => (value ? '✅' : '❌'),
     },
     { field: 'displayName', headerName: 'Name', width: 150 },
     {
@@ -91,7 +91,10 @@ function Page() {
               label="Save"
               sx={{ color: 'primary.main' }}
               onClick={() => {
-                setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+                setRowModesModel({
+                  ...rowModesModel,
+                  [id]: { mode: GridRowModes.View },
+                });
               }}
             />,
             <GridActionsCellItem
@@ -115,7 +118,12 @@ function Page() {
             icon={<EditIcon />}
             label="Edit"
             className="textPrimary"
-            onClick={() => setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } })}
+            onClick={() =>
+              setRowModesModel({
+                ...rowModesModel,
+                [id]: { mode: GridRowModes.Edit },
+              })
+            }
             color="inherit"
           />,
         ];
@@ -127,12 +135,14 @@ function Page() {
     <>
       <Box height={20} />
 
-      <Box sx={{
-        height: 500,
-        width: '100%',
-        '& .actions': { color: 'text.secondary' },
-        '& .textPrimary': { color: 'text.primary' },
-      }}>
+      <Box
+        sx={{
+          height: 500,
+          width: '100%',
+          '& .actions': { color: 'text.secondary' },
+          '& .textPrimary': { color: 'text.primary' },
+        }}
+      >
         <DataGrid
           getRowId={(row) => row.uid}
           rows={users.data || []}
@@ -150,7 +160,11 @@ function Page() {
             const updatedRow = { ...newRow, isNew: false };
             const userId = updatedRow.uid;
 
-            users.setData((users.data || []).map((user) => (user.uid === userId ? updatedRow : user)));
+            users.setData(
+              (users.data || []).map((user) =>
+                user.uid === userId ? updatedRow : user
+              )
+            );
             await updateUserClaims(userId, updatedRow.customClaims);
             return updatedRow;
           }}

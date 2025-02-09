@@ -24,6 +24,8 @@ import { Wrapper } from '../../common/type/wrapper.type';
 import { User } from '../../common/type/firebase-auth.type';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { ExerciseAttributeService } from './exercise-attribute.service';
+import { CreateExerciseDto } from '../dto/create-exercise.dto';
+import { UpdateExerciseDto } from '../dto/update-exercise.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -79,49 +81,47 @@ export class ExerciseService {
     ]);
   }
 
-  async findOne(
+  async findById(
+    user: User,
     ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise> & { userId?: string },
   ): Promise<Exercise | null> {
     // find exercise
     const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
     if (!exercise) return null;
 
     // authorize
-    if (options?.userId)
-      if (!exercise.global && exercise.userId !== options.userId) return null;
-
+    if (!exercise.global && exercise.userId !== user.uid) return null;
     return exercise;
   }
 
-  async findOneOrFail(
+  async findByIdOrFail(
+    user: User,
     ref: Required<ExerciseRef>,
-    options?: FindOneOptions<Exercise> & { userId?: string },
   ): Promise<Exercise> {
-    const exercise = await this.findOne(ref, options);
+    const exercise = await this.findById(user, ref);
     if (!exercise) throw new BadRequestException('Exercise does not exist');
     return exercise;
   }
 
-  async create(user: User, data: Partial<Exercise>) {
+  async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
     this.logger.log(`Creating new exercise for user ${user.uid}`);
 
     // validate exercise attributes
-    await this.exerciseAttributeService.validate(data.values || {});
+    await this.exerciseAttributeService.validate(data.attributeValues || {});
 
     // validate exercise data
-    const { error, message } = await this.validate(data);
-    if (error) throw new BadRequestException(message);
+    // at least one component must be selected
+    if (!data.componentsIds?.length)
+      throw new BadRequestException('No components selected');
 
-    // find all root components of selected leaf components
+    // check that all components exist and are leafs
     const components = await this.cacheManagerService.getComponents();
     const leafs = this.componentService.leafsFromFlat(components);
 
-    const roots: Component[] = [];
-    for (const componentId of data.componentsIds) {
-      const component = leafs.find((c) => c.id === componentId)!;
-      const root = this.componentService.getRoot(component, components);
-      roots.push(root);
+    for (const slug of data.componentsIds!) {
+      const component = this.componentService.getLeafBySlug(slug, leafs);
+      if (!component)
+        throw new BadRequestException(`Component ${slug} does not exist`);
     }
 
     // create exercise
@@ -139,9 +139,17 @@ export class ExerciseService {
     });
 
     return {
+      ...data,
       id: exerciseId,
-      rootComponentIds: roots.map(({ id }) => id), // used for frontend
-    };
+      userId: user.uid,
+      global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      values: Object.entries(data.attributeValues).map(([field, value]) => ({
+        attributeId: field,
+        value,
+      })),
+    } as Exercise;
   }
 
   /**
@@ -153,29 +161,15 @@ export class ExerciseService {
     exerciseIds: string[],
     componentId: string,
   ): Promise<void> {
-    // check if component id exists and is leaf node
-    const components = await this.cacheManagerService.getComponents();
-    const leafs = this.componentService.leafsFromFlat(components);
-
-    const leaf = this.componentService.getLeafBySlug(componentId, leafs);
-    if (!leaf) throw new BadRequestException('Invalid component id');
-
-    // update all exercises
-    const batch = this.firebaseService.firestore.batch();
-    for (const exerciseId of exerciseIds) {
-      const document = this.exerciseRepository.doc(exerciseId);
-      batch.update(document, { componentsIds: [componentId] });
-    }
-
-    await batch.commit();
-  }
-
-  async update() {
     // TODO
   }
 
-  async remove() {
-    // TODO
+  async update(user: User, ref: ExerciseRef, input: UpdateExerciseDto) {
+    return {} as Exercise;
+  }
+
+  async delete(user: User, ref: ExerciseRef) {
+    return {};
   }
 
   /**
@@ -227,29 +221,6 @@ export class ExerciseService {
       );
 
     return exercises;
-  }
-
-  /**
-   * Validates the following:
-   * - Exercise has at least 1 component selected
-   * - All selected components are leafs
-   */
-  private async validate(data: Partial<Exercise>): Promise<Validate> {
-    // at least one component must be selected
-    if (!data.componentsIds?.length)
-      return { error: true, message: 'No components selected' };
-
-    // check that all components exist and are leafs
-    const allComponents = await this.cacheManagerService.getComponents();
-    const components = this.componentService.leafsFromFlat(allComponents);
-
-    for (const slug of data.componentsIds!) {
-      const component = this.componentService.getLeafBySlug(slug, components);
-      if (!component)
-        return { error: true, message: `Component ${slug} does not exist` };
-    }
-
-    return { error: false };
   }
 
   private filter(

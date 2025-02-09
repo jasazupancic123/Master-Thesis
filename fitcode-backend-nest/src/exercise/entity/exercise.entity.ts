@@ -8,7 +8,6 @@ import {
 import { Expose, Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BaseEntity } from '../../common/entity/base.entity';
-import { Component } from '../../component/entity/component.entity';
 import { ExerciseAttributeValue } from './exercise-attribute-value.entity';
 
 export class Exercise extends BaseEntity {
@@ -29,7 +28,6 @@ export class Exercise extends BaseEntity {
   @Expose()
   @ApiProperty()
   componentsIds: string[];
-  // components: Component[]; // populated on frontend
 
   @IsBoolean()
   @IsOptional()

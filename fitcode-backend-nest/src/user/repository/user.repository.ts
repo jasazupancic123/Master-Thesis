@@ -64,14 +64,6 @@ export class UserRepository
     await this.doc(id).update({ deletedAt: Timestamp.now() });
   }
 
-  async addGroup(id: string, groupId: string) {
-    await this.doc(id).update({ groupsIds: FieldValue.arrayUnion(groupId) });
-  }
-
-  async removeGroup(id: string, groupId: string) {
-    await this.doc(id).update({ groupsIds: FieldValue.arrayRemove(groupId) });
-  }
-
   doc(id: string): DocumentReference {
     return this.collection().doc(id);
   }

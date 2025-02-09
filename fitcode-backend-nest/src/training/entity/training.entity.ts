@@ -2,20 +2,15 @@ import { BaseEntity } from '../../common/entity/base.entity';
 import {
   IsDate,
   IsNotEmpty,
-  IsNumber,
   IsObject,
   IsOptional,
   IsString,
-  Validate,
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { TrainingComponent } from './training-component.entity';
-import { Subgroup } from '../../group/entity/subgroup.entity';
-import { Group } from '../../group/entity/group.entity';
-import { Cycle } from '../../group/entity/cycle.entity';
-import { IdEntity } from 'src/common/entity/id.entity';
+import { Subgroup } from './subgroup.entity';
 import { UserMeta } from 'src/user/entity/user-meta.entity';
 
 export class Training extends BaseEntity {
@@ -24,14 +19,12 @@ export class Training extends BaseEntity {
   @ApiProperty()
   @Expose()
   groupId: string;
-  group?: Group;
 
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
   cycleId: string;
-  cycle?: Cycle;
 
   @IsString()
   @IsNotEmpty()
@@ -45,29 +38,6 @@ export class Training extends BaseEntity {
   @Expose()
   membersIds: string[]; // all members of the group
 
-  @IsObject()
-  @ApiProperty()
-  @Expose()
-  meta: {
-    // members' meta used to calculate workloads
-    [userId: string]: UserMeta;
-  };
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  subgroupId?: string;
-  subgroup?: Subgroup;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  copiedFromId?: string; // if this training is copied from another training
-
   @IsDate()
   @ApiProperty()
   @Expose()
@@ -80,10 +50,33 @@ export class Training extends BaseEntity {
   @Transform(({ value }) => new Date(value))
   to: Date;
 
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  copiedFromId?: string; // if this training is copied from another training
+
   @IsObject()
   @ApiProperty()
   @Expose()
   components: {
     [componentId: string]: TrainingComponent;
+  };
+
+  @ValidateNested({ each: true })
+  @Type(() => Subgroup)
+  @ApiProperty()
+  @Expose()
+  subgroups: {
+    [subgroupId: string]: Subgroup;
+  };
+
+  @IsObject()
+  @ApiProperty()
+  @Expose()
+  meta: {
+    // members' meta used to calculate workloads
+    [userId: string]: UserMeta;
   };
 }

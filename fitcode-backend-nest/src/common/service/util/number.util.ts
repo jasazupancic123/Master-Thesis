@@ -1,4 +1,4 @@
-import { RepMaxFormula } from 'src/common/enum/rep-max-formula.enum';
+import { RepMaxFormula } from '../../../training/enum/rep-max-formula.enum';
 
 export class NumberUtil {
   /**

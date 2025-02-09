@@ -61,28 +61,21 @@ export interface RootFirestoreCollectionRepository<Model = any> {
   serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
-export type ComponentRef = { componentId?: string };
-
-export type ExerciseRef = { exerciseId?: string };
-export type ExerciseAttributeRef = { attributeId?: string };
+export type ComponentRef = { componentId: string };
+export type ExerciseRef = { exerciseId: string };
+export type ExerciseAttributeRef = { attributeId: string };
 export type ExerciseAttributeValueRef = ExerciseRef & ExerciseAttributeRef;
-
-export type UserRef = { uid?: string }; // auth user uid
+export type UserRef = { uid: string }; // auth user uid
 export type UserMetaRef = UserRef & { date: Date };
-
-export type GroupRef = { groupId?: string };
-export type SubgroupRef = GroupRef & { subgroupId?: string };
-export type CycleRef = GroupRef & { cycleId?: string };
-
-export type TrainingRef = { trainingId?: string };
+export type GroupRef = { groupId: string };
+export type CycleRef = GroupRef & { cycleId: string };
+export type TrainingRef = { trainingId: string };
+export type SubgroupRef = TrainingRef & { subgroupId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
-export type TrainingSupersetRef = TrainingComponentRef & {
-  superset?: number;
-};
+export type TrainingSupersetRef = TrainingComponentRef & { superset: number };
 export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
-export type TrainingWorkloadRef = TrainingExerciseRef & {
-  userId?: string;
-};
+export type UserWorkloadRef = TrainingRef & { userId: string };
+export type UserWorkloadExerciseRef = UserWorkloadRef & ExerciseRef;
 
 // root collections
 export type DatabaseSchema = {
