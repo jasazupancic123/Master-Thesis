@@ -11,12 +11,14 @@ import toast from 'react-hot-toast';
 import Warning from '@/components/warning';
 import { Training } from '@/controller/training/type/training.type';
 import { TrainingController } from '@/controller/training/training.controller';
+import { theme } from '@/app/style';
 
 const commonService = CommonService.instance;
 
 export default function TrainerWeekView(props: any) {
   const { token } = useAppContext();
   const [index, setIndex] = useState(0); // week index
+  const group = props.selected.group;
   const cycle = props.selected.cycle;
   const weeks = cycle?.weeks || [commonService.date.getWeekDays()];
   const trainings = cycle?.trainings || [];
@@ -72,7 +74,7 @@ export default function TrainerWeekView(props: any) {
     });
   }, [index]);
 
-  if (!cycle) return <Warning title="Select cycle" topBorder />;
+  if (!group || !cycle) return <></>;
 
   return (
     <Box

@@ -48,6 +48,11 @@ export const LINK_CALENDAR = link(
   '/calendar',
   <CalendarTodayIcon />
 );
+export const LINK_MEMBERS = link('Members', '/members')
+export const LINK_SUBGROUPS= link('Subgroups', '/subgroups')
+export const LINK_ADD_GROUP = link('Add Group', '/add-group')
+export const LINK_SETTINGS = link('Settings', '/settings')
+export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaIcon />)
 
 // grouped linked (for utility)
 export const LINKS_AUTH = {
@@ -73,8 +78,11 @@ export const LINKS_SIDEBAR = {
     wellness: LINK_META,
   },
   [UserRole.TRAINER]: {
+    home: LINK_GROUPS,
     exercises: LINK_EXERCISES,
-    groups: LINK_GROUPS,
+    members: LINK_MEMBERS,
+    add: LINK_ADD_GROUP,
+    settings: LINK_SETTINGS,
   },
   [UserRole.MANAGER]: {
     groups: LINK_GROUPS,
