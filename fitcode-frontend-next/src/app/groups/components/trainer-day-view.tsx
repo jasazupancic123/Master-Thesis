@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Circles from '@/app/groups/components/circles';
 import dayjs from 'dayjs';
-import { TextField, Tooltip } from '@mui/material';
+import { Card, CardContent, Switch, TextField, Tooltip } from '@mui/material';
 import { CommonService } from '@/common/service/common.service';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -32,6 +32,11 @@ import { Effort } from '@/controller/training/enum/effort.enum';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import BorderColor from '@/components/border-color';
 import TrainingExerciseCard from '@/components/training-exercise-card';
+import Subgroups from './subgroups';
+import { COLORS } from '@/common/constant/color.constant';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { Component } from '@/controller/component/type/component.type';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 
 const commonService = CommonService.instance;
 
@@ -51,7 +56,7 @@ export default function TrainerDayView(props: any) {
     }))
   );
 
-  const [modal, setModal] = useState({ subgroup: false });
+  const [modal, setModal] = useState({ subgroup: false, edit_subgroup: false });
   const [create, setCreate] = useState({
     subgroup: {
       name: '',
@@ -68,36 +73,66 @@ export default function TrainerDayView(props: any) {
     data: [] as Exercise[],
   });
 
+  const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
+
   async function addSubgroup() {
     const group = props.selected.group;
     if (!group) return;
 
+    /* ADD API CALLS HERE, THIS IS OFFLINE ONLY */
+    const newSubgroup = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: create.subgroup.name,
+      membersIds: create.subgroup.membersIds,
+    } as unknown as Subgroup;
+
+    group.subgroups.push(newSubgroup);
+    setModal((prev) => ({ ...prev, subgroup: false }));
+    create.subgroup.name = '';
+    create.subgroup.membersIds = [];
+    return;
+
     try {
-      const subgroup = await TrainingController.addSubgroup(token, group.id, {
-        name: create.subgroup.name,
-        membersIds: create.subgroup.membersIds,
-      });
-
+      // const subgroup = await GroupController.addSubgroup(token, group.id, {
+      //   name: create.subgroup.name,
+      //   membersIds: create.subgroup.membersIds,
+      //   from: props.date.start.toDate(),
+      //   to: props.date.end.toDate(),
+      // });
       // set selected subgroup
-      props.setSelected((prev: any) => ({ ...prev, subgroup }));
-
-      // add subgroup to selected group
-      props.setSelected((prev: any) => ({
-        ...prev,
-        group: {
-          ...prev.group!,
-          availableMembersIds: (prev.group!.availableMembersIds || []).filter(
-            (id: string) => !subgroup.membersIds.includes(id)
-          ),
-          subgroups: [...prev.group!.subgroups, subgroup],
-        },
-      }));
-
-      setModal((prev) => ({ ...prev, subgroup: false }));
-      setCreate({ ...create, subgroup: { name: '', membersIds: [] } });
+      // props.setSelected((prev) => ({ ...prev, subgroup }));
+      // // add subgroup to selected group
+      // props.setSelected((prev) => ({
+      //   ...prev,
+      //   group: {
+      //     ...prev.group!,
+      //     availableMembersIds: (prev.group!.availableMembersIds || []).filter(
+      //       (id) => !subgroup.membersIds.includes(id)
+      //     ),
+      //     subgroups: [...prev.group!.subgroups, subgroup],
+      //   },
+      // }));
+      // setModal((prev) => ({ ...prev, subgroup: false }));
+      // setCreate({ ...create, subgroup: { name: '', membersIds: [] } });
     } catch (e: any) {
       toast.error(e.message || 'Failed to add subgroup');
     }
+  }
+
+  async function editSubgroup() {
+    const group = props.selected.group;
+    if (!group) return;
+
+    if (!editedSubgroup) return;
+
+    const subgroup = group.subgroups.find((s: any) => s.id === editedSubgroup.id);
+    if (!subgroup) return;
+
+    subgroup.name = editedSubgroup.name; // <-- Use editedSubgroup, not create.subgroup
+    subgroup.membersIds = editedSubgroup.membersIds; // <-- Use editedSubgroup
+
+    setModal((prev) => ({ ...prev, edit_subgroup: false }));
+    setEditedSubgroup(null);
   }
 
   async function deleteComponent(trainingId: string, componentId: string) {
@@ -467,509 +502,620 @@ export default function TrainerDayView(props: any) {
     }));
   }, [props.date.start, props.date.end, props.date.custom]);
 
+  const borderColors = COLORS;
+
   if (!group || !cycle) return <Warning title="Select cycle" topBorder />;
 
   return (
-    <Box>
-      <Circles
-        items={days}
-        value={day.date.toString()}
-        setValue={(value) => {
-          setDay({ label: '', date: dayjs(value) });
-
-          props.setDate({
-            start: dayjs(value).startOf('day'),
-            end: dayjs(value).endOf('day'),
-            custom: true,
-          });
-        }}
-        getBackgroundColor={(value, itemValue) =>
-          commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
-            ? '#1EB980'
-            : 'rgba(255, 255, 255, 0.1)'
-        }
+    <>
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        width="100%"
         sx={{
-          borderBottomRightRadius: 0,
-          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: '20px',
+          borderBottomLeftRadius: '20px',
+          bgcolor: 'background.paper',
         }}
-        arrows
-        onArrowClick={(direction) => {
-          const newDay =
-            direction === 'left'
-              ? day.date.subtract(1, 'day')
-              : day.date.add(1, 'day');
+      >
+        <Circles
+          items={days}
+          value={day.date.toString()}
+          setValue={(value) => {
+            setDay({ label: '', date: dayjs(value) });
 
-          setDay({ label: '', date: newDay });
-          props.setDate({
-            start: newDay.startOf('day'),
-            end: newDay.endOf('day'),
-            custom: true,
-          });
+            props.setDate({
+              start: dayjs(value).startOf('day'),
+              end: dayjs(value).endOf('day'),
+              custom: true,
+            });
+          }}
+          getBackgroundColor={(value, itemValue) =>
+            commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
+              ? '#1EB980'
+              : 'rgba(255, 255, 255, 0.1)'
+          }
+          sx={{
+            borderBottomRightRadius: 0,
+            borderBottomLeftRadius: 0,
+          }}
+          arrows
+          onArrowClick={(direction) => {
+            const newDay =
+              direction === 'left'
+                ? day.date.subtract(1, 'day')
+                : day.date.add(1, 'day');
 
-          setDays(
-            commonService.date.getWeekDays(newDay).map(({ label, date }) => ({
-              label: label[0],
-              value: date.toString(),
-              sublabel: commonService.date.format(date, { withYear: false }),
-            }))
-          );
-        }}
-      />
+            setDay({ label: '', date: newDay });
+            props.setDate({
+              start: newDay.startOf('day'),
+              end: newDay.endOf('day'),
+              custom: true,
+            });
 
-      {/* Training set groups with set exercises */}
-      {trainings.length === 0 ? (
-        <Warning title="No session for current date" />
-      ) : (
-        <Box mt={4} pb={15}>
-          {trainings.map((training, i) => (
-            <Box
-              key={training.id}
+            setDays(
+              commonService.date.getWeekDays(newDay).map(({ label, date }) => ({
+                label: label[0],
+                value: date.toString(),
+                sublabel: commonService.date.format(date, { withYear: false }),
+              }))
+            );
+          }}
+        />
+        {/* Available Members */}
+        <Stack direction="row" py={2} px={2}>
+          {!props.loading && (
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent="flex-start"
+              alignItems="center"
               sx={{
-                border: '1px solid #B2B3B7',
+                width: '100%', // Ensure it takes 90% of its parent’s width
+                maxWidth: 1500,
+                border: '1px solid grey',
                 borderRadius: 2,
-                m: 1,
-                p: 1,
+                rowGap: 1,
+                p: 2,
+                display: 'flex',
+                flexWrap: 'wrap',
+                margin: 'auto',
+                justifyContent: 'center',
+                minHeight:
+                  group.availableMembersIds &&
+                  group.availableMembersIds.length > 0
+                    ? 80
+                    : undefined,
               }}
             >
-              <Typography variant="h6" p={1}>
-                Training {i + 1} (
-                {CommonService.instance.date.formatTime(training.from)} -{' '}
-                {CommonService.instance.date.formatTime(training.to)})
-              </Typography>
+              {group.members && group.members.length > 0 ? (
+                // Sort members: those in a subgroup first, those without a subgroup last
+                [...group.members]
+                  .sort((a, b) => {
+                    const aSubgroupIndex = group.subgroups.findIndex(
+                      (subgroup: any) => subgroup.membersIds.includes(a.uid)
+                    );
+                    const bSubgroupIndex = group.subgroups.findIndex(
+                      (subgroup: any) => subgroup.membersIds.includes(b.uid)
+                    );
 
-              {Object.values(training?.components)?.map((component, i) => {
-                return (
-                  <Fragment key={i}>
-                    {/* Exercise list */}
-                    {exercises.show &&
-                      exercises.componentId === component.id && (
-                        // exercises.superset && (
-                        <Stack>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            mt={2}
-                            justifyContent="space-between"
-                          >
-                            <IconButton
-                              sx={{ width: 40, height: 40, p: 1 }}
-                              onClick={() => {
-                                setExercises((prev) => ({
-                                  ...prev,
-                                  pagination: {
-                                    ...prev.pagination,
-                                    page:
-                                      prev.pagination.page - 1 >= 1
-                                        ? prev.pagination.page - 1
-                                        : 1,
-                                  },
-                                }));
-                              }}
-                            >
-                              <ArrowLeftIcon />
-                            </IconButton>
+                    return aSubgroupIndex === -1
+                      ? 1
+                      : bSubgroupIndex === -1
+                        ? -1
+                        : aSubgroupIndex - bSubgroupIndex;
+                  })
+                  .map((member) => {
+                    if (!member) return null;
 
-                            <Grid2
-                              container
-                              width="100%"
-                              spacing={1}
-                              p={1}
-                              columns={
-                                exercises.pagination.pageSize >
-                                exercises.pagination.total
-                                  ? exercises.pagination.total
-                                  : exercises.pagination.pageSize
-                              }
-                            >
-                              {exercises.data.map((exercise) => (
-                                <Grid2
-                                  xs={1}
-                                  key={exercise.id}
-                                  sx={{ cursor: 'pointer' }}
-                                  onClick={() =>
-                                    addExercise(
-                                      training.id,
-                                      exercises.componentId!,
-                                      exercises.superset!,
-                                      exercise.id
-                                    )
-                                  }
-                                >
-                                  <Box
-                                    sx={{
-                                      height: 60,
-                                      backgroundImage: `url(${
-                                        exercise.imageUrl ||
-                                        'https://mui.com/static/images/cards/contemplative-reptile.jpg'
-                                      })`,
-                                      backgroundSize: 'cover',
-                                      backgroundPosition: 'center',
-                                    }}
-                                  />
+                    // Find the subgroup index
+                    const subgroupIndex = group.subgroups.findIndex(
+                      (subgroup: any) => subgroup.membersIds.includes(member.uid)
+                    );
 
-                                  <Typography
-                                    gutterBottom
-                                    variant="caption"
-                                    component="div"
-                                    p={1}
-                                  >
-                                    {exercise.name}
-                                  </Typography>
-                                </Grid2>
-                              ))}
-                            </Grid2>
+                    // Assign border color based on the subgroup index
+                    const borderColor =
+                      subgroupIndex !== -1
+                        ? borderColors[
+                            subgroupIndex + (1 % borderColors.length)
+                          ]
+                        : undefined;
 
-                            <IconButton
-                              sx={{ width: 40, height: 40, p: 1 }}
-                              onClick={() => {
-                                setExercises((prev) => ({
-                                  ...prev,
-                                  pagination: {
-                                    ...prev.pagination,
-                                    page:
-                                      prev.pagination.page + 1 <=
-                                      prev.pagination.pages
-                                        ? prev.pagination.page + 1
-                                        : prev.pagination.pages,
-                                  },
-                                }));
-                              }}
-                            >
-                              <ArrowRightIcon />
-                            </IconButton>
-                          </Stack>
-
-                          <Stack direction="row" spacing={1}>
-                            {/* Cancel button */}
-                            <Button
-                              sx={{ p: 1 }}
-                              color="secondary"
-                              onClick={() =>
-                                setExercises((prev) => ({
-                                  ...prev,
-                                  show: false,
-                                }))
-                              }
-                            >
-                              Cancel
-                            </Button>
-
-                            {/* Search exercises by name */}
-                            <TextField
-                              label="Search"
-                              fullWidth
-                              variant="outlined"
-                              size="small"
-                              value={exercises.search.name}
-                              onChange={(e) =>
-                                setExercises((prev) => ({
-                                  ...prev,
-                                  search: { name: e.target.value },
-                                }))
-                              }
-                            />
-                          </Stack>
-                        </Stack>
-                      )}
-
-                    <Box
-                      sx={{
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        my: 2,
-                      }}
-                    >
-                      <Box
-                        height={40}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <Stack direction="row" alignItems="center" mt={1}>
-                          <Typography
-                            sx={{
-                              color: '#1EB980',
-                              px: 2,
-                              mb: 0,
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {
-                              components.flat.find(
-                                ({ id }) => id === component.id
-                              )?.name
-                            }
-                          </Typography>
-
-                          {/* Add superset */}
-                          <Tooltip title="Add superset">
-                            <IconButton
-                              onClick={async () => {
-                                await addSuperset(training.id, component.id, {
-                                  exercises: [],
-                                  color:
-                                    COLOR[
-                                      (component.supersets?.length || 0) %
-                                        COLOR.length
-                                    ],
-                                });
-                              }}
-                            >
-                              <AddIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            deleteComponent(training.id, component.id)
-                          }
-                          sx={{ mr: 1 }}
+                    return (
+                      <Tooltip key={member.uid} title={member.email}>
+                        <Avatar
+                          sx={{
+                            width: 60,
+                            height: 60,
+                            border: `3px solid ${borderColor}`, // Apply the border color
+                          }}
                         >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
+                          {member.email[0].toUpperCase()}
+                        </Avatar>
+                      </Tooltip>
+                    );
+                  })
+              ) : (
+                <Typography variant="caption" color="textSecondary">
+                  No available members
+                </Typography>
+              )}
+            </Stack>
+          )}
+        </Stack>
 
-                      <Box bgcolor="background.paper" p={2}>
-                        {/* Supersets */}
-                        <Grid container spacing={2} wrap="wrap">
-                          {component?.supersets
-                            ?.sort((a, b) => a.order - b.order)
-                            ?.map((superset, i) => {
-                              return (
-                                <Grid xs={6} key={i} spacing={3}>
-                                  <BorderColor
-                                    color={superset.color || COLOR[i]}
-                                  />
+        <Subgroups
+          loading={props.loading}
+          selected={props.selected}
+          setSelected={props.setSelected}
+          setModal={setModal}
+          borderColors={borderColors}
+          group={group}
+          setEditedSubgroup={setEditedSubgroup}
+        />
+        {/* Training set groups with set exercises */}
+        {trainings.length === 0 ? (
+          <Warning title="No session for current date" />
+        ) : (
+          <Box mt={4} pb={15}>
+            {trainings.map((training, i) => (
+              <Box
+                key={training.id}
+                sx={{
+                  border: '1px solid #B2B3B7',
+                  borderRadius: 2,
+                  m: 1,
+                  p: 1,
+                }}
+              >
+                <Typography variant="h6" p={1}>
+                  Training {i + 1} (
+                  {CommonService.instance.date.formatTime(training.from)} -{' '}
+                  {CommonService.instance.date.formatTime(training.to)})
+                </Typography>
 
-                                  <Box>
-                                    {Object.values(superset?.exercises)?.map(
-                                      (exercise, k) => (
-                                        <Box
-                                          key={`${i}-${exercise.id}-${k}`}
-                                          position="relative"
-                                        >
-                                          <Box
-                                            position="absolute"
-                                            top={0}
-                                            right={0}
-                                          >
-                                            <Tooltip
-                                              title="Delete exercise"
-                                              placement="left"
-                                            >
-                                              <IconButton
-                                                size="small"
-                                                onClick={() =>
-                                                  deleteExercise(
-                                                    training.id,
-                                                    component.id,
-                                                    i,
-                                                    exercise.id
-                                                  )
-                                                }
-                                              >
-                                                <DeleteIcon />
-                                              </IconButton>
-                                            </Tooltip>
+                {Object.values(training?.components)?.map((component: any, i) => {
+                  return (
+                    <Fragment key={i}>
+                      {/* Exercise list */}
+                      {exercises.show &&
+                        exercises.componentId === component.id && (
+                          // exercises.superset && (
+                          <Stack>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              mt={2}
+                              justifyContent="space-between"
+                            >
+                              <IconButton
+                                sx={{ width: 40, height: 40, p: 1 }}
+                                onClick={() => {
+                                  setExercises((prev) => ({
+                                    ...prev,
+                                    pagination: {
+                                      ...prev.pagination,
+                                      page:
+                                        prev.pagination.page - 1 >= 1
+                                          ? prev.pagination.page - 1
+                                          : 1,
+                                    },
+                                  }));
+                                }}
+                              >
+                                <ArrowLeftIcon />
+                              </IconButton>
 
-                                            <Tooltip
-                                              title="Update exercise"
-                                              placement="left"
-                                            >
-                                              <IconButton
-                                                size="small"
-                                                onClick={() =>
-                                                  updateExercise(
-                                                    training.id,
-                                                    component.id,
-                                                    i,
-                                                    exercise.id,
-                                                    {
-                                                      color: `#${Math.floor(
-                                                        Math.random() * 16777215
-                                                      )
-                                                        .toString(16)
-                                                        .padStart(6, '0')}`,
-                                                      order: 0,
-                                                    }
-                                                  )
-                                                }
-                                              >
-                                                <Update />
-                                              </IconButton>
-                                            </Tooltip>
-                                          </Box>
-
-                                          <TrainingExerciseCard
-                                            exercise={exercise}
-                                            onChange={async (meta) => {
-                                              await updateExercise(
-                                                training.id,
-                                                component.id,
-                                                i,
-                                                exercise.id,
-                                                { meta }
-                                              );
-                                            }}
-                                          />
-                                        </Box>
+                              <Grid2
+                                container
+                                width="100%"
+                                spacing={1}
+                                p={1}
+                                columns={
+                                  exercises.pagination.pageSize >
+                                  exercises.pagination.total
+                                    ? exercises.pagination.total
+                                    : exercises.pagination.pageSize
+                                }
+                              >
+                                {exercises.data.map((exercise) => (
+                                  <Grid2
+                                    xs={1}
+                                    key={exercise.id}
+                                    sx={{ cursor: 'pointer' }}
+                                    onClick={() =>
+                                      addExercise(
+                                        training.id,
+                                        exercises.componentId!,
+                                        exercises.superset!,
+                                        exercise.id
                                       )
-                                    )}
-                                  </Box>
-
-                                  <BorderColor
-                                    color={superset.color || COLOR[i]}
-                                    lower
-                                  />
-
-                                  <Stack
-                                    direction="row"
-                                    justifyContent="space-between"
-                                    m={1}
-                                    spacing={1}
+                                    }
                                   >
-                                    {/* Add exercises to superset */}
                                     <Box
                                       sx={{
-                                        border: '1px dashed #B2B3B7',
-                                        borderRadius: 2,
-                                        flex: 1,
-                                        display: 'flex',
-                                        justifyContent: 'center',
+                                        height: 60,
+                                        backgroundImage: `url(${
+                                          exercise.imageUrl ||
+                                          'https://mui.com/static/images/cards/contemplative-reptile.jpg'
+                                        })`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
                                       }}
+                                    />
+
+                                    <Typography
+                                      gutterBottom
+                                      variant="caption"
+                                      component="div"
+                                      p={1}
                                     >
-                                      <Tooltip title="Add exercises">
-                                        <IconButton
-                                          onClick={() => {
-                                            setExercises((prev) => ({
-                                              ...prev,
-                                              show: true,
-                                              componentId: component.id,
-                                              superset: i,
-                                            }));
-                                          }}
-                                        >
-                                          <AddIcon />
-                                        </IconButton>
-                                      </Tooltip>
+                                      {exercise.name}
+                                    </Typography>
+                                  </Grid2>
+                                ))}
+                              </Grid2>
+
+                              <IconButton
+                                sx={{ width: 40, height: 40, p: 1 }}
+                                onClick={() => {
+                                  setExercises((prev) => ({
+                                    ...prev,
+                                    pagination: {
+                                      ...prev.pagination,
+                                      page:
+                                        prev.pagination.page + 1 <=
+                                        prev.pagination.pages
+                                          ? prev.pagination.page + 1
+                                          : prev.pagination.pages,
+                                    },
+                                  }));
+                                }}
+                              >
+                                <ArrowRightIcon />
+                              </IconButton>
+                            </Stack>
+
+                            <Stack direction="row" spacing={1}>
+                              {/* Cancel button */}
+                              <Button
+                                sx={{ p: 1 }}
+                                color="secondary"
+                                onClick={() =>
+                                  setExercises((prev) => ({
+                                    ...prev,
+                                    show: false,
+                                  }))
+                                }
+                              >
+                                Cancel
+                              </Button>
+
+                              {/* Search exercises by name */}
+                              <TextField
+                                label="Search"
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                value={exercises.search.name}
+                                onChange={(e) =>
+                                  setExercises((prev) => ({
+                                    ...prev,
+                                    search: { name: e.target.value },
+                                  }))
+                                }
+                              />
+                            </Stack>
+                          </Stack>
+                        )}
+
+                      <Box
+                        sx={{
+                          bgcolor: 'background.paper',
+                          borderRadius: 2,
+                          my: 2,
+                        }}
+                      >
+                        <Box
+                          height={40}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Stack direction="row" alignItems="center" mt={1}>
+                            <Typography
+                              sx={{
+                                color: '#1EB980',
+                                px: 2,
+                                mb: 0,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {
+                                components.flat.find(
+                                  ({ id }) => id === component.id
+                                )?.name
+                              }
+                            </Typography>
+
+                            {/* Add superset */}
+                            <Tooltip title="Add superset">
+                              <IconButton
+                                onClick={async () => {
+                                  await addSuperset(training.id, component.id, {
+                                    exercises: [],
+                                    color:
+                                      COLOR[
+                                        (component.supersets?.length || 0) %
+                                          COLOR.length
+                                      ],
+                                  });
+                                }}
+                              >
+                                <AddIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
+
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              deleteComponent(training.id, component.id)
+                            }
+                            sx={{ mr: 1 }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
+
+                        <Box bgcolor="background.paper" p={2}>
+                          {/* Supersets */}
+                          <Grid container spacing={2} wrap="wrap">
+                            {(component as TrainingComponent)?.supersets
+                              ?.sort((a, b) => a.order - b.order)
+                              ?.map((superset, i) => {
+                                return (
+                                  <Grid xs={6} key={i} spacing={3}>
+                                    <BorderColor
+                                      color={superset.color || COLOR[i]}
+                                    />
+
+                                    <Box>
+                                      {Object.values(superset?.exercises)?.map(
+                                        (exercise: any, k) => (
+                                          <Box
+                                            key={`${i}-${exercise.id}-${k}`}
+                                            position="relative"
+                                          >
+                                            <Box
+                                              position="absolute"
+                                              top={0}
+                                              right={0}
+                                            >
+                                              <Tooltip
+                                                title="Delete exercise"
+                                                placement="left"
+                                              >
+                                                <IconButton
+                                                  size="small"
+                                                  onClick={() =>
+                                                    deleteExercise(
+                                                      training.id,
+                                                      component.id,
+                                                      i,
+                                                      exercise.id
+                                                    )
+                                                  }
+                                                >
+                                                  <DeleteIcon />
+                                                </IconButton>
+                                              </Tooltip>
+
+                                              <Tooltip
+                                                title="Update exercise"
+                                                placement="left"
+                                              >
+                                                <IconButton
+                                                  size="small"
+                                                  onClick={() =>
+                                                    updateExercise(
+                                                      training.id,
+                                                      component.id,
+                                                      i,
+                                                      exercise.id,
+                                                      {
+                                                        color: `#${Math.floor(
+                                                          Math.random() *
+                                                            16777215
+                                                        )
+                                                          .toString(16)
+                                                          .padStart(6, '0')}`,
+                                                        order: 0,
+                                                      }
+                                                    )
+                                                  }
+                                                >
+                                                  <Update />
+                                                </IconButton>
+                                              </Tooltip>
+                                            </Box>
+
+                                            <TrainingExerciseCard
+                                              exercise={exercise}
+                                              onChange={async (meta) => {
+                                                await updateExercise(
+                                                  training.id,
+                                                  component.id,
+                                                  i,
+                                                  exercise.id,
+                                                  { meta }
+                                                );
+                                              }}
+                                            />
+                                          </Box>
+                                        )
+                                      )}
                                     </Box>
 
-                                    <Tooltip title="Delete superset">
-                                      <IconButton
-                                        sx={{
-                                          border: 1,
-                                          borderRadius: 2,
-                                        }}
-                                        size="small"
-                                        onClick={() =>
-                                          deleteSuperset(
-                                            training.id,
-                                            component.id,
-                                            superset.order
-                                          )
-                                        }
-                                      >
-                                        <DeleteIcon />
-                                      </IconButton>
-                                    </Tooltip>
+                                    <BorderColor
+                                      color={superset.color || COLOR[i]}
+                                      lower
+                                    />
 
-                                    <Tooltip title="Randomly update superset">
-                                      <IconButton
+                                    <Stack
+                                      direction="row"
+                                      justifyContent="space-between"
+                                      m={1}
+                                      spacing={1}
+                                    >
+                                      {/* Add exercises to superset */}
+                                      <Box
                                         sx={{
-                                          border: 1,
+                                          border: '1px dashed #B2B3B7',
                                           borderRadius: 2,
+                                          flex: 1,
+                                          display: 'flex',
+                                          justifyContent: 'center',
                                         }}
-                                        size="small"
-                                        onClick={() =>
-                                          updateSuperset(
-                                            training.id,
-                                            component.id,
-                                            superset.order,
-                                            {
-                                              color: `#${Math.floor(
-                                                Math.random() * 16777215
-                                              )
-                                                .toString(16)
-                                                .padStart(6, '0')}`,
-                                              order: 0,
-                                            }
-                                          )
-                                        }
                                       >
-                                        <Update />
-                                      </IconButton>
-                                    </Tooltip>
-                                  </Stack>
-                                </Grid>
-                              );
-                            })}
-                        </Grid>
+                                        <Tooltip title="Add exercises">
+                                          <IconButton
+                                            onClick={() => {
+                                              setExercises((prev) => ({
+                                                ...prev,
+                                                show: true,
+                                                componentId: component.id,
+                                                superset: i,
+                                              }));
+                                            }}
+                                          >
+                                            <AddIcon />
+                                          </IconButton>
+                                        </Tooltip>
+                                      </Box>
+
+                                      <Tooltip title="Delete superset">
+                                        <IconButton
+                                          sx={{
+                                            border: 1,
+                                            borderRadius: 2,
+                                          }}
+                                          size="small"
+                                          onClick={() =>
+                                            deleteSuperset(
+                                              training.id,
+                                              component.id,
+                                              superset.order
+                                            )
+                                          }
+                                        >
+                                          <DeleteIcon />
+                                        </IconButton>
+                                      </Tooltip>
+
+                                      <Tooltip title="Randomly update superset">
+                                        <IconButton
+                                          sx={{
+                                            border: 1,
+                                            borderRadius: 2,
+                                          }}
+                                          size="small"
+                                          onClick={() =>
+                                            updateSuperset(
+                                              training.id,
+                                              component.id,
+                                              superset.order,
+                                              {
+                                                color: `#${Math.floor(
+                                                  Math.random() * 16777215
+                                                )
+                                                  .toString(16)
+                                                  .padStart(6, '0')}`,
+                                                order: 0,
+                                              }
+                                            )
+                                          }
+                                        >
+                                          <Update />
+                                        </IconButton>
+                                      </Tooltip>
+                                    </Stack>
+                                  </Grid>
+                                );
+                              })}
+                          </Grid>
+                        </Box>
                       </Box>
-                    </Box>
-                  </Fragment>
-                );
-              })}
-            </Box>
-          ))}
-        </Box>
-      )}
+                    </Fragment>
+                  );
+                })}
+              </Box>
+            ))}
+          </Box>
+        )}
+        {/* Create subgroup modal */}
+        <MyModal
+          isOpen={modal.subgroup}
+          setIsOpen={(subgroup) => setModal((prev) => ({ ...prev, subgroup }))}
+          title="Create Subgroup"
+          onCancel={() => setModal((prev) => ({ ...prev, subgroup: false }))}
+          onConfirm={addSubgroup}
+        >
+          <Stack spacing={4} p={1}>
+            {/* Name */}
+            <TextField
+              label="Name"
+              fullWidth
+              variant="outlined"
+              size="small"
+              value={create.subgroup.name}
+              onChange={(e) =>
+                setCreate((prev) => ({
+                  ...prev,
+                  subgroup: { ...prev.subgroup, name: e.target.value },
+                }))
+              }
+            />
+          </Stack>
+        </MyModal>
 
-      {/* Create subgroup modal */}
-      <MyModal
-        isOpen={modal.subgroup}
-        setIsOpen={(subgroup) => setModal((prev) => ({ ...prev, subgroup }))}
-        title="Create Subgroup"
-        onCancel={() => setModal((prev) => ({ ...prev, subgroup: false }))}
-        onConfirm={addSubgroup}
-      >
-        <Stack spacing={4} p={1}>
-          {/* Name */}
-          <TextField
-            label="Name"
-            fullWidth
-            variant="outlined"
-            size="small"
-            value={create.subgroup.name}
-            onChange={(e) =>
-              setCreate((prev) => ({
-                ...prev,
-                subgroup: { ...prev.subgroup, name: e.target.value },
-              }))
-            }
-          />
-
-          {/* From & To */}
-          {/*<Stack direction="row" spacing={3}>
-          <TextField
-            label="From"
-            type="datetime-local"
-            variant="outlined"
-            size="small"
-            value={create.subgroup.from.format('YYYY-MM-DDTHH:mm')}
-            onChange={(e) => setCreate(prev => ({
-              ...prev,
-              subgroup: { ...prev.subgroup, from: dayjs(e.target.value) },
-            }))}
-          />
-
-          <TextField
-            label="To"
-            type="datetime-local"
-            variant="outlined"
-            size="small"
-            value={create.subgroup.to.format('YYYY-MM-DDTHH:mm')}
-            onChange={(e) => setCreate(prev => ({
-              ...prev,
-              subgroup: { ...prev.subgroup, to: dayjs(e.target.value) },
-            }))}
-          />
-        </Stack>*/}
-        </Stack>
-      </MyModal>
-    </Box>
+        {/* Edit subgroup modal */}
+        <MyModal
+          isOpen={modal.edit_subgroup}
+          setIsOpen={(edit_subgroup) =>
+            setModal((prev) => ({ ...prev, edit_subgroup }))
+          }
+          title="Edit Subgroup"
+          onCancel={() => {
+            setModal((prev) => ({ ...prev, edit_subgroup: false }));
+            setEditedSubgroup(null);
+          }}
+          onConfirm={editSubgroup}
+        >
+          <Stack spacing={4} p={1}>
+            {/* Name */}
+            <TextField
+              label="Name"
+              fullWidth
+              value={editedSubgroup?.name || ''}
+              variant="outlined"
+              size="small"
+              onChange={(e) =>
+                setEditedSubgroup((prev) => {
+                  if (!prev) return prev; // Return prev instead of undefined
+                  return {
+                    ...prev,
+                    name: e.target.value,
+                  };
+                })
+              }
+            />
+          </Stack>
+        </MyModal>
+      </Box>
+    </>
   );
 }

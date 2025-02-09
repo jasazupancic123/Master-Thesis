@@ -1,39 +1,39 @@
 'use client';
 
 import { useFetch } from '@/hook/use-fetch';
-import withAuth from '@/components/with-auth';
+import type { User } from '@/user/type/user.type';
+import { UserRole } from '@/user/enum/user-role.enum';
+import withAuth from '@/common/components/with-auth';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth-provider';
+import type { Group } from '@/group/entity/group.entity';
+import type { Cycle } from '@/group/entity/cycle.entity';
 import { useAppContext } from '@/context/app-provider';
 import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
+import type { GroupPageProps } from '@/group/type/props.type';
+import { UserController } from '@/user/user.controller';
+import { GroupController } from '@/group/group.controller';
+import { Subgroup } from '@/group/entity/subgroup.entity';
 import { CommonService } from '@/common/service/common.service';
 import TrainerPageRouter from '@/app/groups/components/trainer-page-router';
+import { FilterType } from '@/group/type/filter.type';
+import { TrainingController } from '@/training/training.controller';
 import AthletePageRouter from '@/app/groups/components/athlete-page-router';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { User } from '@/controller/user/type/user.type';
-import { Group } from '@/controller/group/type/group.type';
-import { FilterType } from '@/common/type/filter.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { GroupController } from '@/controller/group/group.controller';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { useRouter } from 'next/navigation';
 import { LINK_GROUPS } from '@/common/constant/navigation.constant';
+import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
 
 function Page() {
   // context
   const { role } = useAuth();
+  const { token } = useAppContext();
   const router = useRouter();
-  const { token, components } = useAppContext();
-  const allExercises = useFetch<Exercise[]>('/exercise');
 
   // state
   const [loading, setLoading] = useState(false);
-  const users = useFetch<User[]>('/user');
-  const groups = useFetch<Group[]>('/group');
+  const users = useFetch<User[]>(UserController.URL.users());
+  const groups = useFetch<Group[]>(GroupController.URL.groups());
 
   const [filter, setFilter] = useState<FilterType>('year');
   const [date, setDate] = useState({
@@ -42,13 +42,13 @@ function Page() {
     custom: false,
   });
 
-  const [selected, setSelected] = useState({
+  const [selected, setSelected] = useState<GroupPageProps['selected']>({
     group: null as Group | null,
     subgroup: null as Subgroup | null,
     cycle: null as Cycle | null,
   });
 
-  const props = {
+  const props: GroupPageProps = {
     loading,
     setLoading,
     users,
@@ -74,7 +74,7 @@ function Page() {
 
       const { group } = selected;
       try {
-        const response = await GroupController.findById(token, group.id);
+        const response = await GroupController.findGroup(token, group.id);
         setSelected({ group: response, subgroup: null, cycle: null });
       } catch (e: any) {
         console.error(e);
@@ -83,7 +83,7 @@ function Page() {
     }
 
     fetchGroup().then();
-  }, [selected.group?.id, token, selected.group?.cycles]);
+  }, [selected.group?.id, token]);
 
   /**
    * Filter date range based on provided filters
@@ -143,7 +143,7 @@ function Page() {
     }
 
     setDate({ ...date, start, end });
-  }, [filter, selected.cycle?.id]);
+  }, [filter, selected.cycle?.id, props.selected.cycle?.id]);
 
   /**
    * Filter trainings and subgroups
@@ -156,16 +156,12 @@ function Page() {
       setLoading(true);
 
       try {
-        let response = await TrainingController.findAll(token, {
+        const response = await TrainingController.findTrainings(token, {
           groupId: group!.id,
           cycleId: cycle!.id,
+          subgroupId: subgroup?.id || null,
           from: date.start.toDate(),
           to: date.end.toDate(),
-        });
-
-        response.map((training) => {
-          TrainingService.mapComponents(training, components.flat);
-          TrainingService.mapExercises(training, allExercises.data!);
         });
 
         setSelected((prev) => ({
@@ -180,11 +176,43 @@ function Page() {
       }
     }
 
+    async function fetchSubgroups() {
+      const { group } = selected;
+      if (!group) return;
+
+      if (!date.start.startOf('day').isSame(date.end.startOf('day'))) {
+        setSelected((prev) => ({
+          ...prev,
+          group: { ...prev.group!, subgroups: [] },
+        }));
+        return;
+      }
+
+      try {
+        const response = await GroupController.findSubgroups(token, group.id, {
+          from: date.start,
+          to: date.end,
+        });
+
+        setSelected((prev) => ({
+          ...prev,
+          group: {
+            ...prev.group!,
+            subgroups: response,
+          },
+        }));
+      } catch (e: any) {
+        console.error(e);
+        toast.error(e.message || 'Error fetching subgroups');
+      }
+    }
+
     fetchTrainings().then();
+    fetchSubgroups().then();
   }, [
-    token,
     date.start,
     date.end,
+    token,
     selected.group?.id,
     selected.cycle?.id,
     selected.subgroup?.id,
@@ -206,7 +234,7 @@ function Page() {
     [UserRole.ATHLETE]: <AthletePageRouter {...props} />,
   };
 
-  return mapper[role[0] as UserRole];
+  return mapper[role[0]];
 }
 
 export default withAuth(Page);

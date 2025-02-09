@@ -26,7 +26,12 @@ export function useFetch<T>(url: string, options?: UseFetchOptions) {
     if (auth) headers['Authorization'] = `Bearer ${token}`;
 
     try {
+<<<<<<< HEAD
       const response = await fetch(`${BACKEND_API_BASE_URL}${url}`, {
+=======
+      console.log('URL', `${BASE_URL}${url}`);
+      const response = await fetch(`${BASE_URL}${url}`, {
+>>>>>>> 214d1275e6a0b38689324e76033d9ae849fe93be
         method,
         headers,
         body: JSON.stringify(body),

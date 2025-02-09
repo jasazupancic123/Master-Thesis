@@ -246,38 +246,7 @@ export default function TrainerCycleView(props: any) {
     }
   }
 
-  /**
-   * Fetch trainings' details
-   */
-  useEffect(() => {
-    async function fetchTrainings() {
-      try {
-        let response = await TrainingController.findAll(token, {
-          from: props.date.start.toDate(),
-          to: props.date.end.toDate(),
-        });
-
-        response.map((training) => {
-          TrainingService.mapComponents(training, components.flat);
-        });
-
-        props.setSelected((prev: any) => ({
-          ...prev,
-          cycle: {
-            ...prev.cycle!,
-            trainings: response,
-          },
-        }));
-      } catch (e: any) {
-        toast.error(e.message || 'Failed to fetch trainings');
-      }
-    }
-
-    fetchTrainings().then();
-  }, [token, props.date.start, props.date.end, props.date.custom]);
-
-  if (!props.selected.group || !props.selected.cycle)
-    return <Warning title="Select cycle" topBorder />;
+  if (!props.selected.group || !props.selected.cycle) return <></>;
 
   return (
     <Box pb={10}>

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
-import { TextField, ToggleButtonGroup, Tooltip } from '@mui/material';
+import { Button, TextField, ToggleButtonGroup, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import MyModal from '@/components/modal';
 import { useAppContext } from '@/context/app-provider';
@@ -27,6 +27,10 @@ import { Group } from '@/controller/group/type/group.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { User } from '@/controller/user/type/user.type';
 import { GroupSettings } from '@/components/group-settings';
+import GroupsSidebar from '@/components/groups-sidebar';
+import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
+import { Subgroups } from '@/components/subgroups';
+import AddCycleModal from '../[group_id]/settings/components/add-cycle-modal';
 
 export default function TrainerPageRouter(props: any) {
   // context
@@ -34,10 +38,31 @@ export default function TrainerPageRouter(props: any) {
 
   // modal
   const [modal, setModal] = useState({
-    group: false,
-    editGroup: false,
-    subgroup: false,
+    add_group: false,
+    members: false,
+    subgroups: false,
+    settings: false,
+    add_cycle: false,
   });
+
+  useEffect(() => {
+    const storedGroupId = localStorage.getItem(
+      LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID
+    );
+
+    if (storedGroupId && !props.selected.group) {
+      const group = props.groups.data?.find((g: any) => g.id === storedGroupId);
+
+      if (group) {
+        props.setSelected((prev: any) => ({
+          ...prev,
+          group,
+          cycle: null,
+          subgroup: null,
+        }));
+      }
+    }
+  }, [props.groups.data, props.selected.group]);
 
   // group to create or update
   const [create, setCreate] = useState({ group: { name: '', membersIds: [] } });
@@ -53,16 +78,18 @@ export default function TrainerPageRouter(props: any) {
     try {
       props.setLoading(true);
       const response = await GroupController.create(token, group);
-      setModal({ ...modal, group: false });
+      setModal({ ...modal, add_group: false });
 
       props.setSelected({
         group: response,
         subgroup: null,
         cycle: null,
       });
-
-      props.groups.setData((prev: any) => [...(prev || []), response]);
       setCreate({ ...create, group: { name: '', membersIds: [] } });
+      localStorage.setItem(
+        LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID,
+        response.id as string
+      );
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -72,6 +99,7 @@ export default function TrainerPageRouter(props: any) {
 
   return (
     <>
+      {/* <GroupsSidebar {...sidebarProps} /> */}
       <Box
         bgcolor="background.paper"
         sx={{
@@ -94,43 +122,19 @@ export default function TrainerPageRouter(props: any) {
           </ToggleButtonGroup>
 
           {/* Dropdowns to select group, subgroup and cycle */}
-          <Box
-            p={2}
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-          >
+          <Box p={2} alignItems="center" justifyContent="space-between">
             <Box>
-              {/* Add new group */}
-              <Tooltip title="Add group">
-                <IconButton
-                  onClick={() => setModal({ ...modal, group: true })}
-                  sx={{ height: 50, width: 50 }}
-                >
-                  <AddIcon />
-                </IconButton>
-              </Tooltip>
-
               {/* Select group */}
-              <SelectInput<Group>
-                label="Group"
-                icon={<GroupIcon />}
-                value={props.selected.group?.id || ''}
-                setValue={(value) => {
-                  const group = props.groups.data?.find(
-                    (group: Group) => group.id === value
-                  );
-                  props.setSelected((prev: any) => ({
-                    ...prev,
-                    group: group || null,
-                    cycle: null,
-                    subgroup: null,
-                  }));
-                }}
-                items={props.groups.data || []}
-                itemKey="id"
-                itemName="name"
-              />
+              {!props.selected.group && (
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  m={5}
+                >
+                  <Typography variant="h6">Select a group</Typography>
+                </Box>
+              )}
 
               {/* Select subgroup */}
               {/*{props.selected.group &&
@@ -150,48 +154,51 @@ export default function TrainerPageRouter(props: any) {
 
               {/* Select cycle */}
               {props.selected.group && (
-                <SelectInput<Cycle>
-                  label="Cycle"
-                  icon={<RotateRightIcon />}
-                  value={props.selected.cycle?.id || ''}
-                  setValue={(value) => {
-                    const cycles = props.selected.group!.cycles || [];
-                    const cycle = cycles.find(
-                      (cycle: Cycle) => cycle.id === value
-                    );
-                    props.setSelected((prev: any) => ({
-                      ...prev,
-                      cycle: cycle || null,
-                    }));
-                  }}
-                  items={props.selected.group!.cycles || []}
-                  itemKey="id"
-                  itemName="name"
-                />
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  mt={2}
+                >
+                  {props.filter !== 'year' && (
+                    <SelectInput<Cycle>
+                      label="Cycle"
+                      icon={<RotateRightIcon />}
+                      value={props.selected.cycle?.id || ''}
+                      setValue={(value) => {
+                        const cycles = props.selected.group!.cycles || [];
+                        const cycle = cycles.find(
+                          (cycle: Cycle) => cycle.id === value
+                        );
+                        props.setSelected((prev: any) => ({
+                          ...prev,
+                          cycle: cycle || null,
+                        }));
+                      }}
+                      items={props.selected.group!.cycles || []}
+                      itemKey="id"
+                      itemName="name"
+                    />
+                  )}
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ mt: 2, mb: 2 }}
+                    onClick={() => setModal({ ...modal, add_cycle: true })}
+                  >
+                    Add Cycle
+                  </Button>
+                </Box>
               )}
             </Box>
-
-            <Stack direction="row" spacing={1}>
-              {/* Edit group settings */}
-              {props.selected.group && (
-                <Tooltip title="Edit group">
-                  <IconButton
-                    onClick={() => setModal({ ...modal, editGroup: true })}
-                    sx={{ height: 50, width: 50 }}
-                  >
-                    <SettingsIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Stack>
           </Box>
         </Box>
 
         {/* Create group modal */}
         <MyModal
-          isOpen={modal.group}
-          setIsOpen={(open) => setModal({ ...modal, group: open })}
-          onCancel={() => setModal({ ...modal, group: false })}
+          isOpen={modal.add_group}
+          setIsOpen={(open) => setModal({ ...modal, add_group: open })}
+          onCancel={() => setModal({ ...modal, add_group: false })}
           onConfirm={() => createGroup(create.group)}
         >
           <Typography variant="h6" mb={2}>
@@ -228,14 +235,35 @@ export default function TrainerPageRouter(props: any) {
 
         {props.selected.group && (
           <>
-            {/* Edit group modal */}
+            {/* Subgroups modal */}
             <MyModal
-              isOpen={modal.editGroup}
-              setIsOpen={(open) => setModal({ ...modal, editGroup: open })}
-              onCancel={() => setModal({ ...modal, editGroup: false })}
+              isOpen={modal.subgroups}
+              setIsOpen={(open) => setModal({ ...modal, subgroups: open })}
+              onCancel={() => setModal({ ...modal, subgroups: false })}
               cancelText="Close"
             >
-              <GroupSettings {...props} />
+              <Subgroups
+                members={props.users.data || []}
+                subgroups={props.selected.group.subgroups || []}
+              />
+            </MyModal>
+          </>
+        )}
+
+        {props.selected.group && (
+          <>
+            {/* Group Settings modal */}
+            <MyModal
+              isOpen={modal.add_cycle}
+              setIsOpen={(open) => setModal({ ...modal, add_cycle: open })}
+              onCancel={() => setModal({ ...modal, add_cycle: false })}
+              cancelText="Close"
+            >
+              <AddCycleModal
+                onClose={() => setModal({ ...modal, add_cycle: false })}
+                selected={props.selected}
+                setSelected={props.setSelected}
+              />
             </MyModal>
           </>
         )}

@@ -7,7 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 
 interface Props {
-  items: { label: string; value: string; sublabel?: string; }[];
+  items: { label: string; value: string; sublabel?: string }[];
   value: string;
   setValue: (value: string) => void;
   arrows?: boolean;
@@ -17,74 +17,107 @@ interface Props {
 }
 
 export default function Circles(props: Props) {
-  return <Box sx={{
-    pb: 3,
-    pt: 0,
-    display: 'flex',
-    justifyContent: 'center',
-    borderBottomRightRadius: '20px',
-    borderBottomLeftRadius: '20px',
-    backgroundColor: '#1A2B3C',
-    ...props.sx,
-  }}>
-    <Stack direction="row" spacing={1}>
-      {props.arrows && (
-        <Tooltip title="Previous">
-          <IconButton onClick={() => props.onArrowClick?.('left')} sx={{
-            width: 40,
-            height: 40,
-          }}>
-            <ArrowLeftIcon />
-          </IconButton>
-        </Tooltip>
-      )}
-
-      {props.items.map((item, i) => (
-        <Box key={i}>
-          <Tooltip title={item.label}>
-            <Box
-              onClick={() => props.setValue(item.value)}
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+      }}
+    >
+      {/* Wrapper that keeps arrows and elements aligned in a row */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          backgroundColor: '#1A2B3C',
+          padding: '8px 16px',
+          borderBottomRightRadius: '20px',
+          borderBottomLeftRadius: '20px',
+          maxWidth: 1700,
+          ...props.sx,
+        }}
+      >
+        {/* Left Arrow */}
+        {props.arrows && (
+          <Tooltip title="Previous">
+            <IconButton
+              onClick={() => props.onArrowClick?.('left')}
               sx={{
                 width: 40,
                 height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                backgroundColor: props.getBackgroundColor
-                  ? props.getBackgroundColor(props.value, item.value)
-                  : props.value === item.value
-                    ? '#1EB980'
-                    : 'rgba(255, 255, 255, 0.1)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                },
-                userSelect: 'none', // Prevent text selection
+                flexShrink: 0, // Prevents shrinking
               }}
             >
-              <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>
-                {item.label}
-              </Typography>
-            </Box>
+              <ArrowLeftIcon />
+            </IconButton>
           </Tooltip>
+        )}
 
-          {item.sublabel && (
-            <Typography variant="caption">{item.sublabel}</Typography>
-          )}
+        {/* Items container (allows wrapping) */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap', // Ensures items wrap when needed
+            gap: 2,
+            justifyContent: 'center',
+          }}
+        >
+          {props.items.map((item, i) => (
+            <Box key={i}>
+              <Tooltip title={item.label}>
+                <Box
+                  onClick={() => props.setValue(item.value)}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    cursor: 'pointer',
+                    backgroundColor: props.getBackgroundColor
+                      ? props.getBackgroundColor(props.value, item.value)
+                      : props.value === item.value
+                        ? '#1EB980'
+                        : 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                    userSelect: 'none',
+                  }}
+                >
+                  <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>
+                    {item.label}
+                  </Typography>
+                </Box>
+              </Tooltip>
+
+              {item.sublabel && (
+                <Typography variant="caption">{item.sublabel}</Typography>
+              )}
+            </Box>
+          ))}
         </Box>
-      ))}
 
-      {props.arrows && (
-        <Tooltip title="Next">
-          <IconButton onClick={() => props.onArrowClick?.('right')} sx={{
-            width: 40,
-            height: 40,
-          }}>
-            <ArrowRightIcon />
-          </IconButton>
-        </Tooltip>
-      )}
-    </Stack>
-  </Box>;
+        {/* Right Arrow */}
+        {props.arrows && (
+          <Tooltip title="Next">
+            <IconButton
+              onClick={() => props.onArrowClick?.('right')}
+              sx={{
+                width: 40,
+                height: 40,
+                flexShrink: 0, // Prevents shrinking
+              }}
+            >
+              <ArrowRightIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
+    </Box>
+  );
 }

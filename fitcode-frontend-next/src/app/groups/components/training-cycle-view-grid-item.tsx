@@ -53,14 +53,12 @@ export function TrainingGridItem(props: Props) {
 
       <>
         {Object.values(training.components).map(({ component }) => (
-          <div key={component!.id}>
-            {component!.name}
-
+          <div key={component.id}>
             <IconButton
               size="small"
               onClick={async (e) => {
                 e.stopPropagation();
-                await props.deleteTrainingComponent(training.id, component!.id);
+                await props.deleteTrainingComponent(training.id, component.id);
               }}
             >
               <DeleteIcon />
