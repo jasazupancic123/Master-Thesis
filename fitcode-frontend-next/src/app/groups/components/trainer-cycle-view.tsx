@@ -77,14 +77,17 @@ export default function TrainerCycleView(props: any) {
         cycleId: props.selected.cycle!.id,
         from,
         to,
-        components: selected.reduce((acc, c, i) => {
-          acc[c.id] = {
-            id: c.id,
-            order: i,
-            supersets: [{ exercises: {}, order: 0 }],
-          };
-          return acc;
-        }, {} as Record<string, any>),
+        components: selected.reduce(
+          (acc, c, i) => {
+            acc[c.id] = {
+              id: c.id,
+              order: i,
+              supersets: [{ exercises: {}, order: 0 }],
+            };
+            return acc;
+          },
+          {} as Record<string, any>
+        ),
       });
 
       if (!response) {

@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Circles from '@/app/groups/components/circles';
 import dayjs from 'dayjs';
-import { Card, CardContent, Switch, TextField, Tooltip } from '@mui/material';
+import { TextField, Tooltip } from '@mui/material';
 import { CommonService } from '@/common/service/common.service';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -35,7 +35,6 @@ import TrainingExerciseCard from '@/components/training-exercise-card';
 import Subgroups from './subgroups';
 import { COLORS } from '@/common/constant/color.constant';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Component } from '@/controller/component/type/component.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 
 const commonService = CommonService.instance;

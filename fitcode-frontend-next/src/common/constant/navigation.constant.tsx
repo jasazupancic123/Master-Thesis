@@ -80,6 +80,7 @@ export const LINKS_SIDEBAR = {
     chart: LINK_CHART,
     calendar: LINK_CALENDAR,
     wellness: LINK_META,
+    profile: LINK_PROFILE,
   },
   [UserRole.TRAINER]: {
     home: LINK_GROUPS,

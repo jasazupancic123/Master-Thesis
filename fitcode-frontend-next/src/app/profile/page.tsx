@@ -1,9 +1,18 @@
-'use client';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { UserController } from '@/controller/user/user.controller';
+import { cookies } from 'next/headers';
+import ProfilePage from './profile-page';
 
-import withAuth from '@/components/with-auth';
+export default async function Page() {
+  // fetch data
+  const cookieStore = await cookies();
+  const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
+  if (!token) return <div>Unauthorized</div>;
 
-function Page() {
-  return <>Profile</>;
+  const profile = await UserController.findMe(token);
+  if (!profile) return <div>Unauthorized</div>;
+
+  const role = profile.customClaims.role[0];
+
+  return <ProfilePage token={token} user={profile} />;
 }
-
-export default withAuth(Page);

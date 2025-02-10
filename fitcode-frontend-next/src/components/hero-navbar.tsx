@@ -79,10 +79,7 @@ export default function HeroNavbar({ showLogin = true }) {
                   alignItems: 'center',
                 }}
               >
-                <NextLink
-                  href={mainPageMapper[role[0] as UserRole].href}
-                  passHref
-                >
+                <NextLink href={mainPageMapper[role[0]].href} passHref>
                   Training
                 </NextLink>
                 <NextLink href="#" onClick={logout}>

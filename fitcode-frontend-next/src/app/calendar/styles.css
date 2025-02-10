@@ -1,0 +1,25 @@
+.rbc-off-range-bg {
+  background-color: var(--off-range-bg-color) !important;
+}
+
+span button {
+  color: var(--btn-text-color) !important;
+  background-color: var(--btn-bg-color) !important;
+}
+
+.rbc-today {
+  background-color: var(--today-bg-color) !important;
+}
+
+.rbc-toolbar-label {
+  font-weight: bold;
+  font-size: 2.5vh;
+}
+
+.rbc-event {
+  background-color: var(--event-bg-color) !important;
+}
+
+.rbc-button-link {
+  font-weight: bold !important;
+}

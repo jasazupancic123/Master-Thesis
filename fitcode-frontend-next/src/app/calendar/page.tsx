@@ -1,14 +1,18 @@
-'use client';
-
-import withAuth from '@/components/with-auth';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserController } from '@/controller/user/user.controller';
+import { cookies } from 'next/headers';
+import { CalendarPage } from './calendar-page';
 
-function Page() {
-  return (
-    <div>
-      <h1>Calendar</h1>
-    </div>
-  );
+export default async function Page() {
+  // fetch data
+  const cookieStore = await cookies();
+  const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
+  if (!token) return <div>Unauthorized</div>;
+
+  const profile = await UserController.findMe(token);
+  if (!profile) return <div>Unauthorized</div>;
+
+  return <CalendarPage token={token} />;
 }
-
-export default withAuth(Page, [UserRole.ATHLETE]);
