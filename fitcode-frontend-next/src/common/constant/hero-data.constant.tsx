@@ -10,10 +10,9 @@ import SupportAgentRoundedIcon from '@mui/icons-material/SupportAgentRounded';
 import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
 
 export const team = [
-    {image: '/team/Janez.jpg', name: 'Janez Lovenjak', position: 'Founder'},
-    {image: '/team/Bojan.jpg', name: 'Bojan Krajnc', position: 'CEO'},
-    {image: '/team/Mitja.jpg', name: 'Mitja Blagajac', position: 'CMO'},
-    {image: '/team/Luka.jpg', name: 'Luka Lovenjak', position: 'CQO'},
+  { image: '/team/Janez.jpg', name: 'Janez Lovenjak', position: 'Founder' },
+  { image: '/team/Bojan.jpg', name: 'Bojan Krajnc', position: 'CEO' },
+  { image: '/team/Mitja.jpg', name: 'Mitja Blagajac', position: 'CMO' },
 ];
 
 export const products = [

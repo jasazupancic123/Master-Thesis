@@ -19,7 +19,8 @@ export default function Footer() {
           flexDirection: 'column',
           alignItems: 'center',
           gap: { xs: 4, sm: 8 },
-          py: { xs: 8, sm: 10 },
+          pb: { xs: 8, sm: 10 },
+          pt: { xs: 8, sm: 5 },
           textAlign: { sm: 'center', md: 'left' },
         }}
       >
@@ -41,7 +42,7 @@ export default function Footer() {
           >
             <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
               <Box>
-                <Image src="/logo.png" width={200} height={50} alt="Logo" />
+                <Image src="/logo.png" width={210} height={70} alt="Logo" />
               </Box>
               <Typography variant="body2" fontWeight={600} gutterBottom>
                 Contact Us

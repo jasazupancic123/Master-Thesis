@@ -121,31 +121,47 @@ export default function MembersPage(props: GroupIdPageProps) {
             }}
           >
             <Grid2
-              size={{ xs: 1 }}
+              sx={{ minWidth: 40, flex: '0 0 5%' }}
               display="flex"
               justifyContent="center"
             ></Grid2>
             <Grid2
-              size={{ xs: 0.5 }}
+              sx={{ minWidth: 30, flex: '0 0 3%' }}
               display="flex"
               justifyContent="center"
             ></Grid2>
-            <Grid2 size={{ xs: 3 }} display="flex" justifyContent="center">
+            <Grid2
+              sx={{ minWidth: 120, flex: '1 1 25%' }}
+              display="flex"
+              justifyContent="center"
+            >
               <Typography variant="body1" fontWeight="bold">
                 Name
               </Typography>
             </Grid2>
-            <Grid2 size={{ xs: 3 }} display="flex" justifyContent="center">
+            <Grid2
+              sx={{ minWidth: 120, flex: '1 1 25%' }}
+              display="flex"
+              justifyContent="center"
+            >
               <Typography variant="body1" fontWeight="bold">
                 Email
               </Typography>
             </Grid2>
-            <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
+            <Grid2
+              sx={{ minWidth: 100, flex: '1 1 20%' }}
+              display="flex"
+              justifyContent="center"
+            >
               <Typography variant="body1" fontWeight="bold">
                 Verified
               </Typography>
             </Grid2>
-            <Grid2 size={{ xs: 2 }} display="flex" justifyContent="center">
+            <Grid2
+              sx={{ minWidth: 80, flex: '1 1 15%' }}
+              display="flex"
+              justifyContent="center"
+            >
               <Typography variant="body1" fontWeight="bold">
                 Remove
               </Typography>
@@ -167,7 +183,7 @@ export default function MembersPage(props: GroupIdPageProps) {
                 >
                   {/* Index */}
                   <Grid2
-                    size={{ xs: 1 }}
+                    sx={{ minWidth: 40, flex: '0 0 5%' }}
                     display="flex"
                     justifyContent="center"
                   >
@@ -176,7 +192,7 @@ export default function MembersPage(props: GroupIdPageProps) {
 
                   {/* Avatar */}
                   <Grid2
-                    size={{ xs: 0.5 }}
+                    sx={{ minWidth: 30, flex: '0 0 3%' }}
                     display="flex"
                     justifyContent="center"
                   >
@@ -188,7 +204,7 @@ export default function MembersPage(props: GroupIdPageProps) {
 
                   {/* User Name */}
                   <Grid2
-                    size={{ xs: 1 }}
+                    sx={{ minWidth: 120, flex: '1 1 25%' }}
                     display="flex"
                     justifyContent="center"
                   >
@@ -199,7 +215,7 @@ export default function MembersPage(props: GroupIdPageProps) {
 
                   {/* User Email */}
                   <Grid2
-                    size={{ xs: 1 }}
+                    sx={{ minWidth: 120, flex: '1 1 25%' }}
                     display="flex"
                     justifyContent="center"
                   >
@@ -208,7 +224,7 @@ export default function MembersPage(props: GroupIdPageProps) {
 
                   {/* Email Verified Indicator */}
                   <Grid2
-                    size={{ xs: 2.5 }}
+                    sx={{ minWidth: 100, flex: '1 1 20%' }}
                     display="flex"
                     justifyContent="center"
                   >
@@ -225,7 +241,7 @@ export default function MembersPage(props: GroupIdPageProps) {
 
                   {/* Remove Button */}
                   <Grid2
-                    size={{ xs: 2 }}
+                    sx={{ minWidth: 80, flex: '1 1 15%' }}
                     display="flex"
                     justifyContent="center"
                   >

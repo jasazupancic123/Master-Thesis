@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import CssBaseline from '@mui/material/CssBaseline';
 import { Inter } from 'next/font/google';
 import React from 'react';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/auth-provider';
 import { AppProvider } from '@/context/app-provider';
+import ThemeRegistry from '@/context/theme-registry';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,15 +21,16 @@ export default function RootLayout({
     <html lang="en" style={{ scrollBehavior: 'smooth' }}>
       <body className={inter.className}>
         <AppRouterCacheProvider>
-          <AppProvider>
-            <AuthProvider>{children}</AuthProvider>
-          </AppProvider>
+          <ThemeRegistry>
+            {' '}
+            {/* Use the ThemeRegistry wrapper here */}
+            <AppProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </AppProvider>
+            <Toaster />
+          </ThemeRegistry>
         </AppRouterCacheProvider>
-
-        <Toaster />
       </body>
-
-      <CssBaseline />
     </html>
   );
 }

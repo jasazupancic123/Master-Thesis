@@ -46,13 +46,21 @@ export default function TrainerYearView(props: GroupIdPageProps) {
       disableColumnMenu: true,
       renderCell: (_) => {
         return (
-          <RotateRightIcon
-            style={{
-              backgroundColor: theme.palette.primary.main,
-              padding: 1,
-              cursor: 'pointer',
-            }}
-          />
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+            height="100%"
+          >
+            <RotateRightIcon
+              style={{
+                backgroundColor: theme.palette.primary.main,
+                padding: 1,
+                cursor: 'pointer',
+              }}
+            />
+          </Box>
         );
       },
     },
@@ -95,6 +103,13 @@ export default function TrainerYearView(props: GroupIdPageProps) {
       align: 'center',
       renderCell: (params) => {
         return (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+            height="100%"
+          >
           <EditIcon
             style={{
               backgroundColor: theme.palette.primary.main,
@@ -106,6 +121,7 @@ export default function TrainerYearView(props: GroupIdPageProps) {
               setEditCycle(params.row as Cycle);
             }}
           />
+          </Box>
         );
       },
     },
