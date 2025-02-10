@@ -1,14 +1,14 @@
-'use client'; // Ensure it's a Client Component
+'use client';
 
 import React, { createContext, useContext, useState } from 'react';
 import { useFetch } from '@/hook/use-fetch';
-import type { Group } from '@/group/entity/group.entity';
-import type { Cycle } from '@/group/entity/cycle.entity';
-import type { User } from '@/user/type/user.type';
-import type { FilterType } from '@/group/type/filter.type';
-import type { Subgroup } from '@/group/entity/subgroup.entity';
 import { Dayjs } from 'dayjs';
-import dayjs from 'dayjs'; // ✅ Import correctly
+import dayjs from 'dayjs';
+import { User } from '@/controller/user/type/user.type';
+import { Group } from '@/controller/group/type/group.type';
+import { FilterType } from '@/common/type/filter.type';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
 
@@ -51,6 +51,7 @@ export const GroupSidebarProvider = ({
   const [loading, setLoading] = useState(false);
   const users = useFetch<User[]>('/user');
   const groups = useFetch<Group[]>('/group');
+
   const [filter, setFilter] = useState<FilterType>('week');
   const [selected, setSelected] = useState<{
     group: Group | null;

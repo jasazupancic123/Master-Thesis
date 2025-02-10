@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
 import Circles from '@/app/groups/components/circles';
 import { CommonService } from '@/common/service/common.service';
@@ -126,7 +126,7 @@ export default function TrainerWeekView(props: any) {
             return (
               <Grid
                 key={i}
-                xs={12 / 7}
+                size={{ xs: 12 / 7 }}
                 sx={{
                   padding: '8px',
                   textAlign: 'center',

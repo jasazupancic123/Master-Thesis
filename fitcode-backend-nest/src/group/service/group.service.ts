@@ -107,9 +107,13 @@ export class GroupService {
       // add group
       const docRef = this.groupRepository.collection().doc();
       transaction.set(docRef, {
-        ownerId: user.uid,
         name: input.name,
+        ownerId: user.uid,
         membersIds: input.membersIds,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        deletedAt: null,
+        cycles: [],
       });
 
       // add group to all members and trainer
@@ -150,7 +154,7 @@ export class GroupService {
           });
 
           const docRef = this.groupRepository.doc(ref.groupId);
-          transaction.update(docRef, input);
+          transaction.update(docRef, { ...input });
         },
       );
     } else if (input.name)

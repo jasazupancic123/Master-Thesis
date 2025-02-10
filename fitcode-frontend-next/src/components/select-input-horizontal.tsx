@@ -1,11 +1,5 @@
 import React, { ReactNode } from 'react';
-import {
-  FormControl,
-  InputAdornment,
-  InputLabel,
-  Box,
-  Stack,
-} from '@mui/material';
+import { FormControl, InputAdornment } from '@mui/material';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 
@@ -32,9 +26,11 @@ export default function SelectInputHorizontal<T>(props: Props<T>) {
         displayEmpty
         renderValue={(selected) => {
           if (!selected) return <em>{props.label}</em>;
+
           const selectedItem = props.items.find(
             (item) => (item[props.itemKey] as unknown as string) === selected
           );
+
           return selectedItem ? (
             (selectedItem[props.itemName] as unknown as string)
           ) : (

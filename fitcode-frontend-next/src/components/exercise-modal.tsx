@@ -1,7 +1,7 @@
 import MyModal from '@/components/modal';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid from '@mui/material/Grid2';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -134,7 +134,7 @@ export default function ExerciseModal(props: Props) {
 
         <Grid container spacing={2}>
           {/* Name */}
-          <Grid xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               label="Name"
@@ -146,7 +146,7 @@ export default function ExerciseModal(props: Props) {
           </Grid>
 
           {/* Multi-level dropdown for components */}
-          <Grid xs={12}>
+          <Grid size={{ xs: 12 }}>
             <InputLabel id="component">Component</InputLabel>
             <SelectComponent
               selectedComponents={selectedComponents}
@@ -156,7 +156,7 @@ export default function ExerciseModal(props: Props) {
           </Grid>
 
           {/* Video url and image url */}
-          <Grid xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Stack direction="column" alignItems="center" height="100%">
               {
                 // Update an existing exercise
@@ -214,7 +214,7 @@ export default function ExerciseModal(props: Props) {
             </Stack>
           </Grid>
 
-          <Grid xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Stack direction="column" alignItems="center">
               {
                 // Update an existing exercise
@@ -287,7 +287,7 @@ export default function ExerciseModal(props: Props) {
             </Stack>
           </Grid>
 
-          <Grid xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Divider>Other</Divider>
           </Grid>
 
@@ -296,11 +296,11 @@ export default function ExerciseModal(props: Props) {
               attribute.type === 'number'
                 ? 'number'
                 : attribute.type === 'date'
-                ? 'date'
-                : 'text';
+                  ? 'date'
+                  : 'text';
 
             return (
-              <Grid xs={6} key={attribute.field}>
+              <Grid size={{ xs: 6 }} key={attribute.field}>
                 {attribute.type === 'select' ? (
                   <SelectAttribute
                     attribute={attribute}

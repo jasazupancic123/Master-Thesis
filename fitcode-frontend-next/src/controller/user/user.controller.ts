@@ -1,6 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
-import { User } from '@firebase/auth';
 import { UserMeta } from './type/user-meta.type';
+import { User } from './type/user.type';
 
 const api = CommonService.instance.api;
 

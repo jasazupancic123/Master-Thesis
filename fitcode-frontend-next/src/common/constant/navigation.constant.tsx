@@ -6,8 +6,9 @@ import SpaIcon from '@mui/icons-material/Spa';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import slugify from 'slugify';
 import { ReactNode } from 'react';
+import { FilterType } from '../type/filter.type';
 
-function link(
+export function link(
   label: string,
   href: string,
   icon?: ReactNode,
@@ -48,11 +49,14 @@ export const LINK_CALENDAR = link(
   '/calendar',
   <CalendarTodayIcon />
 );
-export const LINK_MEMBERS = link('Members', '/members')
-export const LINK_SUBGROUPS= link('Subgroups', '/subgroups')
-export const LINK_ADD_GROUP = link('Add Group', '/add-group')
-export const LINK_SETTINGS = link('Settings', '/settings')
-export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaIcon />)
+export const LINK_MEMBERS = link('Members', '/members');
+export const LINK_SUBGROUPS = link('Subgroups', '/subgroups');
+export const LINK_ADD_GROUP = link('Add Group', '/add-group');
+export const LINK_SETTINGS = link('Settings', '/settings');
+export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaIcon />);
+export const LINK_GROUP_BY_ID = (id: string) => link('Group', `/groups/${id}`);
+export const LINK_GROUP_DATE_RANGE_VIEW = (id: string, filter: FilterType) =>
+  link('Day Trainings', `/groups/${id}/${filter}`);
 
 // grouped linked (for utility)
 export const LINKS_AUTH = {

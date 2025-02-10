@@ -9,26 +9,23 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useFetch } from '@/hook/use-fetch';
-import { User } from '@/user/type/user.type';
-import { UserController } from '@/user/user.controller';
-import { SearchBar } from '@/common/components/search-bar';
-import MyModal from '@/common/components/modal';
-import { AddMembersModal } from '@/group/components/add-members';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { useTheme } from '@mui/material/styles';
-import { GroupController } from '@/group/group.controller';
 import { useAppContext } from '@/context/app-provider';
 import { useParams } from 'next/navigation';
-import { Group } from '@/group/entity/group.entity';
 import toast from 'react-hot-toast';
 import { useGroupSidebar } from '@/context/groups-sidebar-provider';
 import { useRouter } from 'next/navigation';
 import { LINK_GROUPS } from '@/common/constant/navigation.constant';
 import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
 import PageTitle from '../components/page-title';
+import { User } from '@/controller/user/type/user.type';
+import { AddMembersModal } from '@/components/add-members-modal';
+import MyModal from '@/components/modal';
+import { SearchBar } from '@/components/search-bar';
+import { GroupController } from '@/controller/group/group.controller';
 
 export default function AddGroup() {
   const { users, setSelected } = useGroupSidebar();
@@ -70,7 +67,7 @@ export default function AddGroup() {
     }
     const membersIds = members.map((member) => member.uid);
     try {
-      const newGroup = await GroupController.createGroup(token, {
+      const newGroup = await GroupController.create(token, {
         name: groupName,
         membersIds,
       });
