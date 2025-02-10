@@ -24,7 +24,10 @@ export default function EditCycleModal(props: EditCycleModalProps) {
           variant="outlined"
           fullWidth
           value={cycleName}
-          onChange={(e) => setCycleName(e.target.value)}
+          onChange={(e) => {
+            setCycleName(e.target.value);
+            setSelectedCycle({ ...selectedCycle, name: e.target.value });
+          }}
         />
 
         <DatePicker

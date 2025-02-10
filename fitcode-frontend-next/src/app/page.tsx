@@ -38,7 +38,7 @@ interface Props {
 
 function Section({ title, description, id, children }: Props) {
   return (
-    <Box id={id} p={8}>
+    <Box id={id} p={8} sx={{ backgroundColor: 'black' }}>
       <Container
         sx={{
           position: 'relative',
@@ -95,9 +95,27 @@ export default function Home() {
             width: '100%',
             height: '100%',
             zIndex: -1,
+            backgroundColor: 'black',
           }}
         >
-          TODO - video background
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'translate(-50%, -50%)',
+              zIndex: -1, // Ensure the video stays in the background
+            }}
+          >
+            <source src="/hero.mp4" type="video/mp4" />
+          </video>
         </Box>
 
         <Container

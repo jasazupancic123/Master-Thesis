@@ -12,7 +12,7 @@ import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { auth } from '@/common/config/firebase.config';
 import { useLocalStorage } from 'usehooks-ts';
 import { useRouter } from 'next/navigation';
-import { LINKS_AUTH } from '@/common/constant/navigation.constant';
+import { LINK_INDEX, LINKS_AUTH } from '@/common/constant/navigation.constant';
 import { AuthContextType } from '@/common/type/context.type';
 import { CommonService } from '@/common/service/common.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: Props) => {
   async function logout(): Promise<void> {
     await auth.signOut();
     await CommonService.instance.generic.sleep(0.3);
-    router.push(LINKS_AUTH.login.href);
+    router.push(LINK_INDEX.href);
     setUser(null);
     setRole([]);
     setToken(null);
