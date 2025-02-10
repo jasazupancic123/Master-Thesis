@@ -25,7 +25,7 @@ export class TrainingController {
       components: TrainingPlan;
     }
   ) {
-    return api.post<Training>('/training', { token, body });
+    return api.post<Training>('/training', body, { token });
   }
 
   static async update(
@@ -33,7 +33,7 @@ export class TrainingController {
     trainingId: string,
     body: DateRange & { components: TrainingPlan }
   ) {
-    return api.patch<Training>(`/training/${trainingId}`, { token, body });
+    return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }
 
   static async delete(token: string, trainingId: string) {
@@ -45,9 +45,8 @@ export class TrainingController {
     trainingId: string,
     body: { name: string; membersIds: string[] }
   ) {
-    return api.post<Training>(`/training/${trainingId}/subgroup`, {
+    return api.post<Training>(`/training/${trainingId}/subgroup`, body, {
       token,
-      body,
     });
   }
 
@@ -59,7 +58,8 @@ export class TrainingController {
   ) {
     return api.patch<Training>(
       `/training/${trainingId}/subgroup/${subgroupId}`,
-      { token, body }
+      body,
+      { token }
     );
   }
 
@@ -86,9 +86,8 @@ export class TrainingController {
       }[];
     }
   ) {
-    return api.post<Training>(`/training/${trainingId}/component`, {
+    return api.post<Training>(`/training/${trainingId}/component`, body, {
       token,
-      body,
     });
   }
 
@@ -104,7 +103,8 @@ export class TrainingController {
   ) {
     return api.patch<Training>(
       `/training/${trainingId}/component/${componentId}`,
-      { token, body }
+      body,
+      { token }
     );
   }
 
@@ -128,7 +128,8 @@ export class TrainingController {
   ) {
     return api.post<Training>(
       `/training/${trainingId}/component/${componentId}`,
-      { token, body }
+      body,
+      { token }
     );
   }
 
@@ -141,7 +142,8 @@ export class TrainingController {
   ) {
     return api.patch<Training>(
       `/training/${trainingId}/component/${componentId}/superset/${superset}`,
-      { token, body }
+      body,
+      { token }
     );
   }
 
@@ -174,7 +176,8 @@ export class TrainingController {
   ) {
     return api.post<Training>(
       `/training/${trainingId}/component/${componentId}/superset/${superset}`,
-      { token, body }
+      body,
+      { token }
     );
   }
 
@@ -193,7 +196,8 @@ export class TrainingController {
   ) {
     return api.patch<Training>(
       `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}`,
-      { token, body }
+      body,
+      { token }
     );
   }
 
@@ -224,10 +228,8 @@ export class TrainingController {
   ) {
     return api.patch<{}>(
       `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}`,
-      {
-        token,
-        body,
-      }
+      body,
+      { token }
     );
   }
 }

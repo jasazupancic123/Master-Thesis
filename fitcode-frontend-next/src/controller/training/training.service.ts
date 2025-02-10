@@ -4,12 +4,14 @@ import { TrainingExercise } from './type/training-plan.type';
 import { Training } from './type/training.type';
 
 export class TrainingService {
-  static mapComponents(item: Training, components: Component[]) {
-    for (const componentId in item.components) {
-      const trainingComponent = item.components[componentId];
-      const found = components.find((c) => c.id === trainingComponent.id);
-      if (found) trainingComponent.component = found;
-    }
+  static mapComponents(item: Training, components: Component[]): Training {
+    const mappedItem = { ...item };
+    for (const componentId in mappedItem.components)
+      mappedItem.components[componentId].component = components.find(
+        (c) => c.id === componentId
+      );
+
+    return mappedItem;
   }
 
   static mapExercises(item: Training, exercises: Exercise[]) {

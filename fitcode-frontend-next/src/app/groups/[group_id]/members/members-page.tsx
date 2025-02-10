@@ -6,7 +6,7 @@ import { useTheme } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import PageTitle from '../../components/page-title';
+import PageTitle from '../../../../components/page-title';
 import { GroupIdPageProps } from '../type';
 import { GroupService } from '@/controller/group/group.service';
 import { User } from '@/controller/user/type/user.type';

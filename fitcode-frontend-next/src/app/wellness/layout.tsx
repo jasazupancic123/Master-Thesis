@@ -1,13 +1,9 @@
-import React, { ReactNode } from 'react';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import SidebarAthlete from '@/components/sidebar-athlete';
+import { ChildrenProps } from '@/common/type/props.type';
 
-interface Props {
-  children: ReactNode;
-}
-
-export default function Layout({ children }: Props) {
+export default function Layout({ children }: ChildrenProps) {
   return (
     <Box bgcolor="background.paper" minHeight="100vh">
       <SidebarAthlete />

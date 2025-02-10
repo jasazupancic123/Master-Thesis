@@ -28,6 +28,6 @@ export class UserController {
   }
 
   static async saveMeta(token: string, body: Omit<UserMeta, 'userId'>) {
-    return api.post('/user/me/meta', body, { token });
+    return api.post<UserMeta>('/user/me/meta', body, { token });
   }
 }

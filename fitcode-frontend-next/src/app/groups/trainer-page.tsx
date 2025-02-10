@@ -11,7 +11,7 @@ import {
 import Typography from '@mui/material/Typography';
 import MyModal from '@/components/modal';
 import SelectData from '@/components/select-data';
-import FilterButton from '@/app/groups/components/filter-button';
+import FilterButton from '@/components/filter-button';
 import { FilterType } from '@/common/type/filter.type';
 import { User } from '@/controller/user/type/user.type';
 import { CreateGroupInput, handleCreateGroup } from './state';

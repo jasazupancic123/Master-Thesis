@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import PageTitle from '../../components/page-title';
+import PageTitle from '../../../../components/page-title';
 import AddCycleModal from '../../../../components/add-cycle-modal';
 import MyModal from '@/components/modal';
 import { GroupIdPageProps } from '../type';

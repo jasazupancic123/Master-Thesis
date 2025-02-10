@@ -13,7 +13,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { useTheme } from '@mui/material/styles';
-import PageTitle from '../../components/page-title';
+import PageTitle from '../../../../components/page-title';
 import { User } from '@/controller/user/type/user.type';
 import { AddMembersModal } from '@/components/add-members-modal';
 import MyModal from '@/components/modal';
