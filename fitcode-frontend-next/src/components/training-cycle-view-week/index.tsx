@@ -5,24 +5,10 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import React from 'react';
 import { CommonService } from '@/common/service/common.service';
-import { TrainingGridItem } from '@/app/groups/components/training-cycle-view-grid-item';
-import { Component } from '@/controller/component/type/component.type';
-import { Training } from '@/controller/training/type/training.type';
+import { TrainingGridItem } from '@/components/training-cycle-view-week/training-cycle-view-grid-item';
+import { TrainingCycleViewWeekProps } from './type';
 
-export default function TrainingWeek(props: {
-  index: number;
-  week: Dayjs[];
-  trainings: Training[];
-  components: Component[];
-  training: any;
-  addTraining: (data: any) => void;
-  addTrainingComponent: (trainingId: string, data: any[]) => void;
-  deleteTraining: (trainingId: string) => Promise<void>;
-  deleteTrainingComponent: (
-    trainingId: string,
-    componentId: string
-  ) => Promise<void>;
-}) {
+export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   function getFilteredTrainings(date: Dayjs) {
     date = dayjs(date);
 
@@ -82,11 +68,9 @@ export default function TrainingWeek(props: {
                 cursor: props.components.length ? 'pointer' : 'default',
               }}
               onClick={async () => {
+                console.log(date.toDate());
                 if (props.components.length)
-                  props.addTraining({
-                    ...props.training,
-                    date: dayjs(date) as Dayjs,
-                  });
+                  props.addTraining({ ...props.training, date });
               }}
             >
               <Typography

@@ -28,15 +28,11 @@ import Link from '@mui/material/Link';
 import { LINKS_NAVBAR } from '@/common/constant/navigation.constant';
 import HeroNavbar from '@/components/hero-navbar';
 import { buttonStyle, titleStyle } from '@/app/style';
+import { AppPageProps } from './type';
 
-interface Props {
-  title: string;
-  description: string;
-  id: string;
-  children: ReactNode;
-}
+function Section(props: AppPageProps) {
+  const { title, description, id, children } = props;
 
-function Section({ title, description, id, children }: Props) {
   return (
     <Box id={id} p={8} sx={{ backgroundColor: 'black' }}>
       <Container

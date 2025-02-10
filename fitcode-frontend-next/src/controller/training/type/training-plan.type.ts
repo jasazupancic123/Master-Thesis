@@ -15,7 +15,7 @@ export type TrainingComponent = IdEntity & {
   supersets: Superset[];
 
   // mapped properties
-  component: Component;
+  component?: Component;
 };
 
 export type Superset = {

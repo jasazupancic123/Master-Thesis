@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
-import Circles from '@/app/groups/components/circles';
+import Circles from '@/components/circles';
 import { CommonService } from '@/common/service/common.service';
 import { useAppContext } from '@/context/app-provider';
 import toast from 'react-hot-toast';

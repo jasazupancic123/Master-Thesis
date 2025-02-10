@@ -1,10 +1,18 @@
 import { SetState } from '@/common/type/state.type';
-import { Slider, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Chip, Slider, useMediaQuery, useTheme } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import { useScreenSize } from '@/context/screen-size-provider';
+import {
+  DatePicker,
+  LocalizationProvider,
+  StaticDatePicker,
+} from '@mui/x-date-pickers';
+import dayjs from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { UserMeta } from '@/controller/user/type/user-meta.type';
 
 interface Props {
@@ -15,6 +23,7 @@ interface Props {
 }
 
 export default function UserWellnessForm(props: Props) {
+  const screenSize = useScreenSize();
   const [state, setState] = useState<UserMeta>(() => {
     if (props.initialData) return props.initialData;
 
@@ -23,22 +32,54 @@ export default function UserWellnessForm(props: Props) {
       fatigue: 5,
       soreness: 5,
       comment: '',
-      weight: 100,
+      weight: 0,
     } as UserMeta;
   });
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const today = dayjs().format('dddd, MMMM D, YYYY');
 
   return (
-    <Stack alignItems="center" height="100%" pb={15} px={isMobile ? 2 : 4}>
+    <Stack
+      alignItems="center"
+      pb={screenSize.isLandscapeMobile ? 2 : 12}
+      sx={{
+        height: screenSize.isLandscapeMobile
+          ? '100vh'
+          : screenSize.isMobile
+            ? '90vh'
+            : 'auto', // Use 90% of viewport height on mobile
+        maxHeight: screenSize.isMobile ? '90vh' : undefined,
+        px: screenSize.isMobile ? 2 : 4,
+        overflowY: 'auto', // Prevents content from being cut off on smaller screens
+      }}
+    >
       {/* Today's date */}
-      <Typography variant="h5" sx={{ color: '#1EB980' }} m={2}>
-        {new Date().toDateString()}
-      </Typography>
+      <Chip
+        label={today}
+        sx={{
+          fontSize: 20,
+          fontWeight: 'bold',
+          color: '#1EB980', // Match theme
+          backgroundColor: '#303E4A', // Subtle dark background
+          borderRadius: '8px',
+          padding: 2,
+          marginBottom: screenSize.isLandscapeMobile ? 2 : 4,
+          letterSpacing: '0.5px',
+        }}
+      />
 
       <Stack
-        sx={{ height: 300, width: '100%', maxWidth: isMobile ? '90%' : '60%' }}
+        sx={{
+          height: screenSize.isMobile
+            ? 'calc(90vh - 200px)'
+            : screenSize.isLandscapeMobile
+              ? '30vh'
+              : 300, // Adjusts dynamically for mobile
+          width: '100%',
+          maxWidth: screenSize.isMobile ? '90%' : '60%',
+          overflowY: 'auto', // Ensures scrollability if needed
+          padding: screenSize.isLandscapeMobile ? 1 : 0,
+        }}
         spacing={4}
         direction="row"
         justifyContent="center"
@@ -48,7 +89,7 @@ export default function UserWellnessForm(props: Props) {
           label="Sleep"
           value={state.sleep as number}
           setValue={(value) =>
-            setState((prev) => ({ ...prev, sleep: value as number }))
+            setState((prev: UserMeta) => ({ ...prev, sleep: value as number }))
           }
           disabled={props.disabled}
         />
@@ -83,27 +124,58 @@ export default function UserWellnessForm(props: Props) {
           setState((prev) => ({ ...prev, comment: event.target.value }))
         }
         multiline
-        rows={2}
+        rows={screenSize.isLandscapeMobile ? 1 : 2} // Reduce rows in landscape
         sx={{
-          mt: 4,
-          width: isMobile ? '90%' : '30%',
+          mt: screenSize.isLandscapeMobile ? 1 : 4,
+          width: screenSize.isMobile
+            ? '90%'
+            : screenSize.isLandscapeMobile
+              ? '66%'
+              : '30%',
           backgroundColor: '#303E4A',
           borderRadius: '10px',
+          '& .MuiOutlinedInput-root': {
+            height: screenSize.isLandscapeMobile ? '20vh' : 'auto', // Set full field height
+            display: 'flex', // Align text properly
+            alignItems: 'center', // Ensures vertical centering
+            '& textarea': {
+              height: screenSize.isLandscapeMobile ? '12vh' : 'auto', // Resize inner text area
+              paddingTop: screenSize.isLandscapeMobile ? '5px' : undefined, // Adjust text alignment
+              paddingBottom: screenSize.isLandscapeMobile ? '5px' : undefined,
+              overflow: 'hidden', // Prevent extra growth
+            },
+          },
+          '& .MuiInputLabel-root': {
+            top: screenSize.isLandscapeMobile ? '-5px' : undefined, // Adjust label position
+          },
+        }}
+        inputProps={{
+          style: {
+            padding: screenSize.isLandscapeMobile ? '5px 10px' : undefined, // Ensure consistent padding
+            height: screenSize.isLandscapeMobile ? '12vh' : 'auto',
+            display: 'flex',
+            alignItems: 'center', // Ensures text aligns correctly
+          },
         }}
         disabled={props.disabled}
       />
 
-      {/* Submit button*/}
+      {/* Submit button */}
+
       <Button
         variant="contained"
         onClick={() => {
           props.onSubmit(state);
           props.setDisabled(true);
         }}
-        sx={{ mt: 4, backgroundColor: '#1EB980', color: '#ffffff' }}
+        sx={{
+          mt: screenSize.isLandscapeMobile ? 2 : 4,
+          backgroundColor: '#1EB980',
+          color: '#ffffff',
+        }}
         disabled={props.disabled}
       >
-        Submit
+        {!props.disabled ? 'Submit' : 'Already submited wellness for today'}
       </Button>
     </Stack>
   );

@@ -10,6 +10,8 @@ import { LINK_GROUP_DATE_RANGE_VIEW } from '@/common/constant/navigation.constan
 import TrainerPage from './trainer-page';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { ComponentController } from '@/controller/component/component.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { TrainingController } from '@/controller/training/training.controller';
 
 export default async function Page({ params }: GroupIdPageParams) {
   // fetch data
@@ -30,13 +32,19 @@ export default async function Page({ params }: GroupIdPageParams) {
 
   if ([UserRole.ATHLETE, UserRole.ADMIN].includes(role)) return notFound();
 
-  const [users, groups, exercises, attributes, components] = await Promise.all([
-    UserController.findAll(token),
-    GroupController.findAll(token),
-    ExerciseController.findAll(token),
-    ExerciseController.findAttributes(),
-    ComponentController.findAll(),
-  ]);
+  const [users, groups, exercises, attributes, components, trainings] =
+    await Promise.all([
+      UserController.findAll(token),
+      GroupController.findAll(token),
+      ExerciseController.findAll(token),
+      ExerciseController.findAttributes(),
+      ComponentController.findAll(),
+      TrainingController.findAll(token, { groupId }),
+    ]);
+
+  const mappedTrainings = trainings.map((t) =>
+    TrainingService.mapComponents(t, components)
+  );
 
   const props: GroupIdPageProps = {
     token,
@@ -46,6 +54,7 @@ export default async function Page({ params }: GroupIdPageParams) {
     exercises,
     attributes,
     components,
+    trainings: mappedTrainings,
   };
 
   const mapper: Record<UserRole, ReactNode> = {

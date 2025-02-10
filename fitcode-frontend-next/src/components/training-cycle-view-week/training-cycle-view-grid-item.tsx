@@ -1,33 +1,14 @@
-import { useAppContext } from '@/context/app-provider';
-import { AppContextType } from '@/common/type/context.type';
 import Box from '@mui/material/Box';
-import { Button, Divider } from '@mui/material';
+import { Divider } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { AddCircle } from '@mui/icons-material';
 import React from 'react';
-import { CommonService } from '@/common/service/common.service';
-import { Component } from '@/controller/component/type/component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { TrainingService } from '@/controller/training/training.service';
+import { TrainingCycleViewGridItemProps } from './type';
 
-interface Props {
-  training: Training;
-  components: Component[];
-  order: number;
-  addTrainingComponent: (trainingId: string, data: any[]) => void;
-  deleteTraining: (trainingId: string) => Promise<void>;
-  deleteTrainingComponent: (
-    trainingId: string,
-    componentId: string
-  ) => Promise<void>;
-}
-
-export function TrainingGridItem(props: Props) {
-  const { components } = useAppContext() as AppContextType;
-  const training = props.training;
-  TrainingService.mapComponents(training, components.flat);
+export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
+  const { training } = props;
 
   return (
     <Box px={1}>
@@ -53,34 +34,34 @@ export function TrainingGridItem(props: Props) {
 
       <>
         {Object.values(training.components).map(({ component }) => (
-          <div key={component.id}>
+          <div key={component!.id}>
             <IconButton
               size="small"
               onClick={async (e) => {
                 e.stopPropagation();
-                await props.deleteTrainingComponent(training.id, component.id);
+                await props.deleteTrainingComponent(training.id, component!.id);
               }}
             >
+              <Typography variant="caption">{component!.name}</Typography>
               <DeleteIcon />
             </IconButton>
           </div>
         ))}
       </>
 
-      {/* Add training component icon */}
+      {/* add training component icon */}
       {props.components.length > 0 && (
         <>
           <IconButton
             size="small"
             onClick={(e) => {
               e.stopPropagation();
-              props.addTrainingComponent(
-                training.id,
-                props.components.map((c, i) => ({
+              props.addTrainingComponent(training.id, {
+                components: props.components.map((c, i) => ({
                   id: c.id,
                   order: i,
-                }))
-              );
+                })),
+              });
             }}
           >
             <AddCircle />

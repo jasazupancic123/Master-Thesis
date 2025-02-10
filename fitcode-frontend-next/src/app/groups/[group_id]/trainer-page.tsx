@@ -4,11 +4,12 @@ import { Box, Button, ToggleButtonGroup } from '@mui/material';
 import { GroupIdPageProps } from './type';
 import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 import { FilterType } from '@/common/type/filter.type';
-import FilterButton from '../components/filter-button';
+import FilterButton from '../../../components/filter-button';
 import { ReactNode, useState } from 'react';
 import TrainerYearView from '../../../components/trainer-year-view';
 import MyModal from '@/components/modal';
 import AddCycleModal from '@/components/add-cycle-modal';
+import TrainerCycleView from '@/components/trainer-cycle-view';
 
 export default function TrainerPage(props: GroupIdPageProps) {
   const { token, groupId, users, groups, exercises, attributes, components } =
@@ -22,7 +23,7 @@ export default function TrainerPage(props: GroupIdPageProps) {
   const mapper: Record<FilterType, ReactNode> = {
     day: 'Day',
     week: 'Week',
-    cycle: 'Cycle',
+    cycle: <TrainerCycleView {...props} />,
     year: <TrainerYearView {...props} />,
   };
 

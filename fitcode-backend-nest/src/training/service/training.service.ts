@@ -182,7 +182,7 @@ export class TrainingService {
 
     // check overlap between all other trainings
     const groupTrainings = await this.getDocsByGroup(group.id);
-    this.validateOverlap(input.from, input.to, groupTrainings);
+    await this.validateOverlap(input.from, input.to, groupTrainings);
 
     // create training
     const meta = await this.userService.getLastMetas(group.membersIds);
