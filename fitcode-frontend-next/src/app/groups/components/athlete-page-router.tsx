@@ -1,8 +1,6 @@
 'use client';
 
 import Box from '@mui/material/Box';
-import SelectInput from '@/components/select-input';
-import GroupIcon from '@mui/icons-material/Group';
 import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/app-provider';
 import dayjs from 'dayjs';

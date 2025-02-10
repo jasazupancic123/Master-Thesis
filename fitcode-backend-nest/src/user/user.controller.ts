@@ -27,7 +27,7 @@ export class UserController {
   }
 
   @Get(':id')
-  @Auth([UserRole.TRAINER, UserRole.MANAGER, UserRole.ADMIN])
+  @Auth()
   async findById(@RequestUser() user: User, @Param('id') id: string) {
     if (id === 'me') return await this.userService.findOneBy('id', user.uid);
     return await this.userService.findOneBy('id', id);

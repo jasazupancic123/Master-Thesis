@@ -7,5 +7,12 @@ interface Props {
 
 export default function Logo(props: Props) {
   const { width = 100, height = 50 } = props;
-  return <Image src="/logo.png" alt="Logo" width={width} height={height} />;
+  return (
+    <Image
+      src="/fitcode_logo_wide_transparent.png"
+      alt="Logo"
+      width={width}
+      height={height}
+    />
+  );
 }

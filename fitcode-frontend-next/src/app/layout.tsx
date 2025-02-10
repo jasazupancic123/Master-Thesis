@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/auth-provider';
 import { AppProvider } from '@/context/app-provider';
 import ThemeRegistry from '@/context/theme-registry';
+import { ScreenSizeProvider } from '@/context/screen-size-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,14 +23,15 @@ export default function RootLayout({
       <body className={inter.className}>
         <AppRouterCacheProvider>
           <ThemeRegistry>
-            {' '}
-            {/* Use the ThemeRegistry wrapper here */}
             <AppProvider>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <ScreenSizeProvider>{children}</ScreenSizeProvider>
+              </AuthProvider>
             </AppProvider>
             <Toaster />
           </ThemeRegistry>
         </AppRouterCacheProvider>
+        <Toaster />
       </body>
     </html>
   );

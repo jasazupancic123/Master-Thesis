@@ -10,8 +10,10 @@ import { useEffect, useState } from 'react';
 import { UserMeta } from '@/controller/user/type/user-meta.type';
 import { UserController } from '@/controller/user/user.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 function Page() {
+  const screenSize = useScreenSize();
   const { token } = useAppContext();
   const wellness = useFetch<UserMeta>('/user/me/meta');
   const [disabled, setDisabled] = useState(false);
@@ -33,7 +35,7 @@ function Page() {
   if (wellness.loading) return <div>Loading...</div>;
 
   return (
-    <Box height="100%">
+    <Box height="100%" marginTop={screenSize.isLandscapeMobile ? 1 : 3}>
       <UserWellnessForm
         initialData={wellness.data}
         onSubmit={(data) => {}}
