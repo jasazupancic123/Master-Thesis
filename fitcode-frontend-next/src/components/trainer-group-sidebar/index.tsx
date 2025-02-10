@@ -25,9 +25,11 @@ import {
 } from './constant';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/context/auth-provider';
 
 export default function TrainerGroupSidebar(props: Props) {
-  const { logout, groups, selectedGroup } = props;
+  const { groups, selectedGroup } = props;
+  const { logout } = useAuth();
 
   const theme = useTheme();
   const router = useRouter();
@@ -83,38 +85,39 @@ export default function TrainerGroupSidebar(props: Props) {
             {Object.values(
               LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
             ).map((link, i) => (
-              <ListItem
-                key={i}
-                disablePadding
-                sx={{
-                  display: 'block',
-                  '&:hover': { backgroundColor: 'transparent' },
-                  '&:focus': { backgroundColor: 'transparent' },
-                  '&:active': { backgroundColor: 'transparent' },
-                }}
-              >
-                <ListItemButton
-                  sx={[
-                    { minHeight: 48, px: 2.5 },
-                    open
-                      ? { justifyContent: 'initial' }
-                      : { justifyContent: 'center' },
-                  ]}
+              <ListItem key={i} disablePadding sx={{ display: 'block' }}>
+                {/* Wrap the entire ListItemButton in Link */}
+                <Link
+                  href={link.href}
+                  style={{ width: '100%', textDecoration: 'none' }}
                 >
-                  <ListItemIcon
+                  <ListItemButton
+                    disableRipple
+                    disableTouchRipple
                     sx={[
-                      { minWidth: 0, justifyContent: 'center' },
-                      open ? { mr: 3 } : { mr: 'auto' },
+                      { minHeight: 48, px: 2.5 },
+                      open
+                        ? { justifyContent: 'initial' }
+                        : { justifyContent: 'center' },
                     ]}
                   >
-                    <Link href={link.href}>{link.icon}</Link>
-                  </ListItemIcon>
+                    <ListItemIcon
+                      sx={[
+                        { minWidth: 0, justifyContent: 'center' },
+                        open ? { mr: 3 } : { mr: 'auto' },
+                      ]}
+                    >
+                      {link.icon}
+                    </ListItemIcon>
 
-                  <ListItemText
-                    primary={<Link href={link.href}>{link.label}</Link>}
-                    sx={[open ? { opacity: 1 } : { opacity: 0 }]}
-                  />
-                </ListItemButton>
+                    <ListItemText
+                      primary={link.label}
+                      sx={[
+                        open ? { opacity: 1, color: 'white' } : { opacity: 0 },
+                      ]}
+                    />
+                  </ListItemButton>
+                </Link>
               </ListItem>
             ))}
           </List>

@@ -11,6 +11,7 @@ import Avatar from '@mui/material/Avatar';
 import HeroNavbar from '@/components/hero-navbar';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {
+  LINK_CALENDAR,
   LINK_GROUPS,
   LINK_USERS,
   LINKS_AUTH,
@@ -25,7 +26,7 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 
 const mapper = {
-  [UserRole.ATHLETE]: LINK_GROUPS,
+  [UserRole.ATHLETE]: LINK_CALENDAR,
   [UserRole.TRAINER]: LINK_GROUPS,
   [UserRole.MANAGER]: LINK_GROUPS,
   [UserRole.ADMIN]: LINK_USERS,
@@ -64,88 +65,90 @@ export default function SignIn() {
   }
 
   return (
-    <ThemeProvider theme={signInUpTheme}>
+    <>
       <HeroNavbar />
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100dvh',
-          justifyContent: 'center',
-        }}
-      >
+      <ThemeProvider theme={signInUpTheme}>
         <Box
           sx={{
-            justifyItems: 'center',
-            backgroundColor: '#FFFFFF',
-            padding: 4,
-            borderRadius: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100dvh',
+            justifyContent: 'center',
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            {LINKS_AUTH.login.label}
-          </Typography>
-
           <Box
-            component="form"
-            onSubmit={handleSubmit}
-            noValidate
-            sx={{ mt: 1 }}
+            sx={{
+              justifyItems: 'center',
+              backgroundColor: '#FFFFFF',
+              padding: 4,
+              borderRadius: 3,
+            }}
           >
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, px: 2, py: 2 }}
-            >
+            <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
+              <LockOutlinedIcon />
+            </Avatar>
+            <Typography component="h1" variant="h5">
               {LINKS_AUTH.login.label}
-            </Button>
+            </Typography>
 
-            <Grid2 container sx={{ justifyContent: 'center' }}>
-              <Grid2>
-                <Typography>
-                  Don&apos;t have an account?{' '}
-                  <Link
-                    href={LINKS_AUTH.register.href}
-                    style={{ textDecoration: 'none', color: '#0f9d58' }}
-                  >
-                    Sign Up
-                  </Link>
-                </Typography>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              noValidate
+              sx={{ mt: 1 }}
+            >
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2, px: 2, py: 2 }}
+              >
+                {LINKS_AUTH.login.label}
+              </Button>
+
+              <Grid2 container sx={{ justifyContent: 'center' }}>
+                <Grid2>
+                  <Typography>
+                    Don&apos;t have an account?{' '}
+                    <Link
+                      href={LINKS_AUTH.register.href}
+                      style={{ textDecoration: 'none', color: '#0f9d58' }}
+                    >
+                      Sign Up
+                    </Link>
+                  </Typography>
+                </Grid2>
               </Grid2>
-            </Grid2>
+            </Box>
           </Box>
         </Box>
-      </Box>
-    </ThemeProvider>
+      </ThemeProvider>
+    </>
   );
 }

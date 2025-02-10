@@ -15,6 +15,22 @@ export const theme = createTheme({
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     button: { textTransform: 'none' },
   },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        a: {
+          textDecoration: 'none', // Removes underline
+          color: 'inherit', // Keeps text color unchanged
+          '&:hover': {
+            textDecoration: 'none', // Prevents underline on hover
+          },
+          '&:active': {
+            color: 'inherit', // Prevents color change on click
+          },
+        },
+      },
+    },
+  },
 });
 
 export const signInUpTheme = createTheme({
@@ -39,7 +55,7 @@ export const buttonStyle = {
   alignItems: 'center',
   backgroundSize: 'cover',
   backgroundPosition: 'center',
-  color: 'white',
+  color: 'white', // Ensures button text is white
   textAlign: 'center',
 };
 
@@ -48,5 +64,6 @@ export const titleStyle = {
   bgcolor: 'rgba(0, 0, 0, 0.5)',
   borderRadius: 2,
   transition: 'transform 0.3s',
+  color: 'white', // Title text is white
   '&:hover': { transform: 'scale(1.05)' },
 };
