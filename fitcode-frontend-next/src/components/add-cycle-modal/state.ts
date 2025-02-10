@@ -29,6 +29,25 @@ export async function handleAddCycle(
     return;
   }
 
+  // try {
+  //   const newCycle = await GroupController.addCycle(token, selectedGroup.id, {
+  //     name: cycleName,
+  //     description,
+  //     from: start,
+  //     to: end,
+  //   });
+  //   const updatedCycles = [...(selectedGroup.cycles || []), newCycle];
+
+  //   setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
+  //   toast.success('Cycle added successfully.');
+  // } catch (error: any) {
+  //   if (error.message?.toLowerCase().includes('overlap')) {
+  //     toast.error('Cycle dates overlap with an existing cycle.');
+  //     return;
+  //   }
+  //   toast.error('Failed to add cycle.');
+  // }
+
   handleApiRequest(
     () =>
       GroupController.addCycle(token, selectedGroup.id, {
