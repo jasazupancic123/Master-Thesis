@@ -1,11 +1,5 @@
 import toast from 'react-hot-toast';
 
-export type StateFetchData<T = any> = {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-};
-
 export type SetState<T = any> = (
   state: T | ((state: T) => T)
 ) => void | Promise<void>;

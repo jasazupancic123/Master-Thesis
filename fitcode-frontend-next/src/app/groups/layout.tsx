@@ -6,12 +6,9 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
+import { ChildrenProps } from '@/common/type/props.type';
 
-interface Props {
-  children: ReactNode;
-}
-
-export default async function Layout({ children }: Props) {
+export default async function Layout({ children }: ChildrenProps) {
   // fetch data
   const cookieStore = await cookies();
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;

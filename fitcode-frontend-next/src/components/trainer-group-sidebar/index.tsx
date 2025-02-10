@@ -19,12 +19,12 @@ import { Group } from '@/controller/group/type/group.type';
 import { AppBar, Drawer, DrawerHeader } from './style';
 import SelectInputHorizontal from '../select-input-horizontal';
 import { Props } from './type';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS,
   LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS,
 } from './constant';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 export default function TrainerGroupSidebar(props: Props) {
   const { logout, groups, selectedGroup } = props;
