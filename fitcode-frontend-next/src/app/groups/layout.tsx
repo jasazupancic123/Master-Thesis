@@ -1,40 +1,36 @@
-'use client';
-
 import React, { ReactNode } from 'react';
 import Container from '@mui/material/Container';
-import Sidebar from '@/components/sidebar';
 import Box from '@mui/material/Box';
-import { useAuth } from '@/context/auth-provider';
-import { LOCAL_STORAGE_KEYS } from '@/common/constant/local-storage.constant';
-import { useRouter } from 'next/navigation';
-import { LINK_GROUPS } from '@/common/constant/navigation.constant';
 import SidebarAthlete from '@/components/sidebar-athlete';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { UserController } from '@/controller/user/user.controller';
+import { cookies } from 'next/headers';
 
 interface Props {
   children: ReactNode;
 }
 
-export default function Layout({ children }: Props) {
-  const { role } = useAuth();
-  const router = useRouter();
-  const isAthlete = role[0] === UserRole.ATHLETE;
-  const isTrainer = role[0] === UserRole.TRAINER;
+export default async function Layout({ children }: Props) {
+  // fetch data
+  const cookieStore = await cookies();
+  const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
+  if (!token) return <div>Unauthorized</div>;
 
-  const bgcolor = isTrainer ? 'background.default' : 'background.paper';
-  const minHeight = `calc(100vh - ${isTrainer ? 64 : 0}px)`;
+  const profile = await UserController.findMe(token);
+  if (!profile) return <div>Unauthorized</div>;
 
-  //redirect to /id of group if it exists in local storage
-  if (localStorage.getItem(LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID)) {
-    router.push(
-      LINK_GROUPS.href +
-        '/' +
-        localStorage.getItem(LOCAL_STORAGE_KEYS.SELECTED_GROUP_ID)
-    );
-  }
+  const role = profile.customClaims.role[0];
+  const isAthlete = role === UserRole.ATHLETE;
+  const isTrainer = role === UserRole.TRAINER;
+
+  const styles = {
+    bgcolor: isTrainer ? 'background.default' : 'background.paper',
+    minHeight: `calc(100vh - ${isTrainer ? 64 : 0}px)`,
+  };
 
   return (
-    <Box bgcolor={bgcolor} minHeight={minHeight}>
+    <Box {...styles}>
       {isAthlete && <SidebarAthlete />}
 
       <Container

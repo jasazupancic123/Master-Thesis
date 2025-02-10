@@ -27,7 +27,7 @@ export class ExerciseController {
       attributeValues: Record<string, any>;
     }
   ) {
-    return api.post<Exercise>(`/exercise`, { token, body });
+    return api.post<Exercise>(`/exercise`, body, { token });
   }
 
   static async update(
@@ -41,7 +41,7 @@ export class ExerciseController {
       attributeValues: Record<string, any>;
     }
   ) {
-    return api.patch<Exercise>(`/exercise/${exerciseId}`, { token, body });
+    return api.patch<Exercise>(`/exercise/${exerciseId}`, body, { token });
   }
 
   static async delete(token: string, exerciseId: string) {

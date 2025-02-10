@@ -1,55 +1,47 @@
 import { useEffect, useState } from 'react';
 import {
   Button,
-  Divider,
   List,
   ListItem,
   ListItemText,
   Typography,
 } from '@mui/material';
-import { styled, alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import InputBase from '@mui/material/InputBase';
 import { theme } from '@/app/style';
-import { AddMembersModalProps } from '@/common/type/members.type';
 import { User } from '@/controller/user/type/user.type';
-import { SearchBar } from './search-bar';
+import { SearchBar } from '../search-bar';
+import { AddMembersModalProps } from './type';
 
 export function AddMembersModal(props: AddMembersModalProps) {
+  const { users, members, setMembers, addUserToEnd } = props;
+
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);
-  const groupMembers = props.groupMembers;
-
-  const handleAddPlayerSearchChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const query = event.target.value;
-    setSearchQueryAddPlayer(query);
-  };
 
   const handleAddMember = (user: User) => {
-    if (groupMembers.some((m) => m.uid === user.uid)) return;
+    if (members.some((m) => m.uid === user.uid)) return;
 
     const updatedMembers = props.addUserToEnd
-      ? [...groupMembers, user]
-      : [user, ...groupMembers];
-    props.setGlobalMembers(updatedMembers);
-    setFilteredUsers((prev) => prev);
+      ? [...members, user]
+      : [user, ...members];
+
+    setMembers(updatedMembers);
   };
 
   useEffect(() => {
-    if (!props.users.data) return;
-    let filteredUsers = props.users.data.filter(
+    let filteredUsers = users.filter(
       (user) =>
         user.email.toLowerCase().includes(searchQueryAddPlayer.toLowerCase()) ||
         user.displayName
           ?.toLowerCase()
           .includes(searchQueryAddPlayer.toLowerCase())
     );
-    filteredUsers.length = 5;
+
+    filteredUsers.length = 5; // limit to 5
     filteredUsers = filteredUsers.filter(
       (user, index, self) => index === self.findIndex((t) => t.uid === user.uid)
     );
+
     setFilteredUsers(filteredUsers);
   }, [searchQueryAddPlayer]);
 
@@ -66,7 +58,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
           <SearchBar
             placeholder="Search Users"
             value={searchQueryAddPlayer}
-            handleSearchChange={handleAddPlayerSearchChange}
+            handleSearchChange={(e) => setSearchQueryAddPlayer(e.target.value)}
             maxWidth={'85%'}
           />
         </Box>
@@ -96,7 +88,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
                           secondary={user.email}
                           sx={{ m: 0 }}
                         />
-                        {groupMembers.some((m) => m.uid === user.uid) ? (
+                        {members.some((m) => m.uid === user.uid) ? (
                           <Button
                             variant="contained"
                             sx={{

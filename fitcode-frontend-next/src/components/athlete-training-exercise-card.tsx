@@ -1,5 +1,5 @@
 import Typography from '@mui/material/Typography';
-import Grid2 from '@mui/material/Unstable_Grid2';
+import Grid2 from '@mui/material/Grid2';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import React, { useEffect } from 'react';
@@ -133,7 +133,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
 
   return (
     <Grid2 container spacing={3}>
-      <Grid2 xs={12} key={component.id}>
+      <Grid2 size={{ xs: 12 }} key={component.id}>
         <Card
           sx={{
             borderRadius: 2,
@@ -168,7 +168,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
             {component.supersets
               .sort((a, b) => a.order - b.order)
               .map((superset) => (
-                <Grid2 xs={12} key={superset.order}>
+                <Grid2 size={{ xs: 12 }} key={superset.order}>
                   <Card
                     sx={{
                       borderRadius: 2,
@@ -188,7 +188,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                             key={exercise.id}
                             sx={{ mb: 1 }}
                           >
-                            <Grid2 xs={12} sm={4}>
+                            <Grid2 size={{ xs: 12, sm: 4 }}>
                               <Card sx={{ borderRadius: 2, boxShadow: 0 }}>
                                 <CardContent>
                                   <Avatar
@@ -239,16 +239,20 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                               </Card>
                             </Grid2>
 
-                            <Grid2 container xs={12} sm={8} spacing={1}>
+                            <Grid2
+                              container
+                              size={{ xs: 12, sm: 8 }}
+                              spacing={1}
+                            >
                               {Array.from({ length: exercise.meta.sets }).map(
                                 (_, setIndex) => (
                                   <Grid2
                                     container
-                                    xs={12}
+                                    size={{ xs: 12 }}
                                     key={setIndex}
                                     spacing={0}
                                   >
-                                    <Grid2 xs={12} sm={6}>
+                                    <Grid2 size={{ xs: 12, sm: 6 }}>
                                       {/* Set Type Dropdown (Reps/Distance/Time/VO2) */}
                                       <FormControl fullWidth>
                                         <InputLabel>
@@ -279,7 +283,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                                       </FormControl>
                                     </Grid2>
 
-                                    <Grid2 xs={12} sm={6}>
+                                    <Grid2 size={{ xs: 12, sm: 6 }}>
                                       {/* Workload Value TextField */}
                                       <TextField
                                         fullWidth
@@ -303,7 +307,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                                 )
                               )}
 
-                              <Grid2 xs={12}>
+                              <Grid2 size={{ xs: 12 }}>
                                 <Button
                                   fullWidth
                                   variant="contained"

@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
+import CssBaseline from '@mui/material/CssBaseline';
 import { Inter } from 'next/font/google';
-import './globals.css';
 import React from 'react';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/auth-provider';
 import { AppProvider } from '@/context/app-provider';
-import AuthWrapper from '@/common/components/auth-wrapper';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,14 +22,14 @@ export default function RootLayout({
       <body className={inter.className}>
         <AppRouterCacheProvider>
           <AppProvider>
-            <AuthProvider>
-              <AuthWrapper>{children}</AuthWrapper>{' '}
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
           </AppProvider>
         </AppRouterCacheProvider>
 
         <Toaster />
       </body>
+
+      <CssBaseline />
     </html>
   );
 }

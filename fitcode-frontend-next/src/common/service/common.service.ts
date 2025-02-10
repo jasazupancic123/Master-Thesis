@@ -6,6 +6,7 @@ import { ObjectUtil } from '@/common/service/util/object.util';
 import { NavigationUtil } from '@/common/service/util/navigation.util';
 import { GenericUtil } from './util/generic.util';
 import { TreeUtil } from '@/common/service/util/tree.util';
+import { BrowserUtil } from './util/browser.util';
 
 export class CommonService {
   readonly firebase: {
@@ -14,6 +15,7 @@ export class CommonService {
   };
 
   readonly api: ApiUtil;
+  readonly browser: BrowserUtil;
   readonly date: DateUtil;
   readonly object: ObjectUtil;
   readonly tree: TreeUtil;
@@ -27,6 +29,7 @@ export class CommonService {
     };
 
     this.api = new ApiUtil();
+    this.browser = new BrowserUtil();
     this.date = new DateUtil();
     this.object = new ObjectUtil();
     this.tree = new TreeUtil();
