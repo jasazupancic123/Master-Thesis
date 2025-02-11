@@ -23,10 +23,8 @@ import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 import { GroupIdPageProps } from '../type';
 
 export default function AddGroupPage(props: GroupIdPageProps) {
-  const { token, users, groups, groupId } = props;
+  const { token, users, groups, group } = props;
   const theme = useTheme();
-
-  const selectedGroup = groups.find((g) => g.id === groupId)!;
 
   const [members, setMembers] = useState<User[]>([]);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -44,7 +42,7 @@ export default function AddGroupPage(props: GroupIdPageProps) {
       <Box mt="16px" ml="45px">
         <TrainerGroupSidebar
           groups={groups}
-          selectedGroup={selectedGroup}
+          selectedGroup={group}
           logout={async () => {
             console.log('Log out');
           }}
