@@ -1,54 +1,36 @@
 'use client';
 
 import { useState } from 'react';
-import { Group } from '@/group/entity/group.entity';
 import {
-  Stack,
   Box,
   Tooltip,
   Avatar,
   Switch,
   Typography,
-  Button,
   Card,
   CardContent,
   IconButton,
 } from '@mui/material';
-import { Subgroup } from '@/group/entity/subgroup.entity';
-import { Cycle } from '@/group/entity/cycle.entity';
-import { SetState } from '@/common/type/state.type';
-import { GroupPageProps } from '@/group/type/props.type';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { SetState } from '@/common/type/state.type';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { Group } from '@/controller/group/type/group.type';
 
-interface SubgroupsProps {
-  loading: boolean;
-  selected: {
-    group: Group | null;
-    subgroup: Subgroup | null;
-    cycle: Cycle | null;
-  };
-  setSelected: SetState<GroupPageProps['selected']>;
-  setModal: any;
-  group: Group;
-  borderColors: string[];
-  setEditedSubgroup: any;
-}
+const defaultSubgroup: Subgroup = {
+  id: 'default',
+  name: 'Default',
+  membersIds: [],
+  components: {},
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 export default function Subgroups(props: SubgroupsProps) {
   const [showSubgroups, setShowSubgroups] = useState(false);
-
-  const defaultSubgroup: Subgroup = {
-    id: 'default',
-    name: 'Default',
-    membersIds: props.group.availableMembersIds || [],
-    from: new Date(),
-    to: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
 
   const subgroupsWithDefault = [
     defaultSubgroup,
