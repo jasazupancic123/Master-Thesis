@@ -13,19 +13,34 @@ import TrainerCycleView from '@/components/trainer-cycle-view';
 import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainerPage(props: GroupIdPageProps) {
-  const { token, groupId, users, groups, exercises, attributes, components } =
-    props;
+  const {
+    token,
+    group,
+    users,
+    groups,
+    exercises,
+    attributes,
+    components,
+    trainings,
+  } = props;
 
   const [filter, setFilter] = useState<FilterType>('day');
-  const [selectedGroup, setSelectedGroup] = useState(
-    () => groups.find((g) => g.id === groupId)!
-  );
+  const [selectedGroup, setSelectedGroup] = useState(() => group);
+  const [selectedTrainings, setSelectedTrainings] = useState(() => trainings);
+
+  const newProps = {
+    ...props,
+    group: selectedGroup,
+    setSelectedGroup,
+    trainings: selectedTrainings,
+    setSelectedTrainings,
+  };
 
   const mapper: Record<FilterType, ReactNode> = {
     day: 'Day',
     week: 'Week',
-    cycle: <TrainerCycleView {...props} />,
-    year: <TrainerYearView {...props} />,
+    cycle: <TrainerCycleView {...newProps} />,
+    year: <TrainerYearView {...newProps} />,
   };
 
   const [modal, setModal] = useState({ add_cycle: false });
@@ -71,35 +86,7 @@ export default function TrainerPage(props: GroupIdPageProps) {
             ))}
           </ToggleButtonGroup>
         </Box>
-
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2, mb: 2 }}
-          onClick={() => setModal({ ...modal, add_cycle: true })}
-        >
-          Add Cycle
-        </Button>
       </Box>
-
-      {props.groupId && (
-        <>
-          {/* Group Settings modal */}
-          <MyModal
-            isOpen={modal.add_cycle}
-            setIsOpen={(open) => setModal({ ...modal, add_cycle: open })}
-            onCancel={() => setModal({ ...modal, add_cycle: false })}
-            cancelText="Close"
-          >
-            <AddCycleModal
-              token={token}
-              onClose={() => setModal({ ...modal, add_cycle: false })}
-              selectedGroup={selectedGroup}
-              setSelectedGroup={setSelectedGroup}
-            />
-          </MyModal>
-        </>
-      )}
 
       <Box>{mapper[filter]}</Box>
     </Box>

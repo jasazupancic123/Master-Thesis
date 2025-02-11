@@ -11,7 +11,7 @@ import TrainingWeek from '@/components/training-cycle-view-week';
 import { Component } from '@/controller/component/type/component.type';
 import ExerciseChips from '@/components/exercise-chips';
 import { ComponentService } from '@/controller/component/component.service';
-import { GroupIdPageProps } from '@/app/groups/[group_id]/type';
+import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
 import {
   handleAddTrainingComponents,
   handleDeleteTraining,
@@ -19,25 +19,21 @@ import {
   handleCreateTraining,
 } from './state';
 
-export default function TrainerCycleView(props: GroupIdPageProps) {
+export default function TrainerCycleView(props: FilterTypeViewProps) {
   const {
     token,
-    groupId,
+    group,
+    setSelectedGroup,
     users,
     groups,
     exercises,
     attributes,
     components,
-    trainings: allTrainings,
+    trainings,
+    setSelectedTrainings,
   } = props;
 
-  const [selectedGroup, setSelectedGroup] = useState(
-    () => groups.find((g) => g.id === groupId)!
-  );
-
-  const [selectedCycle, setSelectedCycle] = useState(
-    () => selectedGroup.cycles?.[0]
-  );
+  const [selectedCycle, setSelectedCycle] = useState(() => group.cycles?.[0]);
 
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [createTraining, setCreateTraining] = useState({
@@ -45,8 +41,6 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
     to: dayjs().add(1, 'hour'),
     date: dayjs(),
   });
-
-  const [trainings, setTrainings] = useState(() => allTrainings);
 
   return (
     <Box pb={10}>
@@ -143,8 +137,8 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
                     handleCreateTraining(
                       token,
                       input,
-                      selectedGroup,
-                      setTrainings,
+                      group,
+                      setSelectedTrainings,
                       selectedCycle,
                       selectedComponents,
                       setSelectedComponents,
@@ -156,12 +150,16 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
                       token,
                       trainingId,
                       input,
-                      setTrainings,
+                      setSelectedTrainings,
                       components
                     )
                   }
                   deleteTraining={(trainingId) =>
-                    handleDeleteTraining(trainingId, token, setTrainings)
+                    handleDeleteTraining(
+                      trainingId,
+                      token,
+                      setSelectedTrainings
+                    )
                   }
                   deleteTrainingComponent={(trainingId, componentId) =>
                     handleDeleteTrainingComponent(
@@ -169,7 +167,7 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
                       componentId,
                       token,
                       {},
-                      setTrainings,
+                      setSelectedTrainings,
                       components
                     )
                   }

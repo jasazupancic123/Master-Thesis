@@ -3,7 +3,7 @@ import { GroupController } from '@/controller/group/group.controller';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { ReactNode } from 'react';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { ComponentController } from '@/controller/component/component.controller';
@@ -39,12 +39,13 @@ export default async function Page({ params }: GroupIdPageParams) {
 
   const props: GroupIdPageProps = {
     token,
-    groupId,
+    group,
     users,
     groups,
     exercises,
     attributes,
     components,
+    trainings: [],
   };
 
   const mapper: Record<UserRole, ReactNode> = {

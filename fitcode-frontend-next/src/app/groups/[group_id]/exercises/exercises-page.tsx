@@ -7,7 +7,6 @@ import AddIcon from '@mui/icons-material/AddOutlined';
 import Grid from '@mui/material/Grid2';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
-import { CommonService } from '@/common/service/common.service';
 import { ExerciseCard } from '@/components/exercise-card';
 import ExerciseChips from '@/components/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal';
@@ -28,13 +27,11 @@ export function ExercisesPage(props: GroupIdPageProps) {
   const {
     token,
     groups,
-    groupId,
+    group,
     components,
     attributes,
     exercises: allExercises,
   } = props;
-
-  const selectedGroup = groups.find((g) => g.id === groupId)!;
 
   // filter exercises
   const [exercises, setExercises] = useState([...allExercises]);
@@ -82,7 +79,7 @@ export function ExercisesPage(props: GroupIdPageProps) {
       <Box>
         <TrainerGroupSidebar
           groups={groups}
-          selectedGroup={selectedGroup}
+          selectedGroup={group}
           logout={async () => {
             console.log('Log out');
           }}

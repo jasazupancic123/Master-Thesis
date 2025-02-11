@@ -21,13 +21,11 @@ import {
 import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 
 export default function MembersPage(props: GroupIdPageProps) {
-  const { token, groupId, users, groups, exercises, attributes, components } =
+  const { token, group, users, groups, exercises, attributes, components } =
     props;
 
   const theme = useTheme();
-  const [selectedGroup, setSelectedGroup] = useState(
-    () => groups.find((g) => g.id === groupId)!
-  );
+  const [selectedGroup, setSelectedGroup] = useState(() => group);
 
   const [members, setMembers] = useState<User[]>(() =>
     GroupService.mapMembers(selectedGroup, users)
