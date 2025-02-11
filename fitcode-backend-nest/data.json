@@ -337,216 +337,6 @@
       "level": "beginner",
       "displayName": "Dwayne Johnson",
       "weight": 120
-    },
-    {
-      "email": "nicholas.chandler@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Nicholas Chandler",
-      "weight": 116
-    },
-    {
-      "email": "spencer.brown@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Spencer Brown",
-      "weight": 92
-    },
-    {
-      "email": "leslie.robertson@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Leslie Robertson",
-      "weight": 68
-    },
-    {
-      "email": "ryan.bates@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Ryan Bates",
-      "weight": 141
-    },
-    {
-      "email": "suzanne.taylor@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Suzanne Taylor",
-      "weight": 65
-    },
-    {
-      "email": "juan.dickerson@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Juan Dickerson",
-      "weight": 95
-    },
-    {
-      "email": "kyle.hill@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Kyle Hill",
-      "weight": 85
-    },
-    {
-      "email": "kelly.logan@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Kelly Logan",
-      "weight": 136
-    },
-    {
-      "email": "shane.mcmahon@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Shane Mcmahon",
-      "weight": 115
-    },
-    {
-      "email": "russell.evans@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Russell Evans",
-      "weight": 112
-    },
-    {
-      "email": "jamie.peters@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Jamie Peters",
-      "weight": 135
-    },
-    {
-      "email": "mark.thompson@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Mark Thompson",
-      "weight": 112
-    },
-    {
-      "email": "richard.shelton@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Richard Shelton",
-      "weight": 84
-    },
-    {
-      "email": "april.whitaker@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "April Whitaker",
-      "weight": 81
-    },
-    {
-      "email": "curtis.duncan@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Curtis Duncan",
-      "weight": 86
-    },
-    {
-      "email": "victoria.bean@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Victoria Bean",
-      "weight": 146
-    },
-    {
-      "email": "adam.smith@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Adam Smith",
-      "weight": 72
-    },
-    {
-      "email": "emily.williams@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Emily Williams",
-      "weight": 103
-    },
-    {
-      "email": "cody.smith@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Cody Smith",
-      "weight": 133
-    },
-    {
-      "email": "john.lewis@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "John Lewis",
-      "weight": 119
-    },
-    {
-      "email": "debra.hansen@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Debra Hansen",
-      "weight": 97
-    },
-    {
-      "email": "heather.dunlap@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Heather Dunlap",
-      "weight": 119
-    },
-    {
-      "email": "carmen.perry@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Carmen Perry",
-      "weight": 128
-    },
-    {
-      "email": "troy.dunn@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Troy Dunn",
-      "weight": 116
-    },
-    {
-      "email": "alice.lopez@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Alice Lopez",
-      "weight": 107
-    },
-    {
-      "email": "casey.robinson@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Casey Robinson",
-      "weight": 97
-    },
-    {
-      "email": "kevin.watkins@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Kevin Watkins",
-      "weight": 77
-    },
-    {
-      "email": "mark.anderson@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Mark Anderson",
-      "weight": 135
-    },
-    {
-      "email": "matthew.ruiz.jr.@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Matthew Ruiz Jr.",
-      "weight": 68
-    },
-    {
-      "email": "rick.kennedy@mail.com",
-      "role": "athlete",
-      "level": "beginner",
-      "displayName": "Rick Kennedy",
-      "weight": 127
     }
   ],
   "components": [
@@ -930,22 +720,13 @@
       "field": "prescription",
       "name": "Prescription",
       "type": "select",
-      "values": [
-        "EL BIL",
-        "EL UNI",
-        "INE BIL",
-        "INE UNI"
-      ]
+      "values": ["EL BIL", "EL UNI", "INE BIL", "INE UNI"]
     },
     {
       "field": "priority",
       "name": "Exercise Priority",
       "type": "select",
-      "values": [
-        "Main Lift",
-        "Supplemental Lift",
-        "Assistance Lift"
-      ]
+      "values": ["Main Lift", "Supplemental Lift", "Assistance Lift"]
     },
     {
       "field": "method",
@@ -963,52 +744,31 @@
       "field": "body-region",
       "name": "Body Region",
       "type": "select",
-      "values": [
-        "Total Body",
-        "Upper Body",
-        "Lower Body",
-        "Core"
-      ]
+      "values": ["Total Body", "Upper Body", "Lower Body", "Core"]
     },
     {
       "field": "diagnosis",
       "name": "Diagnosis",
       "type": "select",
-      "values": [
-        "ACL Reconstruction",
-        "Ankle Sprain"
-      ]
+      "values": ["ACL Reconstruction", "Ankle Sprain"]
     },
     {
       "field": "loading-side",
       "name": "Loading Side",
       "type": "select",
-      "values": [
-        "Unilateral",
-        "Bilateral",
-        "Quadruped",
-        "Monopedal",
-        "Bipedal"
-      ]
+      "values": ["Unilateral", "Bilateral", "Quadruped", "Monopedal", "Bipedal"]
     },
     {
       "field": "location",
       "name": "Location",
       "type": "select",
-      "values": [
-        "Home",
-        "Gym",
-        "Outdoor"
-      ]
+      "values": ["Home", "Gym", "Outdoor"]
     },
     {
       "field": "movement-direction",
       "name": "Movement Direction",
       "type": "select",
-      "values": [
-        "Linear",
-        "Lateral"
-      ]
+      "values": ["Linear", "Lateral"]
     },
     {
       "field": "muscle",
@@ -1133,12 +893,7 @@
         {
           "field": "functional",
           "name": "Functional Training Equipment",
-          "values": [
-            "TRX",
-            "Plyo Box",
-            "Jump Rope",
-            "Agility Ladder"
-          ]
+          "values": ["TRX", "Plyo Box", "Jump Rope", "Agility Ladder"]
         }
       ]
     }
