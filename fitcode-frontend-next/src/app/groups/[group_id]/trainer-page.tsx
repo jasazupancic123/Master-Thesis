@@ -1,49 +1,44 @@
 'use client';
 
-import { Box, Button, ToggleButtonGroup } from '@mui/material';
-import { GroupIdPageProps } from './type';
+import { Box, ToggleButtonGroup } from '@mui/material';
+import { FilterTypeViewProps, GroupIdPageProps } from './type';
 import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 import { FilterType } from '@/common/type/filter.type';
 import FilterButton from '../../../components/filter-button';
 import { ReactNode, useState } from 'react';
 import TrainerYearView from '../../../components/trainer-year-view';
-import MyModal from '@/components/modal';
-import AddCycleModal from '@/components/add-cycle-modal';
 import TrainerCycleView from '@/components/trainer-cycle-view';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import TrainerWeekView from '@/components/trainer-week-view';
 
 export default function TrainerPage(props: GroupIdPageProps) {
-  const {
-    token,
-    group,
-    users,
-    groups,
-    exercises,
-    attributes,
-    components,
-    trainings,
-  } = props;
+  const { group, groups, trainings } = props;
 
   const [filter, setFilter] = useState<FilterType>('day');
-  const [selectedGroup, setSelectedGroup] = useState(() => group);
   const [selectedTrainings, setSelectedTrainings] = useState(() => trainings);
+  const [selectedGroup, setSelectedGroup] = useState(() => group);
+  const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
+    () => group.cycles[0]
+  );
 
-  const newProps = {
+  const newProps: FilterTypeViewProps = {
     ...props,
     group: selectedGroup,
     setSelectedGroup,
     trainings: selectedTrainings,
     setSelectedTrainings,
+    selectedCycle,
+    setSelectedCycle,
   };
 
   const mapper: Record<FilterType, ReactNode> = {
     day: 'Day',
-    week: 'Week',
+    week: <TrainerWeekView {...newProps} />,
     cycle: <TrainerCycleView {...newProps} />,
     year: <TrainerYearView {...newProps} />,
   };
 
-  const [modal, setModal] = useState({ add_cycle: false });
   const screenSize = useScreenSize();
 
   return (

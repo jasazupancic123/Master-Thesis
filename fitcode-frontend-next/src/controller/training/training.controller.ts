@@ -31,7 +31,7 @@ export class TrainingController {
   static async update(
     token: string,
     trainingId: string,
-    body: DateRange & { components: TrainingPlan }
+    body: Partial<DateRange & { components: TrainingPlan }>
   ) {
     return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }

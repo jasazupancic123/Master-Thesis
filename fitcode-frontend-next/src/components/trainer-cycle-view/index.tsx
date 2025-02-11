@@ -18,22 +18,20 @@ import {
   handleDeleteTrainingComponent,
   handleCreateTraining,
 } from './state';
+import SelectInput from '../select-input';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { RotateRight } from '@mui/icons-material';
 
 export default function TrainerCycleView(props: FilterTypeViewProps) {
   const {
     token,
     group,
-    setSelectedGroup,
-    users,
-    groups,
-    exercises,
-    attributes,
     components,
     trainings,
     setSelectedTrainings,
+    selectedCycle,
+    setSelectedCycle,
   } = props;
-
-  const [selectedCycle, setSelectedCycle] = useState(() => group.cycles?.[0]);
 
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [createTraining, setCreateTraining] = useState({
@@ -104,6 +102,21 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
           )}
         </Box>
       </Box>
+
+      {/* Choose cycle */}
+      <Box mb={2} />
+      <SelectInput<Cycle>
+        label="Cycle"
+        icon={<RotateRight />}
+        value={selectedCycle?.id || ''}
+        items={group.cycles}
+        itemKey="id"
+        itemName="name"
+        setValue={(value) => {
+          const cycle = group.cycles.find((cycle) => cycle.id === value)!;
+          setSelectedCycle(cycle);
+        }}
+      />
 
       {selectedCycle && (
         <Box p={2} borderRadius={2} borderColor="primary.main">
