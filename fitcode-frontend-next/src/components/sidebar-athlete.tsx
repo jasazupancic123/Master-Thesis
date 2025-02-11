@@ -39,10 +39,7 @@ export default function SidebarAthlete(props: Props) {
         justifyContent="center"
         alignItems="center"
       >
-        <Logo
-          width={screenSize.isLandscapeMobile || screenSize.isMobile ? 80 : 120}
-          height={screenSize.isLandscapeMobile || screenSize.isMobile ? 40 : 60}
-        />
+        <Logo width={120} height={35} />
       </Stack>
 
       <Box

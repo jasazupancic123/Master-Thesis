@@ -6,7 +6,6 @@ import {
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-provider';
-import IconButton from '@mui/material/IconButton';
 import { LogoutRounded } from '@mui/icons-material';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
@@ -69,11 +68,12 @@ export default function BottomNavigation({
           }}
         />
       ))}
-
-      {/* Logout Button */}
-      <IconButton onClick={logout}>
-        <LogoutRounded />
-      </IconButton>
+      <BNAction
+        key="logout"
+        label="Sign out"
+        icon={<LogoutRounded />} // Just pass the icon directly
+        onClick={logout} // Add onClick here instead
+      />
     </BN>
   );
 }

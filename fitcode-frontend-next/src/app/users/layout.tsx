@@ -10,7 +10,7 @@ interface Props {
 export default function Layout({ children }: Props) {
   return (
     <Container component="main" maxWidth="lg">
-      <Sidebar title="USERS" />
+      <Sidebar />
 
       <Box mt={20}>{children}</Box>
     </Container>

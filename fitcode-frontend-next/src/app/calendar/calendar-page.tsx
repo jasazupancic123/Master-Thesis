@@ -18,8 +18,8 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { CalendarPageProps } from './props';
 import { fetchAthleteTrainings, handleNavigate } from './state';
 import { Training } from '@/controller/training/type/training.type';
-/* import 'react-big-calendar/lib/css/react-big-calendar.css';
-import './styles.css'; */
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './styles.css';
 
 const events = [
   {
