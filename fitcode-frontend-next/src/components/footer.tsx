@@ -9,6 +9,7 @@ import TwitterIcon from '@mui/icons-material/X';
 import Copyright from '@/components/copyright';
 import Image from 'next/image';
 import { SITE_MAIL } from '@/common/constant/browser.constant';
+import Logo from './logo';
 
 export default function Footer() {
   return (
@@ -20,7 +21,7 @@ export default function Footer() {
           alignItems: 'center',
           gap: { xs: 4, sm: 8 },
           pb: { xs: 8, sm: 10 },
-          pt: { xs: 8, sm: 5 },
+          pt: { xs: 8, sm: 4 },
           textAlign: { sm: 'center', md: 'left' },
         }}
       >
@@ -42,9 +43,14 @@ export default function Footer() {
           >
             <Box sx={{ width: { xs: '100%', sm: '60%' } }}>
               <Box>
-                <Image src="/logo.png" width={210} height={70} alt="Logo" />
+                <Logo width={180} height={52} />
               </Box>
-              <Typography variant="body2" fontWeight={600} gutterBottom>
+              <Typography
+                variant="body2"
+                fontWeight={600}
+                gutterBottom
+                sx={{ mt: 2 }}
+              >
                 Contact Us
               </Typography>
               <Typography variant="body2" color="text.secondary" mb={2}>

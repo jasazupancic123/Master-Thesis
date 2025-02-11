@@ -16,10 +16,12 @@ import {
   handleDragChange,
   handleUpdateCycleDates,
 } from './state';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 dayjs.extend(dayOfYear);
 
 export default function MultiCycleSlider(props: Props) {
+  const screenSize = useScreenSize();
   const { token, groupId, cycles, selectedGroup, setSelectedGroup } = props;
 
   const theme = useTheme();
@@ -107,6 +109,7 @@ export default function MultiCycleSlider(props: Props) {
       flexDirection="column"
       alignItems="center"
       p={3}
+      pb={!screenSize.isMobile && !screenSize.isLandscapeMobile ? 3 : 0}
       width="100%"
     >
       {/* Year Navigation */}

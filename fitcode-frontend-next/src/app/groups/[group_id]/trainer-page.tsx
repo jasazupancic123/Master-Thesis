@@ -10,6 +10,7 @@ import TrainerYearView from '../../../components/trainer-year-view';
 import MyModal from '@/components/modal';
 import AddCycleModal from '@/components/add-cycle-modal';
 import TrainerCycleView from '@/components/trainer-cycle-view';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainerPage(props: GroupIdPageProps) {
   const { token, groupId, users, groups, exercises, attributes, components } =
@@ -27,12 +28,16 @@ export default function TrainerPage(props: GroupIdPageProps) {
     year: <TrainerYearView {...props} />,
   };
 
-  const [modal, setModal] = useState({
-    add_cycle: false,
-  });
+  const [modal, setModal] = useState({ add_cycle: false });
+  const screenSize = useScreenSize();
 
   return (
-    <Box mt="16px" ml="45px">
+    <Box
+      mt="16px"
+      ml={screenSize.isLandscapeMobile || screenSize.isMobile ? '0' : '45px'}
+      mx={screenSize.isLandscapeMobile || screenSize.isMobile ? 1 : undefined}
+      pl={!screenSize.isLandscapeMobile && !screenSize.isMobile ? 2.25 : 0}
+    >
       <TrainerGroupSidebar
         groups={groups}
         selectedGroup={selectedGroup}
