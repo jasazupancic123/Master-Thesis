@@ -17,8 +17,10 @@ import { Cycle } from '@/controller/group/type/cycle.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupIdPageProps } from '../../app/groups/[group_id]/type';
 import { handleUpdateCycle } from './state';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainerYearView(props: GroupIdPageProps) {
+  const screenSize = useScreenSize();
   const { token, groupId, users, groups, exercises, attributes, components } =
     props;
 
@@ -110,17 +112,17 @@ export default function TrainerYearView(props: GroupIdPageProps) {
             width="100%"
             height="100%"
           >
-          <EditIcon
-            style={{
-              backgroundColor: theme.palette.primary.main,
-              padding: 1,
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              setShowEditModal(true);
-              setEditCycle(params.row as Cycle);
-            }}
-          />
+            <EditIcon
+              style={{
+                backgroundColor: theme.palette.primary.main,
+                padding: 1,
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                setShowEditModal(true);
+                setEditCycle(params.row as Cycle);
+              }}
+            />
           </Box>
         );
       },
@@ -149,7 +151,16 @@ export default function TrainerYearView(props: GroupIdPageProps) {
           Cycles
         </Typography>
 
-        <Box sx={{ width: '50%', mt: 2, mb: 2 }}>
+        <Box
+          sx={{
+            width:
+              !screenSize.isMobile && !screenSize.isLandscapeMobile
+                ? '50%'
+                : '90%',
+            mt: 2,
+            mb: 2,
+          }}
+        >
           <DataGrid
             rows={selectedGroup.cycles}
             columns={columns}
