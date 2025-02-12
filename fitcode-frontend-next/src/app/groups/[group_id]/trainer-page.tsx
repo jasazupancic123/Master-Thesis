@@ -11,6 +11,8 @@ import TrainerCycleView from '@/components/trainer-cycle-view';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import TrainerWeekView from '@/components/trainer-week-view';
+import dayjs from 'dayjs';
+import TrainerDayView from '@/components/trainer-day-view';
 
 export default function TrainerPage(props: GroupIdPageProps) {
   const { group, groups, trainings } = props;
@@ -22,6 +24,12 @@ export default function TrainerPage(props: GroupIdPageProps) {
     () => group.cycles[0]
   );
 
+  const [date, setDate] = useState({
+    start: dayjs().startOf('year'),
+    end: dayjs().endOf('year'),
+    custom: false,
+  });
+
   const newProps: FilterTypeViewProps = {
     ...props,
     group: selectedGroup,
@@ -30,10 +38,12 @@ export default function TrainerPage(props: GroupIdPageProps) {
     setSelectedTrainings,
     selectedCycle,
     setSelectedCycle,
+    date,
+    setDate,
   };
 
   const mapper: Record<FilterType, ReactNode> = {
-    day: 'Day',
+    day: <TrainerDayView {...newProps} />,
     week: <TrainerWeekView {...newProps} />,
     cycle: <TrainerCycleView {...newProps} />,
     year: <TrainerYearView {...newProps} />,
@@ -57,14 +67,14 @@ export default function TrainerPage(props: GroupIdPageProps) {
       />
       <Box
         bgcolor="background.paper"
-        sx={{
-          borderTopLeftRadius: '20px',
-          borderTopRightRadius: '20px',
-        }}
         display="flex"
         flexDirection="column"
         justifyContent="center"
         alignItems="center"
+        sx={{
+          borderTopLeftRadius: '20px',
+          borderTopRightRadius: '20px',
+        }}
       >
         {/* Date filter */}
         <Box mx="auto" justifyContent="center" mb={2}>

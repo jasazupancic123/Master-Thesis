@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Select from '@mui/material/Select';
@@ -12,7 +13,6 @@ import {
   SET_TYPE,
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
-import { useEffect, useState } from 'react';
 import {
   ExerciseMeta,
   TrainingExercise,

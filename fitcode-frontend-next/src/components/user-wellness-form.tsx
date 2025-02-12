@@ -1,18 +1,12 @@
 import { SetState } from '@/common/type/state.type';
-import { Box, Chip, Slider, useMediaQuery, useTheme } from '@mui/material';
+import { Chip, Slider } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { useScreenSize } from '@/context/screen-size-provider';
-import {
-  DatePicker,
-  LocalizationProvider,
-  StaticDatePicker,
-} from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { UserMeta } from '@/controller/user/type/user-meta.type';
 
 interface Props {

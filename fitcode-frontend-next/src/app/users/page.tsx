@@ -1,6 +1,5 @@
 'use client';
 
-import withAuth from '@/components/with-auth';
 import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import EditIcon from '@mui/icons-material/Edit';
@@ -23,7 +22,7 @@ import { UserController } from '@/controller/user/user.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { CustomClaims } from '@/controller/user/type/custom-claims.type';
 
-function Page() {
+export default function Page() {
   const users = useFetch<User[]>('user');
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
@@ -173,5 +172,3 @@ function Page() {
     </>
   );
 }
-
-export default withAuth(Page, [UserRole.ADMIN]);
