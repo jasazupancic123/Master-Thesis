@@ -24,6 +24,8 @@ export interface GroupIdPageProps {
 export type FilterTypeViewProps = GroupIdPageProps & {
   setSelectedGroup: SetState<Group>;
   setSelectedTrainings: SetState<Training[]>;
+  selectedTraining: Training | null;
+  setSelectedTraining: SetState<Training | null>;
   selectedCycle: Cycle | null;
   setSelectedCycle: SetState<Cycle | null>;
   date: { start: Dayjs; end: Dayjs; custom: boolean };

@@ -13,12 +13,16 @@ import { Cycle } from '@/controller/group/type/cycle.type';
 import TrainerWeekView from '@/components/trainer-week-view';
 import dayjs from 'dayjs';
 import TrainerDayView from '@/components/trainer-day-view';
+import { Training } from '@/controller/training/type/training.type';
 
 export default function TrainerPage(props: GroupIdPageProps) {
   const { group, groups, trainings } = props;
 
   const [filter, setFilter] = useState<FilterType>('day');
   const [selectedTrainings, setSelectedTrainings] = useState(() => trainings);
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(
+    null
+  );
   const [selectedGroup, setSelectedGroup] = useState(() => group);
   const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     () => group.cycles[0]
@@ -36,6 +40,8 @@ export default function TrainerPage(props: GroupIdPageProps) {
     setSelectedGroup,
     trainings: selectedTrainings,
     setSelectedTrainings,
+    selectedTraining,
+    setSelectedTraining,
     selectedCycle,
     setSelectedCycle,
     date,

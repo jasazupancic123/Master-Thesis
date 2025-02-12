@@ -22,10 +22,15 @@ export type FilteredExercises = {
 };
 
 export type SubgroupsProps = {
+  token: string;
   training: Training;
+  setSelectedTraining: SetState<Training | null>;
+  users: User[];
   setTrainings: SetState<Training[]>;
   setModal: SetState<{ subgroup: boolean; editSubgroup: boolean }>;
   setEditedSubgroup: SetState<Subgroup | null>;
+  detectedSubgroupChanges: boolean;
+  setDetectedSubgroupChanges: SetState<boolean>;
 };
 
 export type AddSubgroupInput = Parameters<
