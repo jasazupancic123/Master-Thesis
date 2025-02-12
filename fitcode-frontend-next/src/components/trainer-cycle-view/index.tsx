@@ -11,33 +11,27 @@ import TrainingWeek from '@/components/training-cycle-view-week';
 import { Component } from '@/controller/component/type/component.type';
 import ExerciseChips from '@/components/exercise-chips';
 import { ComponentService } from '@/controller/component/component.service';
-import { GroupIdPageProps } from '@/app/groups/[group_id]/type';
+import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
 import {
   handleAddTrainingComponents,
   handleDeleteTraining,
   handleDeleteTrainingComponent,
   handleCreateTraining,
 } from './state';
+import SelectInput from '../select-input';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { RotateRight } from '@mui/icons-material';
 
-export default function TrainerCycleView(props: GroupIdPageProps) {
+export default function TrainerCycleView(props: FilterTypeViewProps) {
   const {
     token,
-    groupId,
-    users,
-    groups,
-    exercises,
-    attributes,
+    group,
     components,
-    trainings: allTrainings,
+    trainings,
+    setSelectedTrainings,
+    selectedCycle,
+    setSelectedCycle,
   } = props;
-
-  const [selectedGroup, setSelectedGroup] = useState(
-    () => groups.find((g) => g.id === groupId)!
-  );
-
-  const [selectedCycle, setSelectedCycle] = useState(
-    () => selectedGroup.cycles?.[0]
-  );
 
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [createTraining, setCreateTraining] = useState({
@@ -45,8 +39,6 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
     to: dayjs().add(1, 'hour'),
     date: dayjs(),
   });
-
-  const [trainings, setTrainings] = useState(() => allTrainings);
 
   return (
     <Box pb={10}>
@@ -111,6 +103,21 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
         </Box>
       </Box>
 
+      {/* Choose cycle */}
+      <Box mb={2} />
+      <SelectInput<Cycle>
+        label="Cycle"
+        icon={<RotateRight />}
+        value={selectedCycle?.id || ''}
+        items={group.cycles}
+        itemKey="id"
+        itemName="name"
+        setValue={(value) => {
+          const cycle = group.cycles.find((cycle) => cycle.id === value)!;
+          setSelectedCycle(cycle);
+        }}
+      />
+
       {selectedCycle && (
         <Box p={2} borderRadius={2} borderColor="primary.main">
           {/* Cycle name and weeks count */}
@@ -143,8 +150,8 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
                     handleCreateTraining(
                       token,
                       input,
-                      selectedGroup,
-                      setTrainings,
+                      group,
+                      setSelectedTrainings,
                       selectedCycle,
                       selectedComponents,
                       setSelectedComponents,
@@ -156,12 +163,16 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
                       token,
                       trainingId,
                       input,
-                      setTrainings,
+                      setSelectedTrainings,
                       components
                     )
                   }
                   deleteTraining={(trainingId) =>
-                    handleDeleteTraining(trainingId, token, setTrainings)
+                    handleDeleteTraining(
+                      trainingId,
+                      token,
+                      setSelectedTrainings
+                    )
                   }
                   deleteTrainingComponent={(trainingId, componentId) =>
                     handleDeleteTrainingComponent(
@@ -169,7 +180,7 @@ export default function TrainerCycleView(props: GroupIdPageProps) {
                       componentId,
                       token,
                       {},
-                      setTrainings,
+                      setSelectedTrainings,
                       components
                     )
                   }

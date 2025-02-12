@@ -1,6 +1,5 @@
 'use client';
 
-import withAuth from '@/components/with-auth';
 import React, { useState } from 'react';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
@@ -25,7 +24,7 @@ const DEFAULT_COMPONENT: Component = {
   parents: [],
 };
 
-function Page() {
+export default function Page() {
   // context
   const { token, components } = useAppContext();
 
@@ -158,5 +157,3 @@ function Page() {
     </Box>
   );
 }
-
-export default withAuth(Page, [UserRole.ADMIN]);

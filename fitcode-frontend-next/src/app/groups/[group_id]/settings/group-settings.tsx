@@ -11,14 +11,12 @@ import TrainerGroupSidebar from '../../../../components/trainer-group-sidebar';
 import { handleDeleteGroup, handleUpdateGroup } from './state';
 
 export default function GroupSettings(props: GroupIdPageProps) {
-  const { token, groupId, users, groups, exercises, attributes, components } =
+  const { token, group, users, groups, exercises, attributes, components } =
     props;
 
   const router = useRouter();
   const [showCycleModal, setShowCyclesModal] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(
-    () => groups.find((g) => g.id === groupId)!
-  );
+  const [selectedGroup, setSelectedGroup] = useState(() => group);
 
   return (
     <>

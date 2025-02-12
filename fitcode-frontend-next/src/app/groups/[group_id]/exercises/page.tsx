@@ -38,12 +38,13 @@ export default async function Page({ params }: GroupIdPageParams) {
   return (
     <ExercisesPage
       token={token}
-      groupId={groupId}
+      group={group}
       groups={groups}
       users={users}
       exercises={exercises}
       attributes={attributes}
       components={components}
+      trainings={[]}
     />
   );
 }

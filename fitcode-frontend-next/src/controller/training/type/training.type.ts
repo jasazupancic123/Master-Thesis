@@ -3,6 +3,7 @@ import { Subgroup } from './subgroup.type';
 import { UserMeta } from '@/controller/user/type/user-meta.type';
 import { DateRange } from '@/common/type/date-range.type';
 import { BaseEntity } from '@/common/type/entity.type';
+import { User } from '@/controller/user/type/user.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
@@ -15,4 +16,7 @@ export type Training = BaseEntity &
     components: TrainingPlan;
     subgroups: { [subgroupId: string]: Subgroup };
     meta: { [userId: string]: UserMeta };
+
+    // mapped properties
+    members?: User[];
   };

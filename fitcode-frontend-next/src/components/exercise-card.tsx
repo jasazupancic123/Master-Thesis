@@ -1,7 +1,7 @@
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 interface Props {
   exercise: Exercise;

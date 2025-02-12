@@ -1,34 +1,54 @@
 'use client';
 
-import { Box, Button, ToggleButtonGroup } from '@mui/material';
-import { GroupIdPageProps } from './type';
+import { Box, ToggleButtonGroup } from '@mui/material';
+import { FilterTypeViewProps, GroupIdPageProps } from './type';
 import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 import { FilterType } from '@/common/type/filter.type';
 import FilterButton from '../../../components/filter-button';
 import { ReactNode, useState } from 'react';
 import TrainerYearView from '../../../components/trainer-year-view';
-import MyModal from '@/components/modal';
-import AddCycleModal from '@/components/add-cycle-modal';
 import TrainerCycleView from '@/components/trainer-cycle-view';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import TrainerWeekView from '@/components/trainer-week-view';
+import dayjs from 'dayjs';
+import TrainerDayView from '@/components/trainer-day-view';
 
 export default function TrainerPage(props: GroupIdPageProps) {
-  const { token, groupId, users, groups, exercises, attributes, components } =
-    props;
+  const { group, groups, trainings } = props;
 
   const [filter, setFilter] = useState<FilterType>('day');
-  const [selectedGroup, setSelectedGroup] = useState(
-    () => groups.find((g) => g.id === groupId)!
+  const [selectedTrainings, setSelectedTrainings] = useState(() => trainings);
+  const [selectedGroup, setSelectedGroup] = useState(() => group);
+  const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
+    () => group.cycles[0]
   );
 
-  const mapper: Record<FilterType, ReactNode> = {
-    day: 'Day',
-    week: 'Week',
-    cycle: <TrainerCycleView {...props} />,
-    year: <TrainerYearView {...props} />,
+  const [date, setDate] = useState({
+    start: dayjs().startOf('year'),
+    end: dayjs().endOf('year'),
+    custom: false,
+  });
+
+  const newProps: FilterTypeViewProps = {
+    ...props,
+    group: selectedGroup,
+    setSelectedGroup,
+    trainings: selectedTrainings,
+    setSelectedTrainings,
+    selectedCycle,
+    setSelectedCycle,
+    date,
+    setDate,
   };
 
-  const [modal, setModal] = useState({ add_cycle: false });
+  const mapper: Record<FilterType, ReactNode> = {
+    day: <TrainerDayView {...newProps} />,
+    week: <TrainerWeekView {...newProps} />,
+    cycle: <TrainerCycleView {...newProps} />,
+    year: <TrainerYearView {...newProps} />,
+  };
+
   const screenSize = useScreenSize();
 
   return (
@@ -47,14 +67,14 @@ export default function TrainerPage(props: GroupIdPageProps) {
       />
       <Box
         bgcolor="background.paper"
-        sx={{
-          borderTopLeftRadius: '20px',
-          borderTopRightRadius: '20px',
-        }}
         display="flex"
         flexDirection="column"
         justifyContent="center"
         alignItems="center"
+        sx={{
+          borderTopLeftRadius: '20px',
+          borderTopRightRadius: '20px',
+        }}
       >
         {/* Date filter */}
         <Box mx="auto" justifyContent="center" mb={2}>
@@ -71,35 +91,7 @@ export default function TrainerPage(props: GroupIdPageProps) {
             ))}
           </ToggleButtonGroup>
         </Box>
-
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2, mb: 2 }}
-          onClick={() => setModal({ ...modal, add_cycle: true })}
-        >
-          Add Cycle
-        </Button>
       </Box>
-
-      {props.groupId && (
-        <>
-          {/* Group Settings modal */}
-          <MyModal
-            isOpen={modal.add_cycle}
-            setIsOpen={(open) => setModal({ ...modal, add_cycle: open })}
-            onCancel={() => setModal({ ...modal, add_cycle: false })}
-            cancelText="Close"
-          >
-            <AddCycleModal
-              token={token}
-              onClose={() => setModal({ ...modal, add_cycle: false })}
-              selectedGroup={selectedGroup}
-              setSelectedGroup={setSelectedGroup}
-            />
-          </MyModal>
-        </>
-      )}
 
       <Box>{mapper[filter]}</Box>
     </Box>
