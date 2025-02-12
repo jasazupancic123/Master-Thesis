@@ -26,22 +26,17 @@ export default async function Page({ params }: GroupIdPageParams) {
   const group = await GroupController.findById(token, groupId);
   if (!group) return notFound();
 
-  const [users, groups, exercises, attributes, components] = await Promise.all([
-    UserController.findAll(token),
-    GroupController.findAll(token),
-    ExerciseController.findAll(token),
-    ExerciseController.findAttributes(),
-    ComponentController.findAll(),
-  ]);
+  const [groups] = await Promise.all([GroupController.findAll(token)]);
 
   const props: GroupIdPageProps = {
     token,
-    groupId,
-    users,
+    group,
     groups,
-    exercises,
-    attributes,
-    components,
+    users: [],
+    exercises: [],
+    attributes: [],
+    components: [],
+    trainings: [],
   };
 
   return <AddGroupPage {...props} />;

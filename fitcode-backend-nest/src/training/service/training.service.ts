@@ -279,7 +279,13 @@ export class TrainingService {
       );
     } else await this.trainingRepository.updateDoc(ref.trainingId, input);
 
-    return { ...training, ...input };
+    return {
+      ...training,
+      ...(input.components && { from: input.components }),
+      ...(input.membersIds && { from: input.membersIds }),
+      ...(input.from && { from: input.from }),
+      ...(input.to && { from: input.to }),
+    };
   }
 
   async remove(user: User, ref: Required<TrainingRef>): Promise<void> {

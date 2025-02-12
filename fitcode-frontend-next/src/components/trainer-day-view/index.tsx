@@ -1,7 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
 import Circles from '@/components/circles';
 import dayjs from 'dayjs';
 import { TextField, Tooltip } from '@mui/material';
@@ -11,40 +10,47 @@ import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
 import Grid from '@mui/material/Grid';
 import Grid2 from '@mui/material/Grid2';
-import { useAppContext } from '@/context/app-provider';
 import { Day } from '@/common/service/util/date.util';
 import DeleteIcon from '@mui/icons-material/Delete';
-import toast from 'react-hot-toast';
 import { COLOR } from '@/common/constant/browser.constant';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 import Button from '@mui/material/Button';
-import MyModal from '@/components/modal';
 import { Update } from '@mui/icons-material';
-import Warning from '@/components/warning';
-import { useFetch } from '@/hook/use-fetch';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Training } from '@/controller/training/type/training.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import { SetType } from '@/controller/training/enum/set-type.enum';
-import { WorkloadType } from '@/controller/training/enum/workload-type.enum';
-import { Effort } from '@/controller/training/enum/effort.enum';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
 import BorderColor from '@/components/border-color';
-import TrainingExerciseCard from '@/components/training-exercise-card';
-import Subgroups from './subgroups-dnd';
-import { COLORS } from '@/common/constant/color.constant';
+import TrainingExerciseCard from '@/components/trainer-day-view/training-exercise-card';
+import Subgroups from './subgroups';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
+import TrainingMembers from './training-members';
+import { FilteredExercises } from './type';
+import {
+  ExerciseMeta,
+  TrainingComponent,
+} from '@/controller/training/type/training-plan.type';
+import {
+  addExercise,
+  addSuperset,
+  deleteComponent,
+  deleteExercise,
+  updateExercise,
+  deleteSuperset,
+  updateSuperset,
+  filterExercises,
+} from './state';
 
 const commonService = CommonService.instance;
 
-export default function TrainerDayView(props: any) {
-  const { token, components } = useAppContext();
-  const allExercises = useFetch<Exercise[]>('/exercise');
-
-  const { group, cycle } = props.selected;
-  const [trainings, setTrainings] = useState<Training[]>([]);
+export default function TrainerDayView(props: FilterTypeViewProps) {
+  const {
+    token,
+    components,
+    users,
+    selectedCycle,
+    trainings,
+    setSelectedTrainings,
+    exercises,
+    setDate,
+  } = props;
 
   const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [days, setDays] = useState(
@@ -55,457 +61,45 @@ export default function TrainerDayView(props: any) {
     }))
   );
 
-  const [modal, setModal] = useState({ subgroup: false, edit_subgroup: false });
-  const [create, setCreate] = useState({
-    subgroup: {
-      name: '',
-      membersIds: [],
-    },
-  });
-
-  const [exercises, setExercises] = useState({
-    show: false,
-    componentId: null as string | null,
-    superset: 0,
-    search: { name: '' },
-    pagination: { page: 1, pageSize: 9, pages: 1, total: 0 },
-    data: [] as Exercise[],
-  });
-
   const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
+  const [modal, setModal] = useState({ subgroup: false, editSubgroup: false });
+  const [create, setCreate] = useState({
+    subgroup: { name: '', membersIds: [] },
+  });
 
-  async function addSubgroup() {
-    const group = props.selected.group;
-    if (!group) return;
-
-    /* ADD API CALLS HERE, THIS IS OFFLINE ONLY */
-    const newSubgroup = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: create.subgroup.name,
-      membersIds: create.subgroup.membersIds,
-    } as unknown as Subgroup;
-
-    group.subgroups.push(newSubgroup);
-    setModal((prev) => ({ ...prev, subgroup: false }));
-    create.subgroup.name = '';
-    create.subgroup.membersIds = [];
-    return;
-
-    try {
-      // const subgroup = await GroupController.addSubgroup(token, group.id, {
-      //   name: create.subgroup.name,
-      //   membersIds: create.subgroup.membersIds,
-      //   from: props.date.start.toDate(),
-      //   to: props.date.end.toDate(),
-      // });
-      // set selected subgroup
-      // props.setSelected((prev) => ({ ...prev, subgroup }));
-      // // add subgroup to selected group
-      // props.setSelected((prev) => ({
-      //   ...prev,
-      //   group: {
-      //     ...prev.group!,
-      //     availableMembersIds: (prev.group!.availableMembersIds || []).filter(
-      //       (id) => !subgroup.membersIds.includes(id)
-      //     ),
-      //     subgroups: [...prev.group!.subgroups, subgroup],
-      //   },
-      // }));
-      // setModal((prev) => ({ ...prev, subgroup: false }));
-      // setCreate({ ...create, subgroup: { name: '', membersIds: [] } });
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to add subgroup');
+  const [filteredExercises, setFilteredExercises] = useState<FilteredExercises>(
+    {
+      show: false,
+      componentId: null,
+      superset: 0,
+      search: { name: '' },
+      pagination: { page: 1, pageSize: 9, pages: 1, total: 0 },
+      data: [],
     }
-  }
-
-  async function editSubgroup() {
-    const group = props.selected.group;
-    if (!group) return;
-
-    if (!editedSubgroup) return;
-
-    const subgroup = group.subgroups.find(
-      (s: any) => s.id === editedSubgroup.id
-    );
-    if (!subgroup) return;
-
-    subgroup.name = editedSubgroup.name; // <-- Use editedSubgroup, not create.subgroup
-    subgroup.membersIds = editedSubgroup.membersIds; // <-- Use editedSubgroup
-
-    setModal((prev) => ({ ...prev, edit_subgroup: false }));
-    setEditedSubgroup(null);
-  }
-
-  async function deleteComponent(trainingId: string, componentId: string) {
-    try {
-      await TrainingController.deleteComponent(
-        token,
-        trainingId,
-        componentId,
-        {}
-      );
-
-      // update training components
-      setTrainings((prev) =>
-        prev.map((training) => {
-          if (training.id === trainingId) {
-            const { [componentId]: _, ...rest } = training.components;
-            training.components = rest;
-          }
-
-          return training;
-        })
-      );
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to delete training component');
-    }
-  }
-
-  async function addSuperset(
-    trainingId: string,
-    componentId: string,
-    input: any
-  ) {
-    try {
-      let response = await TrainingController.addSuperset(
-        token,
-        trainingId,
-        componentId,
-        { ...input, exercises: {} as [] }
-      );
-
-      TrainingService.mapComponents(response, components.flat);
-      TrainingService.mapExercises(response, allExercises.data!);
-
-      setTrainings((prev) =>
-        prev.map((training) =>
-          training.id === trainingId ? response : training
-        )
-      );
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to add superset');
-    }
-  }
-
-  async function updateSuperset(
-    trainingId: string,
-    componentId: string,
-    superset: number,
-    input: any
-  ) {
-    try {
-      let response = await TrainingController.updateSuperset(
-        token,
-        trainingId,
-        componentId,
-        superset,
-        input
-      );
-
-      TrainingService.mapComponents(response, components.flat);
-      TrainingService.mapExercises(response, allExercises.data!);
-
-      setTrainings((prev) =>
-        prev.map((training) =>
-          training.id === trainingId ? response : training
-        )
-      );
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to add superset');
-    }
-  }
-
-  async function deleteSuperset(
-    trainingId: string,
-    componentId: string,
-    superset: number
-  ) {
-    try {
-      await TrainingController.deleteSuperset(
-        token,
-        trainingId,
-        componentId,
-        superset,
-        {}
-      );
-
-      /* setTrainings((prev) =>
-        prev.map((training) =>
-          training.id === trainingId
-            ? {
-                ...training,
-                components: training.components?.map((component) =>
-                  component.id === componentId
-                    ? {
-                        ...component,
-                        supersets: component.supersets?.filter(
-                          (_, i) => i !== superset
-                        ),
-                      }
-                    : component
-                ),
-              }
-            : training
-        )
-      ); */
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to delete superset');
-    }
-  }
-
-  async function addExercise(
-    trainingId: string,
-    componentId: string,
-    superset: number,
-    exerciseId: string
-  ) {
-    try {
-      let response = await TrainingController.addExercises(
-        token,
-        trainingId,
-        componentId,
-        superset,
-        {
-          exercises: [
-            {
-              id: exerciseId,
-              meta: {
-                sets: 3,
-                setType: SetType.REPS,
-                setTypeValue: 10,
-                workloadType: WorkloadType.KG,
-                workloadValue: 20,
-                rec: 60,
-                tempo: '0:0:0',
-                effort: Effort.MODERATE,
-              },
-            },
-          ],
-        }
-      );
-
-      TrainingService.mapComponents(response, components.flat);
-      TrainingService.mapExercises(response, allExercises.data!);
-
-      setTrainings((prev) =>
-        prev.map((training) =>
-          training.id === trainingId ? response : training
-        )
-      );
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to add exercise');
-    }
-  }
-
-  async function updateExercise(
-    trainingId: string,
-    componentId: string,
-    superset: number,
-    exerciseId: string,
-    input: any
-  ) {
-    try {
-      let response = await TrainingController.updateExercise(
-        token,
-        trainingId,
-        componentId,
-        superset,
-        exerciseId,
-        input
-      );
-
-      TrainingService.mapComponents(response, components.flat);
-      TrainingService.mapExercises(response, allExercises.data!);
-
-      setTrainings((prev) =>
-        prev.map((training) =>
-          training.id === trainingId ? response : training
-        )
-      );
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to update exercise');
-    }
-  }
-
-  async function deleteExercise(
-    trainingId: string,
-    componentId: string,
-    superset: number,
-    exerciseId: string
-  ) {
-    try {
-      await TrainingController.deleteExercise(
-        token,
-        trainingId,
-        componentId,
-        superset,
-        exerciseId,
-        {}
-      );
-
-      /* setTrainings((prev) =>
-        prev.map((training) =>
-          training.id === trainingId
-            ? {
-                ...training,
-                components: training.components?.map((component) =>
-                  component.id === componentId
-                    ? {
-                        ...component,
-                        supersets: component?.supersets?.map((s, i) =>
-                          i === superset
-                            ? {
-                                ...s,
-                                exercises: s?.exercises?.filter(
-                                  (e) => e.id !== exerciseId
-                                ),
-                              }
-                            : s
-                        ),
-                      }
-                    : component
-                ),
-              }
-            : training
-        )
-      ); */
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to delete exercise');
-    }
-  }
-
-  async function handleSave() {
-    console.log('handle save:', trainings);
-
-    try {
-    } catch (e: any) {
-      console.log(e?.message);
-    }
-  }
-
-  /**
-   * Fetch trainings' details
-   */
-  useEffect(() => {
-    if (!allExercises.data) return;
-
-    async function fetchTrainings() {
-      try {
-        let response = await TrainingController.findAll(token, {});
-
-        response.map((t) => {
-          TrainingService.mapComponents(t, components.flat);
-          TrainingService.mapExercises(t, allExercises.data!);
-        });
-
-        /* setTrainings(
-          response.map((training) => ({
-            ...training,
-            exercises: training.components.map((component) => ({
-              componentId: component.id,
-              global: false,
-              search: '',
-              pagination: { page: 1, pageSize: 6, pages: 1, total: 0 },
-              data: [],
-            })),
-          }))
-        ); */
-      } catch (e: any) {
-        toast.error(e.message || 'Failed to fetch trainings');
-      }
-    }
-
-    fetchTrainings().then();
-  }, [
-    props.selected.cycle?.id,
-    props.selected.cycle?.trainings,
-    props.date.start,
-    props.date.end,
-    props.date.custom,
-    token,
-  ]);
+  );
 
   /**
    * Filter exercises
    */
   useEffect(() => {
-    async function fetchExercises() {
-      if (!exercises.componentId || !exercises.show) return;
-      if (allExercises.loading || allExercises.error || !allExercises.data)
-        return;
+    if (!filteredExercises.show || !filteredExercises.componentId) return;
 
-      const filter = {
-        componentsIds: [exercises.componentId],
-        name: exercises.search.name,
-      };
-
-      let filtered = ExerciseService.filter(
-        allExercises.data!,
-        filter,
-        components.flat
-      );
-
-      const total = filtered.length;
-
-      // paginate
-      const pages = Math.ceil(total / exercises.pagination.pageSize);
-      const page =
-        pages < exercises.pagination.pages ? 1 : exercises.pagination.page;
-      filtered = commonService.generic.paginate(filtered, {
-        page,
-        pageSize: exercises.pagination.pageSize,
-        orderBy: { field: 'name', value: 'asc' },
-      });
-
-      // populate exercises
-      filtered.map((exercise) => {
-        ExerciseService.mapComponents(exercise, components.flat);
-        ExerciseService.mapAttributes(exercise);
-      });
-
-      setExercises((prev) => ({
-        ...prev,
-        data: filtered,
-        pagination: {
-          ...prev.pagination,
-          total,
-          pages: Math.ceil(total / prev.pagination.pageSize),
-        },
-      }));
-    }
-
-    fetchExercises().then();
+    filterExercises(
+      filteredExercises,
+      exercises,
+      components,
+      setFilteredExercises
+    );
   }, [
-    exercises.show,
-    exercises.componentId,
-    exercises.search.name,
-    exercises.pagination.page,
-    exercises.pagination.pageSize,
     token,
+    filteredExercises.show,
+    filteredExercises.componentId,
+    filteredExercises.search.name,
+    filteredExercises.pagination.page,
+    filteredExercises.pagination.pageSize,
   ]);
 
-  /**
-   * Reset exercises
-   */
-  useEffect(() => {
-    setExercises((prev) => ({
-      ...prev,
-      componentId: null,
-      superset: 0,
-      data: [],
-      show: false,
-      global: true,
-      search: { name: '' },
-      pagination: {
-        ...prev.pagination,
-        page: 1,
-      },
-    }));
-  }, [props.date.start, props.date.end, props.date.custom]);
-
-  const borderColors = COLORS;
-
-  if (!group || !cycle) return <Warning title="Select cycle" topBorder />;
+  if (!selectedCycle) return <>Select cycle!</>;
 
   return (
     <>
@@ -526,7 +120,7 @@ export default function TrainerDayView(props: any) {
           setValue={(value) => {
             setDay({ label: '', date: dayjs(value) });
 
-            props.setDate({
+            setDate({
               start: dayjs(value).startOf('day'),
               end: dayjs(value).endOf('day'),
               custom: true,
@@ -564,101 +158,10 @@ export default function TrainerDayView(props: any) {
             );
           }}
         />
-        {/* Available Members */}
-        <Stack direction="row" py={2} px={2}>
-          {!props.loading && (
-            <Stack
-              direction="row"
-              spacing={1}
-              justifyContent="flex-start"
-              alignItems="center"
-              sx={{
-                width: '100%', // Ensure it takes 90% of its parent’s width
-                maxWidth: 1500,
-                border: '1px solid grey',
-                borderRadius: 2,
-                rowGap: 1,
-                p: 2,
-                display: 'flex',
-                flexWrap: 'wrap',
-                margin: 'auto',
-                justifyContent: 'center',
-                minHeight:
-                  group.availableMembersIds &&
-                  group.availableMembersIds.length > 0
-                    ? 80
-                    : undefined,
-              }}
-            >
-              {group.members && group.members.length > 0 ? (
-                // Sort members: those in a subgroup first, those without a subgroup last
-                [...group.members]
-                  .sort((a, b) => {
-                    const aSubgroupIndex = group.subgroups.findIndex(
-                      (subgroup: any) => subgroup.membersIds.includes(a.uid)
-                    );
-                    const bSubgroupIndex = group.subgroups.findIndex(
-                      (subgroup: any) => subgroup.membersIds.includes(b.uid)
-                    );
 
-                    return aSubgroupIndex === -1
-                      ? 1
-                      : bSubgroupIndex === -1
-                        ? -1
-                        : aSubgroupIndex - bSubgroupIndex;
-                  })
-                  .map((member) => {
-                    if (!member) return null;
-
-                    // Find the subgroup index
-                    const subgroupIndex = group.subgroups.findIndex(
-                      (subgroup: any) =>
-                        subgroup.membersIds.includes(member.uid)
-                    );
-
-                    // Assign border color based on the subgroup index
-                    const borderColor =
-                      subgroupIndex !== -1
-                        ? borderColors[
-                            subgroupIndex + (1 % borderColors.length)
-                          ]
-                        : undefined;
-
-                    return (
-                      <Tooltip key={member.uid} title={member.email}>
-                        <Avatar
-                          sx={{
-                            width: 60,
-                            height: 60,
-                            border: `3px solid ${borderColor}`, // Apply the border color
-                          }}
-                        >
-                          {member.email[0].toUpperCase()}
-                        </Avatar>
-                      </Tooltip>
-                    );
-                  })
-              ) : (
-                <Typography variant="caption" color="textSecondary">
-                  No available members
-                </Typography>
-              )}
-            </Stack>
-          )}
-        </Stack>
-
-        <Subgroups
-          loading={props.loading}
-          selected={props.selected}
-          setSelected={props.setSelected}
-          setModal={setModal}
-          borderColors={borderColors}
-          group={group}
-          setEditedSubgroup={setEditedSubgroup}
-        />
         {/* Training set groups with set exercises */}
         {trainings.length === 0 ? (
-          <Warning title="No session for current date" />
+          <>No session for current date</>
         ) : (
           <Box mt={4} pb={15}>
             {trainings.map((training, i) => (
@@ -671,19 +174,27 @@ export default function TrainerDayView(props: any) {
                   p: 1,
                 }}
               >
+                <TrainingMembers training={training} users={users} />
+                {/* <Subgroups
+                  training={training}
+                  setTrainings={setSelectedTrainings}
+                  setModal={setModal}
+                  setEditedSubgroup={setEditedSubgroup}
+                /> */}
+
                 <Typography variant="h6" p={1}>
                   Training {i + 1} (
                   {CommonService.instance.date.formatTime(training.from)} -{' '}
                   {CommonService.instance.date.formatTime(training.to)})
                 </Typography>
 
-                {Object.values(training?.components)?.map(
-                  (component: any, i) => {
+                {Object.values(training?.components || {})?.map(
+                  (component, i) => {
                     return (
                       <Fragment key={i}>
                         {/* Exercise list */}
-                        {exercises.show &&
-                          exercises.componentId === component.id && (
+                        {filteredExercises.show &&
+                          filteredExercises.componentId === component.id && (
                             // exercises.superset && (
                             <Stack>
                               <Stack
@@ -695,7 +206,7 @@ export default function TrainerDayView(props: any) {
                                 <IconButton
                                   sx={{ width: 40, height: 40, p: 1 }}
                                   onClick={() => {
-                                    setExercises((prev) => ({
+                                    setFilteredExercises((prev) => ({
                                       ...prev,
                                       pagination: {
                                         ...prev.pagination,
@@ -716,22 +227,26 @@ export default function TrainerDayView(props: any) {
                                   spacing={1}
                                   p={1}
                                   columns={
-                                    exercises.pagination.pageSize >
-                                    exercises.pagination.total
-                                      ? exercises.pagination.total
-                                      : exercises.pagination.pageSize
+                                    filteredExercises.pagination.pageSize >
+                                    filteredExercises.pagination.total
+                                      ? filteredExercises.pagination.total
+                                      : filteredExercises.pagination.pageSize
                                   }
                                 >
-                                  {exercises.data.map((exercise) => (
+                                  {filteredExercises.data.map((exercise) => (
                                     <Grid2
                                       key={exercise.id}
                                       sx={{ cursor: 'pointer' }}
                                       onClick={() =>
                                         addExercise(
+                                          token,
                                           training.id,
-                                          exercises.componentId!,
-                                          exercises.superset!,
-                                          exercise.id
+                                          filteredExercises.componentId!,
+                                          filteredExercises.superset!,
+                                          exercise.id,
+                                          setSelectedTrainings,
+                                          components,
+                                          exercises
                                         )
                                       }
                                     >
@@ -762,7 +277,7 @@ export default function TrainerDayView(props: any) {
                                 <IconButton
                                   sx={{ width: 40, height: 40, p: 1 }}
                                   onClick={() => {
-                                    setExercises((prev) => ({
+                                    setFilteredExercises((prev) => ({
                                       ...prev,
                                       pagination: {
                                         ...prev.pagination,
@@ -785,7 +300,7 @@ export default function TrainerDayView(props: any) {
                                   sx={{ p: 1 }}
                                   color="secondary"
                                   onClick={() =>
-                                    setExercises((prev) => ({
+                                    setFilteredExercises((prev) => ({
                                       ...prev,
                                       show: false,
                                     }))
@@ -800,9 +315,9 @@ export default function TrainerDayView(props: any) {
                                   fullWidth
                                   variant="outlined"
                                   size="small"
-                                  value={exercises.search.name}
+                                  value={filteredExercises.search.name}
                                   onChange={(e) =>
-                                    setExercises((prev) => ({
+                                    setFilteredExercises((prev) => ({
                                       ...prev,
                                       search: { name: e.target.value },
                                     }))
@@ -837,9 +352,8 @@ export default function TrainerDayView(props: any) {
                                 }}
                               >
                                 {
-                                  components.flat.find(
-                                    ({ id }) => id === component.id
-                                  )?.name
+                                  components.find((c) => c.id === component.id)
+                                    ?.name
                                 }
                               </Typography>
 
@@ -848,16 +362,19 @@ export default function TrainerDayView(props: any) {
                                 <IconButton
                                   onClick={async () => {
                                     await addSuperset(
+                                      token,
                                       training.id,
                                       component.id,
                                       {
-                                        exercises: [],
                                         color:
                                           COLOR[
                                             (component.supersets?.length || 0) %
                                               COLOR.length
                                           ],
-                                      }
+                                      },
+                                      setSelectedTrainings,
+                                      components,
+                                      exercises
                                     );
                                   }}
                                 >
@@ -869,7 +386,12 @@ export default function TrainerDayView(props: any) {
                             <IconButton
                               size="small"
                               onClick={() =>
-                                deleteComponent(training.id, component.id)
+                                deleteComponent(
+                                  token,
+                                  training.id,
+                                  component.id,
+                                  setSelectedTrainings
+                                )
                               }
                               sx={{ mr: 1 }}
                             >
@@ -891,7 +413,7 @@ export default function TrainerDayView(props: any) {
 
                                       <Box>
                                         {Object.values(
-                                          superset?.exercises
+                                          superset?.exercises || {}
                                         )?.map((exercise: any, k) => (
                                           <Box
                                             key={`${i}-${exercise.id}-${k}`}
@@ -910,10 +432,15 @@ export default function TrainerDayView(props: any) {
                                                   size="small"
                                                   onClick={() =>
                                                     deleteExercise(
+                                                      token,
                                                       training.id,
                                                       component.id,
                                                       i,
-                                                      exercise.id
+                                                      exercise.id,
+                                                      {},
+                                                      setSelectedTrainings,
+                                                      components,
+                                                      exercises
                                                     )
                                                   }
                                                 >
@@ -929,6 +456,7 @@ export default function TrainerDayView(props: any) {
                                                   size="small"
                                                   onClick={() =>
                                                     updateExercise(
+                                                      token,
                                                       training.id,
                                                       component.id,
                                                       i,
@@ -941,7 +469,10 @@ export default function TrainerDayView(props: any) {
                                                           .toString(16)
                                                           .padStart(6, '0')}`,
                                                         order: 0,
-                                                      }
+                                                      },
+                                                      setSelectedTrainings,
+                                                      components,
+                                                      exercises
                                                     )
                                                   }
                                                 >
@@ -954,11 +485,17 @@ export default function TrainerDayView(props: any) {
                                               exercise={exercise}
                                               onChange={async (meta) => {
                                                 await updateExercise(
+                                                  token,
                                                   training.id,
                                                   component.id,
                                                   i,
                                                   exercise.id,
-                                                  { meta }
+                                                  {
+                                                    meta: meta as ExerciseMeta,
+                                                  },
+                                                  setSelectedTrainings,
+                                                  components,
+                                                  exercises
                                                 );
                                               }}
                                             />
@@ -990,12 +527,14 @@ export default function TrainerDayView(props: any) {
                                           <Tooltip title="Add exercises">
                                             <IconButton
                                               onClick={() => {
-                                                setExercises((prev) => ({
-                                                  ...prev,
-                                                  show: true,
-                                                  componentId: component.id,
-                                                  superset: i,
-                                                }));
+                                                setFilteredExercises(
+                                                  (prev) => ({
+                                                    ...prev,
+                                                    show: true,
+                                                    componentId: component.id,
+                                                    superset: i,
+                                                  })
+                                                );
                                               }}
                                             >
                                               <AddIcon />
@@ -1012,9 +551,12 @@ export default function TrainerDayView(props: any) {
                                             size="small"
                                             onClick={() =>
                                               deleteSuperset(
+                                                token,
                                                 training.id,
                                                 component.id,
-                                                superset.order
+                                                superset.order,
+                                                {},
+                                                setSelectedTrainings
                                               )
                                             }
                                           >
@@ -1031,6 +573,7 @@ export default function TrainerDayView(props: any) {
                                             size="small"
                                             onClick={() =>
                                               updateSuperset(
+                                                token,
                                                 training.id,
                                                 component.id,
                                                 superset.order,
@@ -1041,7 +584,10 @@ export default function TrainerDayView(props: any) {
                                                     .toString(16)
                                                     .padStart(6, '0')}`,
                                                   order: 0,
-                                                }
+                                                },
+                                                setSelectedTrainings,
+                                                components,
+                                                exercises
                                               )
                                             }
                                           >
@@ -1063,65 +609,6 @@ export default function TrainerDayView(props: any) {
             ))}
           </Box>
         )}
-        {/* Create subgroup modal */}
-        <MyModal
-          isOpen={modal.subgroup}
-          setIsOpen={(subgroup) => setModal((prev) => ({ ...prev, subgroup }))}
-          title="Create Subgroup"
-          onCancel={() => setModal((prev) => ({ ...prev, subgroup: false }))}
-          onConfirm={addSubgroup}
-        >
-          <Stack spacing={4} p={1}>
-            {/* Name */}
-            <TextField
-              label="Name"
-              fullWidth
-              variant="outlined"
-              size="small"
-              value={create.subgroup.name}
-              onChange={(e) =>
-                setCreate((prev) => ({
-                  ...prev,
-                  subgroup: { ...prev.subgroup, name: e.target.value },
-                }))
-              }
-            />
-          </Stack>
-        </MyModal>
-
-        {/* Edit subgroup modal */}
-        <MyModal
-          isOpen={modal.edit_subgroup}
-          setIsOpen={(edit_subgroup) =>
-            setModal((prev) => ({ ...prev, edit_subgroup }))
-          }
-          title="Edit Subgroup"
-          onCancel={() => {
-            setModal((prev) => ({ ...prev, edit_subgroup: false }));
-            setEditedSubgroup(null);
-          }}
-          onConfirm={editSubgroup}
-        >
-          <Stack spacing={4} p={1}>
-            {/* Name */}
-            <TextField
-              label="Name"
-              fullWidth
-              value={editedSubgroup?.name || ''}
-              variant="outlined"
-              size="small"
-              onChange={(e) =>
-                setEditedSubgroup((prev) => {
-                  if (!prev) return prev; // Return prev instead of undefined
-                  return {
-                    ...prev,
-                    name: e.target.value,
-                  };
-                })
-              }
-            />
-          </Stack>
-        </MyModal>
       </Box>
     </>
   );

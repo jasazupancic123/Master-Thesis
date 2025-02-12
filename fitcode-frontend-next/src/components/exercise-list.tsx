@@ -1,6 +1,5 @@
 import Typography from '@mui/material/Typography';
 import { Card, CardContent, CardMedia } from '@mui/material';
-import React, { useState } from 'react';
 import Stack from '@mui/material/Stack';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 
@@ -12,7 +11,6 @@ interface Props {
 
 export default function ExerciseList(props: Props) {
   const { exercises, selectedExercises, setSelectedExercises } = props;
-  const [global, setGlobal] = useState(true);
 
   return (
     <Stack direction="row" spacing={1} mt={5}>
