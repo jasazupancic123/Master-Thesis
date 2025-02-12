@@ -1,6 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import InfoIcon from '@mui/icons-material/Info';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { Training } from '@/controller/training/type/training.type';
+import { SetState } from '@/common/type/state.type';
+import { COLORS } from '@/common/constant/color.constant';
 import {
   Box,
   Tooltip,
@@ -11,14 +19,7 @@ import {
   CardContent,
   IconButton,
 } from '@mui/material';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import InfoIcon from '@mui/icons-material/Info';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { SetState } from '@/common/type/state.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
+import { SubgroupsProps } from './type';
 
 const defaultSubgroup: Subgroup = {
   id: 'default',
@@ -30,81 +31,94 @@ const defaultSubgroup: Subgroup = {
 };
 
 export default function Subgroups(props: SubgroupsProps) {
+  const { training, setTrainings, setModal } = props;
+
   const [showSubgroups, setShowSubgroups] = useState(false);
 
   const subgroupsWithDefault = [
     defaultSubgroup,
-    ...(props.selected.group?.subgroups || []),
+    ...(Object.values(training.subgroups) || []),
   ];
 
   const onDragEnd = (result: any) => {
-    const { source, destination, draggableId } = result;
+    const { destination, draggableId } = result;
     if (!destination) return;
 
-    const updatedGroup = { ...props.group };
+    // remove member from all subgroups, including the default subgroup
+    const updatedTraining = { ...training };
+    const subgroups = Object.values(updatedTraining.subgroups);
 
-    // Remove member from all subgroups, including the default subgroup
-    [defaultSubgroup, ...updatedGroup.subgroups].forEach((subgroup) => {
-      subgroup.membersIds = subgroup.membersIds.filter(
-        (id) => id !== draggableId
-      );
+    [defaultSubgroup, ...subgroups].forEach((s) => {
+      s.membersIds = s.membersIds.filter((id) => id !== draggableId);
     });
 
     // Add member to the new subgroup
-    if (destination.droppableId === 'default') {
+    if (destination.droppableId === 'default')
       defaultSubgroup.membersIds.push(draggableId);
-    } else if (destination.droppableId === 'available-members') {
-      updatedGroup.availableMembersIds?.push(draggableId);
-    } else {
-      const targetSubgroup = updatedGroup.subgroups.find(
+    else if (destination.droppableId === 'available-members')
+      updatedTraining.membersIds?.push(draggableId);
+    else {
+      const targetSubgroup = subgroups.find(
         (s) => s.id === destination.droppableId
       );
-      if (targetSubgroup) {
-        targetSubgroup.membersIds.push(draggableId);
-      }
-      updatedGroup.availableMembersIds =
-        updatedGroup.availableMembersIds?.filter((id) => id !== draggableId);
+
+      if (targetSubgroup) targetSubgroup.membersIds.push(draggableId);
+
+      updatedTraining.membersIds = updatedTraining.membersIds?.filter(
+        (id) => id !== draggableId
+      );
     }
 
-    // Ensure the default subgroup updates when a member is removed from it
+    // ensure the default subgroup updates when a member is removed from it
     defaultSubgroup.membersIds = defaultSubgroup.membersIds.filter(
-      (id) => !updatedGroup.subgroups.some((s) => s.membersIds.includes(id))
+      (id) => !subgroups.some((s) => s.membersIds.includes(id))
     );
 
-    props.setSelected((prev) => ({ ...prev, group: updatedGroup }));
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
+    );
   };
 
   const handleRightClick = (memberId: string) => {
-    const updatedGroup = { ...props.group };
+    const updatedTraining = { ...training };
+    const subgroups = Object.values(updatedTraining.subgroups);
 
-    updatedGroup.subgroups.forEach((subgroup) => {
-      subgroup.membersIds = subgroup.membersIds.filter((id) => id !== memberId);
+    subgroups.forEach((s) => {
+      s.membersIds = s.membersIds.filter((id) => id !== memberId);
     });
 
-    if (!updatedGroup.availableMembersIds?.includes(memberId)) {
-      updatedGroup.availableMembersIds?.push(memberId);
-    }
+    if (!updatedTraining.membersIds?.includes(memberId))
+      updatedTraining.membersIds?.push(memberId);
 
-    props.setSelected((prev) => ({ ...prev, group: updatedGroup }));
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
+    );
   };
 
   const handleDelete = (subgroupId: string) => {
-    const updatedGroup = { ...props.group };
-    const deletedSubgroup = updatedGroup.subgroups.find(
-      (subgroup) => subgroup.id === subgroupId
-    );
+    const updatedTraining = { ...training };
+    const subgroups = Object.values(updatedTraining.subgroups);
 
-    updatedGroup.subgroups = updatedGroup.subgroups.filter(
-      (subgroup) => subgroup.id !== subgroupId
-    );
+    const deletedSubgroup = subgroups.find((s) => s.id === subgroupId);
+    updatedTraining.subgroups = subgroups
+      .filter((s) => s.id !== subgroupId)
+      .reduce(
+        (acc, s) => {
+          acc[s.id] = s;
+          return acc;
+        },
+        {} as { [key: string]: Subgroup }
+      );
 
-    if (deletedSubgroup) {
-      updatedGroup.availableMembersIds = [
-        ...updatedGroup.availableMembersIds!,
+    if (deletedSubgroup)
+      updatedTraining.membersIds = [
+        ...updatedTraining.membersIds!,
         ...deletedSubgroup.membersIds!,
       ];
-    }
-    props.setSelected((prev) => ({ ...prev, group: updatedGroup }));
+
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
+    );
   };
 
   return (
@@ -143,22 +157,22 @@ export default function Subgroups(props: SubgroupsProps) {
         </>
       )}
 
-      {showSubgroups && props.selected?.group?.subgroups && (
+      {showSubgroups && Object.values(training.subgroups).length > 0 && (
         <>
           <Box
             sx={{
               width: '100%',
               display:
-                props.selected.group.subgroups.length % 3 === 0
+                Object.values(training.subgroups).length % 3 === 0
                   ? 'flex'
                   : 'grid',
               flexWrap: 'wrap',
               gridTemplateColumns:
-                props.selected.group.subgroups.length > 0
+                Object.values(training.subgroups).length > 0
                   ? 'repeat(3, minmax(300px, 1fr))'
                   : 'minmax(300px, 1fr)',
               justifyContent:
-                props.selected.group.subgroups.length % 3 !== 0
+                Object.values(training.subgroups).length % 3 !== 0
                   ? 'center'
                   : 'initial',
               gap: 2,
@@ -185,7 +199,7 @@ export default function Subgroups(props: SubgroupsProps) {
                       maxHeight: 210,
                       margin: 1,
                       transition: 'border 0.2s',
-                      border: `1px solid ${props.borderColors[index % 20]}`,
+                      border: `1px solid ${COLORS[index % 20]}`,
                       display: 'flex',
                       flexDirection: 'column',
                       position: 'relative', // Needed for absolute positioning of icons
@@ -205,7 +219,10 @@ export default function Subgroups(props: SubgroupsProps) {
                         <IconButton
                           size="small"
                           onClick={() => {
-                            props.setModal({ edit_subgroup: true });
+                            setModal((prev) => ({
+                              ...prev,
+                              editSubgroup: true,
+                            }));
                             props.setEditedSubgroup(subgroup as Subgroup);
                           }}
                           sx={{ p: 0.5 }}
@@ -248,9 +265,10 @@ export default function Subgroups(props: SubgroupsProps) {
                         }}
                       >
                         {subgroup.membersIds?.map((id, idx) => {
-                          const user = props.group.members?.find(
+                          const user = training.members?.find(
                             (m) => m.uid === id
                           );
+
                           return (
                             user && (
                               <Draggable

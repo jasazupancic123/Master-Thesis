@@ -127,7 +127,7 @@ export class TrainingController {
     body: { subgroupId?: string; color?: string }
   ) {
     return api.post<Training>(
-      `/training/${trainingId}/component/${componentId}`,
+      `/training/${trainingId}/component/${componentId}/superset`,
       body,
       { token }
     );
@@ -175,7 +175,7 @@ export class TrainingController {
     }
   ) {
     return api.post<Training>(
-      `/training/${trainingId}/component/${componentId}/superset/${superset}`,
+      `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise`,
       body,
       { token }
     );
