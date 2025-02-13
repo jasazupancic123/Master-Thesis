@@ -12,9 +12,8 @@ import TrainingMembers from './training-members';
 import { FilteredExercises } from './type';
 import { filterExercises } from './state';
 import MyModal from '../modal';
-import { Training } from '@/controller/training/type/training.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import TrainingComponentPage from './training';
+import TrainingCard from './training-card';
 
 const commonService = CommonService.instance;
 
@@ -219,7 +218,7 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
         ) : (
           <>
             {amTraining && (
-              <TrainingComponentPage
+              <TrainingCard
                 token={token}
                 setSelectedTrainings={setSelectedTrainings}
                 selectedTraining={selectedTraining}
@@ -237,7 +236,7 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
             )}
 
             {pmTraining && (
-              <TrainingComponentPage
+              <TrainingCard
                 token={token}
                 setSelectedTrainings={setSelectedTrainings}
                 selectedTraining={selectedTraining}
