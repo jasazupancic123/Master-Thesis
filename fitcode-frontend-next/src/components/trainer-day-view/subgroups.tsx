@@ -26,8 +26,7 @@ import { TrainingController } from '@/controller/training/training.controller';
 import toast from 'react-hot-toast';
 
 export default function Subgroups(props: SubgroupsProps) {
-  const { token, training, setSelectedTraining, setTrainings, setModal } =
-    props;
+  const { training, setTrainings, setModal, users, setEditedSubgroup } = props;
 
   const [showSubgroups, setShowSubgroups] = useState(false);
 
@@ -39,17 +38,17 @@ export default function Subgroups(props: SubgroupsProps) {
   );
 
   useEffect(() => {
-    if (!props.training) return;
+    if (!training) return;
 
     const members: string[] = [];
     for (const subgroup of subgroups) {
       members.push(...subgroup.membersIds);
     }
 
-    const ids = props.training.membersIds.filter((id) => !members.includes(id));
+    const ids = training.membersIds.filter((id) => !members.includes(id));
 
-    setAvailableMembers(props.users.filter((user) => ids.includes(user.uid)));
-  }, [props.training, showSubgroups]);
+    setAvailableMembers(users.filter((user) => ids.includes(user.uid)));
+  }, [training, showSubgroups]);
 
   useEffect(() => {
     setSubgroups(Object.values(training.subgroups));
@@ -93,7 +92,7 @@ export default function Subgroups(props: SubgroupsProps) {
       if (!availableMembers.some((user) => user.uid === draggableId)) {
         setAvailableMembers((prev) => [
           ...prev,
-          props.users.find((user) => user.uid === draggableId)!,
+          users.find((user) => user.uid === draggableId)!,
         ]);
       }
     } else {
@@ -129,7 +128,7 @@ export default function Subgroups(props: SubgroupsProps) {
     });
     setAvailableMembers((prev) => [
       ...prev,
-      props.users.find((user) => user.uid === memberId)!,
+      users.find((user) => user.uid === memberId)!,
     ]);
     setDetectedSubgroupChanges(true);
   };
@@ -281,7 +280,7 @@ export default function Subgroups(props: SubgroupsProps) {
                               ...prev,
                               editSubgroup: true,
                             }));
-                            props.setEditedSubgroup(subgroup as Subgroup);
+                            setEditedSubgroup(subgroup as Subgroup);
                           }}
                           sx={{ p: 0.5 }}
                         >
@@ -326,7 +325,7 @@ export default function Subgroups(props: SubgroupsProps) {
                           const userId = training.membersIds.find(
                             (memberId) => memberId === id
                           );
-                          const user = props.users.find(
+                          const user = users.find(
                             (user) => user.uid === userId
                           );
 
@@ -379,7 +378,7 @@ export default function Subgroups(props: SubgroupsProps) {
             {/* Add New Subgroup Button */}
             <Card
               onClick={() =>
-                props.setModal((prev: any) => ({
+                setModal((prev: any) => ({
                   ...prev,
                   subgroup: true,
                 }))
