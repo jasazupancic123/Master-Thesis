@@ -143,22 +143,34 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
         mb={3}
         pb={3}
       >
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2, mb: 2 }}
-          onClick={() => setShowAddCycleModal(true)}
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          sx={{
+            backgroundColor: theme.palette.background.paper,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+          }}
         >
-          Add Cycle
-        </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mb: 1 }}
+            onClick={() => setShowAddCycleModal(true)}
+          >
+            Add Cycle
+          </Button>
 
-        <MultiCycleSlider
-          token={token}
-          groupId={group.id}
-          cycles={group.cycles}
-          selectedGroup={group}
-          setSelectedGroup={setSelectedGroup}
-        />
+          <MultiCycleSlider
+            token={token}
+            groupId={group.id}
+            cycles={group.cycles}
+            selectedGroup={group}
+            setSelectedGroup={setSelectedGroup}
+          />
+        </Box>
 
         <Typography variant="h6" gutterBottom mt={3}>
           Cycles
