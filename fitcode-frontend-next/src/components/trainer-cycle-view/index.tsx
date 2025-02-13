@@ -1,26 +1,23 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
-import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Alert } from '@mui/material';
-import { CommonService } from '@/common/service/common.service';
+import { useTheme } from '@mui/material';
 import TrainingWeek from '@/components/training-cycle-view-week';
 import { Component } from '@/controller/component/type/component.type';
 import ExerciseChips from '@/components/exercise-chips';
 import { ComponentService } from '@/controller/component/component.service';
 import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
+import SelectInput from '../select-input';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { RotateRight } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 import {
   handleAddTrainingComponents,
   handleDeleteTraining,
   handleDeleteTrainingComponent,
-  handleCreateTraining,
 } from './state';
-import SelectInput from '../select-input';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { RotateRight } from '@mui/icons-material';
 
 export default function TrainerCycleView(props: FilterTypeViewProps) {
   const {
@@ -33,109 +30,100 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
     setSelectedCycle,
   } = props;
 
+  const theme = useTheme();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
-  const [createTraining, setCreateTraining] = useState({
-    from: dayjs(),
-    to: dayjs().add(1, 'hour'),
-    date: dayjs(),
-  });
+  const [isSticky, setIsSticky] = useState(false);
+
+  // Effect to track scroll position and set sticky mode
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setIsSticky(scrollY > 150); // Change 150px threshold if needed
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <Box pb={10}>
-      <Box>
-        {/* Exercises */}
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        width="100%"
+        pt={2}
+        sx={{
+          backgroundColor: theme.palette.background.paper,
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20,
+        }}
+      >
+        <SelectInput<Cycle>
+          label="Cycle"
+          icon={<RotateRight />}
+          value={selectedCycle?.id || ''}
+          items={group.cycles}
+          itemKey="id"
+          itemName="name"
+          setValue={(value) => {
+            const cycle = group.cycles.find((cycle) => cycle.id === value)!;
+            setSelectedCycle(cycle);
+          }}
+        />
+
+        {/* Exercise Chips (Sticky Behavior) */}
         <Box
           display="flex"
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          pt={3}
-          pb={selectedComponents.length ? 0 : 3}
+          pb={0}
           sx={{
             borderBottomRightRadius: '20px',
             borderBottomLeftRadius: '20px',
-            backgroundColor: '#1A2B3C',
+            borderTopRightRadius: isSticky ? '20px' : 0,
+            borderTopLeftRadius: isSticky ? '20px' : 0,
+            backgroundColor: theme.palette.background.paper,
+            position: isSticky ? 'fixed' : undefined, // Sticky when scrolling
+            top: isSticky ? '70px' : undefined, // Adjust top position
+            zIndex: 1000, // Ensure it stays above other elements
+            transition: 'top 1s ease-in-out', // Smooth transition effect
+            boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
+            border: isSticky ? '1px solid grey' : 'none',
           }}
         >
           <ExerciseChips
-            noSelectionLabel="None"
             components={ComponentService.toTree(components)}
             selected={selectedComponents}
             setSelected={(component) =>
               setSelectedComponents(component as Component[])
             }
+            bgColor={theme.palette.background.default}
+            primaryColor={theme.palette.primary.main}
           />
-
-          {selectedComponents.length > 0 && (
-            <LocalizationProvider dateAdapter={AdapterDayjs as any}>
-              <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                mt={5}
-              >
-                {/* Start time */}
-                <TimePicker
-                  label="Start Time"
-                  value={createTraining.from}
-                  sx={{ mr: 1 }}
-                  onChange={(date) =>
-                    setCreateTraining({ ...createTraining, from: date! })
-                  }
-                />
-
-                {/* End time */}
-                <TimePicker
-                  label="End Time"
-                  value={createTraining.to}
-                  sx={{ mr: 1 }}
-                  onChange={(date) =>
-                    setCreateTraining({ ...createTraining, to: date! })
-                  }
-                />
-              </Box>
-
-              <Alert severity="info" sx={{ mt: 2, alignSelf: 'flex-end' }}>
-                Select time and click on a day below to create a training
-              </Alert>
-            </LocalizationProvider>
-          )}
         </Box>
+
+        <Typography
+          variant="caption"
+          sx={{
+            pb: 2,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <InfoIcon sx={{ fontSize: 20, mb: 0.5, mr: 0.5 }} /> Click on
+          components to remove them. If all components are removed from a
+          training, the training will be deleted. To add a component to an
+          existing training, select the component and click on the training.
+        </Typography>
       </Box>
 
       {/* Choose cycle */}
       <Box mb={2} />
-      <SelectInput<Cycle>
-        label="Cycle"
-        icon={<RotateRight />}
-        value={selectedCycle?.id || ''}
-        items={group.cycles}
-        itemKey="id"
-        itemName="name"
-        setValue={(value) => {
-          const cycle = group.cycles.find((cycle) => cycle.id === value)!;
-          setSelectedCycle(cycle);
-        }}
-      />
 
       {selectedCycle && (
-        <Box p={2} borderRadius={2} borderColor="primary.main">
-          {/* Cycle name and weeks count */}
-          <Stack direction="row" spacing={5} alignItems="center">
-            <Typography variant="h6" color="primary" fontWeight="bold">
-              {selectedCycle.name}
-            </Typography>
-
-            <Typography variant="body1" fontSize={20}>
-              {selectedCycle.weeks.length || 0} weeks
-            </Typography>
-
-            <Typography variant="body1" fontSize={16}>
-              {CommonService.instance.date.format(selectedCycle.from)} -{' '}
-              {CommonService.instance.date.format(selectedCycle.to)}
-            </Typography>
-          </Stack>
-
+        <Box borderRadius={2} borderColor="primary.main">
           {/* Training weeks */}
           <Stack spacing={1} mt={2}>
             {selectedCycle.weeks.map((week, i) => (
@@ -145,19 +133,15 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
                   week={week.map(({ date }) => dayjs(date!))}
                   trainings={trainings}
                   components={selectedComponents}
-                  training={createTraining}
-                  addTraining={(input) =>
-                    handleCreateTraining(
-                      token,
-                      input,
-                      group,
-                      setSelectedTrainings,
-                      selectedCycle,
-                      selectedComponents,
-                      setSelectedComponents,
-                      components
-                    )
+                  selected={selectedComponents}
+                  setSelected={(component) =>
+                    setSelectedComponents(component as Component[])
                   }
+                  token={token}
+                  group={group}
+                  setSelectedTrainings={setSelectedTrainings}
+                  selectedCycle={selectedCycle}
+                  setSelectedComponents={setSelectedComponents}
                   addTrainingComponent={(trainingId, input) =>
                     handleAddTrainingComponents(
                       token,

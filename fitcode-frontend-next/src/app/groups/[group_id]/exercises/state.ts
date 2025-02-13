@@ -75,7 +75,7 @@ export async function addExercise(
 ) {
   if (!item.name) return toast.error('Name is required');
   if (!item.componentsIds?.length)
-    return toast.error('Select at least one component');
+    return toast.error('Select at least one component to add');
 
   try {
     const attributeValues: Record<string, any> = {};

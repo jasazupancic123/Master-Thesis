@@ -13,7 +13,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { Group } from '@/controller/group/type/group.type';
 import { AppBar, Drawer, DrawerHeader } from './style';
@@ -22,14 +21,13 @@ import { Props } from './type';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
+import Logo from '../logo';
+import { Tooltip } from '@mui/material';
 import {
   LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS,
   LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS,
 } from './constant';
-import { useScreenSize } from '@/context/screen-size-provider';
-import { isObject } from '@mui/x-data-grid/internals';
-import Logo from '../logo';
-import { Tooltip } from '@mui/material';
 
 export default function TrainerGroupSidebar(props: Props) {
   const screenSize = useScreenSize();
@@ -126,8 +124,8 @@ export default function TrainerGroupSidebar(props: Props) {
             {Object.values(
               LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
             ).map((link, i) => (
-              <Tooltip title={link.label} placement="right">
-                <ListItem key={i} disablePadding sx={{ display: 'block' }}>
+              <Tooltip title={link.label} placement="right" key={i}>
+                <ListItem disablePadding sx={{ display: 'block' }}>
                   {/* Wrap the entire ListItemButton in Link */}
                   <Link
                     href={link.href}
@@ -166,8 +164,8 @@ export default function TrainerGroupSidebar(props: Props) {
             {Object.entries(LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS).map(
               ([key, link], i) => {
                 return (
-                  <Tooltip title={link.label} placement="right">
-                    <ListItem key={i} disablePadding sx={{ display: 'block' }}>
+                  <Tooltip title={link.label} placement="right" key={i}>
+                    <ListItem disablePadding sx={{ display: 'block' }}>
                       <ListItemButton
                         sx={[
                           { minHeight: 48, px: 2.5 },

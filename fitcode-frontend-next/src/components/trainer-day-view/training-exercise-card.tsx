@@ -6,6 +6,8 @@ import Stack from '@mui/material/Stack';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { Box, FormControl, TextField } from '@mui/material';
+import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
+import { TrainingExerciseCardProps } from './type';
 import {
   SetExerciseOption,
   RECOVERY,
@@ -13,17 +15,8 @@ import {
   SET_TYPE,
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
-import {
-  ExerciseMeta,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
 
-interface Props {
-  exercise: TrainingExercise;
-  onChange: (data: Partial<ExerciseMeta>) => void;
-}
-
-export default function TrainingExerciseCard(props: Props) {
+export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const { exercise, onChange } = props;
   const [state, setState] = useState(() => exercise.meta);
 

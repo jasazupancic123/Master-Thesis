@@ -1,7 +1,6 @@
 import { FilterType } from '@/common/type/filter.type';
-import { Box, ToggleButton } from '@mui/material';
+import { ToggleButton } from '@mui/material';
 import React from 'react';
-import { useTheme } from '@mui/material';
 
 interface Props {
   value: FilterType;
@@ -9,7 +8,6 @@ interface Props {
 }
 
 export default function FilterButton(props: Props) {
-  const theme = useTheme();
   const { value, disabled = false } = props;
 
   return (
