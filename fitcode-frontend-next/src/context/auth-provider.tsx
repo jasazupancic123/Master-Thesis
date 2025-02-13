@@ -1,6 +1,15 @@
 'use client';
 
 import { User } from 'firebase/auth';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { auth } from '@/common/config/firebase.config';
+import { useLocalStorage } from 'usehooks-ts';
+import { useRouter } from 'next/navigation';
+import { LINK_INDEX } from '@/common/constant/navigation.constant';
+import { AuthContextType } from '@/common/type/context.type';
+import { CommonService } from '@/common/service/common.service';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { CustomClaims } from '@/controller/user/type/custom-claims.type';
 import {
   createContext,
   ReactNode,
@@ -8,19 +17,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import { auth } from '@/common/config/firebase.config';
-import { useLocalStorage } from 'usehooks-ts';
-import { useRouter } from 'next/navigation';
-import { LINK_INDEX, LINKS_AUTH } from '@/common/constant/navigation.constant';
-import { AuthContextType } from '@/common/type/context.type';
-import { CommonService } from '@/common/service/common.service';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { CustomClaims } from '@/controller/user/type/custom-claims.type';
-
-interface Props {
-  children: ReactNode;
-}
+import { ChildrenProps } from '@/common/type/props.type';
 
 const AuthContext = createContext<AuthContextType>({
   loading: true,
@@ -31,7 +28,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider = ({ children }: Props) => {
+export const AuthProvider = ({ children }: ChildrenProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
