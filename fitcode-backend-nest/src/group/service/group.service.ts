@@ -234,14 +234,17 @@ export class GroupService {
     const group = await this.findByIdOrFail(user, ref);
     const cycle = this.findCycleOrFail(ref.cycleId, group);
 
-    if (input.from || input.to)
+    if (input.from || input.to) {
+      const from = input.from || cycle.from;
+      const to = input.to || cycle.to;
+
       this.checkCycleOverlap(
         group.cycles.filter((c) => c.id !== cycle.id),
-        {
-          from: input.from || cycle.from,
-          to: input.to || cycle.to,
-        } as Cycle,
+        { from, to } as Cycle,
       );
+
+      cycle.weeks = this.commonService.date.weeks(from, to);
+    }
 
     await this.groupRepository.updateCycle(group.id, ref.cycleId, input);
     return { ...cycle, ...input };

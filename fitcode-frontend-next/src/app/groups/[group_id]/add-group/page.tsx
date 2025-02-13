@@ -6,8 +6,6 @@ import AddGroupPage from './add-group-page';
 import { GroupController } from '@/controller/group/group.controller';
 import { GroupIdPageParams, GroupIdPageProps } from '../type';
 import { notFound } from 'next/navigation';
-import { ComponentController } from '@/controller/component/component.controller';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
 
 export default async function Page({ params }: GroupIdPageParams) {
   // fetch data
@@ -26,13 +24,16 @@ export default async function Page({ params }: GroupIdPageParams) {
   const group = await GroupController.findById(token, groupId);
   if (!group) return notFound();
 
-  const [groups] = await Promise.all([GroupController.findAll(token)]);
+  const [groups, users] = await Promise.all([
+    GroupController.findAll(token),
+    UserController.findAll(token),
+  ]);
 
   const props: GroupIdPageProps = {
     token,
     group,
     groups,
-    users: [],
+    users,
     exercises: [],
     attributes: [],
     components: [],

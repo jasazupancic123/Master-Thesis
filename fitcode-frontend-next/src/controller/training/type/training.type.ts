@@ -10,6 +10,7 @@ export type Training = BaseEntity &
     groupId: string;
     cycleId: string;
     ownerId: string;
+    name: string;
     membersIds: string[];
     subgroupId?: string | null;
     copiedFromId?: string;

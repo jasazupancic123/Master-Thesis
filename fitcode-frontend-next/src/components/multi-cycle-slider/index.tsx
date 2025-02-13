@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
-import { useState, useEffect, useRef, ReactNode } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Range } from 'react-range';
 import { Box, Stack, Typography, IconButton, Button } from '@mui/material';
 import { ArrowLeft, ArrowRight } from '@mui/icons-material';
@@ -10,19 +10,27 @@ import { useTheme } from '@mui/material/styles';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { COLORS } from '@/common/constant/color.constant';
 import { Props } from './type';
+import { useScreenSize } from '@/context/screen-size-provider';
 import {
   changeYear,
   handleDrag,
   handleDragChange,
   handleUpdateCycleDates,
 } from './state';
-import { useScreenSize } from '@/context/screen-size-provider';
 
 dayjs.extend(dayOfYear);
 
 export default function MultiCycleSlider(props: Props) {
   const screenSize = useScreenSize();
-  const { token, groupId, cycles, selectedGroup, setSelectedGroup } = props;
+  const {
+    token,
+    groupId,
+    cycles,
+    selectedGroup,
+    setSelectedGroup,
+    selectedCycle,
+    setSelectedCycle,
+  } = props;
 
   const theme = useTheme();
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
@@ -335,7 +343,9 @@ export default function MultiCycleSlider(props: Props) {
               sortedCycles,
               setSortedCycles,
               valuesReal,
-              selectedYear
+              selectedYear,
+              selectedCycle,
+              setSelectedCycle
             )
           }
           style={{
