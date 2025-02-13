@@ -38,7 +38,7 @@ export default function TrainerPage(props: Props) {
   });
 
   return (
-    <Box mt="16px" ml="45px">
+    <Box mt="16px">
       <TrainerGroupSidebar
         groups={groups}
         selectedGroup={selectedGroup}
