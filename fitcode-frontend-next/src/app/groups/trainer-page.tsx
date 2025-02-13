@@ -59,8 +59,8 @@ export default function TrainerPage(props: Props) {
           <ToggleButtonGroup
             value={filter}
             exclusive
-            onChange={(_, value: FilterType) =>
-              setFilter((prev) => (!value ? prev : value))
+            onChange={(_, val: FilterType) =>
+              setFilter((prev) => (!val ? prev : val))
             }
             sx={{ display: 'flex', bgcolor: '#1A2B3C', width: 300, mx: 'auto' }}
           >
@@ -69,7 +69,6 @@ export default function TrainerPage(props: Props) {
             ))}
           </ToggleButtonGroup>
         </Box>
-
         {/* Add new group */}
         <Box pl={3}>
           <Tooltip title="Add group">
@@ -81,7 +80,6 @@ export default function TrainerPage(props: Props) {
             </IconButton>
           </Tooltip>
         </Box>
-
         {/* Create group modal */}
         <MyModal
           isOpen={openCreateGroupModal}

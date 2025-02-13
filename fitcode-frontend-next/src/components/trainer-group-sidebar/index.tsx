@@ -29,6 +29,7 @@ import {
 import { useScreenSize } from '@/context/screen-size-provider';
 import { isObject } from '@mui/x-data-grid/internals';
 import Logo from '../logo';
+import { Tooltip } from '@mui/material';
 
 export default function TrainerGroupSidebar(props: Props) {
   const screenSize = useScreenSize();
@@ -41,7 +42,13 @@ export default function TrainerGroupSidebar(props: Props) {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed" open={open}>
+      <AppBar
+        position="fixed"
+        open={open}
+        sx={{
+          boxShadow: 'none', // Remove default elevation
+        }}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -94,10 +101,7 @@ export default function TrainerGroupSidebar(props: Props) {
         variant="permanent"
         open={open}
         sx={{
-          display:
-            (screenSize.isLandscapeMobile || screenSize.isMobile) && !open
-              ? 'none'
-              : undefined,
+          display: !open ? 'none' : undefined,
         }}
       >
         <DrawerHeader>
@@ -107,7 +111,6 @@ export default function TrainerGroupSidebar(props: Props) {
             alignItems="center"
             width="100%"
           >
-            <Logo width={103} height={29} marginLeft={15} />
             <IconButton onClick={() => setOpen(false)}>
               {theme.direction === 'rtl' ? (
                 <ChevronRightIcon />
@@ -123,40 +126,35 @@ export default function TrainerGroupSidebar(props: Props) {
             {Object.values(
               LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
             ).map((link, i) => (
-              <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                {/* Wrap the entire ListItemButton in Link */}
-                <Link
-                  href={link.href}
-                  style={{ width: '100%', textDecoration: 'none' }}
-                >
-                  <ListItemButton
-                    disableRipple
-                    disableTouchRipple
-                    sx={[
-                      { minHeight: 48, px: 2.5 },
-                      open
-                        ? { justifyContent: 'initial' }
-                        : { justifyContent: 'center' },
-                    ]}
+              <Tooltip title={link.label} placement="right">
+                <ListItem key={i} disablePadding sx={{ display: 'block' }}>
+                  {/* Wrap the entire ListItemButton in Link */}
+                  <Link
+                    href={link.href}
+                    style={{ width: '100%', textDecoration: 'none' }}
                   >
-                    <ListItemIcon
+                    <ListItemButton
+                      disableRipple
+                      disableTouchRipple
                       sx={[
-                        { minWidth: 0, justifyContent: 'center' },
-                        open ? { mr: 3 } : { mr: 'auto' },
+                        { minHeight: 48, px: 2.5 },
+                        open
+                          ? { justifyContent: 'initial' }
+                          : { justifyContent: 'center' },
                       ]}
                     >
-                      {link.icon}
-                    </ListItemIcon>
-
-                    <ListItemText
-                      primary={link.label}
-                      sx={[
-                        open ? { opacity: 1, color: 'white' } : { opacity: 0 },
-                      ]}
-                    />
-                  </ListItemButton>
-                </Link>
-              </ListItem>
+                      <ListItemIcon
+                        sx={[
+                          { minWidth: 0, justifyContent: 'center' },
+                          open ? { mr: 3 } : { mr: 'auto' },
+                        ]}
+                      >
+                        {link.icon}
+                      </ListItemIcon>
+                    </ListItemButton>
+                  </Link>
+                </ListItem>
+              </Tooltip>
             ))}
           </List>
         )}
@@ -168,33 +166,30 @@ export default function TrainerGroupSidebar(props: Props) {
             {Object.entries(LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS).map(
               ([key, link], i) => {
                 return (
-                  <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                    <ListItemButton
-                      sx={[
-                        { minHeight: 48, px: 2.5 },
-                        open
-                          ? { justifyContent: 'initial' }
-                          : { justifyContent: 'center' },
-                      ]}
-                      onClick={() => {
-                        if (key === 'signout') logout();
-                      }}
-                    >
-                      <ListItemIcon
+                  <Tooltip title={link.label} placement="right">
+                    <ListItem key={i} disablePadding sx={{ display: 'block' }}>
+                      <ListItemButton
                         sx={[
-                          { minWidth: 0, justifyContent: 'center' },
-                          open ? { mr: 3 } : { mr: 'auto' },
+                          { minHeight: 48, px: 2.5 },
+                          open
+                            ? { justifyContent: 'initial' }
+                            : { justifyContent: 'center' },
                         ]}
+                        onClick={() => {
+                          if (key === 'signout') logout();
+                        }}
                       >
-                        {link.icon}
-                      </ListItemIcon>
-
-                      <ListItemText
-                        primary={link.label}
-                        sx={[open ? { opacity: 1 } : { opacity: 0 }]}
-                      />
-                    </ListItemButton>
-                  </ListItem>
+                        <ListItemIcon
+                          sx={[
+                            { minWidth: 0, justifyContent: 'center' },
+                            open ? { mr: 3 } : { mr: 'auto' },
+                          ]}
+                        >
+                          {link.icon}
+                        </ListItemIcon>
+                      </ListItemButton>
+                    </ListItem>
+                  </Tooltip>
                 );
               }
             )}
