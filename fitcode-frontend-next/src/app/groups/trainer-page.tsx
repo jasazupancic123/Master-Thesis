@@ -7,6 +7,7 @@ import {
   TextField,
   ToggleButtonGroup,
   Tooltip,
+  useTheme,
 } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import MyModal from '@/components/modal';
@@ -29,14 +30,7 @@ export default function TrainerPage(props: Props) {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterType>('day');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-
-  // create group
-  const [openCreateGroupModal, setOpenCreateGroupModal] = useState(false);
-  const [newGroup, setNewGroup] = useState<CreateGroupInput>({
-    name: '',
-    membersIds: [],
-  });
-
+  const theme = useTheme();
   return (
     <Box mt="16px" ml="45px">
       <TrainerGroupSidebar
@@ -48,10 +42,13 @@ export default function TrainerPage(props: Props) {
       />
 
       <Box
-        bgcolor="background.paper"
         sx={{
+          backgroundColor: theme.palette.background.paper,
           borderTopLeftRadius: '20px',
           borderTopRightRadius: '20px',
+          borderBottomLeftRadius: !selectedGroup ? '20px' : 0,
+          borderBottomRightRadius: !selectedGroup ? '20px' : 0,
+          pb: !selectedGroup ? 3 : 0,
         }}
       >
         {/* Date filter */}
@@ -69,74 +66,12 @@ export default function TrainerPage(props: Props) {
             ))}
           </ToggleButtonGroup>
         </Box>
-
-        {/* Add new group */}
-        <Box pl={3}>
-          <Tooltip title="Add group">
-            <IconButton
-              onClick={() => setOpenCreateGroupModal(true)}
-              sx={{ height: 50, width: 50 }}
-            >
-              <Add />
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        {/* Create group modal */}
-        <MyModal
-          isOpen={openCreateGroupModal}
-          setIsOpen={(open) => setOpenCreateGroupModal(open)}
-          onCancel={() => setOpenCreateGroupModal(false)}
-          onConfirm={async () => {
-            const item = await handleCreateGroup(
-              props.token,
-              newGroup,
-              setNewGroup,
-              setOpenCreateGroupModal
-            );
-
-            if (item) router.push(LINK_GROUP_BY_ID(item.id).href);
-          }}
-        >
-          <Typography variant="h6" mb={2}>
-            Create Group
+        {!selectedGroup && (
+          <Typography variant="h6" align="center">
+            Select a group
           </Typography>
-
-          <Box mt={2} />
-
-          <TextField
-            sx={{ mb: 2 }}
-            label="Name"
-            fullWidth
-            value={newGroup.name || ''}
-            onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
-          />
-
-          <SelectData<User>
-            multiple
-            data={props.users || []}
-            dataKeyProp="uid"
-            dataValueProp="email"
-            label="Members"
-            value={newGroup.membersIds}
-            onChange={(membersIds) => setNewGroup({ ...newGroup, membersIds })}
-          />
-        </MyModal>
+        )}
       </Box>
-
-      <Box
-        sx={{
-          backgroundColor: '#1A2B3C',
-          height: '30px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderTopRightRadius: '0px',
-          borderTopLeftRadius: '0px',
-          borderBottomRightRadius: '20px',
-          borderBottomLeftRadius: '20px',
-        }}
-      />
     </Box>
   );
 }

@@ -1,9 +1,11 @@
+import { getComponentIcon } from '@/common/service/util/components-icon.util';
 import { SetState } from '@/common/type/state.type';
 import {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import { Chip, SxProps } from '@mui/material';
+import { SvgIconComponent } from '@mui/icons-material';
+import { Box, Chip, Icon, SxProps, Toolbar, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 
@@ -16,6 +18,8 @@ interface Props {
   direction?: 'row' | 'column';
   itemSx?: SxProps;
   sx?: SxProps;
+  bgColor?: string;
+  primaryColor?: string;
 }
 
 export default function ExerciseChips(props: Props) {
@@ -26,6 +30,8 @@ export default function ExerciseChips(props: Props) {
     setSelected,
     small = false,
     direction = 'row',
+    bgColor,
+    primaryColor,
   } = props;
 
   return (
@@ -38,60 +44,51 @@ export default function ExerciseChips(props: Props) {
         ...props.sx,
       }}
     >
-      {selected && (
-        <Chip
-          key={''}
-          label={noSelectionLabel}
-          color="secondary"
-          variant={!selected ? 'filled' : ('outlined' as any)}
-          size={small ? 'small' : ('medium' as any)}
-          onClick={() => {
-            if (!setSelected) return;
+      {components.map((c, i) => {
+        const IconComponent: SvgIconComponent = getComponentIcon(c.name);
 
-            if (Array.isArray(selected)) setSelected([]);
-            else setSelected(null);
-          }}
-          sx={props.itemSx}
-        />
-      )}
+        return (
+          <Box sx={{ p: 1 }}>
+            <Tooltip key={i} title={c.name} sx={{ m: 2 }}>
+              <div
+                key={i}
+                onClick={() => {
+                  if (!setSelected) return;
 
-      {components.map((c, i) => (
-        <Chip
-          key={i}
-          label={c.name}
-          sx={props.itemSx}
-          variant={
-            !selected
-              ? 'outlined'
-              : Array.isArray(selected)
-              ? selected.find((component) => component.id === c.id)
-                ? 'filled'
-                : ('outlined' as any)
-              : selected?.id === c.id
-              ? 'filled'
-              : ('outlined' as any)
-          }
-          onClick={() => {
-            if (!setSelected) return;
-
-            if (Array.isArray(selected)) {
-              if (selected.find((component) => component.id === c.id))
-                // if components already selected, deselect it
-                setSelected(
-                  selected.filter((component) => component.id !== c.id)
-                );
-              // if components not selected, select it
-              else setSelected([...selected, c]);
-            } else {
-              // if components already selected, deselect it
-              if (selected?.id === c.id) setSelected(null);
-              // if components not selected, select it
-              else setSelected(c);
-            }
-          }}
-          size={small ? 'small' : ('medium' as any)}
-        />
-      ))}
+                  if (Array.isArray(selected)) {
+                    if (selected.some((component) => component.id === c.id)) {
+                      setSelected(
+                        selected.filter((component) => component.id !== c.id)
+                      );
+                    } else {
+                      setSelected([...selected, c]);
+                    }
+                  } else {
+                    setSelected(selected?.id === c.id ? null : c);
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 50, // Adjust size as needed
+                  height: 50, // Adjust size as needed
+                  borderRadius: '50%', // Makes it a circle
+                  border: `2px solid ${Array.isArray(selected) && selected.some((component) => component.id === c.id) ? primaryColor : 'gray'}`,
+                  cursor: 'pointer',
+                  backgroundColor:
+                    Array.isArray(selected) &&
+                    selected.some((component) => component.id === c.id)
+                      ? bgColor
+                      : 'transparent',
+                }}
+              >
+                <IconComponent sx={{ fontSize: 30 }} />
+              </div>
+            </Tooltip>
+          </Box>
+        );
+      })}
     </Stack>
   );
 }
