@@ -20,7 +20,7 @@ export default function GroupSettings(props: GroupIdPageProps) {
 
   return (
     <>
-      <Box mt="16px" ml="45px">
+      <Box mt="16px">
         <TrainerGroupSidebar
           groups={groups}
           selectedGroup={selectedGroup}
@@ -50,19 +50,6 @@ export default function GroupSettings(props: GroupIdPageProps) {
         <Typography variant="h6" gutterBottom mt={3}>
           *HERE ADD TRAINER LIST IF THERE CAN BE MULTIPLE TRAINERS IN A GROUP*
         </Typography>
-
-        <Typography variant="h6" gutterBottom mt={3}>
-          Cycles
-        </Typography>
-
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2, mb: 2 }}
-          onClick={() => setShowCyclesModal(true)}
-        >
-          Add Cycle
-        </Button>
 
         {showCycleModal && (
           <MyModal
