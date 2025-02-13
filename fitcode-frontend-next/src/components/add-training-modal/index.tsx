@@ -1,22 +1,10 @@
-import { useState } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
-import {
-  Component,
-  TreeComponent,
-} from '@/controller/component/type/component.type';
-import { getComponentIcon } from '@/common/service/util/components-icon.util';
-import { SvgIconComponent } from '@mui/icons-material';
+import { Component } from '@/controller/component/type/component.type';
 import { theme } from '@/app/style';
+import { AddTrainingModalProps } from './type';
+import { CommonService } from '@/common/service/common.service';
 
-interface AddTrainingModalProps {
-  startTime: string;
-  endTime: string;
-  setStartTime: (startTime: string) => void;
-  setEndTime: (endTime: string) => void;
-  components: TreeComponent[] | Component[];
-  selectedComponents: Component[];
-  setSelectedComponents: (components: Component[]) => void;
-}
+const commonService = CommonService.instance;
 
 export default function AddTrainingModal(props: AddTrainingModalProps) {
   return (
@@ -30,9 +18,10 @@ export default function AddTrainingModal(props: AddTrainingModalProps) {
       <Typography variant="h6">Pick Components</Typography>
       <Box display="flex" justifyContent="center" alignItems="center" mt={1}>
         {props.components.map((component, index) => {
-          const IconComponent: SvgIconComponent = getComponentIcon(
+          const IconComponent = commonService.navigation.getComponentIcon(
             component.name
           );
+
           return (
             <Box
               display="flex"
@@ -59,18 +48,17 @@ export default function AddTrainingModal(props: AddTrainingModalProps) {
                   (c) => c.name === component.name
                 );
 
-                if (isSelected) {
+                if (isSelected)
                   props.setSelectedComponents(
                     props.selectedComponents.filter(
                       (c) => c.name !== component.name
                     )
                   );
-                } else {
+                else
                   props.setSelectedComponents([
                     ...props.selectedComponents,
                     component as Component,
                   ]);
-                }
               }}
             >
               <IconComponent
@@ -78,14 +66,17 @@ export default function AddTrainingModal(props: AddTrainingModalProps) {
                 fontSize="large"
                 sx={{ m: 3, mt: 1, mb: 1 }}
               />
+
               <Typography variant="caption">{component.name}</Typography>
             </Box>
           );
         })}
       </Box>
+
       <Typography variant="h6" sx={{ mt: 2 }}>
         Set Time
       </Typography>
+
       <Box display="flex" mt={1}>
         <TextField
           label="Start Time"
@@ -94,10 +85,9 @@ export default function AddTrainingModal(props: AddTrainingModalProps) {
           value={props.startTime}
           onChange={(e) => props.setStartTime(e.target.value)}
           InputLabelProps={{ shrink: true }}
-          sx={{
-            m: 1,
-          }}
+          sx={{ m: 1 }}
         />
+
         <TextField
           label="End Time"
           type="time"
@@ -105,9 +95,7 @@ export default function AddTrainingModal(props: AddTrainingModalProps) {
           value={props.endTime}
           onChange={(e) => props.setEndTime(e.target.value)}
           InputLabelProps={{ shrink: true }}
-          sx={{
-            m: 1,
-          }}
+          sx={{ m: 1 }}
         />
       </Box>
     </Box>

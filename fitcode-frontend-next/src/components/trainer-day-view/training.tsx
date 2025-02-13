@@ -1,8 +1,7 @@
 import { COLOR } from '@/common/constant/browser.constant';
 import { CommonService } from '@/common/service/common.service';
 import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Update, FitnessCenter } from '@mui/icons-material';
+import { Update } from '@mui/icons-material';
 import BorderColor from '@/components/border-color';
 import {
   Box,
@@ -28,33 +27,11 @@ import {
 } from './state';
 import Subgroups from './subgroups';
 import TrainingExerciseCard from './training-exercise-card';
-import { User } from '@/controller/user/type/user.type';
-import { Component } from '@/controller/component/type/component.type';
-import { SetState } from '@/common/type/state.type';
-import { FilteredExercises } from './type';
+import { FilteredExercises, TrainingProps } from './type';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
 import dayjs from 'dayjs';
-import { Day } from '@/common/service/util/date.util';
-
-interface TrainingProps {
-  token: string;
-  setSelectedTrainings: SetState<Training[]>;
-  selectedTraining: Training | null;
-  users: User[];
-  setModal: SetState<{ subgroup: boolean; editSubgroup: boolean }>;
-  setEditedSubgroup: (subgroup: any) => void;
-  filteredExercises: FilteredExercises;
-  setFilteredExercises: SetState<FilteredExercises>;
-  components: Component[];
-  training: Training;
-  period: 'AM' | 'PM';
-  exercises: Exercise[];
-  day: Day;
-}
 
 export default function TrainingComponentPage(props: TrainingProps) {
   const {
@@ -73,7 +50,7 @@ export default function TrainingComponentPage(props: TrainingProps) {
     day,
   } = props;
   return (
-    <Box  width="100%">
+    <Box width="100%">
       <Box display="flex" width="100%" mt={2}>
         <Box
           display="flex"

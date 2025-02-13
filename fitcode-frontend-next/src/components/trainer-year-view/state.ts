@@ -1,7 +1,9 @@
 import { SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
+import { GroupService } from '@/controller/group/group.service';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
+import { TrainingService } from '@/controller/training/training.service';
 import toast from 'react-hot-toast';
 
 export async function handleUpdateCycle(
@@ -10,7 +12,9 @@ export async function handleUpdateCycle(
   setSelectedGroup: SetState<Group>,
   editCycle: Cycle | null,
   setEditCycle: SetState<Cycle | null>,
-  setShowEditModal: SetState<boolean>
+  setShowEditModal: SetState<boolean>,
+  selectedCycle: Cycle | null,
+  setSelectedCycle: SetState<Cycle | null>
 ) {
   setShowEditModal(false);
 
@@ -30,11 +34,14 @@ export async function handleUpdateCycle(
         to: editCycle.to,
       }
     );
+
     const updatedCycles = selectedGroup.cycles.map((cycle) =>
       cycle.id === updatedCycle.id ? updatedCycle : cycle
     );
 
     setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
+    if (selectedCycle?.id === editCycle.id) setSelectedCycle(updatedCycle);
+
     toast.success('Cycle updated successfully.');
 
     setEditCycle(null);

@@ -8,4 +8,6 @@ export interface Props {
   cycles: Cycle[];
   selectedGroup: Group;
   setSelectedGroup: SetState<Group>;
+  selectedCycle: Cycle | null;
+  setSelectedCycle: SetState<Cycle | null>;
 }

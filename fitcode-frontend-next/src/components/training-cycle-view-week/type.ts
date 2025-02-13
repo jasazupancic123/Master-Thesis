@@ -1,17 +1,17 @@
 import { Training } from '@/controller/training/type/training.type';
 import { Dayjs } from 'dayjs';
 import { AddTrainingComponents } from '../trainer-cycle-view/type';
-import { Component, TreeComponent } from '@/controller/component/type/component.type';
 import { SetState } from '@/common/type/state.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
-
-type CreateTraining = { from: Dayjs; to: Dayjs; date: Dayjs };
+import {
+  Component,
+  TreeComponent,
+} from '@/controller/component/type/component.type';
 
 export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
   index: number;
   week: Dayjs[];
-  training: CreateTraining;
   trainings: Training[];
   selected?: null | Component | TreeComponent | (Component | TreeComponent)[];
   setSelected?: SetState<TrainingCycleViewWeekProps['selected']>;
