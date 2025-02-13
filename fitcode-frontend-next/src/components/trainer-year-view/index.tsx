@@ -6,7 +6,7 @@ import Box from '@mui/material/Box';
 import React from 'react';
 import MultiCycleSlider from '@/components/multi-cycle-slider';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import { Button, Typography } from '@mui/material';
+import { IconButton, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import EditIcon from '@mui/icons-material/Edit';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
@@ -17,19 +17,12 @@ import { FilterTypeViewProps } from '../../app/groups/[group_id]/type';
 import { handleUpdateCycle } from './state';
 import { useScreenSize } from '@/context/screen-size-provider';
 import AddCycleModal from '../add-cycle-modal';
+import { Add } from '@mui/icons-material';
 
 export default function TrainerYearView(props: FilterTypeViewProps) {
   const screenSize = useScreenSize();
-  const {
-    token,
-    group,
-    setSelectedGroup,
-    users,
-    groups,
-    exercises,
-    attributes,
-    components,
-  } = props;
+  const { token, group, setSelectedGroup, selectedCycle, setSelectedCycle } =
+    props;
 
   const theme = useTheme();
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
@@ -139,26 +132,32 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
         display="flex"
         flexDirection="column"
         alignItems="center"
-        width="100%"
+        justifyContent="center"
         mb={3}
-        pb={3}
       >
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2, mb: 2 }}
-          onClick={() => setShowAddCycleModal(true)}
+        <Box
+          width="100%"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
         >
-          Add Cycle
-        </Button>
+          <IconButton
+            onClick={() => setShowAddCycleModal(true)}
+            sx={{ height: 50, width: 50 }}
+          >
+            <Add />
+          </IconButton>
 
-        <MultiCycleSlider
-          token={token}
-          groupId={group.id}
-          cycles={group.cycles}
-          selectedGroup={group}
-          setSelectedGroup={setSelectedGroup}
-        />
+          <MultiCycleSlider
+            token={token}
+            groupId={group.id}
+            cycles={group.cycles}
+            selectedGroup={group}
+            setSelectedGroup={setSelectedGroup}
+            selectedCycle={selectedCycle}
+            setSelectedCycle={setSelectedCycle}
+          />
+        </Box>
 
         <Typography variant="h6" gutterBottom mt={3}>
           Cycles
@@ -219,6 +218,7 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
           isOpen={showEditCycleModal}
           setIsOpen={(open) => setShowEditCycleModal(open)}
           onCancel={() => setShowEditCycleModal(false)}
+          cancelText="Close"
           onConfirm={() =>
             handleUpdateCycle(
               token,
@@ -226,10 +226,11 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
               setSelectedGroup,
               editCycle,
               setEditCycle,
-              setShowEditCycleModal
+              setShowEditCycleModal,
+              selectedCycle,
+              setSelectedCycle
             )
           }
-          cancelText="Close"
         >
           <EditCycleModal
             token={token}
@@ -242,20 +243,6 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
           />
         </MyModal>
       )}
-
-      <MyModal
-        isOpen={showAddCycleModal}
-        setIsOpen={(open) => setShowAddCycleModal(open)}
-        onCancel={() => setShowAddCycleModal(false)}
-        cancelText="Close"
-      >
-        <AddCycleModal
-          token={token}
-          onClose={() => setShowAddCycleModal(false)}
-          selectedGroup={group}
-          setSelectedGroup={setSelectedGroup}
-        />
-      </MyModal>
 
       {/* Add cycle modal */}
       <MyModal
