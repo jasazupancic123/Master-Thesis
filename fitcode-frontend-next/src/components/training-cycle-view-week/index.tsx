@@ -7,20 +7,47 @@ import React from 'react';
 import { CommonService } from '@/common/service/common.service';
 import { TrainingGridItem } from '@/components/training-cycle-view-week/training-cycle-view-grid-item';
 import { TrainingCycleViewWeekProps } from './type';
+import { handleCreateTraining } from '../trainer-cycle-view/state';
+import { Component } from '@/controller/component/type/component.type';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
-  function getFilteredTrainings(date: Dayjs) {
+  function getFilteredTrainings(date: Dayjs, period: string) {
     date = dayjs(date);
 
-    return props.trainings.map((training) => {
-      const start = dayjs(training.from).startOf('day');
+    return props.trainings.filter((training) => {
+      const trainingDate = dayjs(training.from);
+      const start = trainingDate.startOf('day');
       const end = dayjs(training.to).endOf('day');
-      if (CommonService.instance.date.isBetween(date, start, end))
-        return training;
 
-      return null;
+      // Check if training falls within the given day
+      const isBetween = CommonService.instance.date.isBetween(date, start, end);
+      if (!isBetween) return false;
+
+      // Apply AM/PM filtering
+      if (period === 'AM') return trainingDate.hour() < 12; // Before noon
+      if (period === 'PM') return trainingDate.hour() >= 12; // Noon or later
+
+      return false;
     });
   }
+
+  const handleAddTraining = async (date: Dayjs, period: 'AM' | 'PM') => {
+    if (props.components.length) {
+      console.log('period inside handleAddTraining', period);
+      await handleCreateTraining(
+        props.token,
+        { ...props.training, date },
+        period,
+        props.group,
+        props.setSelectedTrainings,
+        props.selectedCycle,
+        props.selected as Component[],
+        props.setSelectedComponents,
+        props.components,
+        props.trainings
+      );
+    }
+  };
 
   return (
     <Box>
@@ -66,38 +93,90 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 borderColor: '#303E4A',
                 backgroundColor: '#1A2B3C',
                 cursor: props.components.length ? 'pointer' : 'default',
-              }}
-              onClick={async () => {
-                console.log(date.toDate());
-                if (props.components.length)
-                  props.addTraining({ ...props.training, date });
+                minHeight: 140,
               }}
             >
               <Typography
-                sx={{ color: '#fff', fontSize: '0.7rem', opacity: 0.7 }}
+                sx={{
+                  color: '#fff',
+                  fontSize: '0.7rem',
+                  opacity: 0.7,
+                  height: '12%',
+                }}
               >
-                {CommonService.instance.date.format(date)}
+                {dayjs(date).format('ddd, DD.MM')}
               </Typography>
 
               {/* Full-width divider */}
               <Divider />
 
-              <Box>
-                {getFilteredTrainings(date).map((training, key) => {
-                  return !training ? null : (
-                    <Box key={key} borderRadius={2} p={1}>
-                      <TrainingGridItem
-                        order={key + 1}
-                        training={training}
-                        components={props.components}
-                        addTrainingComponent={props.addTrainingComponent}
-                        deleteTraining={props.deleteTraining}
-                        deleteTrainingComponent={props.deleteTrainingComponent}
-                      />
-                    </Box>
-                  );
-                })}
-              </Box>
+              {['AM', 'PM'].map((period, index) => (
+                <>
+                  {period === 'PM' && (
+                    <>
+                      <Divider />
+                      <Divider />
+                    </>
+                  )}
+                  <Box
+                    key={period}
+                    sx={{
+                      position: 'relative',
+                      height: '44%',
+                    }}
+                    onClick={async () => {
+                      await handleAddTraining(date, period as 'AM' | 'PM');
+                    }}
+                  >
+                    {/* Period Label */}
+                    <Typography
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        left: 6,
+                        color: '#fff',
+                        fontSize: '0.7rem',
+                        opacity: 0.7,
+                      }}
+                    >
+                      {period}
+                    </Typography>
+
+                    {/* Trainings */}
+                    {getFilteredTrainings(date, period).map((training, key) => (
+                      <Box
+                        key={key}
+                        borderRadius={2}
+                        sx={{
+                          cursor: 'pointer',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          props.addTrainingComponent(training.id, {
+                            components: props.components.map((c, i) => ({
+                              id: c.id,
+                              order: i,
+                            })),
+                          });
+                          props.setSelected!!([]);
+                        }}
+                      >
+                        {key > 0 && <Divider />}
+                        <TrainingGridItem
+                          order={key + 1}
+                          training={training}
+                          components={props.components}
+                          addTrainingComponent={props.addTrainingComponent}
+                          deleteTraining={props.deleteTraining}
+                          deleteTrainingComponent={
+                            props.deleteTrainingComponent
+                          }
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                </>
+              ))}
             </Box>
           ))}
         </Stack>

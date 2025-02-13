@@ -5,43 +5,77 @@ import { Group } from '@/controller/group/type/group.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
 import {
   AddTrainingComponents,
   UpdateTrainingComponents,
   DeleteTrainingComponent,
 } from './type';
+import { CommonService } from '@/common/service/common.service';
 
 export async function handleCreateTraining(
   token: string,
   data: { from: Dayjs; to: Dayjs; date: Dayjs },
+  period: 'AM' | 'PM',
   selectedGroup: Group,
   setTrainings: SetState<Training[]>,
   selectedCycle: Cycle,
   selectedComponents: Component[],
   setSelectedComponents: SetState<Component[]>,
-  components: Component[]
+  components: Component[],
+  trainings: Training[]
 ) {
   if (!selectedComponents.length)
-    return toast.error('Select at least one component');
+    return toast.error('Select at least one component to add');
+
+  //get number of trainings in the selected period
+  const periodTrainings = trainings.filter((training) => {
+    const trainingDate = dayjs(training.from);
+    const start = trainingDate.startOf('day');
+    const end = dayjs(training.to).endOf('day');
+
+    // Check if training falls within the given day
+    const isBetween = CommonService.instance.date.isBetween(
+      data.date,
+      start,
+      end
+    );
+    if (!isBetween) return false;
+
+    // Apply AM/PM filtering
+    if (period === 'AM') return trainingDate.hour() < 12; // Before noon
+    if (period === 'PM') return trainingDate.hour() >= 12; // Noon or later
+
+    return false;
+  });
+
+  if(periodTrainings.length >= 1) {
+    toast.error('You can only create 1 trainings per period');
+    return;
+  }
+
+  const amPair = { start: 8, end: 10 }
+  const pmPair = { start: 14, end: 16 }
+
+  const pair = period === 'AM' ? amPair : pmPair
 
   // set start time and end time to date
   const from = data.date
     .set('year', data.date.year())
     .set('month', data.date.month())
     .set('date', data.date.date())
-    .set('hour', data.from.hour())
-    .set('minute', data.from.minute())
-    .set('second', data.from.second());
+    .set('hour', pair.start)
+    .set('minute', 0)
+    .set('second', 0);
 
   const to = data.date
     .set('year', data.date.year())
     .set('month', data.date.month())
     .set('date', data.date.date())
-    .set('hour', data.to.hour())
-    .set('minute', data.to.minute())
-    .set('second', data.to.second());
+    .set('hour', pair.end)
+    .set('minute', 0)
+    .set('second', 0);
 
   handleApiRequest(
     () =>
@@ -67,6 +101,7 @@ export async function handleCreateTraining(
       const mapped = TrainingService.mapComponents(training, components);
       setTrainings((prev) => [...prev, mapped]);
       setSelectedComponents([]);
+      toast.success('Training created successfully');
     },
     undefined,
     'Failed to create training'
@@ -81,19 +116,23 @@ export async function handleAddTrainingComponents(
   components: Component[]
 ) {
   handleApiRequest(
-    () => TrainingController.addComponents(token, trainingId, input),
+    () => {
+      if (!input.components.length) {
+        return Promise.reject('Select at least one component to add');
+      }
+      return TrainingController.addComponents(token, trainingId, input); // Ensure a Promise is always returned
+    },
     (training) => {
-      // update training
+      // Update training
       TrainingService.mapComponents(training, components);
       setTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === trainingId) return training;
-          return t;
-        })
+        prev.map((t) => (t.id === trainingId ? training : t))
       );
     },
     undefined,
-    'Failed to add training components'
+    !input.components.length
+      ? 'Select at least one component to add'
+      : 'Failed to add training components'
   );
 }
 
@@ -137,6 +176,12 @@ export async function handleDeleteTrainingComponent(
     (training) => {
       // update training
       TrainingService.mapComponents(training, components);
+      if (Object.keys(training.components).length === 0) {
+        TrainingController.delete(token, trainingId);
+        setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+        toast.success('Training deleted successfully');
+        return;
+      }
       setTrainings((prev) =>
         prev.map((t) => {
           if (t.id === trainingId) return training;

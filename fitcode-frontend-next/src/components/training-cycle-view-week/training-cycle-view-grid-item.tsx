@@ -3,71 +3,61 @@ import { Divider } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { AddCircle } from '@mui/icons-material';
+import { AddCircle, SvgIconComponent } from '@mui/icons-material';
 import React from 'react';
 import { TrainingCycleViewGridItemProps } from './type';
+import { getComponentIcon } from '@/common/service/util/components-icon.util';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
+  const screenSize = useScreenSize();
   const { training } = props;
 
   return (
-    <Box px={1}>
+    <Box py={1}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Box sx={{ flex: 1 }}>
-          <Divider />
-
-          <Typography variant="caption" color="primary" fontSize={12}>
-            Training #{props.order}
-          </Typography>
-        </Box>
-
-        <IconButton
-          size="small"
-          onClick={async (e) => {
-            e.stopPropagation();
-            await props.deleteTraining(training.id);
-          }}
-        >
-          <DeleteIcon />
-        </IconButton>
+        <Box sx={{ flex: 1 }}></Box>
       </Box>
 
-      <>
-        {Object.values(training.components).map(({ component }) => (
-          <div key={component!.id}>
-            <IconButton
-              size="small"
-              onClick={async (e) => {
-                e.stopPropagation();
-                await props.deleteTrainingComponent(training.id, component!.id);
-              }}
-            >
-              <Typography variant="caption">{component!.name}</Typography>
-              <DeleteIcon />
-            </IconButton>
-          </div>
-        ))}
-      </>
-
-      {/* add training component icon */}
-      {props.components.length > 0 && (
-        <>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              props.addTrainingComponent(training.id, {
-                components: props.components.map((c, i) => ({
-                  id: c.id,
-                  order: i,
-                })),
-              });
-            }}
-          >
-            <AddCircle />
-          </IconButton>
-        </>
-      )}
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        flexWrap="wrap"
+      >
+        {Object.values(training.components).map(({ component }) => {
+          if (!component) return null;
+          const IconComponent: SvgIconComponent = getComponentIcon(
+            component?.name
+          );
+          return (
+            <div key={component!.id}>
+              <IconComponent
+                fontSize={
+                  Object.values(training.components).length > 5 ||
+                  (Object.values(training.components).length >= 5 &&
+                    screenSize.isLaptop)
+                    ? screenSize.isLaptop
+                      ? 'small'
+                      : 'small'
+                    : 'medium'
+                }
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await props.deleteTrainingComponent(
+                    training.id,
+                    component!.id
+                  );
+                }}
+                sx={{
+                  margin: 1,
+                  cursor: 'pointer',
+                }}
+              ></IconComponent>
+            </div>
+          );
+        })}
+      </Box>
     </Box>
   );
 }
