@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import { Divider } from '@mui/material';
+import { Divider, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,30 +31,32 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
             component?.name
           );
           return (
-            <div key={component!.id}>
-              <IconComponent
-                fontSize={
-                  Object.values(training.components).length > 5 ||
-                  (Object.values(training.components).length >= 5 &&
-                    screenSize.isLaptop)
-                    ? screenSize.isLaptop
-                      ? 'small'
-                      : 'small'
-                    : 'medium'
-                }
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  await props.deleteTrainingComponent(
-                    training.id,
-                    component!.id
-                  );
-                }}
-                sx={{
-                  margin: 1,
-                  cursor: 'pointer',
-                }}
-              ></IconComponent>
-            </div>
+            <Tooltip title={component.name}>
+              <div key={component!.id}>
+                <IconComponent
+                  fontSize={
+                    Object.values(training.components).length > 5 ||
+                    (Object.values(training.components).length >= 5 &&
+                      screenSize.isLaptop)
+                      ? screenSize.isLaptop
+                        ? 'small'
+                        : 'small'
+                      : 'medium'
+                  }
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await props.deleteTrainingComponent(
+                      training.id,
+                      component!.id
+                    );
+                  }}
+                  sx={{
+                    margin: 1,
+                    cursor: 'pointer',
+                  }}
+                ></IconComponent>
+              </div>
+            </Tooltip>
           );
         })}
       </Box>

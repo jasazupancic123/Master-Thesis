@@ -1,5 +1,6 @@
 import { SetState } from '@/common/type/state.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Group } from '@/controller/group/type/group.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { Training } from '@/controller/training/type/training.type';
@@ -22,15 +23,11 @@ export type FilteredExercises = {
 };
 
 export type SubgroupsProps = {
-  token: string;
   training: Training;
-  setSelectedTraining: SetState<Training | null>;
   users: User[];
   setTrainings: SetState<Training[]>;
   setModal: SetState<{ subgroup: boolean; editSubgroup: boolean }>;
   setEditedSubgroup: SetState<Subgroup | null>;
-  detectedSubgroupChanges: boolean;
-  setDetectedSubgroupChanges: SetState<boolean>;
 };
 
 export type AddSubgroupInput = Parameters<
@@ -66,6 +63,7 @@ export type DeleteExerciseInput = Parameters<
 >[5];
 
 export type TrainingMembersProps = {
-  training: Training;
+  training: Training | null;
+  group: Group,
   users: User[];
 };
