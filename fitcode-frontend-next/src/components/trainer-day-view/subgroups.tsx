@@ -6,9 +6,10 @@ import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Training } from '@/controller/training/type/training.type';
-import { SetState } from '@/common/type/state.type';
 import { COLORS } from '@/common/constant/color.constant';
+import { SubgroupsProps } from './type';
+import { User } from '@/controller/user/type/user.type';
+import toast from 'react-hot-toast';
 import {
   Box,
   Tooltip,
@@ -20,16 +21,11 @@ import {
   IconButton,
   Button,
 } from '@mui/material';
-import { SubgroupsProps } from './type';
-import { User } from '@/controller/user/type/user.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import toast from 'react-hot-toast';
 
 export default function Subgroups(props: SubgroupsProps) {
   const { training, setTrainings, setModal, users, setEditedSubgroup } = props;
 
   const [showSubgroups, setShowSubgroups] = useState(false);
-
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
   const [detectedSubgroupChanges, setDetectedSubgroupChanges] = useState(false);
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);

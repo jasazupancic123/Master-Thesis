@@ -1,13 +1,12 @@
 import Box from '@mui/material/Box';
-import { Divider, Tooltip } from '@mui/material';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { AddCircle, SvgIconComponent } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
+import { SvgIconComponent } from '@mui/icons-material';
 import React from 'react';
 import { TrainingCycleViewGridItemProps } from './type';
-import { getComponentIcon } from '@/common/service/util/components-icon.util';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { CommonService } from '@/common/service/common.service';
+
+const commonService = CommonService.instance;
 
 export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   const screenSize = useScreenSize();
@@ -27,12 +26,12 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
       >
         {Object.values(training.components).map(({ component }) => {
           if (!component) return null;
-          const IconComponent: SvgIconComponent = getComponentIcon(
-            component?.name
-          );
+          const IconComponent: SvgIconComponent =
+            commonService.navigation.getComponentIcon(component?.name);
+
           return (
-            <Tooltip title={component.name}>
-              <div key={component!.id}>
+            <Tooltip title={component.name} key={component!.id}>
+              <div>
                 <IconComponent
                   fontSize={
                     Object.values(training.components).length > 5 ||

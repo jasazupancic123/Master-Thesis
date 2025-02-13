@@ -1,26 +1,23 @@
 import React, { Fragment, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
-import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Alert, useTheme } from '@mui/material';
-import { CommonService } from '@/common/service/common.service';
+import { useTheme } from '@mui/material';
 import TrainingWeek from '@/components/training-cycle-view-week';
 import { Component } from '@/controller/component/type/component.type';
 import ExerciseChips from '@/components/exercise-chips';
 import { ComponentService } from '@/controller/component/component.service';
 import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
+import SelectInput from '../select-input';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { RotateRight } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 import {
   handleAddTrainingComponents,
   handleDeleteTraining,
   handleDeleteTrainingComponent,
 } from './state';
-import SelectInput from '../select-input';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { RotateRight } from '@mui/icons-material';
-import InfoIcon from '@mui/icons-material/Info';
 
 export default function TrainerCycleView(props: FilterTypeViewProps) {
   const {
@@ -33,15 +30,8 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
     setSelectedCycle,
   } = props;
 
-  const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
-  const [createTraining, setCreateTraining] = useState({
-    from: dayjs(),
-    to: dayjs().add(1, 'hour'),
-    date: dayjs(),
-  });
-  const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
   const theme = useTheme();
-
+  const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [isSticky, setIsSticky] = useState(false);
 
   // Effect to track scroll position and set sticky mode
@@ -143,7 +133,6 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
                   week={week.map(({ date }) => dayjs(date!))}
                   trainings={trainings}
                   components={selectedComponents}
-                  training={createTraining}
                   selected={selectedComponents}
                   setSelected={(component) =>
                     setSelectedComponents(component as Component[])

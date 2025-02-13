@@ -2,20 +2,10 @@
 
 import { Stack, Tooltip, Avatar, Typography } from '@mui/material';
 import { TrainingMembersProps } from './type';
-import { useState, useEffect } from 'react';
-import { TrainingService } from '@/controller/training/training.service';
-import { Training } from '@/controller/training/type/training.type';
 
 export default function TrainingMembers(props: TrainingMembersProps) {
-  const { training: t, group, users } = props;
-  const [training, setTraining] = useState<Training | null>(t);
-  const [members, setMembers] = useState<any[]>(
-    users.filter((user) => group.membersIds.includes(user.uid))
-  );
-
-  useEffect(() => {
-    setTraining(t);
-  }, [t]);
+  const { group, users } = props;
+  const members = users.filter((user) => group.membersIds.includes(user.uid));
 
   return (
     <>

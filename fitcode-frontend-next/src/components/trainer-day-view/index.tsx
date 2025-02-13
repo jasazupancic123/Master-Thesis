@@ -1,51 +1,19 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Circles from '@/components/circles';
 import dayjs from 'dayjs';
-import { Divider, TextField, Tooltip } from '@mui/material';
+import { TextField } from '@mui/material';
 import { CommonService } from '@/common/service/common.service';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import AddIcon from '@mui/icons-material/Add';
-import Grid from '@mui/material/Grid';
-import Grid2 from '@mui/material/Grid2';
 import { Day } from '@/common/service/util/date.util';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { COLOR } from '@/common/constant/browser.constant';
-import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
-import Button from '@mui/material/Button';
-import { FitnessCenter, Update } from '@mui/icons-material';
-import BorderColor from '@/components/border-color';
-import TrainingExerciseCard from '@/components/trainer-day-view/training-exercise-card';
-import Subgroups from './subgroups';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
 import TrainingMembers from './training-members';
 import { FilteredExercises } from './type';
-import {
-  ExerciseMeta,
-  TrainingComponent,
-  TrainingPlan,
-} from '@/controller/training/type/training-plan.type';
-import {
-  addExercise,
-  addSuperset,
-  deleteComponent,
-  deleteExercise,
-  updateExercise,
-  deleteSuperset,
-  updateSuperset,
-  filterExercises,
-} from './state';
+import { filterExercises } from './state';
 import MyModal from '../modal';
-import SelectInput from '../select-input';
 import { Training } from '@/controller/training/type/training.type';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import SelectInputObject from '../select-input-object';
-import { User } from '@/controller/user/type/user.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import { COLORS } from '@/common/constant/color.constant';
 import TrainingComponentPage from './training';
 
 const commonService = CommonService.instance;
@@ -78,16 +46,16 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
   const [create, setCreate] = useState({
     subgroup: { name: '', membersIds: [] },
   });
-  const [detectedSubgroupChanges, setDetectedSubgroupChanges] = useState(false);
+
   const todaysTrainings = trainings.filter((training) =>
     commonService.date.isSameDay(day.date, dayjs(training.from))
   );
 
-  const amTraining: Training | undefined = todaysTrainings.find(
+  const amTraining = todaysTrainings.find(
     (training) => dayjs(training.from).hour() < 12
   );
 
-  const pmTraining: Training | undefined = todaysTrainings.find(
+  const pmTraining = todaysTrainings.find(
     (training) => dayjs(training.from).hour() >= 12
   );
 
@@ -210,7 +178,7 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 : day.date.add(1, 'day');
 
             setDay({ label: '', date: newDay });
-            props.setDate({
+            setDate({
               start: newDay.startOf('day'),
               end: newDay.endOf('day'),
               custom: true,

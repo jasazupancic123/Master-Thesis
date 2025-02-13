@@ -31,12 +31,11 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     });
   }
 
-  const handleAddTraining = async (date: Dayjs, period: 'AM' | 'PM') => {
+  async function handleAddTraining(date: Dayjs, period: 'AM' | 'PM') {
     if (props.components.length) {
-      console.log('period inside handleAddTraining', period);
       await handleCreateTraining(
         props.token,
-        { ...props.training, date },
+        date,
         period,
         props.group,
         props.setSelectedTrainings,
@@ -47,7 +46,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         props.trainings
       );
     }
-  };
+  }
 
   return (
     <Box>
@@ -107,26 +106,26 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 {dayjs(date).format('ddd, DD.MM')}
               </Typography>
 
-              {/* Full-width divider */}
               <Divider />
 
-              {['AM', 'PM'].map((period, index) => (
-                <>
+              {['AM', 'PM'].map((period) => (
+                <React.Fragment key={period}>
                   {period === 'PM' && (
                     <>
                       <Divider />
                       <Divider />
                     </>
                   )}
+
                   <Box
                     key={period}
                     sx={{
                       position: 'relative',
                       height: '44%',
                     }}
-                    onClick={async () => {
-                      await handleAddTraining(date, period as 'AM' | 'PM');
-                    }}
+                    onClick={() =>
+                      handleAddTraining(date, period as 'AM' | 'PM')
+                    }
                   >
                     {/* Period Label */}
                     <Typography
@@ -162,6 +161,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                         }}
                       >
                         {key > 0 && <Divider />}
+
                         <TrainingGridItem
                           order={key + 1}
                           training={training}
@@ -175,7 +175,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                       </Box>
                     ))}
                   </Box>
-                </>
+                </React.Fragment>
               ))}
             </Box>
           ))}

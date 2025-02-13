@@ -3,7 +3,7 @@ import dayjs, { Dayjs } from 'dayjs';
 export type Day = {
   label: string;
   date: Dayjs;
-}
+};
 
 export class DateUtil {
   format(date: Dayjs | Date, options = { withYear: true }): string {
@@ -15,9 +15,11 @@ export class DateUtil {
   }
 
   isBetween(date: Dayjs, startDate: Dayjs, endDate: Dayjs): boolean {
-    return date.isSame(startDate, 'day') ||
+    return (
+      date.isSame(startDate, 'day') ||
       date.isSame(endDate, 'day') ||
-      (date.isAfter(startDate, 'day') && date.isBefore(endDate, 'day'));
+      (date.isAfter(startDate, 'day') && date.isBefore(endDate, 'day'))
+    );
   }
 
   isSameDay(date1: Dayjs, date2: Dayjs): boolean {

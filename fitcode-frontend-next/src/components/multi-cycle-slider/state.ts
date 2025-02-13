@@ -85,7 +85,9 @@ export async function handleUpdateCycleDates(
   sortedCycles: Cycle[],
   setSortedCycles: SetState<Cycle[]>,
   valuesReal: number[],
-  selectedYear: number
+  selectedYear: number,
+  selectedCycle: Cycle | null,
+  setSelectedCycle: SetState<Cycle | null>
 ) {
   if (!detectedChange) return;
 
@@ -144,18 +146,21 @@ export async function handleUpdateCycleDates(
           })
         )
       ),
-    (_cycles) => {
+    (cycles) => {
       const newCycles = selectedGroup.cycles.map((item) => {
-        const updatedCycle = updatedCycles.find(
-          (cycle) => cycle?.id === item.id
-        );
-
+        const updatedCycle = cycles.find((cycle) => cycle?.id === item.id);
         return updatedCycle ? updatedCycle : item;
       });
 
       setSelectedGroup((prev) => ({ ...prev, cycles: newCycles }));
       setDetectedChange(false);
       setSortedCycles(newCycles);
+
+      for (const cycle of cycles)
+        if (selectedCycle?.id === cycle.id) {
+          setSelectedCycle(cycle);
+          break;
+        }
 
       toast.success('Cycles updated successfully!');
     },

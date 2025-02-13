@@ -16,7 +16,7 @@ import { CommonService } from '@/common/service/common.service';
 
 export async function handleCreateTraining(
   token: string,
-  data: { from: Dayjs; to: Dayjs; date: Dayjs },
+  date: Dayjs,
   period: 'AM' | 'PM',
   selectedGroup: Group,
   setTrainings: SetState<Training[]>,
@@ -36,11 +36,7 @@ export async function handleCreateTraining(
     const end = dayjs(training.to).endOf('day');
 
     // Check if training falls within the given day
-    const isBetween = CommonService.instance.date.isBetween(
-      data.date,
-      start,
-      end
-    );
+    const isBetween = CommonService.instance.date.isBetween(date, start, end);
     if (!isBetween) return false;
 
     // Apply AM/PM filtering
@@ -50,29 +46,29 @@ export async function handleCreateTraining(
     return false;
   });
 
-  if(periodTrainings.length >= 1) {
+  if (periodTrainings.length >= 1) {
     toast.error('You can only create 1 trainings per period');
     return;
   }
 
-  const amPair = { start: 8, end: 10 }
-  const pmPair = { start: 14, end: 16 }
+  const amPair = { start: 8, end: 10 };
+  const pmPair = { start: 14, end: 16 };
 
-  const pair = period === 'AM' ? amPair : pmPair
+  const pair = period === 'AM' ? amPair : pmPair;
 
   // set start time and end time to date
-  const from = data.date
-    .set('year', data.date.year())
-    .set('month', data.date.month())
-    .set('date', data.date.date())
+  const from = date
+    .set('year', date.year())
+    .set('month', date.month())
+    .set('date', date.date())
     .set('hour', pair.start)
     .set('minute', 0)
     .set('second', 0);
 
-  const to = data.date
-    .set('year', data.date.year())
-    .set('month', data.date.month())
-    .set('date', data.date.date())
+  const to = date
+    .set('year', date.year())
+    .set('month', date.month())
+    .set('date', date.date())
     .set('hour', pair.end)
     .set('minute', 0)
     .set('second', 0);

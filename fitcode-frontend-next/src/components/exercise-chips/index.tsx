@@ -1,28 +1,12 @@
-import { getComponentIcon } from '@/common/service/util/components-icon.util';
-import { SetState } from '@/common/type/state.type';
-import {
-  Component,
-  TreeComponent,
-} from '@/controller/component/type/component.type';
-import { SvgIconComponent } from '@mui/icons-material';
-import { Box, Chip, Icon, SxProps, Toolbar, Tooltip } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
+import { ExerciseChipsProps } from './type';
+import { CommonService } from '@/common/service/common.service';
 
-interface Props {
-  components: (Component | TreeComponent)[];
-  noSelectionLabel?: string; // for all / no selection
-  selected?: null | Component | TreeComponent | (Component | TreeComponent)[];
-  setSelected?: SetState<Props['selected']>;
-  small?: boolean;
-  direction?: 'row' | 'column';
-  itemSx?: SxProps;
-  sx?: SxProps;
-  bgColor?: string;
-  primaryColor?: string;
-}
+const commonService = CommonService.instance;
 
-export default function ExerciseChips(props: Props) {
+export default function ExerciseChips(props: ExerciseChipsProps) {
   const {
     selected,
     noSelectionLabel,
@@ -45,10 +29,10 @@ export default function ExerciseChips(props: Props) {
       }}
     >
       {components.map((c, i) => {
-        const IconComponent: SvgIconComponent = getComponentIcon(c.name);
+        const IconComponent = commonService.navigation.getComponentIcon(c.name);
 
         return (
-          <Box sx={{ p: 1 }}>
+          <Box sx={{ p: 1 }} key={c.id}>
             <Tooltip key={i} title={c.name} sx={{ m: 2 }}>
               <div
                 key={i}

@@ -18,11 +18,13 @@ import { Training } from '@/controller/training/type/training.type';
 export default function TrainerPage(props: GroupIdPageProps) {
   const { group, groups, trainings } = props;
 
+  const screenSize = useScreenSize();
   const [filter, setFilter] = useState<FilterType>('day');
   const [selectedTrainings, setSelectedTrainings] = useState(() => trainings);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(
     null
   );
+
   const [selectedGroup, setSelectedGroup] = useState(() => group);
   const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     () => group.cycles[0]
@@ -54,8 +56,6 @@ export default function TrainerPage(props: GroupIdPageProps) {
     cycle: <TrainerCycleView {...newProps} />,
     year: <TrainerYearView {...newProps} />,
   };
-
-  const screenSize = useScreenSize();
 
   return (
     <Box
