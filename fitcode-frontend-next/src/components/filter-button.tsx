@@ -15,16 +15,20 @@ export default function FilterButton(props: Props) {
       value={value.toLowerCase()}
       disabled={disabled}
       sx={{
+        width: 500,
+        px: 2,
         flex: 1,
         color: '#fff',
         backgroundColor: '#303E4A',
-        borderColor: '#303E4A',
-        borderWidth: 1,
-        borderRadius: '0 0 30px 30px',
         '&.Mui-selected': {
           backgroundColor: '#1EB980',
           color: '#fff',
+          borderBottomLeftRadius: '500px',
+          borderBottomRightRadius: '500px',
         },
+        border: 'none',
+        borderBottomLeftRadius: '500px',
+        borderBottomRightRadius: '500px',
         '&:hover': {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           color: '#fff',
