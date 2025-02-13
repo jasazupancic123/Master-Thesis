@@ -79,7 +79,7 @@ export interface TrainingExerciseCardProps {
   onChange: (data: Partial<ExerciseMeta>) => void;
 }
 
-export interface TrainingProps {
+export interface TrainingCardProps {
   token: string;
   setSelectedTrainings: SetState<Training[]>;
   selectedTraining: Training | null;

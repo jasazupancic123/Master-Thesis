@@ -8,18 +8,16 @@ import {
   Typography,
   Stack,
   IconButton,
-  Grid2,
   Button,
   TextField,
   Tooltip,
-  Grid,
+  Grid2,
 } from '@mui/material';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 import { Fragment } from 'react';
 import {
   addExercise,
   addSuperset,
-  deleteComponent,
   deleteExercise,
   updateExercise,
   deleteSuperset,
@@ -27,17 +25,16 @@ import {
 } from './state';
 import Subgroups from './subgroups';
 import TrainingExerciseCard from './training-exercise-card';
-import { FilteredExercises, TrainingProps } from './type';
+import { FilteredExercises, TrainingCardProps } from './type';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
-import dayjs from 'dayjs';
 
-export default function TrainingComponentPage(props: TrainingProps) {
+const commonService = CommonService.instance;
+
+export default function TrainingCard(props: TrainingCardProps) {
   const {
     token,
     setSelectedTrainings,
-    selectedTraining,
     users,
     setModal,
     setEditedSubgroup,
@@ -49,9 +46,10 @@ export default function TrainingComponentPage(props: TrainingProps) {
     period,
     day,
   } = props;
+
   return (
     <Box width="100%">
-      <Box display="flex" width="100%" mt={2}>
+      <Box display="flex" mt={2}>
         <Box
           display="flex"
           width="10%"
@@ -71,11 +69,13 @@ export default function TrainingComponentPage(props: TrainingProps) {
           <Typography variant="caption" p={1}>
             {period}
           </Typography>
+
           <Typography variant="caption" p={1}>
-            {dayjs(day.date).locale('de').format('ddd, DD.MM.')}
+            {commonService.date.format(day.date)}
           </Typography>
         </Box>
       </Box>
+
       <Box
         key={training.id}
         sx={{
@@ -96,8 +96,8 @@ export default function TrainingComponentPage(props: TrainingProps) {
         />
 
         <Typography variant="h6" p={1}>
-          Training ({CommonService.instance.date.formatTime(training.from)} -{' '}
-          {CommonService.instance.date.formatTime(training.to)})
+          Training ({commonService.date.formatTime(training.from)} -{' '}
+          {commonService.date.formatTime(training.to)})
         </Typography>
 
         {Object.values(training.components || {})?.map((component, i) => {
@@ -151,7 +151,7 @@ export default function TrainingComponentPage(props: TrainingProps) {
                             onClick={() =>
                               addExercise(
                                 token,
-                                selectedTraining!!.id,
+                                training.id,
                                 filteredExercises.componentId!,
                                 filteredExercises.superset!,
                                 exercise.id,
@@ -271,7 +271,7 @@ export default function TrainingComponentPage(props: TrainingProps) {
                         onClick={async () => {
                           await addSuperset(
                             token,
-                            selectedTraining!!.id,
+                            training.id,
                             component.id,
                             {
                               color:
@@ -290,36 +290,21 @@ export default function TrainingComponentPage(props: TrainingProps) {
                       </IconButton>
                     </Tooltip>
                   </Stack>
-
-                  <IconButton
-                    size="small"
-                    onClick={() =>
-                      deleteComponent(
-                        token,
-                        selectedTraining!!.id,
-                        component.id,
-                        setSelectedTrainings
-                      )
-                    }
-                    sx={{ mr: 1 }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
                 </Box>
 
                 <Box bgcolor="background.paper" p={2}>
                   {/* Supersets */}
-                  <Grid container spacing={2} wrap="wrap">
-                    {(component as TrainingComponent)?.supersets
+                  <Grid2 container spacing={2} wrap="wrap">
+                    {component?.supersets
                       ?.sort((a, b) => a.order - b.order)
                       ?.map((superset, i) => {
                         return (
-                          <Grid xs={6} key={i} spacing={3}>
+                          <Grid2 size={{ xs: 6 }} key={i} spacing={3}>
                             <BorderColor color={superset.color || COLOR[i]} />
 
                             <Box>
                               {Object.values(superset?.exercises || {})?.map(
-                                (exercise: any, k) => (
+                                (exercise, k) => (
                                   <Box
                                     key={`${i}-${exercise.id}-${k}`}
                                     position="relative"
@@ -334,7 +319,7 @@ export default function TrainingComponentPage(props: TrainingProps) {
                                           onClick={() =>
                                             deleteExercise(
                                               token,
-                                              selectedTraining!!.id,
+                                              training.id,
                                               component.id,
                                               i,
                                               exercise.id,
@@ -358,7 +343,7 @@ export default function TrainingComponentPage(props: TrainingProps) {
                                           onClick={() =>
                                             updateExercise(
                                               token,
-                                              selectedTraining!!.id,
+                                              training.id,
                                               component.id,
                                               i,
                                               exercise.id,
@@ -386,7 +371,7 @@ export default function TrainingComponentPage(props: TrainingProps) {
                                       onChange={async (meta) => {
                                         await updateExercise(
                                           token,
-                                          selectedTraining!!.id,
+                                          training.id,
                                           component.id,
                                           i,
                                           exercise.id,
@@ -451,9 +436,9 @@ export default function TrainingComponentPage(props: TrainingProps) {
                                   onClick={() =>
                                     deleteSuperset(
                                       token,
-                                      selectedTraining!!.id,
+                                      training.id,
                                       component.id,
-                                      superset.order,
+                                      i,
                                       {},
                                       setSelectedTrainings
                                     )
@@ -473,9 +458,9 @@ export default function TrainingComponentPage(props: TrainingProps) {
                                   onClick={() =>
                                     updateSuperset(
                                       token,
-                                      selectedTraining!!.id,
+                                      training.id,
                                       component.id,
-                                      superset.order,
+                                      i,
                                       {
                                         color: `#${Math.floor(
                                           Math.random() * 16777215
@@ -494,10 +479,10 @@ export default function TrainingComponentPage(props: TrainingProps) {
                                 </IconButton>
                               </Tooltip>
                             </Stack>
-                          </Grid>
+                          </Grid2>
                         );
                       })}
-                  </Grid>
+                  </Grid2>
                 </Box>
               </Box>
             </Fragment>

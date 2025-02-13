@@ -106,25 +106,6 @@ export async function editSubgroup(
   setEditedSubgroup(null);
 }
 
-export async function deleteComponent(
-  token: string,
-  trainingId: string,
-  componentId: string,
-  setSelectedTrainings: SetState<Training[]>
-) {
-  handleApiRequest(
-    () =>
-      TrainingController.deleteComponent(token, trainingId, componentId, {}),
-    (training) => {
-      setSelectedTrainings((prev) =>
-        prev.map((t) => (t.id === trainingId ? training : t))
-      );
-    },
-    undefined,
-    'Failed to delete training component'
-  );
-}
-
 export async function addSuperset(
   token: string,
   trainingId: string,
