@@ -60,9 +60,8 @@ export default function TrainerPage(props: GroupIdPageProps) {
   return (
     <Box
       mt="16px"
-      ml={screenSize.isLandscapeMobile || screenSize.isMobile ? '0' : '45px'}
+      ml={screenSize.isLandscapeMobile || screenSize.isMobile ? '0' : undefined}
       mx={screenSize.isLandscapeMobile || screenSize.isMobile ? 1 : undefined}
-      pl={!screenSize.isLandscapeMobile && !screenSize.isMobile ? 2.25 : 0}
     >
       <TrainerGroupSidebar
         groups={groups}
@@ -84,18 +83,27 @@ export default function TrainerPage(props: GroupIdPageProps) {
       >
         {/* Date filter */}
         <Box mx="auto" justifyContent="center" mb={2}>
-          <ToggleButtonGroup
-            value={filter}
-            exclusive
-            onChange={(_, val: FilterType) =>
-              setFilter((prev) => (!val ? prev : val))
-            }
-            sx={{ display: 'flex', bgcolor: '#1A2B3C', width: 300, mx: 'auto' }}
-          >
-            {(['day', 'week', 'cycle', 'year'] as FilterType[]).map((val) => (
-              <FilterButton key={val} value={val} />
-            ))}
-          </ToggleButtonGroup>
+          <Box mx="auto" justifyContent="center" mb={2}>
+            <ToggleButtonGroup
+              value={filter}
+              exclusive
+              onChange={(_, val: FilterType) =>
+                setFilter((prev) => (!val ? prev : val))
+              }
+              sx={{
+                display: 'flex',
+                bgcolor: 'background.default',
+                width: 700,
+                mx: 'auto',
+                borderBottomLeftRadius: '500px',
+                borderBottomRightRadius: '500px',
+              }}
+            >
+              {(['day', 'week', 'cycle', 'year'] as FilterType[]).map((val) => (
+                <FilterButton key={val} value={val} />
+              ))}
+            </ToggleButtonGroup>
+          </Box>
         </Box>
       </Box>
 

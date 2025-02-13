@@ -6,7 +6,7 @@ import Box from '@mui/material/Box';
 import React from 'react';
 import MultiCycleSlider from '@/components/multi-cycle-slider';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import { IconButton, Typography } from '@mui/material';
+import { Button, IconButton, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import EditIcon from '@mui/icons-material/Edit';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
@@ -138,15 +138,22 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
         <Box
           width="100%"
           display="flex"
+          flexDirection="column"
           alignItems="center"
-          justifyContent="center"
+          sx={{
+            backgroundColor: theme.palette.background.paper,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+          }}
         >
-          <IconButton
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mb: 1 }}
             onClick={() => setShowAddCycleModal(true)}
-            sx={{ height: 50, width: 50 }}
           >
-            <Add />
-          </IconButton>
+            Add Cycle
+          </Button>
 
           <MultiCycleSlider
             token={token}
@@ -158,6 +165,20 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
             setSelectedCycle={setSelectedCycle}
           />
         </Box>
+
+        {/* <Box
+          width="100%"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <IconButton
+            onClick={() => setShowAddCycleModal(true)}
+            sx={{ height: 50, width: 50 }}
+          >
+            <Add />
+          </IconButton>
+        </Box> */}
 
         <Typography variant="h6" gutterBottom mt={3}>
           Cycles

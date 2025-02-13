@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { link } from '@/common/constant/navigation.constant';
 
-export const DRAWER_WIDTH = 240;
+export const DRAWER_WIDTH = 65;
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
   home: link('Home', `/groups/${groupId}`, <HomeIcon />),
