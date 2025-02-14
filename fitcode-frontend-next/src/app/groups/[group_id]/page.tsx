@@ -13,7 +13,7 @@ import { ComponentController } from '@/controller/component/component.controller
 import { TrainingService } from '@/controller/training/training.service';
 import { TrainingController } from '@/controller/training/training.controller';
 
-export default async function Page({ params }: GroupIdPageParams) {
+export default async function Page(props: GroupIdPageParams) {
   // fetch data
   const cookieStore = await cookies();
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
@@ -26,7 +26,8 @@ export default async function Page({ params }: GroupIdPageParams) {
   if (![UserRole.TRAINER, UserRole.MANAGER].includes(role))
     return <div>Unauthorized</div>;
 
-  const groupId = (await params).group_id; // https://nextjs.org/docs/messages/sync-dynamic-apis
+  // @ts-ignore
+  const groupId = (await props.params).group_id; // https://nextjs.org/docs/messages/sync-dynamic-apis
   const group = await GroupController.findById(token, groupId);
   if (!group) return notFound();
 
@@ -49,7 +50,7 @@ export default async function Page({ params }: GroupIdPageParams) {
     )
   );
 
-  const props: GroupIdPageProps = {
+  const pageProps: GroupIdPageProps = {
     token,
     group,
     users,
@@ -64,7 +65,7 @@ export default async function Page({ params }: GroupIdPageParams) {
     [UserRole.ADMIN]: null,
     [UserRole.ATHLETE]: null,
     [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: <TrainerPage {...props} />,
+    [UserRole.TRAINER]: <TrainerPage {...pageProps} />,
   };
 
   return mapper[role];

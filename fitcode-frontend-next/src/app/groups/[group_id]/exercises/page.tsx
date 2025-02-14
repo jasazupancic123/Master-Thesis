@@ -9,7 +9,7 @@ import { ComponentController } from '@/controller/component/component.controller
 import { GroupIdPageParams } from '../type';
 import { GroupController } from '@/controller/group/group.controller';
 
-export default async function Page({ params }: GroupIdPageParams) {
+export default async function Page(props: GroupIdPageParams) {
   // fetch data
   const cookieStore = await cookies();
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
@@ -21,7 +21,8 @@ export default async function Page({ params }: GroupIdPageParams) {
   const role = profile.customClaims.role[0];
   if ([UserRole.ATHLETE].includes(role)) return notFound();
 
-  const groupId = (await params).group_id; // https://nextjs.org/docs/messages/sync-dynamic-apis
+  // @ts-ignore
+  const groupId = (await props.params).group_id; // https://nextjs.org/docs/messages/sync-dynamic-apis
   const group = await GroupController.findById(token, groupId);
   if (!group) return notFound();
 

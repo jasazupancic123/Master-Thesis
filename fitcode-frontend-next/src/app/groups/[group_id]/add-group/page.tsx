@@ -7,7 +7,7 @@ import { GroupController } from '@/controller/group/group.controller';
 import { GroupIdPageParams, GroupIdPageProps } from '../type';
 import { notFound } from 'next/navigation';
 
-export default async function Page({ params }: GroupIdPageParams) {
+export default async function Page(props: GroupIdPageParams) {
   // fetch data
   const cookieStore = await cookies();
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
@@ -20,7 +20,7 @@ export default async function Page({ params }: GroupIdPageParams) {
   if (![UserRole.TRAINER, UserRole.MANAGER].includes(role))
     return <div>Unauthorized</div>;
 
-  const groupId = (await params).group_id; // https://nextjs.org/docs/messages/sync-dynamic-apis
+  const groupId = (await props.params).group_id; // https://nextjs.org/docs/messages/sync-dynamic-apis
   const group = await GroupController.findById(token, groupId);
   if (!group) return notFound();
 
@@ -29,7 +29,7 @@ export default async function Page({ params }: GroupIdPageParams) {
     UserController.findAll(token),
   ]);
 
-  const props: GroupIdPageProps = {
+  const addGroupPage: GroupIdPageProps = {
     token,
     group,
     groups,
@@ -40,5 +40,5 @@ export default async function Page({ params }: GroupIdPageParams) {
     trainings: [],
   };
 
-  return <AddGroupPage {...props} />;
+  return <AddGroupPage {...addGroupPage} />;
 }

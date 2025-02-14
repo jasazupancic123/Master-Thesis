@@ -24,6 +24,7 @@ export default function AddTrainingModal(props: AddTrainingModalProps) {
 
           return (
             <Box
+              key={index}
               display="flex"
               flexDirection="column"
               alignItems="center"
@@ -61,11 +62,7 @@ export default function AddTrainingModal(props: AddTrainingModalProps) {
                   ]);
               }}
             >
-              <IconComponent
-                key={index}
-                fontSize="large"
-                sx={{ m: 3, mt: 1, mb: 1 }}
-              />
+              <IconComponent fontSize="large" sx={{ m: 3, mt: 1, mb: 1 }} />
 
               <Typography variant="caption">{component.name}</Typography>
             </Box>

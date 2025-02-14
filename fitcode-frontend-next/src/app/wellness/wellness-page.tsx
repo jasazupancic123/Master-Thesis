@@ -14,7 +14,12 @@ export default function WellnessPage(props: WellnessPageProps) {
     <Box height="100%" marginTop={screenSize.isLandscapeMobile ? 1 : 3}>
       <UserWellnessForm
         initialData={wellness}
-        onSubmit={(data) => submitWellness(token, data)}
+        onSubmit={(data) =>
+          submitWellness(token, {
+            date: new Date(),
+            ...data,
+          })
+        }
         disabled={false}
         setDisabled={() => {}}
       />
