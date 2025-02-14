@@ -28,6 +28,7 @@ import {
   LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS,
   LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS,
 } from './constant';
+import toast from 'react-hot-toast';
 
 export default function TrainerGroupSidebar(props: Props) {
   const screenSize = useScreenSize();
@@ -38,32 +39,45 @@ export default function TrainerGroupSidebar(props: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
+  const handleLinkClick = (
+    event: React.MouseEvent,
+    selectedGroup: Group | null
+  ) => {
+    if (!selectedGroup) {
+      event.preventDefault();
+      toast.error('Please select a group first!');
+    }
+  };
+
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box
+      sx={{
+        display: 'flex',
+      }}
+    >
       <AppBar
         position="fixed"
-        open={open}
         sx={{
-          boxShadow: 'none', // Remove default elevation
+          width: '100%', // Prevent shifting
+          transition: 'margin-left 0.3s ease-in-out',
+          boxShadow: 'none',
         }}
       >
         <Toolbar>
+          {/* Menu Button */}
           <IconButton
             color="inherit"
             aria-label="open drawer"
-            onClick={() => setOpen(true)}
+            onClick={() => setOpen(!open)}
             edge="start"
-            sx={[
-              {
-                marginRight:
-                  !screenSize.isLandscapeMobile && !screenSize.isMobile ? 3 : 0,
-              },
-              open && { display: 'none' },
-            ]}
+            sx={{
+              marginRight: 2,
+            }}
           >
             <MenuIcon />
           </IconButton>
 
+          {/* Logo - Stay Centered */}
           {!screenSize.isMobile && !screenSize.isLandscapeMobile && (
             <Box
               sx={{
@@ -73,7 +87,7 @@ export default function TrainerGroupSidebar(props: Props) {
                 transform: 'translate(-50%, -50%)',
               }}
             >
-              <Logo width={120} height={35} />
+              <Logo width={52} height={35} version="narrow" />
             </Box>
           )}
 
@@ -99,7 +113,14 @@ export default function TrainerGroupSidebar(props: Props) {
         variant="permanent"
         open={open}
         sx={{
-          display: !open ? 'none' : undefined,
+          display: !open ? 'none' : undefined, // Hide when closed
+          position: 'fixed', // Keep it independent
+          zIndex: 1200, // Ensure it's above other elements
+          transition: 'width 0.3s ease-in-out',
+          '& .MuiDrawer-paper': {
+            transition: 'width 0.3s ease-in-out',
+            overflowX: 'hidden', // Prevent sudden content shift
+          },
         }}
       >
         <DrawerHeader>
@@ -118,28 +139,59 @@ export default function TrainerGroupSidebar(props: Props) {
             </IconButton>
           </Box>
         </DrawerHeader>
-
-        {selectedGroup && (
-          <List sx={{ display: 'flex', flexDirection: 'column', pt: 0 }}>
-            {Object.values(
-              LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
-            ).map((link, i) => (
-              <Tooltip title={link.label} placement="right" key={i}>
-                <ListItem disablePadding sx={{ display: 'block' }}>
-                  {/* Wrap the entire ListItemButton in Link */}
-                  <Link
-                    href={link.href}
-                    style={{ width: '100%', textDecoration: 'none' }}
+        <List sx={{ display: 'flex', flexDirection: 'column', pt: 0 }}>
+          {Object.values(
+            LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup?.id || '')
+          ).map((link, i) => (
+            <Tooltip title={link.label} placement="right" key={i}>
+              <ListItem disablePadding sx={{ display: 'block' }}>
+                {/* Wrap the entire ListItemButton in Link */}
+                <Link
+                  href={link.href}
+                  style={{ width: '100%', textDecoration: 'none' }}
+                  onClick={(event) => handleLinkClick(event, selectedGroup)}
+                >
+                  <ListItemButton
+                    disableRipple
+                    disableTouchRipple
+                    sx={[
+                      { minHeight: 48, px: 2.5 },
+                      open
+                        ? { justifyContent: 'initial' }
+                        : { justifyContent: 'center' },
+                    ]}
                   >
+                    <ListItemIcon
+                      sx={[
+                        { minWidth: 0, justifyContent: 'center' },
+                        open ? { mr: 3 } : { mr: 'auto' },
+                      ]}
+                    >
+                      {link.icon}
+                    </ListItemIcon>
+                  </ListItemButton>
+                </Link>
+              </ListItem>
+            </Tooltip>
+          ))}
+        </List>
+        <Divider />
+        <List>
+          {Object.entries(LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS).map(
+            ([key, link], i) => {
+              return (
+                <Tooltip title={link.label} placement="right" key={i}>
+                  <ListItem disablePadding sx={{ display: 'block' }}>
                     <ListItemButton
-                      disableRipple
-                      disableTouchRipple
                       sx={[
                         { minHeight: 48, px: 2.5 },
                         open
                           ? { justifyContent: 'initial' }
                           : { justifyContent: 'center' },
                       ]}
+                      onClick={() => {
+                        if (key === 'signout') logout();
+                      }}
                     >
                       <ListItemIcon
                         sx={[
@@ -150,49 +202,12 @@ export default function TrainerGroupSidebar(props: Props) {
                         {link.icon}
                       </ListItemIcon>
                     </ListItemButton>
-                  </Link>
-                </ListItem>
-              </Tooltip>
-            ))}
-          </List>
-        )}
-
-        <Divider />
-
-        {selectedGroup && (
-          <List>
-            {Object.entries(LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS).map(
-              ([key, link], i) => {
-                return (
-                  <Tooltip title={link.label} placement="right" key={i}>
-                    <ListItem disablePadding sx={{ display: 'block' }}>
-                      <ListItemButton
-                        sx={[
-                          { minHeight: 48, px: 2.5 },
-                          open
-                            ? { justifyContent: 'initial' }
-                            : { justifyContent: 'center' },
-                        ]}
-                        onClick={() => {
-                          if (key === 'signout') logout();
-                        }}
-                      >
-                        <ListItemIcon
-                          sx={[
-                            { minWidth: 0, justifyContent: 'center' },
-                            open ? { mr: 3 } : { mr: 'auto' },
-                          ]}
-                        >
-                          {link.icon}
-                        </ListItemIcon>
-                      </ListItemButton>
-                    </ListItem>
-                  </Tooltip>
-                );
-              }
-            )}
-          </List>
-        )}
+                  </ListItem>
+                </Tooltip>
+              );
+            }
+          )}
+        </List>
       </Drawer>
     </Box>
   );
