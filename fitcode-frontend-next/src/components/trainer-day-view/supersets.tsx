@@ -181,7 +181,7 @@ export default function Supersets(props: SupersetsProps) {
                                 borderRadius={1}
                                 boxShadow={snapshot.isDragging ? 2 : 0}
                               >
-                                <Box position="absolute" top={0} right={0}>
+                                <Box position="absolute" top={5} right={5}>
                                   <Tooltip
                                     title="Delete exercise"
                                     placement="left"
@@ -303,29 +303,6 @@ export default function Supersets(props: SupersetsProps) {
               }
             </Droppable>
           ))}
-        {/* Add Superset Field at the Bottom */}
-        {/* {supersets.length < 4 && (
-          <Box
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            display="flex"
-            width={{ xs: "100%", sm: "100%", md: "24%" }}
-            alignItems="center"
-            justifyContent="center"
-            border="1px dashed #B2B3B7"
-            borderRadius={2}
-            p={2}
-            mt={2}
-            sx={{
-              maxHeight: 150,
-              cursor: "pointer",
-            }}
-          >
-            <Typography variant="body2" ml={1}>
-              Drop here to add a new superset
-            </Typography>
-          </Box>
-        )} */}
       </Box>
 
       {/* Members modal */}

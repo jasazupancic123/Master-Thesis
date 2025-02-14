@@ -130,6 +130,12 @@ export default function Subgroups(props: SubgroupsProps) {
   };
 
   const handleDelete = async (subgroupId: string) => {
+    const deletedSubgroup = Object.values(training.subgroups).find(
+      (s) => s.id === subgroupId
+    )!;
+
+    const deletedMembers = [...deletedSubgroup.membersIds!];
+
     const updatedSubgroups = Object.values(training.subgroups).filter(
       (s) => s.id !== subgroupId
     );
@@ -145,6 +151,11 @@ export default function Subgroups(props: SubgroupsProps) {
           }),
         }
       );
+
+      setAvailableMembers((prev) => [
+        ...prev,
+        ...deletedMembers.map((id) => users.find((u) => u.uid === id)!),
+      ]);
 
       setSubgroups(updatedSubgroups);
       setTrainings((prev) =>
@@ -435,6 +446,10 @@ export default function Subgroups(props: SubgroupsProps) {
 
             setModal((prev) => ({ ...prev, subgroup: false }));
             setSubgroups(Object.values(newTraining.subgroups));
+
+            setCreate({
+              subgroup: { name: '', membersIds: [] },
+            });
 
             toast.success('Successfully added new subgroup');
           } catch (e) {
