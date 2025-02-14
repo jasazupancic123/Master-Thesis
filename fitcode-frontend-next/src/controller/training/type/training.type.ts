@@ -20,4 +20,5 @@ export type Training = BaseEntity &
 
     // mapped properties
     members?: User[];
+    availableMembersIds?: string[];
   };

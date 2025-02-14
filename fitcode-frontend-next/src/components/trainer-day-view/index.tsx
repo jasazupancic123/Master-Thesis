@@ -9,12 +9,11 @@ import { Day } from '@/common/service/util/date.util';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
 import TrainingMembers from './training-members';
-import { FilteredExercises } from './type';
+import { AddSubgroupInput, FilteredExercises } from './type';
 import { filterExercises } from './state';
 import MyModal from '../modal';
-import { Training } from '@/controller/training/type/training.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import TrainingComponentPage from './training';
+import TrainingCard from './training-card';
 
 const commonService = CommonService.instance;
 
@@ -25,7 +24,6 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
     users,
     selectedCycle,
     selectedTraining,
-    setSelectedTraining,
     trainings,
     setSelectedTrainings,
     exercises,
@@ -40,12 +38,6 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
       sublabel: commonService.date.format(date, { withYear: false }),
     }))
   );
-
-  const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
-  const [modal, setModal] = useState({ subgroup: false, editSubgroup: false });
-  const [create, setCreate] = useState({
-    subgroup: { name: '', membersIds: [] },
-  });
 
   const todaysTrainings = trainings.filter((training) =>
     commonService.date.isSameDay(day.date, dayjs(training.from))
@@ -69,48 +61,6 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
       data: [],
     }
   );
-
-  async function addSubgroup() {
-    const training = props.selectedTraining;
-    if (!training) return;
-
-    const newTraining = await TrainingController.addSubgroup(
-      token,
-      training.id,
-      {
-        name: create.subgroup.name,
-        membersIds: [],
-      }
-    );
-
-    setSelectedTraining(newTraining);
-    setModal((prev) => ({ ...prev, subgroup: false }));
-    create.subgroup.name = '';
-    create.subgroup.membersIds = [];
-  }
-
-  async function editSubgroup() {
-    const training = props.selectedTraining;
-    if (!training) return;
-
-    if (!editedSubgroup) return;
-
-    const newTraining = await TrainingController.updateSubgroup(
-      token,
-      training.id,
-      editedSubgroup.id,
-      {
-        name: editedSubgroup.name,
-        membersIds: editedSubgroup.membersIds,
-      }
-    );
-
-    console.log('newTraining', newTraining);
-
-    setSelectedTraining(newTraining);
-    setModal((prev) => ({ ...prev, editSubgroup: false }));
-    setEditedSubgroup(null);
-  }
 
   /**
    * Filter exercises
@@ -153,7 +103,6 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
           value={day.date.toString()}
           setValue={(value) => {
             setDay({ label: '', date: dayjs(value) });
-
             setDate({
               start: dayjs(value).startOf('day'),
               end: dayjs(value).endOf('day'),
@@ -219,13 +168,11 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
         ) : (
           <>
             {amTraining && (
-              <TrainingComponentPage
+              <TrainingCard
                 token={token}
                 setSelectedTrainings={setSelectedTrainings}
                 selectedTraining={selectedTraining}
                 users={users}
-                setModal={setModal}
-                setEditedSubgroup={setEditedSubgroup}
                 filteredExercises={filteredExercises}
                 setFilteredExercises={setFilteredExercises}
                 components={components}
@@ -237,13 +184,11 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
             )}
 
             {pmTraining && (
-              <TrainingComponentPage
+              <TrainingCard
                 token={token}
                 setSelectedTrainings={setSelectedTrainings}
                 selectedTraining={selectedTraining}
                 users={users}
-                setModal={setModal}
-                setEditedSubgroup={setEditedSubgroup}
                 filteredExercises={filteredExercises}
                 setFilteredExercises={setFilteredExercises}
                 components={components}
@@ -253,70 +198,6 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 day={day}
               />
             )}
-
-            {/* Create subgroup modal */}
-            <MyModal
-              isOpen={modal.subgroup}
-              setIsOpen={(subgroup) =>
-                setModal((prev) => ({ ...prev, subgroup }))
-              }
-              title="Create Subgroup"
-              onCancel={() =>
-                setModal((prev) => ({ ...prev, subgroup: false }))
-              }
-              onConfirm={addSubgroup}
-            >
-              <Stack spacing={4} p={1}>
-                {/* Name */}
-                <TextField
-                  label="Name"
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  value={create.subgroup.name}
-                  onChange={(e) =>
-                    setCreate((prev) => ({
-                      ...prev,
-                      subgroup: { ...prev.subgroup, name: e.target.value },
-                    }))
-                  }
-                />
-              </Stack>
-            </MyModal>
-
-            {/* Edit subgroup modal */}
-            <MyModal
-              isOpen={modal.editSubgroup}
-              setIsOpen={(editSubgroup) =>
-                setModal((prev) => ({ ...prev, editSubgroup }))
-              }
-              title="Edit Subgroup"
-              onCancel={() => {
-                setModal((prev) => ({ ...prev, editSubgroup: false }));
-                setEditedSubgroup(null);
-              }}
-              onConfirm={editSubgroup}
-            >
-              <Stack spacing={4} p={1}>
-                {/* Name */}
-                <TextField
-                  label="Name"
-                  fullWidth
-                  value={editedSubgroup?.name || ''}
-                  variant="outlined"
-                  size="small"
-                  onChange={(e) =>
-                    setEditedSubgroup((prev) => {
-                      if (!prev) return prev; // Return prev instead of undefined
-                      return {
-                        ...prev,
-                        name: e.target.value,
-                      };
-                    })
-                  }
-                />
-              </Stack>
-            </MyModal>
           </>
         )}
       </Box>

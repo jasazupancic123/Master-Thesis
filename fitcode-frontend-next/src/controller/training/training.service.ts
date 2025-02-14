@@ -53,4 +53,18 @@ export class TrainingService {
 
     return mappedItem;
   }
+
+  static mapAvailableMembers(training: Training): Training {
+    const allMembersIds = training.membersIds;
+
+    const subgroups = Object.values(training.subgroups || {});
+    const subgroupMembersIds = subgroups.flatMap((s) => s.membersIds);
+    const availableMembersIds = allMembersIds.filter(
+      (memberId) => !subgroupMembersIds.includes(memberId)
+    );
+
+    const mapped = { ...training };
+    mapped.availableMembersIds = availableMembersIds;
+    return mapped;
+  }
 }
