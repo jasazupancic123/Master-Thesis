@@ -53,31 +53,34 @@ export default function TrainerPage(props: Props) {
       >
         {/* Date filter */}
         <Box mx="auto" justifyContent="center" mb={2}>
-          <ToggleButtonGroup
-            value={filter}
-            exclusive
-            onChange={(_, val: FilterType) =>
-              setFilter((prev) => (!val ? prev : val))
-            }
-            sx={{ display: 'flex', bgcolor: '#1A2B3C', width: 300, mx: 'auto' }}
-          >
-            {(['day', 'week', 'cycle', 'year'] as FilterType[]).map((val) => (
-              <FilterButton key={val} value={val} />
-            ))}
-          </ToggleButtonGroup>
+          <Box mx="auto" justifyContent="center" mb={2}>
+            <ToggleButtonGroup
+              value={filter}
+              exclusive
+              onChange={(_, val: FilterType) =>
+                setFilter((prev) => (!val ? prev : val))
+              }
+              sx={{
+                display: 'flex',
+                bgcolor: 'background.default',
+                width: 700,
+                mx: 'auto',
+                borderBottomLeftRadius: '500px',
+                borderBottomRightRadius: '500px',
+              }}
+            >
+              {(['day', 'week', 'cycle', 'year'] as FilterType[]).map((val) => (
+                <FilterButton key={val} value={val} />
+              ))}
+            </ToggleButtonGroup>
+          </Box>
         </Box>
 
-        {/* Add new group */}
-        <Box pl={3}>
-          <Tooltip title="Add group">
-            <IconButton
-              onClick={() => setOpenCreateGroupModal(true)}
-              sx={{ height: 50, width: 50 }}
-            >
-              <Add />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        {!selectedGroup && (
+          <Typography variant="h6" textAlign="center" mt={2} p={2}>
+            Select a group
+          </Typography>
+        )}
 
         {/* Create group modal */}
         <MyModal

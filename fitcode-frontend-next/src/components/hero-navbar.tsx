@@ -50,7 +50,7 @@ export default function HeroNavbar({ showLogin = true }) {
             }}
           >
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-              <Logo width={120} height={35} />
+              <Logo width={52} height={35} version="narrow" />
               <Box mr={4} />
 
               <Box
