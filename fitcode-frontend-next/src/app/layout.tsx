@@ -7,6 +7,8 @@ import { AuthProvider } from '@/context/auth-provider';
 import { AppProvider } from '@/context/app-provider';
 import ThemeRegistry from '@/context/theme-registry';
 import { ScreenSizeProvider } from '@/context/screen-size-provider';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const inter = Inter({ subsets: ['latin'] });
 
