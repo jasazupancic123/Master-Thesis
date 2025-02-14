@@ -339,7 +339,7 @@ export class TrainingService {
     };
   }
 
-  async updateSubgroup(
+  /* async updateSubgroup(
     user: User,
     ref: Required<SubgroupRef>,
     input: Omit<UpdateSubgroup, 'components'>,
@@ -405,6 +405,43 @@ export class TrainingService {
     const { [ref.subgroupId]: _, ...subgroups } = training.subgroups;
 
     return { ...training, subgroups };
+  } */
+
+  async updateSubgroups(user: User, ref: TrainingRef, input: Subgroup[]) {
+    this.logger.log(
+      `User ${user.uid} is updating training ${ref.trainingId} subgroups: ${JSON.stringify(input)}`,
+    );
+
+    // validate parent references and ownership
+    const training = await this.findOneOrFail(user, ref);
+    this.validateTrainer(user);
+    this.validateOwner(user.uid, training);
+
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      // validate members of each subgroup
+      /* for (const subgroup of input) {
+        // this.validateTrainingMembers(training, subgroup.membersIds);
+
+        // update members workload data
+        await this.updateMembers(
+          transaction,
+          training,
+          ref,
+          subgroup.membersIds,
+          [], // subgroup is "alive" only for one training, don't update other trainings
+        );
+      } */
+
+      const docRef = this.trainingRepository.doc(ref.trainingId);
+      transaction.update(docRef, {
+        subgroups: input.reduce((acc, s) => {
+          acc[s.id] = { ...s, components: training.components };
+          return acc;
+        }, {}),
+      });
+    });
+
+    return { ...training, subgroups: input } as unknown as Training;
   }
 
   async addComponents(

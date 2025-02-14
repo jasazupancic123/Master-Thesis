@@ -10,7 +10,7 @@ import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import {
   AddSubgroupInput,
-  UpdateSubgroupInput,
+  UpdateSubgroupsInput,
   AddSupersetInput,
   UpdateSupersetInput,
   DeleteSupersetInput,
@@ -85,25 +85,6 @@ export async function addSubgroup(
 
   training.subgroups[newSubgroup.id] = newSubgroup;
   setModal((prev) => ({ ...prev, subgroup: false }));
-}
-
-export async function editSubgroup(
-  token: string,
-  training: Training,
-  input: UpdateSubgroupInput,
-  editedSubgroup: Partial<Subgroup>,
-  setEditedSubgroup: SetState<Partial<Subgroup> | null>,
-  setModal: SetState<{ subgroup: boolean }>
-) {
-  if (!editedSubgroup) return;
-  const subgroup = Object.values(training.subgroups).find(
-    (s) => s.id === editedSubgroup.id
-  );
-
-  if (!subgroup) return;
-
-  setModal((prev) => ({ ...prev, editSubgroup: false }));
-  setEditedSubgroup(null);
 }
 
 export async function addSuperset(

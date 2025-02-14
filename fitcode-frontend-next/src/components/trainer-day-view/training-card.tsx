@@ -36,8 +36,6 @@ export default function TrainingCard(props: TrainingCardProps) {
     token,
     setSelectedTrainings,
     users,
-    setModal,
-    setEditedSubgroup,
     filteredExercises,
     setFilteredExercises,
     components,
@@ -88,11 +86,10 @@ export default function TrainingCard(props: TrainingCardProps) {
         }}
       >
         <Subgroups
+          token={token}
           training={training}
           setTrainings={setSelectedTrainings}
-          setModal={setModal}
           users={users}
-          setEditedSubgroup={setEditedSubgroup}
         />
 
         <Typography variant="h6" p={1}>

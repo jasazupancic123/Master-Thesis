@@ -3,6 +3,8 @@ import { Training } from './type/training.type';
 import { ExerciseMeta, TrainingPlan } from './type/training-plan.type';
 import { DateRange } from '@/common/type/date-range.type';
 import { SetData } from './type/set-data';
+import { Subgroup } from './type/subgroup.type';
+import { BaseEntity } from '@/common/type/entity.type';
 
 const api = CommonService.instance.api;
 
@@ -50,28 +52,16 @@ export class TrainingController {
     });
   }
 
-  static async updateSubgroup(
+  static async updateSubgroups(
     token: string,
     trainingId: string,
-    subgroupId: string,
-    body: { name: string; membersIds: string[] }
+    body: {
+      subgroups: Omit<Subgroup, 'createdAt' | 'updatedAt' | 'components'>[];
+    }
   ) {
-    return api.patch<Training>(
-      `/training/${trainingId}/subgroup/${subgroupId}`,
-      body,
-      { token }
-    );
-  }
-
-  static async deleteSubgroup(
-    token: string,
-    trainingId: string,
-    subgroupId: string
-  ) {
-    return api.delete<Training>(
-      `/training/${trainingId}/subgroup/${subgroupId}`,
-      { token }
-    );
+    return api.patch<Training>(`/training/${trainingId}/subgroup`, body, {
+      token,
+    });
   }
 
   static async addComponents(

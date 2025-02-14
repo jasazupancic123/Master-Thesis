@@ -29,20 +29,19 @@ export type FilteredExercises = {
 };
 
 export type SubgroupsProps = {
+  token: string;
   training: Training;
   users: User[];
   setTrainings: SetState<Training[]>;
-  setModal: SetState<{ subgroup: boolean; editSubgroup: boolean }>;
-  setEditedSubgroup: SetState<Subgroup | null>;
 };
 
 export type AddSubgroupInput = Parameters<
   typeof TrainingController.addSubgroup
 >[2];
 
-export type UpdateSubgroupInput = Parameters<
-  typeof TrainingController.updateSubgroup
->[3];
+export type UpdateSubgroupsInput = Parameters<
+  typeof TrainingController.updateSubgroups
+>[2];
 
 export type AddSupersetInput = Parameters<
   typeof TrainingController.addSuperset
@@ -84,8 +83,6 @@ export interface TrainingCardProps {
   setSelectedTrainings: SetState<Training[]>;
   selectedTraining: Training | null;
   users: User[];
-  setModal: SetState<{ subgroup: boolean; editSubgroup: boolean }>;
-  setEditedSubgroup: (subgroup: any) => void;
   filteredExercises: FilteredExercises;
   setFilteredExercises: SetState<FilteredExercises>;
   components: Component[];
