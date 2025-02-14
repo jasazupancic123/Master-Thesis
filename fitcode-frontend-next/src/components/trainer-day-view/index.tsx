@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Circles from '@/components/circles';
 import dayjs from 'dayjs';
-import { TextField } from '@mui/material';
+import { TextField, Typography } from '@mui/material';
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
@@ -51,6 +51,11 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
     (training) => dayjs(training.from).hour() >= 12
   );
 
+  const [selectedDailyTraining, setSelectedDailyTraining] = useState<{
+    am: boolean;
+    pm: boolean;
+  }>({ am: !pmTraining ? true : false, pm: !amTraining ? true : false });
+
   const [filteredExercises, setFilteredExercises] = useState<FilteredExercises>(
     {
       show: false,
@@ -93,8 +98,8 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
         alignItems="center"
         width="100%"
         sx={{
-          borderBottomRightRadius: '20px',
-          borderBottomLeftRadius: '20px',
+          borderBottomRightRadius: todaysTrainings.length === 0 ? 0 : '20px',
+          borderBottomLeftRadius: todaysTrainings.length === 0 ? 0 : '20px',
           bgcolor: 'background.paper',
         }}
       >
@@ -155,7 +160,7 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
         flexDirection="column"
         alignItems="center"
         width="100%"
-        mt={2}
+        mt={todaysTrainings.length === 0 ? 0 : 2}
         pb={15}
         sx={{
           borderBottomRightRadius: '20px',
@@ -164,7 +169,21 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
       >
         {/* Training set groups with set exercises */}
         {todaysTrainings.length === 0 ? (
-          <>No session for current date</>
+          <Box
+            display="flex"
+            bgcolor={'background.paper'}
+            width="100%"
+            p={2}
+            justifyContent="center"
+            sx={{
+              borderBottomRightRadius: '20px',
+              borderBottomLeftRadius: '20px',
+            }}
+          >
+            <Typography variant="h6" mb={2}>
+              No session for current date
+            </Typography>
+          </Box>
         ) : (
           <>
             {amTraining && (
@@ -180,6 +199,8 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 period="AM"
                 exercises={exercises}
                 day={day}
+                selectedDailyTraining={selectedDailyTraining}
+                setSelectedDailyTraining={setSelectedDailyTraining}
               />
             )}
 
@@ -196,6 +217,8 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 period="PM"
                 exercises={exercises}
                 day={day}
+                selectedDailyTraining={selectedDailyTraining}
+                setSelectedDailyTraining={setSelectedDailyTraining}
               />
             )}
           </>

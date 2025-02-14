@@ -90,4 +90,6 @@ export interface TrainingCardProps {
   period: 'AM' | 'PM';
   exercises: Exercise[];
   day: Day;
+  selectedDailyTraining: {am: boolean; pm: boolean};
+  setSelectedDailyTraining: SetState<{am: boolean; pm: boolean}>;
 }
