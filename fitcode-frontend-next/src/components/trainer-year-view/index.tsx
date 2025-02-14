@@ -17,7 +17,6 @@ import { FilterTypeViewProps } from '../../app/groups/[group_id]/type';
 import { handleUpdateCycle } from './state';
 import { useScreenSize } from '@/context/screen-size-provider';
 import AddCycleModal from '../add-cycle-modal';
-import { Add } from '@mui/icons-material';
 
 export default function TrainerYearView(props: FilterTypeViewProps) {
   const screenSize = useScreenSize();
@@ -54,7 +53,7 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
           >
             <RotateRightIcon
               style={{
-                backgroundColor: theme.palette.primary.main,
+                backgroundColor: theme.palette.primary.light,
                 padding: 1,
                 cursor: 'pointer',
               }}
@@ -111,7 +110,7 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
           >
             <EditIcon
               style={{
-                backgroundColor: theme.palette.primary.main,
+                backgroundColor: theme.palette.primary.light,
                 padding: 1,
                 cursor: 'pointer',
               }}
@@ -146,15 +145,6 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
             borderBottomRightRadius: 20,
           }}
         >
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ mb: 1 }}
-            onClick={() => setShowAddCycleModal(true)}
-          >
-            Add Cycle
-          </Button>
-
           <MultiCycleSlider
             token={token}
             groupId={group.id}
@@ -163,6 +153,7 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
             setSelectedGroup={setSelectedGroup}
             selectedCycle={selectedCycle}
             setSelectedCycle={setSelectedCycle}
+            setShowAddCycleModal={setShowAddCycleModal}
           />
         </Box>
 
@@ -210,7 +201,7 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
                 backgroundColor: theme.palette.background.paper,
               },
               '& .MuiDataGrid-columnHeaders': {
-                backgroundColor: theme.palette.primary.main,
+                backgroundColor: theme.palette.primary.light,
                 color: theme.palette.primary.contrastText,
                 fontSize: '16px',
                 fontWeight: 'bold',

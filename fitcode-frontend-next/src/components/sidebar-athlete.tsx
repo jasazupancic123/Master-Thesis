@@ -39,7 +39,7 @@ export default function SidebarAthlete(props: Props) {
         justifyContent="center"
         alignItems="center"
       >
-        <Logo width={120} height={35} />
+        <Logo width={52} height={35} version="narrow" />
       </Stack>
 
       <Box

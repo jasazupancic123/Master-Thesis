@@ -9,7 +9,7 @@ import { ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { COLORS } from '@/common/constant/color.constant';
-import { Props } from './type';
+import { MultiCycleSliderProps } from './type';
 import { useScreenSize } from '@/context/screen-size-provider';
 import {
   changeYear,
@@ -17,10 +17,11 @@ import {
   handleDragChange,
   handleUpdateCycleDates,
 } from './state';
+import { Add } from '@mui/icons-material';
 
 dayjs.extend(dayOfYear);
 
-export default function MultiCycleSlider(props: Props) {
+export default function MultiCycleSlider(props: MultiCycleSliderProps) {
   const screenSize = useScreenSize();
   const {
     token,
@@ -30,6 +31,7 @@ export default function MultiCycleSlider(props: Props) {
     setSelectedGroup,
     selectedCycle,
     setSelectedCycle,
+    setShowAddCycleModal,
   } = props;
 
   const theme = useTheme();
@@ -117,6 +119,7 @@ export default function MultiCycleSlider(props: Props) {
       flexDirection="column"
       alignItems="center"
       p={3}
+      pt={1}
       pb={!screenSize.isMobile && !screenSize.isLandscapeMobile ? 3 : 0}
       width="100%"
     >
@@ -130,6 +133,23 @@ export default function MultiCycleSlider(props: Props) {
           <ArrowRight />
         </IconButton>
       </Stack>
+
+      <IconButton
+        sx={{
+          mb: 2,
+          backgroundColor: 'primary.light', // Set primary background color
+          color: 'white', // Ensure the icon is visible
+          borderRadius: '50%', // Make it round
+          width: 30, // Set a fixed width for a perfect circle
+          height: 30, // Set a fixed height for a perfect circle
+          '&:hover': {
+            backgroundColor: 'primary.dark', // Darker shade on hover
+          },
+        }}
+        onClick={() => setShowAddCycleModal(true)}
+      >
+        <Add />
+      </IconButton>
 
       {/* Slider */}
       <div
