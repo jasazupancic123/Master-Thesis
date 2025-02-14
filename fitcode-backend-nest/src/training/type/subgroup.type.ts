@@ -1,5 +1,4 @@
 import { Subgroup } from '../../training/entity/subgroup.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
 
 export type CreateSubgroup = Pick<
   Subgroup,

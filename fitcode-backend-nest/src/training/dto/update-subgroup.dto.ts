@@ -1,7 +1,19 @@
-import { UpdateSubgroup } from '../type/subgroup.type';
-import { PartialType, PickType } from '@nestjs/mapped-types';
 import { Subgroup } from '../entity/subgroup.entity';
+import { ValidateNested } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 
-export class UpdateSubgroupDto
-  extends PartialType(PickType(Subgroup, ['name', 'membersIds']))
-  implements UpdateSubgroup {}
+export class UpdateSubgroupDto extends OmitType(Subgroup, [
+  'createdAt',
+  'updatedAt',
+  'deletedAt',
+  'components',
+]) {}
+
+export class UpdateSubgroupsDto {
+  @ValidateNested({ each: true })
+  @Type(() => UpdateSubgroupDto)
+  @ApiProperty()
+  @Expose()
+  subgroups: UpdateSubgroupDto[];
+}
