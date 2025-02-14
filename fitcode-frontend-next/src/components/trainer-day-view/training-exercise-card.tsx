@@ -70,12 +70,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         marginBottom: '5px', // Vertical gap between exercises
       }}
     >
-      <Stack direction="row">
-        <Box
+      <Stack direction="row" width="100%" justifyContent="center">
+        {/* <Box
           width={20}
           height={20}
           sx={{ backgroundColor: exercise.color, mr: 2 }}
-        />
+        /> */}
 
         <Typography
           variant="body1"
@@ -90,7 +90,13 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Typography>
       </Stack>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap">
+      <Stack
+        direction="row"
+        spacing={1}
+        flexWrap="wrap"
+        width="100%"
+        justifyContent="center"
+      >
         {/* Sets */}
         <SetExerciseAttribute
           options={SET}
@@ -109,7 +115,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             setState((prev) => ({ ...prev, sets }));
           }}
         />
-
         {/* Set Type */}
         <SetExerciseAttribute
           options={SET_TYPE}
@@ -136,7 +141,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             }));
           }}
         />
-
         {/* Workload */}
         <SetExerciseAttribute
           options={WORKLOAD}
@@ -170,7 +174,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             }));
           }}
         />
-
         {/* Effort */}
         {/*<SetExerciseAttribute
         options={TRAINING_EXERCISE_EFFORT}
@@ -189,7 +192,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setState(prev => ({ ...prev, effort }));
         }}
       />*/}
-
         {/* Tempo */}
         {/*<SetExerciseAttribute
         options={SET_EXERCISE_TEMPO}
@@ -208,7 +210,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setState(prev => ({ ...prev, tempo }));
         }}
       />*/}
-
         {/* Recovery */}
         <SetExerciseAttribute
           options={RECOVERY}
@@ -269,7 +270,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const { options, state, onChange, disabled = false } = props;
 
   return (
-    <Stack direction="column">
+    <Stack direction="column" m={0}>
       {/* On option change */}
       <FormControl variant="filled" size="small" sx={sx}>
         <Select
