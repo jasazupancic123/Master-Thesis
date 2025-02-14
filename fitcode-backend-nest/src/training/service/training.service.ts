@@ -53,6 +53,7 @@ import { SetData } from '../entity/set-data';
 import { CreateSubgroup, UpdateSubgroup } from '../type/subgroup.type';
 import { Subgroup } from '../entity/subgroup.entity';
 import { ExerciseMeta } from '../entity/exercise-meta.entity';
+import { UserWorkload } from '../entity/user-workload.entity';
 
 @Injectable()
 export class TrainingService {
@@ -338,7 +339,7 @@ export class TrainingService {
     };
   }
 
-  async updateSubgroup(
+  /* async updateSubgroup(
     user: User,
     ref: Required<SubgroupRef>,
     input: Omit<UpdateSubgroup, 'components'>,
@@ -404,6 +405,43 @@ export class TrainingService {
     const { [ref.subgroupId]: _, ...subgroups } = training.subgroups;
 
     return { ...training, subgroups };
+  } */
+
+  async updateSubgroups(user: User, ref: TrainingRef, input: Subgroup[]) {
+    this.logger.log(
+      `User ${user.uid} is updating training ${ref.trainingId} subgroups: ${JSON.stringify(input)}`,
+    );
+
+    // validate parent references and ownership
+    const training = await this.findOneOrFail(user, ref);
+    this.validateTrainer(user);
+    this.validateOwner(user.uid, training);
+
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      // validate members of each subgroup
+      /* for (const subgroup of input) {
+        // this.validateTrainingMembers(training, subgroup.membersIds);
+
+        // update members workload data
+        await this.updateMembers(
+          transaction,
+          training,
+          ref,
+          subgroup.membersIds,
+          [], // subgroup is "alive" only for one training, don't update other trainings
+        );
+      } */
+
+      const docRef = this.trainingRepository.doc(ref.trainingId);
+      transaction.update(docRef, {
+        subgroups: input.reduce((acc, s) => {
+          acc[s.id] = { ...s, components: training.components };
+          return acc;
+        }, {}),
+      });
+    });
+
+    return { ...training, subgroups: input } as unknown as Training;
   }
 
   async addComponents(
@@ -571,8 +609,6 @@ export class TrainingService {
     const [query, updatedTraining] =
       this.trainingPlanService.getUpdateSupersetQuery(training, ref, input);
 
-    console.log('updateSupersets query:', query);
-
     // update superset
     await this.trainingRepository.updateDoc(training.id, query);
     return updatedTraining;
@@ -603,8 +639,6 @@ export class TrainingService {
     // get query for training / subgroup training
     const [query, updatedTraining] =
       this.trainingPlanService.getDeleteSupersetQuery(training, ref);
-
-    console.log('deleteSuperset query:', query);
 
     // delete superset
     await this.trainingRepository.updateDoc(training.id, query);
@@ -664,31 +698,20 @@ export class TrainingService {
     const [query, updatedTraining] =
       this.trainingPlanService.getAddExercisesQuery(training, ref, input);
 
-    console.log('addExercises query:', query);
-
     // get training and member workloads
     const trainingWorkloads = await this.userWorkloadService.findAllByTraining(
       training.id,
     );
 
-    const membersData = await Promise.all(
-      input.map(async ([exerciseId]) => {
-        const userWorkloads = await this.userWorkloadService.findAllByMembers(
+    const userWorkloads = await Promise.all(
+      input.map(async ([exerciseId]) => ({
+        [exerciseId]: await this.userWorkloadService.findAllByMembers(
           exerciseId,
           training.membersIds,
-        );
-
-        return {
-          [exerciseId]: training.membersIds.reduce((acc, userId) => {
-            acc[userId] = {
-              weight: training.meta[userId]?.weight || 0,
-              workloads: userWorkloads[userId] || [],
-            };
-
-            return acc;
-          }, {}),
-        };
-      }),
+        ),
+      })),
+    ).then((results) =>
+      results.reduce((acc, curr) => ({ ...acc, ...curr }), {}),
     );
 
     await this.firebaseService.firestore.runTransaction(async (transaction) => {
@@ -700,10 +723,24 @@ export class TrainingService {
       await Promise.all(
         input.map(([exerciseId, payload]) => {
           const exerciseRef = { ...ref, exerciseId };
+
+          const membersData: {
+            [userId: string]: {
+              weight: number;
+              workloads: UserWorkload[];
+            };
+          } = {};
+
+          for (const memberId of training.membersIds)
+            membersData[memberId] = {
+              weight: training.meta[memberId]?.weight || 0,
+              workloads: userWorkloads[exerciseId][memberId] || [],
+            };
+
           this.userWorkloadService.createForTraining(
             transaction,
             exerciseRef,
-            membersData[exerciseId],
+            membersData,
             payload,
             trainingWorkloads,
           );
@@ -738,10 +775,15 @@ export class TrainingService {
     this.validateExercise(training, ref);
 
     // get query for training / subgroup training
+    const {
+      meta: oldMeta, // old meta
+    } =
+      training.components[ref.componentId].supersets[ref.superset].exercises[
+        ref.exerciseId
+      ];
+
     const [query, updatedTraining] =
       this.trainingPlanService.getUpdateExerciseQuery(training, ref, input);
-
-    console.log('updateExercise query:', query);
 
     // get training and member workloads
     const trainingWorkloads = await this.userWorkloadService.findAllByTraining(
@@ -767,18 +809,14 @@ export class TrainingService {
 
       // update training workload
       if (input.meta) {
-        const {
-          meta, // old meta
-        } =
-          training.components[ref.componentId].supersets[ref.superset]
-            .exercises[ref.exerciseId];
-
         const isWorkloadTypeChanged =
           input.meta?.workloadType &&
-          input.meta.workloadType !== meta.workloadType;
+          input.meta.workloadType !== oldMeta.workloadType;
         const isWorkloadValueChanged =
           input.meta?.workloadValue &&
-          input.meta.workloadValue !== meta.workloadValue;
+          input.meta.workloadValue !== oldMeta.workloadValue;
+
+        console.log(isWorkloadTypeChanged, isWorkloadValueChanged);
 
         // if nothing of workload type or workload value changed, don't update workloads
         if (isWorkloadTypeChanged || isWorkloadValueChanged)

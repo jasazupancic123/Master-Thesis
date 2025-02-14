@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -25,7 +26,11 @@ import { UpdateAthleteSetDataDto } from './dto/update-athlete-set-data.dto';
 import { TrainingExercise } from './entity/training-exercise.entity';
 import { SubgroupIdDto } from 'src/common/dto/subgroup-id.dto';
 import { AddSubgroupDto } from './dto/add-subgroup.dto';
-import { UpdateSubgroupDto } from './dto/update-subgroup.dto';
+import {
+  UpdateSubgroupDto,
+  UpdateSubgroupsDto,
+} from './dto/update-subgroup.dto';
+import { Subgroup } from './entity/subgroup.entity';
 
 @Controller('training')
 export class TrainingController {
@@ -86,7 +91,22 @@ export class TrainingController {
     return await this.trainingService.addSubgroup(user, ref, body);
   }
 
-  @Patch(':trainingId/subgroup/:subgroupId')
+  @Patch(':trainingId/subgroup')
+  @Auth()
+  async updateSubgroups(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() { subgroups }: UpdateSubgroupsDto,
+  ) {
+    const ref = { trainingId };
+    return await this.trainingService.updateSubgroups(
+      user,
+      ref,
+      subgroups as Subgroup[],
+    );
+  }
+
+  /* @Patch(':trainingId/subgroup/:subgroupId')
   @Auth()
   async updateSubgroup(
     @RequestUser() user: User,
@@ -107,7 +127,7 @@ export class TrainingController {
   ) {
     const ref = { trainingId, subgroupId };
     return await this.trainingService.deleteSubgroup(user, ref);
-  }
+  } */
 
   @Post(':trainingId/component')
   @Auth()
@@ -169,7 +189,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('superset') superset: number,
+    @Param('superset', ParseIntPipe) superset: number,
     @Body() body: UpdateTrainingSupersetDto,
   ) {
     const ref = {
@@ -188,7 +208,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('superset') superset: number,
+    @Param('superset', ParseIntPipe) superset: number,
     @Body() body: SubgroupIdDto,
   ) {
     const ref = {
@@ -207,7 +227,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('superset') superset: number,
+    @Param('superset', ParseIntPipe) superset: number,
     @Body() body: AddTrainingExercisesDto,
   ) {
     const ref = {
@@ -233,7 +253,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('superset') superset: number,
+    @Param('superset', ParseIntPipe) superset: number,
     @Param('exerciseId') exerciseId: string,
     @Body() body: UpdateTrainingExerciseDto,
   ) {
@@ -256,7 +276,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('superset') superset: number,
+    @Param('superset', ParseIntPipe) superset: number,
     @Param('exerciseId') exerciseId: string,
     @Body() body: SubgroupIdDto,
   ) {

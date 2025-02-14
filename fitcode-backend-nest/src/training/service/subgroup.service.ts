@@ -3,7 +3,6 @@ import {
   forwardRef,
   Inject,
   Injectable,
-  Logger,
 } from '@nestjs/common';
 import { CommonService } from 'src/common/service/common.service';
 import { ExerciseService } from 'src/exercise/service/exercise.service';
@@ -17,7 +16,6 @@ import {
   SubgroupRef,
   TrainingRef,
 } from 'src/common/type/firebase-firestore.type';
-import { Subgroup } from '../entity/subgroup.entity';
 import { v4 } from 'uuid';
 import { FieldValue, Timestamp, Transaction } from 'firebase-admin/firestore';
 import { Training } from '../entity/training.entity';
@@ -50,10 +48,7 @@ export class SubgroupService {
     return item;
   }
 
-  async create(
-    ref: Required<TrainingRef>,
-    input: CreateSubgroup,
-  ): Promise<string> {
+  async create(ref: TrainingRef, input: CreateSubgroup): Promise<string> {
     const subgroupId = v4();
 
     await this.trainingRepository.doc(ref.trainingId).update({
@@ -68,10 +63,7 @@ export class SubgroupService {
     return subgroupId;
   }
 
-  async update(
-    ref: Required<SubgroupRef>,
-    input: UpdateSubgroup,
-  ): Promise<void> {
+  async update(ref: SubgroupRef, input: UpdateSubgroup): Promise<void> {
     const docRef = this.trainingRepository.doc(ref.trainingId);
 
     try {
@@ -92,7 +84,7 @@ export class SubgroupService {
     }
   }
 
-  async delete(ref: Required<SubgroupRef>) {
+  async delete(ref: SubgroupRef) {
     const docRef = this.trainingRepository.doc(ref.trainingId);
 
     try {

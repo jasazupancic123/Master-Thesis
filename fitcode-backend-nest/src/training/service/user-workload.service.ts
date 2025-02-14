@@ -65,21 +65,6 @@ export class UserWorkloadService {
     exerciseId: string,
     membersIds: string[],
   ): Promise<{ [userId: string]: UserWorkload[] }> {
-    /* const membersWorkloads = await Promise.all(
-      membersIds.map(async (userId) => ({
-        userId,
-        data: await this.findAll({
-          exerciseId,
-          userId,
-        }),
-      })),
-    );
-
-    return membersWorkloads.reduce((acc, { userId, data }) => {
-      acc[userId] = data;
-      return acc;
-    }, {}); */
-
     const workloads = await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)
