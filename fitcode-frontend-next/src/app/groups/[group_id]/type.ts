@@ -8,7 +8,7 @@ import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
 
-export type GroupIdPageParams = { params: { group_id: string } };
+export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
 export interface GroupIdPageProps {
   token: string;
