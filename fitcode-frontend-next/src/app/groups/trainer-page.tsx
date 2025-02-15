@@ -62,7 +62,7 @@ export default function TrainerPage(props: Props) {
               }
               sx={{
                 display: 'flex',
-                bgcolor: 'background.default',
+                bgcolor: 'background.paper',
                 width: 700,
                 mx: 'auto',
                 borderBottomLeftRadius: '500px',

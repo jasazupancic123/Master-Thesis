@@ -92,9 +92,9 @@ export default function AddExerciseModal(props: AddExerciseModalProps) {
         <Grid2 container direction="column" spacing={1} p={1} width="100%">
           {filteredList.data
             .sort((a, b) => {
-              const aSelected = selectedExercises.some((ex) => ex.id === a.id);
-              const bSelected = selectedExercises.some((ex) => ex.id === b.id);
-              return aSelected === bSelected ? 0 : aSelected ? 1 : -1;
+              if (a.name < b.name) return -1;
+              if (a.name > b.name) return 1;
+              return 0;
             })
             .map((exercise) => {
               const isSelected = selectedExercises.some(

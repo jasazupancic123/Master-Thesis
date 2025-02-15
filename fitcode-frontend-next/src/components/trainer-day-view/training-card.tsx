@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { CommonService } from '@/common/service/common.service';
 import { Box, Typography, IconButton } from '@mui/material';
 import Subgroups from './subgroups';
@@ -17,9 +18,12 @@ export default function TrainingCard(props: TrainingCardProps) {
     setFilteredExercises,
     components,
     training,
+    setSelectedTraining,
     exercises,
     period,
     day,
+    openComponent,
+    setOpenComponent,
   } = props;
 
   return (
@@ -87,6 +91,7 @@ export default function TrainingCard(props: TrainingCardProps) {
             key={i}
             token={token}
             training={training}
+            setSelectedTraining={setSelectedTraining}
             component={component}
             components={components}
             exercises={exercises}
@@ -94,6 +99,8 @@ export default function TrainingCard(props: TrainingCardProps) {
             filteredExercises={filteredExercises}
             setFilteredExercises={setFilteredExercises}
             i={i}
+            openComponent={openComponent}
+            setOpenComponent={setOpenComponent}
           />
         ))}
       </Box>

@@ -13,10 +13,14 @@ import SelectInput from '../select-input';
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { Method } from '@/controller/component/type/method.type';
 import Supersets from './supersets';
+import { CommonService } from '@/common/service/common.service';
+
+const commonService = CommonService.instance;
 
 interface TrainingComponentProps {
   token: string;
   training: Training;
+  setSelectedTraining: SetState<Training | null>;
   component: TrainingComponent;
   components: Component[];
   exercises: Exercise[];
@@ -24,12 +28,18 @@ interface TrainingComponentProps {
   filteredExercises: FilteredExercises;
   setFilteredExercises: SetState<FilteredExercises>;
   i: number;
+  openComponent: { componentId: string | null; trainingId: string | null };
+  setOpenComponent: SetState<{
+    componentId: string | null;
+    trainingId: string | null;
+  }>;
 }
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const {
     token,
     training,
+    setSelectedTraining,
     component,
     components,
     exercises,
@@ -37,15 +47,13 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     filteredExercises,
     setFilteredExercises,
     i,
+    openComponent,
+    setOpenComponent,
   } = props;
 
-  const [open, setOpen] = useState(false);
   const [selectedMainSet, setSelectedMainSet] = useState<MainSet | null>();
   const [selectedAfterSet, setSelectedAfterSet] = useState<AfterSet | null>();
   const [selectedMethod, setSelectedMethod] = useState<Method | null>();
-
-  console.log('component', component);
-  console.log('exercises', exercises);
 
   const mainSets = [
     {
@@ -117,7 +125,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   ];
 
   return (
-    <Box my={1} p={0}>
+    <Box my={1} p={0} px={1}>
       <Fragment key={i}>
         <Box
           sx={{
@@ -140,18 +148,37 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               width="100%"
               justifyContent="space-between"
             >
-              <Box display="flex" p={0} alignItems="center">
-                <Typography
-                  sx={{
-                    color: '#1EB980',
-                    px: 2,
-                    mb: 0,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {component.component?.name}
-                </Typography>
+              <Box display="flex" p={0} justifyContent="center">
+                {component.component && (
+                  <Box display="flex" p={0}>
+                    {(() => {
+                      const IconComponent =
+                        commonService.navigation.getComponentIcon(
+                          component.component.name
+                        );
+
+                      return (
+                        <Box display="flex" alignItems="center">
+                          <IconComponent fontSize="medium" color="primary" />
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              color: '#1EB980',
+                              pl: 1,
+                              mb: 0,
+                              textTransform: 'uppercase',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {component.component.name}
+                          </Typography>
+                        </Box>
+                      );
+                    })()}
+                  </Box>
+                )}
               </Box>
+
               <Box display="flex" p={0} mr={1} alignItems="center">
                 <SelectInput<MainSet>
                   label={'Main Set'}
@@ -202,31 +229,58 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
                 <IconButton
                   onClick={() => {
-                    setOpen(!open);
+                    if (
+                      openComponent.componentId === component.id &&
+                      openComponent.trainingId === training.id
+                    ) {
+                      setOpenComponent({
+                        componentId: null,
+                        trainingId: null,
+                      });
+                    } else {
+                      setOpenComponent({
+                        componentId: component.id,
+                        trainingId: training.id,
+                      });
+                    }
                   }}
                 >
-                  {open ? <VisibilityOff /> : <Visibility />}
+                  {openComponent.componentId === component.id &&
+                  training.id === openComponent.trainingId ? (
+                    <VisibilityOff />
+                  ) : (
+                    <Visibility />
+                  )}
                 </IconButton>
               </Box>
             </Stack>
           </Box>
 
-          {open && (
-            <Box bgcolor="background.paper" p={2}>
-              {/* Supersets */}
-              <Supersets
-                supersets={component.supersets || []}
-                token={token}
-                training={training}
-                component={component}
-                components={components}
-                exercises={exercises}
-                setSelectedTrainings={setSelectedTrainings}
-                filteredExercises={filteredExercises}
-                setFilteredExercises={setFilteredExercises}
-              />
-            </Box>
-          )}
+          <Box
+            bgcolor="background.paper"
+            p={2}
+            sx={{
+              display:
+                openComponent.componentId === component.id &&
+                training.id === openComponent.trainingId
+                  ? undefined
+                  : 'none',
+            }}
+          >
+            {/* Supersets */}
+            <Supersets
+              supersets={component.supersets || []}
+              token={token}
+              training={training}
+              component={component}
+              components={components}
+              exercises={exercises}
+              setSelectedTrainings={setSelectedTrainings}
+              setSelectedTraining={setSelectedTraining}
+              filteredExercises={filteredExercises}
+              setFilteredExercises={setFilteredExercises}
+            />
+          </Box>
         </Box>
       </Fragment>
     </Box>

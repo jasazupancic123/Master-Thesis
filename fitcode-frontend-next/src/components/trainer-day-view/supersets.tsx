@@ -13,6 +13,7 @@ import { Box, Tooltip, IconButton, Typography } from '@mui/material';
 import {
   addSuperset,
   deleteExercise,
+  deleteSuperset,
   filterExercises,
   updateExercise,
 } from './state';
@@ -36,6 +37,7 @@ interface SupersetsProps {
   training: Training;
   component: TrainingComponent;
   setSelectedTrainings: SetState<Training[]>;
+  setSelectedTraining: SetState<Training | null>;
   components: Component[];
   exercises: Exercise[];
   filteredExercises: FilteredExercises;
@@ -47,6 +49,7 @@ export default function Supersets(props: SupersetsProps) {
     supersets,
     token,
     training,
+    setSelectedTraining,
     component,
     setSelectedTrainings,
     components,
@@ -98,6 +101,7 @@ export default function Supersets(props: SupersetsProps) {
             color: COLOR[(component.supersets?.length || 0) % COLOR.length],
           },
           setSelectedTrainings,
+          setSelectedTraining,
           components,
           exercises
         );
@@ -107,6 +111,23 @@ export default function Supersets(props: SupersetsProps) {
         console.error(e);
       }
     } else {
+    }
+  };
+
+  const handleDeleteSuperset = (order: number) => async () => {
+    try {
+      await deleteSuperset(
+        token,
+        training.id,
+        component.id,
+        order,
+        { subgroupId: '' },
+        setSelectedTrainings
+      );
+      toast.success('Superset deleted successfully');
+    } catch (e) {
+      toast.error('Failed to delete superset');
+      console.error(e);
     }
   };
 
@@ -156,7 +177,14 @@ export default function Supersets(props: SupersetsProps) {
                     display="flex"
                     flexDirection="column"
                   >
-                    <BorderColor color={superset.color || COLOR[i]} />
+                    <Box
+                      sx={{ cursor: 'pointer' }}
+                      onClick={handleDeleteSuperset(
+                        supersets.indexOf(superset)
+                      )}
+                    >
+                      <BorderColor color={superset.color || COLOR[i]} />
+                    </Box>
 
                     <Box>
                       {Object.values(superset?.exercises || {})?.map(
@@ -263,7 +291,14 @@ export default function Supersets(props: SupersetsProps) {
                       {provided.placeholder}
                     </Box>
 
-                    <BorderColor color={superset.color || COLOR[i]} lower />
+                    <Box
+                      sx={{ cursor: 'pointer' }}
+                      onClick={handleDeleteSuperset(
+                        supersets.indexOf(superset)
+                      )}
+                    >
+                      <BorderColor color={superset.color || COLOR[i]} lower />
+                    </Box>
 
                     <Box
                       display="flex"

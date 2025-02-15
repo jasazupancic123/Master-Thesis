@@ -93,6 +93,7 @@ export async function addSuperset(
   componentId: string,
   input: AddSupersetInput,
   setSelectedTrainings: SetState<Training[]>,
+  setSelectedTraining: SetState<Training | null>,
   components: Component[],
   exercises: Exercise[]
 ) {
@@ -105,6 +106,8 @@ export async function addSuperset(
       setSelectedTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))
       );
+
+      setSelectedTraining(training);
     },
     undefined,
     'Failed to add superset'
@@ -152,14 +155,16 @@ export async function deleteSuperset(
   setSelectedTrainings: SetState<Training[]>
 ) {
   handleApiRequest(
-    () =>
-      TrainingController.deleteSuperset(
+    () => {
+      console.log('here')
+      return TrainingController.deleteSuperset(
         token,
         trainingId,
         componentId,
         superset,
         input
-      ),
+      );
+    },
     (training) => {
       setSelectedTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))

@@ -14,6 +14,7 @@ import { filterExercises } from './state';
 import MyModal from '../modal';
 import { TrainingController } from '@/controller/training/training.controller';
 import TrainingCard from './training-card';
+import { Training } from '@/controller/training/type/training.type';
 
 const commonService = CommonService.instance;
 
@@ -24,6 +25,7 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
     users,
     selectedCycle,
     selectedTraining,
+    setSelectedTraining,
     trainings,
     setSelectedTrainings,
     exercises,
@@ -50,6 +52,11 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
   const pmTraining = todaysTrainings.find(
     (training) => dayjs(training.from).hour() >= 12
   );
+
+  const [openComponent, setOpenComponent] = useState<{
+    componentId: string | null;
+    trainingId: string | null;
+  }>({ componentId: null, trainingId: null });
 
   const [selectedDailyTraining, setSelectedDailyTraining] = useState<{
     am: boolean;
@@ -87,6 +94,8 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
     filteredExercises.pagination.page,
     filteredExercises.pagination.pageSize,
   ]);
+
+  useEffect(() => {}, [openComponent]);
 
   if (!selectedCycle) return <>Select cycle!</>;
 
@@ -149,9 +158,10 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
         />
 
         <TrainingMembers
-          training={props.selectedTraining}
+          trainings={todaysTrainings}
           group={props.group}
           users={users}
+          selectedTrainingId={openComponent.trainingId}
         />
       </Box>
 
@@ -191,6 +201,7 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 token={token}
                 setSelectedTrainings={setSelectedTrainings}
                 selectedTraining={selectedTraining}
+                setSelectedTraining={setSelectedTraining}
                 users={users}
                 filteredExercises={filteredExercises}
                 setFilteredExercises={setFilteredExercises}
@@ -201,6 +212,8 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 day={day}
                 selectedDailyTraining={selectedDailyTraining}
                 setSelectedDailyTraining={setSelectedDailyTraining}
+                openComponent={openComponent}
+                setOpenComponent={setOpenComponent}
               />
             )}
 
@@ -209,6 +222,7 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 token={token}
                 setSelectedTrainings={setSelectedTrainings}
                 selectedTraining={selectedTraining}
+                setSelectedTraining={setSelectedTraining}
                 users={users}
                 filteredExercises={filteredExercises}
                 setFilteredExercises={setFilteredExercises}
@@ -219,6 +233,8 @@ export default function TrainerDayView(props: FilterTypeViewProps) {
                 day={day}
                 selectedDailyTraining={selectedDailyTraining}
                 setSelectedDailyTraining={setSelectedDailyTraining}
+                openComponent={openComponent}
+                setOpenComponent={setOpenComponent}
               />
             )}
           </>
