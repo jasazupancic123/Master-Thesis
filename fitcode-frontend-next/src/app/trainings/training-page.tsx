@@ -1,50 +1,23 @@
 'use client';
 
-import Box from '@mui/material/Box';
-import React, { useEffect, useState } from 'react';
-import { useAppContext } from '@/context/app-provider';
-import dayjs from 'dayjs';
-import toast from 'react-hot-toast';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
+import { useState } from 'react';
+import { TrainingPageProps } from './type';
 import { CommonService } from '@/common/service/common.service';
-import { Divider } from '@mui/material';
-import { useFetch } from '@/hook/use-fetch';
-import { Training } from '@/controller/training/type/training.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import AthleteTrainingExerciseCard from '@/components/athlete-training-exercise-card';
+import { endOfDay, startOfDay } from 'date-fns';
+import AthleteTrainingExerciseCard from '@/components/athlete-trainings/athlete-training-exercise-card';
+import { Stack, Box, Typography, Divider } from '@mui/material';
+import dayjs from 'dayjs';
 
-export default function AthletePageRouter(props: any) {
-  const [trainings, setTrainings] = useState<Training[]>([]);
-  const { token, components } = useAppContext();
-  const exercises = useFetch<Exercise[]>('/exercise', { auth: true });
+const commonService = CommonService.instance;
 
-  useEffect(() => {
-    async function fetchTrainings() {
-      if (!exercises.data) return;
+export default function TrainingPage(props: TrainingPageProps) {
+  const { token, trainings: allTrainings } = props;
 
-      try {
-        let trainings = await TrainingController.findAll(token, {
-          from: dayjs().startOf('day').toDate(),
-          to: dayjs().endOf('day').toDate(),
-        });
-
-        trainings.map((t) => {
-          TrainingService.mapComponents(t, components.flat);
-          TrainingService.mapExercises(t, exercises.data!);
-        });
-
-        setTrainings(trainings);
-      } catch (e) {
-        console.error(e);
-        toast.error('Error fetching trainings');
-      }
-    }
-
-    fetchTrainings().then();
-  }, [token, exercises.data]);
+  const [trainings, setTrainings] = useState(() =>
+    allTrainings.filter(({ from }) =>
+      commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
+    )
+  );
 
   return (
     <>
@@ -99,6 +72,7 @@ export default function AthletePageRouter(props: any) {
                 {Object.values(training.components).map((component) => (
                   <Box key={component.id} sx={{ borderRadius: 2 }}>
                     <AthleteTrainingExerciseCard
+                      token={token}
                       component={component}
                       trainingId={training.id}
                     />

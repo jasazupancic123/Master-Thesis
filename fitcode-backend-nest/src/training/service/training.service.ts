@@ -74,34 +74,6 @@ export class TrainingService {
     private readonly userService: Wrapper<UserService>,
   ) {}
 
-  map(training: Training): MappedTraining {
-    return {
-      ...training,
-      components: Object.entries(training.components).map(
-        ([componentId, component]) => ({
-          id: componentId,
-          color: component.color,
-          order: component.order,
-          supersets: component.supersets?.map((superset, i) => ({
-            color: superset.color,
-            order: i,
-            componentId,
-            exercises: Object.entries(superset.exercises).map(
-              ([id, exercise]) => ({
-                id,
-                componentId,
-                supersetId: i.toString(),
-                order: exercise.order,
-                color: exercise.color,
-                meta: exercise.meta,
-              }),
-            ),
-          })),
-        }),
-      ),
-    };
-  }
-
   async getDocs(query: (query: Query) => Query = (query) => query) {
     return query(this.trainingRepository.collection()).get();
   }
@@ -339,10 +311,10 @@ export class TrainingService {
     };
   }
 
-  /* async updateSubgroup(
+  async updateSubgroup(
     user: User,
     ref: Required<SubgroupRef>,
-    input: Omit<UpdateSubgroup, 'components'>,
+    input: Pick<UpdateSubgroup, 'name'>,
   ): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is updating training subgroup ${ref.subgroupId}: ${JSON.stringify(input)}`,
@@ -358,22 +330,6 @@ export class TrainingService {
     // validate that all members belong to training
     this.validateTrainer(user);
     this.validateOwner(user.uid, training);
-    this.validateTrainingMembers(training, input.membersIds);
-
-    // update members
-    if (input.membersIds) {
-      await this.firebaseService.firestore.runTransaction(
-        async (transaction) => {
-          await this.updateMembers(
-            transaction,
-            training,
-            ref,
-            input.membersIds,
-            [], // subgroup is "alive" only for one training, don't update other trainings
-          );
-        },
-      );
-    }
 
     await this.subgroupService.update(ref, input);
 
@@ -385,27 +341,6 @@ export class TrainingService {
       },
     };
   }
-
-  async deleteSubgroup(
-    user: User,
-    ref: Required<SubgroupRef>,
-  ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is deleting training subgroup ${ref.subgroupId}`,
-    );
-
-    // validate parent references and ownership
-    const training = await this.findOneOrFail(user, ref);
-    this.subgroupService.findByIdOrFail(ref.subgroupId, training);
-
-    this.validateTrainer(user);
-    this.validateOwner(user.uid, training);
-
-    await this.subgroupService.delete(ref);
-    const { [ref.subgroupId]: _, ...subgroups } = training.subgroups;
-
-    return { ...training, subgroups };
-  } */
 
   async updateSubgroups(user: User, ref: TrainingRef, input: Subgroup[]) {
     this.logger.log(

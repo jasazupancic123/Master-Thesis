@@ -217,7 +217,7 @@ export class TrainingController {
     }
   ) {
     return api.patch<{}>(
-      `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}`,
+      `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}/set`,
       body,
       { token }
     );
