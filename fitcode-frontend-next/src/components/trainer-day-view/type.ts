@@ -68,9 +68,10 @@ export type DeleteExerciseInput = Parameters<
 >[5];
 
 export type TrainingMembersProps = {
-  training: Training | null;
+  trainings: Training[];
   group: Group;
   users: User[];
+  selectedTrainingId: string | null;
 };
 
 export interface TrainingExerciseCardProps {
@@ -87,9 +88,12 @@ export interface TrainingCardProps {
   setFilteredExercises: SetState<FilteredExercises>;
   components: Component[];
   training: Training;
+  setSelectedTraining: SetState<Training | null>;
   period: 'AM' | 'PM';
   exercises: Exercise[];
   day: Day;
   selectedDailyTraining: {am: boolean; pm: boolean};
   setSelectedDailyTraining: SetState<{am: boolean; pm: boolean}>;
+  openComponent: { componentId: string | null; trainingId: string | null };
+  setOpenComponent: SetState<{ componentId: string | null; trainingId: string | null }>;
 }

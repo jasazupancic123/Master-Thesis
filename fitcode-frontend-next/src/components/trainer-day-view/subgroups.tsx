@@ -25,8 +25,11 @@ import {
 import { TrainingService } from '@/controller/training/training.service';
 import MyModal from '../modal';
 import { TrainingController } from '@/controller/training/training.controller';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { set } from 'date-fns';
 
 export default function Subgroups(props: SubgroupsProps) {
+  const screenSize = useScreenSize();
   const { token, training, setTrainings, users } = props;
 
   const [showSubgroups, setShowSubgroups] = useState(false);
@@ -65,7 +68,7 @@ export default function Subgroups(props: SubgroupsProps) {
 
     // remove member from all subgroups, including the default subgroup
     const updatedTraining = { ...training };
-    const updatedSubgroups = Object.values(updatedTraining.subgroups);
+    const updatedSubgroups = subgroups;
 
     //find from which subgroup the member is being dragged and add it to changedSubgroupIds
     const fromSubgroup = updatedSubgroups.find((s) =>
@@ -111,34 +114,52 @@ export default function Subgroups(props: SubgroupsProps) {
 
     setDetectedSubgroupChanges(true);
     setSubgroups(updatedSubgroups);
+    updatedTraining.subgroups = Object.fromEntries(
+      updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
+    );
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
+    );
   };
 
-  const handleRightClick = (memberId: string) => {
-    const updatedTraining = { ...training };
-    const updatedSubgroups = Object.values(updatedTraining.subgroups);
+  const handleRightClick = (memberId: string, subgroupId: string) => {
+    if (subgroupId === 'default') return;
 
-    updatedSubgroups.forEach((s) => {
-      s.membersIds = s.membersIds.filter((id) => id !== memberId);
-    });
+    // Create a new array to avoid mutating state directly
+    const updatedSubgroups = subgroups.map((s) => ({
+      ...s,
+      membersIds: s.membersIds.filter((id) => id !== memberId),
+    }));
 
     setAvailableMembers((prev) => [
       ...prev,
       users.find((user) => user.uid === memberId)!,
     ]);
 
+    setSubgroups(updatedSubgroups);
+
+    setTrainings((prev) =>
+      prev.map((t) =>
+        t.id === training.id
+          ? {
+              ...t,
+              subgroups: Object.fromEntries(
+                updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
+              ),
+            }
+          : t
+      )
+    );
+
     setDetectedSubgroupChanges(true);
   };
 
   const handleDelete = async (subgroupId: string) => {
-    const deletedSubgroup = Object.values(training.subgroups).find(
-      (s) => s.id === subgroupId
-    )!;
+    const deletedSubgroup = subgroups.find((s) => s.id === subgroupId)!;
 
     const deletedMembers = [...deletedSubgroup.membersIds!];
 
-    const updatedSubgroups = Object.values(training.subgroups).filter(
-      (s) => s.id !== subgroupId
-    );
+    const updatedSubgroups = subgroups.filter((s) => s.id !== subgroupId);
 
     try {
       const updatedTraining = await TrainingController.updateSubgroups(
@@ -158,6 +179,9 @@ export default function Subgroups(props: SubgroupsProps) {
       ]);
 
       setSubgroups(updatedSubgroups);
+      updatedTraining.subgroups = Object.fromEntries(
+        updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
+      );
       setTrainings((prev) =>
         prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
       );
@@ -171,13 +195,22 @@ export default function Subgroups(props: SubgroupsProps) {
 
   const handleSaveSubgroupChanges = async () => {
     try {
-      await TrainingController.updateSubgroups(token, training.id, {
-        subgroups: subgroups.map((s) => {
-          const { components: _, ...subgroup } = s;
-          return subgroup;
-        }),
-      });
+      const newTraining = await TrainingController.updateSubgroups(
+        token,
+        training.id,
+        {
+          subgroups: subgroups.map((s) => {
+            const { components: _, ...subgroup } = s;
+            return subgroup;
+          }),
+        }
+      );
 
+      setSubgroups(Object.values(newTraining.subgroups));
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === newTraining.id ? newTraining : t))
+      );
+      setDetectedSubgroupChanges(false);
       toast.success('Subgroup changes saved successfully');
     } catch (error) {
       console.error(error);
@@ -198,7 +231,7 @@ export default function Subgroups(props: SubgroupsProps) {
             <Typography>Show Subgroups</Typography>
           </Box>
 
-          {detectedSubgroupChanges && (
+          {detectedSubgroupChanges && showSubgroups && (
             <Button
               variant="contained"
               color="primary"
@@ -248,11 +281,10 @@ export default function Subgroups(props: SubgroupsProps) {
                   subgroups.length > 0
                     ? 'repeat(3, minmax(300px, 1fr))'
                     : 'minmax(300px, 1fr)',
-                justifyContent:
-                  subgroups.length % 3 !== 0 ? 'center' : 'initial',
+                justifyContent: 'center',
+                alignItems: 'center',
                 gap: 2,
-                pl: 5,
-                pr: 5,
+                px: 5,
               }}
             >
               {/* Render Subgroups */}
@@ -269,7 +301,7 @@ export default function Subgroups(props: SubgroupsProps) {
                       sx={{
                         flex: '1 1 70%',
                         minWidth: 250,
-                        maxWidth: 500,
+                        maxWidth: screenSize.isLaptop ? 420 : 500,
                         minHeight: 210,
                         maxHeight: 210,
                         margin: 1,
@@ -361,7 +393,7 @@ export default function Subgroups(props: SubgroupsProps) {
                                       {...provided.dragHandleProps}
                                       onContextMenu={(event) => {
                                         event.preventDefault(); // Prevent default right-click menu
-                                        handleRightClick(user.uid);
+                                        handleRightClick(user.uid, subgroup.id);
                                       }}
                                       sx={{
                                         cursor: 'grab',
@@ -405,7 +437,7 @@ export default function Subgroups(props: SubgroupsProps) {
                 sx={{
                   flex: '1 1 70%',
                   minWidth: 250,
-                  maxWidth: 500,
+                  maxWidth: screenSize.isLaptop ? 420 : 500,
                   minHeight: 210,
                   maxHeight: 210,
                   margin: 1,
@@ -445,7 +477,20 @@ export default function Subgroups(props: SubgroupsProps) {
             );
 
             setModal((prev) => ({ ...prev, subgroup: false }));
-            setSubgroups(Object.values(newTraining.subgroups));
+            const newSubgroups = Object.values(newTraining.subgroups);
+            //set subgroups so, that u check if a subgroup from newSubgroups is not in subgroups and if its not, add it
+            const uniqueNewSubgroups = newSubgroups.filter(
+              (s) => !subgroups.find((sub) => sub.id === s.id)
+            );
+
+            setSubgroups((prev) => [...prev, ...uniqueNewSubgroups]);
+            newTraining.subgroups = Object.fromEntries(
+              uniqueNewSubgroups.map((subgroup) => [subgroup.id, subgroup])
+            );
+
+            setTrainings((prev) =>
+              prev.map((t) => (t.id === newTraining.id ? newTraining : t))
+            );
 
             setCreate({
               subgroup: { name: '', membersIds: [] },

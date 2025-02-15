@@ -1,11 +1,24 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Stack, Tooltip, Avatar, Typography } from '@mui/material';
 import { TrainingMembersProps } from './type';
+import { COLORS } from '@/common/constant/color.constant';
+import { Training } from '@/controller/training/type/training.type';
 
 export default function TrainingMembers(props: TrainingMembersProps) {
-  const { group, users } = props;
+  const { trainings, group, users, selectedTrainingId } = props;
   const members = users.filter((user) => group.membersIds.includes(user.uid));
+
+  const [training, setTraining] = useState<Training | undefined>(
+    trainings.find((training) => training.id === selectedTrainingId)
+  );
+
+  useEffect(() => {
+    setTraining(
+      trainings.find((training) => training.id === selectedTrainingId)
+    );
+  }, [trainings, group, selectedTrainingId]);
 
   return (
     <>
@@ -49,18 +62,33 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                     : aSubgroupIndex - bSubgroupIndex;
               }) */
               .map((member) => {
-                if (!member) return null;
+                if (!member || !training)
+                  return (
+                    <Tooltip key={member.uid} title={member.email}>
+                      <Avatar
+                        sx={{
+                          width: 45,
+                          height: 45,
+                          border: `3px solid ${undefined}`, // Apply the border color
+                        }}
+                      >
+                        {member.email[0].toUpperCase()}
+                      </Avatar>
+                    </Tooltip>
+                  );
 
-                /* // Find the subgroup index
-                const subgroupIndex = training.subgroups.findIndex(
-                  (subgroup: any) => subgroup.membersIds.includes(member.uid)
+                // Find the subgroup index
+                const subgroupIndex = Object.values(
+                  training.subgroups
+                ).findIndex((subgroup: any) =>
+                  subgroup.membersIds.includes(member.uid)
                 );
 
                 // assign border color based on the subgroup index
                 const borderColor =
                   subgroupIndex !== -1
                     ? COLORS[subgroupIndex + (1 % COLORS.length)]
-                    : undefined; */
+                    : undefined;
 
                 return (
                   <Tooltip key={member.uid} title={member.email}>
@@ -68,7 +96,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       sx={{
                         width: 45,
                         height: 45,
-                        border: `3px solid ${undefined}`, // Apply the border color
+                        border: `3px solid ${borderColor}`, // Apply the border color
                       }}
                     >
                       {member.email[0].toUpperCase()}
