@@ -24,17 +24,24 @@ import {
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
-import { useAppContext } from '@/context/app-provider';
 import { SetType } from '@/controller/training/enum/set-type.enum';
+import { handleApiRequest } from '@/common/type/state.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
+import { SetData } from '@/controller/training/type/set-data';
+import { REDIRECT_TO_SIGN_IN } from '@/common/error/redirect.error';
+import { useRouter } from 'next/navigation';
+import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
 
 interface Props {
+  token: string;
   trainingId: string;
   component: TrainingComponent;
 }
 
 export default function AthleteTrainingExerciseCard(props: Props) {
-  const { token } = useAppContext();
-  const { component, trainingId } = props;
+  const { token, component, trainingId } = props;
+  const router = useRouter();
 
   // State to manage input values for each set
   const [setValues, setSetValues] = React.useState<
@@ -61,6 +68,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
         ...updatedValues[exerciseId][setIndex],
         [type]: value,
       };
+
       return updatedValues;
     });
   };
@@ -70,27 +78,29 @@ export default function AthleteTrainingExerciseCard(props: Props) {
     superset: number,
     exerciseId: string
   ) {
-    const values = setValues[exerciseId] || [];
+    const values: SetData[] = (setValues[exerciseId] || []).map((val, i) => ({
+      status: SetStatus.COMPLETED,
+      setNumber: i + 1,
+      setTypeValue: +val.setValue,
+      workloadValue: val.workloadValue,
+    }));
 
-    try {
-      /* await TrainingController.updateAthleteSetData(
-        token,
-        trainingId,
-        componentId,
-        supersetId,
-        exerciseId,
-        values.map((val, i) => ({
-          setNumber: i + 1,
-          setTypeValue: +val.setValue,
-          workloadValue: val.workloadValue,
-        }))
-      ); */
-
-      toast.success('Successfully updated sets!');
-    } catch (e: any) {
-      console.error(e);
-      toast.error(`Something went wrong: ${e.message}`);
-    }
+    handleApiRequest(
+      () =>
+        TrainingController.updateAthleteWorkload(
+          token,
+          trainingId,
+          componentId,
+          superset,
+          exerciseId,
+          { sets: values }
+        ),
+      () => {
+        toast.success('Successfully updated sets!');
+      },
+      undefined,
+      router
+    );
   }
 
   // Helper function to get options based on set type and workload type
@@ -167,8 +177,8 @@ export default function AthleteTrainingExerciseCard(props: Props) {
           <CardContent>
             {component.supersets
               .sort((a, b) => a.order - b.order)
-              .map((superset) => (
-                <Grid2 size={{ xs: 12 }} key={superset.order}>
+              .map((superset, i) => (
+                <Grid2 size={{ xs: 12 }} key={i}>
                   <Card
                     sx={{
                       borderRadius: 2,
@@ -313,11 +323,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                                   variant="contained"
                                   startIcon={<FitnessCenter />}
                                   onClick={() =>
-                                    handleSaveSets(
-                                      component.id,
-                                      superset.order,
-                                      exercise.id
-                                    )
+                                    handleSaveSets(component.id, i, exercise.id)
                                   }
                                   sx={{ mb: 2 }}
                                 >

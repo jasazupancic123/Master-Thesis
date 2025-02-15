@@ -3,8 +3,7 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import { ReactNode } from 'react';
-import TrainerPage from './trainer-page';
+import GroupPage from './group-page';
 import { notFound } from 'next/navigation';
 
 export default async function Page() {
@@ -24,14 +23,5 @@ export default async function Page() {
 
   if ([UserRole.ADMIN, UserRole.ATHLETE].includes(role)) return notFound();
 
-  const mapper: Record<UserRole, ReactNode> = {
-    [UserRole.ATHLETE]: null,
-    [UserRole.ADMIN]: null,
-    [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: (
-      <TrainerPage token={token} users={users} groups={groups} />
-    ),
-  };
-
-  return mapper[role];
+  return <GroupPage token={token} users={users} groups={groups} />;
 }

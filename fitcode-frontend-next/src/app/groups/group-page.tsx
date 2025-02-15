@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@mui/material';
 
-export default function TrainerPage(props: Props) {
+export default function GroupPage(props: Props) {
   const { groups } = props;
   const theme = useTheme();
 

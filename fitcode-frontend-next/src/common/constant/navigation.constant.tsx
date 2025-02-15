@@ -38,6 +38,11 @@ export const LINK_USERS = link('Users', '/users');
 export const LINK_COMPONENTS = link('Components', '/components');
 export const LINK_EXERCISES = link('Exercises', '/exercises');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
+export const LINK_TRAININGS = link(
+  'Trainings',
+  '/trainings',
+  <FitnessCenterIcon />
+);
 export const LINK_CHART = link('Chart', '/chart', <BarChartIcon />);
 export const LINK_META = link('Wellness', '/wellness', <SpaIcon />);
 export const LINK_TRAINING = link(
@@ -77,8 +82,8 @@ export const LINKS_NAVBAR = {
 
 export const LINKS_SIDEBAR = {
   [UserRole.ATHLETE]: {
-    groups: LINK_GROUPS,
-    chart: LINK_CHART,
+    groups: LINK_TRAININGS,
+    // chart: LINK_CHART,
     calendar: LINK_CALENDAR,
     wellness: LINK_META,
     profile: LINK_PROFILE,

@@ -155,6 +155,8 @@ export class UserService {
     const metas = await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.USER_META)
       .where('userId', 'in', userIds)
+      .orderBy('date', 'desc')
+      .limit(1)
       .get()
       .then(({ docs }) =>
         docs.map((doc) => this.userMetaRepository.serialize(doc)),
