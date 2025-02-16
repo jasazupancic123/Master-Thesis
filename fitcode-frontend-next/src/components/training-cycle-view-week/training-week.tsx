@@ -1,20 +1,27 @@
-import dayjs, { Dayjs } from 'dayjs';
+import { CommonService } from '@/common/service/common.service';
+import { TrainingGridItem } from '@/components/training-cycle-view-week/training-cycle-view-grid-item';
+import { useGroup } from '@/context/group-provider';
+import { Divider } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Divider } from '@mui/material';
+import dayjs, { Dayjs } from 'dayjs';
+import { useRouter } from 'next/navigation';
 import React from 'react';
-import { CommonService } from '@/common/service/common.service';
-import { TrainingGridItem } from '@/components/training-cycle-view-week/training-cycle-view-grid-item';
-import { TrainingCycleViewWeekProps } from './type';
 import { handleCreateTraining } from '../trainer-cycle-view/state';
-import { Component } from '@/controller/component/type/component.type';
+import { TrainingCycleViewWeekProps } from './type';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
+  const { index, week, selected, setSelected } = props;
+
+  const router = useRouter();
+  const { token, group, cycle, components, setCycle, trainings, setTrainings } =
+    useGroup();
+
   function getFilteredTrainings(date: Dayjs, period: string) {
     date = dayjs(date);
 
-    return props.trainings.filter((training) => {
+    return trainings.filter((training) => {
       const trainingDate = dayjs(training.from);
       const start = trainingDate.startOf('day');
       const end = dayjs(training.to).endOf('day');
@@ -32,20 +39,24 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   }
 
   async function handleAddTraining(date: Dayjs, period: 'AM' | 'PM') {
-    if (props.components.length) {
-      await handleCreateTraining(
-        props.token,
+    handleCreateTraining(
+      token,
+      {
+        group,
+        cycle: cycle!,
         date,
         period,
-        props.group,
-        props.setSelectedTrainings,
-        props.selectedCycle,
-        props.selected as Component[],
-        props.setSelectedComponents,
-        props.components,
-        props.trainings
-      );
-    }
+        selectedComponents: selected!,
+      },
+      {
+        router,
+        components,
+        setCycle,
+        trainings,
+        setTrainings,
+        setSelectedComponents: setSelected as any,
+      }
+    );
   }
 
   return (
@@ -62,7 +73,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
             borderColor: '#303E4A',
             backgroundColor: '#1A2B3C',
             height: '100%',
-            cursor: props.components.length ? 'pointer' : 'default',
+            cursor: components.length ? 'pointer' : 'default',
             borderTopLeftRadius: 8,
             borderBottomLeftRadius: 8,
           }}
@@ -80,10 +91,10 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
               borderTopRightRadius: 8,
             }}
           >
-            Week {props.index + 1}
+            Week {index + 1}
           </Typography>
 
-          {props.week.map((date, j) => (
+          {week.map((date, j) => (
             <Box
               key={j}
               width="calc(100% / 7)"
@@ -91,7 +102,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 border: '1px solid',
                 borderColor: '#303E4A',
                 backgroundColor: '#1A2B3C',
-                cursor: props.components.length ? 'pointer' : 'default',
+                cursor: components.length ? 'pointer' : 'default',
                 minHeight: 140,
               }}
             >
@@ -146,13 +157,11 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                       <Box
                         key={key}
                         borderRadius={2}
-                        sx={{
-                          cursor: 'pointer',
-                        }}
+                        sx={{ cursor: 'pointer' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           props.addTrainingComponent(training.id, {
-                            components: props.components.map((c, i) => ({
+                            components: components.map((c, i) => ({
                               id: c.id,
                               order: i,
                             })),
@@ -165,7 +174,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                         <TrainingGridItem
                           order={key + 1}
                           training={training}
-                          components={props.components}
                           addTrainingComponent={props.addTrainingComponent}
                           deleteTraining={props.deleteTraining}
                           deleteTrainingComponent={

@@ -1,6 +1,11 @@
 'use client';
 
+import { AddMembersModal } from '@/components/add-members-modal';
 import GroupSidebar from '@/components/group-sidebar';
+import MyModal from '@/components/modal';
+import PageTitle from '@/components/page-title';
+import { SearchBar } from '@/components/search-bar';
+import { useGroup } from '@/context/group-provider';
 import { GroupService } from '@/controller/group/group.service';
 import { User } from '@/controller/user/type/user.type';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -8,27 +13,17 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 import { Avatar, Box, Button, Grid2, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { AddMembersModal } from '../../../../components/add-members-modal';
-import MyModal from '../../../../components/modal';
-import PageTitle from '../../../../components/page-title';
-import { SearchBar } from '../../../../components/search-bar';
-import { GroupIdPageProps } from '../props';
-import {
-  handleMembersSearchChange,
-  handleRemoveMember,
-  handleUpdateMembers,
-} from './state';
+import { handleRemoveMember, handleUpdateMembers } from './state';
 
-export default function MembersPage(props: GroupIdPageProps) {
-  const { token, group, users, groups, exercises, attributes, components } =
-    props;
+export default function GroupMembersPage() {
+  const { token, group, setGroup, users, groups } = useGroup();
 
+  const router = useRouter();
   const theme = useTheme();
-  const [selectedGroup, setSelectedGroup] = useState(() => group);
-
   const [members, setMembers] = useState<User[]>(() =>
-    GroupService.mapMembers(selectedGroup, users)
+    GroupService.mapMembers(group, users)
   );
 
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -48,13 +43,7 @@ export default function MembersPage(props: GroupIdPageProps) {
   return (
     <>
       <Box mt="16px">
-        <GroupSidebar
-          groups={groups}
-          selectedGroup={selectedGroup}
-          logout={async () => {
-            console.log('Log out');
-          }}
-        />
+        <GroupSidebar groups={groups} group={group} />
       </Box>
 
       <Box
@@ -65,7 +54,7 @@ export default function MembersPage(props: GroupIdPageProps) {
         alignItems="center"
         mt={0}
       >
-        <PageTitle title={`Members of ${selectedGroup.name}`} />
+        <PageTitle title={`Members of ${group.name}`} />
 
         <Box
           display="flex"
@@ -86,8 +75,8 @@ export default function MembersPage(props: GroupIdPageProps) {
               maxWidth="60%"
               placeholder="Search Members"
               value={searchQueryMembers}
-              handleSearchChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                handleMembersSearchChange(e, setSearchQueryMembers)
+              handleSearchChange={(e) =>
+                setSearchQueryMembers(e.target.value.toLowerCase())
               }
             />
 
@@ -253,12 +242,12 @@ export default function MembersPage(props: GroupIdPageProps) {
                         },
                       }}
                       onClick={() =>
-                        handleRemoveMember(
-                          member,
+                        handleRemoveMember({
+                          user: member,
                           members,
                           setMembers,
-                          setFilteredMembers
-                        )
+                          setFilteredMembers,
+                        })
                       }
                     >
                       <RemoveCircleIcon />
@@ -278,7 +267,7 @@ export default function MembersPage(props: GroupIdPageProps) {
           variant="contained"
           sx={{ marginTop: 2, backgroundColor: theme.palette.primary.dark }}
           onClick={() =>
-            handleUpdateMembers(token, members, selectedGroup, setSelectedGroup)
+            handleUpdateMembers(token, members, { router, group, setGroup })
           }
         >
           Save Changes

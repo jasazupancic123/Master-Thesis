@@ -1,8 +1,11 @@
 'use client';
 
+import { handleApiRequest } from '@/common/type/state.type';
 import MyModal from '@/components/modal';
 import MultiCycleSlider from '@/components/multi-cycle-slider';
+import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { GroupController } from '@/controller/group/group.controller';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import EditIcon from '@mui/icons-material/Edit';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
@@ -11,16 +14,16 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { GroupContextProps } from '../../app/groups/[group_id]/props';
-import AddCycleForm from '../add-cycle-form';
-import EditCycleModal from '../edit-cycle-modal';
-import { handleUpdateCycle } from './state';
+import toast from 'react-hot-toast';
+import AddCycleForm from '../../../components/add-cycle-form';
+import EditCycleModal from '../../../components/edit-cycle-modal';
 
-export default function TrainerYearView(props: GroupContextProps) {
+export default function TrainerYearView() {
+  const router = useRouter();
   const screenSize = useScreenSize();
-  const { token, group, setSelectedGroup, selectedCycle, setSelectedCycle } =
-    props;
+  const { token, group, setGroup, cycle, setCycle } = useGroup();
 
   const theme = useTheme();
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
@@ -30,6 +33,34 @@ export default function TrainerYearView(props: GroupContextProps) {
     pageSize: 10,
     page: 0,
   });
+
+  async function handleUpdateCycle() {
+    setShowEditCycleModal(false);
+    if (!editCycle) return toast.error('No cycle selected.');
+
+    handleApiRequest(
+      router,
+      () =>
+        GroupController.updateCycle(token, group.id, editCycle.id, {
+          name: editCycle.name,
+          from: editCycle.from,
+          to: editCycle.to,
+        }),
+      (updatedCycle) => {
+        const updatedCycles = group.cycles.map((cycle) =>
+          cycle.id === updatedCycle.id ? updatedCycle : cycle
+        );
+
+        setGroup({ ...group, cycles: updatedCycles });
+        if (cycle?.id === editCycle.id) setCycle(updatedCycle);
+
+        toast.success('Cycle updated successfully.');
+        setEditCycle(null);
+      },
+      undefined,
+      'Failed to update cycle.'
+    );
+  }
 
   const columns: GridColDef[] = [
     {
@@ -144,31 +175,8 @@ export default function TrainerYearView(props: GroupContextProps) {
             borderBottomRightRadius: 20,
           }}
         >
-          <MultiCycleSlider
-            token={token}
-            groupId={group.id}
-            cycles={group.cycles}
-            selectedGroup={group}
-            setSelectedGroup={setSelectedGroup}
-            selectedCycle={selectedCycle}
-            setSelectedCycle={setSelectedCycle}
-            setShowAddCycleModal={setShowAddCycleModal}
-          />
+          <MultiCycleSlider setShowModal={setShowAddCycleModal} />
         </Box>
-
-        {/* <Box
-          width="100%"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <IconButton
-            onClick={() => setShowAddCycleModal(true)}
-            sx={{ height: 50, width: 50 }}
-          >
-            <Add />
-          </IconButton>
-        </Box> */}
 
         <Typography variant="h6" gutterBottom mt={3}>
           Cycles
@@ -230,18 +238,7 @@ export default function TrainerYearView(props: GroupContextProps) {
           setIsOpen={(open) => setShowEditCycleModal(open)}
           onCancel={() => setShowEditCycleModal(false)}
           cancelText="Close"
-          onConfirm={() =>
-            handleUpdateCycle(
-              token,
-              group,
-              setSelectedGroup,
-              editCycle,
-              setEditCycle,
-              setShowEditCycleModal,
-              selectedCycle,
-              setSelectedCycle
-            )
-          }
+          onConfirm={handleUpdateCycle}
         >
           <EditCycleModal
             token={token}
@@ -262,12 +259,7 @@ export default function TrainerYearView(props: GroupContextProps) {
         onCancel={() => setShowAddCycleModal(false)}
         cancelText="Close"
       >
-        <AddCycleForm
-          token={token}
-          onClose={() => setShowAddCycleModal(false)}
-          selectedGroup={group}
-          setSelectedGroup={setSelectedGroup}
-        />
+        <AddCycleForm onClose={() => setShowAddCycleModal(false)} />
       </MyModal>
     </>
   );

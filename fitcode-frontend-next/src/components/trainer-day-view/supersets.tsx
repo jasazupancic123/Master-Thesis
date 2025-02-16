@@ -1,14 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { COLOR } from '@/common/constant/browser.constant';
-import {
-  ExerciseMeta,
-  Superset,
-  TrainingComponent,
-} from '@/controller/training/type/training-plan.type';
+import BorderColor from '@/components/border-color';
+import { useGroup } from '@/context/group-provider';
+import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
 import { Update } from '@mui/icons-material';
-import { Box, Tooltip, IconButton, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import toast from 'react-hot-toast';
+import MyModal from '../modal';
+import AddExerciseForm from './add-exercise-form';
+import { SupersetsProps } from './props';
 import {
   addSuperset,
   deleteExercise,
@@ -16,58 +22,34 @@ import {
   updateExercise,
 } from './state';
 import TrainingExerciseCard from './training-exercise-card';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import BorderColor from '@/components/border-color';
-import { Training } from '@/controller/training/type/training.type';
-import { Component } from '@/controller/component/type/component.type';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { FilteredExercises } from './type';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import toast from 'react-hot-toast';
-import MyModal from '../modal';
-import AddExerciseModal from './add-exercise-modal';
-
-interface SupersetsProps {
-  supersets: Superset[];
-  token: string;
-  training: Training;
-  component: TrainingComponent;
-  setSelectedTrainings: SetState<Training[]>;
-  setSelectedTraining: SetState<Training | null>;
-  components: Component[];
-  exercises: Exercise[];
-  filteredExercises: FilteredExercises;
-  setFilteredExercises: SetState<FilteredExercises>;
-}
 
 export default function Supersets(props: SupersetsProps) {
+  const { trainingComponent } = props;
+
   const {
-    supersets,
     token,
     training,
-    setSelectedTraining,
+    setTraining,
+    setFilteredTrainings,
+    setTrainings,
     component,
-    setSelectedTrainings,
     components,
     exercises,
-    filteredExercises,
-    setFilteredExercises,
-  } = props;
+  } = useGroup();
 
-  const [openAddExcerciseModal, setOpenAddExcerciseModal] = useState(false);
+  const supersets = trainingComponent.supersets || [];
+
+  const router = useRouter();
+  const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [supersetsWithAdd, setSupersetsWithAdd] = useState(supersets);
   const [selectedExercises, setSelectedExercises] = useState(
     supersets.map((superset) => Object.values(superset.exercises)).flat()
   );
 
   useEffect(() => {
-    if (supersets.length < 4) {
+    if (supersets.length < 4)
       setSupersetsWithAdd([...supersets, { exercises: {}, order: 100 }]);
-    } else {
-      setSupersetsWithAdd([...supersets]); // Don't include placeholder when max is reached
-    }
+    else setSupersetsWithAdd([...supersets]); // don't include placeholder when max is reached
   }, [supersets]);
 
   useEffect(() => {
@@ -77,53 +59,54 @@ export default function Supersets(props: SupersetsProps) {
   }, [supersets, supersets.length]);
 
   async function onDragEnd({ destination }: any) {
-    if (!destination) return;
+    if (!destination || !training || !component) return;
 
     if ((destination.droppableId as string).endsWith('100')) {
       if (supersets.length >= 4)
         return toast.error('You can only have 4 supersets per component');
 
-      handleApiRequest(
-        () =>
-          addSuperset(
-            token,
-            training.id,
-            component.id,
-            {
-              color: COLOR[(component.supersets?.length || 0) % COLOR.length],
-            },
-            setSelectedTrainings,
-            setSelectedTraining,
-            components,
-            exercises
-          ),
-        () => {
-          toast.success('Superset added successfully');
+      addSuperset(
+        token,
+        {
+          color:
+            COLOR[(trainingComponent.supersets?.length || 0) % COLOR.length],
+          trainingId: training.id,
+          componentId: component.id,
         },
-        undefined,
-        'Failed to add superset'
+        {
+          router,
+          setFilteredTrainings,
+          setTrainings,
+          setTraining,
+          components,
+          exercises,
+        }
       );
     }
   }
 
   async function handleDeleteSuperset(order: number) {
-    handleApiRequest(
-      () =>
-        deleteSuperset(
-          token,
-          training.id,
-          component.id,
-          order,
-          { subgroupId: '' },
-          setSelectedTrainings
-        ),
-      () => {
-        toast.success('Superset deleted successfully');
+    if (!training || !component) return;
+
+    deleteSuperset(
+      token,
+      {
+        trainingId: training.id,
+        componentId: component.id,
+        superset: order,
       },
-      undefined,
-      'Failed to delete superset'
+      {
+        router,
+        setTraining,
+        setTrainings,
+        setFilteredTrainings,
+        components,
+        exercises,
+      }
     );
   }
+
+  if (!component || !training) return null;
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -213,14 +196,20 @@ export default function Supersets(props: SupersetsProps) {
                                       onClick={() =>
                                         deleteExercise(
                                           token,
-                                          training.id,
-                                          component.id,
-                                          i,
-                                          exercise.id,
-                                          {},
-                                          setSelectedTrainings,
-                                          components,
-                                          exercises
+                                          {
+                                            trainingId: training.id,
+                                            componentId: component.id,
+                                            superset: i,
+                                            exerciseId: exercise.id,
+                                          },
+                                          {
+                                            router,
+                                            setTraining,
+                                            setTrainings,
+                                            setFilteredTrainings,
+                                            components,
+                                            exercises,
+                                          }
                                         )
                                       }
                                     >
@@ -237,11 +226,11 @@ export default function Supersets(props: SupersetsProps) {
                                       onClick={() =>
                                         updateExercise(
                                           token,
-                                          training.id,
-                                          component.id,
-                                          i,
-                                          exercise.id,
                                           {
+                                            trainingId: training.id,
+                                            componentId: component.id,
+                                            superset: i,
+                                            exerciseId: exercise.id,
                                             color: `#${Math.floor(
                                               Math.random() * 16777215
                                             )
@@ -249,9 +238,14 @@ export default function Supersets(props: SupersetsProps) {
                                               .padStart(6, '0')}`,
                                             order: 0,
                                           },
-                                          setSelectedTrainings,
-                                          components,
-                                          exercises
+                                          {
+                                            router,
+                                            setTraining,
+                                            setTrainings,
+                                            setFilteredTrainings,
+                                            components,
+                                            exercises,
+                                          }
                                         )
                                       }
                                     >
@@ -259,21 +253,27 @@ export default function Supersets(props: SupersetsProps) {
                                     </IconButton>
                                   </Tooltip>
                                 </Box>
+
                                 <TrainingExerciseCard
                                   exercise={exercise}
                                   onChange={async (meta) => {
-                                    await updateExercise(
+                                    updateExercise(
                                       token,
-                                      training.id,
-                                      component.id,
-                                      i,
-                                      exercise.id,
                                       {
+                                        trainingId: training.id,
+                                        componentId: component.id,
+                                        superset: i,
+                                        exerciseId: exercise.id,
                                         meta: meta as ExerciseMeta,
                                       },
-                                      setSelectedTrainings,
-                                      components,
-                                      exercises
+                                      {
+                                        router,
+                                        setTraining,
+                                        setTrainings,
+                                        setFilteredTrainings,
+                                        components,
+                                        exercises,
+                                      }
                                     );
                                   }}
                                 />
@@ -282,6 +282,7 @@ export default function Supersets(props: SupersetsProps) {
                           </Draggable>
                         )
                       )}
+
                       {provided.placeholder}
                     </Box>
 
@@ -313,13 +314,7 @@ export default function Supersets(props: SupersetsProps) {
                         <Tooltip title="Add exercises">
                           <IconButton
                             onClick={() => {
-                              setFilteredExercises((prev) => ({
-                                ...prev,
-                                show: true,
-                                componentId: component.id,
-                                superset: i,
-                              }));
-                              setOpenAddExcerciseModal(true);
+                              setOpenAddExerciseModal(true);
                             }}
                           >
                             <AddIcon />
@@ -334,21 +329,15 @@ export default function Supersets(props: SupersetsProps) {
           ))}
       </Box>
 
-      {/* Members modal */}
+      {/* Component exercises modal */}
       <MyModal
-        isOpen={openAddExcerciseModal}
-        setIsOpen={(open) => setOpenAddExcerciseModal(open)}
-        onCancel={() => setOpenAddExcerciseModal(false)}
-        onConfirm={() => setOpenAddExcerciseModal(false)}
+        isOpen={openAddExerciseModal}
+        setIsOpen={(open) => setOpenAddExerciseModal(open)}
+        onCancel={() => setOpenAddExerciseModal(false)}
+        onConfirm={() => setOpenAddExerciseModal(false)}
         cancelText="Close"
       >
-        <AddExerciseModal
-          token={token}
-          training={training}
-          filteredExercises={filteredExercises}
-          setSelectedTrainings={setSelectedTrainings}
-          components={components}
-          exercises={exercises}
+        <AddExerciseForm
           selectedExercises={selectedExercises}
           setSelectedExercises={setSelectedExercises}
         />

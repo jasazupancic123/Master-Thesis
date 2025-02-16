@@ -1,4 +1,7 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import { REDIRECT_TO_SIGN_IN } from '@/common/error/redirect.error';
+import { GroupProvider } from '@/context/group-provider';
 import { ComponentController } from '@/controller/component/component.controller';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { GroupController } from '@/controller/group/group.controller';
@@ -8,9 +11,9 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { GroupIdPageParams, GroupIdPageProps } from './props';
-import TrainerPage from './trainer-page';
+import TrainerGroupPage from './trainer-group-page';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -25,7 +28,6 @@ export default async function Page(props: GroupIdPageParams) {
   if (![UserRole.TRAINER, UserRole.MANAGER].includes(role))
     return <div>Unauthorized</div>;
 
-  // @ts-ignore
   const groupId = (await props.params).group_id; // https://nextjs.org/docs/messages/sync-dynamic-apis
   const group = await GroupController.findById(token, groupId);
   if (!group) return notFound();
@@ -49,7 +51,7 @@ export default async function Page(props: GroupIdPageParams) {
     )
   );
 
-  const groupIdPageProps: GroupIdPageProps = {
+  const context: GroupIdPageProps = {
     token,
     group,
     users,
@@ -64,8 +66,12 @@ export default async function Page(props: GroupIdPageParams) {
     [UserRole.ADMIN]: null,
     [UserRole.ATHLETE]: null,
     [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: <TrainerPage {...groupIdPageProps} />,
+    [UserRole.TRAINER]: <TrainerGroupPage />,
   };
 
-  return mapper[role];
+  return (
+    <Suspense fallback={<div>Loading ...</div>}>
+      <GroupProvider {...context}>{mapper[role]}</GroupProvider>
+    </Suspense>
+  );
 }

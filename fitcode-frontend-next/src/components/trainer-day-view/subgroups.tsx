@@ -1,223 +1,98 @@
 'use client';
 
-import { useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import InfoIcon from '@mui/icons-material/Info';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { COLORS } from '@/common/constant/color.constant';
-import { SubgroupsProps } from './type';
-import toast from 'react-hot-toast';
+import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { TrainingService } from '@/controller/training/training.service';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { User } from '@/controller/user/type/user.type';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import InfoIcon from '@mui/icons-material/Info';
 import {
-  Box,
-  Tooltip,
   Avatar,
-  Switch,
-  Typography,
+  Box,
+  Button,
   Card,
   CardContent,
   IconButton,
-  Button,
-  TextField,
   Stack,
+  Switch,
+  TextField,
+  Tooltip,
+  Typography,
 } from '@mui/material';
-import { TrainingService } from '@/controller/training/training.service';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import MyModal from '../modal';
-import { TrainingController } from '@/controller/training/training.controller';
-import { useScreenSize } from '@/context/screen-size-provider';
+import { DEFAULT_SUBGROUP } from './constant';
+import { AddSubgroupInput } from './input';
+import {
+  addSubgroup,
+  handleDeleteSubgroup,
+  handleRightClickSubgroup,
+  handleSaveSubgroupChanges,
+  onDragEndSubgroup,
+} from './state';
 
-export default function Subgroups(props: SubgroupsProps) {
+export default function Subgroups() {
   const screenSize = useScreenSize();
-  const { token, training, setTrainings, users } = props;
+  const router = useRouter();
+  const {
+    token,
+    training,
+    setTrainings,
+    setTraining,
+    setFilteredTrainings,
+    users,
+    components,
+    exercises,
+  } = useGroup();
 
   const [showSubgroups, setShowSubgroups] = useState(false);
-  const [availableMembers, setAvailableMembers] = useState(() =>
-    TrainingService.mapAvailableMembers(training).availableMembersIds!.map(
-      (userId) => users.find((u) => u.uid === userId)!
-    )
-  );
+  const [availableMembers, setAvailableMembers] = useState<User[]>([]);
 
   const [detectedSubgroupChanges, setDetectedSubgroupChanges] = useState(false);
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
-  const [subgroups, setSubgroups] = useState<Subgroup[]>(
-    Object.values(training.subgroups || {})
-  );
+  const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
   const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
   const [modal, setModal] = useState({ subgroup: false, editSubgroup: false });
-  const [create, setCreate] = useState({
-    subgroup: { name: '', membersIds: [] },
+  const [createSubgroup, setCreateSubgroup] = useState<AddSubgroupInput>({
+    name: '',
+    membersIds: [],
   });
 
-  const defaultSubgroup: Subgroup = {
-    id: 'default',
-    name: 'Default',
-    membersIds: availableMembers.map((user) => user.uid),
-    components: {},
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  useEffect(() => {
+    if (!training) return;
 
-  const subgroupsWithDefault = [defaultSubgroup, ...(subgroups || [])];
-
-  const onDragEnd = (result: any) => {
-    const { destination, draggableId } = result;
-    if (!destination) return;
-
-    // remove member from all subgroups, including the default subgroup
-    const updatedTraining = { ...training };
-    const updatedSubgroups = subgroups;
-
-    // find from which subgroup the member is being dragged and add it to changedSubgroupIds
-    const fromSubgroup = updatedSubgroups.find((s) =>
-      s.membersIds.includes(draggableId)
-    );
-
-    if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id))
-      setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
-
-    [defaultSubgroup, ...updatedSubgroups].forEach((s) => {
-      if (!s.membersIds) return;
-      s.membersIds = s.membersIds.filter((id) => id !== draggableId);
-    });
-
-    // Add member to the new subgroup
-    if (destination.droppableId === 'default') {
-      if (!availableMembers.some((user) => user.uid === draggableId))
-        setAvailableMembers((prev) => [
-          ...prev,
-          users.find((user) => user.uid === draggableId)!,
-        ]);
-    } else {
-      const targetSubgroup = updatedSubgroups.find(
-        (s) => s.id === destination.droppableId
-      );
-
-      if (targetSubgroup) targetSubgroup.membersIds.push(draggableId);
-
-      setAvailableMembers((prev) =>
-        prev.filter((user) => user.uid !== draggableId)
-      );
-
-      if (targetSubgroup && !changedSubgroupIds.includes(targetSubgroup.id))
-        setChangedSubgroupIds((prev) => [...prev, targetSubgroup.id]);
-    }
-
-    setTrainings((prev) =>
-      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
-    );
-
-    setDetectedSubgroupChanges(true);
-    setSubgroups(updatedSubgroups);
-    updatedTraining.subgroups = Object.fromEntries(
-      updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
-    );
-
-    setTrainings((prev) =>
-      prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
-    );
-  };
-
-  function handleRightClick(memberId: string, subgroupId: string) {
-    if (subgroupId === 'default') return;
-
-    // Create a new array to avoid mutating state directly
-    const updatedSubgroups = subgroups.map((s) => ({
-      ...s,
-      membersIds: s.membersIds.filter((id) => id !== memberId),
-    }));
-
-    setAvailableMembers((prev) => [
-      ...prev,
-      users.find((user) => user.uid === memberId)!,
-    ]);
-
-    setSubgroups(updatedSubgroups);
-
-    setTrainings((prev) =>
-      prev.map((t) =>
-        t.id === training.id
-          ? {
-              ...t,
-              subgroups: Object.fromEntries(
-                updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
-              ),
-            }
-          : t
+    setSubgroups(Object.values(training.subgroups || {}));
+    setAvailableMembers(
+      TrainingService.mapAvailableMembers(training).availableMembersIds!.map(
+        (userId) => users.find((u) => u.uid === userId)!
       )
     );
+  }, [training]);
 
-    setDetectedSubgroupChanges(true);
-  }
-
-  const handleDelete = async (subgroupId: string) => {
-    const deletedSubgroup = subgroups.find((s) => s.id === subgroupId)!;
-
-    const deletedMembers = [...deletedSubgroup.membersIds!];
-
-    const updatedSubgroups = subgroups.filter((s) => s.id !== subgroupId);
-
-    try {
-      const updatedTraining = await TrainingController.updateSubgroups(
-        token,
-        training.id,
-        {
-          subgroups: updatedSubgroups.map((s) => {
-            const { components: _, ...subgroup } = s;
-            return subgroup;
-          }),
-        }
-      );
-
-      setAvailableMembers((prev) => [
-        ...prev,
-        ...deletedMembers.map((id) => users.find((u) => u.uid === id)!),
-      ]);
-
-      setSubgroups(updatedSubgroups);
-      updatedTraining.subgroups = Object.fromEntries(
-        updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
-      );
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
-      );
-
-      toast.success('Subgroup successfully deleted');
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to delete subgroup');
-    }
-  };
-
-  const handleSaveSubgroupChanges = async () => {
-    try {
-      const newTraining = await TrainingController.updateSubgroups(
-        token,
-        training.id,
-        {
-          subgroups: subgroups.map((s) => {
-            const { components: _, ...subgroup } = s;
-            return subgroup;
-          }),
-        }
-      );
-
-      setSubgroups(Object.values(newTraining.subgroups));
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === newTraining.id ? newTraining : t))
-      );
-      setDetectedSubgroupChanges(false);
-      toast.success('Subgroup changes saved successfully');
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to save subgroup changes');
-    }
-  };
+  if (!training) return null;
 
   return (
     <>
-      <DragDropContext onDragEnd={onDragEnd}>
+      <DragDropContext
+        onDragEnd={(result) =>
+          onDragEndSubgroup(result, {
+            subgroups,
+            setSubgroups,
+            changedSubgroupIds,
+            setChangedSubgroupIds,
+            availableMembers,
+            setAvailableMembers,
+            users,
+            setDetectedSubgroupChanges,
+          })
+        }
+      >
         {/* Subgroups Section */}
         <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
           <Box display="flex" justifyContent="center" alignItems="center">
@@ -232,7 +107,20 @@ export default function Subgroups(props: SubgroupsProps) {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => handleSaveSubgroupChanges()}
+              onClick={() =>
+                handleSaveSubgroupChanges(token, {
+                  router,
+                  training,
+                  setTraining,
+                  setTrainings,
+                  setFilteredTrainings,
+                  subgroups,
+                  setSubgroups,
+                  setDetectedSubgroupChanges,
+                  components,
+                  exercises,
+                })
+              }
               sx={{
                 mt: 1,
               }}
@@ -285,143 +173,181 @@ export default function Subgroups(props: SubgroupsProps) {
               }}
             >
               {/* Render Subgroups */}
-              {subgroupsWithDefault.map((subgroup, index) => (
-                <Droppable
-                  key={subgroup.id}
-                  droppableId={subgroup.id}
-                  direction="horizontal"
-                >
-                  {(provided) => (
-                    <Card
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      sx={{
-                        flex: '1 1 70%',
-                        minWidth: 250,
-                        maxWidth: screenSize.isLaptop ? 420 : 500,
-                        minHeight: 210,
-                        maxHeight: 210,
-                        margin: 1,
-                        transition: 'border 0.2s',
-                        border: `1px solid ${COLORS[index % 20]}`,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        position: 'relative', // Needed for absolute positioning of icons
-                      }}
-                    >
-                      {/* Icons for edit and delete */}
-                      {subgroup.id !== 'default' && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            pt: 1.5,
-                            right: 5,
-                            display: 'flex',
-                            gap: 0,
-                          }}
-                        >
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              setModal((prev) => ({
-                                ...prev,
-                                editSubgroup: true,
-                              }));
-                              setEditedSubgroup(subgroup as Subgroup);
-                            }}
-                            sx={{ p: 0.5 }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDelete(subgroup.id)}
-                            sx={{ p: 0.5 }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      )}
-
-                      <CardContent
+              {[DEFAULT_SUBGROUP(availableMembers), ...(subgroups || [])].map(
+                (subgroup, index) => (
+                  <Droppable
+                    key={subgroup.id}
+                    droppableId={subgroup.id}
+                    direction="horizontal"
+                  >
+                    {(provided) => (
+                      <Card
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
                         sx={{
+                          flex: '1 1 70%',
+                          minWidth: 250,
+                          maxWidth: screenSize.isLaptop ? 420 : 500,
+                          minHeight: 210,
+                          maxHeight: 210,
+                          margin: 1,
+                          transition: 'border 0.2s',
+                          border: `1px solid ${COLORS[index % 20]}`,
                           display: 'flex',
                           flexDirection: 'column',
-                          alignItems: 'center',
-                          height: '100%',
-                          overflow: 'hidden',
+                          position: 'relative', // Needed for absolute positioning of icons
                         }}
                       >
-                        <Typography sx={{ marginBottom: 1 }}>
-                          {subgroup.name}
-                        </Typography>
+                        {/* Icons for edit and delete */}
+                        {subgroup.id !== 'default' && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              pt: 1.5,
+                              right: 5,
+                              display: 'flex',
+                              gap: 0,
+                            }}
+                          >
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setModal((prev) => ({
+                                  ...prev,
+                                  editSubgroup: true,
+                                }));
+                                setEditedSubgroup(subgroup as Subgroup);
+                              }}
+                              sx={{ p: 0.5 }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleDeleteSubgroup(
+                                  token,
+                                  { subgroupId: subgroup.id },
+                                  {
+                                    router,
+                                    training,
+                                    setTraining,
+                                    setFilteredTrainings,
+                                    setTrainings,
+                                    subgroups,
+                                    setSubgroups,
+                                    setAvailableMembers,
+                                    users,
+                                    components,
+                                    exercises,
+                                  }
+                                )
+                              }
+                              sx={{ p: 0.5 }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        )}
 
-                        <Box
+                        <CardContent
                           sx={{
                             display: 'flex',
-                            flexWrap: 'wrap',
-                            overflowY: 'auto',
-                            overflowX: 'hidden',
-                            maxHeight: 160,
-                            padding: 1,
-                            width: '100%',
-                            justifyContent: 'center',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            height: '100%',
+                            overflow: 'hidden',
                           }}
                         >
-                          {subgroup.membersIds?.map((id, idx) => {
-                            const userId = training.membersIds.find(
-                              (memberId) => memberId === id
-                            );
-                            const user = users.find(
-                              (user) => user.uid === userId
-                            );
+                          <Typography sx={{ marginBottom: 1 }}>
+                            {subgroup.name}
+                          </Typography>
 
-                            return (
-                              user && (
-                                <Draggable
-                                  key={user.uid}
-                                  draggableId={user.uid}
-                                  index={idx}
-                                >
-                                  {(provided, snapshot) => (
-                                    <Box
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      onContextMenu={(event) => {
-                                        event.preventDefault(); // Prevent default right-click menu
-                                        handleRightClick(user.uid, subgroup.id);
-                                      }}
-                                      sx={{
-                                        cursor: 'grab',
-                                        opacity: snapshot.isDragging ? 0.6 : 1, // Reduce opacity while dragging
-                                        transition: 'opacity 0.2s ease',
-                                      }}
-                                    >
-                                      <Tooltip title={user.email} arrow>
-                                        <Avatar
-                                          sx={{
-                                            width: 40,
-                                            height: 40,
-                                            margin: 1,
-                                          }}
-                                        >
-                                          {user.email[0].toUpperCase()}
-                                        </Avatar>
-                                      </Tooltip>
-                                    </Box>
-                                  )}
-                                </Draggable>
-                              )
-                            );
-                          })}
-                          {provided.placeholder}
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  )}
-                </Droppable>
-              ))}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              overflowY: 'auto',
+                              overflowX: 'hidden',
+                              maxHeight: 160,
+                              padding: 1,
+                              width: '100%',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {subgroup.membersIds?.map((id, idx) => {
+                              const userId = training!.membersIds.find(
+                                (memberId) => memberId === id
+                              );
+                              const user = users.find(
+                                (user) => user.uid === userId
+                              );
+
+                              return (
+                                user && (
+                                  <Draggable
+                                    key={user.uid}
+                                    draggableId={user.uid}
+                                    index={idx}
+                                  >
+                                    {(provided, snapshot) => (
+                                      <Box
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        onContextMenu={(event) => {
+                                          event.preventDefault(); // prevent default right-click menu
+                                          handleRightClickSubgroup(
+                                            {
+                                              memberId: user.uid,
+                                              subgroupId: subgroup.id,
+                                            },
+                                            {
+                                              subgroups,
+                                              setSubgroups,
+                                              training,
+                                              setTraining,
+                                              setFilteredTrainings,
+                                              setTrainings,
+                                              setAvailableMembers,
+                                              users,
+                                              setDetectedSubgroupChanges,
+                                            }
+                                          );
+                                        }}
+                                        sx={{
+                                          cursor: 'grab',
+                                          opacity: snapshot.isDragging
+                                            ? 0.6
+                                            : 1, // Reduce opacity while dragging
+                                          transition: 'opacity 0.2s ease',
+                                        }}
+                                      >
+                                        <Tooltip title={user.email} arrow>
+                                          <Avatar
+                                            sx={{
+                                              width: 40,
+                                              height: 40,
+                                              margin: 1,
+                                            }}
+                                          >
+                                            {user.email[0].toUpperCase()}
+                                          </Avatar>
+                                        </Tooltip>
+                                      </Box>
+                                    )}
+                                  </Draggable>
+                                )
+                              );
+                            })}
+                            {provided.placeholder}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </Droppable>
+                )
+              )}
 
               {/* Add New Subgroup Button */}
               <Card
@@ -461,43 +387,20 @@ export default function Subgroups(props: SubgroupsProps) {
         setIsOpen={(subgroup) => setModal((prev) => ({ ...prev, subgroup }))}
         title="Create Subgroup"
         onCancel={() => setModal((prev) => ({ ...prev, subgroup: false }))}
-        onConfirm={async () => {
-          try {
-            const newTraining = await TrainingController.addSubgroup(
-              token,
-              training.id,
-              create.subgroup
-            );
-
-            setTrainings((prev) =>
-              prev.map((t) => (t.id === newTraining.id ? newTraining : t))
-            );
-
-            setModal((prev) => ({ ...prev, subgroup: false }));
-            const newSubgroups = Object.values(newTraining.subgroups);
-            //set subgroups so, that u check if a subgroup from newSubgroups is not in subgroups and if its not, add it
-            const uniqueNewSubgroups = newSubgroups.filter(
-              (s) => !subgroups.find((sub) => sub.id === s.id)
-            );
-
-            setSubgroups((prev) => [...prev, ...uniqueNewSubgroups]);
-            newTraining.subgroups = Object.fromEntries(
-              uniqueNewSubgroups.map((subgroup) => [subgroup.id, subgroup])
-            );
-
-            setTrainings((prev) =>
-              prev.map((t) => (t.id === newTraining.id ? newTraining : t))
-            );
-
-            setCreate({
-              subgroup: { name: '', membersIds: [] },
-            });
-
-            toast.success('Successfully added new subgroup');
-          } catch (e) {
-            toast.error('Failed to add new subgroup');
-          }
-        }}
+        onConfirm={() =>
+          addSubgroup(token, createSubgroup, {
+            router,
+            subgroups,
+            setSubgroups,
+            training,
+            setTraining,
+            setTrainings,
+            setFilteredTrainings,
+            setCreateSubgroup,
+            components,
+            exercises,
+          })
+        }
       >
         <Stack spacing={4} p={1}>
           {/* Name */}
@@ -506,11 +409,11 @@ export default function Subgroups(props: SubgroupsProps) {
             fullWidth
             variant="outlined"
             size="small"
-            value={create.subgroup.name}
+            value={createSubgroup.name}
             onChange={(e) =>
-              setCreate((prev) => ({
+              setCreateSubgroup((prev) => ({
                 ...prev,
-                subgroup: { ...prev.subgroup, name: e.target.value },
+                name: e.target.value,
               }))
             }
           />
@@ -540,11 +443,8 @@ export default function Subgroups(props: SubgroupsProps) {
             size="small"
             onChange={(e) =>
               setEditedSubgroup((prev) => {
-                if (!prev) return prev; // Return prev instead of undefined
-                return {
-                  ...prev,
-                  name: e.target.value,
-                };
+                if (!prev) return prev;
+                return { ...prev, name: e.target.value };
               })
             }
           />

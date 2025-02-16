@@ -1,0 +1,33 @@
+import { Day } from '@/common/service/util/date.util';
+import { SetState } from '@/common/type/state.type';
+import {
+  ExerciseMeta,
+  TrainingComponent,
+  TrainingExercise,
+} from '@/controller/training/type/training-plan.type';
+import { Training } from '@/controller/training/type/training.type';
+
+export interface TrainingCardProps {
+  day: Day;
+  training: Training;
+  period: string;
+}
+
+export interface TrainingComponentProps {
+  training: Training;
+  trainingComponent: TrainingComponent;
+}
+
+export interface SupersetsProps {
+  trainingComponent: TrainingComponent;
+}
+
+export interface AddExerciseFormProps {
+  selectedExercises: TrainingExercise[];
+  setSelectedExercises: SetState<TrainingExercise[]>;
+}
+
+export interface TrainingExerciseCardProps {
+  exercise: TrainingExercise;
+  onChange: (data: Partial<ExerciseMeta>) => void;
+}

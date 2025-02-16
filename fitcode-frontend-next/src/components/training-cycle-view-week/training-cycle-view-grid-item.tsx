@@ -1,10 +1,10 @@
-import Box from '@mui/material/Box';
-import { Tooltip } from '@mui/material';
+import { CommonService } from '@/common/service/common.service';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { SvgIconComponent } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
+import Box from '@mui/material/Box';
 import React from 'react';
 import { TrainingCycleViewGridItemProps } from './type';
-import { useScreenSize } from '@/context/screen-size-provider';
-import { CommonService } from '@/common/service/common.service';
 
 const commonService = CommonService.instance;
 
@@ -49,10 +49,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                       component!.id
                     );
                   }}
-                  sx={{
-                    margin: 1,
-                    cursor: 'pointer',
-                  }}
+                  sx={{ margin: 1, cursor: 'pointer' }}
                 ></IconComponent>
               </div>
             </Tooltip>

@@ -1,11 +1,12 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { CommonService } from '@/common/service/common.service';
 import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ReactNode } from 'react';
-import TrainerGroupPage from './trainer-group-page';
+import TrainerGroupsPage from './trainer-groups-page';
 
 export default async function Page() {
   // fetch data
@@ -25,7 +26,7 @@ export default async function Page() {
     [UserRole.ATHLETE]: null,
     [UserRole.ADMIN]: null,
     [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: <TrainerGroupPage token={token} groups={groups} />,
+    [UserRole.TRAINER]: <TrainerGroupsPage token={token} groups={groups} />,
   };
 
   return <>{mapper[role]}</>;

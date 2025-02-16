@@ -1,14 +1,19 @@
+import {
+  LINK_SIGN_IN,
+  LINKS_SIDEBAR,
+} from '@/common/constant/navigation.constant';
+import { REDIRECT_TO_SIGN_IN } from '@/common/error/redirect.error';
 import { ILink } from '@/common/type/link.type';
-import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { SvgIconComponent } from '@mui/icons-material';
-import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
-import TimerIcon from '@mui/icons-material/Timer';
-import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import AccessibilityIcon from '@mui/icons-material/Accessibility';
+import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
+import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
+import TimerIcon from '@mui/icons-material/Timer';
+import { redirect } from 'next/navigation';
 
 export class NavigationUtil {
   getSidebarLinksByUserRole(role: UserRole): ILink[] {
@@ -36,5 +41,9 @@ export class NavigationUtil {
       default:
         return QuestionMarkIcon;
     }
+  }
+
+  handleErrorRedirectToSignInPage(e: Error) {
+    if (e.message === REDIRECT_TO_SIGN_IN) redirect(LINK_SIGN_IN.href);
   }
 }

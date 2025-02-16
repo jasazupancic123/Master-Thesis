@@ -1,4 +1,5 @@
 import { GroupDateFilter } from '@/common/type/filter.type';
+import { Pagination } from '@/common/type/paginate.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Component } from '@/controller/component/type/component.type';
 import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
@@ -28,20 +29,31 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilter: SetState<GroupDateFilter>;
   group: Group;
   setGroup: SetState<Group>;
-  cycle: Cycle | null;
+  cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
-  component: Component | null;
+  component: Component | undefined;
   setComponent: SetStateNullable<Component>;
-  training: Training | null;
+  training: Training | undefined;
   setTraining: SetStateNullable<Training>;
-  subgroup: Subgroup | null;
+  subgroup: Subgroup | undefined;
   setSubgroup: SetStateNullable<Subgroup>;
   dateFrom: Dayjs;
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;
   setDateTo: SetState<Dayjs>;
+  trainings: Training[];
+  setTrainings: SetState<Training[]>;
   filteredTrainings: Training[];
   setFilteredTrainings: SetState<Training[]>;
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
+};
+
+export type TrainerDayViewContextProps = {
+  filteredExercises: Exercise[];
+  setFilteredExercises: SetState<Exercise[]>;
+  pagination: Pagination;
+  setPagination: SetState<Pagination>;
+  search: string;
+  setSearch: SetState<string>;
 };

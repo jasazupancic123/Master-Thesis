@@ -1,13 +1,13 @@
 'use client';
 
+import AddCycleForm from '@/components/add-cycle-form';
+import GroupSidebar from '@/components/group-sidebar';
 import MyModal from '@/components/modal';
+import PageTitle from '@/components/page-title';
 import { useGroup } from '@/context/group-provider';
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import AddCycleForm from '../../../../components/add-cycle-form';
-import GroupSidebar from '../../../../components/group-sidebar';
-import PageTitle from '../../../../components/page-title';
 import { handleDeleteGroup, handleUpdateGroup } from './state';
 
 export default function GroupSettingsPage() {
@@ -54,7 +54,7 @@ export default function GroupSettingsPage() {
           variant="contained"
           color="primary"
           sx={{ mt: 2 }}
-          onClick={() => handleUpdateGroup(token, group, { setGroup })}
+          onClick={() => handleUpdateGroup(token, group, { router, setGroup })}
         >
           Update Group
         </Button>
@@ -66,12 +66,7 @@ export default function GroupSettingsPage() {
         onCancel={() => setShowCyclesModal(false)}
         cancelText="Close"
       >
-        <AddCycleForm
-          token={token}
-          group={group}
-          setGroup={setGroup}
-          onClose={() => setShowCyclesModal(false)}
-        />
+        <AddCycleForm onClose={() => setShowCyclesModal(false)} />
       </MyModal>
     </>
   );

@@ -1,72 +1,45 @@
-import { useEffect, useState } from 'react';
-import {
-  Stack,
-  IconButton,
-  Grid,
-  Box,
-  Typography,
-  Button,
-  Grid2,
-} from '@mui/material';
+import { useGroup } from '@/context/group-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { ArrowLeft, ArrowRight } from '@mui/icons-material';
-import { addExercise } from './state';
-import { FilteredExercises } from './type';
-import { SetState } from '@/common/type/state.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
+import {
+  Box,
+  Button,
+  Grid,
+  Grid2,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { SearchBar } from '../search-bar';
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { AddExerciseFormProps } from './props';
+import { addExercise } from './state';
 
-interface AddExerciseModalProps {
-  token: string;
-  training: Training;
-  filteredExercises: FilteredExercises;
-  setSelectedTrainings: SetState<Training[]>;
-  components: Component[];
-  exercises: Exercise[];
-  selectedExercises: TrainingExercise[];
-  setSelectedExercises: SetState<TrainingExercise[]>;
-}
+export default function AddExerciseForm(props: AddExerciseFormProps) {
+  const { selectedExercises } = props;
+  const router = useRouter();
 
-export default function AddExerciseModal(props: AddExerciseModalProps) {
+  const { filteredExercises, setPagination, search, setSearch } =
+    useTrainerDayViewContext();
+
   const {
     token,
     training,
-    filteredExercises,
-    setSelectedTrainings,
+    setTraining,
+    setFilteredTrainings,
+    setTrainings,
+    component,
     components,
     exercises,
-    selectedExercises,
-    setSelectedExercises,
-  } = props;
-
-  const [searchQueryExcercise, setSearchQueryExercise] = useState('');
-  const [filteredList, setFilteredList] =
-    useState<FilteredExercises>(filteredExercises);
-
-  useEffect(() => {
-    if (searchQueryExcercise === '') {
-      setFilteredList(filteredExercises);
-    } else {
-      setFilteredList((prev) => ({
-        ...prev,
-        data: filteredExercises.data.filter((exercise) =>
-          exercise.name
-            .toLowerCase()
-            .includes(searchQueryExcercise.toLowerCase())
-        ),
-      }));
-    }
-  }, [searchQueryExcercise, filteredExercises]);
+  } = useGroup();
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" width="100%">
       {/* Search Bar */}
       <SearchBar
         placeholder="Search Exercises"
-        value={searchQueryExcercise}
-        handleSearchChange={(e) => setSearchQueryExercise(e.target.value)}
+        value={search}
+        handleSearchChange={(e) => setSearch(e.target.value)}
         maxWidth={'85%'}
       />
 
@@ -75,13 +48,9 @@ export default function AddExerciseModal(props: AddExerciseModalProps) {
         <IconButton
           sx={{ width: 40, height: 40, p: 1 }}
           onClick={() => {
-            setFilteredList((prev: FilteredExercises) => ({
+            setPagination((prev) => ({
               ...prev,
-              pagination: {
-                ...prev.pagination,
-                page:
-                  prev.pagination.page - 1 >= 1 ? prev.pagination.page - 1 : 1,
-              },
+              page: prev.page - 1 >= 1 ? prev.page - 1 : 1,
             }));
           }}
         >
@@ -90,7 +59,7 @@ export default function AddExerciseModal(props: AddExerciseModalProps) {
 
         {/* Exercise List */}
         <Grid2 container direction="column" spacing={1} p={1} width="100%">
-          {filteredList.data
+          {filteredExercises
             .sort((a, b) => {
               if (a.name < b.name) return -1;
               if (a.name > b.name) return 1;
@@ -119,14 +88,14 @@ export default function AddExerciseModal(props: AddExerciseModalProps) {
                     sx={{
                       width: 60,
                       height: 60,
-                      backgroundImage: `url(${
-                        exercise.imageUrl ||
-                        'https://mui.com/static/images/cards/contemplative-reptile.jpg'
-                      })`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       borderRadius: '8px',
                       flexShrink: 0,
+                      backgroundImage: `url(${
+                        exercise.imageUrl ||
+                        'https://mui.com/static/images/cards/contemplative-reptile.jpg'
+                      })`,
                     }}
                   />
 
@@ -148,16 +117,25 @@ export default function AddExerciseModal(props: AddExerciseModalProps) {
                     variant={isSelected ? 'outlined' : 'contained'}
                     color="primary"
                     onClick={() => {
+                      if (!training || !component) return;
+
                       if (!isSelected) {
                         addExercise(
                           token,
-                          training.id,
-                          filteredList.componentId!,
-                          filteredList.superset!,
-                          exercise.id,
-                          setSelectedTrainings,
-                          components,
-                          exercises
+                          {
+                            trainingId: training.id,
+                            componentId: component.id,
+                            superset: 0,
+                            exerciseId: exercise.id,
+                          },
+                          {
+                            router,
+                            setTraining,
+                            setTrainings,
+                            setFilteredTrainings,
+                            components,
+                            exercises,
+                          }
                         );
                       }
                     }}
@@ -172,15 +150,9 @@ export default function AddExerciseModal(props: AddExerciseModalProps) {
         <IconButton
           sx={{ width: 40, height: 40, p: 1 }}
           onClick={() => {
-            setFilteredList((prev) => ({
+            setPagination((prev) => ({
               ...prev,
-              pagination: {
-                ...prev.pagination,
-                page:
-                  prev.pagination.page + 1 <= prev.pagination.pages
-                    ? prev.pagination.page + 1
-                    : prev.pagination.pages,
-              },
+              page: prev.page + 1 <= prev.pages ? prev.page + 1 : prev.pages,
             }));
           }}
         >

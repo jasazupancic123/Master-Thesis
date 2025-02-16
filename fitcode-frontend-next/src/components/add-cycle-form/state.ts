@@ -1,7 +1,7 @@
 import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { Group } from '@/controller/group/type/group.type';
-import { Dayjs } from 'dayjs';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { AddCycleInput } from './input';
 
@@ -9,6 +9,7 @@ export async function handleAddCycle(
   token: string,
   input: AddCycleInput,
   state: {
+    router: AppRouterInstance;
     group: Group;
     setGroup: SetState<Group>;
   },
@@ -28,6 +29,7 @@ export async function handleAddCycle(
   }
 
   handleApiRequest(
+    state.router,
     () =>
       GroupController.addCycle(token, group.id, {
         name,

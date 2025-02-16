@@ -1,34 +1,55 @@
 'use client';
 
-import { GroupContextProps } from '@/app/groups/[group_id]/props';
 import { CommonService } from '@/common/service/common.service';
+import { handleApiRequest } from '@/common/type/state.type';
 import Circles from '@/components/circles';
+import TrainingItem from '@/components/trainer-week-view/training-week-view-item';
+import { useGroup } from '@/context/group-provider';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
-import { getWeek, updateTraining } from './state';
-import TrainingItem from './training-week-view-item';
 
 const commonService = CommonService.instance;
 
-export default function TrainerWeekView(props: GroupContextProps) {
-  const { token, components, trainings, selectedCycle, setSelectedTrainings } =
-    props;
+export default function TrainerWeekView() {
+  const {
+    token,
+    components,
+    cycle,
+    trainings,
+    setFilteredTrainings,
+    setTrainings,
+    setDateFrom,
+    setDateTo,
+  } = useGroup();
 
+  const router = useRouter();
   const [index, setIndex] = useState(0); // week index
-  const weeks = selectedCycle?.weeks || [];
+  const weeks = cycle?.weeks || [];
 
   /**
    * Set date to cycle start and end when opening the page
    */
   useEffect(() => {
-    if (!selectedCycle) return;
+    if (!cycle) return;
     setIndex(0);
-  }, [selectedCycle?.id]);
+  }, [cycle]);
 
-  if (!selectedCycle) return null;
+  /**
+   * Filter trainings based on cycle
+   */
+  useEffect(() => {
+    if (!cycle) return;
+    setDateFrom(dayjs(weeks[index][0].date));
+    setDateTo(dayjs(weeks[index][6].date));
+  }, [cycle, index]);
+
+  if (!cycle) return null;
 
   return (
     <Box
@@ -71,9 +92,9 @@ export default function TrainerWeekView(props: GroupContextProps) {
           display="flex"
           justifyContent="space-between"
         >
-          {getWeek(weeks, index)?.map(({ date }: { date: Date }, i: number) => {
+          {weeks[index].map(({ date }, i) => {
             const day = dayjs(date);
-            const filtered = trainings.filter((t: any) =>
+            const filtered = trainings.filter((t) =>
               commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to))
             );
 
@@ -107,16 +128,40 @@ export default function TrainerWeekView(props: GroupContextProps) {
                     <Fragment key={training.id}>
                       <TrainingItem
                         training={training}
-                        updateTraining={(training, input) =>
-                          updateTraining(
-                            token,
-                            training,
-                            input,
-                            selectedCycle,
-                            setSelectedTrainings,
-                            components
-                          )
-                        }
+                        updateTraining={async (training, input) => {
+                          if (!cycle) return;
+                          if (!Object.keys(input).length) return;
+
+                          await handleApiRequest(
+                            router,
+                            () =>
+                              TrainingController.update(
+                                token,
+                                training.id,
+                                input
+                              ),
+                            (training) => {
+                              const mapped = TrainingService.mapComponents(
+                                training,
+                                components
+                              );
+
+                              setFilteredTrainings((prev) =>
+                                prev.map((t) =>
+                                  t.id === training.id ? mapped : t
+                                )
+                              );
+
+                              setTrainings((prev) =>
+                                prev.map((t) =>
+                                  t.id === training.id ? mapped : t
+                                )
+                              );
+                            },
+                            undefined,
+                            'Error when updating training'
+                          );
+                        }}
                       />
                     </Fragment>
                   ))}

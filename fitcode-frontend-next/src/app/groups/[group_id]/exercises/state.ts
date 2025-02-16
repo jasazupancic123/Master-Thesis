@@ -1,47 +1,52 @@
 import { CommonService } from '@/common/service/common.service';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { SetState } from '@/common/type/state.type';
+import { Pagination } from '@/common/type/paginate.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { Component } from '@/controller/component/type/component.type';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 
 const commonService = CommonService.instance;
 
-export async function onFileUpload(file: File, path: string) {
-  try {
-    await FirebaseStorageUtil.uploadFile(file, path);
-  } catch (e: any) {
-    console.error(e);
-    toast.error(e.message || 'An error occurred');
-  }
+export async function handleFileUpload(
+  input: { file: File; path: string },
+  state: { router: AppRouterInstance }
+) {
+  const { file, path } = input;
+  const { router } = state;
+
+  handleApiRequest(
+    router,
+    () => FirebaseStorageUtil.uploadFile(file, path),
+    () => {},
+    undefined,
+    'Failed to upload file'
+  );
 }
 
-export async function fetchExercises(
-  setFilteredExercises: SetState<Exercise[]>,
-  components: Component[],
-  exercises: Exercise[],
-  pagination: { page: number; pageSize: number; pages: number; total: number },
-  setPagination: SetState<{
-    page: number;
-    pageSize: number;
-    pages: number;
-    total: number;
-  }>,
-  selectedComponent: Component | null,
-  name?: string
+export function handlePaginateExercises(
+  filter: { componentsIds?: string[]; name?: string },
+  state: {
+    components: Component[];
+    exercises: Exercise[];
+    pagination: Pagination;
+    setFilteredExercises: SetState<Exercise[]>;
+    setPagination: SetState<Pagination>;
+  }
 ) {
-  const filter = {
-    ...(selectedComponent?.id && {
-      componentsIds: [selectedComponent?.id || ''],
-    }),
-    ...(name && { name }),
-  };
+  const {
+    components,
+    exercises,
+    pagination,
+    setFilteredExercises,
+    setPagination,
+  } = state;
 
   let filtered = ExerciseService.filter(exercises, filter, components);
-
   const total = filtered.length;
 
   // paginate
@@ -54,90 +59,102 @@ export async function fetchExercises(
   });
 
   // populate exercises
-  filtered.map((exercise) => {
-    ExerciseService.mapAttributes(exercise);
-    ExerciseService.mapComponents(exercise, components);
-  });
+  filtered.map((exercise) =>
+    ExerciseService.mapComponents(
+      ExerciseService.mapAttributes(exercise),
+      components
+    )
+  );
 
   setFilteredExercises(filtered);
   setPagination((prev) => ({ ...prev, page, total, pages }));
 }
 
-export async function addExercise(
+export async function handleAddExercise(
   token: string,
-  item: Partial<Exercise>,
-  selectedComponent: Component | null,
-  filteredExercises: Exercise[],
-  setFilteredExercises: SetState<Exercise[]>,
-  setExercises: SetState<Exercise[]>,
-  attributes: ExerciseAttribute[],
-  components: Component[]
-) {
-  if (!item.name) return toast.error('Name is required');
-  if (!item.componentsIds?.length)
-    return toast.error('Select at least one component to add');
-
-  try {
-    const attributeValues: Record<string, any> = {};
-
-    // find all nested select attributes and convert them to a multi-level object
-    const nestedSelectAttributes = attributes
-      .filter(
-        (attribute) =>
-          attribute.type === 'select' &&
-          typeof attribute.values?.[0] === 'object'
-      )
-      .map((attribute) => attribute.field);
-
-    for (const key of nestedSelectAttributes) {
-      const nested = commonService.object.nestObject(
-        item.attributeValues || {},
-        key
-      );
-
-      if (nested) attributeValues[key] = nested;
-    }
-
-    // add all other attributes
-    const otherAttributes = attributes.filter(
-      (attribute) => !nestedSelectAttributes.includes(attribute.field)
-    );
-
-    for (const attribute of otherAttributes)
-      attributeValues[attribute.field] =
-        item.attributeValues?.[attribute.field];
-
-    // delete all keys with undefined values
-    Object.keys(attributeValues).forEach(
-      (key) => attributeValues[key] === undefined && delete attributeValues[key]
-    );
-
-    const response = await ExerciseController.create(token, {
-      name: item.name,
-      componentsIds: item.componentsIds,
-      imageUrl: item.imageUrl,
-      videoUrl: item.videoUrl,
-      attributeValues,
-    });
-
-    toast.success('Exercise added');
-
-    const id = response.id;
-    const rootComponents = item.componentsIds.map((cId) => {
-      const component = components.find((c) => c.id === cId)!;
-      return commonService.tree.getRoot(component, components);
-    });
-
-    if (
-      !selectedComponent ||
-      (selectedComponent &&
-        rootComponents.map((c) => c.id).includes(selectedComponent.id))
-    )
-      setFilteredExercises([...filteredExercises, { ...item, id } as Exercise]);
-
-    setExercises((prev) => [...prev!, { ...item, id } as Exercise]);
-  } catch (e: any) {
-    console.error(e);
-    toast.error(e.message || 'An error occurred');
+  input: Partial<Exercise>,
+  state: {
+    router: AppRouterInstance;
+    components: Component[];
+    attributes: ExerciseAttribute[];
+    component?: Component;
+    filteredExercises: Exercise[];
+    setFilteredExercises: SetState<Exercise[]>;
+    setExercises: SetState<Exercise[]>;
   }
+) {
+  const {
+    router,
+    components,
+    attributes,
+    component,
+    filteredExercises,
+    setFilteredExercises,
+    setExercises,
+  } = state;
+
+  if (!input.name) return toast.error('Name is required');
+  if (!input.componentsIds?.length)
+    return toast.error('Select at least one component to add');
+  const attributeValues: Record<string, any> = {};
+
+  // find all nested select attributes and convert them to a multi-level object
+  const nestedSelectAttributes = attributes
+    .filter(
+      (attribute) =>
+        attribute.type === 'select' && typeof attribute.values?.[0] === 'object'
+    )
+    .map((attribute) => attribute.field);
+
+  for (const key of nestedSelectAttributes) {
+    const nested = commonService.object.nestObject(
+      input.attributeValues || {},
+      key
+    );
+
+    if (nested) attributeValues[key] = nested;
+  }
+
+  // add all other attributes
+  const otherAttributes = attributes.filter(
+    (attribute) => !nestedSelectAttributes.includes(attribute.field)
+  );
+
+  for (const attribute of otherAttributes)
+    attributeValues[attribute.field] = input.attributeValues?.[attribute.field];
+
+  // delete all keys with undefined values
+  Object.keys(attributeValues).forEach(
+    (key) => attributeValues[key] === undefined && delete attributeValues[key]
+  );
+
+  handleApiRequest(
+    router,
+    () =>
+      ExerciseController.create(token, {
+        name: input.name!,
+        componentsIds: input.componentsIds!,
+        imageUrl: input.imageUrl,
+        videoUrl: input.videoUrl,
+        attributeValues,
+      }),
+    (exercise) => {
+      const id = exercise.id;
+      const rootComponents = input.componentsIds!.map((cId) => {
+        const component = components.find((c) => c.id === cId)!;
+        return commonService.tree.getRoot(component, components);
+      });
+
+      if (
+        !component ||
+        (component && rootComponents.map((c) => c.id).includes(component.id))
+      )
+        setFilteredExercises([
+          ...filteredExercises,
+          { ...input, id } as Exercise,
+        ]);
+
+      setExercises((prev) => [...prev!, { ...input, id } as Exercise]);
+    }
+  );
 }

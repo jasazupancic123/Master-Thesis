@@ -1,4 +1,5 @@
 import pluginJs from "@eslint/js";
+import nextPlugin from '@next/eslint-plugin-next';
 import importPlugin from 'eslint-plugin-import';
 import pluginReact from "eslint-plugin-react";
 import globals from "globals";
@@ -13,6 +14,7 @@ export default [
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   importPlugin.flatConfigs.recommended,
+  nextPlugin.flatConfigs.recommended,
   {
     rules: {
       'import/order': ["error", {

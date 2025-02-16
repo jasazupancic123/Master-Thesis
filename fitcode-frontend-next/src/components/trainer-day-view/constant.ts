@@ -1,6 +1,8 @@
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
 import { Method } from '@/controller/component/type/method.type';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { User } from '@/controller/user/type/user.type';
 
 export const MAIN_SETS: MainSet[] = [
   { id: '1', name: 'Circuit' },
@@ -25,3 +27,12 @@ export const METHODS: Method[] = [
   { id: '6', name: 'PNF Stretching' },
   { id: '7', name: 'Foam Rolling' },
 ];
+
+export const DEFAULT_SUBGROUP = (availableMembers: User[]): Subgroup => ({
+  id: 'default',
+  name: 'Default',
+  membersIds: availableMembers.map((user) => user.uid),
+  components: {},
+  createdAt: new Date(),
+  updatedAt: new Date(),
+});

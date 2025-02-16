@@ -3,7 +3,9 @@
 import { AddMembersModal } from '@/components/add-members-modal';
 import GroupSidebar from '@/components/group-sidebar';
 import MyModal from '@/components/modal';
+import PageTitle from '@/components/page-title';
 import { SearchBar } from '@/components/search-bar';
+import { useGroup } from '@/context/group-provider';
 import { User } from '@/controller/user/type/user.type';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -17,37 +19,33 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import PageTitle from '../../../../components/page-title';
-import { GroupIdPageProps } from '../props';
-import { filterMembers, handleCreateGroup, handleRemoveMember } from './state';
+import {
+  handleCreateGroup,
+  handleFilterMembers,
+  handleRemoveMember,
+} from './state';
 
-export default function AddGroupPage(props: GroupIdPageProps) {
-  const { token, users, groups, group } = props;
+export default function AddGroupPage() {
+  const { token, users, groups, group } = useGroup();
   const theme = useTheme();
+  const router = useRouter();
 
   const [members, setMembers] = useState<User[]>([]);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [searchQueryMembers, setSearchQueryMembers] = useState('');
   const [filteredMembers, setFilteredMembers] = useState<User[]>([]);
+  const [name, setName] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    if (!members) return;
-    filterMembers(members, setFilteredMembers, searchQueryMembers);
-  }, [searchQueryMembers, members]);
+    handleFilterMembers({ members, setFilteredMembers, search });
+  }, [search, members]);
 
   return (
     <>
-      <Box mt="16px">
-        <GroupSidebar
-          groups={groups}
-          selectedGroup={group}
-          logout={async () => {
-            console.log('Log out');
-          }}
-        />
-      </Box>
+      <GroupSidebar groups={groups} group={group} />
+
       <Box
         display="flex"
         flexDirection="column"
@@ -62,7 +60,7 @@ export default function AddGroupPage(props: GroupIdPageProps) {
         <TextField
           label="Group Name"
           sx={{ minWidth: 275, mt: 3 }}
-          onChange={(e) => setGroupName(e.target.value)}
+          onChange={(e) => setName(e.target.value)}
         />
 
         <Typography variant="h5" gutterBottom mt={3} mb={0}>
@@ -79,10 +77,8 @@ export default function AddGroupPage(props: GroupIdPageProps) {
           {/* Search Bar */}
           <SearchBar
             placeholder="Search Members"
-            value={searchQueryMembers}
-            handleSearchChange={(e) =>
-              setSearchQueryMembers(e.target.value.toLowerCase())
-            }
+            value={search}
+            handleSearchChange={(e) => setSearch(e.target.value.toLowerCase())}
             maxWidth="60%"
           />
 
@@ -112,31 +108,24 @@ export default function AddGroupPage(props: GroupIdPageProps) {
               borderTopRightRadius: 4,
             }}
           >
-            <Grid2
-              size={{ xs: 1 }}
-              display="flex"
-              justifyContent="center"
-            ></Grid2>
-            <Grid2
-              size={{ xs: 0.5 }}
-              display="flex"
-              justifyContent="center"
-            ></Grid2>
             <Grid2 size={{ xs: 3 }} display="flex" justifyContent="center">
               <Typography variant="body1" fontWeight="bold">
                 Name
               </Typography>
             </Grid2>
+
             <Grid2 size={{ xs: 3 }} display="flex" justifyContent="center">
               <Typography variant="body1" fontWeight="bold">
                 Email
               </Typography>
             </Grid2>
+
             <Grid2 size={{ xs: 2.5 }} display="flex" justifyContent="center">
               <Typography variant="body1" fontWeight="bold">
                 Verified
               </Typography>
             </Grid2>
+
             <Grid2 size={{ xs: 2 }} display="flex" justifyContent="center">
               <Typography variant="body1" fontWeight="bold">
                 Remove
@@ -144,7 +133,7 @@ export default function AddGroupPage(props: GroupIdPageProps) {
             </Grid2>
           </Grid2>
 
-          <Box maxHeight="42vh" overflow="auto">
+          <Box overflow="auto">
             {/* Filtered Members List */}
             {filteredMembers && filteredMembers.length > 0 ? (
               filteredMembers.map((member, index) => (
@@ -230,12 +219,12 @@ export default function AddGroupPage(props: GroupIdPageProps) {
                         },
                       }}
                       onClick={() =>
-                        handleRemoveMember(
-                          member,
+                        handleRemoveMember({
+                          user: member,
                           members,
                           setMembers,
-                          setFilteredMembers
-                        )
+                          setFilteredMembers,
+                        })
                       }
                     >
                       <RemoveCircleIcon />
@@ -272,10 +261,8 @@ export default function AddGroupPage(props: GroupIdPageProps) {
           onClick={() =>
             handleCreateGroup(
               token,
-              groupName,
-              members,
-              setMembers,
-              setGroupName
+              { name, membersIds: members.map((m) => m.uid) },
+              { router, setMembers }
             )
           }
         >

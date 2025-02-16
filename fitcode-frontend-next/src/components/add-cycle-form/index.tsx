@@ -1,15 +1,19 @@
 'use client';
 
+import { useGroup } from '@/context/group-provider';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AddCycleModalProps } from './props';
 import { handleAddCycle } from './state';
 
 export default function AddCycleForm(props: AddCycleModalProps) {
-  const { token, group, setGroup, onClose } = props;
+  const { onClose } = props;
+  const router = useRouter();
+  const { token, group, setGroup } = useGroup();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -77,7 +81,7 @@ export default function AddCycleForm(props: AddCycleModalProps) {
               from: from?.toDate()!,
               to: to?.toDate()!,
             },
-            { group, setGroup },
+            { router, group, setGroup },
             onClose
           )
         }
