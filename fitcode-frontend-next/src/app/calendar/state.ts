@@ -2,13 +2,8 @@ import { DateRange } from '@/common/type/date-range.type';
 import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { addMonths, subMonths } from 'date-fns';
-import {
-  Calendar,
-  momentLocalizer,
-  ToolbarProps,
-  View,
-  NavigateAction,
-} from 'react-big-calendar';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { NavigateAction, View } from 'react-big-calendar';
 
 export function handleNavigate(
   newDate: Date,
@@ -24,9 +19,15 @@ export function handleNavigate(
 
 export async function fetchAthleteTrainings(
   token: string,
-  dateRange: DateRange
+  dateRange: DateRange,
+  state: {
+    router: AppRouterInstance;
+  }
 ) {
+  const { router } = state;
+
   return handleApiRequest(
+    router,
     () => TrainingController.findAll(token, { ...dateRange }),
     (_trainings) => {},
     undefined,

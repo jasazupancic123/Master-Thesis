@@ -1,6 +1,8 @@
 import { CommonService } from '@/common/service/common.service';
-import { Exercise } from './type/exercise.type';
+import { Pagination } from '@/common/type/paginate.type';
+import { SetState } from '@/common/type/state.type';
 import { Component } from '../component/type/component.type';
+import { Exercise } from './type/exercise.type';
 
 const commonService = CommonService.instance;
 
@@ -61,6 +63,56 @@ export class ExerciseService {
     if (attributeValues) throw new Error('not implemented yet');
 
     return filtered;
+  }
+
+  static paginate(
+    filter: {
+      componentsIds: string[];
+      name?: string;
+    },
+    state: {
+      pagination: Pagination;
+      exercises: Exercise[];
+      components: Component[];
+      setFilteredExercises: SetState<Exercise[]>;
+      setPagination: SetState<Pagination>;
+    }
+  ) {
+    const {
+      pagination,
+      exercises,
+      components,
+      setFilteredExercises,
+      setPagination,
+    } = state;
+
+    let filtered = ExerciseService.filter(exercises, filter, components);
+    const total = filtered.length;
+
+    // paginate
+    const pages = Math.ceil(total / pagination.pageSize);
+    const page = pages < pagination.pages ? 1 : pagination.page;
+
+    filtered = CommonService.instance.generic.paginate(filtered, {
+      page,
+      pageSize: pagination.pageSize,
+      orderBy: { field: 'name', value: 'asc' },
+    });
+
+    // populate exercises
+    filtered.map((exercise) => {
+      ExerciseService.mapComponents(
+        ExerciseService.mapAttributes(exercise),
+        components
+      );
+    });
+
+    setFilteredExercises(filtered);
+    setPagination((prev) => ({
+      ...prev,
+      total,
+      pages: Math.ceil(total / pagination.pageSize),
+    }));
   }
 
   static mapAttributes(item: Exercise): Exercise {

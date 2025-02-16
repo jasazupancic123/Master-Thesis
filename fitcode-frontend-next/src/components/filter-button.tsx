@@ -1,9 +1,9 @@
-import { FilterType } from '@/common/type/filter.type';
+import { GroupDateFilter } from '@/common/type/filter.type';
 import { ToggleButton } from '@mui/material';
 import React from 'react';
 
 interface Props {
-  value: FilterType;
+  value: GroupDateFilter;
   disabled?: boolean;
 }
 
@@ -19,7 +19,7 @@ export default function FilterButton(props: Props) {
         px: 2,
         flex: 1,
         color: '#fff',
-        backgroundColor: '#303E4A',
+        backgroundColor: 'background.paper',
         '&.Mui-selected': {
           backgroundColor: '#1EB980',
           color: '#fff',

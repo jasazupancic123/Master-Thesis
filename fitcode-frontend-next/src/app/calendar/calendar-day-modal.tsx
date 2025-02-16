@@ -1,14 +1,9 @@
-import React from 'react';
-import { Box } from '@mui/material';
 import MyModal from '@/components/modal';
+import { Box } from '@mui/material';
+import React from 'react';
+import { CalendarDayModalProps } from './type';
 
-interface Props {
-  data: any;
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-}
-
-export default function CalendarDayModal(props: Props) {
+export default function CalendarDayModal(props: CalendarDayModalProps) {
   const { data, isOpen, setIsOpen } = props;
 
   return (

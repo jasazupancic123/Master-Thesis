@@ -1,25 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Box, Paper, Grid2 } from '@mui/material';
-import CustomToolbar from './custom-toolbar';
-import CalendarDayModal from './calendar-day-modal';
-import {
-  Calendar,
-  momentLocalizer,
-  ToolbarProps,
-  View,
-  NavigateAction,
-} from 'react-big-calendar';
-import moment from 'moment';
-import { useTheme } from '@mui/material/styles';
-import { CalendarEvent } from './calendar-event';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { Training } from '@/controller/training/type/training.type';
+import { Box, Paper } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import moment from 'moment';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { Calendar, momentLocalizer, ToolbarProps } from 'react-big-calendar';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import CalendarDayModal from './calendar-day-modal';
+import CustomToolbar from './custom-toolbar';
 import { CalendarPageProps } from './props';
 import { fetchAthleteTrainings, handleNavigate } from './state';
-import { Training } from '@/controller/training/type/training.type';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './styles.css';
+import { CalendarEvent } from './type';
 
 const events = [
   {
@@ -47,22 +42,23 @@ const events = [
 export function CalendarPage(props: CalendarPageProps) {
   const { token } = props;
 
+  const router = useRouter();
   const theme = useTheme();
   const localizer = momentLocalizer(moment);
   const screenSize = useScreenSize();
 
-  const [currentDate, setCurrentDate] = useState(new Date()); // track current month
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [trainings, setTrainings] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchAthleteTrainings(token, { from: new Date(), to: new Date() }).then(
-      (trainings) => {
-        if (trainings) {
-          setTrainings(events);
-        }
-      }
-    );
+    fetchAthleteTrainings(
+      token,
+      { from: new Date(), to: new Date() },
+      { router }
+    ).then((_trainings) => {
+      setTrainings(events);
+    });
   }, [token]);
 
   return (
@@ -147,7 +143,4 @@ export function CalendarPage(props: CalendarPageProps) {
       </Paper>
     </Box>
   );
-}
-function fetchActiveCycleTrainings() {
-  throw new Error('Function not implemented.');
 }

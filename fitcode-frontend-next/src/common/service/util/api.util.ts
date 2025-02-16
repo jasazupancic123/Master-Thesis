@@ -1,9 +1,8 @@
-import qs from 'qs';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { FetchOptions, Query } from '@/common/type/api.type';
 import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { permanentRedirect, redirect } from 'next/navigation';
-import { REDIRECT_TO_SIGN_IN } from '@/common/error/redirect.error';
+import { FetchOptions, Query } from '@/common/type/api.type';
+import { redirect } from 'next/navigation';
+import qs from 'qs';
 
 export class ApiUtil {
   static formatQuery(query: Query[string]): string {
@@ -50,10 +49,9 @@ export class ApiUtil {
       if (
         error.message === 'Please refresh the page or login again' ||
         error['code']?.includes('auth')
-      )
-        throw new Error(REDIRECT_TO_SIGN_IN);
-
-      throw new Error(error.message || 'An error occurred');
+      ) {
+        redirect(LINK_SIGN_IN.href);
+      } else throw new Error(error.message || 'An error occurred');
     }
 
     return res.json() as T;

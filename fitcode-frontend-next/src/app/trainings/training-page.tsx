@@ -1,12 +1,12 @@
 'use client';
 
+import { CommonService } from '@/common/service/common.service';
+import AthleteTrainingExerciseCard from '@/components/athlete-trainings/athlete-training-exercise-card';
+import { Box, Divider, Stack, Typography } from '@mui/material';
+import { endOfDay, startOfDay } from 'date-fns';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { TrainingPageProps } from './type';
-import { CommonService } from '@/common/service/common.service';
-import { endOfDay, startOfDay } from 'date-fns';
-import AthleteTrainingExerciseCard from '@/components/athlete-trainings/athlete-training-exercise-card';
-import { Stack, Box, Typography, Divider } from '@mui/material';
-import dayjs from 'dayjs';
 
 const commonService = CommonService.instance;
 
@@ -74,7 +74,7 @@ export default function TrainingPage(props: TrainingPageProps) {
                     <AthleteTrainingExerciseCard
                       token={token}
                       component={component}
-                      trainingId={training.id}
+                      training={training}
                     />
                   </Box>
                 ))}

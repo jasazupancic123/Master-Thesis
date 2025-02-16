@@ -1,9 +1,15 @@
-import Typography from '@mui/material/Typography';
-import Grid2 from '@mui/material/Grid2';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import React, { useEffect } from 'react';
-import Avatar from '@mui/material/Avatar';
+import {
+  DISTANCE_OPTIONS,
+  REP_OPTIONS,
+  TIME_OPTIONS,
+  VO2_OPTIONS,
+} from '@/common/constant/training-exercise.constant';
+import { handleApiRequest } from '@/common/type/state.type';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
+import { SetType } from '@/controller/training/enum/set-type.enum';
+import { TrainingController } from '@/controller/training/training.controller';
+import { SetData } from '@/controller/training/type/set-data';
+import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import FitnessCenter from '@mui/icons-material/FitnessCenter';
 import {
   Button,
@@ -13,38 +19,24 @@ import {
   Select,
   TextField,
 } from '@mui/material';
-import {
-  DISTANCE_OPTIONS,
-  REP_OPTIONS,
-  TIME_OPTIONS,
-  VO2_OPTIONS,
-} from '@/common/constant/training-exercise.constant';
-import toast from 'react-hot-toast';
-import {
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
-import { SetType } from '@/controller/training/enum/set-type.enum';
-import { handleApiRequest } from '@/common/type/state.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { SetStatus } from '@/controller/training/enum/set-status.enum';
-import { SetData } from '@/controller/training/type/set-data';
-import { REDIRECT_TO_SIGN_IN } from '@/common/error/redirect.error';
+import Avatar from '@mui/material/Avatar';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Grid2 from '@mui/material/Grid2';
+import Typography from '@mui/material/Typography';
 import { useRouter } from 'next/navigation';
-import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { AthleteTrainingExerciseCardProps } from './props';
 
-interface Props {
-  token: string;
-  trainingId: string;
-  component: TrainingComponent;
-}
-
-export default function AthleteTrainingExerciseCard(props: Props) {
-  const { token, component, trainingId } = props;
+export default function AthleteTrainingExerciseCard(
+  props: AthleteTrainingExerciseCardProps
+) {
+  const { token, component, training } = props;
   const router = useRouter();
 
   // State to manage input values for each set
-  const [setValues, setSetValues] = React.useState<
+  const [setValues, setSetValues] = useState<
     Record<string, Array<{ setValue: string; workloadValue: string }>>
   >({});
 
@@ -86,10 +78,11 @@ export default function AthleteTrainingExerciseCard(props: Props) {
     }));
 
     handleApiRequest(
+      router,
       () =>
         TrainingController.updateAthleteWorkload(
           token,
-          trainingId,
+          training!.id,
           componentId,
           superset,
           exerciseId,
@@ -98,8 +91,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
       () => {
         toast.success('Successfully updated sets!');
       },
-      undefined,
-      router
+      undefined
     );
   }
 

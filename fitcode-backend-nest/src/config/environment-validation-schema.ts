@@ -2,9 +2,7 @@ import * as Joi from 'joi';
 
 export const validationSchema = Joi.object({
   // Environment
-  NODE_ENV: Joi.string()
-    .valid('development', 'production', 'test')
-    .default('development'),
+  NODE_ENV: Joi.string().valid('dev', 'prod', 'test').default('development'),
   PORT: Joi.number().default(3000),
 
   // Firebase Admin
@@ -20,7 +18,7 @@ export const validationSchema = Joi.object({
 });
 
 export type Environment = {
-  NODE_ENV: 'development' | 'production' | 'test';
+  NODE_ENV: 'dev' | 'prod' | 'test';
   PORT: number;
   FIREBASE_ADMIN_EMAIL: string;
   FIREBASE_ADMIN_PASSWORD: string;

@@ -1,21 +1,27 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Pagination, TextField } from '@mui/material';
-import Box from '@mui/material/Box';
-import AddIcon from '@mui/icons-material/AddOutlined';
-import Grid from '@mui/material/Grid2';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
+import { Pagination as PaginationType } from '@/common/type/paginate.type';
 import { ExerciseCard } from '@/components/exercise-card';
 import ExerciseChips from '@/components/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Component } from '@/controller/component/type/component.type';
-import { addExercise, fetchExercises, onFileUpload } from './state';
+import GroupSidebar from '@/components/group-sidebar';
+import { useGroup } from '@/context/group-provider';
 import { ComponentService } from '@/controller/component/component.service';
-import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
-import { GroupIdPageProps } from '../type';
+import { Component } from '@/controller/component/type/component.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import AddIcon from '@mui/icons-material/AddOutlined';
+import { Pagination, TextField } from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid2';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import {
+  handleAddExercise,
+  handleFileUpload,
+  handlePaginateExercises,
+} from './state';
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -23,52 +29,59 @@ const DEFAULT_EXERCISE: Partial<Exercise> = {
   attributeValues: {},
 };
 
-export function ExercisesPage(props: GroupIdPageProps) {
+export function ExercisesPage() {
   const {
     token,
     groups,
     group,
+    component,
+    setComponent,
     components,
     attributes,
     exercises: allExercises,
-  } = props;
+  } = useGroup();
+
+  const router = useRouter();
 
   // filter exercises
   const [exercises, setExercises] = useState([...allExercises]);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
-  const [search, setSearch] = useState({ name: '' });
-  const [selectedComponent, setSelectedComponent] = useState<Component | null>(
-    null
-  );
-  const [pagination, setPagination] = useState({
+  const [search, setSearch] = useState('');
+  const [pagination, setPagination] = useState<PaginationType>({
     page: 1,
     pageSize: 6,
     pages: 1,
     total: 0,
   });
 
-  // add and edit modals and exercise state
+  // modals
   const [modal, setModal] = useState({ add: false, edit: false });
-  const [exercise, setExercise] = useState(DEFAULT_EXERCISE);
+  const [exercise, setExercise] = useState<Partial<Exercise>>(DEFAULT_EXERCISE);
 
   /**
    * Filter exercises
    */
   useEffect(() => {
-    fetchExercises(
-      setFilteredExercises,
-      components,
-      exercises,
-      pagination,
-      setPagination,
-      selectedComponent,
-      search.name
-    ).then();
+    handlePaginateExercises(
+      {
+        ...(component?.id && {
+          componentsIds: [component.id],
+        }),
+        ...(search && { name: search }),
+      },
+      {
+        components,
+        exercises,
+        pagination,
+        setPagination,
+        setFilteredExercises,
+      }
+    );
   }, [
     token,
     components,
-    search.name,
-    selectedComponent?.id,
+    search,
+    component,
     pagination.page,
     pagination.pageSize,
     pagination.pages,
@@ -77,13 +90,7 @@ export function ExercisesPage(props: GroupIdPageProps) {
   return (
     <>
       <Box>
-        <TrainerGroupSidebar
-          groups={groups}
-          selectedGroup={group}
-          logout={async () => {
-            console.log('Log out');
-          }}
-        />
+        <GroupSidebar groups={groups} group={group} />
       </Box>
 
       <Box ml={10} p={2}>
@@ -91,10 +98,8 @@ export function ExercisesPage(props: GroupIdPageProps) {
           <ExerciseChips
             noSelectionLabel="All"
             components={ComponentService.toTree(components)}
-            selected={selectedComponent}
-            setSelected={(component) =>
-              setSelectedComponent(component as Component)
-            }
+            selected={component}
+            setSelected={(component) => setComponent(component as Component)}
           />
 
           <Box>
@@ -103,8 +108,8 @@ export function ExercisesPage(props: GroupIdPageProps) {
               label="Search"
               variant="outlined"
               size="small"
-              value={search.name}
-              onChange={(e) => setSearch({ ...search, name: e.target.value })}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
 
             {/* Add Button */}
@@ -149,24 +154,26 @@ export function ExercisesPage(props: GroupIdPageProps) {
           data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
           setData={setExercise}
           attributes={attributes}
+          components={components}
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
-          onFileUpload={onFileUpload}
+          onFileUpload={(file, path) =>
+            handleFileUpload({ file, path }, { router })
+          }
           icons={
             <>
               <IconButton
                 onClick={() =>
-                  addExercise(
-                    token,
-                    exercise,
-                    selectedComponent,
+                  handleAddExercise(token, exercise, {
+                    router,
+                    components,
+                    attributes,
+                    component,
                     filteredExercises,
                     setFilteredExercises,
                     setExercises,
-                    attributes,
-                    components
-                  )
+                  })
                 }
               >
                 <AddIcon />
@@ -180,10 +187,13 @@ export function ExercisesPage(props: GroupIdPageProps) {
           data={exercise}
           setData={setExercise}
           attributes={attributes}
+          components={components}
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
           title={'Update Exercise'}
-          onFileUpload={onFileUpload}
+          onFileUpload={(file, path) =>
+            handleFileUpload({ file, path }, { router })
+          }
           icons={
             <>
               <IconButton onClick={() => {}}>
