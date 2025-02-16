@@ -1,6 +1,7 @@
 import { FilterType } from '@/common/type/filter.type';
 import { ToggleButton } from '@mui/material';
 import React from 'react';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 interface Props {
   value: FilterType;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function FilterButton(props: Props) {
+  const screenSize = useScreenSize();
   const { value, disabled = false } = props;
 
   return (
@@ -15,9 +17,8 @@ export default function FilterButton(props: Props) {
       value={value.toLowerCase()}
       disabled={disabled}
       sx={{
-        width: 500,
+        width: '25%',
         px: 2,
-        flex: 1,
         color: '#fff',
         backgroundColor: '#303E4A',
         '&.Mui-selected': {

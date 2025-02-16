@@ -120,7 +120,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       alignItems="center"
       p={3}
       pt={1}
-      pb={!screenSize.isMobile && !screenSize.isLandscapeMobile ? 3 : 0}
+      pb={detectedChange ? 3 : 0}
       width="100%"
     >
       {/* Year Navigation */}

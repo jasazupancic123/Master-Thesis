@@ -178,7 +178,9 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
         <Box
           sx={{
             width:
-              !screenSize.isMobile && !screenSize.isLandscapeMobile
+              !screenSize.isMobile &&
+              !screenSize.isLandscapeMobile &&
+              !screenSize.isTablet
                 ? '50%'
                 : '90%',
             mt: 2,
