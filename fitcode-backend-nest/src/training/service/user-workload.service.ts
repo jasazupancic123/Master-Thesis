@@ -90,7 +90,7 @@ export class UserWorkloadService {
    */
   async updateSets(ref: UserWorkloadExerciseRef, input: SetData[]) {
     await this.trainingWorkloadRepository.updateDoc(ref, {
-      [`exercises.${ref.exerciseId}.sets`]: input,
+      [`exercises.${ref.exerciseId}.sets`]: input.map((set) => ({ ...set })),
     });
   }
 

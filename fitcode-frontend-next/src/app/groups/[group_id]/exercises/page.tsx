@@ -1,4 +1,5 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { GroupProvider } from '@/context/group-provider';
 import { ComponentController } from '@/controller/component/component.controller';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { GroupController } from '@/controller/group/group.controller';
@@ -6,7 +7,7 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { GroupIdPageParams } from '../props';
+import { GroupIdPageParams, GroupIdPageProps } from '../props';
 import { ExercisesPage } from './exercises-page';
 
 export default async function Page(props: GroupIdPageParams) {
@@ -36,16 +37,20 @@ export default async function Page(props: GroupIdPageParams) {
     ComponentController.findAll(),
   ]);
 
+  const pageProps: GroupIdPageProps = {
+    token,
+    group,
+    users,
+    groups,
+    exercises,
+    attributes,
+    components,
+    trainings: [],
+  };
+
   return (
-    <ExercisesPage
-      token={token}
-      group={group}
-      groups={groups}
-      users={users}
-      exercises={exercises}
-      attributes={attributes}
-      components={components}
-      trainings={[]}
-    />
+    <GroupProvider {...pageProps}>
+      <ExercisesPage />
+    </GroupProvider>
   );
 }

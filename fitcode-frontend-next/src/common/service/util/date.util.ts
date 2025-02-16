@@ -14,7 +14,15 @@ export class DateUtil {
     return dayjs(date).format('HH:mm');
   }
 
-  isBetween(date: Dayjs, startDate: Dayjs, endDate: Dayjs): boolean {
+  isBetween(
+    date: Date | Dayjs,
+    startDate: Date | Dayjs,
+    endDate: Date | Dayjs
+  ): boolean {
+    date = dayjs(date);
+    startDate = dayjs(startDate);
+    endDate = dayjs(endDate);
+
     return (
       date.isSame(startDate, 'day') ||
       date.isSame(endDate, 'day') ||

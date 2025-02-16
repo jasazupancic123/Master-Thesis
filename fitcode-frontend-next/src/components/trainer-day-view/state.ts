@@ -1,3 +1,10 @@
+import {
+  handleApiRequest,
+  SetState,
+  SetStateNullable,
+} from '@/common/type/state.type';
+import { Component } from '@/controller/component/type/component.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Effort } from '@/controller/training/enum/effort.enum';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 import { WorkloadType } from '@/controller/training/enum/workload-type.enum';
@@ -5,109 +12,60 @@ import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { Training } from '@/controller/training/type/training.type';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { User } from '@/controller/user/type/user.type';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import toast from 'react-hot-toast';
+import { DEFAULT_SUBGROUP } from './constant';
 import {
   AddSubgroupInput,
-  UpdateSubgroupsInput,
   AddSupersetInput,
-  UpdateSupersetInput,
+  DeleteExerciseInput,
   DeleteSupersetInput,
   UpdateExerciseInput,
-  DeleteExerciseInput,
-  FilteredExercises,
-} from './type';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { CommonService } from '@/common/service/common.service';
-
-export function filterExercises(
-  filteredExercises: FilteredExercises,
-  exercises: Exercise[],
-  components: Component[],
-  setFilteredExercises: SetState<FilteredExercises>
-) {
-  const filter = {
-    componentsIds: [filteredExercises.componentId!],
-    name: filteredExercises.search.name,
-  };
-
-  let filtered = ExerciseService.filter(exercises, filter, components);
-  const total = filtered.length;
-
-  // paginate
-  const pages = Math.ceil(total / filteredExercises.pagination.pageSize);
-  const page =
-    pages < filteredExercises.pagination.pages
-      ? 1
-      : filteredExercises.pagination.page;
-
-  filtered = CommonService.instance.generic.paginate(filtered, {
-    page,
-    pageSize: filteredExercises.pagination.pageSize,
-    orderBy: { field: 'name', value: 'asc' },
-  });
-
-  // populate exercises
-  filtered.map((exercise) => {
-    ExerciseService.mapComponents(
-      ExerciseService.mapAttributes(exercise),
-      components
-    );
-  });
-
-  setFilteredExercises((prev) => ({
-    ...prev,
-    data: filtered,
-    pagination: {
-      ...prev.pagination,
-      total,
-      pages: Math.ceil(total / prev.pagination.pageSize),
-    },
-  }));
-}
-
-export async function addSubgroup(
-  token: string,
-  training: Training,
-  input: AddSubgroupInput,
-  setModal: SetState<{ subgroup: boolean }>
-) {
-  /* ADD API CALLS HERE, THIS IS OFFLINE ONLY */
-  const newSubgroup = {
-    id: Math.random().toString(36).substr(2, 9),
-    name: input.name,
-    membersIds: input.membersIds,
-    components: training.components,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as Subgroup;
-
-  training.subgroups[newSubgroup.id] = newSubgroup;
-  setModal((prev) => ({ ...prev, subgroup: false }));
-}
+  UpdateSupersetInput,
+} from './input';
 
 export async function addSuperset(
   token: string,
-  trainingId: string,
-  componentId: string,
-  input: AddSupersetInput,
-  setSelectedTrainings: SetState<Training[]>,
-  setSelectedTraining: SetState<Training | null>,
-  components: Component[],
-  exercises: Exercise[]
+  input: AddSupersetInput & {
+    trainingId: string;
+    componentId: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTraining: SetStateNullable<Training>;
+    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+    exercises: Exercise[];
+  }
 ) {
+  const { trainingId, componentId, ...restInput } = input;
+  const {
+    router,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+  } = state;
+
   handleApiRequest(
-    () => TrainingController.addSuperset(token, trainingId, componentId, input),
+    router,
+    () =>
+      TrainingController.addSuperset(token, trainingId, componentId, restInput),
     (training) => {
       training = TrainingService.mapComponents(training, components);
       training = TrainingService.mapExercises(training, exercises);
 
-      setSelectedTrainings((prev) =>
+      setTraining(training);
+      setFilteredTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))
       );
 
-      setSelectedTraining(training);
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === trainingId ? training : t))
+      );
     },
     undefined,
     'Failed to add superset'
@@ -116,28 +74,50 @@ export async function addSuperset(
 
 export async function updateSuperset(
   token: string,
-  trainingId: string,
-  componentId: string,
-  superset: number,
-  input: UpdateSupersetInput,
-  setSelectedTrainings: SetState<Training[]>,
-  components: Component[],
-  exercises: Exercise[]
+  input: UpdateSupersetInput & {
+    trainingId: string;
+    componentId: string;
+    superset: number;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTraining: SetStateNullable<Training>;
+    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+    exercises: Exercise[];
+  }
 ) {
+  const { trainingId, componentId, superset, ...restInput } = input;
+  const {
+    router,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+  } = state;
+
   handleApiRequest(
+    router,
     () =>
       TrainingController.updateSuperset(
         token,
         trainingId,
         componentId,
         superset,
-        input
+        restInput
       ),
     (training) => {
       training = TrainingService.mapComponents(training, components);
       training = TrainingService.mapExercises(training, exercises);
 
-      setSelectedTrainings((prev) =>
+      setTraining(training);
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === trainingId ? training : t))
+      );
+
+      setTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))
       );
     },
@@ -148,25 +128,50 @@ export async function updateSuperset(
 
 export async function deleteSuperset(
   token: string,
-  trainingId: string,
-  componentId: string,
-  superset: number,
-  input: DeleteSupersetInput,
-  setSelectedTrainings: SetState<Training[]>
+  input: DeleteSupersetInput & {
+    trainingId: string;
+    componentId: string;
+    superset: number;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTraining: SetStateNullable<Training>;
+    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+    exercises: Exercise[];
+  }
 ) {
+  const { trainingId, componentId, superset, ...restInput } = input;
+  const {
+    router,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+  } = state;
+
   handleApiRequest(
-    () => {
-      console.log('here')
-      return TrainingController.deleteSuperset(
+    router,
+    () =>
+      TrainingController.deleteSuperset(
         token,
         trainingId,
         componentId,
         superset,
-        input
-      );
-    },
+        restInput
+      ),
     (training) => {
-      setSelectedTrainings((prev) =>
+      training = TrainingService.mapComponents(training, components);
+      training = TrainingService.mapExercises(training, exercises);
+
+      setTraining(training);
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === trainingId ? training : t))
+      );
+
+      setTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))
       );
     },
@@ -177,15 +182,33 @@ export async function deleteSuperset(
 
 export async function addExercise(
   token: string,
-  trainingId: string,
-  componentId: string,
-  superset: number,
-  exerciseId: string,
-  setSelectedTrainings: SetState<Training[]>,
-  components: Component[],
-  exercises: Exercise[]
+  input: {
+    trainingId: string;
+    componentId: string;
+    superset: number;
+    exerciseId: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTraining: SetStateNullable<Training>;
+    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+    exercises: Exercise[];
+  }
 ) {
+  const { trainingId, componentId, superset, exerciseId } = input;
+  const {
+    router,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+  } = state;
+
   handleApiRequest(
+    router,
     () =>
       TrainingController.addExercises(
         token,
@@ -214,7 +237,12 @@ export async function addExercise(
       training = TrainingService.mapComponents(training, components);
       training = TrainingService.mapExercises(training, exercises);
 
-      setSelectedTrainings((prev) =>
+      setTraining(training);
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === trainingId ? training : t))
+      );
+
+      setTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))
       );
     },
@@ -225,16 +253,33 @@ export async function addExercise(
 
 export async function updateExercise(
   token: string,
-  trainingId: string,
-  componentId: string,
-  superset: number,
-  exerciseId: string,
-  input: UpdateExerciseInput,
-  setSelectedTrainings: SetState<Training[]>,
-  components: Component[],
-  exercises: Exercise[]
+  input: UpdateExerciseInput & {
+    trainingId: string;
+    componentId: string;
+    superset: number;
+    exerciseId: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTraining: SetStateNullable<Training>;
+    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+    exercises: Exercise[];
+  }
 ) {
+  const { trainingId, componentId, superset, exerciseId, ...restInput } = input;
+  const {
+    router,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+  } = state;
+
   handleApiRequest(
+    router,
     () =>
       TrainingController.updateExercise(
         token,
@@ -242,13 +287,24 @@ export async function updateExercise(
         componentId,
         superset,
         exerciseId,
-        input
+        restInput
       ),
     (training) => {
       training = TrainingService.mapComponents(training, components);
       training = TrainingService.mapExercises(training, exercises);
 
-      setSelectedTrainings((prev) =>
+      console.log(
+        training.components['rom']?.supersets?.[0]?.exercises[
+          'wtqgA3f3Id5M9xqIA6oq'
+        ]?.meta
+      );
+
+      setTraining(training);
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === trainingId ? training : t))
+      );
+
+      setTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))
       );
     },
@@ -259,16 +315,33 @@ export async function updateExercise(
 
 export async function deleteExercise(
   token: string,
-  trainingId: string,
-  componentId: string,
-  superset: number,
-  exerciseId: string,
-  input: DeleteExerciseInput,
-  setSelectedTrainings: SetState<Training[]>,
-  components: Component[],
-  exercises: Exercise[]
+  input: DeleteExerciseInput & {
+    trainingId: string;
+    componentId: string;
+    superset: number;
+    exerciseId: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTraining: SetStateNullable<Training>;
+    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+    exercises: Exercise[];
+  }
 ) {
+  const { trainingId, componentId, superset, exerciseId, ...restInput } = input;
+  const {
+    router,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+  } = state;
+
   handleApiRequest(
+    router,
     () =>
       TrainingController.deleteExercise(
         token,
@@ -276,17 +349,349 @@ export async function deleteExercise(
         componentId,
         superset,
         exerciseId,
-        input
+        restInput
       ),
     (training) => {
       training = TrainingService.mapComponents(training, components);
       training = TrainingService.mapExercises(training, exercises);
 
-      setSelectedTrainings((prev) =>
+      setTraining(training);
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === trainingId ? training : t))
+      );
+
+      setTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? training : t))
       );
     },
     undefined,
     'Failed to delete exercise'
+  );
+}
+
+export async function addSubgroup(
+  token: string,
+  input: AddSubgroupInput,
+  state: {
+    router: AppRouterInstance;
+    subgroups: Subgroup[];
+    setSubgroups: SetState<Subgroup[]>;
+    training: Training;
+    setTraining: SetStateNullable<Training>;
+    setTrainings: SetState<Training[]>;
+    setFilteredTrainings: SetState<Training[]>;
+    setCreateSubgroup: SetState<AddSubgroupInput>;
+    components: Component[];
+    exercises: Exercise[];
+  }
+) {
+  const {
+    router,
+    subgroups,
+    setSubgroups,
+    training,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    setCreateSubgroup,
+    components,
+    exercises,
+  } = state;
+
+  if (!training) return;
+
+  handleApiRequest(
+    router,
+    () => TrainingController.addSubgroup(token, training.id, input),
+    (training) => {
+      training = TrainingService.mapComponents(training, components);
+      training = TrainingService.mapExercises(training, exercises);
+
+      const uniqueNewSubgroups = Object.values(training.subgroups).filter(
+        (s) => !subgroups.find((sub) => sub.id === s.id)
+      );
+
+      setSubgroups((prev) => [...prev, ...uniqueNewSubgroups]);
+      setTraining(training);
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === training.id ? training : t))
+      );
+
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === training.id ? training : t))
+      );
+
+      setCreateSubgroup({ name: '', membersIds: [] });
+
+      toast.success('Successfully added new subgroup');
+    },
+    undefined,
+    'Failed to add new subgroup'
+  );
+}
+
+export function onDragEndSubgroup(
+  { destination, draggableId }: any,
+  state: {
+    subgroups: Subgroup[];
+    setSubgroups: SetState<Subgroup[]>;
+    changedSubgroupIds: string[];
+    setChangedSubgroupIds: SetState<string[]>;
+    availableMembers: User[];
+    setAvailableMembers: SetState<User[]>;
+    users: User[];
+    setDetectedSubgroupChanges: SetState<boolean>;
+  }
+) {
+  const {
+    subgroups,
+    setSubgroups,
+    changedSubgroupIds,
+    setChangedSubgroupIds,
+    availableMembers,
+    setAvailableMembers,
+    users,
+    setDetectedSubgroupChanges,
+  } = state;
+
+  if (!destination) return;
+
+  // remove member from all subgroups, including the default subgroup
+  const updatedSubgroups = [...subgroups];
+
+  // find from which subgroup the member is being dragged and add it to changedSubgroupIds
+  const fromSubgroup = updatedSubgroups.find((s) =>
+    s.membersIds.includes(draggableId)
+  );
+
+  if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id))
+    setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
+
+  [DEFAULT_SUBGROUP(availableMembers), ...updatedSubgroups].forEach((s) => {
+    if (!s.membersIds) return;
+    s.membersIds = s.membersIds.filter((id) => id !== draggableId);
+  });
+
+  // Add member to the new subgroup
+  if (destination.droppableId === 'default') {
+    if (!availableMembers.some((user) => user.uid === draggableId))
+      setAvailableMembers((prev) => [
+        ...prev,
+        users.find((user) => user.uid === draggableId)!,
+      ]);
+  } else {
+    const targetSubgroup = updatedSubgroups.find(
+      (s) => s.id === destination.droppableId
+    );
+
+    if (targetSubgroup) targetSubgroup.membersIds.push(draggableId);
+
+    setAvailableMembers((prev) =>
+      prev.filter((user) => user.uid !== draggableId)
+    );
+
+    if (targetSubgroup && !changedSubgroupIds.includes(targetSubgroup.id))
+      setChangedSubgroupIds((prev) => [...prev, targetSubgroup.id]);
+  }
+
+  setDetectedSubgroupChanges(true);
+  setSubgroups(updatedSubgroups);
+}
+
+export function handleRightClickSubgroup(
+  input: {
+    memberId: string;
+    subgroupId: string;
+  },
+  state: {
+    subgroups: Subgroup[];
+    setSubgroups: SetState<Subgroup[]>;
+    training: Training;
+    setTraining: SetStateNullable<Training>;
+    setTrainings: SetState<Training[]>;
+    setFilteredTrainings: SetState<Training[]>;
+    setAvailableMembers: SetState<User[]>;
+    users: User[];
+    setDetectedSubgroupChanges: SetState<boolean>;
+  }
+) {
+  const { memberId, subgroupId } = input;
+  const {
+    subgroups,
+    setSubgroups,
+    training,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    setAvailableMembers,
+    users,
+    setDetectedSubgroupChanges,
+  } = state;
+
+  if (subgroupId === 'default' || !training) return;
+
+  const updatedSubgroups = subgroups.map((s) => ({
+    ...s,
+    membersIds: s.membersIds.filter((id) => id !== memberId),
+  }));
+
+  setDetectedSubgroupChanges(true);
+  setSubgroups(updatedSubgroups);
+  setAvailableMembers((prev) => [
+    ...prev,
+    users.find((user) => user.uid === memberId)!,
+  ]);
+
+  const subgroupEntries = Object.fromEntries(
+    updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
+  );
+
+  setTraining((prev) => ({ ...prev!, subgroups: subgroupEntries }));
+  setTrainings((prev) =>
+    prev.map((t) =>
+      t.id === training?.id ? { ...t, subgroups: subgroupEntries } : t
+    )
+  );
+
+  setFilteredTrainings((prev) =>
+    prev.map((t) =>
+      t.id === training?.id ? { ...t, subgroups: subgroupEntries } : t
+    )
+  );
+}
+
+export async function handleDeleteSubgroup(
+  token: string,
+  input: {
+    subgroupId: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    subgroups: Subgroup[];
+    setSubgroups: SetState<Subgroup[]>;
+    training: Training;
+    setTraining: SetStateNullable<Training>;
+    setTrainings: SetState<Training[]>;
+    setFilteredTrainings: SetState<Training[]>;
+    setAvailableMembers: SetState<User[]>;
+    users: User[];
+    components: Component[];
+    exercises: Exercise[];
+  }
+) {
+  const { subgroupId } = input;
+  const {
+    router,
+    subgroups,
+    setSubgroups,
+    training,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    setAvailableMembers,
+    users,
+    components,
+    exercises,
+  } = state;
+
+  const deletedSubgroup = subgroups.find((s) => s.id === subgroupId)!;
+  const deletedMembers = [...deletedSubgroup.membersIds!];
+  const updatedSubgroups = subgroups.filter((s) => s.id !== subgroupId);
+
+  handleApiRequest(
+    router,
+    () =>
+      TrainingController.updateSubgroups(token, training.id, {
+        subgroups: updatedSubgroups.map((s) => {
+          const { components: _, ...subgroup } = s;
+          return subgroup;
+        }),
+      }),
+    (training) => {
+      training = TrainingService.mapComponents(training, components);
+      training = TrainingService.mapExercises(training, exercises);
+
+      setSubgroups(updatedSubgroups);
+      setAvailableMembers((prev) => [
+        ...prev,
+        ...deletedMembers.map((id) => users.find((u) => u.uid === id)!),
+      ]);
+
+      setTraining(training);
+
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === training.id ? training : t))
+      );
+
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === training.id ? training : t))
+      );
+
+      toast.success('Subgroup successfully deleted');
+    },
+    undefined,
+    'Failed to delete subgroup'
+  );
+}
+
+export async function handleSaveSubgroupChanges(
+  token: string,
+  state: {
+    router: AppRouterInstance;
+    subgroups: Subgroup[];
+    setSubgroups: SetState<Subgroup[]>;
+    training: Training;
+    setTraining: SetStateNullable<Training>;
+    setTrainings: SetState<Training[]>;
+    setFilteredTrainings: SetState<Training[]>;
+    setDetectedSubgroupChanges: SetState<boolean>;
+    components: Component[];
+    exercises: Exercise[];
+  }
+) {
+  const {
+    router,
+    subgroups,
+    setSubgroups,
+    training,
+    setTraining,
+    setTrainings,
+    setFilteredTrainings,
+    setDetectedSubgroupChanges,
+    components,
+    exercises,
+  } = state;
+
+  if (!training) return;
+
+  handleApiRequest(
+    router,
+    () =>
+      TrainingController.updateSubgroups(token, training.id, {
+        subgroups: subgroups.map((s) => {
+          const { components: _, ...subgroup } = s;
+          return subgroup;
+        }),
+      }),
+    (training) => {
+      training = TrainingService.mapComponents(training, components);
+      training = TrainingService.mapExercises(training, exercises);
+
+      setDetectedSubgroupChanges(false);
+      setSubgroups(Object.values(training.subgroups));
+      setTraining(training);
+
+      setFilteredTrainings((prev) =>
+        prev.map((t) => (t.id === training.id ? training : t))
+      );
+
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === training.id ? training : t))
+      );
+
+      toast.success('Subgroup changes saved successfully');
+    },
+    undefined,
+    'Failed to save subgroup changes'
   );
 }

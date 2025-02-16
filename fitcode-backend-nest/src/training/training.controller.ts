@@ -106,7 +106,7 @@ export class TrainingController {
     );
   }
 
-  /* @Patch(':trainingId/subgroup/:subgroupId')
+  @Patch(':trainingId/subgroup/:subgroupId')
   @Auth()
   async updateSubgroup(
     @RequestUser() user: User,
@@ -117,17 +117,6 @@ export class TrainingController {
     const ref = { trainingId, subgroupId };
     return await this.trainingService.updateSubgroup(user, ref, body);
   }
-
-  @Delete(':trainingId/subgroup/:subgroupId')
-  @Auth()
-  async deleteSubgroup(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Param('subgroupId') subgroupId: string,
-  ) {
-    const ref = { trainingId, subgroupId };
-    return await this.trainingService.deleteSubgroup(user, ref);
-  } */
 
   @Post(':trainingId/component')
   @Auth()
@@ -292,14 +281,14 @@ export class TrainingController {
   }
 
   @Patch(
-    ':trainingId/component/:componentId/superset/:supersetId/exercise/:exerciseId/set',
+    ':trainingId/component/:componentId/superset/:superset/exercise/:exerciseId/set',
   )
   @Auth()
   async updateAthleteWorkload(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Param('supersetId') superset: number,
+    @Param('superset', ParseIntPipe) superset: number,
     @Param('exerciseId') exerciseId: string,
     @Body() body: UpdateAthleteSetDataDto,
   ) {

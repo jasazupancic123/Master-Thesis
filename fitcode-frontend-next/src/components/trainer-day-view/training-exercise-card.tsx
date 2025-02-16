@@ -1,21 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import { FormControl, TextField } from '@mui/material';
-import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
-import { TrainingExerciseCardProps } from './type';
 import {
-  SetExerciseOption,
   RECOVERY,
   SET,
   SET_TYPE,
+  SetExerciseOption,
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
+import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
+import { FormControl, TextField } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { useEffect, useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
+import { TrainingExerciseCardProps } from './props';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const { exercise, onChange } = props;

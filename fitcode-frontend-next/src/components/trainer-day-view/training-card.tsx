@@ -1,27 +1,13 @@
 import { CommonService } from '@/common/service/common.service';
 import { Box, Typography } from '@mui/material';
+import { TrainingCardProps } from './props';
 import Subgroups from './subgroups';
-import { TrainingCardProps } from './type';
 import TrainingComponentCard from './training-component';
 
 const commonService = CommonService.instance;
 
 export default function TrainingCard(props: TrainingCardProps) {
-  const {
-    token,
-    setSelectedTrainings,
-    users,
-    filteredExercises,
-    setFilteredExercises,
-    components,
-    training,
-    setSelectedTraining,
-    exercises,
-    period,
-    day,
-    openComponent,
-    setOpenComponent,
-  } = props;
+  const { day, training, period } = props;
 
   return (
     <Box width="100%">
@@ -54,15 +40,16 @@ export default function TrainingCard(props: TrainingCardProps) {
             {commonService.date.format(day.date)}
           </Typography>
 
-          <Typography variant="caption" sx={{ mx: 1 }}>
-            {commonService.date.formatTime(training.from)}:
-            {commonService.date.formatTime(training.to)}
-          </Typography>
+          {training && (
+            <Typography variant="caption" sx={{ mx: 1 }}>
+              {commonService.date.formatTime(training.from)}:
+              {commonService.date.formatTime(training.to)}
+            </Typography>
+          )}
         </Box>
       </Box>
 
       <Box
-        key={training.id}
         sx={{
           border: '1px solidrgb(36, 38, 46)',
           borderRadius: 2,
@@ -72,34 +59,26 @@ export default function TrainingCard(props: TrainingCardProps) {
           mt: 0,
         }}
       >
-        <Typography variant="h6" p={1}>
-          Training ({commonService.date.formatTime(training.from)} -{' '}
-          {commonService.date.formatTime(training.to)})
-        </Typography>
-        <Subgroups
-          token={token}
-          training={training}
-          setTrainings={setSelectedTrainings}
-          users={users}
-        />
+        {training && (
+          <>
+            <Typography variant="h6" p={1}>
+              Training ({commonService.date.formatTime(training.from)} -{' '}
+              {commonService.date.formatTime(training.to)})
+            </Typography>
 
-        {Object.values(training.components || {})?.map((component, i) => (
-          <TrainingComponentCard
-            key={i}
-            token={token}
-            training={training}
-            setSelectedTraining={setSelectedTraining}
-            component={component}
-            components={components}
-            exercises={exercises}
-            setSelectedTrainings={setSelectedTrainings}
-            filteredExercises={filteredExercises}
-            setFilteredExercises={setFilteredExercises}
-            i={i}
-            openComponent={openComponent}
-            setOpenComponent={setOpenComponent}
-          />
-        ))}
+            <Subgroups />
+
+            {Object.values(training.components || {})?.map(
+              (trainingComponent, i) => (
+                <TrainingComponentCard
+                  key={i}
+                  training={training}
+                  trainingComponent={trainingComponent}
+                />
+              )
+            )}
+          </>
+        )}
       </Box>
     </Box>
   );

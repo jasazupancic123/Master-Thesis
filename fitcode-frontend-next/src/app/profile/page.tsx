@@ -12,7 +12,5 @@ export default async function Page() {
   const profile = await UserController.findMe(token);
   if (!profile) return <div>Unauthorized</div>;
 
-  const role = profile.customClaims.role[0];
-
   return <ProfilePage token={token} user={profile} />;
 }

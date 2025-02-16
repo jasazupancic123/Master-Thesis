@@ -1,9 +1,15 @@
-import Typography from '@mui/material/Typography';
-import Grid2 from '@mui/material/Grid2';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import React, { useEffect } from 'react';
-import Avatar from '@mui/material/Avatar';
+import {
+  DISTANCE_OPTIONS,
+  REP_OPTIONS,
+  TIME_OPTIONS,
+  VO2_OPTIONS,
+} from '@/common/constant/training-exercise.constant';
+import { handleApiRequest } from '@/common/type/state.type';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
+import { SetType } from '@/controller/training/enum/set-type.enum';
+import { TrainingController } from '@/controller/training/training.controller';
+import { SetData } from '@/controller/training/type/set-data';
+import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import FitnessCenter from '@mui/icons-material/FitnessCenter';
 import {
   Button,
@@ -13,29 +19,24 @@ import {
   Select,
   TextField,
 } from '@mui/material';
-import {
-  DISTANCE_OPTIONS,
-  REP_OPTIONS,
-  TIME_OPTIONS,
-  VO2_OPTIONS,
-} from '@/common/constant/training-exercise.constant';
+import Avatar from '@mui/material/Avatar';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Grid2 from '@mui/material/Grid2';
+import Typography from '@mui/material/Typography';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import {
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
-import { SetType } from '@/controller/training/enum/set-type.enum';
+import { AthleteTrainingExerciseCardProps } from './props';
 
-interface Props {
-  trainingId: string;
-  component: TrainingComponent;
-}
-
-export default function AthleteTrainingExerciseCard(props: Props) {
-  const { component } = props;
+export default function AthleteTrainingExerciseCard(
+  props: AthleteTrainingExerciseCardProps
+) {
+  const { token, component, training } = props;
+  const router = useRouter();
 
   // State to manage input values for each set
-  const [setValues, setSetValues] = React.useState<
+  const [setValues, setSetValues] = useState<
     Record<string, Array<{ setValue: string; workloadValue: string }>>
   >({});
 
@@ -59,6 +60,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
         ...updatedValues[exerciseId][setIndex],
         [type]: value,
       };
+
       return updatedValues;
     });
   };
@@ -68,27 +70,29 @@ export default function AthleteTrainingExerciseCard(props: Props) {
     superset: number,
     exerciseId: string
   ) {
-    const values = setValues[exerciseId] || [];
+    const values: SetData[] = (setValues[exerciseId] || []).map((val, i) => ({
+      status: SetStatus.COMPLETED,
+      setNumber: i + 1,
+      setTypeValue: +val.setValue,
+      workloadValue: val.workloadValue,
+    }));
 
-    try {
-      /* await TrainingController.updateAthleteSetData(
-        token,
-        trainingId,
-        componentId,
-        supersetId,
-        exerciseId,
-        values.map((val, i) => ({
-          setNumber: i + 1,
-          setTypeValue: +val.setValue,
-          workloadValue: val.workloadValue,
-        }))
-      ); */
-
-      toast.success('Successfully updated sets!');
-    } catch (e: any) {
-      console.error(e);
-      toast.error(`Something went wrong: ${e.message}`);
-    }
+    handleApiRequest(
+      router,
+      () =>
+        TrainingController.updateAthleteWorkload(
+          token,
+          training!.id,
+          componentId,
+          superset,
+          exerciseId,
+          { sets: values }
+        ),
+      () => {
+        toast.success('Successfully updated sets!');
+      },
+      undefined
+    );
   }
 
   // Helper function to get options based on set type and workload type
@@ -165,8 +169,8 @@ export default function AthleteTrainingExerciseCard(props: Props) {
           <CardContent>
             {component.supersets
               .sort((a, b) => a.order - b.order)
-              .map((superset) => (
-                <Grid2 size={{ xs: 12 }} key={superset.order}>
+              .map((superset, i) => (
+                <Grid2 size={{ xs: 12 }} key={i}>
                   <Card
                     sx={{
                       borderRadius: 2,
@@ -311,11 +315,7 @@ export default function AthleteTrainingExerciseCard(props: Props) {
                                   variant="contained"
                                   startIcon={<FitnessCenter />}
                                   onClick={() =>
-                                    handleSaveSets(
-                                      component.id,
-                                      superset.order,
-                                      exercise.id
-                                    )
+                                    handleSaveSets(component.id, i, exercise.id)
                                   }
                                   sx={{ mb: 2 }}
                                 >

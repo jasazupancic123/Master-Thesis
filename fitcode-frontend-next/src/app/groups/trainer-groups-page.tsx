@@ -7,14 +7,16 @@ import Typography from '@mui/material/Typography';
 import GroupDateFilterButtonGroup from './group-date-filter-button-group';
 import { GroupPageProps } from './props';
 
-export default function TrainerGroupPage(props: GroupPageProps) {
+export default function TrainerGroupsPage(props: GroupPageProps) {
   const { groups } = props;
 
   const theme = useTheme();
 
   return (
-    <Box mt="16px">
-      <GroupSidebar groups={groups} group={null} />
+    <>
+      <Box mt={'16px'}>
+        <GroupSidebar groups={groups} group={null} />
+      </Box>
 
       <Box
         sx={{
@@ -32,6 +34,6 @@ export default function TrainerGroupPage(props: GroupPageProps) {
           Select a group
         </Typography>
       </Box>
-    </Box>
+    </>
   );
 }

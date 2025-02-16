@@ -1,6 +1,12 @@
-import { GroupContextProps } from '@/app/groups/[group_id]/props';
 import ExerciseChips from '@/components/exercise-chips';
-import TrainingWeek from '@/components/training-cycle-view-week';
+import SelectInput from '@/components/select-input';
+import {
+  handleAddTrainingComponents,
+  handleDeleteTraining,
+  handleDeleteTrainingComponent,
+} from '@/components/trainer-cycle-view/state';
+import TrainingWeek from '@/components/training-cycle-view-week/training-week';
+import { useGroup } from '@/context/group-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
@@ -11,39 +17,43 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
-import SelectInput from '../select-input';
-import {
-  handleAddTrainingComponents,
-  handleDeleteTraining,
-  handleDeleteTrainingComponent,
-} from './state';
 
-export default function TrainerCycleView(props: GroupContextProps) {
+export default function TrainerCycleView() {
   const {
     token,
     group,
     components,
-    trainings,
-    setSelectedTrainings,
-    selectedCycle,
-    setSelectedCycle,
-  } = props;
+    cycle,
+    setCycle,
+    setTrainings,
+    setDateFrom,
+    setDateTo,
+  } = useGroup();
 
   const theme = useTheme();
+  const router = useRouter();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [isSticky, setIsSticky] = useState(false);
 
-  // Effect to track scroll position and set sticky mode
+  // effect to track scroll position and set sticky mode
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      setIsSticky(scrollY > 150); // Change 150px threshold if needed
+      setIsSticky(scrollY > 150);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // filter trainings by cycle
+  useEffect(() => {
+    if (!cycle) return;
+    setDateFrom(dayjs(cycle.from));
+    setDateTo(dayjs(cycle.to));
+  }, [cycle]);
 
   return (
     <Box pb={10}>
@@ -62,13 +72,13 @@ export default function TrainerCycleView(props: GroupContextProps) {
         <SelectInput<Cycle>
           label="Cycle"
           icon={<RotateRight />}
-          value={selectedCycle?.id || ''}
+          value={cycle?.id || ''}
           items={group.cycles}
           itemKey="id"
           itemName="name"
           setValue={(value) => {
             const cycle = group.cycles.find((cycle) => cycle.id === value)!;
-            setSelectedCycle(cycle);
+            setCycle(cycle);
           }}
         />
 
@@ -85,10 +95,10 @@ export default function TrainerCycleView(props: GroupContextProps) {
             borderTopRightRadius: isSticky ? '20px' : 0,
             borderTopLeftRadius: isSticky ? '20px' : 0,
             backgroundColor: theme.palette.background.paper,
-            position: isSticky ? 'fixed' : undefined, // Sticky when scrolling
-            top: isSticky ? '70px' : undefined, // Adjust top position
-            zIndex: 1000, // Ensure it stays above other elements
-            transition: 'top 1s ease-in-out', // Smooth transition effect
+            position: isSticky ? 'fixed' : undefined,
+            top: isSticky ? '70px' : undefined,
+            zIndex: 1000,
+            transition: 'top 1s ease-in-out',
             boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
             border: isSticky ? '1px solid grey' : 'none',
           }}
@@ -122,50 +132,45 @@ export default function TrainerCycleView(props: GroupContextProps) {
       {/* Choose cycle */}
       <Box mb={2} />
 
-      {selectedCycle && (
+      {cycle && (
         <Box borderRadius={2} borderColor="primary.main">
           {/* Training weeks */}
           <Stack spacing={1} mt={2}>
-            {selectedCycle.weeks.map((week, i) => (
+            {cycle.weeks.map((week, i) => (
               <Fragment key={i}>
                 <TrainingWeek
                   index={i}
                   week={week.map(({ date }) => dayjs(date!))}
-                  trainings={trainings}
-                  components={selectedComponents}
                   selected={selectedComponents}
                   setSelected={(component) =>
                     setSelectedComponents(component as Component[])
                   }
-                  token={token}
-                  group={group}
-                  setSelectedTrainings={setSelectedTrainings}
-                  selectedCycle={selectedCycle}
-                  setSelectedComponents={setSelectedComponents}
                   addTrainingComponent={(trainingId, input) =>
                     handleAddTrainingComponents(
                       token,
-                      trainingId,
-                      input,
-                      setSelectedTrainings,
-                      components
+                      { trainingId, ...input },
+                      {
+                        router,
+                        components,
+                        setTrainings,
+                      }
                     )
                   }
                   deleteTraining={(trainingId) =>
                     handleDeleteTraining(
-                      trainingId,
                       token,
-                      setSelectedTrainings
+                      { trainingId },
+                      {
+                        router,
+                        setTrainings,
+                      }
                     )
                   }
                   deleteTrainingComponent={(trainingId, componentId) =>
                     handleDeleteTrainingComponent(
-                      trainingId,
-                      componentId,
                       token,
-                      {},
-                      setSelectedTrainings,
-                      components
+                      { trainingId, componentId },
+                      { router, components, setTrainings }
                     )
                   }
                 />

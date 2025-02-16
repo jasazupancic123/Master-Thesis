@@ -9,15 +9,19 @@ export async function handleUpdateGroup(
   token: string,
   input: Group,
   state: {
+    router: AppRouterInstance;
     setGroup: SetState<Group>;
   }
 ) {
+  const { router } = state;
+
   if (input.name.length < 3) {
     toast.error('Group name must be at least 3 characters long.');
     return;
   }
 
   handleApiRequest(
+    router,
     () => GroupController.update(token, input.id, { name: input.name }),
     (updatedGroup) => {
       state.setGroup(updatedGroup);
@@ -35,7 +39,10 @@ export async function handleDeleteGroup(
     router: AppRouterInstance;
   }
 ) {
+  const { router } = state;
+
   handleApiRequest(
+    router,
     async () => {
       // return await GroupController.deleteGroup(token, input.groupId);
       return null;

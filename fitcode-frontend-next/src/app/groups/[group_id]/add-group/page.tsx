@@ -1,4 +1,5 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { GroupProvider } from '@/context/group-provider';
 import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
@@ -29,7 +30,7 @@ export default async function Page(props: GroupIdPageParams) {
     UserController.findAll(token),
   ]);
 
-  const addGroupPage: GroupIdPageProps = {
+  const context: GroupIdPageProps = {
     token,
     group,
     groups,
@@ -40,5 +41,9 @@ export default async function Page(props: GroupIdPageParams) {
     trainings: [],
   };
 
-  return <AddGroupPage {...addGroupPage} />;
+  return (
+    <GroupProvider {...context}>
+      <AddGroupPage />
+    </GroupProvider>
+  );
 }

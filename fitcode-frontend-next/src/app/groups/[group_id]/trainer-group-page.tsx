@@ -1,32 +1,33 @@
 'use client';
 
+import TrainerCycleView from '@/app/groups/[group_id]/trainer-group-cycle-view';
+import TrainerDayView from '@/app/groups/[group_id]/trainer-group-day-view';
+import TrainerWeekView from '@/app/groups/[group_id]/trainer-group-week-view';
+import TrainerYearView from '@/app/groups/[group_id]/trainer-group-year-view';
 import { GroupDateFilter } from '@/common/type/filter.type';
 import GroupSidebar from '@/components/group-sidebar';
-import TrainerCycleView from '@/components/trainer-cycle-view';
-import TrainerDayView from '@/components/trainer-day-view';
-import TrainerWeekView from '@/components/trainer-week-view';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Box, ToggleButtonGroup } from '@mui/material';
+import { TrainerDayViewProvider } from '@/context/trainer-day-view-provider';
+import { Box } from '@mui/material';
 import { ReactNode } from 'react';
-import FilterButton from '../../../components/filter-button';
-import TrainerYearView from '../../../components/trainer-year-view';
 import GroupDateFilterButtonGroup from '../group-date-filter-button-group';
-import { GroupIdPageProps } from './props';
 
-export default function TrainerPage(props: GroupIdPageProps) {
+export default function TrainerGroupPage() {
   const screenSize = useScreenSize();
   const context = useGroup();
 
-  const { group, groups } = props;
-  const { filter, setFilter } = context;
-  const groupContextProps = { ...props, ...context };
+  const { group, groups, filter, setFilter } = context;
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
-    day: <TrainerDayView {...groupContextProps} />,
-    week: <TrainerWeekView {...groupContextProps} />,
-    cycle: <TrainerCycleView {...groupContextProps} />,
-    year: <TrainerYearView {...groupContextProps} />,
+    day: (
+      <TrainerDayViewProvider {...context}>
+        <TrainerDayView />
+      </TrainerDayViewProvider>
+    ),
+    week: <TrainerWeekView />,
+    cycle: <TrainerCycleView />,
+    year: <TrainerYearView />,
   };
 
   return (
