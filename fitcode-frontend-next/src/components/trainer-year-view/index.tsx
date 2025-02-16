@@ -1,24 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import React from 'react';
+import MyModal from '@/components/modal';
 import MultiCycleSlider from '@/components/multi-cycle-slider';
-import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import { Button, IconButton, Typography } from '@mui/material';
-import dayjs from 'dayjs';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { Cycle } from '@/controller/group/type/cycle.type';
 import EditIcon from '@mui/icons-material/Edit';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
-import MyModal from '@/components/modal';
+import { Button, IconButton, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
+import dayjs from 'dayjs';
+import React, { useState } from 'react';
+import { GroupContextProps } from '../../app/groups/[group_id]/props';
+import AddCycleForm from '../add-cycle-form';
 import EditCycleModal from '../edit-cycle-modal';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { FilterTypeViewProps } from '../../app/groups/[group_id]/type';
 import { handleUpdateCycle } from './state';
-import { useScreenSize } from '@/context/screen-size-provider';
-import AddCycleModal from '../add-cycle-modal';
 
-export default function TrainerYearView(props: FilterTypeViewProps) {
+export default function TrainerYearView(props: GroupContextProps) {
   const screenSize = useScreenSize();
   const { token, group, setSelectedGroup, selectedCycle, setSelectedCycle } =
     props;
@@ -28,7 +27,7 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
   const [showAddCycleModal, setShowAddCycleModal] = useState(false);
   const [editCycle, setEditCycle] = useState<Cycle | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 5,
+    pageSize: 10,
     page: 0,
   });
 
@@ -263,7 +262,7 @@ export default function TrainerYearView(props: FilterTypeViewProps) {
         onCancel={() => setShowAddCycleModal(false)}
         cancelText="Close"
       >
-        <AddCycleModal
+        <AddCycleForm
           token={token}
           onClose={() => setShowAddCycleModal(false)}
           selectedGroup={group}

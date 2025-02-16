@@ -1,60 +1,32 @@
 'use client';
 
-import { Box, ToggleButtonGroup } from '@mui/material';
-import { FilterTypeViewProps, GroupIdPageProps } from './type';
-import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
-import { FilterType } from '@/common/type/filter.type';
-import FilterButton from '../../../components/filter-button';
-import { ReactNode, useState } from 'react';
-import TrainerYearView from '../../../components/trainer-year-view';
+import { GroupDateFilter } from '@/common/type/filter.type';
+import GroupSidebar from '@/components/group-sidebar';
 import TrainerCycleView from '@/components/trainer-cycle-view';
-import { useScreenSize } from '@/context/screen-size-provider';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import TrainerWeekView from '@/components/trainer-week-view';
-import dayjs from 'dayjs';
 import TrainerDayView from '@/components/trainer-day-view';
-import { Training } from '@/controller/training/type/training.type';
+import TrainerWeekView from '@/components/trainer-week-view';
+import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { Box, ToggleButtonGroup } from '@mui/material';
+import { ReactNode } from 'react';
+import FilterButton from '../../../components/filter-button';
+import TrainerYearView from '../../../components/trainer-year-view';
+import GroupDateFilterButtonGroup from '../group-date-filter-button-group';
+import { GroupIdPageProps } from './props';
 
 export default function TrainerPage(props: GroupIdPageProps) {
-  const { group, groups, trainings } = props;
-
   const screenSize = useScreenSize();
-  const [filter, setFilter] = useState<FilterType>('day');
-  const [selectedTrainings, setSelectedTrainings] = useState(() => trainings);
-  const [selectedTraining, setSelectedTraining] = useState<Training | null>(
-    null
-  );
+  const context = useGroup();
 
-  const [selectedGroup, setSelectedGroup] = useState(() => group);
-  const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
-    () => group.cycles[0]
-  );
+  const { group, groups } = props;
+  const { filter, setFilter } = context;
+  const groupContextProps = { ...props, ...context };
 
-  const [date, setDate] = useState({
-    start: dayjs().startOf('year'),
-    end: dayjs().endOf('year'),
-    custom: false,
-  });
-
-  const newProps: FilterTypeViewProps = {
-    ...props,
-    group: selectedGroup,
-    setSelectedGroup,
-    trainings: selectedTrainings,
-    setSelectedTrainings,
-    selectedTraining,
-    setSelectedTraining,
-    selectedCycle,
-    setSelectedCycle,
-    date,
-    setDate,
-  };
-
-  const mapper: Record<FilterType, ReactNode> = {
-    day: <TrainerDayView {...newProps} />,
-    week: <TrainerWeekView {...newProps} />,
-    cycle: <TrainerCycleView {...newProps} />,
-    year: <TrainerYearView {...newProps} />,
+  const mapper: Record<GroupDateFilter, ReactNode> = {
+    day: <TrainerDayView {...groupContextProps} />,
+    week: <TrainerWeekView {...groupContextProps} />,
+    cycle: <TrainerCycleView {...groupContextProps} />,
+    year: <TrainerYearView {...groupContextProps} />,
   };
 
   return (
@@ -63,13 +35,8 @@ export default function TrainerPage(props: GroupIdPageProps) {
       ml={screenSize.isLandscapeMobile || screenSize.isMobile ? '0' : undefined}
       mx={screenSize.isLandscapeMobile || screenSize.isMobile ? 1 : undefined}
     >
-      <TrainerGroupSidebar
-        groups={groups}
-        selectedGroup={selectedGroup}
-        logout={async () => {
-          console.log('Log out');
-        }}
-      />
+      <GroupSidebar groups={groups} group={group} />
+
       <Box
         bgcolor="background.paper"
         display="flex"
@@ -81,30 +48,7 @@ export default function TrainerPage(props: GroupIdPageProps) {
           borderTopRightRadius: '20px',
         }}
       >
-        {/* Date filter */}
-        <Box mx="auto" justifyContent="center" mb={2}>
-          <Box mx="auto" justifyContent="center" mb={2}>
-            <ToggleButtonGroup
-              value={filter}
-              exclusive
-              onChange={(_, val: FilterType) =>
-                setFilter((prev) => (!val ? prev : val))
-              }
-              sx={{
-                display: 'flex',
-                bgcolor: 'background.paper',
-                width: 700,
-                mx: 'auto',
-                borderBottomLeftRadius: '500px',
-                borderBottomRightRadius: '500px',
-              }}
-            >
-              {(['day', 'week', 'cycle', 'year'] as FilterType[]).map((val) => (
-                <FilterButton key={val} value={val} />
-              ))}
-            </ToggleButtonGroup>
-          </Box>
-        </Box>
+        <GroupDateFilterButtonGroup filter={filter} setFilter={setFilter} />
       </Box>
 
       <Box>{mapper[filter]}</Box>

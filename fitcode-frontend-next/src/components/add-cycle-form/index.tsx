@@ -1,20 +1,20 @@
 'use client';
 
-import dayjs from 'dayjs';
-import { useState } from 'react';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { AddCycleModalProps } from './type';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import { AddCycleModalProps } from './props';
 import { handleAddCycle } from './state';
 
-export default function AddCycleModal(props: AddCycleModalProps) {
-  const { token, onClose, selectedGroup, setSelectedGroup } = props;
+export default function AddCycleForm(props: AddCycleModalProps) {
+  const { token, group, setGroup, onClose } = props;
 
-  const [cycleName, setCycleName] = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState<dayjs.Dayjs | null>(null);
-  const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(null);
+  const [from, setFrom] = useState<dayjs.Dayjs | null>(null);
+  const [to, setTo] = useState<dayjs.Dayjs | null>(null);
 
   return (
     <Box
@@ -22,10 +22,7 @@ export default function AddCycleModal(props: AddCycleModalProps) {
       flexDirection="column"
       justifyContent="center"
       alignItems="center"
-      sx={{
-        p: 2,
-        maxWidth: 350,
-      }}
+      sx={{ p: 2, maxWidth: 350 }}
     >
       <Typography variant="h6" gutterBottom>
         Add New Cycle
@@ -34,8 +31,8 @@ export default function AddCycleModal(props: AddCycleModalProps) {
       <TextField
         fullWidth
         label="Cycle Name"
-        value={cycleName}
-        onChange={(e) => setCycleName(e.target.value)}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
         sx={{ mt: 2 }}
       />
 
@@ -53,14 +50,15 @@ export default function AddCycleModal(props: AddCycleModalProps) {
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             label="Start Date"
-            value={startDate}
-            onChange={(date) => setStartDate(date)}
+            value={from}
+            onChange={(date) => setFrom(date)}
             sx={{ mr: 1 }}
           />
+
           <DatePicker
             label="End Date"
-            value={endDate}
-            onChange={(date) => setEndDate(date)}
+            value={to}
+            onChange={(date) => setTo(date)}
             sx={{ ml: 1 }}
           />
         </LocalizationProvider>
@@ -73,12 +71,13 @@ export default function AddCycleModal(props: AddCycleModalProps) {
         onClick={() =>
           handleAddCycle(
             token,
-            cycleName,
-            description,
-            startDate,
-            endDate,
-            selectedGroup,
-            setSelectedGroup,
+            {
+              name: name,
+              description,
+              from: from?.toDate()!,
+              to: to?.toDate()!,
+            },
+            { group, setGroup },
             onClose
           )
         }

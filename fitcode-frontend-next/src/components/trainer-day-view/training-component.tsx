@@ -3,7 +3,7 @@ import { TrainingComponent } from '@/controller/training/type/training-plan.type
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Stack, IconButton, Box, Typography } from '@mui/material';
 import { Fragment } from 'react';
-import { FilteredExercises } from './type';
+import { FilteredExercises, TrainingComponentProps } from './type';
 import { Training } from '@/controller/training/type/training.type';
 import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
@@ -14,26 +14,10 @@ import { AfterSet } from '@/controller/component/type/after-set.type';
 import { Method } from '@/controller/component/type/method.type';
 import Supersets from './supersets';
 import { CommonService } from '@/common/service/common.service';
+import { AFTER_SETS, MAIN_SETS, METHODS } from './constant';
+import { after } from 'node:test';
 
 const commonService = CommonService.instance;
-
-interface TrainingComponentProps {
-  token: string;
-  training: Training;
-  setSelectedTraining: SetState<Training | null>;
-  component: TrainingComponent;
-  components: Component[];
-  exercises: Exercise[];
-  setSelectedTrainings: SetState<Training[]>;
-  filteredExercises: FilteredExercises;
-  setFilteredExercises: SetState<FilteredExercises>;
-  i: number;
-  openComponent: { componentId: string | null; trainingId: string | null };
-  setOpenComponent: SetState<{
-    componentId: string | null;
-    trainingId: string | null;
-  }>;
-}
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const {
@@ -54,75 +38,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const [selectedMainSet, setSelectedMainSet] = useState<MainSet | null>();
   const [selectedAfterSet, setSelectedAfterSet] = useState<AfterSet | null>();
   const [selectedMethod, setSelectedMethod] = useState<Method | null>();
-
-  const mainSets = [
-    {
-      id: '1',
-      name: 'Circuit',
-    } as MainSet,
-    {
-      id: '2',
-      name: 'Block',
-    } as MainSet,
-  ];
-
-  const afterSets = [
-    {
-      id: '1',
-      name: 'Plus Sets',
-    } as AfterSet,
-    {
-      id: '2',
-      name: 'Joker Sets',
-    } as AfterSet,
-    {
-      id: '3',
-      name: 'Back-Off Sets',
-    } as AfterSet,
-    {
-      id: '4',
-      name: 'Myo Reps',
-    } as AfterSet,
-    {
-      id: '5',
-      name: 'Dynamic Effort',
-    } as AfterSet,
-    {
-      id: '6',
-      name: 'Issometric',
-    },
-  ];
-
-  const methods = [
-    {
-      id: '1',
-      name: 'Dynamic Stretching',
-    } as Method,
-    {
-      id: '2',
-      name: 'Static Stretching',
-    } as Method,
-    {
-      id: '3',
-      name: 'Joint Circles and Mobility Drills',
-    } as Method,
-    {
-      id: '4',
-      name: 'Active Isolated Stretching',
-    } as Method,
-    {
-      id: '5',
-      name: 'Yoga',
-    } as Method,
-    {
-      id: '6',
-      name: 'PNF Stretching',
-    } as Method,
-    {
-      id: '7',
-      name: 'Foam Rolling',
-    } as Method,
-  ];
 
   return (
     <Box my={1} p={0} px={1}>
@@ -184,11 +99,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   label={'Main Set'}
                   value={selectedMainSet?.id || ''}
                   icon={null}
-                  items={mainSets}
+                  items={MAIN_SETS}
                   itemKey="id"
                   itemName="name"
                   setValue={(mainSetId) => {
-                    const mainSet = mainSets.find((g) => g.id === mainSetId)!;
+                    const mainSet = MAIN_SETS.find((g) => g.id === mainSetId)!;
                     setSelectedMainSet(mainSet);
                   }}
                   placeholder="Main Set"
@@ -199,13 +114,14 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   label={'After Set'}
                   value={selectedAfterSet?.id || ''}
                   icon={null}
-                  items={afterSets}
+                  items={AFTER_SETS}
                   itemKey="id"
                   itemName="name"
                   setValue={(afterSetId) => {
-                    const afterSet = afterSets.find(
+                    const afterSet = AFTER_SETS.find(
                       (g) => g.id === afterSetId
                     )!;
+
                     setSelectedAfterSet(afterSet);
                   }}
                   placeholder="After Set"
@@ -216,11 +132,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   label={'Method'}
                   value={selectedMethod?.id || ''}
                   icon={null}
-                  items={methods}
+                  items={METHODS}
                   itemKey="id"
                   itemName="name"
                   setValue={(methodId) => {
-                    const method = methods.find((g) => g.id === methodId)!;
+                    const method = METHODS.find((g) => g.id === methodId)!;
                     setSelectedMethod(method);
                   }}
                   placeholder="Method"
@@ -232,17 +148,16 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                     if (
                       openComponent.componentId === component.id &&
                       openComponent.trainingId === training.id
-                    ) {
+                    )
                       setOpenComponent({
                         componentId: null,
                         trainingId: null,
                       });
-                    } else {
+                    else
                       setOpenComponent({
                         componentId: component.id,
                         trainingId: training.id,
                       });
-                    }
                   }}
                 >
                   {openComponent.componentId === component.id &&

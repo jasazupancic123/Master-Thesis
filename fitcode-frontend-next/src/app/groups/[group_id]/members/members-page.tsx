@@ -1,24 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Typography, Box, Avatar, Grid2, Button } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import PageTitle from '../../../../components/page-title';
-import { GroupIdPageProps } from '../type';
+import GroupSidebar from '@/components/group-sidebar';
 import { GroupService } from '@/controller/group/group.service';
 import { User } from '@/controller/user/type/user.type';
-import { SearchBar } from '../../../../components/search-bar';
-import MyModal from '../../../../components/modal';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+import { Avatar, Box, Button, Grid2, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { useEffect, useState } from 'react';
 import { AddMembersModal } from '../../../../components/add-members-modal';
+import MyModal from '../../../../components/modal';
+import PageTitle from '../../../../components/page-title';
+import { SearchBar } from '../../../../components/search-bar';
+import { GroupIdPageProps } from '../props';
 import {
   handleMembersSearchChange,
   handleRemoveMember,
   handleUpdateMembers,
 } from './state';
-import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 
 export default function MembersPage(props: GroupIdPageProps) {
   const { token, group, users, groups, exercises, attributes, components } =
@@ -48,7 +48,7 @@ export default function MembersPage(props: GroupIdPageProps) {
   return (
     <>
       <Box mt="16px">
-        <TrainerGroupSidebar
+        <GroupSidebar
           groups={groups}
           selectedGroup={selectedGroup}
           logout={async () => {

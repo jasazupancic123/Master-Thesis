@@ -7,7 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { COLORS } from '@/common/constant/color.constant';
-import { AddSubgroupInput, SubgroupsProps } from './type';
+import { SubgroupsProps } from './type';
 import toast from 'react-hot-toast';
 import {
   Box,
@@ -26,7 +26,6 @@ import { TrainingService } from '@/controller/training/training.service';
 import MyModal from '../modal';
 import { TrainingController } from '@/controller/training/training.controller';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { set } from 'date-fns';
 
 export default function Subgroups(props: SubgroupsProps) {
   const screenSize = useScreenSize();
@@ -70,14 +69,13 @@ export default function Subgroups(props: SubgroupsProps) {
     const updatedTraining = { ...training };
     const updatedSubgroups = subgroups;
 
-    //find from which subgroup the member is being dragged and add it to changedSubgroupIds
+    // find from which subgroup the member is being dragged and add it to changedSubgroupIds
     const fromSubgroup = updatedSubgroups.find((s) =>
       s.membersIds.includes(draggableId)
     );
 
-    if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id)) {
+    if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id))
       setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
-    }
 
     [defaultSubgroup, ...updatedSubgroups].forEach((s) => {
       if (!s.membersIds) return;
@@ -86,12 +84,11 @@ export default function Subgroups(props: SubgroupsProps) {
 
     // Add member to the new subgroup
     if (destination.droppableId === 'default') {
-      if (!availableMembers.some((user) => user.uid === draggableId)) {
+      if (!availableMembers.some((user) => user.uid === draggableId))
         setAvailableMembers((prev) => [
           ...prev,
           users.find((user) => user.uid === draggableId)!,
         ]);
-      }
     } else {
       const targetSubgroup = updatedSubgroups.find(
         (s) => s.id === destination.droppableId
@@ -103,9 +100,8 @@ export default function Subgroups(props: SubgroupsProps) {
         prev.filter((user) => user.uid !== draggableId)
       );
 
-      if (targetSubgroup && !changedSubgroupIds.includes(targetSubgroup.id)) {
+      if (targetSubgroup && !changedSubgroupIds.includes(targetSubgroup.id))
         setChangedSubgroupIds((prev) => [...prev, targetSubgroup.id]);
-      }
     }
 
     setTrainings((prev) =>
@@ -117,12 +113,13 @@ export default function Subgroups(props: SubgroupsProps) {
     updatedTraining.subgroups = Object.fromEntries(
       updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
     );
+
     setTrainings((prev) =>
       prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
     );
   };
 
-  const handleRightClick = (memberId: string, subgroupId: string) => {
+  function handleRightClick(memberId: string, subgroupId: string) {
     if (subgroupId === 'default') return;
 
     // Create a new array to avoid mutating state directly
@@ -152,7 +149,7 @@ export default function Subgroups(props: SubgroupsProps) {
     );
 
     setDetectedSubgroupChanges(true);
-  };
+  }
 
   const handleDelete = async (subgroupId: string) => {
     const deletedSubgroup = subgroups.find((s) => s.id === subgroupId)!;

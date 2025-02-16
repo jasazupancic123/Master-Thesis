@@ -1,21 +1,21 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Pagination, TextField } from '@mui/material';
-import Box from '@mui/material/Box';
-import AddIcon from '@mui/icons-material/AddOutlined';
-import Grid from '@mui/material/Grid2';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
 import { ExerciseCard } from '@/components/exercise-card';
 import ExerciseChips from '@/components/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Component } from '@/controller/component/type/component.type';
-import { addExercise, fetchExercises, onFileUpload } from './state';
+import GroupSidebar from '@/components/group-sidebar';
 import { ComponentService } from '@/controller/component/component.service';
-import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
-import { GroupIdPageProps } from '../type';
+import { Component } from '@/controller/component/type/component.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import AddIcon from '@mui/icons-material/AddOutlined';
+import { Pagination, TextField } from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid2';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import React, { useEffect, useState } from 'react';
+import { GroupIdPageProps } from '../props';
+import { addExercise, fetchExercises, onFileUpload } from './state';
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -77,7 +77,7 @@ export function ExercisesPage(props: GroupIdPageProps) {
   return (
     <>
       <Box>
-        <TrainerGroupSidebar
+        <GroupSidebar
           groups={groups}
           selectedGroup={group}
           logout={async () => {
@@ -149,6 +149,7 @@ export function ExercisesPage(props: GroupIdPageProps) {
           data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
           setData={setExercise}
           attributes={attributes}
+          components={components}
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
@@ -180,6 +181,7 @@ export function ExercisesPage(props: GroupIdPageProps) {
           data={exercise}
           setData={setExercise}
           attributes={attributes}
+          components={components}
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
           title={'Update Exercise'}

@@ -7,6 +7,7 @@ import { TrainingController } from '@/controller/training/training.controller';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import {
   ExerciseMeta,
+  TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
@@ -34,6 +35,24 @@ export type SubgroupsProps = {
   users: User[];
   setTrainings: SetState<Training[]>;
 };
+
+export interface TrainingComponentProps {
+  token: string;
+  training: Training;
+  setSelectedTraining: SetState<Training | null>;
+  component: TrainingComponent;
+  components: Component[];
+  exercises: Exercise[];
+  setSelectedTrainings: SetState<Training[]>;
+  filteredExercises: FilteredExercises;
+  setFilteredExercises: SetState<FilteredExercises>;
+  i: number;
+  openComponent: { componentId: string | null; trainingId: string | null };
+  setOpenComponent: SetState<{
+    componentId: string | null;
+    trainingId: string | null;
+  }>;
+}
 
 export type AddSubgroupInput = Parameters<
   typeof TrainingController.addSubgroup
@@ -92,8 +111,11 @@ export interface TrainingCardProps {
   period: 'AM' | 'PM';
   exercises: Exercise[];
   day: Day;
-  selectedDailyTraining: {am: boolean; pm: boolean};
-  setSelectedDailyTraining: SetState<{am: boolean; pm: boolean}>;
+  selectedDailyTraining: { am: boolean; pm: boolean };
+  setSelectedDailyTraining: SetState<{ am: boolean; pm: boolean }>;
   openComponent: { componentId: string | null; trainingId: string | null };
-  setOpenComponent: SetState<{ componentId: string | null; trainingId: string | null }>;
+  setOpenComponent: SetState<{
+    componentId: string | null;
+    trainingId: string | null;
+  }>;
 }

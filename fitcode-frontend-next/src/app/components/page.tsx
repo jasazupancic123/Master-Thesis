@@ -10,10 +10,11 @@ import { TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Tree, { TreeItem } from '@/components/tree';
-import { useAppContext } from '@/context/app-provider';
-import { Component } from '@/controller/component/type/component.type';
-import { ComponentController } from '@/controller/component/component.controller';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { CommonService } from '@/common/service/common.service';
+import {
+  Component,
+  TreeComponent,
+} from '@/controller/component/type/component.type';
 
 const DEFAULT_COMPONENT: Component = {
   id: '',
@@ -25,8 +26,12 @@ const DEFAULT_COMPONENT: Component = {
 };
 
 export default function Page() {
-  // context
-  const { token, components } = useAppContext();
+  const components: Component[] = [];
+  const componentsTree = CommonService.instance.tree.fromArray(components, {
+    idPropertyName: 'id',
+    parentIdPropertyName: 'parent',
+    childrenPropertyName: 'children',
+  }) as unknown as TreeComponent[];
 
   // state
   const [component, setComponent] = useState(DEFAULT_COMPONENT);
@@ -50,7 +55,7 @@ export default function Page() {
       headerName: 'Parent',
       width: 150,
       valueGetter: (_, row: Component) => {
-        const found = components.flat.find(
+        const found = components.find(
           (component) => component.id === row.parent
         );
         return (found || DEFAULT_COMPONENT).name;
@@ -68,9 +73,7 @@ export default function Page() {
             icon={<EditIcon />}
             label="Edit"
             onClick={() => {
-              const found = components.flat.find(
-                (component) => component.id === id
-              );
+              const found = components.find((component) => component.id === id);
               setComponent(found || DEFAULT_COMPONENT);
               setModal((prev) => ({ ...prev, edit: true }));
             }}
@@ -88,15 +91,11 @@ export default function Page() {
         </Button>
       </Box>
 
-      {isTreeView && components.tree.length > 0 ? (
-        <Tree data={components.tree as TreeItem[]} />
-      ) : components.flat ? (
+      {isTreeView && componentsTree.length > 0 ? (
+        <Tree data={componentsTree as TreeItem[]} />
+      ) : components ? (
         <Box height={600}>
-          <DataGrid
-            rows={components.flat}
-            columns={columns}
-            rowSelection={false}
-          />
+          <DataGrid rows={components} columns={columns} rowSelection={false} />
         </Box>
       ) : (
         <Typography>Loading...</Typography>
@@ -145,7 +144,7 @@ export default function Page() {
           />
 
           {/*<SelectData<Component>
-            data={components.tree}
+            data={componentsTree}
             dataKeyProp="id"
             dataValueProp="name"
             label="Parent"

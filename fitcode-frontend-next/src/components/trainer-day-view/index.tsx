@@ -1,24 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Circles from '@/components/circles';
-import dayjs from 'dayjs';
-import { TextField, Typography } from '@mui/material';
+import { GroupContextProps } from '@/app/groups/[group_id]/props';
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
+import Circles from '@/components/circles';
+import { TrainingController } from '@/controller/training/training.controller';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
+import { Training } from '@/controller/training/type/training.type';
+import { TextField, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+import MyModal from '../modal';
+import { filterExercises } from './state';
+import TrainingCard from './training-card';
 import TrainingMembers from './training-members';
 import { AddSubgroupInput, FilteredExercises } from './type';
-import { filterExercises } from './state';
-import MyModal from '../modal';
-import { TrainingController } from '@/controller/training/training.controller';
-import TrainingCard from './training-card';
-import { Training } from '@/controller/training/type/training.type';
 
 const commonService = CommonService.instance;
 
-export default function TrainerDayView(props: FilterTypeViewProps) {
+export default function TrainerDayView(props: GroupContextProps) {
   const {
     token,
     components,

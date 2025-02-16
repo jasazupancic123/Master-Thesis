@@ -6,7 +6,6 @@ import {
   ExerciseMeta,
   Superset,
   TrainingComponent,
-  TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { Update } from '@mui/icons-material';
 import { Box, Tooltip, IconButton, Typography } from '@mui/material';
@@ -14,7 +13,6 @@ import {
   addSuperset,
   deleteExercise,
   deleteSuperset,
-  filterExercises,
   updateExercise,
 } from './state';
 import TrainingExerciseCard from './training-exercise-card';
@@ -23,7 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import BorderColor from '@/components/border-color';
 import { Training } from '@/controller/training/type/training.type';
 import { Component } from '@/controller/component/type/component.type';
-import { SetState } from '@/common/type/state.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { FilteredExercises } from './type';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -59,12 +57,10 @@ export default function Supersets(props: SupersetsProps) {
   } = props;
 
   const [openAddExcerciseModal, setOpenAddExcerciseModal] = useState(false);
-  const [supersetsWithAdd, setSupersetsWithAdd] =
-    useState<Superset[]>(supersets);
-
-  const [selectedExercises, setSelectedExercises] = useState<
-    TrainingExercise[]
-  >(supersets.map((superset) => Object.values(superset.exercises)).flat());
+  const [supersetsWithAdd, setSupersetsWithAdd] = useState(supersets);
+  const [selectedExercises, setSelectedExercises] = useState(
+    supersets.map((superset) => Object.values(superset.exercises)).flat()
+  );
 
   useEffect(() => {
     if (supersets.length < 4) {
@@ -80,56 +76,54 @@ export default function Supersets(props: SupersetsProps) {
     );
   }, [supersets, supersets.length]);
 
-  const onDragEnd = async (result: any) => {
-    const { destination, draggableId } = result;
+  async function onDragEnd({ destination }: any) {
     if (!destination) return;
 
-    console.log(destination, draggableId);
-
     if ((destination.droppableId as string).endsWith('100')) {
-      //we want to add a new superset and the component to it
-      if (supersets.length >= 4) {
-        toast.error('You can only have 4 supersets per component');
-        return;
-      }
-      try {
-        await addSuperset(
+      if (supersets.length >= 4)
+        return toast.error('You can only have 4 supersets per component');
+
+      handleApiRequest(
+        () =>
+          addSuperset(
+            token,
+            training.id,
+            component.id,
+            {
+              color: COLOR[(component.supersets?.length || 0) % COLOR.length],
+            },
+            setSelectedTrainings,
+            setSelectedTraining,
+            components,
+            exercises
+          ),
+        () => {
+          toast.success('Superset added successfully');
+        },
+        undefined,
+        'Failed to add superset'
+      );
+    }
+  }
+
+  async function handleDeleteSuperset(order: number) {
+    handleApiRequest(
+      () =>
+        deleteSuperset(
           token,
           training.id,
           component.id,
-          {
-            color: COLOR[(component.supersets?.length || 0) % COLOR.length],
-          },
-          setSelectedTrainings,
-          setSelectedTraining,
-          components,
-          exercises
-        );
-        toast.success('Superset added successfully');
-      } catch (e) {
-        toast.error('Failed to add superset');
-        console.error(e);
-      }
-    } else {
-    }
-  };
-
-  const handleDeleteSuperset = (order: number) => async () => {
-    try {
-      await deleteSuperset(
-        token,
-        training.id,
-        component.id,
-        order,
-        { subgroupId: '' },
-        setSelectedTrainings
-      );
-      toast.success('Superset deleted successfully');
-    } catch (e) {
-      toast.error('Failed to delete superset');
-      console.error(e);
-    }
-  };
+          order,
+          { subgroupId: '' },
+          setSelectedTrainings
+        ),
+      () => {
+        toast.success('Superset deleted successfully');
+      },
+      undefined,
+      'Failed to delete superset'
+    );
+  }
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -179,9 +173,9 @@ export default function Supersets(props: SupersetsProps) {
                   >
                     <Box
                       sx={{ cursor: 'pointer' }}
-                      onClick={handleDeleteSuperset(
-                        supersets.indexOf(superset)
-                      )}
+                      onClick={() =>
+                        handleDeleteSuperset(supersets.indexOf(superset))
+                      }
                     >
                       <BorderColor color={superset.color || COLOR[i]} />
                     </Box>
@@ -293,9 +287,9 @@ export default function Supersets(props: SupersetsProps) {
 
                     <Box
                       sx={{ cursor: 'pointer' }}
-                      onClick={handleDeleteSuperset(
-                        supersets.indexOf(superset)
-                      )}
+                      onClick={() =>
+                        handleDeleteSuperset(supersets.indexOf(superset))
+                      }
                     >
                       <BorderColor color={superset.color || COLOR[i]} lower />
                     </Box>
