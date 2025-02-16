@@ -144,7 +144,6 @@ export class TrainingController {
     superset: number,
     body: { subgroupId?: string }
   ) {
-    console.log(`/training/${trainingId}/component/${componentId}/superset/${superset}`, body)
     return api.delete<Training>(
       `/training/${trainingId}/component/${componentId}/superset/${superset}`,
       { token, body }
