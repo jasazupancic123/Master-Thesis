@@ -16,6 +16,9 @@ import { addExercise, fetchExercises, onFileUpload } from './state';
 import { ComponentService } from '@/controller/component/component.service';
 import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 import { GroupIdPageProps } from '../type';
+import { SearchBar } from '@/components/search-bar';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { useTheme } from '@mui/material/styles';
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -24,6 +27,8 @@ const DEFAULT_EXERCISE: Partial<Exercise> = {
 };
 
 export function ExercisesPage(props: GroupIdPageProps) {
+  const theme = useTheme();
+  const screenSize = useScreenSize();
   const {
     token,
     groups,
@@ -86,40 +91,52 @@ export function ExercisesPage(props: GroupIdPageProps) {
         />
       </Box>
 
-      <Box ml={10} p={2}>
-        <Box display="flex" justifyContent="space-between" my={2}>
+      <Box p={2}>
+        <Box
+          display="flex"
+          justifyContent="center"
+          flexDirection="column"
+          alignItems="center"
+          my={2}
+          borderRadius={2}
+          py={1}
+          bgcolor={theme.palette.background.paper}
+        >
           <ExerciseChips
             noSelectionLabel="All"
             components={ComponentService.toTree(components)}
             selected={selectedComponent}
+            bgColor={theme.palette.background.default}
+            primaryColor={theme.palette.primary.main}
             setSelected={(component) =>
               setSelectedComponent(component as Component)
             }
           />
 
-          <Box>
-            {/* Search Input */}
-            <TextField
-              label="Search"
-              variant="outlined"
-              size="small"
+          {/* Search Input */}
+          <Box sx={{ py: 1 }}>
+            <SearchBar
+              placeholder="Search Exercises"
               value={search.name}
-              onChange={(e) => setSearch({ ...search, name: e.target.value })}
+              handleSearchChange={(e) =>
+                setSearch({ ...search, name: e.target.value })
+              }
+              maxWidth="100%"
             />
-
-            {/* Add Button */}
-            <IconButton
-              onClick={() => {
-                setModal({ ...modal, add: true });
-                setExercise(DEFAULT_EXERCISE);
-              }}
-            >
-              <AddIcon />
-            </IconButton>
           </Box>
+
+          {/* Add Button */}
+          <IconButton
+            onClick={() => {
+              setModal({ ...modal, add: true });
+              setExercise(DEFAULT_EXERCISE);
+            }}
+          >
+            <AddIcon />
+          </IconButton>
         </Box>
 
-        <Stack direction="row" justifyContent="center" my={2}>
+        <Stack direction="row" justifyContent="center" my={2} width="100%">
           <Pagination
             count={pagination.pages}
             color="primary"
@@ -128,21 +145,35 @@ export function ExercisesPage(props: GroupIdPageProps) {
           />
         </Stack>
 
-        <Grid container spacing={2} mb={10}>
-          {filteredExercises.map((exercise) => (
-            <Grid
+        <Box
+          display="flex"
+          flexWrap="wrap"
+          justifyContent="center"
+          gap={2}
+          mb={10}
+        >
+          {filteredExercises.slice(0, 6).map((exercise, index) => (
+            <Box
               key={exercise.id}
-              size={{ xs: 4 }}
-              sx={{ cursor: 'pointer' }}
+              width={{
+                xs: screenSize.isMobile ? '45%' : '30%',
+                sm: screenSize.isMobile ? '45%' : '30%',
+              }}
+              sx={{
+                cursor: 'pointer',
+                flexBasis: screenSize.isMobile ? '45%' : '30%',
+                maxWidth: screenSize.isMobile ? '45%' : '30%',
+              }}
               onClick={() => {
                 setModal({ ...modal, edit: true });
                 setExercise(exercise);
               }}
+              maxHeight={250}
             >
               <ExerciseCard exercise={exercise} />
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
 
         {/* Add Exercise Modal*/}
         <ExerciseModal

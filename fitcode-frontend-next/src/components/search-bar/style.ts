@@ -1,4 +1,5 @@
 import { alpha, InputBase, styled } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export const Search = styled('div', {
   shouldForwardProp: (prop) => prop !== 'maxWidth',
@@ -17,7 +18,7 @@ export const Search = styled('div', {
 }));
 
 export const SearchIconWrapper = styled('div')(({ theme }) => ({
-  padding: theme.spacing(0, 2),
+  padding: useScreenSize().isMobile ? theme.spacing(0, 1) : theme.spacing(0, 2),
   height: '100%',
   position: 'absolute',
   pointerEvents: 'none',
@@ -30,11 +31,19 @@ export const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: 'inherit',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    paddingLeft: useScreenSize().isMobile
+      ? `calc(1em + ${theme.spacing(2)})`
+      : `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
     width: '100%',
     [theme.breakpoints.up('md')]: {
       width: '20ch',
     },
+  },
+  '& .MuiInputBase-input::placeholder': {
+    whiteSpace: 'nowrap', // Prevents placeholder from wrapping
+    overflow: 'hidden', // Clips overflowing text
+    textOverflow: 'ellipsis', // Shows "..." when text is too long
+    display: 'block', // Ensures it works correctly
   },
 }));

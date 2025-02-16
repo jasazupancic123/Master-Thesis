@@ -9,7 +9,7 @@ import { Props } from './type';
 import TrainerGroupSidebar from '@/components/trainer-group-sidebar';
 import { Group } from '@/controller/group/type/group.type';
 import MyModal from '@/components/modal';
-import { Add } from '@mui/icons-material';
+import { Add, CreateNewFolderSharp } from '@mui/icons-material';
 import { CreateGroupInput, handleCreateGroup } from './state';
 import {
   IconButton,
@@ -17,8 +17,10 @@ import {
   Tooltip,
   useTheme,
 } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function GroupPage(props: Props) {
+  const screenSize = useScreenSize();
   const { groups } = props;
   const theme = useTheme();
 
@@ -32,7 +34,12 @@ export default function GroupPage(props: Props) {
   });
 
   return (
-    <Box mt="16px">
+    <Box
+      mt="16px"
+      sx={{
+        px: screenSize.isMobile ? 1 : undefined,
+      }}
+    >
       <TrainerGroupSidebar
         groups={groups}
         selectedGroup={selectedGroup}
@@ -63,7 +70,11 @@ export default function GroupPage(props: Props) {
               sx={{
                 display: 'flex',
                 bgcolor: 'background.default',
-                width: 700,
+                width: screenSize.isMobile
+                  ? '95%'
+                  : screenSize.isLandscapeMobile
+                    ? '90%'
+                    : '40%',
                 mx: 'auto',
                 borderBottomLeftRadius: '500px',
                 borderBottomRightRadius: '500px',

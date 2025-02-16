@@ -15,6 +15,7 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import SelectComponent from './select-component';
 import SelectAttribute from './select-attribute';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 interface Props {
   data: Partial<Exercise>;
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function ExerciseModal(props: Props) {
+  const screenSize = useScreenSize();
   const { data, setData, attributes, isOpen, setIsOpen, icons, title } = props;
 
   const { components } = useAppContext();
@@ -125,8 +127,12 @@ export default function ExerciseModal(props: Props) {
   }, [isOpen]);
 
   return (
-    <MyModal isOpen={isOpen} setIsOpen={setIsOpen} width={500}>
-      <Box>
+    <MyModal
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      width={screenSize.isMobile ? undefined : 500}
+    >
+      <Box p={1}>
         <Box display="flex" justifyContent="space-between" mb={3}>
           <Typography variant="h5">{title}</Typography>
           <Box>{icons}</Box>

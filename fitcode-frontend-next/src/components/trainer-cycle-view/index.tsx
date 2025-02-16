@@ -18,6 +18,7 @@ import {
   handleDeleteTraining,
   handleDeleteTrainingComponent,
 } from './state';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainerCycleView(props: FilterTypeViewProps) {
   const {
@@ -30,6 +31,7 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
     setSelectedCycle,
   } = props;
 
+  const screenSize = useScreenSize();
   const theme = useTheme();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [isSticky, setIsSticky] = useState(false);
@@ -78,7 +80,7 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          pb={0}
+          pb={!isSticky ? 1 : 0}
           sx={{
             borderBottomRightRadius: '20px',
             borderBottomLeftRadius: '20px',
@@ -103,20 +105,6 @@ export default function TrainerCycleView(props: FilterTypeViewProps) {
             primaryColor={theme.palette.primary.main}
           />
         </Box>
-
-        <Typography
-          variant="caption"
-          sx={{
-            pb: 2,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <InfoIcon sx={{ fontSize: 20, mb: 0.5, mr: 0.5 }} /> Click on
-          components to remove them. If all components are removed from a
-          training, the training will be deleted. To add a component to an
-          existing training, select the component and click on the training.
-        </Typography>
       </Box>
 
       {/* Choose cycle */}

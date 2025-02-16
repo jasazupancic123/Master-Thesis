@@ -9,8 +9,10 @@ import { TrainingGridItem } from '@/components/training-cycle-view-week/training
 import { TrainingCycleViewWeekProps } from './type';
 import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { Component } from '@/controller/component/type/component.type';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
+  const screenSize = useScreenSize();
   function getFilteredTrainings(date: Dayjs, period: string) {
     date = dayjs(date);
 
@@ -92,7 +94,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 borderColor: '#303E4A',
                 backgroundColor: '#1A2B3C',
                 cursor: props.components.length ? 'pointer' : 'default',
-                minHeight: 140,
+                minHeight: screenSize.isMobile ? 160 : 140,
               }}
             >
               <Typography
@@ -100,7 +102,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                   color: '#fff',
                   fontSize: '0.7rem',
                   opacity: 0.7,
-                  height: '12%',
+                  height: screenSize.isMobile ? '25%' : '12%',
                 }}
               >
                 {dayjs(date).format('ddd, DD.MM')}
@@ -121,7 +123,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                     key={period}
                     sx={{
                       position: 'relative',
-                      height: '44%',
+                      height: screenSize.isMobile ? '37.5%' : '44%',
                     }}
                     onClick={() =>
                       handleAddTraining(date, period as 'AM' | 'PM')

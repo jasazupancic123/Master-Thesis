@@ -60,8 +60,9 @@ export default function TrainerPage(props: GroupIdPageProps) {
   return (
     <Box
       mt="16px"
-      ml={screenSize.isLandscapeMobile || screenSize.isMobile ? '0' : undefined}
-      mx={screenSize.isLandscapeMobile || screenSize.isMobile ? 1 : undefined}
+      sx={{
+        px: screenSize.isMobile ? 1 : undefined,
+      }}
     >
       <TrainerGroupSidebar
         groups={groups}
@@ -82,7 +83,7 @@ export default function TrainerPage(props: GroupIdPageProps) {
         }}
       >
         {/* Date filter */}
-        <Box mx="auto" justifyContent="center" mb={2}>
+        <Box mx="auto" justifyContent="center" mb={2} width="100%">
           <Box mx="auto" justifyContent="center" mb={2}>
             <ToggleButtonGroup
               value={filter}
@@ -93,7 +94,12 @@ export default function TrainerPage(props: GroupIdPageProps) {
               sx={{
                 display: 'flex',
                 bgcolor: 'background.default',
-                width: 700,
+                width: screenSize.isMobile
+                  ? '90%'
+                  : screenSize.isLandscapeMobile
+                    ? '90%'
+                    : '100%',
+                maxWidth: 700,
                 mx: 'auto',
                 borderBottomLeftRadius: '500px',
                 borderBottomRightRadius: '500px',

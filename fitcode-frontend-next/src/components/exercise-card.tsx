@@ -2,16 +2,23 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React from 'react';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 interface Props {
   exercise: Exercise;
 }
 
 export function ExerciseCard(props: Props) {
+  const screenSize = useScreenSize();
   const { exercise } = props;
 
   return (
-    <Card sx={{ maxWidth: 345, borderRadius: 5 }}>
+    <Card
+      sx={{
+        borderRadius: 5,
+        height: 250,
+      }}
+    >
       <CardMedia
         // components="video" or "img"
         component={
