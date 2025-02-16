@@ -81,6 +81,16 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
             isWrapped || screenSize.isMobile || screenSize.isLandscapeMobile
               ? 'auto'
               : undefined,
+          scrollbarWidth: 'thin', // Standard for Firefox
+          '&::-webkit-scrollbar': {
+            width: '6px', // Small and modern scrollbar
+          },
+          '::-webkit-scrollbar-track': {
+            color: 'transparent',
+          },
+          '::-webkit-scrollbar-thumb': {
+            background: 'red',
+          },
         }}
       >
         {Object.values(training.components).map(({ component }) => {

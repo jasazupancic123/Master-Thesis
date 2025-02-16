@@ -35,6 +35,9 @@ export default function GroupSettings(props: GroupIdPageProps) {
         flexDirection="column"
         alignItems="center"
         height="100%"
+        bgcolor="background.paper"
+        borderRadius={5}
+        pb={2}
       >
         <PageTitle title="Group Settings" />
 

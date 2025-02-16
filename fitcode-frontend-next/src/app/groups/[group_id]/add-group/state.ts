@@ -36,10 +36,10 @@ export async function handleCreateGroup(
   setGroupName: SetState<string>
 ) {
   if (!groupName || groupName.length === 0)
-    return toast.error('Please enter a group name.');
+    return toast.error('Enter a group name.');
 
   if (!members || members.length === 0)
-    return toast.error('Please add at least one member to the group.');
+    return toast.error('Add at least one member to the group.');
 
   const membersIds = members.map((member) => member.uid);
 

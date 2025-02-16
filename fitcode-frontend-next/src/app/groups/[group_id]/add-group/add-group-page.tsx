@@ -120,6 +120,9 @@ export default function AddGroupPage(props: GroupIdPageProps) {
         pr={3}
         mt="15px"
         height="100%"
+        bgcolor={theme.palette.background.paper}
+        borderRadius={5}
+        pb={2}
       >
         <PageTitle title="Create a New Group" />
 

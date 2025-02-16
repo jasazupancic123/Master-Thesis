@@ -107,7 +107,7 @@ export default function MembersPage(props: GroupIdPageProps) {
   };
 
   return (
-    <>
+    <Box display="flex" bgcolor={theme.palette.background.default}>
       <Box mt="16px">
         <TrainerGroupSidebar
           groups={groups}
@@ -119,12 +119,13 @@ export default function MembersPage(props: GroupIdPageProps) {
       </Box>
 
       <Box
-        bgcolor={theme.palette.background.default}
+        bgcolor={theme.palette.background.paper}
         width="100%"
         display="flex"
         flexDirection="column"
         alignItems="center"
-        mt={0}
+        mt={2}
+        borderRadius={5}
       >
         <PageTitle title={`Members of ${selectedGroup.name}`} />
 
@@ -208,6 +209,6 @@ export default function MembersPage(props: GroupIdPageProps) {
           />
         </MyModal>
       </Box>
-    </>
+    </Box>
   );
 }
