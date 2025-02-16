@@ -1,12 +1,11 @@
+import { useScreenSize } from '@/context/screen-size-provider';
+import { ArrowBack, ArrowForward } from '@mui/icons-material';
+import { Box, Button } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { format } from 'date-fns';
 import React from 'react';
 import { ToolbarProps } from 'react-big-calendar';
-import { Box, Button } from '@mui/material';
-import { ArrowBack, ArrowForward } from '@mui/icons-material';
-import { CalendarEvent } from './calendar-event';
-import { format } from 'date-fns';
-import { useTheme } from '@mui/material/styles';
-import { useMediaQuery } from '@mui/material';
-import { useScreenSize } from '@/context/screen-size-provider';
+import { CalendarEvent } from './type';
 
 const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
   label,

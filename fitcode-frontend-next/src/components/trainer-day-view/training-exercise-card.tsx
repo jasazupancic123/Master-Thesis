@@ -1,20 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import { Box, FormControl, TextField } from '@mui/material';
-import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
-import { TrainingExerciseCardProps } from './type';
 import {
-  SetExerciseOption,
   RECOVERY,
   SET,
   SET_TYPE,
+  SetExerciseOption,
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
+import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
+import { FormControl, TextField } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { useEffect, useState } from 'react';
+import { SetExerciseAttribute } from './exercise-card-set-attribute';
+import { TrainingExerciseCardProps } from './props';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const { exercise, onChange } = props;
@@ -63,34 +64,31 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       spacing={2}
       p={1}
       sx={{
-        backgroundColor: 'rgba(255, 255, 255, 0.05)', // White background with 5% transparency
-        padding: '10px', // Internal padding for each drill
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        padding: '10px',
         borderRadius: '0px',
-        boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)', // Optional: Add slight shadow for visual separation
-        marginBottom: '5px', // Vertical gap between exercises
+        boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
+        marginBottom: '5px',
       }}
     >
-      <Stack direction="row">
-        <Box
-          width={20}
-          height={20}
-          sx={{ backgroundColor: exercise.color, mr: 2 }}
-        />
-
+      <Stack direction="row" width="100%" justifyContent="center">
         <Typography
           variant="body1"
           fontWeight="bold"
           textTransform="uppercase"
-          sx={{
-            color: 'white', // Set text color to white
-            textAlign: 'center', // Align text to the center
-          }}
+          sx={{ color: 'white', textAlign: 'center' }}
         >
           {exercise.exercise?.name}
         </Typography>
       </Stack>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap">
+      <Stack
+        direction="row"
+        spacing={1}
+        flexWrap="wrap"
+        width="100%"
+        justifyContent="center"
+      >
         {/* Sets */}
         <SetExerciseAttribute
           options={SET}
@@ -109,7 +107,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             setState((prev) => ({ ...prev, sets }));
           }}
         />
-
         {/* Set Type */}
         <SetExerciseAttribute
           options={SET_TYPE}
@@ -136,7 +133,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             }));
           }}
         />
-
         {/* Workload */}
         <SetExerciseAttribute
           options={WORKLOAD}
@@ -170,7 +166,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             }));
           }}
         />
-
         {/* Effort */}
         {/*<SetExerciseAttribute
         options={TRAINING_EXERCISE_EFFORT}
@@ -189,7 +184,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setState(prev => ({ ...prev, effort }));
         }}
       />*/}
-
         {/* Tempo */}
         {/*<SetExerciseAttribute
         options={SET_EXERCISE_TEMPO}
@@ -208,7 +202,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setState(prev => ({ ...prev, tempo }));
         }}
       />*/}
-
         {/* Recovery */}
         <SetExerciseAttribute
           options={RECOVERY}
@@ -228,132 +221,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           }}
         />
       </Stack>
-    </Stack>
-  );
-}
-
-const sx = {
-  border: 'none',
-  size: 'small',
-  backgroundColor: 'transparent',
-  '& .MuiSelect-icon': { display: 'none' },
-  '& .MuiSelect-select': {
-    padding: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 25,
-    fontSize: '0.7rem',
-    color: 'lightgrey',
-    backgroundColor: 'transparent',
-    borderBottom: 'none',
-  },
-};
-
-interface State {
-  option: string;
-  value: string;
-  type: SetExerciseOption['type'];
-  values?: SetExerciseOption['values'];
-  format: SetExerciseOption['format'];
-}
-
-interface SetExerciseAttributeProps {
-  state: State;
-  onChange: (data: State) => void;
-  options: SetExerciseOption[];
-  disabled?: boolean;
-}
-
-export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
-  const { options, state, onChange, disabled = false } = props;
-
-  return (
-    <Stack direction="column">
-      {/* On option change */}
-      <FormControl variant="filled" size="small" sx={sx}>
-        <Select
-          variant="filled"
-          sx={sx['& .MuiSelect-select']}
-          disableUnderline={true}
-          value={state.option}
-          disabled={disabled}
-          onChange={(e) => {
-            const value = e.target.value as string;
-            const option = options.find((option) => option.label === value);
-            if (!option) return;
-
-            onChange({
-              ...option,
-              option: value,
-              type: option.type,
-              values: option.values ?? [],
-              value: option.values ? option.values[0].toString() : '10',
-            } as State);
-          }}
-        >
-          {options.map((option) => (
-            <MenuItem key={option.label} value={option.label}>
-              {option.label.toUpperCase()}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      {/* On value change */}
-      {state.type === 'select' ? (
-        <FormControl variant="filled" size="small" sx={sx} disabled={disabled}>
-          <Select
-            variant="filled"
-            sx={sx['& .MuiSelect-select']}
-            value={state.value}
-            disabled={disabled}
-            onChange={(e) => {
-              const value = e.target.value as string;
-              onChange({ ...state, value });
-            }}
-          >
-            {(state.values || []).map((value) => (
-              <MenuItem key={value} value={value}>
-                {state.format(value)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      ) : (
-        <TextField
-          variant="filled"
-          value={state.value}
-          type={state.type}
-          size="small"
-          disabled={disabled}
-          onChange={(e) => {
-            const value = e.target.value;
-            onChange({ ...state, value });
-          }}
-          InputLabelProps={{ shrink: true }}
-          sx={{
-            mt: 0,
-            bgcolor: 'transparent',
-            height: sx['& .MuiSelect-select'].height,
-            width: 70,
-            '& .MuiInputBase-root': {
-              borderBottom: 'none',
-              border: 'none',
-            },
-            '& .MuiInputBase-input': {
-              border: 'none',
-              borderBottom: 'none',
-              padding: '1px',
-              textAlign: 'center',
-              backgroundColor: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            },
-          }}
-        />
-      )}
     </Stack>
   );
 }

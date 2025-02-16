@@ -1,40 +1,35 @@
 'use client';
 
+import { COLORS } from '@/common/constant/color.constant';
+import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
+import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
-import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { Range } from 'react-range';
-import { Box, Stack, Typography, IconButton, Button } from '@mui/material';
-import { ArrowLeft, ArrowRight } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { COLORS } from '@/common/constant/color.constant';
-import { MultiCycleSliderProps } from './type';
-import { useScreenSize } from '@/context/screen-size-provider';
+import { MultiCycleSliderProps } from './props';
 import {
   changeYear,
   handleDrag,
   handleDragChange,
   handleUpdateCycleDates,
 } from './state';
-import { Add } from '@mui/icons-material';
 
 dayjs.extend(dayOfYear);
 
 export default function MultiCycleSlider(props: MultiCycleSliderProps) {
-  const screenSize = useScreenSize();
-  const {
-    token,
-    groupId,
-    cycles,
-    selectedGroup,
-    setSelectedGroup,
-    selectedCycle,
-    setSelectedCycle,
-    setShowAddCycleModal,
-  } = props;
+  const { setShowModal } = props;
 
+  const { token, group, setGroup, cycle, setCycle } = useGroup();
+  const screenSize = useScreenSize();
   const theme = useTheme();
+  const router = useRouter();
+
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -57,6 +52,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     })
   );
 
+  const cycles = group.cycles;
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const onMouseMove = (e: any) => setMouseX(e.clientX);
 
@@ -128,7 +124,9 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
         <IconButton onClick={() => changeYear('prev', setSelectedYear)}>
           <ArrowLeft />
         </IconButton>
+
         <Typography variant="h6">{selectedYear}</Typography>
+
         <IconButton onClick={() => changeYear('next', setSelectedYear)}>
           <ArrowRight />
         </IconButton>
@@ -137,16 +135,14 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       <IconButton
         sx={{
           mb: 2,
-          backgroundColor: 'primary.light', // Set primary background color
-          color: 'white', // Ensure the icon is visible
-          borderRadius: '50%', // Make it round
-          width: 30, // Set a fixed width for a perfect circle
-          height: 30, // Set a fixed height for a perfect circle
-          '&:hover': {
-            backgroundColor: 'primary.dark', // Darker shade on hover
-          },
+          backgroundColor: 'primary.light',
+          color: 'white',
+          borderRadius: '50%',
+          width: 30,
+          height: 30,
+          '&:hover': { backgroundColor: 'primary.dark' },
         }}
-        onClick={() => setShowAddCycleModal(true)}
+        onClick={() => setShowModal(true)}
       >
         <Add />
       </IconButton>
@@ -165,11 +161,9 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           values={valuesReal}
           onChange={(newValues: number[]) =>
             handleDragChange(
-              newValues,
-              draggingIndex,
               sliderRef,
-              mouseX,
-              setValuesReal
+              { newValues, draggingIndex, mouseX },
+              { setValuesReal }
             )
           }
           onFinalChange={handleDragEnd}
@@ -274,12 +268,8 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
                 onTouchStart={() => handleDragStart(index)}
                 onMouseMove={() =>
                   handleDrag(
-                    index,
-                    value,
-                    selectedYear,
-                    setDraggedDay,
-                    setValuesReal,
-                    sortedCycles
+                    { index, value, selectedYear },
+                    { setDraggedDay, setValuesReal, sortedCycles }
                   )
                 }
                 style={{
@@ -355,17 +345,22 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           onClick={() =>
             handleUpdateCycleDates(
               token,
-              groupId,
-              selectedGroup,
-              setSelectedGroup,
-              detectedChange,
-              setDetectedChange,
-              sortedCycles,
-              setSortedCycles,
-              valuesReal,
-              selectedYear,
-              selectedCycle,
-              setSelectedCycle
+              {
+                groupId: group.id,
+                sortedCycles,
+              },
+              {
+                router,
+                group,
+                setGroup,
+                detectedChange,
+                setDetectedChange,
+                setSortedCycles,
+                valuesReal,
+                selectedYear,
+                cycle,
+                setCycle,
+              }
             )
           }
           style={{

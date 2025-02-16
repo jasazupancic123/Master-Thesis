@@ -1,12 +1,11 @@
-import React, { ReactNode } from 'react';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { ChildrenProps } from '@/common/type/props.type';
 import SidebarAthlete from '@/components/sidebar-athlete';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { UserController } from '@/controller/user/user.controller';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
 import { cookies } from 'next/headers';
-import { ChildrenProps } from '@/common/type/props.type';
 
 export default async function Layout({ children }: ChildrenProps) {
   // fetch data

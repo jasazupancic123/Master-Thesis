@@ -1,4 +1,9 @@
-import { handleApiRequest, SetState } from '@/common/type/state.type';
+import { CommonService } from '@/common/service/common.service';
+import {
+  handleApiRequest,
+  SetState,
+  SetStateNullable,
+} from '@/common/type/state.type';
 import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
@@ -6,54 +11,61 @@ import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
 import dayjs, { Dayjs } from 'dayjs';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import {
   AddTrainingComponents,
-  UpdateTrainingComponents,
   DeleteTrainingComponent,
+  UpdateTrainingComponents,
 } from './type';
-import { CommonService } from '@/common/service/common.service';
 
 export async function handleCreateTraining(
   token: string,
-  date: Dayjs,
-  period: 'AM' | 'PM',
-  selectedGroup: Group,
-  setTrainings: SetState<Training[]>,
-  selectedCycle: Cycle,
-  selectedComponents: Component[],
-  setSelectedComponents: SetState<Component[]>,
-  components: Component[],
-  trainings: Training[]
+  input: {
+    group: Group;
+    cycle: Cycle;
+    date: Dayjs;
+    period: 'AM' | 'PM';
+    selectedComponents: Component[];
+  },
+  state: {
+    router: AppRouterInstance;
+    trainings: Training[];
+    setTrainings: SetState<Training[]>;
+    setCycle: SetStateNullable<Cycle>;
+    setSelectedComponents: SetState<Component[]>;
+    components: Component[];
+  }
 ) {
+  const { group, cycle, date, period, selectedComponents } = input;
+  const { router, trainings, setTrainings, setSelectedComponents, components } =
+    state;
+
   if (!selectedComponents.length)
     return toast.error('Select at least one component to add');
 
-  //get number of trainings in the selected period
+  // get number of trainings in the selected period
   const periodTrainings = trainings.filter((training) => {
     const trainingDate = dayjs(training.from);
     const start = trainingDate.startOf('day');
     const end = dayjs(training.to).endOf('day');
 
-    // Check if training falls within the given day
+    // check if training falls within the given day
     const isBetween = CommonService.instance.date.isBetween(date, start, end);
     if (!isBetween) return false;
 
-    // Apply AM/PM filtering
-    if (period === 'AM') return trainingDate.hour() < 12; // Before noon
-    if (period === 'PM') return trainingDate.hour() >= 12; // Noon or later
+    // apply AM/PM filtering
+    if (period === 'AM') return trainingDate.hour() < 12; // before noon
+    if (period === 'PM') return trainingDate.hour() >= 12; // noon or later
 
     return false;
   });
 
-  if (periodTrainings.length >= 1) {
-    toast.error('You can only create 1 trainings per period');
-    return;
-  }
+  if (periodTrainings.length >= 1)
+    return toast.error('You can only create 1 trainings per period');
 
   const amPair = { start: 8, end: 10 };
   const pmPair = { start: 14, end: 16 };
-
   const pair = period === 'AM' ? amPair : pmPair;
 
   // set start time and end time to date
@@ -74,10 +86,11 @@ export async function handleCreateTraining(
     .set('second', 0);
 
   handleApiRequest(
+    router,
     () =>
       TrainingController.create(token, {
-        groupId: selectedGroup.id,
-        cycleId: selectedCycle.id,
+        groupId: group.id,
+        cycleId: cycle.id,
         from: from.toDate(),
         to: to.toDate(),
         components: selectedComponents.reduce(
@@ -106,51 +119,61 @@ export async function handleCreateTraining(
 
 export async function handleAddTrainingComponents(
   token: string,
-  trainingId: string,
-  input: AddTrainingComponents,
-  setTrainings: SetState<Training[]>,
-  components: Component[]
+  input: AddTrainingComponents & { trainingId: string },
+  state: {
+    router: AppRouterInstance;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+  }
 ) {
+  const { trainingId, ...restInput } = input;
+  const { router, setTrainings, components } = state;
+
+  if (!restInput.components.length)
+    return toast.error('Select at least one component to add');
+
   handleApiRequest(
-    () => {
-      if (!input.components.length) {
-        return Promise.reject('Select at least one component to add');
-      }
-      return TrainingController.addComponents(token, trainingId, input); // Ensure a Promise is always returned
-    },
+    router,
+    () => TrainingController.addComponents(token, trainingId, restInput),
     (training) => {
-      // Update training
-      TrainingService.mapComponents(training, components);
+      const mapped = TrainingService.mapComponents(training, components);
       setTrainings((prev) =>
-        prev.map((t) => (t.id === trainingId ? training : t))
+        prev.map((t) => (t.id === trainingId ? mapped : t))
       );
     },
     undefined,
-    !input.components.length
-      ? 'Select at least one component to add'
-      : 'Failed to add training components'
+    'Failed to add training components'
   );
 }
 
 export async function handleUpdateTrainingComponent(
   token: string,
-  trainingId: string,
-  componentId: string,
-  input: UpdateTrainingComponents,
-  setTrainings: SetState<Training[]>,
-  components: Component[]
+  input: UpdateTrainingComponents & {
+    trainingId: string;
+    componentId: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+  }
 ) {
+  const { trainingId, componentId, ...restInput } = input;
+  const { router, setTrainings, components } = state;
+
   handleApiRequest(
+    router,
     () =>
-      TrainingController.updateComponent(token, trainingId, componentId, input),
+      TrainingController.updateComponent(
+        token,
+        trainingId,
+        componentId,
+        restInput
+      ),
     (training) => {
-      // update training
-      TrainingService.mapComponents(training, components);
+      const mapped = TrainingService.mapComponents(training, components);
       setTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === trainingId) return training;
-          return t;
-        })
+        prev.map((t) => (t.id === trainingId ? mapped : t))
       );
     },
     undefined,
@@ -159,31 +182,36 @@ export async function handleUpdateTrainingComponent(
 }
 
 export async function handleDeleteTrainingComponent(
-  trainingId: string,
-  componentId: string,
   token: string,
-  input: DeleteTrainingComponent,
-  setTrainings: SetState<Training[]>,
-  components: Component[]
+  input: DeleteTrainingComponent & {
+    trainingId: string;
+    componentId: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    setTrainings: SetState<Training[]>;
+    components: Component[];
+  }
 ) {
+  const { trainingId, componentId, ...restInput } = input;
+  const { router, setTrainings, components } = state;
+
   handleApiRequest(
+    router,
     () =>
-      TrainingController.deleteComponent(token, trainingId, componentId, input),
+      TrainingController.deleteComponent(
+        token,
+        trainingId,
+        componentId,
+        restInput
+      ),
     (training) => {
-      // update training
-      TrainingService.mapComponents(training, components);
-      if (Object.keys(training.components).length === 0) {
-        TrainingController.delete(token, trainingId);
-        setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
-        toast.success('Training deleted successfully');
-        return;
-      }
+      const mapped = TrainingService.mapComponents(training, components);
       setTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === trainingId) return training;
-          return t;
-        })
+        prev.map((t) => (t.id === trainingId ? mapped : t))
       );
+
+      toast.success('Training deleted successfully');
     },
     undefined,
     'Failed to delete training component'
@@ -191,14 +219,20 @@ export async function handleDeleteTrainingComponent(
 }
 
 export async function handleDeleteTraining(
-  trainingId: string,
   token: string,
-  setTrainings: SetState<Training[]>
+  input: { trainingId: string },
+  state: {
+    router: AppRouterInstance;
+    setTrainings: SetState<Training[]>;
+  }
 ) {
+  const { trainingId } = input;
+  const { router, setTrainings } = state;
+
   handleApiRequest(
+    router,
     () => TrainingController.delete(token, trainingId),
     () => {
-      // update training
       setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
     },
     undefined,

@@ -1,14 +1,14 @@
 'use client';
 
-import dayjs, { Dayjs } from 'dayjs';
-import { useState } from 'react';
 import { Box, TextField } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import { useState } from 'react';
 import { EditCycleModalProps } from './type';
 
 export default function EditCycleModal(props: EditCycleModalProps) {
-  const { token, onClose, selectedCycle, setSelectedCycle } = props;
+  const { selectedCycle, setSelectedCycle } = props;
 
   const [cycleName, setCycleName] = useState(selectedCycle.name);
   const [startDate, setStartDate] = useState<Dayjs | null>(

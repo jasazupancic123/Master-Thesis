@@ -1,6 +1,4 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import { GroupController } from '@/controller/group/group.controller';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { CalendarPage } from './calendar-page';
