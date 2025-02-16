@@ -1,17 +1,16 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { ComponentController } from '@/controller/component/component.controller';
+import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { GroupController } from '@/controller/group/group.controller';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
-import { GroupIdPageParams, GroupIdPageProps } from './type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { ReactNode } from 'react';
-import { LINK_GROUP_DATE_RANGE_VIEW } from '@/common/constant/navigation.constant';
+import { GroupIdPageParams, GroupIdPageProps } from './props';
 import TrainerPage from './trainer-page';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
-import { ComponentController } from '@/controller/component/component.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import { TrainingController } from '@/controller/training/training.controller';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -50,7 +49,7 @@ export default async function Page(props: GroupIdPageParams) {
     )
   );
 
-  const pageProps: GroupIdPageProps = {
+  const groupIdPageProps: GroupIdPageProps = {
     token,
     group,
     users,
@@ -65,7 +64,7 @@ export default async function Page(props: GroupIdPageParams) {
     [UserRole.ADMIN]: null,
     [UserRole.ATHLETE]: null,
     [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: <TrainerPage {...pageProps} />,
+    [UserRole.TRAINER]: <TrainerPage {...groupIdPageProps} />,
   };
 
   return mapper[role];

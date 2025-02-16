@@ -3,42 +3,40 @@ import { GroupController } from '@/controller/group/group.controller';
 import { Group } from '@/controller/group/type/group.type';
 import { Dayjs } from 'dayjs';
 import toast from 'react-hot-toast';
-
-export type AddInput = Parameters<typeof GroupController.addCycle>[2];
+import { AddCycleInput } from './input';
 
 export async function handleAddCycle(
   token: string,
-  cycleName: string,
-  description: string,
-  startDate: Dayjs | null,
-  endDate: Dayjs | null,
-  selectedGroup: Group,
-  setSelectedGroup: SetState<Group>,
+  input: AddCycleInput,
+  state: {
+    group: Group;
+    setGroup: SetState<Group>;
+  },
   onClose: () => void
 ) {
-  if (!cycleName || !startDate || !endDate) {
+  const { group, setGroup } = state;
+  const { name, description, from, to } = input;
+
+  if (!name || !from || !to) {
     toast.error('Please fill in all required fields.');
     return;
   }
 
-  const start: Date = startDate?.toDate();
-  const end: Date = endDate?.toDate();
-
-  if (start > end) {
+  if (from > to) {
     toast.error('Start date must be before end date.');
     return;
   }
 
   handleApiRequest(
     () =>
-      GroupController.addCycle(token, selectedGroup.id, {
-        name: cycleName,
+      GroupController.addCycle(token, group.id, {
+        name,
         description,
-        from: start,
-        to: end,
+        from,
+        to,
       }),
     (cycle) => {
-      setSelectedGroup((prev) => ({
+      setGroup((prev) => ({
         ...prev,
         cycles: [...(prev.cycles || []), cycle],
       }));
@@ -51,8 +49,7 @@ export async function handleAddCycle(
         toast.error('Cycle dates overlap with an existing cycle.');
         return;
       }
-
-      toast.error('Failed to add cycle.');
-    }
+    },
+    'Failed to add cycle.'
   );
 }

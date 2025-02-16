@@ -1,9 +1,9 @@
-import { FilterType } from '@/common/type/filter.type';
+import { GroupDateFilter } from '@/common/type/filter.type';
 import { ToggleButton } from '@mui/material';
 import React from 'react';
 
 interface Props {
-  value: FilterType;
+  value: GroupDateFilter;
   disabled?: boolean;
 }
 

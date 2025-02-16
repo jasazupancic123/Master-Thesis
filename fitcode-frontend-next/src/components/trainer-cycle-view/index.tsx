@@ -1,25 +1,25 @@
-import React, { Fragment, useState, useEffect } from 'react';
-import dayjs from 'dayjs';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material';
-import TrainingWeek from '@/components/training-cycle-view-week';
-import { Component } from '@/controller/component/type/component.type';
+import { GroupContextProps } from '@/app/groups/[group_id]/props';
 import ExerciseChips from '@/components/exercise-chips';
+import TrainingWeek from '@/components/training-cycle-view-week';
 import { ComponentService } from '@/controller/component/component.service';
-import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
-import SelectInput from '../select-input';
+import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { RotateRight } from '@mui/icons-material';
 import InfoIcon from '@mui/icons-material/Info';
+import { useTheme } from '@mui/material';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import dayjs from 'dayjs';
+import React, { Fragment, useEffect, useState } from 'react';
+import SelectInput from '../select-input';
 import {
   handleAddTrainingComponents,
   handleDeleteTraining,
   handleDeleteTrainingComponent,
 } from './state';
 
-export default function TrainerCycleView(props: FilterTypeViewProps) {
+export default function TrainerCycleView(props: GroupContextProps) {
   const {
     token,
     group,

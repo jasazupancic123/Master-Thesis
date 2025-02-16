@@ -1,13 +1,13 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { ComponentController } from '@/controller/component/component.controller';
+import { ExerciseController } from '@/controller/exercise/exercise.controller';
+import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
+import { GroupIdPageParams } from '../props';
 import { ExercisesPage } from './exercises-page';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
-import { ComponentController } from '@/controller/component/component.controller';
-import { GroupIdPageParams } from '../type';
-import { GroupController } from '@/controller/group/group.controller';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data

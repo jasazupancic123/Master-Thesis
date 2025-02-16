@@ -1,8 +1,5 @@
-'use client';
-
-import { useState } from 'react';
 import { CommonService } from '@/common/service/common.service';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import Subgroups from './subgroups';
 import { TrainingCardProps } from './type';
 import TrainingComponentCard from './training-component';

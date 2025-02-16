@@ -1,11 +1,11 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
-import AddGroupPage from './add-group-page';
-import { GroupController } from '@/controller/group/group.controller';
-import { GroupIdPageParams, GroupIdPageProps } from '../type';
 import { notFound } from 'next/navigation';
+import { GroupIdPageParams, GroupIdPageProps } from '../props';
+import AddGroupPage from './add-group-page';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data

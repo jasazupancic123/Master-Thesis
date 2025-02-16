@@ -1,8 +1,8 @@
+import { Dispatch, SetStateAction } from 'react';
 import toast from 'react-hot-toast';
 
-export type SetState<T = any> = (
-  state: T | ((state: T) => T)
-) => void | Promise<void>;
+export type SetState<T = any> = Dispatch<SetStateAction<T>>;
+export type SetStateNullable<T = any> = Dispatch<SetStateAction<T | null>>;
 
 export async function handleApiRequest<T>(
   apiCall: () => Promise<T>,

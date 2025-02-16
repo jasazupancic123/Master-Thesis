@@ -24,7 +24,6 @@ import {
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
-import { useAppContext } from '@/context/app-provider';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 
 interface Props {
@@ -33,8 +32,7 @@ interface Props {
 }
 
 export default function AthleteTrainingExerciseCard(props: Props) {
-  const { token } = useAppContext();
-  const { component, trainingId } = props;
+  const { component } = props;
 
   // State to manage input values for each set
   const [setValues, setSetValues] = React.useState<

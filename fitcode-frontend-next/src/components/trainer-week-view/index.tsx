@@ -1,19 +1,19 @@
 'use client';
 
-import React, { Fragment, useEffect, useState } from 'react';
-import dayjs from 'dayjs';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid2';
-import Circles from '@/components/circles';
+import { GroupContextProps } from '@/app/groups/[group_id]/props';
 import { CommonService } from '@/common/service/common.service';
-import { FilterTypeViewProps } from '@/app/groups/[group_id]/type';
+import Circles from '@/components/circles';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid2';
+import Typography from '@mui/material/Typography';
+import dayjs from 'dayjs';
+import React, { Fragment, useEffect, useState } from 'react';
 import { getWeek, updateTraining } from './state';
 import TrainingItem from './training-week-view-item';
 
 const commonService = CommonService.instance;
 
-export default function TrainerWeekView(props: FilterTypeViewProps) {
+export default function TrainerWeekView(props: GroupContextProps) {
   const { token, components, trainings, selectedCycle, setSelectedTrainings } =
     props;
 
