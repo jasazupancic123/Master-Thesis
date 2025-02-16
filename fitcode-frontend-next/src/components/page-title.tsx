@@ -15,7 +15,7 @@ export default function PageTitle({ title }: Props) {
       minWidth={screenSize.isMobile ? undefined : '600px'}
       width={screenSize.isMobile ? '90%' : undefined}
       sx={{
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.background.default,
         borderRadius: '0 0 40px 40px',
       }}
     >

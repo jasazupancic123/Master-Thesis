@@ -19,6 +19,7 @@ import { GroupIdPageProps } from '../type';
 import { SearchBar } from '@/components/search-bar';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTheme } from '@mui/material/styles';
+import PageTitle from '@/components/page-title';
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -99,9 +100,12 @@ export function ExercisesPage(props: GroupIdPageProps) {
           alignItems="center"
           my={2}
           borderRadius={2}
-          py={1}
+          pb={1}
           bgcolor={theme.palette.background.paper}
         >
+          <Box pb={1}>
+            <PageTitle title="Exercises" />
+          </Box>
           <ExerciseChips
             noSelectionLabel="All"
             components={ComponentService.toTree(components)}
@@ -168,7 +172,6 @@ export function ExercisesPage(props: GroupIdPageProps) {
                 setModal({ ...modal, edit: true });
                 setExercise(exercise);
               }}
-              maxHeight={250}
             >
               <ExerciseCard exercise={exercise} />
             </Box>
