@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { theme } from '@/app/style';
+import { User } from '@/controller/user/type/user.type';
 import {
   Button,
   List,
@@ -7,13 +8,12 @@ import {
   Typography,
 } from '@mui/material';
 import Box from '@mui/material/Box';
-import { theme } from '@/app/style';
-import { User } from '@/controller/user/type/user.type';
+import { useEffect, useState } from 'react';
 import { SearchBar } from '../search-bar';
 import { AddMembersModalProps } from './type';
 
 export function AddMembersModal(props: AddMembersModalProps) {
-  const { users, members, setMembers, addUserToEnd } = props;
+  const { users, members, setMembers } = props;
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);

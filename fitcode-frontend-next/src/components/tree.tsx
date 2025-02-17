@@ -14,7 +14,7 @@ interface Props {
 
 export default function Tree(props: Props) {
   return (
-    <SimpleTreeView expandedItems={props.data.map(item => item.id)}>
+    <SimpleTreeView expandedItems={props.data.map((item) => item.id)}>
       {props.data.map((item) => (
         <TreeItem key={item.id} label={item.name} itemId={item.id}>
           {item.children && <Tree data={item.children} />}

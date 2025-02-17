@@ -1,9 +1,9 @@
 import { SetState } from '@/common/type/state.type';
-import { SxProps } from '@mui/material';
 import {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
+import { SxProps } from '@mui/material';
 
 export interface ExerciseChipsProps {
   components: (Component | TreeComponent)[];

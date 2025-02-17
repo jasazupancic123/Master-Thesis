@@ -1,14 +1,12 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import { GroupProvider } from '@/context/group-provider';
 import { GroupController } from '@/controller/group/group.controller';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { notFound } from 'next/navigation';
-import { ReactNode } from 'react';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
-import { ComponentController } from '@/controller/component/component.controller';
-import { GroupIdPageParams, GroupIdPageProps } from '../type';
-import GroupSettings from './group-settings';
+import { GroupIdPageParams, GroupIdPageProps } from '../props';
+import GroupSettingsPage from './group-settings-page';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -30,12 +28,9 @@ export default async function Page(props: GroupIdPageParams) {
 
   if ([UserRole.ATHLETE, UserRole.ADMIN].includes(role)) return notFound();
 
-  const [users, groups, exercises, attributes, components] = await Promise.all([
+  const [users, groups] = await Promise.all([
     UserController.findAll(token),
     GroupController.findAll(token),
-    ExerciseController.findAll(token),
-    ExerciseController.findAttributes(),
-    ComponentController.findAll(),
   ]);
 
   const pageProps: GroupIdPageProps = {
@@ -43,18 +38,15 @@ export default async function Page(props: GroupIdPageParams) {
     group,
     users,
     groups,
-    exercises,
-    attributes,
-    components,
+    exercises: [],
+    attributes: [],
+    components: [],
     trainings: [],
   };
 
-  const mapper: Record<UserRole, ReactNode> = {
-    [UserRole.ADMIN]: null,
-    [UserRole.ATHLETE]: null,
-    [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: <GroupSettings {...pageProps} />,
-  };
-
-  return mapper[role];
+  return (
+    <GroupProvider {...pageProps}>
+      <GroupSettingsPage />
+    </GroupProvider>
+  );
 }

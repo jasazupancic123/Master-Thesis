@@ -1,7 +1,7 @@
-import Typography from '@mui/material/Typography';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
+import Typography from '@mui/material/Typography';
 
 interface Props {
   exercises: Exercise[];

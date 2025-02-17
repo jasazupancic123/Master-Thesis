@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import Box from '@mui/material/Box';
-import { FormControl, InputLabel } from '@mui/material';
-import MenuItem from '@mui/material/MenuItem';
 import {
   ExerciseAttribute,
   ExerciseAttributeSelectOption,
 } from '@/controller/exercise/type/exercise-attribute.type';
+import { FormControl, InputLabel } from '@mui/material';
+import Box from '@mui/material/Box';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import React, { useEffect, useState } from 'react';
 
 // recursive components to show select for sub attributes
 export default function SelectAttribute(props: {

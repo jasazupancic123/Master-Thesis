@@ -1,17 +1,17 @@
-import toast from 'react-hot-toast';
-import { REDIRECT_TO_SIGN_IN } from '../error/redirect.error';
-import { LINK_SIGN_IN } from '../constant/navigation.constant';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { Dispatch, SetStateAction } from 'react';
+import toast from 'react-hot-toast';
+import { LINK_SIGN_IN } from '../constant/navigation.constant';
+import { REDIRECT_TO_SIGN_IN } from '../error/redirect.error';
 
-export type SetState<T = any> = (
-  state: T | ((state: T) => T)
-) => void | Promise<void>;
+export type SetState<T = any> = Dispatch<SetStateAction<T>>;
+export type SetStateNullable<T = any> = Dispatch<SetStateAction<T | undefined>>;
 
 export async function handleApiRequest<T>(
+  router: AppRouterInstance,
   apiCall: () => Promise<T>,
   onSuccess: (data: T) => T | void | undefined,
   onError?: (e: any) => void,
-  router?: AppRouterInstance,
   errorMessage = 'Something went wrong'
 ) {
   try {
@@ -22,7 +22,6 @@ export async function handleApiRequest<T>(
     console.error(e);
     toast.error(e.message || errorMessage);
     if (onError) onError(e);
-    if (router)
-      if (e.message === REDIRECT_TO_SIGN_IN) router.push(LINK_SIGN_IN.href);
+    if (e.message === REDIRECT_TO_SIGN_IN) router.push(LINK_SIGN_IN.href);
   }
 }

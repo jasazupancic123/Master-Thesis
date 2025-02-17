@@ -1,28 +1,33 @@
 import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { User } from '@/controller/user/type/user.type';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+import { CreateGroupInput } from '../../input';
 
-export function filterMembers(
-  members: User[],
-  setFilteredMembers: SetState<User[]>,
-  searchQueryMembers: string
-) {
+export function handleFilterMembers(state: {
+  members: User[];
+  setFilteredMembers: SetState<User[]>;
+  search: string;
+}) {
+  const { members, setFilteredMembers, search } = state;
+
   setFilteredMembers(
     members.filter(
       (member) =>
-        member.displayName?.toLowerCase().includes(searchQueryMembers) ||
-        member.email.toLowerCase().includes(searchQueryMembers)
+        member.displayName?.toLowerCase().includes(search) ||
+        member.email.toLowerCase().includes(search)
     )
   );
 }
 
-export function handleRemoveMember(
-  user: User,
-  members: User[],
-  setMembers: SetState<User[]>,
-  setFilteredMembers: SetState<User[]>
-) {
+export function handleRemoveMember(state: {
+  user: User;
+  members: User[];
+  setMembers: SetState<User[]>;
+  setFilteredMembers: SetState<User[]>;
+}) {
+  const { user, members, setMembers, setFilteredMembers } = state;
   const updatedMembers = members.filter((m) => m.uid !== user.uid);
   setMembers(updatedMembers);
   setFilteredMembers(updatedMembers);
@@ -30,28 +35,26 @@ export function handleRemoveMember(
 
 export async function handleCreateGroup(
   token: string,
-  groupName: string,
-  members: User[],
-  setMembers: SetState<User[]>,
-  setGroupName: SetState<string>
+  input: CreateGroupInput,
+  state: {
+    router: AppRouterInstance;
+    setMembers: SetState<User[]>;
+  }
 ) {
-  if (!groupName || groupName.length === 0)
-    return toast.error('Enter a group name.');
+  const { name, membersIds } = input;
+  const { router, setMembers } = state;
 
-  if (!members || members.length === 0)
-    return toast.error('Add at least one member to the group.');
+  if (!name || name.length === 0)
+    return toast.error('Please enter a group name.');
 
-  const membersIds = members.map((member) => member.uid);
+  if (!membersIds || membersIds.length === 0)
+    return toast.error('Please add at least one member to the group.');
 
   handleApiRequest(
-    () =>
-      GroupController.create(token, {
-        name: groupName,
-        membersIds,
-      }),
-    (group) => {
+    router,
+    () => GroupController.create(token, input),
+    (_group) => {
       setMembers([]);
-      setGroupName('');
       toast.success('Group created successfully.');
     },
     undefined,

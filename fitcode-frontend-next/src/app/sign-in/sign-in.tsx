@@ -1,29 +1,28 @@
 'use client';
 
-import React, { FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Grid2, TextField, ThemeProvider } from '@mui/material';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import HeroNavbar from '@/components/hero-navbar';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import {
   LINK_CALENDAR,
   LINK_GROUPS,
   LINK_USERS,
   LINKS_AUTH,
 } from '@/common/constant/navigation.constant';
-import toast from 'react-hot-toast';
-import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
-import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import { useLocalStorage } from 'usehooks-ts';
 import { CommonService } from '@/common/service/common.service';
-import { signInUpTheme } from '../style';
+import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
+import HeroNavbar from '@/components/hero-navbar';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { Grid2, TextField, ThemeProvider } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { FormEvent } from 'react';
+import toast from 'react-hot-toast';
+import { useLocalStorage } from 'usehooks-ts';
+import { signInUpTheme } from '../style';
 
 const mapper = {
   [UserRole.ATHLETE]: LINK_CALENDAR,

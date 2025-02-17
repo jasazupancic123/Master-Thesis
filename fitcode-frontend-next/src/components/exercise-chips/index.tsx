@@ -1,11 +1,9 @@
+import { CommonService } from '@/common/service/common.service';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { Box, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 import { ExerciseChipsProps } from './type';
-import { CommonService } from '@/common/service/common.service';
-import { useScreenSize } from '@/context/screen-size-provider';
-import { cp } from 'fs';
-import { Component } from '@/controller/component/type/component.type';
 
 const commonService = CommonService.instance;
 
@@ -23,10 +21,6 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
     type,
   } = props;
 
-  console.log('selected', selected);
-  console.log('components', components);
-  console.log(selected as Component);
-
   return (
     <Stack
       direction={direction as any}
@@ -40,10 +34,6 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
     >
       {components.map((c, i) => {
         const IconComponent = commonService.navigation.getComponentIcon(c.name);
-        console.log(
-          'true/false:',
-          selected && !Array.isArray(selected) && selected.id === c.id
-        );
 
         return (
           <Box sx={{ p: 1 }} key={c.id}>

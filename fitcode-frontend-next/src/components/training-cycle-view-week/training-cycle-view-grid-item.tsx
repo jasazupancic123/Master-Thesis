@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import Box from '@mui/material/Box';
-import { Tooltip } from '@mui/material';
-import { SvgIconComponent } from '@mui/icons-material';
-import React from 'react';
-import { TrainingCycleViewGridItemProps } from './type';
-import { useScreenSize } from '@/context/screen-size-provider';
 import { CommonService } from '@/common/service/common.service';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { SvgIconComponent } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
+import Box from '@mui/material/Box';
+import React, { useEffect, useRef, useState } from 'react';
+import { TrainingCycleViewGridItemProps } from './type';
 
 const commonService = CommonService.instance;
 

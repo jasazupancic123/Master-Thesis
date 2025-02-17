@@ -1,13 +1,18 @@
 import { ILink } from '@/common/type/link.type';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import AddIcon from '@mui/icons-material/Add';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import SpaIcon from '@mui/icons-material/Spa';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import slugify from 'slugify';
+import SettingsIcon from '@mui/icons-material/Settings';
+import SpaIcon from '@mui/icons-material/Spa';
 import { ReactNode } from 'react';
-import { FilterType } from '../type/filter.type';
+import slugify from 'slugify';
+import { GroupDateFilter } from '../type/filter.type';
 
 export function link(
   label: string,
@@ -61,10 +66,33 @@ export const LINK_ADD_GROUP = link('Add Group', '/add-group');
 export const LINK_SETTINGS = link('Settings', '/settings');
 export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaIcon />);
 export const LINK_GROUP_BY_ID = (id: string) => link('Group', `/groups/${id}`);
-export const LINK_GROUP_DATE_RANGE_VIEW = (id: string, filter: FilterType) =>
-  link('Day Trainings', `/groups/${id}/${filter}`);
+export const LINK_GROUP_DATE_RANGE_VIEW = (
+  id: string,
+  filter: GroupDateFilter
+) => link('Day Trainings', `/groups/${id}/${filter}`);
 
-// grouped linked (for utility)
+export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
+  home: link('Home', `/groups/${groupId}`, <HomeIcon />),
+  exercises: link(
+    'Exercises',
+    `/groups/${groupId}/exercises`,
+    <FitnessCenterIcon />
+  ),
+  members: link('Members', `/groups/${groupId}/members`, <PeopleIcon />),
+  createGroup: link(
+    'Create group',
+    `/groups/${groupId}/add-group`,
+    <AddIcon />
+  ),
+  settings: link('Settings', `/groups/${groupId}/settings`, <SettingsIcon />),
+});
+
+export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
+  signout: link('Sign out', '#', <LogoutIcon />),
+};
+
+
+// grouped links (for utility)
 export const LINKS_AUTH = {
   login: LINK_SIGN_IN,
   register: LINK_SIGN_UP,

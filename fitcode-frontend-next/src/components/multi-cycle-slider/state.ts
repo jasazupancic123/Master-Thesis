@@ -1,10 +1,17 @@
-import { handleApiRequest, SetState } from '@/common/type/state.type';
+import { IdEntity } from '@/common/type/entity.type';
+import {
+  handleApiRequest,
+  SetState,
+  SetStateNullable,
+} from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import dayjs from 'dayjs';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { RefObject } from 'react';
 import toast from 'react-hot-toast';
+import { AddCycleInput } from '../add-cycle-form/input';
 
 export function changeYear(
   direction: 'prev' | 'next',
@@ -14,12 +21,19 @@ export function changeYear(
 }
 
 export function handleDragChange(
-  newValues: number[],
-  draggingIndex: number | null,
   sliderRef: RefObject<HTMLDivElement | null>,
-  mouseX: number | null,
-  setValuesReal: SetState<number[]>
+  input: {
+    newValues: number[];
+    draggingIndex: number | null;
+    mouseX: number | null;
+  },
+  state: {
+    setValuesReal: SetState<number[]>;
+  }
 ) {
+  const { newValues, draggingIndex, mouseX } = input;
+  const { setValuesReal } = state;
+
   if (draggingIndex !== null) {
     if (newValues[draggingIndex + 1] === 1 && sliderRef?.current) {
       const sliderBounds = sliderRef.current?.getBoundingClientRect();
@@ -45,13 +59,20 @@ export function handleDragChange(
 }
 
 export function handleDrag(
-  index: number,
-  value: number,
-  selectedYear: number,
-  setDraggedDay: SetState<number | null>,
-  setValuesReal: SetState<number[]>,
-  sortedCycles: Cycle[]
+  input: {
+    index: number;
+    value: number;
+    selectedYear: number;
+  },
+  state: {
+    setDraggedDay: SetState<number | null>;
+    setValuesReal: SetState<number[]>;
+    sortedCycles: Cycle[];
+  }
 ) {
+  const { index, value, selectedYear } = input;
+  const { setDraggedDay, setValuesReal, sortedCycles } = state;
+
   setDraggedDay(value);
   setValuesReal((prev) => {
     const updated = [...prev];
@@ -77,100 +98,107 @@ export function handleDrag(
 
 export async function handleUpdateCycleDates(
   token: string,
-  groupId: string,
-  selectedGroup: Group,
-  setSelectedGroup: SetState<Group>,
-  detectedChange: boolean,
-  setDetectedChange: SetState<boolean>,
-  sortedCycles: Cycle[],
-  setSortedCycles: SetState<Cycle[]>,
-  valuesReal: number[],
-  selectedYear: number,
-  selectedCycle: Cycle | null,
-  setSelectedCycle: SetState<Cycle | null>
+  input: {
+    groupId: string;
+    sortedCycles: Cycle[];
+  },
+  state: {
+    router: AppRouterInstance;
+    cycle?: Cycle;
+    setCycle: SetStateNullable<Cycle>;
+    group: Group;
+    setGroup: SetState<Group>;
+    detectedChange: boolean;
+    setDetectedChange: SetState<boolean>;
+    setSortedCycles: SetState<Cycle[]>;
+    valuesReal: number[];
+    selectedYear: number;
+  }
 ) {
+  const { groupId, sortedCycles } = input;
+  const {
+    router,
+    cycle,
+    setCycle,
+    group,
+    setGroup,
+    detectedChange,
+    setDetectedChange,
+    setSortedCycles,
+    valuesReal,
+    selectedYear,
+  } = state;
+
   if (!detectedChange) return;
 
   // look for date changes in between original cycles and sortedCycles
   const updatedCycles = sortedCycles
-    .map((cycle, index) => {
-      const startValue = valuesReal[index * 2];
-      const endValue = valuesReal[index * 2 + 1];
+    .map((c, i) => {
+      const startValue = valuesReal[i * 2];
+      const endValue = valuesReal[i * 2 + 1];
 
-      const cycleStartDays = dayjs(cycle.from).dayOfYear();
-      const cycleEndDays = dayjs(cycle.to).dayOfYear();
+      const cycleStartDays = dayjs(c.from).dayOfYear();
+      const cycleEndDays = dayjs(c.to).dayOfYear();
 
       let foundUpdate = false;
-      const cycle_: any = {
-        id: cycle.id,
-        name: cycle.name,
-        description: cycle.description,
+      const cycle: AddCycleInput & IdEntity = {
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        from: new Date(),
+        to: new Date(),
       };
 
       if (
-        dayjs(cycle.from).year() === selectedYear &&
+        dayjs(c.from).year() === selectedYear &&
         cycleStartDays !== startValue
       ) {
         foundUpdate = true;
+        cycle.from = dayjs().dayOfYear(startValue).year(selectedYear).toDate();
+      } else cycle.from = c.from;
 
-        cycle_.from = dayjs().dayOfYear(startValue).year(selectedYear).toDate();
-      } else cycle_.from = cycle.from;
-
-      if (
-        dayjs(cycle.to).year() === selectedYear &&
-        cycleEndDays !== endValue
-      ) {
+      if (dayjs(c.to).year() === selectedYear && cycleEndDays !== endValue) {
         foundUpdate = true;
-        cycle_.to = dayjs().dayOfYear(endValue).year(selectedYear).toDate();
-      } else cycle_.to = cycle.to;
+        cycle.to = dayjs().dayOfYear(endValue).year(selectedYear).toDate();
+      } else cycle.to = c.to;
 
       if (!foundUpdate) return null;
-      return cycle_;
+      return cycle;
     })
     .filter(Boolean);
 
-  if (updatedCycles.length === 0) {
-    toast.error('No changes detected.');
-    return;
-  }
+  if (updatedCycles.length === 0) return toast.error('No changes detected.');
 
   handleApiRequest(
+    router,
     () =>
       Promise.all(
         updatedCycles.map((cycle) =>
-          GroupController.updateCycle(token, groupId, cycle.id, {
-            name: cycle.name,
-            description: cycle.description,
-            from: cycle.from,
-            to: cycle.to,
+          GroupController.updateCycle(token, groupId, cycle!.id, {
+            name: cycle!.name,
+            description: cycle!.description,
+            from: cycle!.from,
+            to: cycle!.to,
           })
         )
       ),
     (cycles) => {
-      const newCycles = selectedGroup.cycles.map((item) => {
+      const newCycles = group.cycles.map((item) => {
         const updatedCycle = cycles.find((cycle) => cycle?.id === item.id);
         return updatedCycle ? updatedCycle : item;
       });
 
-      setSelectedGroup((prev) => ({ ...prev, cycles: newCycles }));
+      setGroup((prev) => ({ ...prev, cycles: newCycles }));
       setDetectedChange(false);
       setSortedCycles(newCycles);
-
-      for (const cycle of cycles)
-        if (selectedCycle?.id === cycle.id) {
-          setSelectedCycle(cycle);
-          break;
-        }
+      setCycle(cycles.find((c) => cycle?.id === c.id)!);
 
       toast.success('Cycles updated successfully!');
     },
     (e) => {
-      if (e.message?.toLowerCase().includes('overlap')) {
-        toast.error('Cycle dates overlap with an existing cycle.');
-        return;
-      }
-
-      toast.error('Failed to update cycles.');
-    }
+      if (e.message?.toLowerCase().includes('overlap'))
+        return toast.error('Cycle dates overlap with an existing cycle.');
+    },
+    'Failed to update cycles.'
   );
 }
