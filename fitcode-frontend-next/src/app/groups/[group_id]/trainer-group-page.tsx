@@ -9,13 +9,14 @@ import GroupSidebar from '@/components/group-sidebar';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { TrainerDayViewProvider } from '@/context/trainer-day-view-provider';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { ReactNode } from 'react';
 import GroupDateFilterButtonGroup from '../group-date-filter-button-group';
 
 export default function TrainerGroupPage() {
   const screenSize = useScreenSize();
   const context = useGroup();
+  const theme = useTheme();
 
   const { group, groups, filter, setFilter } = context;
 
@@ -31,22 +32,15 @@ export default function TrainerGroupPage() {
   };
 
   return (
-    <Box
-      mt="16px"
-      ml={screenSize.isLandscapeMobile || screenSize.isMobile ? '0' : undefined}
-      mx={screenSize.isLandscapeMobile || screenSize.isMobile ? 1 : undefined}
-    >
+    <Box mt="16px" sx={{ px: screenSize.isMobile ? 1 : undefined }}>
       <GroupSidebar groups={groups} group={group} />
 
       <Box
-        bgcolor="background.paper"
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="center"
         sx={{
+          backgroundColor: theme.palette.background.paper,
           borderTopLeftRadius: '20px',
           borderTopRightRadius: '20px',
+          pb: 3,
         }}
       >
         <GroupDateFilterButtonGroup filter={filter} setFilter={setFilter} />

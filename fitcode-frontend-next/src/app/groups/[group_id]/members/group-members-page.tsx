@@ -6,13 +6,15 @@ import MyModal from '@/components/modal';
 import PageTitle from '@/components/page-title';
 import { SearchBar } from '@/components/search-bar';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { GroupService } from '@/controller/group/group.service';
 import { User } from '@/controller/user/type/user.type';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import { Avatar, Box, Button, Grid2, Typography } from '@mui/material';
+import { Avatar, Box, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { handleRemoveMember, handleUpdateMembers } from './state';
@@ -22,13 +24,14 @@ export default function GroupMembersPage() {
 
   const router = useRouter();
   const theme = useTheme();
-  const [members, setMembers] = useState<User[]>(() =>
-    GroupService.mapMembers(group, users)
-  );
+  const screenSize = useScreenSize();
 
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [searchQueryMembers, setSearchQueryMembers] = useState('');
   const [filteredMembers, setFilteredMembers] = useState<User[]>();
+  const [members, setMembers] = useState<User[]>(() =>
+    GroupService.mapMembers(group, users)
+  );
 
   useEffect(() => {
     const filtered = members.filter(
@@ -40,19 +43,78 @@ export default function GroupMembersPage() {
     setFilteredMembers(filtered);
   }, [searchQueryMembers, members]);
 
+  const columns: GridColDef<User>[] = [
+    {
+      field: 'index',
+      headerName: '#',
+      width: 10,
+      renderCell: (params) =>
+        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+    },
+    {
+      field: 'avatar',
+      headerName: '',
+      width: 10,
+      type: 'actions',
+      renderCell: () => <Avatar src="/user_avatar.png" />,
+    },
+    {
+      field: 'displayName',
+      headerName: 'Name',
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: 'email',
+      headerName: 'Email',
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: 'emailVerified',
+      headerName: 'Verified',
+      type: 'actions',
+      width: 100,
+      renderCell: (params) =>
+        params.value ? (
+          <CheckCircleIcon color="success" />
+        ) : (
+          <CancelIcon color="error" />
+        ),
+    },
+    {
+      field: 'delete',
+      headerName: 'Delete',
+      type: 'actions',
+      width: 100,
+      renderCell: (params) => (
+        <GridActionsCellItem
+          icon={<RemoveCircleIcon color="error" />}
+          label="Remove"
+          onClick={() => handleRemoveMember(params.row)}
+        />
+      ),
+    },
+  ];
+
+  const handleRemoveMember = (member: User) => {
+    setMembers((prev) => prev.filter((m) => m.uid !== member.uid));
+  };
+
   return (
-    <>
+    <Box display="flex" bgcolor={theme.palette.background.default}>
       <Box mt="16px">
         <GroupSidebar groups={groups} group={group} />
       </Box>
 
       <Box
-        bgcolor={theme.palette.background.default}
+        bgcolor={theme.palette.background.paper}
         width="100%"
         display="flex"
         flexDirection="column"
         alignItems="center"
-        mt={0}
+        mt={2}
+        borderRadius={5}
       >
         <PageTitle title={`Members of ${group.name}`} />
 
@@ -64,15 +126,17 @@ export default function GroupMembersPage() {
           alignItems="center"
         >
           <Box
+            width="100%"
             display="flex"
+            flexDirection={screenSize.isMobile ? 'column' : 'row'}
             justifyContent="center"
             alignItems="center"
             gap={2}
-            p={2}
+            py={1}
           >
             {/* Search Bar */}
             <SearchBar
-              maxWidth="60%"
+              maxWidth={screenSize.isMobile ? '90%' : '60%'}
               placeholder="Search Members"
               value={searchQueryMembers}
               handleSearchChange={(e) =>
@@ -93,174 +157,20 @@ export default function GroupMembersPage() {
         </Box>
 
         {/* Table Container */}
-        <Box width="75%">
-          {/* Table Header (Legend) */}
-          <Grid2
-            container
-            sx={{
-              pt: 1,
-              pb: 1,
-              borderBottom: `2px solid ${theme.palette.divider}`,
-              fontWeight: 'bold',
-              backgroundColor: theme.palette.background.paper,
-              borderTopLeftRadius: 4,
-              borderTopRightRadius: 4,
+        <Box width={screenSize.isMobile ? '95%' : '75%'}>
+          <DataGrid
+            pageSizeOptions={[5, 10, 25]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: screenSize.isMobile ? 5 : 10,
+                },
+              },
             }}
-          >
-            <Grid2
-              sx={{ minWidth: 40, flex: '0 0 5%' }}
-              display="flex"
-              justifyContent="center"
-            ></Grid2>
-            <Grid2
-              sx={{ minWidth: 30, flex: '0 0 3%' }}
-              display="flex"
-              justifyContent="center"
-            ></Grid2>
-            <Grid2
-              sx={{ minWidth: 120, flex: '1 1 25%' }}
-              display="flex"
-              justifyContent="center"
-            >
-              <Typography variant="body1" fontWeight="bold">
-                Name
-              </Typography>
-            </Grid2>
-            <Grid2
-              sx={{ minWidth: 120, flex: '1 1 25%' }}
-              display="flex"
-              justifyContent="center"
-            >
-              <Typography variant="body1" fontWeight="bold">
-                Email
-              </Typography>
-            </Grid2>
-            <Grid2
-              sx={{ minWidth: 100, flex: '1 1 20%' }}
-              display="flex"
-              justifyContent="center"
-            >
-              <Typography variant="body1" fontWeight="bold">
-                Verified
-              </Typography>
-            </Grid2>
-            <Grid2
-              sx={{ minWidth: 80, flex: '1 1 15%' }}
-              display="flex"
-              justifyContent="center"
-            >
-              <Typography variant="body1" fontWeight="bold">
-                Remove
-              </Typography>
-            </Grid2>
-          </Grid2>
-
-          {/* Filtered Members List */}
-          <Box maxHeight="45vh" overflow="auto">
-            {filteredMembers && filteredMembers.length > 0 ? (
-              filteredMembers.map((member, index) => (
-                <Grid2
-                  container
-                  key={member.uid}
-                  alignItems="center"
-                  sx={{
-                    borderBottom: `1px solid ${theme.palette.divider}`,
-                    paddingY: 1,
-                  }}
-                >
-                  {/* Index */}
-                  <Grid2
-                    sx={{ minWidth: 40, flex: '0 0 5%' }}
-                    display="flex"
-                    justifyContent="center"
-                  >
-                    <Typography variant="body1">{index + 1}.</Typography>
-                  </Grid2>
-
-                  {/* Avatar */}
-                  <Grid2
-                    sx={{ minWidth: 30, flex: '0 0 3%' }}
-                    display="flex"
-                    justifyContent="center"
-                  >
-                    <Avatar
-                      src="/user_avatar.png"
-                      alt={member.displayName || 'User Avatar'}
-                    />
-                  </Grid2>
-
-                  {/* User Name */}
-                  <Grid2
-                    sx={{ minWidth: 120, flex: '1 1 25%' }}
-                    display="flex"
-                    justifyContent="center"
-                  >
-                    <Typography variant="body1">
-                      {member.displayName || 'Unknown User'}
-                    </Typography>
-                  </Grid2>
-
-                  {/* User Email */}
-                  <Grid2
-                    sx={{ minWidth: 120, flex: '1 1 25%' }}
-                    display="flex"
-                    justifyContent="center"
-                  >
-                    <Typography variant="body2">{member.email}</Typography>
-                  </Grid2>
-
-                  {/* Email Verified Indicator */}
-                  <Grid2
-                    sx={{ minWidth: 100, flex: '1 1 20%' }}
-                    display="flex"
-                    justifyContent="center"
-                  >
-                    {member.emailVerified ? (
-                      <CheckCircleIcon
-                        sx={{ color: theme.palette.success.main, fontSize: 24 }}
-                      />
-                    ) : (
-                      <CancelIcon
-                        sx={{ color: theme.palette.error.main, fontSize: 24 }}
-                      />
-                    )}
-                  </Grid2>
-
-                  {/* Remove Button */}
-                  <Grid2
-                    sx={{ minWidth: 80, flex: '1 1 15%' }}
-                    display="flex"
-                    justifyContent="center"
-                  >
-                    <Button
-                      variant="contained"
-                      color="error"
-                      sx={{
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: theme.palette.error.dark,
-                        },
-                      }}
-                      onClick={() =>
-                        handleRemoveMember({
-                          user: member,
-                          members,
-                          setMembers,
-                          setFilteredMembers,
-                        })
-                      }
-                    >
-                      <RemoveCircleIcon />
-                    </Button>
-                  </Grid2>
-                </Grid2>
-              ))
-            ) : (
-              <Typography textAlign="center" p={2}>
-                No members found.
-              </Typography>
-            )}
-          </Box>
+            rows={filteredMembers}
+            columns={columns}
+            getRowId={(row) => row.uid}
+          />
         </Box>
 
         <Button
@@ -288,6 +198,6 @@ export default function GroupMembersPage() {
           />
         </MyModal>
       </Box>
-    </>
+    </Box>
   );
 }

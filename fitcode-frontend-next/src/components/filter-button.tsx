@@ -15,9 +15,8 @@ export default function FilterButton(props: Props) {
       value={value.toLowerCase()}
       disabled={disabled}
       sx={{
-        width: 500,
+        width: '25%',
         px: 2,
-        flex: 1,
         color: '#fff',
         backgroundColor: 'background.paper',
         '&.Mui-selected': {

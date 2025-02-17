@@ -1,5 +1,4 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import { CommonService } from '@/common/service/common.service';
 import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';

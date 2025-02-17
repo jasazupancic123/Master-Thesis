@@ -2,7 +2,6 @@
 
 import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
-import { useScreenSize } from '@/context/screen-size-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
@@ -26,7 +25,6 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
   const { setShowModal } = props;
 
   const { token, group, setGroup, cycle, setCycle } = useGroup();
-  const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
 
@@ -116,7 +114,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       alignItems="center"
       p={3}
       pt={1}
-      pb={!screenSize.isMobile && !screenSize.isLandscapeMobile ? 3 : 0}
+      pb={detectedChange ? 3 : 0}
       width="100%"
     >
       {/* Year Navigation */}
@@ -132,189 +130,203 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
         </IconButton>
       </Stack>
 
-      <IconButton
-        sx={{
-          mb: 2,
-          backgroundColor: 'primary.light',
-          color: 'white',
-          borderRadius: '50%',
-          width: 30,
-          height: 30,
-          '&:hover': { backgroundColor: 'primary.dark' },
-        }}
-        onClick={() => setShowModal(true)}
-      >
-        <Add />
-      </IconButton>
+      <Box flexDirection="row" display="flex" width="100%">
+        <Box display="flex" flexDirection="column" width="100%">
+          <IconButton
+            sx={{
+              mb: 2,
+              backgroundColor: 'primary.light',
+              color: 'white',
+              borderRadius: '50%',
+              width: 30,
+              height: 30,
+              '&:hover': { backgroundColor: 'primary.dark' },
+            }}
+            onClick={() => setShowModal(true)}
+          >
+            <Add />
+          </IconButton>
 
-      {/* Slider */}
-      <div
-        onMouseMove={onMouseMove}
-        ref={sliderRef}
-        tabIndex={0}
-        style={{ position: 'relative', width: '100%', height: 30 }}
-      >
-        <Range
-          step={1}
-          min={yearStart}
-          max={yearEnd}
-          values={valuesReal}
-          onChange={(newValues: number[]) =>
-            handleDragChange(
-              sliderRef,
-              { newValues, draggingIndex, mouseX },
-              { setValuesReal }
-            )
-          }
-          onFinalChange={handleDragEnd}
-          renderTrack={({ props, children }) => {
-            // avoid error when spreading key
-            const { ['key']: _, ...otherProps } = props as Record<string, any>;
+          {/* Slider */}
+          <div
+            onMouseMove={onMouseMove}
+            ref={sliderRef}
+            tabIndex={0}
+            style={{ position: 'relative', width: '100%', height: 30 }}
+          >
+            <Range
+              step={1}
+              min={yearStart}
+              max={yearEnd}
+              values={valuesReal}
+              onChange={(newValues: number[]) =>
+                handleDragChange(
+                  sliderRef,
+                  { newValues, draggingIndex, mouseX },
+                  { setValuesReal }
+                )
+              }
+              onFinalChange={handleDragEnd}
+              renderTrack={({ props, children }) => {
+                // avoid error when spreading key
+                const { ['key']: _, ...otherProps } = props as Record<
+                  string,
+                  any
+                >;
 
-            return (
-              <div
-                {...otherProps}
-                style={{
-                  ...props.style,
-                  height: 6,
-                  width: '100%',
-                  backgroundColor: '#ccc',
-                  position: 'relative',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                {/* Render colored cycle segments */}
-                {sortedCycles.map((cycle, index) => {
-                  const start = valuesReal[index * 2];
-                  const end = valuesReal[index * 2 + 1];
+                return (
+                  <div
+                    {...otherProps}
+                    style={{
+                      ...props.style,
+                      height: 6,
+                      width: '100%',
+                      backgroundColor: '#ccc',
+                      position: 'relative',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  >
+                    {/* Render colored cycle segments */}
+                    {sortedCycles.map((cycle, index) => {
+                      const start = valuesReal[index * 2];
+                      const end = valuesReal[index * 2 + 1];
 
-                  const left = `${
-                    ((start - yearStart) / (yearEnd - yearStart)) * 100
-                  }%`;
+                      const left = `${
+                        ((start - yearStart) / (yearEnd - yearStart)) * 100
+                      }%`;
 
-                  const width = `${
-                    ((end - start) / (yearEnd - yearStart)) * 100
-                  }%`;
+                      const width = `${
+                        ((end - start) / (yearEnd - yearStart)) * 100
+                      }%`;
 
+                      return (
+                        <div
+                          key={cycle.id}
+                          style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left,
+                            width,
+                            height: 6,
+                            backgroundColor: COLORS[index % COLORS.length],
+                            borderRadius: 2,
+                            transform: 'translateY(-50%)',
+                          }}
+                        />
+                      );
+                    })}
+
+                    {children}
+                  </div>
+                );
+              }}
+              renderThumb={({ props, index }) => {
+                // avoid error when spreading key
+                const { ['key']: _, ...otherProps } = props as Record<
+                  string,
+                  any
+                >;
+
+                const value = valuesReal[index];
+                const cycleIndex = Math.floor(index / 2);
+                const cycle = sortedCycles[cycleIndex];
+                if (!cycle) return null;
+
+                const cycleStartYear = dayjs(cycle.from).year();
+                const cycleEndYear = dayjs(cycle.to).year();
+
+                if (value === yearStart && cycleStartYear < selectedYear)
                   return (
                     <div
-                      key={cycle.id}
+                      key={index}
+                      {...otherProps}
                       style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left,
-                        width,
-                        height: 6,
-                        backgroundColor: COLORS[index % COLORS.length],
-                        borderRadius: 2,
-                        transform: 'translateY(-50%)',
+                        ...props.style,
+                        height: 0,
+                        width: 0,
+                        overflow: 'hidden',
+                        backgroundColor: 'transparent',
                       }}
                     />
                   );
-                })}
 
-                {children}
-              </div>
-            );
-          }}
-          renderThumb={({ props, index }) => {
-            // avoid error when spreading key
-            const { ['key']: _, ...otherProps } = props as Record<string, any>;
+                if (value === yearEnd && cycleEndYear > selectedYear)
+                  return (
+                    <div
+                      key={index}
+                      {...otherProps}
+                      style={{
+                        ...props.style,
+                        height: 0,
+                        width: 0,
+                        overflow: 'hidden',
+                        backgroundColor: 'transparent',
+                      }}
+                    />
+                  );
 
-            const value = valuesReal[index];
-            const cycleIndex = Math.floor(index / 2);
-            const cycle = sortedCycles[cycleIndex];
-            if (!cycle) return null;
-
-            const cycleStartYear = dayjs(cycle.from).year();
-            const cycleEndYear = dayjs(cycle.to).year();
-
-            if (value === yearStart && cycleStartYear < selectedYear)
-              return (
-                <div
-                  key={index}
-                  {...otherProps}
-                  style={{
-                    ...props.style,
-                    height: 0,
-                    width: 0,
-                    overflow: 'hidden',
-                    backgroundColor: 'transparent',
-                  }}
-                />
-              );
-
-            if (value === yearEnd && cycleEndYear > selectedYear)
-              return (
-                <div
-                  key={index}
-                  {...otherProps}
-                  style={{
-                    ...props.style,
-                    height: 0,
-                    width: 0,
-                    overflow: 'hidden',
-                    backgroundColor: 'transparent',
-                  }}
-                />
-              );
-
-            return (
-              <div
-                key={index}
-                {...otherProps}
-                onMouseDown={() => handleDragStart(index)}
-                onTouchStart={() => handleDragStart(index)}
-                onMouseMove={() =>
-                  handleDrag(
-                    { index, value, selectedYear },
-                    { setDraggedDay, setValuesReal, sortedCycles }
-                  )
-                }
-                style={{
-                  ...props.style,
-                  height: 14,
-                  width: 14,
-                  borderRadius: '50%',
-                  backgroundColor: COLORS[cycleIndex % COLORS.length],
-                  position: 'absolute',
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                {/* Floating Label */}
-                {draggingIndex === index && draggedDay !== null && (
+                return (
                   <div
+                    key={index}
+                    {...otherProps}
+                    onMouseDown={() => handleDragStart(index)}
+                    onTouchStart={() => handleDragStart(index)}
+                    onMouseMove={() =>
+                      handleDrag(
+                        { index, value, selectedYear },
+                        { setDraggedDay, setValuesReal, sortedCycles }
+                      )
+                    }
                     style={{
+                      ...props.style,
+                      height: 14,
+                      width: 14,
+                      borderRadius: '50%',
+                      backgroundColor: COLORS[cycleIndex % COLORS.length],
                       position: 'absolute',
-                      top: -24,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      backgroundColor: 'black',
-                      color: 'white',
-                      padding: '4px 6px',
-                      borderRadius: 4,
-                      fontSize: '12px',
-                      whiteSpace: 'nowrap',
+                      transform: 'translateY(-50%)',
                     }}
                   >
-                    {dayjs().dayOfYear(draggedDay).format('MMM DD')}
+                    {/* Floating Label */}
+                    {draggingIndex === index && draggedDay !== null && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -24,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          backgroundColor: 'black',
+                          color: 'white',
+                          padding: '4px 6px',
+                          borderRadius: 4,
+                          fontSize: '12px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {dayjs().dayOfYear(draggedDay).format('MMM DD')}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          }}
-        />
-      </div>
-
-      {/* Month Labels */}
-      <Stack direction="row" justifyContent="space-between" width="100%" mt={1}>
-        {Array.from({ length: 13 }).map((_, monthIndex) => (
-          <Typography key={monthIndex} variant="caption">
-            {dayjs().month(monthIndex).format('MMM')}
-          </Typography>
-        ))}
-      </Stack>
+                );
+              }}
+            />
+          </div>
+          {/* Month Labels */}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            width="100%"
+            mt={1}
+          >
+            {Array.from({ length: 13 }).map((_, monthIndex) => (
+              <Typography key={monthIndex} variant="caption">
+                {dayjs().month(monthIndex).format('MMM')}
+              </Typography>
+            ))}
+          </Stack>
+        </Box>
+      </Box>
 
       {/* Cycle Legends */}
       <Stack direction="row" p={3} spacing={2}>

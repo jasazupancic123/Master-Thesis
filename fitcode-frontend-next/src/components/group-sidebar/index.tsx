@@ -37,7 +37,6 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
   const theme = useTheme();
   const router = useRouter();
 
-  // lol
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
 

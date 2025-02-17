@@ -1,12 +1,14 @@
+import { CommonService } from '@/common/service/common.service';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { Box, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import React from 'react';
 import { ExerciseChipsProps } from './type';
-import { CommonService } from '@/common/service/common.service';
 
 const commonService = CommonService.instance;
 
 export default function ExerciseChips(props: ExerciseChipsProps) {
+  const screenSize = useScreenSize();
   const {
     selected,
     noSelectionLabel,
@@ -16,6 +18,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
     direction = 'row',
     bgColor,
     primaryColor,
+    type,
   } = props;
 
   return (
@@ -24,6 +27,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
       spacing={1}
       flexWrap="wrap"
       sx={{
+        justifyContent: 'center',
         alignItems: 'center',
         ...props.sx,
       }}
@@ -55,19 +59,32 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 50, // Adjust size as needed
-                  height: 50, // Adjust size as needed
+                  width: screenSize.isMobile ? 30 : 50, // Adjust size as needed
+                  height: screenSize.isMobile ? 30 : 50, // Adjust size as needed
                   borderRadius: '50%', // Makes it a circle
-                  border: `2px solid ${Array.isArray(selected) && selected.some((component) => component.id === c.id) ? primaryColor : 'gray'}`,
+                  border: `2px solid ${
+                    (Array.isArray(selected) &&
+                      selected.some((component) => component.id === c.id)) ||
+                    (selected &&
+                      !Array.isArray(selected) &&
+                      selected.id === c.id)
+                      ? primaryColor
+                      : 'gray'
+                  }`,
                   cursor: 'pointer',
                   backgroundColor:
-                    Array.isArray(selected) &&
-                    selected.some((component) => component.id === c.id)
+                    (Array.isArray(selected) &&
+                      selected.some((component) => component.id === c.id)) ||
+                    (selected &&
+                      !Array.isArray(selected) &&
+                      selected.id === c.id)
                       ? bgColor
                       : 'transparent',
                 }}
               >
-                <IconComponent sx={{ fontSize: 30 }} />
+                <IconComponent
+                  sx={{ fontSize: screenSize.isMobile ? 20 : 30 }}
+                />
               </div>
             </Tooltip>
           </Box>
