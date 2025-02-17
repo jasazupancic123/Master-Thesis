@@ -1,22 +1,18 @@
 'use client';
 
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
+import Logo from '@/components/logo';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { useState } from 'react';
-import Logo from '@/components/logo';
-import { usePathname } from 'next/navigation';
-import Stack from '@mui/material/Stack';
-import { useScreenSize } from '@/context/screen-size-provider';
-import Sidebar from './sidebar';
 import BottomNavigation from './bottom-navigation';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import Sidebar from './sidebar';
 
-interface Props {
-  title?: string;
-}
-
-export default function SidebarAthlete(props: Props) {
+export default function SidebarAthlete() {
   const screenSize = useScreenSize();
   const path = usePathname();
   const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map(

@@ -46,10 +46,4 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
   );
 };
 
-export const useScreenSize = () => {
-  const context = useContext(ScreenSizeContext);
-  if (!context) {
-    throw new Error('useScreenSize must be used within a ScreenSizeProvider');
-  }
-  return context;
-};
+export const useScreenSize = () => useContext(ScreenSizeContext)!;

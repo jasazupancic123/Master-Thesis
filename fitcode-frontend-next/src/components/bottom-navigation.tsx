@@ -1,14 +1,14 @@
 import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
+import { useAuth } from '@/context/auth-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { LogoutRounded } from '@mui/icons-material';
 import {
   BottomNavigation as BN,
   BottomNavigationAction as BNAction,
 } from '@mui/material';
-import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/auth-provider';
-import { LogoutRounded } from '@mui/icons-material';
-import { useScreenSize } from '@/context/screen-size-provider';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import * as React from 'react';
 
 interface BottomNavigationProps {
   index: number;

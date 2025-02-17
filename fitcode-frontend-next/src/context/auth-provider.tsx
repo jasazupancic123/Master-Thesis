@@ -10,13 +10,7 @@ import { AuthContextType } from '@/common/type/context.type';
 import { CommonService } from '@/common/service/common.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { CustomClaims } from '@/controller/user/type/custom-claims.type';
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { ChildrenProps } from '@/common/type/props.type';
 
 const AuthContext = createContext<AuthContextType>({

@@ -1,42 +1,57 @@
 import { LINK_GROUPS } from '@/common/constant/navigation.constant';
-import { SetState } from '@/common/type/state.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { Group } from '@/controller/group/type/group.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { NextRouter } from 'next/router';
 import toast from 'react-hot-toast';
 
 export async function handleUpdateGroup(
   token: string,
-  selectedGroup: Group,
-  setSelectedGroup: SetState<Group>
+  input: Group,
+  state: {
+    router: AppRouterInstance;
+    setGroup: SetState<Group>;
+  }
 ) {
-  if (selectedGroup.name.length < 3) {
+  const { router } = state;
+
+  if (input.name.length < 3) {
     toast.error('Group name must be at least 3 characters long.');
     return;
   }
 
-  try {
-    const updatedGroup = await GroupController.update(token, selectedGroup.id, {
-      name: selectedGroup.name,
-    });
-
-    setSelectedGroup(updatedGroup);
-    toast.success('Group updated successfully.');
-  } catch (e) {
-    toast.error('Failed to update group.');
-  }
+  handleApiRequest(
+    router,
+    () => GroupController.update(token, input.id, { name: input.name }),
+    (updatedGroup) => {
+      state.setGroup(updatedGroup);
+      toast.success('Group updated successfully.');
+    },
+    undefined,
+    'Failed to update group.'
+  );
 }
 
 export async function handleDeleteGroup(
-  groupId: string,
-  router: AppRouterInstance
-) {
-  try {
-    // TODO: await GroupController.deleteGroup(token, selected.group?.id || '');
-    toast.success('Group deleted successfully.');
-    router.push(LINK_GROUPS.href);
-  } catch (e) {
-    toast.error('Failed to delete group.');
+  token: string,
+  input: { groupId: string },
+  state: {
+    router: AppRouterInstance;
   }
+) {
+  const { router } = state;
+
+  handleApiRequest(
+    router,
+    async () => {
+      // return await GroupController.deleteGroup(token, input.groupId);
+      return null;
+    },
+    () => {
+      toast.success('Group deleted successfully.');
+      state.router.push(LINK_GROUPS.href);
+    },
+    undefined,
+    'Failed to delete group.'
+  );
 }

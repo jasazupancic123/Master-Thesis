@@ -1,26 +1,30 @@
+import { ContentState } from '@/common/enum/video-state.enum';
+import { CommonService } from '@/common/service/common.service';
+import { SetState } from '@/common/type/state.type';
+import FileUpload from '@/components/file-upload';
 import MyModal from '@/components/modal';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Grid from '@mui/material/Grid2';
-import React, { ReactNode, useEffect, useState } from 'react';
+import { useScreenSize } from '@/context/screen-size-provider';
+import {
+  Component,
+  TreeComponent,
+} from '@/controller/component/type/component.type';
+import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
-import FileUpload from '@/components/file-upload';
+import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
-import { SetState } from '@/common/type/state.type';
-import { useAppContext } from '@/context/app-provider';
-import { CommonService } from '@/common/service/common.service';
-import { ContentState } from '@/common/enum/video-state.enum';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
-import SelectComponent from './select-component';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import React, { ReactNode, useEffect, useState } from 'react';
 import SelectAttribute from './select-attribute';
-import { useScreenSize } from '@/context/screen-size-provider';
+import SelectComponent from './select-component';
 
 interface Props {
   data: Partial<Exercise>;
   setData: SetState<Partial<Exercise>>;
   attributes: ExerciseAttribute[];
+  components: Component[];
   icons: ReactNode;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -30,9 +34,17 @@ interface Props {
 
 export default function ExerciseModal(props: Props) {
   const screenSize = useScreenSize();
-  const { data, setData, attributes, isOpen, setIsOpen, icons, title } = props;
+  const {
+    data,
+    setData,
+    attributes,
+    components,
+    isOpen,
+    setIsOpen,
+    icons,
+    title,
+  } = props;
 
-  const { components } = useAppContext();
   const [selectedComponents, setSelectedComponents] = useState<{
     [key: number]: string;
   }>({});
@@ -49,9 +61,7 @@ export default function ExerciseModal(props: Props) {
     }
 
     // for now, only one selected component is supported
-    const component = components.flat.find(
-      (c) => c.id === data.componentsIds![0]
-    );
+    const component = components.find((c) => c.id === data.componentsIds![0]);
     if (!component) return;
 
     const selected: { [key: number]: string } = {};
@@ -59,7 +69,7 @@ export default function ExerciseModal(props: Props) {
 
     let parentId = component.parent;
     while (parentId) {
-      const parent = components.flat.find((c) => c.id === parentId);
+      const parent = components.find((c) => c.id === parentId);
       if (!parent) break;
 
       selected[--level] = parent.id;
@@ -157,7 +167,13 @@ export default function ExerciseModal(props: Props) {
             <SelectComponent
               selectedComponents={selectedComponents}
               setSelectedComponents={setSelectedComponents}
-              components={components.tree}
+              components={
+                CommonService.instance.tree.fromArray(components, {
+                  idPropertyName: 'id',
+                  parentIdPropertyName: 'parent',
+                  childrenPropertyName: 'children',
+                }) as unknown as TreeComponent[]
+              }
             />
           </Grid>
 

@@ -1,7 +1,7 @@
 import { theme } from '@/app/style';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { Box, Typography } from '@mui/material';
 import { Props } from 'next/script';
-import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function PageTitle({ title }: Props) {
   const screenSize = useScreenSize();
