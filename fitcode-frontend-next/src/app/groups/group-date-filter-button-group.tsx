@@ -22,7 +22,7 @@ export default function GroupDateFilterButtonGroup(
         }
         sx={{
           display: 'flex',
-          bgcolor: 'background.default',
+          bgcolor: 'background.paper',
           width: screenSize.isMobile
             ? '90%'
             : screenSize.isLandscapeMobile

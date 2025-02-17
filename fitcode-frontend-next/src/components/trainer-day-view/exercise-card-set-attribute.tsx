@@ -74,7 +74,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         <FormControl variant="filled" size="small" sx={sx} disabled={disabled}>
           <Select
             variant="filled"
-            sx={sx['& .MuiSelect-select']}
+            sx={{ ...sx['& .MuiSelect-select'], width: 60 }}
             value={state.value}
             disabled={disabled}
             onChange={(e) => {
@@ -105,7 +105,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             mt: 0,
             bgcolor: 'transparent',
             height: sx['& .MuiSelect-select'].height,
-            width: 70,
+            width: 60,
             '& .MuiInputBase-root': {
               borderBottom: 'none',
               border: 'none',

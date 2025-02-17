@@ -131,22 +131,22 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       </Stack>
 
       <Box flexDirection="row" display="flex" width="100%">
+        <IconButton
+          sx={{
+            mb: 2,
+            backgroundColor: 'primary.light',
+            color: 'white',
+            borderRadius: '50%',
+            width: 30,
+            height: 30,
+            mr: 1,
+            '&:hover': { backgroundColor: 'primary.dark' },
+          }}
+          onClick={() => setShowModal(true)}
+        >
+          <Add />
+        </IconButton>
         <Box display="flex" flexDirection="column" width="100%">
-          <IconButton
-            sx={{
-              mb: 2,
-              backgroundColor: 'primary.light',
-              color: 'white',
-              borderRadius: '50%',
-              width: 30,
-              height: 30,
-              '&:hover': { backgroundColor: 'primary.dark' },
-            }}
-            onClick={() => setShowModal(true)}
-          >
-            <Add />
-          </IconButton>
-
           {/* Slider */}
           <div
             onMouseMove={onMouseMove}

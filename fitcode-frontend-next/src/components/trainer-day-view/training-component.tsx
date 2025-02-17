@@ -10,10 +10,12 @@ import SelectInput from '../select-input';
 import { AFTER_SETS, MAIN_SETS, METHODS } from './constant';
 import { TrainingComponentProps } from './props';
 import Supersets from './supersets';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
+  const screenSize = useScreenSize();
   const { training, trainingComponent } = props;
   const {
     training: selectedTraining,
@@ -32,7 +34,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
       <>
         <Box sx={{ bgcolor: 'background.paper', my: 0.5 }}>
           <Box
-            height={40}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -40,13 +41,13 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             }}
           >
             <Stack
-              direction="row"
+              direction={screenSize.isMobile ? 'column' : 'row'}
               alignItems="center"
               mt={1}
               width="100%"
               justifyContent="space-between"
             >
-              <Box display="flex" p={0} justifyContent="center">
+              <Box display="flex" p={0}>
                 <Box display="flex" p={0}>
                   {trainingComponent.component &&
                     (() => {
@@ -71,86 +72,136 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           >
                             {trainingComponent.component.name}
                           </Typography>
+
+                          {screenSize.isMobile && (
+                            <IconButton
+                              onClick={() => {
+                                if (
+                                  trainingComponent &&
+                                  component &&
+                                  trainingComponent.id === component.id
+                                ) {
+                                  setTraining(undefined);
+                                  setComponent(undefined);
+                                } else {
+                                  setTraining(training);
+                                  setComponent(() =>
+                                    components.find(
+                                      (c) => c.id === trainingComponent!.id
+                                    )
+                                  );
+                                }
+                              }}
+                            >
+                              {trainingComponent &&
+                              component &&
+                              trainingComponent.id === component.id ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          )}
                         </Box>
                       );
                     })()}
                 </Box>
               </Box>
 
-              <Box display="flex" p={0} mr={1} alignItems="center">
-                <SelectInput<MainSet>
-                  label={'Main Set'}
-                  value={mainSet?.id || ''}
-                  icon={null}
-                  items={MAIN_SETS}
-                  itemKey="id"
-                  itemName="name"
-                  placeholder="Main Set"
-                  displayInputLabel={true}
-                  setValue={(mainSetId) => {
-                    const mainSet = MAIN_SETS.find((g) => g.id === mainSetId)!;
-                    setMainSet(mainSet);
-                  }}
-                />
+              <Box
+                display="flex"
+                p={0}
+                mr={1}
+                alignItems="center"
+                flexDirection={screenSize.isMobile ? 'column' : 'row'}
+              >
+                {!screenSize.isMobile ||
+                  (screenSize.isMobile &&
+                    trainingComponent &&
+                    component &&
+                    trainingComponent.id === component.id && (
+                      <>
+                        <SelectInput<MainSet>
+                          label={'Main Set'}
+                          value={mainSet?.id || ''}
+                          icon={null}
+                          items={MAIN_SETS}
+                          itemKey="id"
+                          itemName="name"
+                          placeholder="Main Set"
+                          displayInputLabel={true}
+                          setValue={(mainSetId) => {
+                            const mainSet = MAIN_SETS.find(
+                              (g) => g.id === mainSetId
+                            )!;
+                            setMainSet(mainSet);
+                          }}
+                        />
 
-                <SelectInput<AfterSet>
-                  label={'After Set'}
-                  value={afterSet?.id || ''}
-                  icon={null}
-                  items={AFTER_SETS}
-                  itemKey="id"
-                  itemName="name"
-                  placeholder="After Set"
-                  displayInputLabel={true}
-                  setValue={(afterSetId) => {
-                    const afterSet = AFTER_SETS.find(
-                      (g) => g.id === afterSetId
-                    )!;
+                        <SelectInput<AfterSet>
+                          label={'After Set'}
+                          value={afterSet?.id || ''}
+                          icon={null}
+                          items={AFTER_SETS}
+                          itemKey="id"
+                          itemName="name"
+                          placeholder="After Set"
+                          displayInputLabel={true}
+                          setValue={(afterSetId) => {
+                            const afterSet = AFTER_SETS.find(
+                              (g) => g.id === afterSetId
+                            )!;
 
-                    setAfterSet(afterSet);
-                  }}
-                />
+                            setAfterSet(afterSet);
+                          }}
+                        />
 
-                <SelectInput<MainSet>
-                  label={'Method'}
-                  value={method?.id || ''}
-                  icon={null}
-                  items={METHODS}
-                  itemKey="id"
-                  itemName="name"
-                  placeholder="Method"
-                  displayInputLabel={true}
-                  setValue={(methodId) => {
-                    const method = METHODS.find((g) => g.id === methodId)!;
-                    setMethod(method);
-                  }}
-                />
+                        <SelectInput<MainSet>
+                          label={'Method'}
+                          value={method?.id || ''}
+                          icon={null}
+                          items={METHODS}
+                          itemKey="id"
+                          itemName="name"
+                          placeholder="Method"
+                          displayInputLabel={true}
+                          setValue={(methodId) => {
+                            const method = METHODS.find(
+                              (g) => g.id === methodId
+                            )!;
+                            setMethod(method);
+                          }}
+                        />
+                      </>
+                    ))}
 
-                <IconButton
-                  onClick={() => {
-                    if (
-                      trainingComponent &&
-                      component &&
-                      trainingComponent.id === component.id
-                    ) {
-                      setTraining(undefined);
-                      setComponent(undefined);
-                    } else {
-                      setTraining(training);
-                      setComponent(() =>
-                        components.find((c) => c.id === trainingComponent!.id)
-                      );
-                    }
-                  }}
-                >
-                  {trainingComponent &&
-                  component &&
-                  trainingComponent.id === component.id ? (
-                    <VisibilityOff />
-                  ) : (
-                    <Visibility />
-                  )}
-                </IconButton>
+                {!screenSize.isMobile && (
+                  <IconButton
+                    onClick={() => {
+                      if (
+                        trainingComponent &&
+                        component &&
+                        trainingComponent.id === component.id
+                      ) {
+                        setTraining(undefined);
+                        setComponent(undefined);
+                      } else {
+                        setTraining(training);
+                        setComponent(() =>
+                          components.find((c) => c.id === trainingComponent!.id)
+                        );
+                      }
+                    }}
+                  >
+                    {trainingComponent &&
+                    component &&
+                    trainingComponent.id === component.id ? (
+                      <VisibilityOff />
+                    ) : (
+                      <Visibility />
+                    )}
+                  </IconButton>
+                )}
               </Box>
             </Stack>
           </Box>

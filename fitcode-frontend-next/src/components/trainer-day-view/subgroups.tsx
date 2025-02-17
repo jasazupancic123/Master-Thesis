@@ -90,6 +90,7 @@ export default function Subgroups() {
             setAvailableMembers,
             users,
             setDetectedSubgroupChanges,
+            setTraining,
           })
         }
       >
@@ -133,34 +134,14 @@ export default function Subgroups() {
         {showSubgroups && (
           <>
             <Box
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              alignItems="center"
-              width="100%"
-              mt={1}
-            >
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <InfoIcon sx={{ fontSize: 20, mb: 0.5, mr: 0.5 }} /> Drag and
-                drop a member inside a subgroup from Default. Remove members of
-                subgroups by right-clicking on them.
-              </Typography>
-            </Box>
-          </>
-        )}
-
-        {showSubgroups && (
-          <>
-            <Box
               sx={{
                 width: '100%',
-                display: subgroups.length % 3 === 0 ? 'flex' : 'grid',
+                display:
+                  screenSize.isMobile || screenSize.isLandscapeMobile
+                    ? 'flex'
+                    : subgroups.length % 3 === 0
+                      ? 'flex'
+                      : 'grid',
                 flexWrap: 'wrap',
                 gridTemplateColumns:
                   subgroups.length > 0
@@ -387,7 +368,7 @@ export default function Subgroups() {
         setIsOpen={(subgroup) => setModal((prev) => ({ ...prev, subgroup }))}
         title="Create Subgroup"
         onCancel={() => setModal((prev) => ({ ...prev, subgroup: false }))}
-        onConfirm={() =>
+        onConfirm={() => {
           addSubgroup(token, createSubgroup, {
             router,
             subgroups,
@@ -399,8 +380,9 @@ export default function Subgroups() {
             setCreateSubgroup,
             components,
             exercises,
-          })
-        }
+          });
+          setModal((prev) => ({ ...prev, subgroup: false }));
+        }}
       >
         <Stack spacing={4} p={1}>
           {/* Name */}
