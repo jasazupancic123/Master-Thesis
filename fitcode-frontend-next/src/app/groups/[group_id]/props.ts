@@ -47,6 +47,14 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilteredTrainings: SetState<Training[]>;
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
+  selectedSubgroup: {
+    subgroup: Subgroup | null;
+    index: number;
+  } | null;
+  setSelectedSubgroup: SetState<{
+    subgroup: Subgroup | null;
+    index: number;
+  } | null>;
 };
 
 export type TrainerDayViewContextProps = {

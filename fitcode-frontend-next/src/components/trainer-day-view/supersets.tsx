@@ -26,10 +26,12 @@ import {
 } from './state';
 import TrainingExerciseCard from './training-exercise-card';
 import { useScreenSize } from '@/context/screen-size-provider';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function Supersets(props: SupersetsProps) {
   const screenSize = useScreenSize();
-  const { trainingComponent } = props;
+  const { trainingComponent, openAddExerciseModal, setOpenAddExerciseModal } =
+    props;
 
   const {
     token,
@@ -45,7 +47,6 @@ export default function Supersets(props: SupersetsProps) {
   const supersets = trainingComponent.supersets || [];
 
   const router = useRouter();
-  const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [supersetsWithAdd, setSupersetsWithAdd] = useState(supersets);
   const [selectedExercises, setSelectedExercises] = useState(
     supersets.map((superset) => Object.values(superset.exercises)).flat()
@@ -66,10 +67,13 @@ export default function Supersets(props: SupersetsProps) {
   async function onDragEnd({ destination, draggableId }: any) {
     if (!destination || !training || !component) return;
 
+    console.log('on drag end');
+    console.log('destination', destination, 'draggableId', draggableId);
     if ((destination.droppableId as string).endsWith('100')) {
       if (supersets.length >= 4)
         return toast.error('You can only have 4 supersets per component');
 
+      console.log('adding new superset');
       addSuperset(
         token,
         {
@@ -148,13 +152,21 @@ export default function Supersets(props: SupersetsProps) {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Box display="flex" flexWrap="wrap" gap={2}>
+      <Box
+        display="flex"
+        flexWrap={screenSize.isSmallerThanLaptop ? 'wrap' : undefined}
+        gap={screenSize.isSmallerThanLaptop ? 1 : 2}
+      >
         {supersetsWithAdd
           ?.sort((a, b) => a.order - b.order)
           ?.map((superset, i) => (
             <Droppable
               key={`${component.id}-${i}`}
-              droppableId={`${component.id}-${i}`}
+              droppableId={
+                superset.order === 100
+                  ? `${component.id}-${i}-${superset.order}`
+                  : `${component.id}-${i}`
+              }
               direction="vertical"
             >
               {(provided) =>
@@ -201,14 +213,16 @@ export default function Supersets(props: SupersetsProps) {
                     display="flex"
                     flexDirection="column"
                   >
-                    <Box
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() =>
-                        handleDeleteSuperset(supersets.indexOf(superset))
-                      }
-                    >
-                      <BorderColor color={superset.color || COLOR[i]} />
-                    </Box>
+                    <Tooltip title="Delete superset" placement="top">
+                      <Box
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() =>
+                          handleDeleteSuperset(supersets.indexOf(superset))
+                        }
+                      >
+                        <BorderColor color={superset.color || COLOR[i]} />
+                      </Box>
+                    </Tooltip>
                     <Box>
                       {Object.values(superset?.exercises || {})?.map(
                         (exercise, k) => (
@@ -232,6 +246,20 @@ export default function Supersets(props: SupersetsProps) {
                                 borderRadius={1}
                                 boxShadow={snapshot.isDragging ? 2 : 0}
                               >
+                                <Box
+                                  position="absolute"
+                                  top={10}
+                                  left={10}
+                                  display="flex"
+                                  flexDirection="column"
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                  >
+                                    {`${i + 1}${String.fromCharCode(65 + k)}`}
+                                  </Typography>
+                                </Box>
                                 <Box
                                   position="absolute"
                                   top={5}
@@ -265,43 +293,7 @@ export default function Supersets(props: SupersetsProps) {
                                         )
                                       }
                                     >
-                                      <DeleteIcon />
-                                    </IconButton>
-                                  </Tooltip>
-
-                                  <Tooltip
-                                    title="Update exercise"
-                                    placement="left"
-                                  >
-                                    <IconButton
-                                      size="small"
-                                      onClick={() =>
-                                        updateExercise(
-                                          token,
-                                          {
-                                            trainingId: training.id,
-                                            componentId: component.id,
-                                            superset: i,
-                                            exerciseId: exercise.id,
-                                            color: `#${Math.floor(
-                                              Math.random() * 16777215
-                                            )
-                                              .toString(16)
-                                              .padStart(6, '0')}`,
-                                            order: 0,
-                                          },
-                                          {
-                                            router,
-                                            setTraining,
-                                            setTrainings,
-                                            setFilteredTrainings,
-                                            components,
-                                            exercises,
-                                          }
-                                        )
-                                      }
-                                    >
-                                      <Update />
+                                      <CloseIcon />
                                     </IconButton>
                                   </Tooltip>
                                 </Box>
@@ -337,41 +329,26 @@ export default function Supersets(props: SupersetsProps) {
 
                       {provided.placeholder}
                     </Box>
-                    <Box
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() =>
-                        handleDeleteSuperset(supersets.indexOf(superset))
-                      }
+                    <Tooltip
+                      title="Delete superset"
+                      placement="bottom"
+                      sx={{ p: 0, m: 0 }}
                     >
-                      <BorderColor color={superset.color || COLOR[i]} lower />
-                    </Box>
+                      <Box
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() =>
+                          handleDeleteSuperset(supersets.indexOf(superset))
+                        }
+                      >
+                        <BorderColor color={superset.color || COLOR[i]} lower />
+                      </Box>
+                    </Tooltip>
                     <Box
                       display="flex"
                       justifyContent="space-between"
                       mt={1}
                       gap={1}
-                    >
-                      {/* Add exercises to superset */}
-                      <Box
-                        sx={{
-                          border: '1px dashed #B2B3B7',
-                          borderRadius: 2,
-                          flex: 1,
-                          display: 'flex',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Tooltip title="Add exercises">
-                          <IconButton
-                            onClick={() => {
-                              setOpenAddExerciseModal(true);
-                            }}
-                          >
-                            <AddIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </Box>
+                    ></Box>
                   </Box>
                 )
               }

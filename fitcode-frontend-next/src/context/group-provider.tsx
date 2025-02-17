@@ -51,6 +51,11 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(users);
 
+  const [selectedSubgroup, setSelectedSubgroup] = useState<{
+    subgroup: Subgroup | null;
+    index: number;
+  } | null>(null);
+
   // filter trainings every time date changes
   useEffect(() => {
     setFilteredTrainings(
@@ -91,6 +96,8 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setFilteredTrainings,
     filteredUsers,
     setFilteredUsers,
+    selectedSubgroup,
+    setSelectedSubgroup,
   };
 
   return (

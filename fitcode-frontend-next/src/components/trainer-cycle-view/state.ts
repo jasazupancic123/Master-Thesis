@@ -33,12 +33,11 @@ export async function handleCreateTraining(
     trainings: Training[];
     setTrainings: SetState<Training[]>;
     setCycle: SetStateNullable<Cycle>;
-    setSelectedComponents: SetState<Component[]>;
     components: Component[];
   }
 ) {
   const { group, cycle, date, period, selectedComponents } = input;
-  const { router, trainings, setTrainings, setSelectedComponents, components } =
+  const { router, trainings, setTrainings, components } =
     state;
 
   if (!selectedComponents.length)
@@ -109,7 +108,6 @@ export async function handleCreateTraining(
     (training) => {
       const mapped = TrainingService.mapComponents(training, components);
       setTrainings((prev) => [...prev, mapped]);
-      setSelectedComponents([]);
       toast.success('Training created successfully');
     },
     undefined,
@@ -129,8 +127,12 @@ export async function handleAddTrainingComponents(
   const { trainingId, ...restInput } = input;
   const { router, setTrainings, components } = state;
 
-  if (!restInput.components.length)
-    return toast.error('Select at least one component to add');
+  if (!restInput.components.length) {
+    TrainingController.delete(token, trainingId)
+    setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+    toast.success('Training deleted successfully');
+    return
+  }
 
   handleApiRequest(
     router,
@@ -207,11 +209,16 @@ export async function handleDeleteTrainingComponent(
       ),
     (training) => {
       const mapped = TrainingService.mapComponents(training, components);
+      if(Object.values(mapped.components).length === 0) {
+        console.log('deleting training')
+        TrainingController.delete(token, trainingId)
+        toast.success('Training deleted successfully');
+        setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+        return;
+      }
       setTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? mapped : t))
       );
-
-      toast.success('Training deleted successfully');
     },
     undefined,
     'Failed to delete training component'

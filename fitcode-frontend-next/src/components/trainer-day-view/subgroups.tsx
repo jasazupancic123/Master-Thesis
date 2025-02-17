@@ -35,8 +35,14 @@ import {
   handleSaveSubgroupChanges,
   onDragEndSubgroup,
 } from './state';
+import toast from 'react-hot-toast';
 
-export default function Subgroups() {
+interface SubgroupProps {
+  showSubgroups: boolean;
+}
+
+export default function Subgroups(props: SubgroupProps) {
+  const { showSubgroups } = props;
   const screenSize = useScreenSize();
   const router = useRouter();
   const {
@@ -50,7 +56,6 @@ export default function Subgroups() {
     exercises,
   } = useGroup();
 
-  const [showSubgroups, setShowSubgroups] = useState(false);
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
 
   const [detectedSubgroupChanges, setDetectedSubgroupChanges] = useState(false);
@@ -95,15 +100,13 @@ export default function Subgroups() {
         }
       >
         {/* Subgroups Section */}
-        <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
-          <Box display="flex" justifyContent="center" alignItems="center">
-            <Switch
-              checked={showSubgroups}
-              onChange={() => setShowSubgroups((prev) => !prev)}
-            />
-            <Typography>Show Subgroups</Typography>
-          </Box>
-
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          width="100%"
+          mt={2}
+        >
           {detectedSubgroupChanges && showSubgroups && (
             <Button
               variant="contained"
@@ -136,12 +139,7 @@ export default function Subgroups() {
             <Box
               sx={{
                 width: '100%',
-                display:
-                  screenSize.isMobile || screenSize.isLandscapeMobile
-                    ? 'flex'
-                    : subgroups.length % 3 === 0
-                      ? 'flex'
-                      : 'grid',
+                display: 'flex',
                 flexWrap: 'wrap',
                 gridTemplateColumns:
                   subgroups.length > 0
@@ -151,6 +149,7 @@ export default function Subgroups() {
                 alignItems: 'center',
                 gap: 2,
                 px: 5,
+                pb: 2,
               }}
             >
               {/* Render Subgroups */}

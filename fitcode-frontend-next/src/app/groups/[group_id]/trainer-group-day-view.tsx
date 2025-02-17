@@ -1,18 +1,30 @@
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
 import Circles from '@/components/circles';
+import Subgroups from '@/components/trainer-day-view/subgroups';
 import TrainingCard from '@/components/trainer-day-view/training-card';
 import TrainingMembers from '@/components/trainer-day-view/training-members';
 import { useGroup } from '@/context/group-provider';
-import { Typography } from '@mui/material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
+import GroupIcon from '@mui/icons-material/Group';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainerDayView() {
-  const { cycle, filteredTrainings, setDateFrom, setDateTo } = useGroup();
+  const screenSize = useScreenSize();
+  const {
+    cycle,
+    filteredTrainings,
+    setDateFrom,
+    setDateTo,
+    component,
+    setSelectedSubgroup,
+    training: selectedTraining,
+  } = useGroup();
 
   const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [days, setDays] = useState(
@@ -23,10 +35,29 @@ export default function TrainerDayView() {
     }))
   );
 
+  const [showSubgroups, setShowSubgroups] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
+
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
     setDateTo(day.date.endOf('day'));
   }, [day]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setIsSticky(scrollY > 150);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!component) {
+      setSelectedSubgroup(null);
+    }
+  }, [component]);
 
   const todaysTrainings = filteredTrainings.filter((t) =>
     commonService.date.isSameDay(day.date, dayjs(t.from))
@@ -88,7 +119,30 @@ export default function TrainerDayView() {
           }}
         />
 
-        <TrainingMembers />
+        <Box
+          display="flex"
+          flexDirection={screenSize.isMobile ? 'column' : 'row'}
+          width="100%"
+          justifyContent="center"
+          alignItems="center"
+          sx={{ p: isSticky ? 0 : undefined }}
+        >
+          <TrainingMembers isSticky={isSticky} />
+          {!isSticky && (
+            <Tooltip title="Show subgroups">
+              <IconButton
+                onClick={() =>
+                  selectedTraining ? setShowSubgroups(!showSubgroups) : null
+                }
+                sx={{ p: 0, height: 30, width: 30 }}
+              >
+                <GroupIcon sx={{ fontSize: 30 }} />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+
+        <Subgroups showSubgroups={showSubgroups} />
       </Box>
 
       <Box

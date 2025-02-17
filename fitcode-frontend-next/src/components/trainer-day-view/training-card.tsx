@@ -1,13 +1,15 @@
 import { CommonService } from '@/common/service/common.service';
 import { Box, Typography } from '@mui/material';
 import { TrainingCardProps } from './props';
-import Subgroups from './subgroups';
 import TrainingComponentCard from './training-component';
+import { COLORS } from '@/common/constant/color.constant';
+import { useGroup } from '@/context/group-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainingCard(props: TrainingCardProps) {
   const { day, training, period } = props;
+  const { training: selectedTraining, selectedSubgroup } = useGroup();
 
   return (
     <Box width="100%">
@@ -28,7 +30,11 @@ export default function TrainingCard(props: TrainingCardProps) {
             p={2}
             mr={1}
             sx={{
-              backgroundColor: 'background.paper',
+              backgroundColor:
+                selectedSubgroup?.subgroup &&
+                selectedTraining?.id === training.id
+                  ? COLORS[(selectedSubgroup.index % COLORS.length) + 1]
+                  : 'background.paper',
               borderTopLeftRadius: 10,
             }}
           />
@@ -61,13 +67,6 @@ export default function TrainingCard(props: TrainingCardProps) {
       >
         {training && (
           <>
-            <Typography variant="h6" p={1}>
-              Training ({commonService.date.formatTime(training.from)} -{' '}
-              {commonService.date.formatTime(training.to)})
-            </Typography>
-
-            <Subgroups />
-
             {Object.values(training.components || {})?.map(
               (trainingComponent, i) => (
                 <TrainingComponentCard

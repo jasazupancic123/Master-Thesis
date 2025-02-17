@@ -52,9 +52,10 @@ export async function addSuperset(
 
   handleApiRequest(
     router,
-    () =>
+    () => 
       TrainingController.addSuperset(token, trainingId, componentId, restInput),
     (training) => {
+      console.log('2')
       training = TrainingService.mapComponents(training, components);
       training = TrainingService.mapExercises(training, exercises);
 
