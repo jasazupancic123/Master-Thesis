@@ -5,16 +5,19 @@ import { ExerciseCard } from '@/components/exercise-card';
 import ExerciseChips from '@/components/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal';
 import GroupSidebar from '@/components/group-sidebar';
+import PageTitle from '@/components/page-title';
+import { SearchBar } from '@/components/search-bar';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import { Pagination, TextField } from '@mui/material';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import {
@@ -42,6 +45,8 @@ export function ExercisesPage() {
   } = useGroup();
 
   const router = useRouter();
+  const theme = useTheme();
+  const screenSize = useScreenSize();
 
   // filter exercises
   const [exercises, setExercises] = useState([...allExercises]);
@@ -93,38 +98,51 @@ export function ExercisesPage() {
         <GroupSidebar groups={groups} group={group} />
       </Box>
 
-      <Box ml={10} p={2}>
-        <Box display="flex" justifyContent="space-between" my={2}>
+      <Box p={2}>
+        <Box
+          display="flex"
+          justifyContent="center"
+          flexDirection="column"
+          alignItems="center"
+          my={2}
+          borderRadius={2}
+          pb={1}
+          bgcolor={theme.palette.background.paper}
+        >
+          <Box pb={1}>
+            <PageTitle title="Exercises" />
+          </Box>
           <ExerciseChips
             noSelectionLabel="All"
             components={ComponentService.toTree(components)}
             selected={component}
             setSelected={(component) => setComponent(component as Component)}
+            bgColor={theme.palette.background.default}
+            primaryColor={theme.palette.primary.main}
           />
 
-          <Box>
-            {/* Search Input */}
-            <TextField
-              label="Search"
-              variant="outlined"
-              size="small"
+          {/* Search Input */}
+          <Box sx={{ py: 1 }}>
+            <SearchBar
+              placeholder="Search Exercises"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              handleSearchChange={(e) => setSearch(e.target.value)}
+              maxWidth="100%"
             />
-
-            {/* Add Button */}
-            <IconButton
-              onClick={() => {
-                setModal({ ...modal, add: true });
-                setExercise(DEFAULT_EXERCISE);
-              }}
-            >
-              <AddIcon />
-            </IconButton>
           </Box>
+
+          {/* Add Button */}
+          <IconButton
+            onClick={() => {
+              setModal({ ...modal, add: true });
+              setExercise(DEFAULT_EXERCISE);
+            }}
+          >
+            <AddIcon />
+          </IconButton>
         </Box>
 
-        <Stack direction="row" justifyContent="center" my={2}>
+        <Stack direction="row" justifyContent="center" my={2} width="100%">
           <Pagination
             count={pagination.pages}
             color="primary"
@@ -133,21 +151,34 @@ export function ExercisesPage() {
           />
         </Stack>
 
-        <Grid container spacing={2} mb={10}>
-          {filteredExercises.map((exercise) => (
-            <Grid
+        <Box
+          display="flex"
+          flexWrap="wrap"
+          justifyContent="center"
+          gap={2}
+          mb={10}
+        >
+          {filteredExercises.slice(0, 6).map((exercise, index) => (
+            <Box
               key={exercise.id}
-              size={{ xs: 4 }}
-              sx={{ cursor: 'pointer' }}
+              width={{
+                xs: screenSize.isMobile ? '45%' : '30%',
+                sm: screenSize.isMobile ? '45%' : '30%',
+              }}
+              sx={{
+                cursor: 'pointer',
+                flexBasis: screenSize.isMobile ? '45%' : '30%',
+                maxWidth: screenSize.isMobile ? '45%' : '30%',
+              }}
               onClick={() => {
                 setModal({ ...modal, edit: true });
                 setExercise(exercise);
               }}
             >
               <ExerciseCard exercise={exercise} />
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
 
         {/* Add Exercise Modal*/}
         <ExerciseModal

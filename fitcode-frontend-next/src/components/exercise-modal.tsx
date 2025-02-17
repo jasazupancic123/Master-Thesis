@@ -1,23 +1,24 @@
-import MyModal from '@/components/modal';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Grid from '@mui/material/Grid2';
-import React, { ReactNode, useEffect, useState } from 'react';
-import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
-import Box from '@mui/material/Box';
-import FileUpload from '@/components/file-upload';
-import Stack from '@mui/material/Stack';
-import { SetState } from '@/common/type/state.type';
-import { CommonService } from '@/common/service/common.service';
 import { ContentState } from '@/common/enum/video-state.enum';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
-import SelectComponent from './select-component';
-import SelectAttribute from './select-attribute';
+import { CommonService } from '@/common/service/common.service';
+import { SetState } from '@/common/type/state.type';
+import FileUpload from '@/components/file-upload';
+import MyModal from '@/components/modal';
+import { useScreenSize } from '@/context/screen-size-provider';
 import {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
+import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid2';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import React, { ReactNode, useEffect, useState } from 'react';
+import SelectAttribute from './select-attribute';
+import SelectComponent from './select-component';
 
 interface Props {
   data: Partial<Exercise>;
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function ExerciseModal(props: Props) {
+  const screenSize = useScreenSize();
   const {
     data,
     setData,
@@ -135,8 +137,12 @@ export default function ExerciseModal(props: Props) {
   }, [isOpen]);
 
   return (
-    <MyModal isOpen={isOpen} setIsOpen={setIsOpen} width={500}>
-      <Box>
+    <MyModal
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      width={screenSize.isMobile ? undefined : 500}
+    >
+      <Box p={1}>
         <Box display="flex" justifyContent="space-between" mb={3}>
           <Typography variant="h5">{title}</Typography>
           <Box>{icons}</Box>

@@ -1,4 +1,3 @@
-import React, { ReactNode } from 'react';
 import {
   Dialog,
   DialogActions,
@@ -7,6 +6,7 @@ import {
   SxProps,
 } from '@mui/material';
 import Button from '@mui/material/Button';
+import React, { ReactNode } from 'react';
 
 export interface Props {
   isOpen: boolean;

@@ -3,12 +3,10 @@ import toast from 'react-hot-toast';
 
 export function handleLinkClick(
   e: React.MouseEvent,
-  states: {
-    group: Group | null;
-  }
+  states: { group: Group | null }
 ) {
   if (!states.group) {
     e.preventDefault();
-    toast.error('Please select a group first!');
+    toast.error('Select group first!');
   }
 }

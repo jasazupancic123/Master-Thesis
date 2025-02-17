@@ -1,6 +1,7 @@
 import { CommonService } from '@/common/service/common.service';
 import { TrainingGridItem } from '@/components/training-cycle-view-week/training-cycle-view-grid-item';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { Divider } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -15,6 +16,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { index, week, selected, setSelected } = props;
 
   const router = useRouter();
+  const screenSize = useScreenSize();
   const { token, group, cycle, components, setCycle, trainings, setTrainings } =
     useGroup();
 
@@ -103,7 +105,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 borderColor: '#303E4A',
                 backgroundColor: '#1A2B3C',
                 cursor: components.length ? 'pointer' : 'default',
-                minHeight: 140,
+                minHeight: screenSize.isMobile ? 160 : 140,
               }}
             >
               <Typography
@@ -111,7 +113,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                   color: '#fff',
                   fontSize: '0.7rem',
                   opacity: 0.7,
-                  height: '12%',
+                  height: screenSize.isMobile ? '25%' : '12%',
                 }}
               >
                 {dayjs(date).format('ddd, DD.MM')}
@@ -132,7 +134,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                     key={period}
                     sx={{
                       position: 'relative',
-                      height: '44%',
+                      height: screenSize.isMobile ? '37.5%' : '44%',
                     }}
                     onClick={() =>
                       handleAddTraining(date, period as 'AM' | 'PM')

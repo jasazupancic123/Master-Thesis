@@ -1,4 +1,3 @@
-import { Group } from '@/controller/group/type/group.type';
 import { User } from '@/controller/user/type/user.type';
 import { SetState } from '../../common/type/state.type';
 

@@ -1,12 +1,12 @@
-import * as React from 'react';
-import TextField, { TextFieldProps } from '@mui/material/TextField';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { InputAdornment } from '@mui/material';
+import TextField, { TextFieldProps } from '@mui/material/TextField';
+import * as React from 'react';
 
 type Props = TextFieldProps & {
   label?: string;
   children?: React.ReactNode; // icon
-}
+};
 
 export default function IconTextField(props: Props) {
   const { children } = props;

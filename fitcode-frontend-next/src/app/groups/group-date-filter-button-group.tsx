@@ -1,5 +1,8 @@
+'use client';
+
 import { GroupDateFilter } from '@/common/type/filter.type';
 import FilterButton from '@/components/filter-button';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { Box, ToggleButtonGroup } from '@mui/material';
 import { GroupDateFilterButtonGroupProps } from './props';
 
@@ -7,6 +10,7 @@ export default function GroupDateFilterButtonGroup(
   props: GroupDateFilterButtonGroupProps
 ) {
   const { filter, setFilter } = props;
+  const screenSize = useScreenSize();
 
   return (
     <Box mx="auto" justifyContent="center" mb={2}>
@@ -18,8 +22,13 @@ export default function GroupDateFilterButtonGroup(
         }
         sx={{
           display: 'flex',
-          bgcolor: 'background.paper',
-          width: 700,
+          bgcolor: 'background.default',
+          width: screenSize.isMobile
+            ? '90%'
+            : screenSize.isLandscapeMobile
+              ? '90%'
+              : '100%',
+          maxWidth: 700,
           mx: 'auto',
           borderBottomLeftRadius: '500px',
           borderBottomRightRadius: '500px',

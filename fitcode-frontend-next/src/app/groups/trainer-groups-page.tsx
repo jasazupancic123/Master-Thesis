@@ -1,6 +1,7 @@
 'use client';
 
 import GroupSidebar from '@/components/group-sidebar';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -11,10 +12,11 @@ export default function TrainerGroupsPage(props: GroupPageProps) {
   const { groups } = props;
 
   const theme = useTheme();
+  const screenSize = useScreenSize();
 
   return (
     <>
-      <Box mt={'16px'}>
+      <Box mt="16px" sx={{ px: screenSize.isMobile ? 1 : undefined }}>
         <GroupSidebar groups={groups} group={null} />
       </Box>
 

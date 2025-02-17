@@ -1,13 +1,13 @@
 import { SetState } from '@/common/type/state.type';
-import { Chip, Slider } from '@mui/material';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import { useState } from 'react';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
 import { useScreenSize } from '@/context/screen-size-provider';
-import dayjs from 'dayjs';
 import { UserMeta } from '@/controller/user/type/user-meta.type';
+import { Chip, Slider } from '@mui/material';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import dayjs from 'dayjs';
+import { useState } from 'react';
 
 interface Props {
   initialData: UserMeta | null;

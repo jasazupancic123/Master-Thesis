@@ -16,4 +16,5 @@ export interface ExerciseChipsProps {
   sx?: SxProps;
   bgColor?: string;
   primaryColor?: string;
+  type?: 'single' | 'multiple';
 }

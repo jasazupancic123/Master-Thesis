@@ -27,6 +27,9 @@ export default function GroupSettingsPage() {
         flexDirection="column"
         alignItems="center"
         height="100%"
+        bgcolor="background.paper"
+        borderRadius={5}
+        pb={2}
       >
         <PageTitle title="Group Settings" />
 

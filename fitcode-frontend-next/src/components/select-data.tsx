@@ -1,5 +1,5 @@
-import MenuItem from '@mui/material/MenuItem';
 import { FormControl, InputLabel, Select } from '@mui/material';
+import MenuItem from '@mui/material/MenuItem';
 import React from 'react';
 
 interface Props<T> {
@@ -23,25 +23,29 @@ export default function SelectData<T>(props: Props<T>) {
     multiple = false,
   } = props;
 
-  return <FormControl fullWidth>
-    <InputLabel id={label}>{label}</InputLabel>
-    <Select
-      multiple={multiple}
-      labelId={label}
-      value={value}
-      label={label}
-      variant="outlined"
-      onChange={(e) => onChange(e.target.value as string)}
-    >
-      <MenuItem value={''}>None</MenuItem>
-      {data.map((obj) => (
-        <MenuItem
-          key={dataKeyProp ? obj?.[dataKeyProp] as string : obj as string}
-          value={dataKeyProp ? obj?.[dataKeyProp] as string : obj as string}
-        >
-          {dataValueProp ? obj?.[dataValueProp] as string : obj as string}
-        </MenuItem>
-      ))}
-    </Select>
-  </FormControl>;
+  return (
+    <FormControl fullWidth>
+      <InputLabel id={label}>{label}</InputLabel>
+      <Select
+        multiple={multiple}
+        labelId={label}
+        value={value}
+        label={label}
+        variant="outlined"
+        onChange={(e) => onChange(e.target.value as string)}
+      >
+        <MenuItem value={''}>None</MenuItem>
+        {data.map((obj) => (
+          <MenuItem
+            key={dataKeyProp ? (obj?.[dataKeyProp] as string) : (obj as string)}
+            value={
+              dataKeyProp ? (obj?.[dataKeyProp] as string) : (obj as string)
+            }
+          >
+            {dataValueProp ? (obj?.[dataValueProp] as string) : (obj as string)}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
 }

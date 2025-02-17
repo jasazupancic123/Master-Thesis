@@ -11,7 +11,12 @@ export function ExerciseCard(props: Props) {
   const { exercise } = props;
 
   return (
-    <Card sx={{ maxWidth: 345, borderRadius: 5 }}>
+    <Card
+      sx={{
+        borderRadius: 5,
+        height: 250,
+      }}
+    >
       <CardMedia
         // components="video" or "img"
         component={

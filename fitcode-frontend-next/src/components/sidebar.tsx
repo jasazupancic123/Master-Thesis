@@ -1,25 +1,21 @@
 'use client';
 
-import * as React from 'react';
+import { CommonService } from '@/common/service/common.service';
+import { AuthContextType } from '@/common/type/context.type';
+import { useAuth } from '@/context/auth-provider';
+import MenuIcon from '@mui/icons-material/Menu';
+import { Tooltip } from '@mui/material';
+import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Link from 'next/link';
-import AppBar from '@mui/material/AppBar';
-import Container from '@mui/material/Container';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Tooltip } from '@mui/material';
-import { useAuth } from '@/context/auth-provider';
-import { CommonService } from '@/common/service/common.service';
-import { AuthContextType } from '@/common/type/context.type';
-
-export interface Props {
-  title?: string;
-}
+import * as React from 'react';
 
 const commonService = CommonService.instance;
 

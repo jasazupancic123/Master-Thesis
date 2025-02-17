@@ -7,15 +7,14 @@ import {
 } from '@/components/trainer-cycle-view/state';
 import TrainingWeek from '@/components/training-cycle-view-week/training-week';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { RotateRight } from '@mui/icons-material';
-import InfoIcon from '@mui/icons-material/Info';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -32,6 +31,7 @@ export default function TrainerCycleView() {
     setDateTo,
   } = useGroup();
 
+  const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
@@ -88,7 +88,7 @@ export default function TrainerCycleView() {
           flexDirection="column"
           justifyContent="center"
           alignItems="center"
-          pb={0}
+          pb={!isSticky ? 1 : 0}
           sx={{
             borderBottomRightRadius: '20px',
             borderBottomLeftRadius: '20px',
@@ -113,20 +113,6 @@ export default function TrainerCycleView() {
             primaryColor={theme.palette.primary.main}
           />
         </Box>
-
-        <Typography
-          variant="caption"
-          sx={{
-            pb: 2,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <InfoIcon sx={{ fontSize: 20, mb: 0.5, mr: 0.5 }} /> Click on
-          components to remove them. If all components are removed from a
-          training, the training will be deleted. To add a component to an
-          existing training, select the component and click on the training.
-        </Typography>
       </Box>
 
       {/* Choose cycle */}

@@ -1,7 +1,7 @@
-import React, { ReactNode } from 'react';
 import { FormControl, InputAdornment } from '@mui/material';
-import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import React, { ReactNode } from 'react';
 
 interface Props<T> {
   icon: ReactNode;
