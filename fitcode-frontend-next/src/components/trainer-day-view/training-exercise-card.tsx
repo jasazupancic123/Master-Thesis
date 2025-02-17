@@ -12,8 +12,10 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
+  const screenSize = useScreenSize();
   const { exercise, onChange } = props;
   const [state, setState] = useState(() => exercise.meta);
 
@@ -56,6 +58,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
   return (
     <Stack
+      width="100%"
       direction="column"
       spacing={2}
       p={1}
@@ -80,7 +83,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
       <Stack
         direction="row"
-        spacing={1}
+        spacing={screenSize.isSmallerThanLaptop ? undefined : 1}
         flexWrap="wrap"
         width="100%"
         justifyContent="center"

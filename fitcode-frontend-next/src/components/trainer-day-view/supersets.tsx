@@ -3,8 +3,11 @@
 import { COLOR } from '@/common/constant/browser.constant';
 import BorderColor from '@/components/border-color';
 import { useGroup } from '@/context/group-provider';
-import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
-import { Update } from '@mui/icons-material';
+import {
+  ExerciseMeta,
+  TrainingExercise,
+} from '@/controller/training/type/training-plan.type';
+import { ScreenSearchDesktop, Update } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
@@ -22,8 +25,10 @@ import {
   updateExercise,
 } from './state';
 import TrainingExerciseCard from './training-exercise-card';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function Supersets(props: SupersetsProps) {
+  const screenSize = useScreenSize();
   const { trainingComponent } = props;
 
   const {
@@ -58,7 +63,7 @@ export default function Supersets(props: SupersetsProps) {
     );
   }, [supersets, supersets.length]);
 
-  async function onDragEnd({ destination }: any) {
+  async function onDragEnd({ destination, draggableId }: any) {
     if (!destination || !training || !component) return;
 
     if ((destination.droppableId as string).endsWith('100')) {
@@ -78,6 +83,39 @@ export default function Supersets(props: SupersetsProps) {
           setFilteredTrainings,
           setTrainings,
           setTraining,
+          components,
+          exercises,
+        }
+      );
+    } else {
+      const supersetIndex = parseInt(destination.droppableId.split('-')[1]);
+      const supersetsCopy = [...supersetsWithAdd];
+      //in supersets, find the superset that has the exercise
+      const supersetWithExercise = supersetsCopy.find((superset) =>
+        Object.keys(superset.exercises).includes(draggableId)
+      );
+      if (!supersetWithExercise) return;
+      const exercise = supersetWithExercise.exercises[draggableId];
+      if (!exercise) return;
+      supersetsCopy[supersetIndex].exercises[draggableId] = exercise;
+      delete supersetWithExercise.exercises[draggableId];
+
+      setSupersetsWithAdd([...supersetsCopy]);
+
+      updateExercise(
+        token,
+        {
+          trainingId: training.id,
+          componentId: component.id,
+          superset: supersetIndex,
+          exerciseId: exercise.id,
+          order: 0,
+        },
+        {
+          router,
+          setTraining,
+          setTrainings,
+          setFilteredTrainings,
           components,
           exercises,
         }
@@ -115,8 +153,8 @@ export default function Supersets(props: SupersetsProps) {
           ?.sort((a, b) => a.order - b.order)
           ?.map((superset, i) => (
             <Droppable
-              key={`${component.id}-${i}-${superset.order}`}
-              droppableId={`${component.id}-${i}-${superset.order}`}
+              key={`${component.id}-${i}`}
+              droppableId={`${component.id}-${i}`}
               direction="vertical"
             >
               {(provided) =>
@@ -149,8 +187,17 @@ export default function Supersets(props: SupersetsProps) {
                   <Box
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    flexBasis={{ xs: '25%', sm: '25%', md: '24%' }}
+                    flexBasis={
+                      !screenSize.isSmallerThanLaptop
+                        ? { xs: '25%', sm: '25%', md: '24%' }
+                        : undefined
+                    }
                     p={2}
+                    width={
+                      screenSize.isSmallerThanLaptop
+                        ? { xs: '100%', sm: '100%', md: '24%' }
+                        : undefined
+                    }
                     display="flex"
                     flexDirection="column"
                   >
@@ -162,7 +209,6 @@ export default function Supersets(props: SupersetsProps) {
                     >
                       <BorderColor color={superset.color || COLOR[i]} />
                     </Box>
-
                     <Box>
                       {Object.values(superset?.exercises || {})?.map(
                         (exercise, k) => (
@@ -186,7 +232,13 @@ export default function Supersets(props: SupersetsProps) {
                                 borderRadius={1}
                                 boxShadow={snapshot.isDragging ? 2 : 0}
                               >
-                                <Box position="absolute" top={5} right={5}>
+                                <Box
+                                  position="absolute"
+                                  top={5}
+                                  right={5}
+                                  display="flex"
+                                  flexDirection="column"
+                                >
                                   <Tooltip
                                     title="Delete exercise"
                                     placement="left"
@@ -285,7 +337,6 @@ export default function Supersets(props: SupersetsProps) {
 
                       {provided.placeholder}
                     </Box>
-
                     <Box
                       sx={{ cursor: 'pointer' }}
                       onClick={() =>
@@ -294,7 +345,6 @@ export default function Supersets(props: SupersetsProps) {
                     >
                       <BorderColor color={superset.color || COLOR[i]} lower />
                     </Box>
-
                     <Box
                       display="flex"
                       justifyContent="space-between"
