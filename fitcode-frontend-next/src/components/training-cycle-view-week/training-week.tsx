@@ -56,7 +56,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         setCycle,
         trainings,
         setTrainings,
-        setSelectedComponents: setSelected as any,
       }
     );
   }
@@ -169,7 +168,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                               order: i,
                             })),
                           });
-                          props.setSelected!!([]);
                         }}
                       >
                         {key > 0 && <Divider />}

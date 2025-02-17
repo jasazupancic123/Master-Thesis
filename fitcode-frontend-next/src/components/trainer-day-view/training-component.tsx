@@ -4,13 +4,15 @@ import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
 import { Method } from '@/controller/component/type/method.type';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useState } from 'react';
 import SelectInput from '../select-input';
 import { AFTER_SETS, MAIN_SETS, METHODS } from './constant';
 import { TrainingComponentProps } from './props';
 import Supersets from './supersets';
 import { useScreenSize } from '@/context/screen-size-provider';
+import MyModal from '../modal';
+import AddExerciseForm from './add-exercise-form';
 
 const commonService = CommonService.instance;
 
@@ -28,6 +30,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const [mainSet, setMainSet] = useState<MainSet | null>();
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
   const [method, setMethod] = useState<Method | null>();
+  const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
 
   return (
     <Box my={1} p={0} px={1}>
@@ -58,7 +61,36 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
                       return (
                         <Box display="flex" alignItems="center">
-                          <IconComponent fontSize="medium" color="primary" />
+                          {component &&
+                          trainingComponent &&
+                          trainingComponent.id === component.id ? (
+                            <Tooltip
+                              title="Add exercise"
+                              sx={{
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <IconButton
+                                onClick={() => {
+                                  if (
+                                    component &&
+                                    trainingComponent &&
+                                    trainingComponent.id === component.id
+                                  ) {
+                                    setOpenAddExerciseModal(true);
+                                  }
+                                }}
+                                sx={{ p: 0, m: 0 }}
+                              >
+                                <IconComponent
+                                  fontSize="medium"
+                                  color="primary"
+                                />
+                              </IconButton>
+                            </Tooltip>
+                          ) : (
+                            <IconComponent fontSize="medium" color="primary" />
+                          )}
 
                           <Typography
                             variant="h6"
@@ -95,6 +127,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             >
                               {trainingComponent &&
                               component &&
+                              training.id === selectedTraining?.id &&
                               trainingComponent.id === component.id ? (
                                 <VisibilityOff />
                               ) : (
@@ -195,6 +228,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   >
                     {trainingComponent &&
                     component &&
+                    training.id === selectedTraining?.id &&
                     trainingComponent.id === component.id ? (
                       <VisibilityOff />
                     ) : (
@@ -220,7 +254,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             }}
           >
             {/* Supersets */}
-            <Supersets trainingComponent={trainingComponent} />
+            <Supersets
+              trainingComponent={trainingComponent}
+              openAddExerciseModal={openAddExerciseModal}
+              setOpenAddExerciseModal={setOpenAddExerciseModal}
+            />
           </Box>
         </Box>
       </>

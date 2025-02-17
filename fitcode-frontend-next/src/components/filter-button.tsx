@@ -33,7 +33,6 @@ export default function FilterButton(props: Props) {
           color: '#fff',
         },
         textTransform: 'none',
-        p: 1,
       }}
     >
       {value.toUpperCase()}

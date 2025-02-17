@@ -1,5 +1,6 @@
 import { Day } from '@/common/service/util/date.util';
 import { SetState } from '@/common/type/state.type';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
 import {
   ExerciseMeta,
   TrainingComponent,
@@ -20,6 +21,8 @@ export interface TrainingComponentProps {
 
 export interface SupersetsProps {
   trainingComponent: TrainingComponent;
+  openAddExerciseModal: boolean;
+  setOpenAddExerciseModal: SetState<boolean>;
 }
 
 export interface AddExerciseFormProps {

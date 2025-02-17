@@ -62,7 +62,6 @@ export default function TrainerCycleView() {
         flexDirection="column"
         alignItems="center"
         width="100%"
-        pt={2}
         sx={{
           backgroundColor: theme.palette.background.paper,
           borderBottomLeftRadius: 20,
@@ -70,7 +69,7 @@ export default function TrainerCycleView() {
         }}
       >
         <SelectInput<Cycle>
-          label="Cycle"
+          label=""
           icon={<RotateRight />}
           value={cycle?.id || ''}
           items={group.cycles}
