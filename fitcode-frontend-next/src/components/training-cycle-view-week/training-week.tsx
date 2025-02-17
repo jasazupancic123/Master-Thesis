@@ -161,9 +161,10 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                         borderRadius={2}
                         sx={{ cursor: 'pointer' }}
                         onClick={(e) => {
+                          if (!props.selected) return;
                           e.stopPropagation();
                           props.addTrainingComponent(training.id, {
-                            components: components.map((c, i) => ({
+                            components: props.selected.map((c, i) => ({
                               id: c.id,
                               order: i,
                             })),

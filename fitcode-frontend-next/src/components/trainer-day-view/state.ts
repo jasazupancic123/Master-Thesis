@@ -441,6 +441,7 @@ export function onDragEndSubgroup(
     setAvailableMembers: SetState<User[]>;
     users: User[];
     setDetectedSubgroupChanges: SetState<boolean>;
+    setTraining: SetStateNullable<Training>;
   }
 ) {
   const {
@@ -452,6 +453,7 @@ export function onDragEndSubgroup(
     setAvailableMembers,
     users,
     setDetectedSubgroupChanges,
+    setTraining,
   } = state;
 
   if (!destination) return;
@@ -494,6 +496,15 @@ export function onDragEndSubgroup(
       setChangedSubgroupIds((prev) => [...prev, targetSubgroup.id]);
   }
 
+  setTraining((prev: any) => {
+    if (!prev) return null;
+
+    const subgroupEntries = Object.fromEntries(
+      updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
+    );
+
+    return { ...prev, subgroups: subgroupEntries };
+  });
   setDetectedSubgroupChanges(true);
   setSubgroups(updatedSubgroups);
 }
