@@ -1,19 +1,37 @@
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
+import { handleApiRequest } from '@/common/type/state.type';
 import Circles from '@/components/circles';
 import TrainingCard from '@/components/trainer-day-view/training-card';
 import TrainingMembers from '@/components/trainer-day-view/training-members';
 import { useGroup } from '@/context/group-provider';
-import { Typography } from '@mui/material';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { Training } from '@/controller/training/type/training.type';
+import { Save } from '@mui/icons-material';
+import { Fab, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const commonService = CommonService.instance;
 
 export default function TrainerDayView() {
-  const { cycle, filteredTrainings, setDateFrom, setDateTo } = useGroup();
+  const {
+    token,
+    cycle,
+    filteredTrainings,
+    training,
+    setDateFrom,
+    setDateTo,
+    components,
+    setTrainings,
+    setFilteredTrainings,
+  } = useGroup();
 
+  const router = useRouter();
   const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [days, setDays] = useState(
     commonService.date.getWeekDays().map(({ label, date }) => ({
@@ -36,6 +54,32 @@ export default function TrainerDayView() {
   const pmTraining = todaysTrainings.find((t) => dayjs(t.from).hour() >= 12);
 
   if (!cycle) return <>Select cycle</>;
+
+  // console.log('training:', training);
+
+  async function handleUpdateTraining() {
+    if (!training) return;
+
+    await handleApiRequest(
+      router,
+      () => TrainingController.update(token, training.id, training),
+      (newTraining) => {
+        const mapped = TrainingService.mapComponents(newTraining, components);
+
+        setTrainings((prev) =>
+          prev.map((t) => (t.id === newTraining.id ? mapped : t))
+        );
+
+        setFilteredTrainings((prev) =>
+          prev.map((t) => (t.id === newTraining.id ? mapped : t))
+        );
+
+        toast.success('Training updated successfully');
+      },
+      undefined,
+      'Error when updating training'
+    );
+  }
 
   return (
     <>
@@ -123,11 +167,41 @@ export default function TrainerDayView() {
         ) : (
           <>
             {amTraining && (
-              <TrainingCard day={day} training={amTraining} period="AM" />
+              <>
+                {training && training?.id === amTraining.id && (
+                  <Fab
+                    size="small"
+                    color="secondary"
+                    aria-label="add"
+                    onClick={() => {
+                      handleUpdateTraining();
+                    }}
+                  >
+                    <Save />
+                  </Fab>
+                )}
+
+                <TrainingCard day={day} training={amTraining} period="AM" />
+              </>
             )}
 
             {pmTraining && (
-              <TrainingCard day={day} training={pmTraining} period="PM" />
+              <>
+                {training && training?.id === pmTraining.id && (
+                  <Fab
+                    size="small"
+                    color="secondary"
+                    aria-label="add"
+                    onClick={() => {
+                      handleUpdateTraining();
+                    }}
+                  >
+                    <Save />
+                  </Fab>
+                )}
+
+                <TrainingCard day={day} training={pmTraining} period="PM" />
+              </>
             )}
           </>
         )}

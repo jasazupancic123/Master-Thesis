@@ -5,26 +5,27 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { CreateUser, UserEntity } from '../entity/user.entity';
-import { UpdateUserClaimsDto } from '../dto/update-user.dto';
-import { User } from '../../common/type/firebase-auth.type';
+import { ConfigService } from '@nestjs/config';
+import { startOfDay } from 'date-fns';
+import { FieldPath, FieldValue, Transaction } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
-import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
-import { UserRepository } from '../repository/user.repository';
+import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
+import { Wrapper } from 'src/common/type/wrapper.type';
+import { TrainingService } from 'src/training/service/training.service';
+import { User } from '../../common/type/firebase-auth.type';
 import {
   UserMetaRef,
   UserRef,
 } from '../../common/type/firebase-firestore.type';
-import { UserMeta } from '../entity/user-meta.entity';
-import { ConfigService } from '@nestjs/config';
 import { Environment } from '../../config/environment-validation-schema';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
+import { UpdateUserClaimsDto } from '../dto/update-user.dto';
+import { UserMeta } from '../entity/user-meta.entity';
+import { CreateUser, UserEntity } from '../entity/user.entity';
+import { SportLevel } from '../enum/sport-level.enum';
 import { UserMetaRepository } from '../repository/user-meta.repository';
-import { TrainingService } from 'src/training/service/training.service';
-import { Wrapper } from 'src/common/type/wrapper.type';
-import { startOfDay } from 'date-fns';
-import { FieldPath, FieldValue, Transaction } from 'firebase-admin/firestore';
-import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
+import { UserRepository } from '../repository/user.repository';
 
 @Injectable()
 export class UserService {
@@ -111,6 +112,24 @@ export class UserService {
     });
   }
 
+  async addAthlete(input: Omit<CreateUser, 'customClaims'>) {
+    const { email, displayName, password } = input;
+
+    const firebaseAuthUser = await this.firebaseService.auth.createUser({
+      email,
+      displayName,
+      password,
+    });
+
+    await this.userRepository.addDoc({
+      id: firebaseAuthUser.uid,
+      groupsIds: [],
+      level: SportLevel.BEGINNER,
+    });
+
+    return firebaseAuthUser;
+  }
+
   async addGroup(transaction: Transaction, userId: string, groupId: string) {
     const docRef = this.userRepository.doc(userId);
     transaction.update(docRef, { groupsIds: FieldValue.arrayUnion(groupId) });
@@ -149,22 +168,14 @@ export class UserService {
     return this.userMetaRepository.serialize(snapshot.docs[0]);
   }
 
-  async getLastMetas(
-    userIds: string[],
-  ): Promise<{ [userId: string]: UserMeta }> {
-    const metas = await this.firebaseService.firestore
+  async getLastMetas(userIds: string[]): Promise<UserMeta[]> {
+    return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.USER_META)
       .where('userId', 'in', userIds)
       .orderBy('date', 'desc')
-      .limit(1)
       .get()
       .then(({ docs }) =>
         docs.map((doc) => this.userMetaRepository.serialize(doc)),
       );
-
-    return metas.reduce((acc, meta) => {
-      acc[meta.userId] = meta;
-      return acc;
-    }, {});
   }
 }

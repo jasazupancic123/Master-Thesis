@@ -1,11 +1,11 @@
+import { IdEntity } from '@/common/type/entity.type';
 import { User } from '@/controller/user/type/user.type';
-import { TrainingPlan } from './training-plan.type';
-import { BaseEntity } from '@/common/type/entity.type';
+import { Superset } from './training-plan.type';
 
-export type Subgroup = BaseEntity & {
+export type Subgroup = IdEntity & {
   name: string;
   membersIds: string[];
-  components: TrainingPlan;
+  supersets: Superset[];
 
   // mapped properties
   members?: User[];

@@ -1,13 +1,8 @@
-import { UpdateTraining } from '../type/training.type';
-import { DateFilterDto } from '../../common/dto/date-filter.dto';
-import { IsObject, IsOptional, ValidateNested } from 'class-validator';
-import { Expose, Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
-import { TrainingComponent } from '../entity/training-component.entity';
+import { PickType } from '@nestjs/mapped-types';
+import { Training } from '../entity/training.entity';
 
-export class UpdateTrainingDto extends DateFilterDto implements UpdateTraining {
-  @IsObject()
-  @IsOptional()
-  @Expose()
-  components?: { [componentId: string]: TrainingComponent };
-}
+export class UpdateTrainingDto extends PickType(Training, [
+  'components',
+  'from',
+  'to',
+]) {}

@@ -1,5 +1,5 @@
+import { FieldValue } from '@google-cloud/firestore';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   CollectionGroup,
   CollectionReference,
@@ -9,13 +9,13 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
-import { Group } from '../entity/group.entity';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { Cycle } from '../entity/cycle.entity';
-import { FieldValue } from '@google-cloud/firestore';
 import { CommonService } from 'src/common/service/common.service';
 import { v4 } from 'uuid';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { Cycle } from '../entity/cycle.entity';
+import { Group, GroupFirestore } from '../entity/group.entity';
 
 @Injectable()
 export class GroupRepository
@@ -63,6 +63,8 @@ export class GroupRepository
         description: input.description || null,
         from: Timestamp.fromDate(input.from),
         to: Timestamp.fromDate(input.to),
+        rootComponentsIds: input.rootComponentsIds || [],
+        leafComponentsIds: input.leafComponentsIds || [],
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         deletedAt: null,
@@ -87,7 +89,7 @@ export class GroupRepository
           if (!doc.exists)
             throw new BadRequestException('Group does not exist');
 
-          const group = doc.data() as Group;
+          const group = doc.data() as GroupFirestore;
           const cycle = group.cycles.find((cycle) => cycle.id === cycleId);
           if (!cycle) throw new BadRequestException('Cycle does not exist');
 
@@ -97,16 +99,21 @@ export class GroupRepository
             ...(input.description && { description: input.description }),
             ...(input.from && { from: Timestamp.fromDate(input.from) }),
             ...(input.to && { to: Timestamp.fromDate(input.to) }),
+            ...(input.rootComponentsIds && {
+              rootComponentsIds: input.rootComponentsIds,
+            }),
+            ...(input.leafComponentsIds && {
+              leafComponentsIds: input.leafComponentsIds,
+            }),
+            updatedAt: Timestamp.now(),
           };
 
-          transaction.update(ref, {
-            ...group,
-            updatedAt: Timestamp.now(),
-            cycles: [
-              ...group.cycles.filter((c) => c.id !== cycle.id),
-              updatedCycle,
-            ],
-          });
+          const updatedCycles = group.cycles
+            .filter((c) => c.id !== cycle.id)
+            .concat(updatedCycle)
+            .sort((a, b) => a.from.toMillis() - b.from.toMillis());
+
+          transaction.update(ref, { ...group, cycles: updatedCycles });
         },
       );
     } catch (e) {
@@ -155,14 +162,16 @@ export class GroupRepository
           if (!doc.exists)
             throw new BadRequestException('Group does not exist');
 
-          const group = doc.data() as Group;
+          const group = doc.data() as GroupFirestore;
           const cycle = group.cycles.find((cycle) => cycle.id === cycleId);
           if (!cycle) throw new BadRequestException('Cycle does not exist');
 
           transaction.update(ref, {
             ...group,
             updatedAt: Timestamp.now(),
-            cycles: group.cycles.filter((c) => c.id !== cycle.id),
+            cycles: group.cycles
+              .filter((c) => c.id !== cycle.id)
+              .sort((a, b) => a.from.toMillis() - b.from.toMillis()),
             // cycles: [...group.cycles, { ...cycle, deletedAt: Timestamp.now() }],
           });
         },
@@ -181,29 +190,30 @@ export class GroupRepository
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Group {
-    const data = snapshot.data();
+    const data = snapshot.data() as GroupFirestore;
 
     return {
       id: snapshot.id,
       name: data.name,
       ownerId: data.ownerId,
       membersIds: data.membersIds,
-      createdAt: (data.createdAt as Timestamp).toDate(),
-      updatedAt: (data.updatedAt as Timestamp).toDate(),
-      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
-      cycles: (data.cycles ?? []).map((cycle: any) => ({
-        id: cycle.id,
-        name: cycle.name,
-        description: cycle.description || null,
-        from: (cycle.from as Timestamp).toDate(),
-        to: (cycle.to as Timestamp).toDate(),
-        createdAt: (cycle.createdAt as Timestamp).toDate(),
-        updatedAt: (cycle.updatedAt as Timestamp).toDate(),
-        weeks: this.commonService.date.weeks(
-          cycle.from.toDate(),
-          cycle.to.toDate(),
-        ),
-      })),
+      createdAt: data.createdAt.toDate(),
+      updatedAt: data.updatedAt.toDate(),
+      deletedAt: data.deletedAt ? data.deletedAt.toDate() : null,
+      cycles: data.cycles
+        .map((c) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description || null,
+          from: c.from.toDate(),
+          to: c.to.toDate(),
+          rootComponentsIds: c.rootComponentsIds || [],
+          leafComponentsIds: c.leafComponentsIds || [],
+          createdAt: c.createdAt.toDate(),
+          updatedAt: c.updatedAt.toDate(),
+          weeks: this.commonService.date.weeks(c.from.toDate(), c.to.toDate()),
+        }))
+        .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds()),
     };
   }
 }

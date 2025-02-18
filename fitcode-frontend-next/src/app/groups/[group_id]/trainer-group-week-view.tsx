@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const commonService = CommonService.instance;
 
@@ -21,8 +22,9 @@ export default function TrainerWeekView() {
     token,
     components,
     cycle,
-    trainings,
-    setFilteredTrainings,
+    filteredTrainings,
+    training: selectedTraining,
+    setTraining,
     setTrainings,
     setDateFrom,
     setDateTo,
@@ -94,7 +96,7 @@ export default function TrainerWeekView() {
         >
           {weeks[index].map(({ date }, i) => {
             const day = dayjs(date);
-            const filtered = trainings.filter((t) =>
+            const filtered = filteredTrainings.filter((t) =>
               commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to))
             );
 
@@ -130,7 +132,6 @@ export default function TrainerWeekView() {
                         training={training}
                         updateTraining={async (training, input) => {
                           if (!cycle) return;
-                          if (!Object.keys(input).length) return;
 
                           await handleApiRequest(
                             router,
@@ -146,17 +147,16 @@ export default function TrainerWeekView() {
                                 components
                               );
 
-                              setFilteredTrainings((prev) =>
-                                prev.map((t) =>
-                                  t.id === training.id ? mapped : t
-                                )
-                              );
+                              if (training.id === selectedTraining?.id)
+                                setTraining(mapped);
 
                               setTrainings((prev) =>
                                 prev.map((t) =>
                                   t.id === training.id ? mapped : t
                                 )
                               );
+
+                              toast.success('Training updated successfully');
                             },
                             undefined,
                             'Error when updating training'

@@ -167,52 +167,50 @@ export default function AthleteTrainingExerciseCard(
           </Typography>
 
           <CardContent>
-            {component.supersets
-              .sort((a, b) => a.order - b.order)
-              .map((superset, i) => (
-                <Grid2 size={{ xs: 12 }} key={i}>
-                  <Card
-                    sx={{
-                      borderRadius: 2,
-                      boxShadow: 1,
-                      borderLeft: `4px solid ${superset.color}`,
-                      mb: 2,
-                    }}
-                  >
-                    <CardContent sx={{ fontWeight: 'bold', mb: 0 }}>
-                      {Object.values(superset.exercises).map((exercise) => {
-                        const options = getOptions(exercise);
+            {component.supersets.map((superset, i) => (
+              <Grid2 size={{ xs: 12 }} key={i}>
+                <Card
+                  sx={{
+                    borderRadius: 2,
+                    boxShadow: 1,
+                    borderLeft: `4px solid ${superset.color}`,
+                    mb: 2,
+                  }}
+                >
+                  <CardContent sx={{ fontWeight: 'bold', mb: 0 }}>
+                    {Object.values(superset.exercises).map((exercise) => {
+                      const options = getOptions(exercise);
 
-                        return (
-                          <Grid2
-                            container
-                            spacing={2}
-                            key={exercise.id}
-                            sx={{ mb: 1 }}
-                          >
-                            <Grid2 size={{ xs: 12, sm: 4 }}>
-                              <Card sx={{ borderRadius: 2, boxShadow: 0 }}>
-                                <CardContent>
-                                  <Avatar
-                                    sx={{
-                                      width: 60,
-                                      height: 60,
-                                      margin: 'auto',
-                                      backgroundColor: exercise.color,
-                                    }}
-                                  >
-                                    <FitnessCenter />
-                                  </Avatar>
-                                  <Typography
-                                    variant="h6"
-                                    align="center"
-                                    sx={{ marginTop: 1, fontWeight: 'bold' }}
-                                  >
-                                    {exercise.exercise?.name ||
-                                      'Unnamed Exercise'}
-                                  </Typography>
+                      return (
+                        <Grid2
+                          container
+                          spacing={2}
+                          key={exercise.id}
+                          sx={{ mb: 1 }}
+                        >
+                          <Grid2 size={{ xs: 12, sm: 4 }}>
+                            <Card sx={{ borderRadius: 2, boxShadow: 0 }}>
+                              <CardContent>
+                                <Avatar
+                                  sx={{
+                                    width: 60,
+                                    height: 60,
+                                    margin: 'auto',
+                                    backgroundColor: exercise.color,
+                                  }}
+                                >
+                                  <FitnessCenter />
+                                </Avatar>
+                                <Typography
+                                  variant="h6"
+                                  align="center"
+                                  sx={{ marginTop: 1, fontWeight: 'bold' }}
+                                >
+                                  {exercise.exercise?.name ||
+                                    'Unnamed Exercise'}
+                                </Typography>
 
-                                  {/*<Typography
+                                {/*<Typography
                                     variant="body2"
                                     align="center"
                                     sx={{ color: 'text.secondary' }}
@@ -237,99 +235,95 @@ export default function AthleteTrainingExerciseCard(
                                   >
                                     Effort: {exercise.meta.effort || 'N/A'}
                                   </Typography>*/}
-                                </CardContent>
-                              </Card>
-                            </Grid2>
+                              </CardContent>
+                            </Card>
+                          </Grid2>
 
-                            <Grid2
-                              container
-                              size={{ xs: 12, sm: 8 }}
-                              spacing={1}
-                            >
-                              {Array.from({ length: exercise.meta.sets }).map(
-                                (_, setIndex) => (
-                                  <Grid2
-                                    container
-                                    size={{ xs: 12 }}
-                                    key={setIndex}
-                                    spacing={0}
-                                  >
-                                    <Grid2 size={{ xs: 12, sm: 6 }}>
-                                      {/* Set Type Dropdown (Reps/Distance/Time/VO2) */}
-                                      <FormControl fullWidth>
-                                        <InputLabel>
-                                          {options.label[0].toUpperCase() +
-                                            options.label.slice(1)}
-                                        </InputLabel>
-                                        <Select
-                                          value={
-                                            setValues[exercise.id]?.[setIndex]
-                                              ?.setValue || ''
-                                          }
-                                          onChange={(e) =>
-                                            handleSetValueChange(
-                                              exercise.id,
-                                              setIndex,
-                                              e.target.value as string,
-                                              'setValue'
-                                            )
-                                          }
-                                          label={options.label}
-                                        >
-                                          {options.values?.map((value) => (
-                                            <MenuItem key={value} value={value}>
-                                              {options.format(value)}
-                                            </MenuItem>
-                                          ))}
-                                        </Select>
-                                      </FormControl>
-                                    </Grid2>
-
-                                    <Grid2 size={{ xs: 12, sm: 6 }}>
-                                      {/* Workload Value TextField */}
-                                      <TextField
-                                        fullWidth
-                                        label={exercise.meta.workloadType.toUpperCase()}
-                                        type="number"
+                          <Grid2 container size={{ xs: 12, sm: 8 }} spacing={1}>
+                            {Array.from({ length: exercise.meta.sets }).map(
+                              (_, setIndex) => (
+                                <Grid2
+                                  container
+                                  size={{ xs: 12 }}
+                                  key={setIndex}
+                                  spacing={0}
+                                >
+                                  <Grid2 size={{ xs: 12, sm: 6 }}>
+                                    {/* Set Type Dropdown (Reps/Distance/Time/VO2) */}
+                                    <FormControl fullWidth>
+                                      <InputLabel>
+                                        {options.label[0].toUpperCase() +
+                                          options.label.slice(1)}
+                                      </InputLabel>
+                                      <Select
                                         value={
                                           setValues[exercise.id]?.[setIndex]
-                                            ?.workloadValue || ''
+                                            ?.setValue || ''
                                         }
                                         onChange={(e) =>
                                           handleSetValueChange(
                                             exercise.id,
                                             setIndex,
-                                            e.target.value,
-                                            'workloadValue'
+                                            e.target.value as string,
+                                            'setValue'
                                           )
                                         }
-                                      />
-                                    </Grid2>
+                                        label={options.label}
+                                      >
+                                        {options.values?.map((value) => (
+                                          <MenuItem key={value} value={value}>
+                                            {options.format(value)}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </FormControl>
                                   </Grid2>
-                                )
-                              )}
 
-                              <Grid2 size={{ xs: 12 }}>
-                                <Button
-                                  fullWidth
-                                  variant="contained"
-                                  startIcon={<FitnessCenter />}
-                                  onClick={() =>
-                                    handleSaveSets(component.id, i, exercise.id)
-                                  }
-                                  sx={{ mb: 2 }}
-                                >
-                                  Save Sets
-                                </Button>
-                              </Grid2>
+                                  <Grid2 size={{ xs: 12, sm: 6 }}>
+                                    {/* Workload Value TextField */}
+                                    <TextField
+                                      fullWidth
+                                      label={exercise.meta.workloadType.toUpperCase()}
+                                      type="number"
+                                      value={
+                                        setValues[exercise.id]?.[setIndex]
+                                          ?.workloadValue || ''
+                                      }
+                                      onChange={(e) =>
+                                        handleSetValueChange(
+                                          exercise.id,
+                                          setIndex,
+                                          e.target.value,
+                                          'workloadValue'
+                                        )
+                                      }
+                                    />
+                                  </Grid2>
+                                </Grid2>
+                              )
+                            )}
+
+                            <Grid2 size={{ xs: 12 }}>
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<FitnessCenter />}
+                                onClick={() =>
+                                  handleSaveSets(component.id, i, exercise.id)
+                                }
+                                sx={{ mb: 2 }}
+                              >
+                                Save Sets
+                              </Button>
                             </Grid2>
                           </Grid2>
-                        );
-                      })}
-                    </CardContent>
-                  </Card>
-                </Grid2>
-              ))}
+                        </Grid2>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              </Grid2>
+            ))}
           </CardContent>
         </Card>
       </Grid2>

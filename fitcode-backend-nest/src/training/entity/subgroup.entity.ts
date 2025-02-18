@@ -1,10 +1,15 @@
-import { IsNotEmpty, IsObject, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { BaseEntity } from '../../common/entity/base.entity';
-import { TrainingComponent } from './training-component.entity';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsObject,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { IdEntity } from 'src/common/entity/id.entity';
+import { Superset } from './superset.entity';
 
-export class Subgroup extends BaseEntity {
+export class Subgroup extends IdEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -17,11 +22,9 @@ export class Subgroup extends BaseEntity {
   @Expose()
   membersIds: string[]; // all members of the sub-training (at least 1)
 
-  @IsObject()
+  @ValidateNested({ each: true })
+  @Type(() => Superset)
   @ApiProperty()
   @Expose()
-  components: {
-    // separate training plan, initially copied from parent training
-    [componentId: string]: TrainingComponent;
-  };
+  supersets: Superset[];
 }

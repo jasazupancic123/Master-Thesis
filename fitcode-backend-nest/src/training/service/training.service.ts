@@ -6,18 +6,13 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  FieldPath,
-  Query,
-  Timestamp,
-  Transaction,
-} from 'firebase-admin/firestore';
-import { Training } from '../entity/training.entity';
-import { ExerciseService } from '../../exercise/service/exercise.service';
-import { Filter, FindManyOptions } from '../../common/type/orm.type';
-import { GroupService } from '../../group/service/group.service';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { TrainingRepository } from '../repository/training.repository';
+import { isAfter, isBefore } from 'date-fns';
+import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
+import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+import { CommonService } from 'src/common/service/common.service';
+import { Component } from 'src/component/entity/component.entity';
+import { UserService } from 'src/user/service/user.service';
+import { User } from '../../common/type/firebase-auth.type';
 import {
   SubgroupRef,
   TrainingComponentRef,
@@ -26,34 +21,22 @@ import {
   TrainingSupersetRef,
   UserWorkloadExerciseRef,
 } from '../../common/type/firebase-firestore.type';
-import {
-  CreateTraining,
-  MappedTraining,
-  UpdateTraining,
-} from '../type/training.type';
-import { User } from '../../common/type/firebase-auth.type';
+import { Filter, FindManyOptions } from '../../common/type/orm.type';
+import { Wrapper } from '../../common/type/wrapper.type';
+import { ExerciseService } from '../../exercise/service/exercise.service';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Group } from '../../group/entity/group.entity';
-import { UserWorkloadService } from './user-workload.service';
-import { isAfter, isBefore } from 'date-fns';
-import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
-import { Component } from 'src/component/entity/component.entity';
-import { CommonService } from 'src/common/service/common.service';
+import { GroupService } from '../../group/service/group.service';
+import { ExerciseMeta } from '../entity/exercise-meta.entity';
+import { SetData } from '../entity/set-data';
+import { Subgroup } from '../entity/subgroup.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { UserService } from 'src/user/service/user.service';
+import { Training } from '../entity/training.entity';
+import { TrainingRepository } from '../repository/training.repository';
+import { CreateTraining, UpdateTraining } from '../type/training.type';
 import { SubgroupService } from './subgroup.service';
 import { TrainingPlanService } from './training-plan.service';
-import { UpdateTrainingComponent } from '../type/training-component.type';
-import { Superset } from '../entity/superset.entity';
-import {
-  CreateTrainingExercise,
-  UpdateTrainingExercise,
-} from '../type/training-exercise.type';
-import { SetData } from '../entity/set-data';
-import { CreateSubgroup, UpdateSubgroup } from '../type/subgroup.type';
-import { Subgroup } from '../entity/subgroup.entity';
-import { ExerciseMeta } from '../entity/exercise-meta.entity';
-import { UserWorkload } from '../entity/user-workload.entity';
+import { UserWorkloadService } from './user-workload.service';
 
 @Injectable()
 export class TrainingService {
@@ -150,38 +133,42 @@ export class TrainingService {
 
     // validate new trainings time and components
     const components = await this.cacheManagerService.getComponents();
-    this.validateTime(input.from, input.to);
-    this.validateComponents(Object.keys(input.components), components);
+    this.validateComponents(input.componentsIds, components);
 
     // check overlap between all other trainings
-    const groupTrainings = await this.getDocsByGroup(group.id);
-    await this.validateOverlap(input.from, input.to, groupTrainings);
+    /* const groupTrainings = await this.getDocsByGroup(group.id);
+    await this.validateOverlap(input.from, input.to, groupTrainings); */
 
     // create training
     const meta = await this.userService.getLastMetas(group.membersIds);
-    const trainingId = await this.trainingRepository.addDoc({
+    const data: Omit<Training, 'id' | 'createdAt' | 'updatedAt'> = {
       groupId: group.id,
-      ownerId: user.uid,
       cycleId: input.cycleId,
-      membersIds: group.membersIds,
+      ownerId: user.uid,
       from: input.from,
       to: input.to,
-      components: input.components,
+      membersIds: group.membersIds,
       meta,
-    });
+      components: input.componentsIds.map((id) => ({
+        id,
+        color: this.commonService.color.random(),
+        from: new Date(),
+        to: new Date(),
+        subgroups: [],
+        supersets: [
+          {
+            color: this.commonService.color.random(),
+            exercises: [],
+          },
+        ],
+      })),
+    };
+
+    const trainingId = await this.trainingRepository.addDoc(data);
 
     return {
+      ...data,
       id: trainingId,
-      groupId: group.id,
-      cycleId: input.cycleId,
-      ownerId: user.uid,
-      membersIds: group.membersIds,
-      copiedFromId: null,
-      from: input.from,
-      to: input.to,
-      components: input.components,
-      meta,
-      subgroups: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -199,14 +186,16 @@ export class TrainingService {
     input: UpdateTraining,
   ): Promise<Training> {
     this.logger.log(
-      `User ${user.uid} is updating training: ${JSON.stringify(input)}`,
+      `User ${user.uid} is updating training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
     // find training
     const training = await this.findOneOrFail(user, ref);
 
+    // TODO - validate whole training
+
     // validate training times
-    if (input.from || input.to) {
+    /* if (input.from || input.to) {
       const from = input.from || training.from;
       const to = input.to || training.to;
       const trainings = await this.getDocsByGroup(training.groupId);
@@ -217,9 +206,9 @@ export class TrainingService {
         to,
         trainings.filter((t) => t.id !== training.id),
       );
-    }
+    } */
 
-    // add / remove members from training (and its subgroups) and calculate workloads if needed
+    /* // add / remove members from training (and its subgroups) and calculate workloads if needed
     if (input.membersIds) {
       const futureTrainings = await this.getDocs((query) =>
         query.where('from', '>=', Timestamp.now()),
@@ -250,18 +239,17 @@ export class TrainingService {
           transaction.update(trainingRef, input);
         },
       );
-    } else await this.trainingRepository.updateDoc(ref.trainingId, input);
+    } else await this.trainingRepository.updateDoc(ref.trainingId, input); */
 
-    return {
-      ...training,
-      ...(input.components && { from: input.components }),
-      ...(input.membersIds && { from: input.membersIds }),
-      ...(input.from && { from: input.from }),
-      ...(input.to && { from: input.to }),
-    };
+    if (input.components.length === 0)
+      // delete training
+      await this.trainingRepository.deleteDoc(ref.trainingId);
+    else await this.trainingRepository.updateDoc(ref.trainingId, input);
+
+    return { ...training, ...input };
   }
 
-  async remove(user: User, ref: Required<TrainingRef>): Promise<void> {
+  async remove(user: User, ref: TrainingRef): Promise<void> {
     this.logger.log(`User ${user.uid} is removing training ${ref.trainingId}`);
 
     // validate parent references and ownership
@@ -273,7 +261,82 @@ export class TrainingService {
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  async addSubgroup(
+  async updateAthleteWorkload(
+    ref: UserWorkloadExerciseRef,
+    input: SetData[],
+    user: User,
+  ) {
+    this.logger.log(
+      `User ${user.uid} is updating workload sets (exercise ${ref.exerciseId}) for training ${ref.trainingId}: ${JSON.stringify([input])}`,
+    );
+
+    if (user.uid !== ref.userId) throw new UnauthorizedException();
+
+    await this.userWorkloadService.updateSets(ref, input);
+  }
+
+  async addComponents(
+    user: User,
+    ref: TrainingRef,
+    input: string[],
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is adding component to training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    // validate ownership
+    const training = await this.findOneOrFail(user, ref);
+    this.validateTrainer(user);
+    this.validateOwner(user.uid, training);
+
+    // validate input
+    const allComponents = await this.cacheManagerService.getComponents();
+    this.checkValidComponents(input, allComponents);
+    this.checkDuplicateComponents(training.components, input, allComponents);
+
+    // get query for training
+    const [query, updatedTraining] =
+      this.trainingPlanService.getAddComponentsQuery(
+        training,
+        input.map((id) => ({ id, from: null, to: null })),
+      );
+
+    // add components
+    await this.trainingRepository.updateDoc(training.id, query);
+    return updatedTraining;
+  }
+
+  async deleteComponent(
+    ref: TrainingComponentRef,
+    user: User,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is deleting component ${ref.componentId} from training ${ref.trainingId}`,
+    );
+
+    // validate ownership
+    const training = await this.findOneOrFail(user, ref);
+    this.validateTrainer(user);
+    this.validateOwner(user.uid, training);
+
+    // validate input
+    this.validateComponent(training, ref);
+
+    // get query for training
+    const [query, updatedTraining] =
+      this.trainingPlanService.getDeleteComponentQuery(training, ref);
+
+    // delete component
+    if (query.components.length === 0) {
+      // delete doc
+      this.logger.log('No components left, deleting training');
+      await this.trainingRepository.deleteDoc(ref.trainingId);
+    } else await this.trainingRepository.updateDoc(training.id, query);
+
+    return updatedTraining;
+  }
+
+  /* async addSubgroup(
     user: User,
     ref: TrainingRef,
     input: Omit<CreateSubgroup, 'components'>,
@@ -313,7 +376,7 @@ export class TrainingService {
 
   async updateSubgroup(
     user: User,
-    ref: Required<SubgroupRef>,
+    ref: SubgroupRef,
     input: Pick<UpdateSubgroup, 'name'>,
   ): Promise<Training> {
     this.logger.log(
@@ -354,7 +417,7 @@ export class TrainingService {
 
     await this.firebaseService.firestore.runTransaction(async (transaction) => {
       // validate members of each subgroup
-      /* for (const subgroup of input) {
+      for (const subgroup of input) {
         // this.validateTrainingMembers(training, subgroup.membersIds);
 
         // update members workload data
@@ -365,7 +428,7 @@ export class TrainingService {
           subgroup.membersIds,
           [], // subgroup is "alive" only for one training, don't update other trainings
         );
-      } */
+      }
 
       const docRef = this.trainingRepository.doc(ref.trainingId);
       transaction.update(docRef, {
@@ -379,115 +442,8 @@ export class TrainingService {
     return { ...training, subgroups: input } as unknown as Training;
   }
 
-  async addComponents(
-    user: User,
-    ref: SubgroupRef,
-    input: [string, TrainingComponent][], // [componentId, component input][]
-  ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is adding component to training ${ref.trainingId} ${ref.subgroupId ? `for subgroup ${ref.subgroupId}` : ''}: ${JSON.stringify(input)}`,
-    );
-
-    // validate ownership
-    const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
-    this.validateOwner(user.uid, training);
-
-    // find training and subgroup (if provided)
-    let subgroup: Subgroup;
-    if (ref.subgroupId)
-      subgroup = this.subgroupService.findByIdOrFail(ref.subgroupId, training);
-
-    // validate input
-    const allComponents = await this.cacheManagerService.getComponents();
-    const inputComponentIds = input.map(([id]) => id);
-    const existingComponents = subgroup
-      ? subgroup.components
-      : training.components;
-
-    this.checkValidComponents(inputComponentIds, allComponents);
-    this.checkDuplicateComponents(
-      existingComponents,
-      inputComponentIds,
-      allComponents,
-    );
-
-    // get query for training / subgroup training
-    const [query, updatedTraining] =
-      this.trainingPlanService.getAddComponentsQuery(training, ref, input);
-
-    console.log('addComponents query:', query);
-
-    // add components
-    await this.trainingRepository.updateDoc(training.id, query);
-    return updatedTraining;
-  }
-
-  async updateComponent(
-    user: User,
-    ref: TrainingComponentRef & SubgroupRef,
-    input: UpdateTrainingComponent,
-  ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is updating component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
-    );
-
-    // validate ownership
-    const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
-    this.validateOwner(user.uid, training);
-
-    // find training and subgroup (if provided)
-    if (ref.subgroupId)
-      this.subgroupService.findByIdOrFail(ref.subgroupId, training);
-
-    // validate input
-    this.validateComponent(training, ref);
-
-    // get query for training / subgroup training
-    const [query, updatedTraining] =
-      this.trainingPlanService.getUpdateComponentQuery(training, ref, input);
-
-    console.log('updateComponent query:', query);
-
-    // update component
-    await this.trainingRepository.updateDoc(training.id, query);
-    return updatedTraining;
-  }
-
-  async deleteComponent(
-    ref: Required<TrainingComponentRef> & SubgroupRef,
-    user: User,
-  ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is deleting component ${ref.componentId} from training ${ref.trainingId}`,
-    );
-
-    // validate ownership
-    const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
-    this.validateOwner(user.uid, training);
-
-    // find training and subgroup (if provided)
-    if (ref.subgroupId)
-      this.subgroupService.findByIdOrFail(ref.subgroupId, training);
-
-    // validate input
-    this.validateComponent(training, ref);
-
-    // get query for training / subgroup training
-    const [query, updatedTraining] =
-      this.trainingPlanService.getDeleteComponentQuery(training, ref);
-
-    console.log('deleteComponent query:', query);
-
-    // delete component
-    await this.trainingRepository.updateDoc(training.id, query);
-    return updatedTraining;
-  }
-
   async addSupersets(
-    ref: Required<TrainingComponentRef> & SubgroupRef,
+    ref: TrainingComponentRef & SubgroupRef,
     input: Omit<Superset, 'exercises'>[],
     user: User,
   ): Promise<Training> {
@@ -519,7 +475,7 @@ export class TrainingService {
   }
 
   async updateSuperset(
-    ref: Required<TrainingSupersetRef> & SubgroupRef,
+    ref: TrainingSupersetRef & SubgroupRef,
     input: Partial<Superset>,
     user: User,
   ): Promise<Training> {
@@ -550,7 +506,7 @@ export class TrainingService {
   }
 
   async deleteSuperset(
-    ref: Required<TrainingSupersetRef> & SubgroupRef,
+    ref: TrainingSupersetRef & SubgroupRef,
     user: User,
   ): Promise<Training> {
     const index = ref.superset;
@@ -581,7 +537,7 @@ export class TrainingService {
   }
 
   async addExercises(
-    ref: Required<TrainingSupersetRef> & SubgroupRef,
+    ref: TrainingSupersetRef & SubgroupRef,
     input: [string, CreateTrainingExercise][], // [exerciseId, exercise][]
     user: User,
   ): Promise<Training> {
@@ -687,7 +643,7 @@ export class TrainingService {
   }
 
   async updateExercise(
-    ref: Required<TrainingExerciseRef> & SubgroupRef,
+    ref: TrainingExerciseRef & SubgroupRef,
     input: Partial<UpdateTrainingExercise>,
     user: User,
   ): Promise<Training> {
@@ -751,11 +707,9 @@ export class TrainingService {
           input.meta?.workloadValue &&
           input.meta.workloadValue !== oldMeta.workloadValue;
 
-        console.log(isWorkloadTypeChanged, isWorkloadValueChanged);
-
         // if nothing of workload type or workload value changed, don't update workloads
         if (isWorkloadTypeChanged || isWorkloadValueChanged)
-          await this.userWorkloadService.updateByTraining(
+          this.userWorkloadService.updateByTraining(
             transaction,
             ref,
             membersData,
@@ -771,7 +725,7 @@ export class TrainingService {
   }
 
   async deleteExercise(
-    ref: Required<TrainingExerciseRef> & SubgroupRef,
+    ref: TrainingExerciseRef & SubgroupRef,
     user: User,
   ): Promise<Training> {
     this.logger.log(
@@ -801,21 +755,7 @@ export class TrainingService {
     // delete exercise
     await this.trainingRepository.updateDoc(training.id, query);
     return updatedTraining;
-  }
-
-  async updateAthleteWorkload(
-    ref: Required<UserWorkloadExerciseRef>,
-    input: SetData[],
-    user: User,
-  ) {
-    this.logger.log(
-      `User ${user.uid} is updating workload sets (exercise ${ref.exerciseId}) for training ${ref.trainingId}: ${JSON.stringify([input])}`,
-    );
-
-    if (user.uid !== ref.userId) throw new UnauthorizedException();
-
-    await this.userWorkloadService.updateSets(ref, input);
-  }
+  } */
 
   private filter(query: Query, filter: Filter<Training>) {
     if (filter.ids?.length)
@@ -870,7 +810,7 @@ export class TrainingService {
     return query;
   }
 
-  private async updateMembers(
+  /* private async updateMembers(
     transaction: Transaction,
     training: Training,
     ref: SubgroupRef,
@@ -924,7 +864,7 @@ export class TrainingService {
         });
       }),
     );
-  }
+  } */
 
   /**
    * Return all exercises from training.
@@ -954,7 +894,7 @@ export class TrainingService {
    * // ]
    * ```
    */
-  private getAllTrainingExercises(training: Training): {
+  /* private getAllTrainingExercises(training: Training): {
     componentId: string;
     superset: number;
     exerciseId: string;
@@ -1000,7 +940,7 @@ export class TrainingService {
     }
 
     return result;
-  }
+  } */
 
   private isAuthorized(user: User, training: Training): boolean {
     return (
@@ -1066,14 +1006,14 @@ export class TrainingService {
   }
 
   private checkDuplicateComponents(
-    existingComponents: { [componentId: string]: TrainingComponent },
+    existingComponents: TrainingComponent[],
     inputComponentIds: string[],
     allComponents: Component[],
   ) {
     // components must be unique
     const duplicates: Component[] = [];
     for (const id of inputComponentIds)
-      if (Object.keys(existingComponents).find((cId) => cId === id))
+      if (existingComponents.find((c) => c.id === id))
         duplicates.push(allComponents.find((c) => c.id === id));
 
     if (duplicates.length)
@@ -1082,31 +1022,22 @@ export class TrainingService {
       );
   }
 
-  private validateComponent(
-    training: Training,
-    ref: Required<TrainingComponentRef>,
-  ) {
-    if (!Object.keys(training.components).includes(ref.componentId))
+  private validateComponent(training: Training, ref: TrainingComponentRef) {
+    if (!training.components.find((c) => c.id === ref.componentId))
       throw new BadRequestException('Training component not found');
   }
 
-  private validateSuperset(
-    training: Training,
-    ref: Required<TrainingSupersetRef>,
-  ) {
+  /* private validateSuperset(training: Training, ref: TrainingSupersetRef) {
     const supersets = training.components[ref.componentId].supersets || [];
     if (ref.superset < 0 || ref.superset >= supersets.length)
       throw new BadRequestException('Superset index out of bounds');
   }
 
-  private validateExercise(
-    training: Training,
-    ref: Required<TrainingExerciseRef>,
-  ) {
+  private validateExercise(training: Training, ref: TrainingExerciseRef) {
     const supersets = training.components[ref.componentId].supersets || [];
     const superset = supersets[ref.superset];
     const exercises = superset.exercises || {};
     if (!exercises[ref.exerciseId])
       throw new BadRequestException('Exercise not found in superset');
-  }
+  } */
 }

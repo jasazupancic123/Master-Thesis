@@ -1,6 +1,4 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { REDIRECT_TO_SIGN_IN } from '@/common/error/redirect.error';
 import { GroupProvider } from '@/context/group-provider';
 import { ComponentController } from '@/controller/component/component.controller';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';

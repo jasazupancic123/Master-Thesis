@@ -6,6 +6,8 @@ export type Cycle = BaseEntity &
     name: string;
     description?: string;
     weeks: Week[][];
+    rootComponentsIds: string[];
+    leafComponentsIds: string[];
   };
 
 export interface Week {
