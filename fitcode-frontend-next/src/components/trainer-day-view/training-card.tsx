@@ -1,9 +1,9 @@
+import { COLORS } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
+import { useGroup } from '@/context/group-provider';
 import { Box, Typography } from '@mui/material';
 import { TrainingCardProps } from './props';
 import TrainingComponentCard from './training-component';
-import { COLORS } from '@/common/constant/color.constant';
-import { useGroup } from '@/context/group-provider';
 
 const commonService = CommonService.instance;
 
@@ -46,12 +46,10 @@ export default function TrainingCard(props: TrainingCardProps) {
             {commonService.date.format(day.date)}
           </Typography>
 
-          {training && (
-            <Typography variant="caption" sx={{ mx: 1 }}>
-              {commonService.date.formatTime(training.from)}:
-              {commonService.date.formatTime(training.to)}
-            </Typography>
-          )}
+          <Typography variant="caption" sx={{ mx: 1 }}>
+            {commonService.date.formatTime(training.from)}:
+            {commonService.date.formatTime(training.to)}
+          </Typography>
         </Box>
       </Box>
 
@@ -67,15 +65,13 @@ export default function TrainingCard(props: TrainingCardProps) {
       >
         {training && (
           <>
-            {Object.values(training.components || {})?.map(
-              (trainingComponent, i) => (
-                <TrainingComponentCard
-                  key={i}
-                  training={training}
-                  trainingComponent={trainingComponent}
-                />
-              )
-            )}
+            {training.components.map((trainingComponent, i) => (
+              <TrainingComponentCard
+                key={i}
+                training={training}
+                trainingComponent={trainingComponent}
+              />
+            ))}
           </>
         )}
       </Box>

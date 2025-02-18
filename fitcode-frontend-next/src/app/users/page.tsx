@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import Box from '@mui/material/Box';
+import { ALL_LEVELS, ALL_ROLES } from '@/common/constant/user.constant';
+import { CustomClaims } from '@/controller/user/type/custom-claims.type';
+import { User } from '@/controller/user/type/user.type';
+import CancelIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Close';
-import { useFetch } from '@/hook/use-fetch';
+import Box from '@mui/material/Box';
 import {
   DataGrid,
   GridActionsCellItem,
@@ -15,15 +16,12 @@ import {
   GridRowModes,
   GridRowModesModel,
 } from '@mui/x-data-grid';
-import { ALL_LEVELS, ALL_ROLES } from '@/common/constant/user.constant';
+import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { User } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { CustomClaims } from '@/controller/user/type/custom-claims.type';
 
 export default function Page() {
-  const users = useFetch<User[]>('user');
+  // const users = useFetch<User[]>('user');
+  const users: User[] = [];
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
   async function updateUserClaims(uid: string, claims: Partial<CustomClaims>) {
@@ -34,8 +32,6 @@ export default function Page() {
       toast.error(e.message);
     }
   }
-
-  if (users.loading) return <h2>Loading...</h2>;
 
   const columns: GridColDef<User>[] = [
     { field: 'uid', headerName: 'ID', width: 280 },
@@ -144,7 +140,7 @@ export default function Page() {
       >
         <DataGrid
           getRowId={(row) => row.uid}
-          rows={users.data || []}
+          rows={users}
           columns={columns as GridColDef[]}
           editMode="row"
           rowModesModel={rowModesModel}
@@ -158,12 +154,6 @@ export default function Page() {
           processRowUpdate={async (newRow: GridRowModel<User>) => {
             const updatedRow = { ...newRow, isNew: false };
             const userId = updatedRow.uid;
-
-            users.setData(
-              (users.data || []).map((user) =>
-                user.uid === userId ? updatedRow : user
-              )
-            );
             await updateUserClaims(userId, updatedRow.customClaims);
             return updatedRow;
           }}

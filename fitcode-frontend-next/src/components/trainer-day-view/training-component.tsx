@@ -1,18 +1,18 @@
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
 import { Method } from '@/controller/component/type/method.type';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useState } from 'react';
+import MyModal from '../modal';
 import SelectInput from '../select-input';
+import AddExerciseForm from './add-exercise-form';
 import { AFTER_SETS, MAIN_SETS, METHODS } from './constant';
 import { TrainingComponentProps } from './props';
 import Supersets from './supersets';
-import { useScreenSize } from '@/context/screen-size-provider';
-import MyModal from '../modal';
-import AddExerciseForm from './add-exercise-form';
 
 const commonService = CommonService.instance;
 
@@ -22,7 +22,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const {
     training: selectedTraining,
     setTraining,
-    components,
     component,
     setComponent,
   } = useGroup();
@@ -105,6 +104,16 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             {trainingComponent.component.name}
                           </Typography>
 
+                          <Typography variant="caption" ml={2}>
+                            {commonService.date.formatTime(
+                              trainingComponent.from
+                            )}{' '}
+                            -{' '}
+                            {commonService.date.formatTime(
+                              trainingComponent.to
+                            )}
+                          </Typography>
+
                           {screenSize.isMobile && (
                             <IconButton
                               onClick={() => {
@@ -117,11 +126,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                   setComponent(undefined);
                                 } else {
                                   setTraining(training);
-                                  setComponent(() =>
-                                    components.find(
-                                      (c) => c.id === trainingComponent!.id
-                                    )
-                                  );
+                                  setComponent(trainingComponent);
                                 }
                               }}
                             >
@@ -167,6 +172,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             const mainSet = MAIN_SETS.find(
                               (g) => g.id === mainSetId
                             )!;
+
                             setMainSet(mainSet);
                           }}
                         />
@@ -220,9 +226,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                         setComponent(undefined);
                       } else {
                         setTraining(training);
-                        setComponent(() =>
-                          components.find((c) => c.id === trainingComponent!.id)
-                        );
+                        setComponent(trainingComponent);
                       }
                     }}
                   >
@@ -240,26 +244,14 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             </Stack>
           </Box>
 
-          <Box
-            bgcolor="background.paper"
-            p={2}
-            sx={{
-              display:
-                trainingComponent &&
-                component &&
-                trainingComponent.id === component.id &&
-                training.id === selectedTraining?.id
-                  ? undefined
-                  : 'none',
-            }}
-          >
-            {/* Supersets */}
-            <Supersets
-              trainingComponent={trainingComponent}
-              openAddExerciseModal={openAddExerciseModal}
-              setOpenAddExerciseModal={setOpenAddExerciseModal}
-            />
-          </Box>
+          {trainingComponent &&
+            component &&
+            trainingComponent.id === component.id &&
+            training.id === selectedTraining?.id && (
+              <Box bgcolor="background.paper" p={2}>
+                <Supersets />
+              </Box>
+            )}
         </Box>
       </>
     </Box>

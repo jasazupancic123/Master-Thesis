@@ -1,10 +1,9 @@
-import { ValidateNested } from 'class-validator';
-import { Expose, Type } from 'class-transformer';
-import { SetData } from '../entity/set-data';
 import { ApiProperty } from '@nestjs/swagger';
-import { SubgroupIdDto } from 'src/common/dto/subgroup-id.dto';
+import { Expose, Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+import { SetData } from '../entity/set-data';
 
-export class UpdateAthleteSetDataDto extends SubgroupIdDto {
+export class UpdateAthleteSetDataDto {
   @ValidateNested({ each: true })
   @Type(() => SetData)
   @ApiProperty()

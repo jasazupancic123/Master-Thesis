@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
-import { useScreenSize } from '@/context/screen-size-provider';
-import { TrainingService } from '@/controller/training/training.service';
-import { sub } from 'date-fns';
+import { useEffect, useState } from 'react';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -16,7 +14,7 @@ interface TrainingMembersProps {
 export default function TrainingMembers(props: TrainingMembersProps) {
   const screenSize = useScreenSize();
   const { isSticky } = props;
-  const { group, users, training, setSelectedSubgroup } = useGroup();
+  const { group, users, training, setSelectedSubgroup, component } = useGroup();
   const members = users.filter((user) => group.membersIds.includes(user.uid));
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
@@ -27,9 +25,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     if (!training) return 0; // If no training data, return original order
 
     const getSubgroupIndex = (uid: string) =>
-      Object.values(training.subgroups).findIndex((subgroup: any) =>
-        subgroup.membersIds.includes(uid)
-      );
+      training.components
+        .flatMap((c) => c.subgroups)
+        .findIndex((s) => s.membersIds.includes(uid));
 
     const subgroupIndexA = getSubgroupIndex(a.uid);
     const subgroupIndexB = getSubgroupIndex(b.uid);
@@ -45,23 +43,25 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   useEffect(() => {
     if (!training) return;
 
-    const subgroups = Object.values(training.subgroups || {});
+    const subgroups = training.components.flatMap((c) => c.subgroups);
     const availableMembers = members.filter(
       (member) =>
         !subgroups.some((subgroup: any) =>
           subgroup.membersIds.includes(member.uid)
         )
     );
+
     const defaultSubgroup: Subgroup = {
       id: 'default',
       name: 'Default',
       membersIds: availableMembers.map((user) => user.uid),
-      components: {},
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      supersets: [],
     };
+
     setSubgroups([defaultSubgroup, ...subgroups]);
   }, [training]);
+
+  if (!component) return null;
 
   return (
     <>

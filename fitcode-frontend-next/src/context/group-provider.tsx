@@ -11,6 +11,7 @@ import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -40,9 +41,10 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [cycle, setCycle] = useState<Cycle | undefined>(
     group.cycles[0] || undefined
   );
-  const [component, setComponent] = useState<Component | undefined>(undefined);
+  const [component, setComponent] = useState<TrainingComponent | undefined>(
+    undefined
+  );
   const [training, setTraining] = useState<Training | undefined>(undefined);
-  const [subgroup, setSubgroup] = useState<Subgroup | undefined>(undefined);
   const [dateFrom, setDateFrom] = useState(dayjs().startOf('day'));
   const [dateTo, setDateTo] = useState(dayjs().endOf('day'));
 
@@ -84,8 +86,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setComponent,
     training,
     setTraining,
-    subgroup,
-    setSubgroup,
     dateFrom,
     setDateFrom,
     dateTo,

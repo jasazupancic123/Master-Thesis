@@ -17,7 +17,7 @@ import { useTheme } from '@mui/material/styles';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { handleRemoveMember, handleUpdateMembers } from './state';
+import { handleUpdateMembers } from './state';
 
 export default function GroupMembersPage() {
   const { token, group, setGroup, users, groups } = useGroup();

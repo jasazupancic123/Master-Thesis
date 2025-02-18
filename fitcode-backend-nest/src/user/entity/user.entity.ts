@@ -1,16 +1,9 @@
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
+import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { BaseEntity } from '../../common/entity/base.entity';
 import { CustomClaims, User } from '../../common/type/firebase-auth.type';
 import { Group } from '../../group/entity/group.entity';
-import { UserMeta } from './user-meta.entity';
-import { BaseEntity } from '../../common/entity/base.entity';
 import { SportLevel } from '../enum/sport-level.enum';
 
 export class UserEntity extends BaseEntity {

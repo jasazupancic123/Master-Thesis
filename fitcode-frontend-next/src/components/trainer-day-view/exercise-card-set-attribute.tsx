@@ -1,12 +1,5 @@
 import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
-import {
-  Stack,
-  FormControl,
-  Select,
-  MenuItem,
-  TextField,
-  Box,
-} from '@mui/material';
+import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
 
 const sx = {
   border: 'none',
