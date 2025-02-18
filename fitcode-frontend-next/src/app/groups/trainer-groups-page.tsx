@@ -27,7 +27,7 @@ export default function TrainerGroupsPage(props: GroupPageProps) {
           borderTopRightRadius: '20px',
           borderBottomLeftRadius: '20px',
           borderBottomRightRadius: '20px',
-          pb: 3,
+          pb: 1,
         }}
       >
         <GroupDateFilterButtonGroup filter={'day'} setFilter={() => {}} />

@@ -13,6 +13,7 @@ import {
 } from '@/controller/training/type/training-plan.type';
 import { Update } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
@@ -52,6 +53,8 @@ export default function Supersets() {
   async function onDragEnd({ destination, draggableId }: any) {
     if (!destination || !training || !component) return;
 
+    console.log('on drag end');
+    console.log('destination', destination, 'draggableId', draggableId);
     if ((destination.droppableId as string).endsWith('100')) {
       if (supersets.length >= 4)
         return toast.error('You can only have 4 supersets per component');
@@ -108,6 +111,142 @@ export default function Supersets() {
                     mt={2}
                     sx={{ maxHeight: 150, cursor: 'pointer' }}
                   >
+                    <Tooltip title="Delete superset" placement="top">
+                      <Box
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() =>
+                          handleDeleteSuperset(supersets.indexOf(superset))
+                        }
+                      >
+                        <BorderColor color={superset.color || COLOR[i]} />
+                      </Box>
+                    </Tooltip>
+                    <Box>
+                      {Object.values(superset?.exercises || {})?.map(
+                        (exercise, k) => (
+                          <Draggable
+                            key={exercise.id}
+                            draggableId={exercise.id.toString()}
+                            index={k}
+                          >
+                            {(provided, snapshot) => (
+                              <Box
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                position="relative"
+                                bgcolor={
+                                  snapshot.isDragging
+                                    ? '#f0f0f0'
+                                    : 'transparent'
+                                }
+                                p={1}
+                                borderRadius={1}
+                                boxShadow={snapshot.isDragging ? 2 : 0}
+                              >
+                                <Box
+                                  position="absolute"
+                                  top={10}
+                                  left={10}
+                                  display="flex"
+                                  flexDirection="column"
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    color="textSecondary"
+                                  >
+                                    {`${i + 1}${String.fromCharCode(65 + k)}`}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  position="absolute"
+                                  top={5}
+                                  right={5}
+                                  display="flex"
+                                  flexDirection="column"
+                                >
+                                  <Tooltip
+                                    title="Delete exercise"
+                                    placement="left"
+                                  >
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        deleteExercise(
+                                          token,
+                                          {
+                                            trainingId: training.id,
+                                            componentId: component.id,
+                                            superset: i,
+                                            exerciseId: exercise.id,
+                                          },
+                                          {
+                                            router,
+                                            setTraining,
+                                            setTrainings,
+                                            setFilteredTrainings,
+                                            components,
+                                            exercises,
+                                          }
+                                        )
+                                      }
+                                    >
+                                      <CloseIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+
+                                <TrainingExerciseCard
+                                  exercise={exercise}
+                                  onChange={async (meta) => {
+                                    updateExercise(
+                                      token,
+                                      {
+                                        trainingId: training.id,
+                                        componentId: component.id,
+                                        superset: i,
+                                        exerciseId: exercise.id,
+                                        meta: meta as ExerciseMeta,
+                                      },
+                                      {
+                                        router,
+                                        setTraining,
+                                        setTrainings,
+                                        setFilteredTrainings,
+                                        components,
+                                        exercises,
+                                      }
+                                    );
+                                  }}
+                                />
+                              </Box>
+                            )}
+                          </Draggable>
+                        )
+                      )}
+
+                      {provided.placeholder}
+                    </Box>
+                    <Tooltip
+                      title="Delete superset"
+                      placement="bottom"
+                      sx={{ p: 0, m: 0 }}
+                    >
+                      <Box
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() =>
+                          handleDeleteSuperset(supersets.indexOf(superset))
+                        }
+                      >
+                        <BorderColor color={superset.color || COLOR[i]} lower />
+                      </Box>
+                    </Tooltip>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      mt={1}
+                      gap={1}
+                    ></Box>
                     <Typography variant="body2" ml={1}>
                       Drop here to add a new superset
                     </Typography>

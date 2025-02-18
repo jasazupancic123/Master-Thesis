@@ -1,65 +1,75 @@
 'use client';
 
+import { CommonService } from '@/common/service/common.service';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Training } from '@/controller/training/type/training.type';
+import { Component } from '@/controller/component/type/component.type';
 import { Box, Paper } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { addMonths, subMonths } from 'date-fns';
+import dayjs from 'dayjs';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { Calendar, momentLocalizer, ToolbarProps } from 'react-big-calendar';
+import {
+  Calendar,
+  momentLocalizer,
+  NavigateAction,
+  ToolbarProps,
+  View,
+} from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import CalendarDayModal from './calendar-day-modal';
 import CustomToolbar from './custom-toolbar';
 import { CalendarPageProps } from './props';
 import { fetchAthleteTrainings, handleNavigate } from './state';
 import './styles.css';
 import { CalendarEvent } from './type';
 
-const events = [
-  {
-    title: 'Strength Training',
-    start: new Date(2025, 0, 30, 10, 0), // Jan 30, 2025, 10:00 AM
-    end: new Date(2025, 0, 30, 11, 30), // Jan 30, 2025, 11:30 AM
-  },
-  {
-    title: 'Endurance Training',
-    start: new Date(2025, 0, 31, 7, 0), // Jan 31, 2025, 7:00 AM
-    end: new Date(2025, 0, 31, 8, 0), // Jan 31, 2025, 8:00 AM
-  },
-  {
-    title: 'Speed Training',
-    start: new Date(2025, 0, 31, 12, 0), // Jan 31, 2025, 12:00 PM
-    end: new Date(2025, 0, 31, 13, 0), // Jan 31, 2025, 1:00 PM
-  },
-  {
-    title: 'Coordination Training',
-    start: new Date(2025, 0, 28, 12, 0), // Jan 31, 2025, 12:00 PM
-    end: new Date(2025, 0, 28, 13, 0), // Jan 31, 2025, 1:00 PM
-  },
-];
+const commonService = CommonService.instance;
 
 export function CalendarPage(props: CalendarPageProps) {
+  const screenSize = useScreenSize();
   const { token } = props;
 
   const router = useRouter();
   const theme = useTheme();
   const localizer = momentLocalizer(moment);
-  const screenSize = useScreenSize();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [trainings, setTrainings] = useState<CalendarEvent[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+
     fetchAthleteTrainings(
       token,
-      { from: new Date(), to: new Date() },
+      { from: firstDayOfMonth, to: lastDayOfMonth },
       { router }
     ).then((_trainings) => {
+      if (!_trainings) return;
+      const events = _trainings.map((training) => {
+        const componentsIcons = [];
+        for (const component of Object.values(training.components)) {
+          const IconComponent = commonService.navigation.getComponentIcon(
+            (component as any).id
+          );
+          componentsIcons.push(IconComponent);
+        }
+
+        return {
+          title: screenSize.isSmallerThanLaptop
+            ? dayjs(training.from).format('HH:mm')
+            : `${dayjs(training.from).format('HH:mm')}-${dayjs(training.to).format('HH:mm')}`,
+          start: new Date(training.from),
+          end: new Date(training.to),
+          icon: componentsIcons[0],
+        };
+      });
+
       setTrainings(events);
     });
-  }, [token]);
+  }, [token, screenSize.isSmallerThanLaptop, currentDate]);
 
   return (
     <Box
@@ -80,7 +90,7 @@ export function CalendarPage(props: CalendarPageProps) {
         elevation={3}
         sx={{
           width: '90%',
-          height: '75vh',
+          height: '80vh',
           maxWidth: '1200px',
           marginTop: screenSize.isLandscapeMobile ? 1 : 5,
           padding: screenSize.isLandscapeMobile ? 1 : 3,
@@ -99,8 +109,10 @@ export function CalendarPage(props: CalendarPageProps) {
             '--off-range-bg-color': theme.palette.background.default,
             '--btn-text-color': theme.palette.text.primary,
             '--btn-bg-color': theme.palette.primary.dark,
-            '--today-bg-color': theme.palette.primary.dark,
-            '--event-bg-color': theme.palette.info.dark,
+            '--today-bg-color': theme.palette.background.paper,
+            '--event-bg-color': theme.palette.primary.main,
+            '--row-container-height': '25px',
+            '--rbc-event-margin': '0',
           } as React.CSSProperties
         }
       >
@@ -124,21 +136,14 @@ export function CalendarPage(props: CalendarPageProps) {
           views={['month', 'week', 'day']}
           defaultView="month"
           selectable
-          onNavigate={() =>
-            handleNavigate(new Date(), {} as any, '' as any, setCurrentDate)
+          onNavigate={(newDate, view, action) =>
+            handleNavigate(newDate, view, action, setCurrentDate)
           }
-          onSelectEvent={() => setIsModalOpen(true)}
           components={{
             toolbar: CustomToolbar as React.ComponentType<
               ToolbarProps<CalendarEvent, object>
             >,
           }}
-        />
-
-        <CalendarDayModal
-          data={{} as Training}
-          isOpen={isModalOpen}
-          setIsOpen={setIsModalOpen}
         />
       </Paper>
     </Box>

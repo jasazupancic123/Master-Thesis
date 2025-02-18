@@ -45,7 +45,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     undefined
   );
   const [training, setTraining] = useState<Training | undefined>(undefined);
-  const [subgroup, setSubgroup] = useState<Subgroup | undefined>(undefined);
   const [dateFrom, setDateFrom] = useState(dayjs().startOf('day'));
   const [dateTo, setDateTo] = useState(dayjs().endOf('day'));
 
@@ -53,6 +52,11 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(users);
+
+  const [selectedSubgroup, setSelectedSubgroup] = useState<{
+    subgroup: Subgroup | null;
+    index: number;
+  } | null>(null);
 
   // filter trainings every time date changes
   useEffect(() => {
@@ -82,8 +86,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setComponent,
     training,
     setTraining,
-    subgroup,
-    setSubgroup,
     dateFrom,
     setDateFrom,
     dateTo,
@@ -94,6 +96,8 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setFilteredTrainings,
     filteredUsers,
     setFilteredUsers,
+    selectedSubgroup,
+    setSelectedSubgroup,
   };
 
   return (

@@ -39,7 +39,11 @@ const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
         startIcon={<ArrowBack />}
         variant="contained"
         sx={{
-          maxHeight: screenSize.isLandscapeMobile ? 19 : undefined,
+          maxHeight: screenSize.isLandscapeMobile
+            ? 19
+            : screenSize.isMobile
+              ? 25
+              : undefined,
           maxWidth: screenSize.isLandscapeMobile ? 25 : undefined,
         }}
       >
@@ -57,7 +61,11 @@ const CustomToolbar: React.FC<ToolbarProps<CalendarEvent, object>> = ({
         endIcon={<ArrowForward />}
         variant="contained"
         sx={{
-          maxHeight: screenSize.isLandscapeMobile ? 19 : undefined,
+          maxHeight: screenSize.isLandscapeMobile
+            ? 19
+            : screenSize.isMobile
+              ? 25
+              : undefined,
           maxWidth: screenSize.isLandscapeMobile ? 25 : undefined,
         }}
       >

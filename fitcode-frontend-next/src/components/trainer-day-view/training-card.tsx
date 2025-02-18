@@ -1,13 +1,15 @@
+import { COLORS } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
+import { useGroup } from '@/context/group-provider';
 import { Box, Typography } from '@mui/material';
 import { TrainingCardProps } from './props';
-import Subgroups from './subgroups';
 import TrainingComponentCard from './training-component';
 
 const commonService = CommonService.instance;
 
 export default function TrainingCard(props: TrainingCardProps) {
   const { day, training, period } = props;
+  const { training: selectedTraining, selectedSubgroup } = useGroup();
 
   return (
     <Box width="100%">
@@ -28,7 +30,11 @@ export default function TrainingCard(props: TrainingCardProps) {
             p={2}
             mr={1}
             sx={{
-              backgroundColor: 'background.paper',
+              backgroundColor:
+                selectedSubgroup?.subgroup &&
+                selectedTraining?.id === training.id
+                  ? COLORS[(selectedSubgroup.index % COLORS.length) + 1]
+                  : 'background.paper',
               borderTopLeftRadius: 10,
             }}
           />
@@ -57,20 +63,17 @@ export default function TrainingCard(props: TrainingCardProps) {
           mt: 0,
         }}
       >
-        <Typography variant="h6" p={1}>
-          Training ({commonService.date.formatTime(training.from)} -{' '}
-          {commonService.date.formatTime(training.to)})
-        </Typography>
-
-        <Subgroups />
-
-        {training.components.map((trainingComponent, i) => (
-          <TrainingComponentCard
-            key={i}
-            training={training}
-            trainingComponent={trainingComponent}
-          />
-        ))}
+        {training && (
+          <>
+            {training.components.map((trainingComponent, i) => (
+              <TrainingComponentCard
+                key={i}
+                training={training}
+                trainingComponent={trainingComponent}
+              />
+            ))}
+          </>
+        )}
       </Box>
     </Box>
   );

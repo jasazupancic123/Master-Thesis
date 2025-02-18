@@ -93,7 +93,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
           <Typography
             color="#1A2B3C"
             bgcolor="#1EB980"
-            p={2}
+            p={screenSize.isMobile ? 0.1 : 2}
             sx={{
               backgroundColor: '#1EB980',
               writingMode: 'vertical-rl',

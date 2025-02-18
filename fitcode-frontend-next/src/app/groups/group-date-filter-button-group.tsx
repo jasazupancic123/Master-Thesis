@@ -13,7 +13,7 @@ export default function GroupDateFilterButtonGroup(
   const screenSize = useScreenSize();
 
   return (
-    <Box mx="auto" justifyContent="center" mb={2}>
+    <Box mx="auto" justifyContent="center">
       <ToggleButtonGroup
         value={filter}
         exclusive
