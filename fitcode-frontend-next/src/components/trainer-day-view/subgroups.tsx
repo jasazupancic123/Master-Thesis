@@ -105,7 +105,6 @@ export default function Subgroups(props: SubgroupProps) {
           flexDirection="column"
           alignItems="center"
           width="100%"
-          mt={2}
         >
           {detectedSubgroupChanges && showSubgroups && (
             <Button

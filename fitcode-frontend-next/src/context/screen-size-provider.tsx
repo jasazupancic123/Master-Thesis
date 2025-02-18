@@ -5,6 +5,7 @@ import { useMediaQuery } from '@mui/material';
 import { ChildrenProps } from '@/common/type/props.type';
 
 interface ScreenSizeContextType {
+  isReallySmall: boolean;
   isMobile: boolean;
   isLandscapeMobile: boolean;
   isLaptop: boolean;
@@ -18,6 +19,7 @@ const ScreenSizeContext = createContext<ScreenSizeContextType | undefined>(
 );
 
 export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
+  const isReallySmall = useMediaQuery('(max-width:360px)');
   const isSmallHeight = useMediaQuery('(max-height:600px)');
   const isMobile = useMediaQuery('(max-width:600px)');
   const isLandscape = useMediaQuery('(orientation: landscape)');
@@ -33,6 +35,7 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
   return (
     <ScreenSizeContext.Provider
       value={{
+        isReallySmall,
         isMobile,
         isLandscapeMobile,
         isLaptop,

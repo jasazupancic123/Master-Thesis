@@ -35,8 +35,8 @@ export default function BottomNavigation({
       showLabels
       sx={{
         backgroundColor: '#303E4A',
-        height: screenSize.isLandscapeMobile ? 45 : '70px',
-        width: { xs: '100%', md: '50%' }, // Centered and one-third of the width on larger screens
+        height: '70px',
+        width: '100%',
         '& .Mui-selected': { color: '#1EB980 !important' },
       }}
     >
@@ -45,34 +45,49 @@ export default function BottomNavigation({
           key={i}
           label={link.label}
           icon={
-            screenSize.isLandscapeMobile ? (
-              React.isValidElement(link.icon) ? (
-                React.cloneElement(
+            React.isValidElement(link.icon)
+              ? React.cloneElement(
                   link.icon as React.ReactElement<{ sx?: object }>,
                   {
-                    sx: {
-                      fontSize: screenSize.isLandscapeMobile ? 20 : undefined,
-                    },
+                    sx: { fontSize: 20, p: 0 },
                   }
                 )
-              ) : (
-                <></>
-              )
-            ) : (
-              link.icon
-            )
+              : link.icon
           }
           sx={{
             color: index === i ? '#1EB980' : '#fff',
-            p: 1,
+            minWidth: '48px', // Reduce the minimum width
+            padding: '4px', // Reduce padding
+            '& .MuiBottomNavigationAction-root': {
+              minWidth: '48px', // Override MUI default min-width
+            },
+            '& .MuiSvgIcon-root': {
+              fontSize: '20px !important', // Force smaller icon
+            },
           }}
         />
       ))}
       <BNAction
         key="logout"
         label="Sign out"
-        icon={<LogoutRounded />} // Just pass the icon directly
+        icon={
+          <LogoutRounded
+            sx={{
+              fontSize: screenSize.isLandscapeMobile ? 20 : undefined,
+            }}
+          />
+        } // Just pass the icon directly
         onClick={logout} // Add onClick here instead
+        sx={{
+          minWidth: '48px', // Reduce the minimum width
+          padding: '4px', // Reduce padding
+          '& .MuiBottomNavigationAction-root': {
+            minWidth: '48px', // Override MUI default min-width
+          },
+          '& .MuiSvgIcon-root': {
+            fontSize: '20px !important', // Force smaller icon
+          },
+        }}
       />
     </BN>
   );

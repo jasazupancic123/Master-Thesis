@@ -6,6 +6,7 @@ export default function BorderColor(props: {
   lower?: boolean;
   width?: string | number;
   onClick?: () => void;
+  applyMargin?: boolean;
 }) {
   if (props.lower)
     return (
@@ -15,6 +16,7 @@ export default function BorderColor(props: {
           borderBottomRightRadius: 25,
           borderBottomLeftRadius: 25,
           backgroundColor: props.color,
+          marginTop: props.applyMargin ? '5px' : undefined,
           width: props.width,
         }}
       />
@@ -25,9 +27,9 @@ export default function BorderColor(props: {
       sx={{
         height: 6,
         borderTopRightRadius: 25,
-        marginBottom: '5px',
         borderTopLeftRadius: 25,
         backgroundColor: props.color,
+        marginBottom: props.applyMargin ? '5px' : undefined,
         width: props.width,
       }}
     />

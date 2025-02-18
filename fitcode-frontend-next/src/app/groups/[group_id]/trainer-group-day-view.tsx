@@ -5,12 +5,18 @@ import Subgroups from '@/components/trainer-day-view/subgroups';
 import TrainingCard from '@/components/trainer-day-view/training-card';
 import TrainingMembers from '@/components/trainer-day-view/training-members';
 import { useGroup } from '@/context/group-provider';
-import { IconButton, Tooltip, Typography } from '@mui/material';
+import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import GroupIcon from '@mui/icons-material/Group';
 import { useScreenSize } from '@/context/screen-size-provider';
+import GroupsIcon from '@mui/icons-material/Groups';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import { Cyclone, RotateRight } from '@mui/icons-material';
+
+dayjs.extend(weekOfYear);
 
 const commonService = CommonService.instance;
 
@@ -24,14 +30,16 @@ export default function TrainerDayView() {
     component,
     setSelectedSubgroup,
     training: selectedTraining,
+    group,
   } = useGroup();
 
   const [day, setDay] = useState<Day>(commonService.date.getToday());
+  const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
     commonService.date.getWeekDays().map(({ label, date }) => ({
       label: label[0],
       value: date.toString(),
-      sublabel: commonService.date.format(date, { withYear: false }),
+      //sublabel: commonService.date.format(date, { withYear: false }),
     }))
   );
 
@@ -41,7 +49,17 @@ export default function TrainerDayView() {
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
     setDateTo(day.date.endOf('day'));
-  }, [day]);
+
+    if (!cycle?.from) return;
+
+    const cycleStart = dayjs(cycle.from).startOf('day');
+    const cycleWeek = cycleStart.week(); // Get week number of cycle start
+    const currentWeek = day.date.subtract(1, 'day').week(); // Get current week number
+
+    const diff = currentWeek - cycleWeek + 1; // Calculate week difference
+
+    setWeek(diff);
+  }, [day, cycle]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,7 +87,7 @@ export default function TrainerDayView() {
   if (!cycle) return <>Select cycle</>;
 
   return (
-    <>
+    <Box>
       <Box
         display="flex"
         flexDirection="column"
@@ -80,61 +98,187 @@ export default function TrainerDayView() {
           borderBottomLeftRadius: todaysTrainings.length === 0 ? 0 : '20px',
           bgcolor: 'background.paper',
         }}
+        justifyContent={
+          screenSize.isSmallerThanLaptop ? 'center' : 'space-between'
+        }
       >
-        <Circles
-          items={days}
-          value={day.date.toString()}
-          setValue={(value) => {
-            setDay({ label: '', date: dayjs(value) });
-            setDateFrom(dayjs(value).startOf('day'));
-            setDateTo(dayjs(value).endOf('day'));
-          }}
-          getBackgroundColor={(value, itemValue) =>
-            commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
-              ? '#1EB980'
-              : 'rgba(255, 255, 255, 0.1)'
+        <Stack
+          direction="row"
+          width="100%"
+          p={2}
+          pb={0}
+          justifyContent={
+            screenSize.isSmallerThanLaptop ? 'center' : 'space-between'
           }
-          sx={{
-            borderBottomRightRadius: 0,
-            borderBottomLeftRadius: 0,
-            marginBottom: 3,
-          }}
-          arrows
-          onArrowClick={(direction) => {
-            const newDay =
-              direction === 'left'
-                ? day.date.subtract(1, 'day')
-                : day.date.add(1, 'day');
+        >
+          <Box
+            display={screenSize.isSmallerThanLaptop ? 'none' : 'flex'}
+            justifyContent="center"
+            flex={1}
+          >
+            <Box
+              bgcolor="#283444"
+              p={!screenSize.isDesktop ? 0 : 1}
+              px={!screenSize.isDesktop ? 1 : 3}
+              sx={{
+                borderTopLeftRadius: 10,
+                borderBottomLeftRadius: 10,
+              }}
+              display="flex"
+              alignItems="center"
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  px: 0,
+                  pr: !screenSize.isDesktop ? 1 : 4,
+                  fontSize: !screenSize.isDesktop ? 15 : 20,
+                }}
+              >
+                {group.name}
+              </Typography>
+              <GroupsIcon />
+            </Box>
+            <Box
+              bgcolor="#283444"
+              p={1}
+              px={3}
+              ml={0.5}
+              sx={{
+                borderTopRightRadius: 10,
+                borderBottomRightRadius: 10,
+              }}
+              display="flex"
+              alignItems="center"
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  px: 0,
+                  pr: !screenSize.isDesktop ? 1 : 4,
+                  fontSize: !screenSize.isDesktop ? 15 : 20,
+                }}
+              >
+                {dayjs(day.date).format('DD-MMM-YY')}
+              </Typography>
+              <CalendarMonthIcon />
+            </Box>
+          </Box>
 
-            setDay({ label: '', date: newDay });
-            setDateFrom(newDay.startOf('day'));
-            setDateTo(newDay.endOf('day'));
-            setDays(
-              commonService.date.getWeekDays(newDay).map(({ label, date }) => ({
-                label: label[0],
-                value: date.toString(),
-                sublabel: commonService.date.format(date, { withYear: false }),
-              }))
-            );
-          }}
-        />
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems={screenSize.isSmallerThanLaptop ? 'center' : undefined}
+          >
+            <Circles
+              items={days}
+              value={day.date.toString()}
+              setValue={(value) => {
+                setDay({ label: '', date: dayjs(value) });
+                setDateFrom(dayjs(value).startOf('day'));
+                setDateTo(dayjs(value).endOf('day'));
+              }}
+              getBackgroundColor={(value, itemValue) =>
+                commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
+                  ? '#1EB980'
+                  : 'rgba(255, 255, 255, 0.1)'
+              }
+              sx={{
+                borderBottomRightRadius: 0,
+                borderBottomLeftRadius: 0,
+              }}
+              arrows
+              onArrowClick={(direction) => {
+                const newDay =
+                  direction === 'left'
+                    ? day.date.subtract(1, 'day')
+                    : day.date.add(1, 'day');
 
+                setDay({ label: '', date: newDay });
+                setDateFrom(newDay.startOf('day'));
+                setDateTo(newDay.endOf('day'));
+                setDays(
+                  commonService.date
+                    .getWeekDays(newDay)
+                    .map(({ label, date }) => ({
+                      label: label[0],
+                      value: date.toString(),
+                      //sublabel: commonService.date.format(date, { withYear: false }),
+                    }))
+                );
+              }}
+            />
+          </Box>
+
+          <Box
+            display={screenSize.isSmallerThanLaptop ? 'none' : 'flex'}
+            justifyContent="center"
+            flex={1}
+          >
+            <Box
+              bgcolor="#283444"
+              p={!screenSize.isDesktop ? 0 : 1}
+              px={!screenSize.isDesktop ? 1 : 3}
+              sx={{
+                borderTopLeftRadius: 10,
+                borderBottomLeftRadius: 10,
+              }}
+              display="flex"
+              alignItems="center"
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  pl: 1,
+                  pr: 4,
+                  fontSize: !screenSize.isDesktop ? 15 : 20,
+                }}
+              >
+                Week {week}
+              </Typography>
+            </Box>
+            <Box
+              bgcolor="#283444"
+              p={1}
+              px={3}
+              ml={0.5}
+              sx={{
+                borderTopRightRadius: 10,
+                borderBottomRightRadius: 10,
+              }}
+              display="flex"
+              alignItems="center"
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  pl: 1,
+                  pr: 4,
+                  fontSize: !screenSize.isDesktop ? 15 : 20,
+                }}
+              >
+                {cycle.name}
+              </Typography>
+              <RotateRight />
+            </Box>
+          </Box>
+        </Stack>
         <Box
           display="flex"
-          flexDirection={screenSize.isMobile ? 'column' : 'row'}
+          flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
           width="100%"
           justifyContent="center"
           alignItems="center"
-          sx={{ p: isSticky ? 0 : undefined }}
+          sx={{ p: isSticky ? 0 : undefined, pt: 0 }}
         >
           <TrainingMembers isSticky={isSticky} />
-          {!isSticky && (
+          {!isSticky && component && (
             <Tooltip title="Show subgroups">
               <IconButton
                 onClick={() =>
                   selectedTraining ? setShowSubgroups(!showSubgroups) : null
                 }
-                sx={{ p: 0, height: 30, width: 30 }}
+                sx={{ p: 0, height: 30, width: 30, mb: 0 }}
               >
                 <GroupIcon sx={{ fontSize: 30 }} />
               </IconButton>
@@ -186,6 +330,6 @@ export default function TrainerDayView() {
           </>
         )}
       </Box>
-    </>
+    </Box>
   );
 }

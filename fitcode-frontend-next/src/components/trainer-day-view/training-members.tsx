@@ -1,10 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Avatar, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { TrainingService } from '@/controller/training/training.service';
+import { sub } from 'date-fns';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -15,6 +18,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const { isSticky } = props;
   const { group, users, training, setSelectedSubgroup } = useGroup();
   const members = users.filter((user) => group.membersIds.includes(user.uid));
+  const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
   // Sort members:
   // 1. Members without a subgroup come first
@@ -37,6 +41,27 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     // If both have a subgroup, sort by subgroup index
     return subgroupIndexA - subgroupIndexB;
   });
+
+  useEffect(() => {
+    if (!training) return;
+
+    const subgroups = Object.values(training.subgroups || {});
+    const availableMembers = members.filter(
+      (member) =>
+        !subgroups.some((subgroup: any) =>
+          subgroup.membersIds.includes(member.uid)
+        )
+    );
+    const defaultSubgroup: Subgroup = {
+      id: 'default',
+      name: 'Default',
+      membersIds: availableMembers.map((user) => user.uid),
+      components: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setSubgroups([defaultSubgroup, ...subgroups]);
+  }, [training]);
 
   return (
     <>
@@ -73,87 +98,35 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             border: isSticky ? '1px solid grey' : 'none',
           }}
         >
-          {sortedMembers.length > 0 ? (
+          {/* No members to display*/}
+          {!training && sortedMembers.length === 0 && (
+            <Typography variant="caption" color="textSecondary">
+              No available members
+            </Typography>
+          )}
+
+          {/* Training/component is not selected yet, display the members normally */}
+          {!training &&
+            sortedMembers.length > 0 &&
             sortedMembers.map((member) => {
-              if (!member || !training)
-                return (
-                  <Tooltip key={member.uid} title={member.email} sx={{ p: 0 }}>
-                    <div
-                      style={{
-                        display: 'inline-block',
-                        border: '3px solid transparent',
-                        borderRadius: '50%', // Ensure the border keeps its circular shape
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => {
-                        setSelectedSubgroup(null);
-                      }}
-                    >
-                      <Avatar
-                        className="avatar-border"
-                        sx={{
-                          width: 45,
-                          height: 45,
-                        }}
-                      >
-                        {member.email[0].toUpperCase()}
-                      </Avatar>
-                    </div>
-                  </Tooltip>
-                );
-
-              // Find the subgroup index
-              const subgroupIndex = Object.values(training.subgroups).findIndex(
-                (subgroup: any) => subgroup.membersIds.includes(member.uid)
-              );
-
-              // Assign border color based on the subgroup index
-              const borderColor =
-                subgroupIndex !== -1
-                  ? COLORS[(subgroupIndex % COLORS.length) + 1] // Fix the color selection
-                  : 'transparent';
-
               return (
                 <Tooltip key={member.uid} title={member.email} sx={{ p: 0 }}>
                   <div
-                    onClick={(event) => {
-                      const avatarElement =
-                        event.currentTarget.querySelector('.avatar-border');
-                      if (avatarElement && event.target !== avatarElement) {
-                        const subgroup: Subgroup | undefined = Object.values(
-                          training.subgroups
-                        ).find((subgroup: any) =>
-                          subgroup.membersIds.includes(member.uid)
-                        );
-                        setSelectedSubgroup({
-                          subgroup: subgroup || null,
-                          index: subgroupIndex,
-                        });
-                      } else {
-                        const subgroup: Subgroup | undefined = Object.values(
-                          training.subgroups
-                        ).find((subgroup: any) =>
-                          subgroup.membersIds.includes(member.uid)
-                        );
-                        if (subgroup === undefined) {
-                          setSelectedSubgroup(null);
-                        }
-                      }
-                    }}
                     style={{
                       display: 'inline-block',
-                      border: borderColor
-                        ? `3px solid ${borderColor}`
-                        : '3px solid transparent',
+                      border: '3px solid transparent',
                       borderRadius: '50%', // Ensure the border keeps its circular shape
                       cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      setSelectedSubgroup(null);
                     }}
                   >
                     <Avatar
                       className="avatar-border"
                       sx={{
-                        width: isSticky && screenSize.isMobile ? 30 : 45,
-                        height: isSticky && screenSize.isMobile ? 30 : 45,
+                        width: 45,
+                        height: 45,
                       }}
                     >
                       {member.email[0].toUpperCase()}
@@ -161,12 +134,160 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   </div>
                 </Tooltip>
               );
-            })
-          ) : (
-            <Typography variant="caption" color="textSecondary">
-              No available members
-            </Typography>
-          )}
+            })}
+
+          {training &&
+            subgroups.map((subgroup, subgroupIndex) => {
+              if (subgroup.membersIds.length === 0) return null;
+              // Assign border color based on the subgroup index
+              const borderColor =
+                subgroupIndex > 0
+                  ? COLORS[subgroupIndex % COLORS.length]
+                  : 'transparent';
+
+              return (
+                <div
+                  onClick={(event) => {
+                    const BORDER_WIDTH = 2; // Match the border width
+
+                    // Get the bounding box of the div
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+
+                    // Check if the click is within the border region
+                    const isBorderClick =
+                      x < BORDER_WIDTH ||
+                      x > rect.width - BORDER_WIDTH ||
+                      y < BORDER_WIDTH ||
+                      y > rect.height - BORDER_WIDTH;
+
+                    if (isBorderClick && subgroupIndex > 0) {
+                      setSelectedSubgroup({
+                        subgroup: subgroup || null,
+                        index: subgroupIndex - 1,
+                      });
+                    } else if (subgroupIndex === 0) {
+                      setSelectedSubgroup(null);
+                    }
+                  }}
+                  style={{
+                    display: 'inline-block',
+                    border:
+                      subgroupIndex > 0
+                        ? `2px solid ${borderColor}`
+                        : '2px solid transparent',
+                    borderTopLeftRadius: 7,
+                    borderTopRightRadius: 7,
+                    backgroundColor: '#283444',
+                    cursor: 'pointer',
+                    margin: '5px',
+                  }}
+                >
+                  <Box
+                    display="flex"
+                    flexDirection="row"
+                    sx={{ backgroundColor: '#283444', borderRadius: 10 }}
+                  >
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      sx={{
+                        pr: 1.5,
+                        backgroundColor: '#283444',
+                        borderTopLeftRadius: 10,
+                      }}
+                      height={70}
+                    >
+                      {/* First Typography (Green Box) */}
+                      <Box
+                        height={20}
+                        sx={{
+                          backgroundColor: '#1EB980',
+                          textAlign: 'center',
+                          display: 'flex', // Center content inside
+                          flex: 1, // Fill remaining space
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderTopLeftRadius: 5,
+                        }}
+                        width={20}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{ textAlign: 'center', color: 'white' }}
+                        >
+                          {`G${subgroupIndex + 1}`}
+                        </Typography>
+                      </Box>
+
+                      {/* Second Typography (Member Count) */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center', // Centers text
+                          flex: 1, // Fill remaining space
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          color="textSecondary"
+                          sx={{ textAlign: 'center' }}
+                        >
+                          {subgroup.membersIds.length}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box
+                      key={subgroup.id}
+                      sx={{
+                        pr: 0.5,
+                        py: 0,
+                        pl: 0,
+                        borderRadius: 2,
+                        backgroundColor: '#283444',
+                      }}
+                      display="flex"
+                      flexWrap="wrap"
+                      justifyContent="center"
+                      alignItems="center" // Ensure children stretch to full height
+                      height="100%" // Make this box take full height
+                    >
+                      {subgroup.membersIds.map((memberId) => {
+                        const member = members.find(
+                          (user) => user.uid === memberId
+                        );
+                        if (!member) return null;
+
+                        return (
+                          <Tooltip
+                            key={member.uid}
+                            title={member.email}
+                            sx={{ mx: 1, p: 0 }}
+                          >
+                            <Avatar
+                              className="avatar-border"
+                              src="/user_avatar.png" // Path to the image in the public folder
+                              sx={{
+                                width:
+                                  isSticky && screenSize.isMobile ? 30 : 50,
+                                height:
+                                  isSticky && screenSize.isMobile ? 30 : 50,
+                                mx: 0.5,
+                                my: 1,
+                              }}
+                            >
+                              {/* {member.email[0].toUpperCase()} */}
+                            </Avatar>
+                          </Tooltip>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                </div>
+              );
+            })}
         </Stack>
       </Stack>
     </>
