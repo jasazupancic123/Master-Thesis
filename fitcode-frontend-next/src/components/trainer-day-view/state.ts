@@ -16,16 +16,8 @@ import { User } from '@/controller/user/type/user.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { DEFAULT_SUBGROUP } from './constant';
-import {
-  AddSubgroupInput,
-  AddSupersetInput,
-  DeleteExerciseInput,
-  DeleteSupersetInput,
-  UpdateExerciseInput,
-  UpdateSupersetInput,
-} from './input';
 
-export async function addSuperset(
+/* export async function addSuperset(
   token: string,
   input: AddSupersetInput & {
     trainingId: string;
@@ -428,7 +420,7 @@ export async function addSubgroup(
     undefined,
     'Failed to add new subgroup'
   );
-}
+} */
 
 export function onDragEndSubgroup(
   { destination, draggableId }: any,
@@ -498,13 +490,9 @@ export function onDragEndSubgroup(
 
   setTraining((prev: any) => {
     if (!prev) return null;
-
-    const subgroupEntries = Object.fromEntries(
-      updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
-    );
-
-    return { ...prev, subgroups: subgroupEntries };
+    return { ...prev, subgroups: updatedSubgroups };
   });
+
   setDetectedSubgroupChanges(true);
   setSubgroups(updatedSubgroups);
 }
@@ -553,25 +541,21 @@ export function handleRightClickSubgroup(
     users.find((user) => user.uid === memberId)!,
   ]);
 
-  const subgroupEntries = Object.fromEntries(
-    updatedSubgroups.map((subgroup) => [subgroup.id, subgroup])
-  );
-
-  setTraining((prev) => ({ ...prev!, subgroups: subgroupEntries }));
+  setTraining((prev) => ({ ...prev!, subgroups: updatedSubgroups }));
   setTrainings((prev) =>
     prev.map((t) =>
-      t.id === training?.id ? { ...t, subgroups: subgroupEntries } : t
+      t.id === training?.id ? { ...t, subgroups: updatedSubgroups } : t
     )
   );
 
   setFilteredTrainings((prev) =>
     prev.map((t) =>
-      t.id === training?.id ? { ...t, subgroups: subgroupEntries } : t
+      t.id === training?.id ? { ...t, subgroups: updatedSubgroups } : t
     )
   );
 }
 
-export async function handleDeleteSubgroup(
+/* export async function handleDeleteSubgroup(
   token: string,
   input: {
     subgroupId: string;
@@ -643,7 +627,7 @@ export async function handleDeleteSubgroup(
     undefined,
     'Failed to delete subgroup'
   );
-}
+} */
 
 export async function handleSaveSubgroupChanges(
   token: string,
@@ -675,7 +659,7 @@ export async function handleSaveSubgroupChanges(
 
   if (!training) return;
 
-  handleApiRequest(
+  /* handleApiRequest(
     router,
     () =>
       TrainingController.updateSubgroups(token, training.id, {
@@ -704,5 +688,5 @@ export async function handleSaveSubgroupChanges(
     },
     undefined,
     'Failed to save subgroup changes'
-  );
+  ); */
 }

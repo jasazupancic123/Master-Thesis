@@ -1,15 +1,15 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { TrainingService } from './service/training.service';
 import { ComponentModule } from '../component/component.module';
 import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
-import { UserWorkloadRepository } from './repository/user-workload.repository';
-import { TrainingRepository } from './repository/training.repository';
-import { UserWorkloadService } from './service/user-workload.service';
 import { UserModule } from '../user/user.module';
-import { TrainingController } from './training.controller';
+import { TrainingRepository } from './repository/training.repository';
+import { UserWorkloadRepository } from './repository/user-workload.repository';
 import { SubgroupService } from './service/subgroup.service';
 import { TrainingPlanService } from './service/training-plan.service';
+import { TrainingService } from './service/training.service';
+import { UserWorkloadService } from './service/user-workload.service';
+import { TrainingController } from './training.controller';
 
 @Module({
   imports: [
@@ -21,8 +21,8 @@ import { TrainingPlanService } from './service/training-plan.service';
   providers: [
     UserWorkloadRepository,
     TrainingRepository,
-    SubgroupService,
     UserWorkloadService,
+    SubgroupService,
     TrainingPlanService,
     TrainingService,
   ],

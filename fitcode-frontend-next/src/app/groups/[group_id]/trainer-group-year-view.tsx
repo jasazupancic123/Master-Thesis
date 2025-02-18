@@ -1,6 +1,8 @@
 'use client';
 
 import { handleApiRequest } from '@/common/type/state.type';
+import AddCycleForm from '@/components/add-cycle-form';
+import EditCycleModal from '@/components/edit-cycle-modal';
 import MyModal from '@/components/modal';
 import MultiCycleSlider from '@/components/multi-cycle-slider';
 import { useGroup } from '@/context/group-provider';
@@ -17,8 +19,6 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import AddCycleForm from '../../../components/add-cycle-form';
-import EditCycleModal from '../../../components/edit-cycle-modal';
 
 export default function TrainerYearView() {
   const router = useRouter();

@@ -1,130 +1,79 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { CommonService } from 'src/common/service/common.service';
-import { FirebaseService } from 'src/firebase/firebase.service';
-import { TrainingRepository } from '../repository/training.repository';
-import { FieldValue } from 'firebase-admin/firestore';
 import {
-  TrainingRef,
-  TrainingComponentRef,
-  TrainingSupersetRef,
-  TrainingExerciseRef,
   SubgroupRef,
+  TrainingComponentRef,
+  TrainingRef,
 } from 'src/common/type/firebase-firestore.type';
-import { Superset } from '../entity/superset.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
-import { UpdateTrainingComponent } from '../type/training-component.type';
-import {
-  CreateTrainingExercise,
-  UpdateTrainingExercise,
-} from '../type/training-exercise.type';
-import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
-import { UserWorkloadService } from './user-workload.service';
 
 @Injectable()
 export class TrainingPlanService {
-  constructor(
-    private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
-    private readonly cacheManagerService: CacheManagerService,
-    private readonly trainingRepository: TrainingRepository,
-    private readonly trainingWorkloadService: UserWorkloadService,
-  ) {}
+  constructor(private readonly commonService: CommonService) {}
 
   getAddComponentsQuery(
     training: Training,
-    ref: Required<TrainingRef> & SubgroupRef,
-    input: [string, TrainingComponent][], // [componentId, component input][]
+    input: Omit<TrainingComponent, 'subgroups' | 'supersets'>[],
   ): [Record<string, any>, Training] {
-    const prefix = ref.subgroupId
-      ? `subgroups.${ref.subgroupId}.components`
-      : `components`;
-
-    const trainingOrSubgroupRef = ref.subgroupId
-      ? training.subgroups[ref.subgroupId]
-      : training;
-
-    const query = Object.fromEntries(
-      input.map(([id, c]) => [
-        `${prefix}.${id}`,
-        {
-          id,
-          order: c.order || 0,
-          color: c.color || this.commonService.color.random(),
-          supersets: c.supersets?.length
-            ? c.supersets.map((superset) => ({
-                exercises: superset.exercises,
-                color: superset.color,
-              }))
-            : [
-                {
-                  exercises: {},
-                  color: this.commonService.color.random(),
-                },
-              ],
-        },
-      ]),
-    );
-
-    trainingOrSubgroupRef.components = {
-      ...trainingOrSubgroupRef.components,
-      ...this.commonService.object.removeKeyPrefix(query, prefix),
-    };
-
-    return [query, training];
-  }
-
-  getUpdateComponentQuery(
-    training: Training,
-    ref: Required<TrainingComponentRef> & SubgroupRef,
-    input: UpdateTrainingComponent,
-  ): [Record<string, any>, Training] {
-    const prefix = ref.subgroupId
-      ? `subgroups.${ref.subgroupId}.components.${ref.componentId}`
-      : `components.${ref.componentId}`;
-
-    const trainingOrSubgroupRef = ref.subgroupId
-      ? training.subgroups[ref.subgroupId]
-      : training;
-
     const query = {
-      ...(input.color && { [`${prefix}.color`]: input.color }),
-      ...(input.order && { [`${prefix}.order`]: input.order }),
+      components: [
+        ...training.components.map((c) => ({
+          ...c,
+          from: Timestamp.fromDate(c.from), // explicit conversion of date types
+          to: Timestamp.fromDate(c.to),
+        })),
+        ...input.map((c) => ({
+          id: c.id,
+          color: c.color || this.commonService.color.random(),
+          from: Timestamp.fromDate(c.from ? c.from : new Date()),
+          to: Timestamp.fromDate(c.to ? c.to : new Date()),
+          subgroups: [],
+          supersets: [
+            {
+              exercises: [],
+              color: this.commonService.color.random(),
+            },
+          ],
+        })),
+      ],
     };
 
-    trainingOrSubgroupRef.components = {
-      ...trainingOrSubgroupRef.components,
-      [ref.componentId]: {
-        ...training.components[ref.componentId],
-        ...input,
-      },
-    };
+    training.components = [
+      ...training.components,
+      ...input.map((c) => ({
+        id: c.id,
+        color: c.color || this.commonService.color.random(),
+        from: c.from ? c.from : new Date(),
+        to: c.to ? c.to : new Date(),
+        subgroups: [],
+        supersets: [
+          {
+            exercises: [],
+            color: this.commonService.color.random(),
+          },
+        ],
+      })),
+    ];
 
     return [query, training];
   }
 
   getDeleteComponentQuery(
     training: Training,
-    ref: Required<TrainingComponentRef> & SubgroupRef,
+    ref: TrainingComponentRef,
   ): [Record<string, any>, Training] {
-    const prefix = ref.subgroupId
-      ? `subgroups.${ref.subgroupId}.components.${ref.componentId}`
-      : `components.${ref.componentId}`;
+    const updatedComponents = training.components.filter(
+      (c) => c.id !== ref.componentId,
+    );
 
-    const trainingOrSubgroupRef = ref.subgroupId
-      ? training.subgroups[ref.subgroupId]
-      : training;
-
-    const query = { [prefix]: FieldValue.delete() };
-    const { [ref.componentId]: _, ...components } =
-      trainingOrSubgroupRef.components;
-    trainingOrSubgroupRef.components = components;
-
+    const query = { components: updatedComponents };
+    training.components = updatedComponents;
     return [query, training];
   }
 
-  getAddSupersetsQuery(
+  /* getAddSupersetsQuery(
     training: Training,
     ref: Required<TrainingComponentRef> & SubgroupRef,
     input: Omit<Superset, 'exercises'>[],
@@ -328,5 +277,5 @@ export class TrainingPlanService {
     trainingOrSubgroupRef.components[ref.componentId].supersets = supersets;
 
     return [query, training];
-  }
+  } */
 }

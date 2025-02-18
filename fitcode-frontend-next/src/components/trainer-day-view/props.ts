@@ -18,13 +18,9 @@ export interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
 }
 
-export interface SupersetsProps {
-  trainingComponent: TrainingComponent;
-}
-
 export interface AddExerciseFormProps {
-  selectedExercises: TrainingExercise[];
-  setSelectedExercises: SetState<TrainingExercise[]>;
+  selectedExercisesIds: string[];
+  setSelectedExercisesIds: SetState<string[]>;
 }
 
 export interface TrainingExerciseCardProps {

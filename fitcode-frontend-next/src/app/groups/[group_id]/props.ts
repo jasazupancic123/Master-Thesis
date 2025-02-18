@@ -7,6 +7,7 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
@@ -31,8 +32,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setGroup: SetState<Group>;
   cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
-  component: Component | undefined;
-  setComponent: SetStateNullable<Component>;
+  component: TrainingComponent | undefined; // selected training component
+  setComponent: SetStateNullable<TrainingComponent>;
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
   subgroup: Subgroup | undefined;

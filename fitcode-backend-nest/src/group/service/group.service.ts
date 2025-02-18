@@ -5,22 +5,22 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { Group } from '../entity/group.entity';
-import { UserService } from '../../user/service/user.service';
 import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
-import { TrainingService } from '../../training/service/training.service';
+import { Training } from 'src/training/entity/training.entity';
 import { CommonService } from '../../common/service/common.service';
-import { Subgroup } from '../../training/entity/subgroup.entity';
+import { User } from '../../common/type/firebase-auth.type';
+import { CycleRef, GroupRef } from '../../common/type/firebase-firestore.type';
 import { Filter, FindManyOptions } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { CycleRef, GroupRef } from '../../common/type/firebase-firestore.type';
-import { GroupRepository } from '../repository/group.repository';
-import { CreateGroup, UpdateGroup } from '../type/group.type';
-import { User } from '../../common/type/firebase-auth.type';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { CreateCycle, UpdateCycle } from '../type/cycle.type';
+import { Subgroup } from '../../training/entity/subgroup.entity';
+import { TrainingService } from '../../training/service/training.service';
+import { UserService } from '../../user/service/user.service';
 import { Cycle } from '../entity/cycle.entity';
-import { Training } from 'src/training/entity/training.entity';
+import { Group } from '../entity/group.entity';
+import { GroupRepository } from '../repository/group.repository';
+import { CreateCycle, UpdateCycle } from '../type/cycle.type';
+import { CreateGroup, UpdateGroup } from '../type/group.type';
 
 @Injectable()
 export class GroupService {
@@ -153,6 +153,8 @@ export class GroupService {
             transaction.update(doc.ref, { membersIds: input.membersIds });
           });
 
+          // TODO - add group to users groupIds
+
           const docRef = this.groupRepository.doc(ref.groupId);
           transaction.update(docRef, { ...input });
         },
@@ -218,6 +220,8 @@ export class GroupService {
       weeks: this.commonService.date.weeks(input.from, input.to),
       createdAt: new Date(),
       updatedAt: new Date(),
+      rootComponentsIds: [],
+      leafComponentsIds: [],
       ...input,
     };
   }
@@ -247,6 +251,7 @@ export class GroupService {
     }
 
     await this.groupRepository.updateCycle(group.id, ref.cycleId, input);
+
     return { ...cycle, ...input };
   }
 

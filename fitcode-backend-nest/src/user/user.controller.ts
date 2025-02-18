@@ -7,14 +7,15 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { RequestUser } from '../common/decorator/request-user.decorator';
 import { Auth } from '../common/decorator/auth.decorator';
-import { UserRole } from './enum/user-role.enum';
-import { UpdateUserClaimsDto } from './dto/update-user.dto';
-import { UserService } from './service/user.service';
-import { FilterUserQueryDto } from './dto/filter-user-query.dto';
+import { RequestUser } from '../common/decorator/request-user.decorator';
 import type { User } from '../common/type/firebase-auth.type';
+import { AddAthleteDto } from './dto/add-athlete.dto';
+import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { SaveUserMetaDto } from './dto/save-user-meta.dto';
+import { UpdateUserClaimsDto } from './dto/update-user.dto';
+import { UserRole } from './enum/user-role.enum';
+import { UserService } from './service/user.service';
 
 @Controller('user')
 export class UserController {
@@ -59,5 +60,11 @@ export class UserController {
       userId: user.uid,
       date: ref.date,
     });
+  }
+
+  @Post('athlete/add')
+  @Auth([UserRole.TRAINER])
+  async addAthlete(@Body() body: AddAthleteDto) {
+    return await this.userService.addAthlete(body);
   }
 }
