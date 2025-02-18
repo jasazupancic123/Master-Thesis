@@ -1,20 +1,25 @@
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
+import { handleApiRequest } from '@/common/type/state.type';
 import Circles from '@/components/circles';
 import Subgroups from '@/components/trainer-day-view/subgroups';
 import TrainingCard from '@/components/trainer-day-view/training-card';
 import TrainingMembers from '@/components/trainer-day-view/training-members';
 import { useGroup } from '@/context/group-provider';
-import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { RotateRight, Save } from '@mui/icons-material';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import GroupIcon from '@mui/icons-material/Group';
+import GroupsIcon from '@mui/icons-material/Groups';
+import { Fab, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
-import GroupIcon from '@mui/icons-material/Group';
-import { useScreenSize } from '@/context/screen-size-provider';
-import GroupsIcon from '@mui/icons-material/Groups';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
-import { Cyclone, RotateRight } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 dayjs.extend(weekOfYear);
 
@@ -23,23 +28,28 @@ const commonService = CommonService.instance;
 export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const {
+    token,
+    group,
     cycle,
+    components,
+    training,
+    setTrainings,
+    setFilteredTrainings,
     filteredTrainings,
     setDateFrom,
     setDateTo,
     component,
     setSelectedSubgroup,
-    training: selectedTraining,
-    group,
   } = useGroup();
 
+  const router = useRouter();
   const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
     commonService.date.getWeekDays().map(({ label, date }) => ({
       label: label[0],
       value: date.toString(),
-      //sublabel: commonService.date.format(date, { withYear: false }),
+      // sublabel: commonService.date.format(date, { withYear: false }),
     }))
   );
 
@@ -85,6 +95,30 @@ export default function TrainerDayView() {
   const pmTraining = todaysTrainings.find((t) => dayjs(t.from).hour() >= 12);
 
   if (!cycle) return <>Select cycle</>;
+
+  async function handleUpdateTraining() {
+    if (!training) return;
+
+    await handleApiRequest(
+      router,
+      () => TrainingController.update(token, training.id, training),
+      (newTraining) => {
+        const mapped = TrainingService.mapComponents(newTraining, components);
+
+        setTrainings((prev) =>
+          prev.map((t) => (t.id === newTraining.id ? mapped : t))
+        );
+
+        setFilteredTrainings((prev) =>
+          prev.map((t) => (t.id === newTraining.id ? mapped : t))
+        );
+
+        toast.success('Training updated successfully');
+      },
+      undefined,
+      'Error when updating training'
+    );
+  }
 
   return (
     <Box>
@@ -276,7 +310,7 @@ export default function TrainerDayView() {
             <Tooltip title="Show subgroups">
               <IconButton
                 onClick={() =>
-                  selectedTraining ? setShowSubgroups(!showSubgroups) : null
+                  training ? setShowSubgroups(!showSubgroups) : null
                 }
                 sx={{ p: 0, height: 30, width: 30, mb: 0 }}
               >
@@ -321,11 +355,41 @@ export default function TrainerDayView() {
         ) : (
           <>
             {amTraining && (
-              <TrainingCard day={day} training={amTraining} period="AM" />
+              <>
+                {training && training?.id === amTraining.id && (
+                  <Fab
+                    size="small"
+                    color="secondary"
+                    aria-label="add"
+                    onClick={() => {
+                      handleUpdateTraining();
+                    }}
+                  >
+                    <Save />
+                  </Fab>
+                )}
+
+                <TrainingCard day={day} training={amTraining} period="AM" />
+              </>
             )}
 
             {pmTraining && (
-              <TrainingCard day={day} training={pmTraining} period="PM" />
+              <>
+                {training && training?.id === pmTraining.id && (
+                  <Fab
+                    size="small"
+                    color="secondary"
+                    aria-label="add"
+                    onClick={() => {
+                      handleUpdateTraining();
+                    }}
+                  >
+                    <Save />
+                  </Fab>
+                )}
+
+                <TrainingCard day={day} training={pmTraining} period="PM" />
+              </>
             )}
           </>
         )}

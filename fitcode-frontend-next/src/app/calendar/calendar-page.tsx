@@ -1,9 +1,12 @@
 'use client';
 
+import { CommonService } from '@/common/service/common.service';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Training } from '@/controller/training/type/training.type';
+import { Component } from '@/controller/component/type/component.type';
 import { Box, Paper } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { addMonths, subMonths } from 'date-fns';
+import dayjs from 'dayjs';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -15,23 +18,11 @@ import {
   View,
 } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import CalendarDayModal from './calendar-day-modal';
 import CustomToolbar from './custom-toolbar';
 import { CalendarPageProps } from './props';
-import { fetchAthleteTrainings } from './state';
+import { fetchAthleteTrainings, handleNavigate } from './state';
 import './styles.css';
 import { CalendarEvent } from './type';
-import dayjs from 'dayjs';
-import {
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  addMonths,
-  subMonths,
-} from 'date-fns';
-import { CommonService } from '@/common/service/common.service';
-import { Component } from '@/controller/component/type/component.type';
 
 const commonService = CommonService.instance;
 
@@ -51,14 +42,11 @@ export function CalendarPage(props: CalendarPageProps) {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
 
-    console.log(firstDayOfMonth, lastDayOfMonth);
-
     fetchAthleteTrainings(
       token,
       { from: firstDayOfMonth, to: lastDayOfMonth },
       { router }
     ).then((_trainings) => {
-      console.log('_trainings', _trainings);
       if (!_trainings) return;
       const events = _trainings.map((training) => {
         const componentsIcons = [];
@@ -78,24 +66,10 @@ export function CalendarPage(props: CalendarPageProps) {
           icon: componentsIcons[0],
         };
       });
-      console.log(events);
+
       setTrainings(events);
     });
   }, [token, screenSize.isSmallerThanLaptop, currentDate]);
-
-  const handleNavigate = (
-    newDate: Date,
-    _view: View,
-    action: NavigateAction
-  ) => {
-    if (action === 'NEXT') {
-      setCurrentDate((prev) => addMonths(prev, 1));
-    } else if (action === 'PREV') {
-      setCurrentDate((prev) => subMonths(prev, 1));
-    } else {
-      setCurrentDate(new Date()); // Reset to today
-    }
-  };
 
   return (
     <Box
@@ -162,7 +136,9 @@ export function CalendarPage(props: CalendarPageProps) {
           views={['month', 'week', 'day']}
           defaultView="month"
           selectable
-          onNavigate={handleNavigate}
+          onNavigate={(newDate, view, action) =>
+            handleNavigate(newDate, view, action, setCurrentDate)
+          }
           components={{
             toolbar: CustomToolbar as React.ComponentType<
               ToolbarProps<CalendarEvent, object>

@@ -32,7 +32,5 @@ export const DEFAULT_SUBGROUP = (availableMembers: User[]): Subgroup => ({
   id: 'default',
   name: 'Default',
   membersIds: availableMembers.map((user) => user.uid),
-  components: {},
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  supersets: [],
 });

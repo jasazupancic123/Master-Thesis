@@ -5,11 +5,11 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { Exercise } from '../entity/exercise.entity';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { ComponentService } from '../../component/component.service';
-import { Component } from '../../component/entity/component.entity';
+import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
+import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
+import { User } from '../../common/type/firebase-auth.type';
+import { ExerciseRef } from '../../common/type/firebase-firestore.type';
 import {
   Filter,
   FindManyOptions,
@@ -17,22 +17,23 @@ import {
   Populate,
 } from '../../common/type/orm.type';
 import { Validate } from '../../common/type/validate.type';
-import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
-import { ExerciseRepository } from '../repository/exercise.repository';
-import { ExerciseRef } from '../../common/type/firebase-firestore.type';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { User } from '../../common/type/firebase-auth.type';
-import { CacheManagerService } from '../../cache-manager/cache-manager.service';
-import { ExerciseAttributeService } from './exercise-attribute.service';
+import { ComponentService } from '../../component/component.service';
+import { Component } from '../../component/entity/component.entity';
+import { FirebaseService } from '../../firebase/firebase.service';
 import { CreateExerciseDto } from '../dto/create-exercise.dto';
 import { UpdateExerciseDto } from '../dto/update-exercise.dto';
+import { Exercise } from '../entity/exercise.entity';
+import { ExerciseRepository } from '../repository/exercise.repository';
+import { ExerciseAttributeService } from './exercise-attribute.service';
 
 @Injectable()
 export class ExerciseService {
   private logger = new Logger(ExerciseService.name);
 
   constructor(
-    private readonly cacheManagerService: CacheManagerService,
+    @Inject(forwardRef(() => CacheManagerService))
+    private readonly cacheManagerService: Wrapper<CacheManagerService>,
     private readonly exerciseRepository: ExerciseRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,

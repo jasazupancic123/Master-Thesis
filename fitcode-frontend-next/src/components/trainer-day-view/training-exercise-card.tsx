@@ -6,13 +6,13 @@ import {
   SET_TYPE,
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
-import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -25,7 +25,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   useEffect(() => {
     // manual data object to avoid id, createdAt, updatedAt, etc.
     const data = {
-      order: exercise.order,
       sets: state.sets,
       setType: state.setType,
       setTypeValue: state.setTypeValue,
@@ -40,7 +39,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     if (
       JSON.stringify(data) ===
       JSON.stringify({
-        order: exercise.order,
         sets: exercise.meta.sets,
         setType: exercise.meta.setType,
         setTypeValue: exercise.meta.setTypeValue,
@@ -54,7 +52,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       return;
 
     onChange(data);
-  }, [exercise.meta, exercise.order, state]);
+  }, [exercise.meta, exercise, state]);
 
   return (
     <Stack

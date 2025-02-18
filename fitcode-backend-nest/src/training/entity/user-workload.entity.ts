@@ -1,20 +1,17 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { Workload } from './workload';
+import { IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsStringOrNumber } from 'src/common/decorator/is-string-or-number.decorator';
+import { TimestampEntity } from 'src/common/entity/timestamp.entity';
+import { WorkloadType } from '../enum/workload-type.enum';
+import { SetData } from './set-data';
 
-export class UserWorkload {
+export class UserWorkload extends TimestampEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  userId: string; // document id
+  userId: string; // also document id
 
   @IsString()
   @IsNotEmpty()
@@ -22,17 +19,25 @@ export class UserWorkload {
   @Expose()
   trainingId: string;
 
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @ApiPropertyOptional()
-  @Expose()
-  subgroupId: string;
-
-  @IsObject()
   @ApiProperty()
   @Expose()
-  exercises: {
-    [exerciseId: string]: Workload;
-  };
+  exerciseId: string;
+
+  @IsEnum(WorkloadType)
+  @ApiProperty()
+  @Expose()
+  workloadType: WorkloadType;
+
+  @IsStringOrNumber()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  workloadValue: string | number; // calculated value prescribed by trainer
+
+  // calculated value prescribed by trainer
+  @ValidateNested({ each: true })
+  @Expose()
+  sets: SetData[];
 }

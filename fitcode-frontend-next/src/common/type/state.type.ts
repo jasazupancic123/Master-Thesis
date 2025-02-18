@@ -20,8 +20,11 @@ export async function handleApiRequest<T>(
     return response;
   } catch (e: any) {
     console.error(e);
-    toast.error(e.message || errorMessage);
     if (onError) onError(e);
-    if (e.message === REDIRECT_TO_SIGN_IN) router.push(LINK_SIGN_IN.href);
+
+    if (e.message === REDIRECT_TO_SIGN_IN || e.message === 'NEXT_REDIRECT')
+      router.push(LINK_SIGN_IN.href);
+
+    toast.error(e.message || errorMessage);
   }
 }
