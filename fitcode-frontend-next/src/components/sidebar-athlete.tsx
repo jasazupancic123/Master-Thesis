@@ -31,7 +31,7 @@ export default function SidebarAthlete() {
         spacing={2}
         bgcolor="background.default"
         width="100%"
-        height={screenSize.isLandscapeMobile || screenSize.isMobile ? 50 : 64}
+        height={50}
         justifyContent="center"
         alignItems="center"
       >
@@ -46,7 +46,7 @@ export default function SidebarAthlete() {
         justifyContent="center"
         zIndex={10001}
       >
-        {screenSize.isLandscapeMobile || screenSize.isMobile ? (
+        {!screenSize.isLandscapeMobile && !screenSize.isMobile ? (
           <Sidebar />
         ) : (
           <BottomNavigation index={index} setIndex={setIndex} mapper={mapper} />

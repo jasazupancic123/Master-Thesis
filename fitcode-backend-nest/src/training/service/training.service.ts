@@ -1018,7 +1018,7 @@ export class TrainingService {
 
     if (duplicates.length)
       throw new BadRequestException(
-        `Components ${duplicates.map((c) => c.name.toLowerCase()).join(', ')} already exist in the training`,
+        `Duplicate components`,
       );
   }
 

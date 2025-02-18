@@ -36,8 +36,14 @@ export type GroupContextProps = GroupIdPageProps & {
   setComponent: SetStateNullable<TrainingComponent>;
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
-  subgroup: Subgroup | undefined;
-  setSubgroup: SetStateNullable<Subgroup>;
+  selectedSubgroup: {
+    subgroup: Subgroup | null;
+    index: number;
+  } | null;
+  setSelectedSubgroup: SetState<{
+    subgroup: Subgroup | null;
+    index: number;
+  } | null>;
   dateFrom: Dayjs;
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;

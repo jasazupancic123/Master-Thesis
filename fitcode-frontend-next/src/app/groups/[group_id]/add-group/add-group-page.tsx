@@ -11,14 +11,7 @@ import { User } from '@/controller/user/type/user.type';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import {
-  Avatar,
-  Box,
-  Button,
-  Grid2,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Button, TextField, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useRouter } from 'next/navigation';

@@ -171,7 +171,31 @@ export class TrainingPlanService {
     const supersets =
       trainingOrSubgroupRef.components[ref.componentId].supersets || [];
 
-    // add exercises
+    // Check if the current superset already has 4 exercises
+    if (Object.keys(supersets[ref.superset].exercises).length >= 4) {
+      let emptySuperset = supersets.find(
+        (superset) => Object.keys(superset.exercises).length < 4,
+      );
+
+      if (emptySuperset === undefined && supersets.length >= 4) {
+        // All 4 supersets have 4 exercises
+        throw new BadRequestException(
+          'Maximum number of exercises per superset reached',
+        );
+      } else if (emptySuperset === undefined) {
+        // Creating a new superset, since all current ones are full
+        const newSupersetId = supersets.length;
+        supersets.push({
+          exercises: {},
+        });
+        ref.superset = newSupersetId;
+      } else {
+        // Found a superset with less than 4 exercises
+        ref.superset = supersets.indexOf(emptySuperset);
+      }
+    }
+
+    // Add exercises to the determined superset
     let order = Object.keys(supersets[ref.superset].exercises).length;
     supersets[ref.superset].exercises = {
       ...supersets[ref.superset].exercises,

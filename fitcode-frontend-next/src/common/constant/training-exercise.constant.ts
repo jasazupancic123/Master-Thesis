@@ -67,8 +67,9 @@ export const INT_OPTIONS: SetExerciseOption = {
 };
 
 export const KG_OPTIONS: SetExerciseOption = {
-  type: 'number',
+  type: 'select',
   label: 'kg',
+  values: getValues(120),
   format: (value) => value,
 };
 

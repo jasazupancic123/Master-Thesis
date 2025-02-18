@@ -18,10 +18,12 @@ import {
   handleDragChange,
   handleUpdateCycleDates,
 } from './state';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 dayjs.extend(dayOfYear);
 
 export default function MultiCycleSlider(props: MultiCycleSliderProps) {
+  const screenSize = useScreenSize();
   const { setShowModal } = props;
 
   const { token, group, setGroup, cycle, setCycle } = useGroup();
@@ -112,7 +114,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      p={3}
+      p={screenSize.isMobile ? 1 : 3}
       pt={1}
       pb={detectedChange ? 3 : 0}
       width="100%"
@@ -130,15 +132,22 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
         </IconButton>
       </Stack>
 
-      <Box flexDirection="row" display="flex" width="100%">
+      <Box
+        flexDirection="row"
+        display="flex"
+        width="100%"
+        alignItems="center"
+        justifyContent="flex-start"
+      >
         <IconButton
           sx={{
-            mb: 2,
+            mb: 3,
             backgroundColor: 'primary.light',
             color: 'white',
             borderRadius: '50%',
-            width: 30,
-            height: 30,
+            width: screenSize.isReallySmall ? 20 : 30,
+            height: screenSize.isReallySmall ? 20 : 30,
+            p: screenSize.isReallySmall ? 1 : 0,
             mr: 1,
             '&:hover': { backgroundColor: 'primary.dark' },
           }}
@@ -320,7 +329,11 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
             mt={1}
           >
             {Array.from({ length: 13 }).map((_, monthIndex) => (
-              <Typography key={monthIndex} variant="caption">
+              <Typography
+                key={monthIndex}
+                variant="caption"
+                sx={{ fontSize: screenSize.isReallySmall ? 9 : undefined }}
+              >
                 {dayjs().month(monthIndex).format('MMM')}
               </Typography>
             ))}

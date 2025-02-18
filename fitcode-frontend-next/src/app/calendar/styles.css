@@ -9,6 +9,7 @@ span button {
 
 .rbc-today {
   background-color: var(--today-bg-color) !important;
+  font-weight: bold;
 }
 
 .rbc-toolbar-label {
@@ -18,6 +19,21 @@ span button {
 
 .rbc-event {
   background-color: var(--event-bg-color) !important;
+  font-size: 12px !important; /* Adjust to your preference */
+  text-align: center;
+  display: inline-block; /* Makes the event shrink to fit its content */
+  width: max-content; /* Ensures it only wraps around the text */
+  padding: 2px 2px; /* Adds a little padding for better appearance */
+  margin: var(--rbc-event-margin) !important; /* Removes the default margin */
+  cursor: default; /* Removes the pointer cursor */
+}
+
+.rbc-row-segment { /* Adjust this based on the actual parent class */
+  height: var(--row-container-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers horizontally */
+  justify-content: center; /* Centers vertically */
 }
 
 .rbc-button-link {

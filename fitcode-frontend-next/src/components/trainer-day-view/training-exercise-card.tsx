@@ -82,7 +82,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       <Stack
         direction="row"
         spacing={screenSize.isSmallerThanLaptop ? undefined : 1}
-        flexWrap="wrap"
+        flexWrap={screenSize.isTablet ? 'wrap' : undefined}
         width="100%"
         justifyContent="center"
       >

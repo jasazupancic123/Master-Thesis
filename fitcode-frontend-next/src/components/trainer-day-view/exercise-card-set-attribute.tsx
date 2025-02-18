@@ -1,5 +1,5 @@
 import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
-import { Stack, FormControl, Select, MenuItem, TextField } from '@mui/material';
+import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
 
 const sx = {
   border: 'none',
@@ -43,7 +43,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
       <FormControl variant="filled" size="small" sx={sx}>
         <Select
           variant="filled"
-          sx={sx['& .MuiSelect-select']}
+          sx={{ ...sx['& .MuiSelect-select'] }}
           disableUnderline={true}
           value={state.option}
           disabled={disabled}
@@ -62,7 +62,13 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           }}
         >
           {options.map((option) => (
-            <MenuItem key={option.label} value={option.label}>
+            <MenuItem
+              key={option.label}
+              value={option.label}
+              sx={{
+                width: '10px',
+              }}
+            >
               {option.label.toUpperCase()}
             </MenuItem>
           ))}

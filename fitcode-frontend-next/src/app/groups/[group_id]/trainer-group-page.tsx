@@ -40,7 +40,7 @@ export default function TrainerGroupPage() {
           backgroundColor: theme.palette.background.paper,
           borderTopLeftRadius: '20px',
           borderTopRightRadius: '20px',
-          pb: 3,
+          pb: 1,
         }}
       >
         <GroupDateFilterButtonGroup filter={filter} setFilter={setFilter} />

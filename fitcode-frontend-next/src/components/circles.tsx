@@ -5,6 +5,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 import React from 'react';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 interface Props {
   items: { label: string; value: string; sublabel?: string }[];
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function Circles(props: Props) {
+  const screenSize = useScreenSize();
   return (
     <Box
       sx={{
@@ -31,9 +33,10 @@ export default function Circles(props: Props) {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          gap: screenSize.isMobile ? 0 : 2,
+          width: screenSize.isMobile ? '100%' : undefined,
           backgroundColor: '#1A2B3C',
-          padding: '8px 16px',
+          padding: screenSize.isMobile ? 0 : '8px 16px',
           borderBottomRightRadius: '20px',
           borderBottomLeftRadius: '20px',
           maxWidth: 1700,
@@ -42,12 +45,16 @@ export default function Circles(props: Props) {
       >
         {/* Left Arrow */}
         {props.arrows && (
-          <Tooltip title="Previous">
+          <Tooltip
+            title="Previous"
+            sx={{ p: screenSize.isMobile ? 0 : undefined }}
+          >
             <IconButton
               onClick={() => props.onArrowClick?.('left')}
               sx={{
-                width: 40,
-                height: 40,
+                p: screenSize.isMobile ? 0 : undefined,
+                width: !screenSize.isDesktop ? 30 : 40,
+                height: !screenSize.isDesktop ? 30 : 40,
                 flexShrink: 0, // Prevents shrinking
               }}
             >
@@ -71,8 +78,8 @@ export default function Circles(props: Props) {
                 <Box
                   onClick={() => props.setValue(item.value)}
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: !screenSize.isDesktop ? 30 : 40,
+                    height: !screenSize.isDesktop ? 30 : 40,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

@@ -17,7 +17,7 @@ import { useTheme } from '@mui/material/styles';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { handleRemoveMember, handleUpdateMembers } from './state';
+import { handleUpdateMembers } from './state';
 
 export default function GroupMembersPage() {
   const { token, group, setGroup, users, groups } = useGroup();
@@ -115,6 +115,7 @@ export default function GroupMembersPage() {
         alignItems="center"
         mt={2}
         borderRadius={5}
+        pb={2}
       >
         <PageTitle title={`Members of ${group.name}`} />
 
@@ -175,7 +176,10 @@ export default function GroupMembersPage() {
 
         <Button
           variant="contained"
-          sx={{ marginTop: 2, backgroundColor: theme.palette.primary.dark }}
+          sx={{
+            marginTop: 2,
+            backgroundColor: theme.palette.primary.dark,
+          }}
           onClick={() =>
             handleUpdateMembers(token, members, { router, group, setGroup })
           }
