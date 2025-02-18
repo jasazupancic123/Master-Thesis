@@ -1,26 +1,14 @@
-import { IdEntity } from '../../common/entity/id.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
 import {
-  IsInt,
   IsNotEmpty,
-  IsObject,
   IsOptional,
   IsString,
-  Min,
   ValidateNested,
 } from 'class-validator';
-import { Expose, Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TrainingExercise } from './training-exercise.entity';
-import { TrainingComponent } from './training-component.entity';
 
 export class Superset {
-  @IsInt()
-  @IsOptional()
-  @Min(0)
-  @ApiPropertyOptional()
-  @Expose()
-  order?: number;
-
   @IsString()
   @IsOptional()
   @IsNotEmpty()
@@ -28,10 +16,9 @@ export class Superset {
   @Expose()
   color?: string;
 
-  @IsObject()
+  @ValidateNested({ each: true })
+  @Type(() => TrainingExercise)
   @ApiProperty()
   @Expose()
-  exercises: {
-    [exerciseId: string]: TrainingExercise;
-  };
+  exercises: TrainingExercise[];
 }

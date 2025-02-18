@@ -1,70 +1,50 @@
 import { Component } from '../component/type/component.type';
 import { Exercise } from '../exercise/type/exercise.type';
 import { User } from '../user/type/user.type';
-import { TrainingExercise } from './type/training-plan.type';
 import { Training } from './type/training.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training {
-    const mappedItem = { ...item };
+    for (const tc of item.components)
+      tc.component = components.find((c) => c.id === tc.id);
 
-    for (const componentId in mappedItem.components)
-      mappedItem.components[componentId].component = components.find(
-        (c) => c.id === componentId
-      );
-
-    return mappedItem;
+    return item;
   }
 
   static mapExercises(item: Training, exercises: Exercise[]): Training {
-    const mappedItem = { ...item };
+    for (const tc of item.components) {
+      for (const s of tc.supersets)
+        for (const e of s.exercises)
+          e.exercise = exercises.find(({ id }) => id === e.id) || null;
 
-    for (const componentId in mappedItem.components) {
-      const trainingComponent = mappedItem.components[componentId];
-      for (const superset of trainingComponent.supersets) {
-        // Sort exercises & convert to map
-        const sorted: { [key: string]: TrainingExercise } = {};
-        const trainingExercises = Object.entries(superset.exercises || {}).map(
-          ([_, e]) => e
-        );
-
-        trainingExercises.sort((a, b) => a.order - b.order);
-        for (const e of trainingExercises) sorted[e.id] = e;
-        superset.exercises = sorted;
-
-        // Map exercises
-        for (const exerciseId in superset.exercises) {
-          const trainingExercise = superset.exercises[exerciseId];
-          const found = exercises.find((e) => e.id === trainingExercise.id);
-          if (found) trainingExercise.exercise = found;
-        }
-      }
+      for (const subgroup of tc.subgroups)
+        for (const s of subgroup.supersets)
+          for (const e of s.exercises)
+            e.exercise = exercises.find(({ id }) => id === e.id) || null;
     }
 
-    return mappedItem;
+    return item;
   }
 
   static mapMembers(item: Training, users: User[]): Training {
-    const mappedItem = { ...item };
-
-    mappedItem.members = item.membersIds.map(
-      (userId) => users.find((u) => u.uid === userId)!
+    item.members = item.membersIds.map(
+      (id) => users.find((u) => u.uid === id)!
     );
 
-    return mappedItem;
+    return item;
   }
 
   static mapAvailableMembers(training: Training): Training {
-    const allMembersIds = training.membersIds;
-
-    const subgroups = Object.values(training.subgroups || {});
-    const subgroupMembersIds = subgroups.flatMap((s) => s.membersIds);
-    const availableMembersIds = allMembersIds.filter(
-      (memberId) => !subgroupMembersIds.includes(memberId)
+    const subgroupMembersIds = training.components.flatMap((component) =>
+      component.subgroups.flatMap((subgroup) => subgroup.membersIds)
     );
 
-    const mapped = { ...training };
-    mapped.availableMembersIds = availableMembersIds;
-    return mapped;
+    const allSubgroupMembersIds = new Set(subgroupMembersIds);
+    const availableMembersIds = training.membersIds.filter(
+      (memberId) => !allSubgroupMembersIds.has(memberId)
+    );
+
+    training.availableMembersIds = availableMembersIds;
+    return training;
   }
 }

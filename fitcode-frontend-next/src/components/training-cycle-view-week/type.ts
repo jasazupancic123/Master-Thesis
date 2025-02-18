@@ -21,7 +21,6 @@ type TrainingCycleViewCommonProps = {
     trainingId: string,
     data: AddTrainingComponents
   ) => void;
-  deleteTraining: (trainingId: string) => Promise<void>;
   deleteTrainingComponent: (
     trainingId: string,
     componentId: string

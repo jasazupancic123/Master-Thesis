@@ -1,7 +1,7 @@
 import { CommonService } from '@/common/service/common.service';
-import { Group } from './type/group.type';
 import { DateRange } from '@/common/type/date-range.type';
 import { Cycle } from './type/cycle.type';
+import { Group } from './type/group.type';
 
 const api = CommonService.instance.api;
 
@@ -51,6 +51,8 @@ export class GroupController {
     body: DateRange & {
       name?: string;
       description?: string;
+      rootComponentsIds?: string[];
+      leafComponentsIds?: string[];
     }
   ) {
     return api.patch<Cycle>(`/group/${groupId}/cycle/${cycleId}`, body, {
