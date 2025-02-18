@@ -40,12 +40,10 @@ export default function TrainingCard(props: TrainingCardProps) {
             {commonService.date.format(day.date)}
           </Typography>
 
-          {training && (
-            <Typography variant="caption" sx={{ mx: 1 }}>
-              {commonService.date.formatTime(training.from)}:
-              {commonService.date.formatTime(training.to)}
-            </Typography>
-          )}
+          <Typography variant="caption" sx={{ mx: 1 }}>
+            {commonService.date.formatTime(training.from)}:
+            {commonService.date.formatTime(training.to)}
+          </Typography>
         </Box>
       </Box>
 
@@ -59,26 +57,20 @@ export default function TrainingCard(props: TrainingCardProps) {
           mt: 0,
         }}
       >
-        {training && (
-          <>
-            <Typography variant="h6" p={1}>
-              Training ({commonService.date.formatTime(training.from)} -{' '}
-              {commonService.date.formatTime(training.to)})
-            </Typography>
+        <Typography variant="h6" p={1}>
+          Training ({commonService.date.formatTime(training.from)} -{' '}
+          {commonService.date.formatTime(training.to)})
+        </Typography>
 
-            <Subgroups />
+        <Subgroups />
 
-            {Object.values(training.components || {})?.map(
-              (trainingComponent, i) => (
-                <TrainingComponentCard
-                  key={i}
-                  training={training}
-                  trainingComponent={trainingComponent}
-                />
-              )
-            )}
-          </>
-        )}
+        {training.components.map((trainingComponent, i) => (
+          <TrainingComponentCard
+            key={i}
+            training={training}
+            trainingComponent={trainingComponent}
+          />
+        ))}
       </Box>
     </Box>
   );

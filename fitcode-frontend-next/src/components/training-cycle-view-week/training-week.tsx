@@ -17,13 +17,22 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
 
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { token, group, cycle, components, setCycle, trainings, setTrainings } =
-    useGroup();
+  const {
+    token,
+    group,
+    cycle,
+    components,
+    setCycle,
+    setFilteredTrainings,
+    trainings,
+    filteredTrainings,
+    setTrainings,
+  } = useGroup();
 
   function getFilteredTrainings(date: Dayjs, period: string) {
     date = dayjs(date);
 
-    return trainings.filter((training) => {
+    return filteredTrainings.filter((training) => {
       const trainingDate = dayjs(training.from);
       const start = trainingDate.startOf('day');
       const end = dayjs(training.to).endOf('day');
@@ -52,11 +61,11 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
       },
       {
         router,
-        components,
         setCycle,
-        trainings,
+        filteredTrainings,
+        setFilteredTrainings,
         setTrainings,
-        setSelectedComponents: setSelected as any,
+        components,
       }
     );
   }
@@ -163,13 +172,10 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                         onClick={(e) => {
                           if (!props.selected) return;
                           e.stopPropagation();
+
                           props.addTrainingComponent(training.id, {
-                            components: props.selected.map((c, i) => ({
-                              id: c.id,
-                              order: i,
-                            })),
+                            componentsIds: props.selected?.map((c) => c.id),
                           });
-                          props.setSelected!!([]);
                         }}
                       >
                         {key > 0 && <Divider />}
@@ -178,7 +184,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                           order={key + 1}
                           training={training}
                           addTrainingComponent={props.addTrainingComponent}
-                          deleteTraining={props.deleteTraining}
                           deleteTrainingComponent={
                             props.deleteTrainingComponent
                           }

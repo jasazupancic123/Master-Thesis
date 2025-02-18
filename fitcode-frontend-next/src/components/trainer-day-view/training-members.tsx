@@ -5,8 +5,10 @@ import { useGroup } from '@/context/group-provider';
 import { Avatar, Stack, Tooltip, Typography } from '@mui/material';
 
 export default function TrainingMembers() {
-  const { group, users, training } = useGroup();
+  const { group, users, training, component } = useGroup();
   const members = users.filter((user) => group.membersIds.includes(user.uid));
+
+  if (!component) return null;
 
   return (
     <>
@@ -49,7 +51,7 @@ export default function TrainingMembers() {
                 );
 
               // Find the subgroup index
-              const subgroupIndex = Object.values(training.subgroups).findIndex(
+              const subgroupIndex = component.subgroups.findIndex(
                 (subgroup: any) => subgroup.membersIds.includes(member.uid)
               );
 

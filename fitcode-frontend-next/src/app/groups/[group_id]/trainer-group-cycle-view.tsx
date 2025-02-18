@@ -2,12 +2,10 @@ import ExerciseChips from '@/components/exercise-chips';
 import SelectInput from '@/components/select-input';
 import {
   handleAddTrainingComponents,
-  handleDeleteTraining,
   handleDeleteTrainingComponent,
 } from '@/components/trainer-cycle-view/state';
 import TrainingWeek from '@/components/training-cycle-view-week/training-week';
 import { useGroup } from '@/context/group-provider';
-import { useScreenSize } from '@/context/screen-size-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
@@ -26,12 +24,14 @@ export default function TrainerCycleView() {
     components,
     cycle,
     setCycle,
+    training,
+    setTraining,
     setTrainings,
+    setFilteredTrainings,
     setDateFrom,
     setDateTo,
   } = useGroup();
 
-  const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
@@ -138,17 +138,10 @@ export default function TrainerCycleView() {
                       {
                         router,
                         components,
+                        training,
+                        setTraining,
                         setTrainings,
-                      }
-                    )
-                  }
-                  deleteTraining={(trainingId) =>
-                    handleDeleteTraining(
-                      token,
-                      { trainingId },
-                      {
-                        router,
-                        setTrainings,
+                        setFilteredTrainings,
                       }
                     )
                   }
@@ -156,7 +149,14 @@ export default function TrainerCycleView() {
                     handleDeleteTrainingComponent(
                       token,
                       { trainingId, componentId },
-                      { router, components, setTrainings }
+                      {
+                        router,
+                        training,
+                        setTraining,
+                        setTrainings,
+                        setFilteredTrainings,
+                        components,
+                      }
                     )
                   }
                 />

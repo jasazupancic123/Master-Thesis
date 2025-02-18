@@ -37,14 +37,13 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     // Initial check & event listener for resizes
     checkWrapping();
     window.addEventListener('resize', checkWrapping);
-
     return () => window.removeEventListener('resize', checkWrapping);
-  }, [training.components]); // Rerun when components change
+  }, [training.components]);
 
   let fontSize = undefined;
   if (screenSize.isMobile) fontSize = '125%';
   else if (screenSize.isLandscapeMobile) fontSize = 15;
-  else if (Object.values(training.components).length > 5) {
+  else if (training?.components.length > 5) {
     fontSize = 22.5;
   }
 
@@ -64,14 +63,13 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         maxHeight={40}
         mt={
           screenSize.isLandscapeMobile ||
-          (Object.values(training.components).length >= 5 &&
-            screenSize.isLaptop)
+          (training.components.length >= 5 && screenSize.isLaptop)
             ? 1
             : screenSize.isLaptop
               ? 1
               : screenSize.isMobile
                 ? 2
-                : Object.values(training.components).length > 5
+                : training.components.length > 5
                   ? 0.5
                   : undefined
         }
@@ -92,7 +90,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
           },
         }}
       >
-        {Object.values(training.components).map(({ component }) => {
+        {training.components.map(({ component }) => {
           if (!component) return null;
           const IconComponent: SvgIconComponent =
             commonService.navigation.getComponentIcon(component?.name);

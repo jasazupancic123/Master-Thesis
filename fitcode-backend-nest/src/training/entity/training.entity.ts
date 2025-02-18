@@ -1,17 +1,15 @@
-import { BaseEntity } from '../../common/entity/base.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsDate,
   IsNotEmpty,
-  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Transform, Type } from 'class-transformer';
-import { TrainingComponent } from './training-component.entity';
-import { Subgroup } from './subgroup.entity';
 import { UserMeta } from 'src/user/entity/user-meta.entity';
+import { BaseEntity } from '../../common/entity/base.entity';
+import { TrainingComponent } from './training-component.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -38,6 +36,13 @@ export class Training extends BaseEntity {
   @Expose()
   membersIds: string[]; // all members of the group
 
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  copiedFromId?: string; // if this training is copied from another training
+
   @IsDate()
   @ApiProperty()
   @Expose()
@@ -50,33 +55,15 @@ export class Training extends BaseEntity {
   @Transform(({ value }) => new Date(value))
   to: Date;
 
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @ApiPropertyOptional()
-  @Expose()
-  copiedFromId?: string; // if this training is copied from another training
-
-  @IsObject()
+  @ValidateNested({ each: true })
+  @Type(() => TrainingComponent)
   @ApiProperty()
   @Expose()
-  components: {
-    [componentId: string]: TrainingComponent;
-  };
+  components: TrainingComponent[];
 
   @ValidateNested({ each: true })
-  @Type(() => Subgroup)
+  @Type(() => UserMeta)
   @ApiProperty()
   @Expose()
-  subgroups: {
-    [subgroupId: string]: Subgroup;
-  };
-
-  @IsObject()
-  @ApiProperty()
-  @Expose()
-  meta: {
-    // members' meta used to calculate workloads
-    [userId: string]: UserMeta;
-  };
+  meta: UserMeta[]; // members' meta used to calculate workloads
 }

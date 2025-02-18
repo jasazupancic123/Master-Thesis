@@ -12,6 +12,7 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import { Pagination, TextField } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -37,8 +38,6 @@ export function ExercisesPage() {
     token,
     groups,
     group,
-    component,
-    setComponent,
     components,
     attributes,
     exercises: allExercises,
@@ -49,6 +48,9 @@ export function ExercisesPage() {
   const screenSize = useScreenSize();
 
   // filter exercises
+  const [selectedComponent, setSelectedComponent] = useState<Component | null>(
+    null
+  );
   const [exercises, setExercises] = useState([...allExercises]);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState('');
@@ -69,8 +71,8 @@ export function ExercisesPage() {
   useEffect(() => {
     handlePaginateExercises(
       {
-        ...(component?.id && {
-          componentsIds: [component.id],
+        ...(selectedComponent?.id && {
+          componentsIds: [selectedComponent.id],
         }),
         ...(search && { name: search }),
       },
@@ -86,7 +88,7 @@ export function ExercisesPage() {
     token,
     components,
     search,
-    component,
+    selectedComponent,
     pagination.page,
     pagination.pageSize,
     pagination.pages,
@@ -112,11 +114,14 @@ export function ExercisesPage() {
           <Box pb={1}>
             <PageTitle title="Exercises" />
           </Box>
+
           <ExerciseChips
             noSelectionLabel="All"
             components={ComponentService.toTree(components)}
-            selected={component}
-            setSelected={(component) => setComponent(component as Component)}
+            selected={selectedComponent}
+            setSelected={(component) =>
+              setSelectedComponent(component as Component)
+            }
             bgColor={theme.palette.background.default}
             primaryColor={theme.palette.primary.main}
           />
@@ -200,7 +205,7 @@ export function ExercisesPage() {
                     router,
                     components,
                     attributes,
-                    component,
+                    component: selectedComponent!,
                     filteredExercises,
                     setFilteredExercises,
                     setExercises,

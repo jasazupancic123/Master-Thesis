@@ -1,28 +1,53 @@
-import { Box, Stack, Typography } from '@mui/material';
+'use client';
+
+import { useGroup } from '@/context/group-provider';
+import { Save } from '@mui/icons-material';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TrainingWeekViewItemProps } from './type';
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
   const { training, updateTraining } = props;
-  const [date, setDate] = useState(() => ({
-    from: dayjs(training.from).format('HH:mm'),
-    to: dayjs(training.to).format('HH:mm'),
-  }));
+  const { setFilteredTrainings } = useGroup();
 
-  async function onChange(key: 'from' | 'to', value: string) {
-    const [hours, minutes] = value.split(':');
-    const date = dayjs(training.from)
-      .set('hour', parseInt(hours))
-      .set('minute', parseInt(minutes));
+  const [isChanged, setIsChanged] = useState(false);
+  const [updatedComponents, setUpdatedComponents] = useState(
+    training.components
+  );
 
-    await updateTraining(training, { [key]: date.toDate() });
-
-    setDate((prev) => ({ ...prev, [key]: value }));
-  }
+  useEffect(() => {
+    // only update current filtered trainings (in week view, max 7 of them are in array)
+    // and update all trainings and current training after training is saved
+    setFilteredTrainings((prev) =>
+      prev.map((t) =>
+        t.id === training.id
+          ? { ...training, components: updatedComponents }
+          : t
+      )
+    );
+  }, [updatedComponents]);
 
   return (
     <Box>
+      {isChanged && (
+        <IconButton
+          onClick={() => {
+            updateTraining(training, {
+              from: training.from,
+              to: training.to,
+              components: updatedComponents,
+            });
+
+            setIsChanged(false);
+          }}
+        >
+          <Tooltip title="Save Training">
+            <Save />
+          </Tooltip>
+        </IconButton>
+      )}
+
       {/* Training components */}
       <Box
         sx={{
@@ -33,52 +58,62 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
           flexDirection: 'column',
         }}
       >
-        <Stack spacing={1}>
-          <input
-            type="time"
-            value={date.from}
-            onChange={(e) => onChange('from', e.target.value)}
-            style={{
-              color: '#fff',
-              backgroundColor: '#303E4A',
-              border: 'none',
-              padding: '4px',
-              borderRadius: '4px',
-              textAlign: 'center',
-            }}
-          />
-
-          <input
-            type="time"
-            value={date.to}
-            onChange={(e) => onChange('to', e.target.value)}
-            style={{
-              color: '#fff',
-              backgroundColor: '#303E4A',
-              border: 'none',
-              padding: '4px',
-              borderRadius: '4px',
-              textAlign: 'center',
-            }}
-          />
-        </Stack>
-
-        {Object.values(training.components).map((c) => (
-          <Box
-            key={c.id}
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mt: 1,
-            }}
-          >
+        {training.components.map((c) => (
+          <Stack key={c.id}>
             <Typography
-              sx={{ color: '#fff', textAlign: 'left', flexBasis: '66.67%' }}
+              sx={{
+                color: '#fff',
+                textAlign: 'left',
+                flexBasis: '66.67%',
+              }}
             >
               {c.component?.name}
             </Typography>
-          </Box>
+
+            <Stack spacing={1} sx={{ mb: 1 }}>
+              <input
+                type="time"
+                value={dayjs(c.from).format('HH:mm')}
+                onChange={(e) => {
+                  setIsChanged(true);
+
+                  const [hours, minutes] = e.target.value.split(':');
+                  const from = dayjs(training.from)
+                    .set('hour', parseInt(hours))
+                    .set('minute', parseInt(minutes))
+                    .toDate();
+
+                  const components = [...updatedComponents];
+                  const i = updatedComponents.findIndex((tc) => tc.id === c.id);
+                  if (i === -1) return;
+                  components[i] = { ...components[i], from };
+                  setUpdatedComponents(components);
+                }}
+                style={{
+                  color: '#fff',
+                  backgroundColor: '#303E4A',
+                  border: 'none',
+                  padding: '4px',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                }}
+              />
+
+              {/* <input
+                type="time"
+                value={date.to}
+                onChange={(e) => onChange('to', e.target.value)}
+                style={{
+                  color: '#fff',
+                  backgroundColor: '#303E4A',
+                  border: 'none',
+                  padding: '4px',
+                  borderRadius: '4px',
+                  textAlign: 'center',
+                }}
+              /> */}
+            </Stack>
+          </Stack>
         ))}
       </Box>
     </Box>

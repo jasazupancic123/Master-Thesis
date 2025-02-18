@@ -1,4 +1,3 @@
-import { useGroup } from '@/context/group-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { ArrowLeft, ArrowRight } from '@mui/icons-material';
 import {
@@ -10,28 +9,13 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { SearchBar } from '../search-bar';
 import { AddExerciseFormProps } from './props';
-import { addExercise } from './state';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
-  const { selectedExercises } = props;
-  const router = useRouter();
-
+  const { selectedExercisesIds, setSelectedExercisesIds } = props;
   const { filteredExercises, setPagination, search, setSearch } =
     useTrainerDayViewContext();
-
-  const {
-    token,
-    training,
-    setTraining,
-    setFilteredTrainings,
-    setTrainings,
-    component,
-    components,
-    exercises,
-  } = useGroup();
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" width="100%">
@@ -66,8 +50,8 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
               return 0;
             })
             .map((exercise) => {
-              const isSelected = selectedExercises.some(
-                (ex) => ex.id === exercise.id
+              const isSelected = selectedExercisesIds.some(
+                (id) => id === exercise.id
               );
 
               return (
@@ -117,27 +101,15 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
                     variant={isSelected ? 'outlined' : 'contained'}
                     color="primary"
                     onClick={() => {
-                      if (!training || !component) return;
-
-                      if (!isSelected) {
-                        addExercise(
-                          token,
-                          {
-                            trainingId: training.id,
-                            componentId: component.id,
-                            superset: 0,
-                            exerciseId: exercise.id,
-                          },
-                          {
-                            router,
-                            setTraining,
-                            setTrainings,
-                            setFilteredTrainings,
-                            components,
-                            exercises,
-                          }
+                      if (isSelected)
+                        setSelectedExercisesIds((prev) =>
+                          prev.filter((id) => id !== exercise.id)
                         );
-                      }
+                      else
+                        setSelectedExercisesIds((prev) => [
+                          ...prev,
+                          exercise.id,
+                        ]);
                     }}
                   >
                     {isSelected ? 'Selected' : 'Select'}

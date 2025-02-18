@@ -1,10 +1,9 @@
 import { CommonService } from '@/common/service/common.service';
-import { Training } from './type/training.type';
-import { ExerciseMeta, TrainingPlan } from './type/training-plan.type';
 import { DateRange } from '@/common/type/date-range.type';
 import { SetData } from './type/set-data';
 import { Subgroup } from './type/subgroup.type';
-import { BaseEntity } from '@/common/type/entity.type';
+import { TrainingComponent } from './type/training-plan.type';
+import { Training } from './type/training.type';
 
 const api = CommonService.instance.api;
 
@@ -24,7 +23,7 @@ export class TrainingController {
     body: Required<DateRange> & {
       groupId: string;
       cycleId: string;
-      components: TrainingPlan;
+      componentsIds: string[];
     }
   ) {
     return api.post<Training>('/training', body, { token });
@@ -33,7 +32,7 @@ export class TrainingController {
   static async update(
     token: string,
     trainingId: string,
-    body: Partial<DateRange & { components: TrainingPlan }>
+    body: Partial<DateRange & { components: TrainingComponent[] }>
   ) {
     return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }
@@ -42,7 +41,46 @@ export class TrainingController {
     return api.delete<{}>(`/training/${trainingId}`, { token });
   }
 
-  static async addSubgroup(
+  static async updateAthleteWorkload(
+    token: string,
+    trainingId: string,
+    componentId: string,
+    superset: number,
+    exerciseId: string,
+    body: {
+      subgroupId?: string;
+      sets: SetData[];
+    }
+  ) {
+    return api.patch<{}>(
+      `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}/set`,
+      body,
+      { token }
+    );
+  }
+
+  static async addComponents(
+    token: string,
+    trainingId: string,
+    body: { componentsIds: string[] }
+  ) {
+    return api.post<Training>(`/training/${trainingId}/component`, body, {
+      token,
+    });
+  }
+
+  static async deleteComponent(
+    token: string,
+    trainingId: string,
+    componentId: string
+  ) {
+    return api.delete<Training>(
+      `/training/${trainingId}/component/${componentId}`,
+      { token }
+    );
+  }
+
+  /* static async addSubgroup(
     token: string,
     trainingId: string,
     body: { name: string; membersIds: string[] }
@@ -62,52 +100,6 @@ export class TrainingController {
     return api.patch<Training>(`/training/${trainingId}/subgroup`, body, {
       token,
     });
-  }
-
-  static async addComponents(
-    token: string,
-    trainingId: string,
-    body: {
-      subgroupId?: string;
-      components: {
-        id: string;
-        order: number;
-        color?: string;
-      }[];
-    }
-  ) {
-    return api.post<Training>(`/training/${trainingId}/component`, body, {
-      token,
-    });
-  }
-
-  static async updateComponent(
-    token: string,
-    trainingId: string,
-    componentId: string,
-    body: {
-      subgroupId?: string;
-      order: number;
-      color?: string;
-    }
-  ) {
-    return api.patch<Training>(
-      `/training/${trainingId}/component/${componentId}`,
-      body,
-      { token }
-    );
-  }
-
-  static async deleteComponent(
-    token: string,
-    trainingId: string,
-    componentId: string,
-    body: { subgroupId?: string }
-  ) {
-    return api.delete<Training>(
-      `/training/${trainingId}/component/${componentId}`,
-      { token, body }
-    );
   }
 
   static async addSuperset(
@@ -203,23 +195,5 @@ export class TrainingController {
       `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}`,
       { token, body }
     );
-  }
-
-  static async updateAthleteWorkload(
-    token: string,
-    trainingId: string,
-    componentId: string,
-    superset: number,
-    exerciseId: string,
-    body: {
-      subgroupId?: string;
-      sets: SetData[];
-    }
-  ) {
-    return api.patch<{}>(
-      `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}/set`,
-      body,
-      { token }
-    );
-  }
+  } */
 }

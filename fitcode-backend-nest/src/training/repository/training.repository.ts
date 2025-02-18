@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
@@ -8,20 +7,22 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import {
-  RootFirestoreCollectionRepository,
-  TrainingExerciseRef,
-  TrainingSupersetRef,
-} from '../../common/type/firebase-firestore.type';
-import { Training } from '../entity/training.entity';
+import { CommonService } from 'src/common/service/common.service';
+import { Component } from 'src/component/entity/component.entity';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { TrainingExercise } from '../entity/training-exercise.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { Training } from '../entity/training.entity';
 
 @Injectable()
 export class TrainingRepository
   implements RootFirestoreCollectionRepository<Training>
 {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly commonService: CommonService,
+  ) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -36,21 +37,44 @@ export class TrainingRepository
     return this.serialize(snapshot);
   }
 
-  async addDoc(input: Partial<Training>): Promise<string> {
+  async addDoc(
+    input: Partial<
+      Omit<Training, 'components'> & {
+        components: Partial<TrainingComponent>[];
+      }
+    >,
+  ): Promise<string> {
+    if (input.membersIds?.length === 0)
+      throw new BadRequestException('Training must have atleast one member');
+
+    if (input.components?.length === 0)
+      throw new BadRequestException('Training must have atleast one component');
+
     const result = await this.collection().add({
       groupId: input.groupId,
       cycleId: input.cycleId,
       ownerId: input.ownerId,
-      membersIds: input.membersIds || [],
-      copiedFromId: input.copiedFromId || null,
       from: Timestamp.fromDate(input.from),
       to: Timestamp.fromDate(input.to),
+      membersIds: input.membersIds || [],
+      copiedFromId: input.copiedFromId || null,
+      components: input.components.map((c) => ({
+        id: c.id,
+        color: c.color || this.commonService.color.random(),
+        from: Timestamp.fromDate(c.from ? c.from : new Date()),
+        to: Timestamp.fromDate(c.to ? c.to : new Date()),
+        subgroups: c.subgroups || [],
+        supersets: c.supersets || [
+          {
+            color: this.commonService.color.random(),
+            exercises: [],
+          },
+        ],
+      })),
+      meta: input.meta || [],
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       deletedAt: null,
-      components: input.components || {},
-      meta: input.meta || {},
-      subgroups: input.subgroups || [],
     });
 
     return result.id;
@@ -58,15 +82,44 @@ export class TrainingRepository
 
   async updateDoc(id: string, input: Partial<Training>) {
     await this.doc(id).update({
-      ...input,
       ...(input.from && { from: Timestamp.fromDate(input.from) }),
       ...(input.to && { to: Timestamp.fromDate(input.to) }),
-      updatedAt: Timestamp.now(),
+      ...(input.components && {
+        components: input.components.map((c) => ({
+          id: c.id,
+          from: Timestamp.fromDate(c.from || new Date()),
+          to: Timestamp.fromDate(c.to || new Date()),
+          color: c.color || null,
+          subgroups: c.subgroups.map((s) => ({
+            id: s.id,
+            name: s.name,
+            membersIds: s.membersIds,
+            supersets: s.supersets.map((s) => ({
+              color: s.color,
+              exercises: s.exercises.map((e) => ({
+                id: e.id,
+                color: e.color,
+                meta: { ...e.meta },
+              })),
+            })),
+          })),
+          supersets: c.supersets.map((s) => ({
+            color: s.color,
+            exercises: s.exercises.map((e) => ({
+              id: e.id,
+              color: e.color,
+              meta: { ...e.meta },
+            })),
+          })),
+        })),
+        updatedAt: Timestamp.now(),
+      }),
     });
   }
 
   async deleteDoc(id: string) {
-    await this.doc(id).update({ deletedAt: Timestamp.now() });
+    // await this.doc(id).update({ deletedAt: Timestamp.now() });
+    await this.doc(id).delete();
   }
 
   doc(id: string): DocumentReference {
@@ -91,12 +144,18 @@ export class TrainingRepository
       copiedFromId: data.copiedFromId || null,
       from: (data.from as Timestamp).toDate(),
       to: (data.to as Timestamp).toDate(),
+      components: (data.components || []).map((c: any) => ({
+        id: c.id,
+        color: c.color || null,
+        from: (c.from as Timestamp).toDate(),
+        to: (c.to as Timestamp).toDate(),
+        supersets: c.supersets || [],
+        subgroups: c.subgroups || [],
+      })),
+      meta: data.meta || [],
       createdAt: (data.createdAt as Timestamp).toDate(),
       updatedAt: (data.updatedAt as Timestamp).toDate(),
       deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
-      components: data.components || {},
-      meta: data.meta || {},
-      subgroups: data.subgroups || {},
     };
   }
 }
