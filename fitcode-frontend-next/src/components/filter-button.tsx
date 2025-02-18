@@ -17,6 +17,7 @@ export default function FilterButton(props: Props) {
       sx={{
         width: '25%',
         px: 2,
+        py: 1,
         color: '#fff',
         backgroundColor: 'background.paper',
         '&.Mui-selected': {

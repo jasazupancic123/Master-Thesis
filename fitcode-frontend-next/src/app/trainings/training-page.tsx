@@ -2,87 +2,151 @@
 
 import { CommonService } from '@/common/service/common.service';
 import AthleteTrainingExerciseCard from '@/components/athlete-trainings/athlete-training-exercise-card';
-import { Box, Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack, TextField, Typography } from '@mui/material';
 import { endOfDay, startOfDay } from 'date-fns';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TrainingPageProps } from './type';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainingPage(props: TrainingPageProps) {
+  const screenSize = useScreenSize();
   const { token, trainings: allTrainings } = props;
 
+  const [loading, setLoading] = useState(true);
   const [trainings, setTrainings] = useState(() =>
     allTrainings.filter(({ from }) =>
       commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
     )
   );
+  const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs>(
+    dayjs(new Date())
+  );
 
-  return (
-    <>
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    setTrainings(
+      allTrainings.filter(({ from }) =>
+        commonService.date.isBetween(
+          from,
+          startOfDay(selectedDate.toDate()),
+          endOfDay(selectedDate.toDate())
+        )
+      )
+    );
+    setLoading(false);
+  }, [selectedDate]);
+
+  return loading ? (
+    <>Loading...</>
+  ) : (
+    <Box display="flex" flexDirection="column" alignItems="center" pb={10}>
+      <Box width={screenSize.isSmallerThanLaptop ? 120 : 160} pt={4}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            label="Select Date"
+            value={selectedDate}
+            onChange={(newDate) => {
+              if (!newDate) return;
+              setSelectedDate(newDate);
+            }}
+            sx={{
+              textAlign: 'center',
+            }}
+            closeOnSelect={true}
+            format="DD-MMM-YYYY"
+          />
+        </LocalizationProvider>
+      </Box>
       {/* Trainings */}
-      <Stack p={2} sx={{ borderRadius: 2 }} spacing={3}>
-        <>
-          {trainings?.map((training, i) => (
-            <Box key={i} sx={{ borderRadius: 2, p: 3 }}>
-              {/* Training Time Header */}
-              <Stack direction="row" sx={{ borderRadius: 5 }}>
-                <Box
-                  sx={{
-                    width: 25,
-                    height: 25,
-                    backgroundColor: 'background.default',
-                    borderBottomLeftRadius: 5,
-                    borderTopLeftRadius: 5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: 3,
-                  }}
-                />
-
+      <Stack
+        sx={{
+          borderRadius: 2,
+          width: '100%',
+        }}
+      >
+        <Box
+          display="flex"
+          width="100%"
+          justifyContent="center"
+          flexDirection="column"
+        >
+          {trainings.length === 0 ? (
+            <Typography variant="h6" sx={{ pt: 2 }}>
+              No trainings scheduled for this day
+            </Typography>
+          ) : (
+            trainings?.map((training, i) => (
+              <Box
+                key={i}
+                sx={{
+                  borderRadius: 2,
+                  p: screenSize.isMobile ? 1 : 3,
+                  pt: screenSize.isMobile ? 3 : undefined,
+                  pb: 0,
+                  minWidth: screenSize.isSmallerThanLaptop ? undefined : 1000,
+                }}
+              >
+                {/* Training Time Header */}
                 <Stack
                   direction="row"
-                  spacing={3}
                   sx={{
-                    backgroundColor: '#025c59',
-                    px: 1,
-                    borderTopRightRadius: 5,
-                    borderBottomRightRadius: 5,
+                    borderRadius: 5,
                   }}
                 >
-                  <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                    {CommonService.instance.date.formatTime(
-                      dayjs(training.from)
-                    )}{' '}
-                    -{' '}
-                    {CommonService.instance.date.formatTime(dayjs(training.to))}
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                    {CommonService.instance.date.format(new Date())}
-                  </Typography>
+                  <Box
+                    sx={{
+                      width: 25,
+                      height: 25,
+                      backgroundColor: 'background.default',
+                      borderTopLeftRadius: 5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: 3,
+                    }}
+                  />
+
+                  <Stack
+                    direction="row"
+                    sx={{
+                      backgroundColor: '#025c59',
+                      px: 1,
+                      borderTopRightRadius: 5,
+                      justifyContent: screenSize.isMobile
+                        ? 'flex-start'
+                        : undefined,
+                    }}
+                  >
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {CommonService.instance.date.formatTime(
+                        dayjs(training.from)
+                      )}{' '}
+                      -{' '}
+                      {CommonService.instance.date.formatTime(
+                        dayjs(training.to)
+                      )}
+                    </Typography>
+                  </Stack>
                 </Stack>
-              </Stack>
-
-              <Divider sx={{ my: 0.5, mb: 2 }} />
-
-              {/* Components */}
-              <Stack spacing={3}>
-                {Object.values(training.components).map((component) => (
-                  <Box key={component.id} sx={{ borderRadius: 2 }}>
-                    <AthleteTrainingExerciseCard
-                      token={token}
-                      component={component}
-                      training={training}
-                    />
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-          ))}
-        </>
+                {/* Components */}
+                <Stack spacing={3}>
+                  <AthleteTrainingExerciseCard
+                    token={token}
+                    components={training.components}
+                    training={training}
+                  />
+                </Stack>
+              </Box>
+            ))
+          )}
+        </Box>
       </Stack>
-    </>
+    </Box>
   );
 }

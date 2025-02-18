@@ -53,8 +53,8 @@ export default function Circles(props: Props) {
               onClick={() => props.onArrowClick?.('left')}
               sx={{
                 p: screenSize.isMobile ? 0 : undefined,
-                width: 40,
-                height: 40,
+                width: !screenSize.isDesktop ? 30 : 40,
+                height: !screenSize.isDesktop ? 30 : 40,
                 flexShrink: 0, // Prevents shrinking
               }}
             >
@@ -78,8 +78,8 @@ export default function Circles(props: Props) {
                 <Box
                   onClick={() => props.setValue(item.value)}
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: !screenSize.isDesktop ? 30 : 40,
+                    height: !screenSize.isDesktop ? 30 : 40,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
