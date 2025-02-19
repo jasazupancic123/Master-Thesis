@@ -128,13 +128,24 @@ export async function handleAddTrainingComponents(
     components,
   } = state;
 
-  if (!restInput.componentsIds.length)
-    return toast.error('Select at least one component to add');
-
   handleApiRequest(
     router,
-    () => TrainingController.addComponents(token, trainingId, restInput),
+    () =>
+      !restInput.componentsIds.length
+        ? // if outside box was clicked, delete the whole training
+          TrainingController.delete(token, trainingId)
+        : // else, add components
+          TrainingController.addComponents(token, trainingId, restInput),
     (training) => {
+      if (!training) {
+        // training was deleted
+        if (trainingId === selectedTraining?.id) setTraining(undefined);
+        setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+        setFilteredTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+        return;
+      }
+
+      // add components to training
       const mapped = TrainingService.mapComponents(training, components);
       if (training.id === selectedTraining?.id) setTraining(mapped);
 
@@ -199,8 +210,6 @@ export async function handleDeleteTrainingComponent(
           prev.map((t) => (t.id === trainingId ? mapped : t))
         );
       }
-
-      // toast.success('Training component deleted successfully');
     },
     undefined,
     'Failed to delete training component'

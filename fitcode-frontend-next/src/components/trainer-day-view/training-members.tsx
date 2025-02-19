@@ -43,7 +43,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   useEffect(() => {
     if (!training) return;
 
-    const subgroups = training.components.flatMap((c) => c.subgroups);
+    const subgroups = component?.subgroups || [];
     const availableMembers = members.filter(
       (member) =>
         !subgroups.some((subgroup: any) =>
@@ -59,7 +59,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     };
 
     setSubgroups([defaultSubgroup, ...subgroups]);
-  }, [training]);
+  }, [training, component]);
 
   if (!component) return null;
 
@@ -80,7 +80,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             maxWidth: 1500,
             borderRadius: 2,
             rowGap: 1,
-            py: isSticky ? 1 : 2,
+            py: isSticky ? 0 : 2,
             display: 'flex',
             flexWrap: 'wrap',
             margin: 'auto',
@@ -93,7 +93,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             zIndex: isSticky ? 1 : undefined,
             position: isSticky ? 'fixed' : undefined,
             top: isSticky ? '70px' : undefined,
-            px: isSticky ? 2 : 0,
+            px: 0,
             boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
             border: isSticky ? '1px solid grey' : 'none',
           }}
@@ -147,6 +147,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
               return (
                 <div
+                  key={subgroup.id}
                   onClick={(event) => {
                     const BORDER_WIDTH = 2; // Match the border width
 
@@ -197,7 +198,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         backgroundColor: '#283444',
                         borderTopLeftRadius: 10,
                       }}
-                      height={70}
+                      height={screenSize.isMobile ? 55 : 70}
                     >
                       {/* First Typography (Green Box) */}
                       <Box
@@ -270,10 +271,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                               className="avatar-border"
                               src="/user_avatar.png" // Path to the image in the public folder
                               sx={{
-                                width:
-                                  isSticky && screenSize.isMobile ? 30 : 50,
-                                height:
-                                  isSticky && screenSize.isMobile ? 30 : 50,
+                                width: screenSize.isMobile ? 40 : 50,
+                                height: screenSize.isMobile ? 40 : 50,
                                 mx: 0.5,
                                 my: 1,
                               }}

@@ -3,7 +3,6 @@
 import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { TrainingService } from '@/controller/training/training.service';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -11,7 +10,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import {
   Avatar,
   Box,
-  Button,
   Card,
   CardContent,
   IconButton,
@@ -20,40 +18,34 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import MyModal from '../modal';
 import { DEFAULT_SUBGROUP } from './constant';
+import { SubgroupProps } from './props';
 import {
+  handleAddSubgroup,
+  handleDeleteSubgroup,
   handleRightClickSubgroup,
-  handleSaveSubgroupChanges,
   onDragEndSubgroup,
 } from './state';
-
-interface SubgroupProps {
-  showSubgroups: boolean;
-}
 
 export default function Subgroups(props: SubgroupProps) {
   const { showSubgroups } = props;
   const screenSize = useScreenSize();
-  const router = useRouter();
   const {
-    token,
     training,
     component,
+    group,
+    setComponent,
     setTrainings,
     setTraining,
     setFilteredTrainings,
     users,
-    components,
-    exercises,
   } = useGroup();
 
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
 
-  const [detectedSubgroupChanges, setDetectedSubgroupChanges] = useState(false);
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
@@ -66,14 +58,18 @@ export default function Subgroups(props: SubgroupProps) {
 
   useEffect(() => {
     if (!training || !component) return;
+    const availableMembers = group.membersIds.filter(
+      (id) =>
+        !component.subgroups.some((subgroup) =>
+          subgroup.membersIds.includes(id)
+        )
+    );
 
     setSubgroups(component.subgroups);
     setAvailableMembers(
-      TrainingService.mapAvailableMembers(training).availableMembersIds!.map(
-        (userId) => users.find((u) => u.uid === userId)!
-      )
+      availableMembers.map((id) => users.find((user) => user.uid === id)!)
     );
-  }, [training]);
+  }, [training, component]);
 
   if (!training) return null;
 
@@ -89,45 +85,10 @@ export default function Subgroups(props: SubgroupProps) {
             availableMembers,
             setAvailableMembers,
             users,
-            setDetectedSubgroupChanges,
             setTraining,
           })
         }
       >
-        {/* Subgroups Section */}
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          width="100%"
-        >
-          {detectedSubgroupChanges && showSubgroups && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() =>
-                handleSaveSubgroupChanges(token, {
-                  router,
-                  training,
-                  setTraining,
-                  setTrainings,
-                  setFilteredTrainings,
-                  subgroups,
-                  setSubgroups,
-                  setDetectedSubgroupChanges,
-                  components,
-                  exercises,
-                })
-              }
-              sx={{
-                mt: 1,
-              }}
-            >
-              Save Subgroup Changes
-            </Button>
-          )}
-        </Box>
-
         {showSubgroups && (
           <>
             <Box
@@ -197,7 +158,21 @@ export default function Subgroups(props: SubgroupProps) {
                               <EditIcon fontSize="small" />
                             </IconButton>
 
-                            <IconButton size="small" sx={{ p: 0.5 }}>
+                            <IconButton
+                              size="small"
+                              sx={{ p: 0.5 }}
+                              onClick={() => {
+                                handleDeleteSubgroup(
+                                  { subgroupId: subgroup.id },
+                                  {
+                                    training,
+                                    setTraining,
+                                    component: component!,
+                                    setComponent,
+                                  }
+                                );
+                              }}
+                            >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
                           </Box>
@@ -263,8 +238,9 @@ export default function Subgroups(props: SubgroupProps) {
                                               setFilteredTrainings,
                                               setTrainings,
                                               setAvailableMembers,
+                                              component,
+                                              setComponent,
                                               users,
-                                              setDetectedSubgroupChanges,
                                             }
                                           );
                                         }}
@@ -341,6 +317,15 @@ export default function Subgroups(props: SubgroupProps) {
         title="Create Subgroup"
         onCancel={() => setModal((prev) => ({ ...prev, subgroup: false }))}
         onConfirm={() => {
+          handleAddSubgroup({
+            training,
+            setTraining,
+            component: component!,
+            setComponent,
+            createSubgroup,
+            setCreateSubgroup,
+          });
+
           setModal((prev) => ({ ...prev, subgroup: false }));
         }}
       >

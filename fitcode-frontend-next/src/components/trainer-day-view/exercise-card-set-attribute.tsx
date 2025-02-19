@@ -1,23 +1,6 @@
 import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
-
-const sx = {
-  border: 'none',
-  size: 'small',
-  backgroundColor: 'transparent',
-  '& .MuiSelect-icon': { display: 'none' },
-  '& .MuiSelect-select': {
-    padding: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 25,
-    fontSize: '0.7rem',
-    color: 'lightgrey',
-    backgroundColor: 'transparent',
-    borderBottom: 'none',
-  },
-};
+import { exerciseCardSetAttributeSx } from './style';
 
 interface State {
   option: string;
@@ -40,10 +23,14 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   return (
     <Stack direction="column" m={0}>
       {/* On option change */}
-      <FormControl variant="filled" size="small" sx={sx}>
+      <FormControl
+        variant="filled"
+        size="small"
+        sx={exerciseCardSetAttributeSx}
+      >
         <Select
           variant="filled"
-          sx={{ ...sx['& .MuiSelect-select'] }}
+          sx={{ ...exerciseCardSetAttributeSx['& .MuiSelect-select'] }}
           disableUnderline={true}
           value={state.option}
           disabled={disabled}
@@ -77,10 +64,17 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
 
       {/* On value change */}
       {state.type === 'select' ? (
-        <FormControl variant="filled" size="small" sx={sx} disabled={disabled}>
+        <FormControl
+          variant="filled"
+          size="small"
+          sx={exerciseCardSetAttributeSx}
+          disabled={disabled}
+        >
           <Select
             variant="filled"
-            sx={{ ...sx['& .MuiSelect-select'], width: 60 }}
+            sx={{
+              ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
+            }}
             value={state.value}
             disabled={disabled}
             onChange={(e) => {
@@ -110,7 +104,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           sx={{
             mt: 0,
             bgcolor: 'transparent',
-            height: sx['& .MuiSelect-select'].height,
+            height: exerciseCardSetAttributeSx['& .MuiSelect-select'].height,
             width: 60,
             '& .MuiInputBase-root': {
               borderBottom: 'none',

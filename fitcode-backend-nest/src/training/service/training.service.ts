@@ -301,6 +301,12 @@ export class TrainingService {
         input.map((id) => ({ id, from: null, to: null })),
       );
 
+    // convert all query component dates to JS' Date, since trainingRepository.updateDoc converts them to Firestore's Timestamp
+    for (const c of query['components']) {
+      c['from'] = (c['from'] as Timestamp)?.toDate();
+      c['to'] = (c['to'] as Timestamp)?.toDate();
+    }
+
     // add components
     await this.trainingRepository.updateDoc(training.id, query);
     return updatedTraining;
@@ -1017,9 +1023,7 @@ export class TrainingService {
         duplicates.push(allComponents.find((c) => c.id === id));
 
     if (duplicates.length)
-      throw new BadRequestException(
-        `Duplicate components`,
-      );
+      throw new BadRequestException(`Duplicate components`);
   }
 
   private validateComponent(training: Training, ref: TrainingComponentRef) {

@@ -56,6 +56,17 @@ export class TrainingController {
     return await this.trainingService.update(user, ref, body);
   }
 
+  @Delete(':trainingId')
+  @Auth()
+  async delete(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+  ) {
+    const ref = { trainingId };
+    await this.trainingService.remove(user, ref);
+    return {};
+  }
+
   @Patch(
     ':trainingId/component/:componentId/superset/:superset/exercise/:exerciseId/set',
   )
