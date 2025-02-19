@@ -129,6 +129,17 @@ export default function Supersets(props: SupersetsProps) {
                         >
                           <Box
                             position="absolute"
+                            top={10}
+                            left={10}
+                            display="flex"
+                            flexDirection="column"
+                          >
+                            <Typography variant="caption" color="textSecondary">
+                              {`${i + 1}${String.fromCharCode(65 + k)}`}
+                            </Typography>
+                          </Box>
+                          <Box
+                            position="absolute"
                             top={5}
                             right={5}
                             display="flex"
@@ -287,16 +298,24 @@ export default function Supersets(props: SupersetsProps) {
               const exerciseToAdd = exercisesToAdd.shift(); // Remove from the front
               if (exerciseToAdd) superset.exercises.push(exerciseToAdd);
             }
-            if (exercisesToAdd.length === 0) break; // Stop if no exercises left
-          }
 
-          if (exercisesToAdd.length > 0) {
-            toast.error(
-              'Added exercises exceed the maximum number of exercises allowed'
-            );
-            return;
+            if (exercisesToAdd.length === 0) break; // Stop if no exercises left
+
+            if (supersets.indexOf(superset) === supersets.length - 1) {
+              if (supersets.length === 4)
+                return toast.error(
+                  'Added exercises exceed the maximum number of exercises allowed'
+                );
+
+              const newSuperset: Superset = {
+                exercises: exercisesToAdd,
+                color: COLOR[supersets.length],
+              };
+
+              supersets.push(newSuperset);
+              break;
+            }
           }
-          setSupersetsWithAdd([...supersets]);
 
           const updatedComponents = [...training.components];
           updatedComponents[trainingComponentIndex] = {
@@ -304,6 +323,7 @@ export default function Supersets(props: SupersetsProps) {
             supersets: [...supersets],
           };
 
+          setSupersetsWithAdd([...supersets]);
           setTraining({ ...training, components: updatedComponents });
           setOpenAddExerciseModal(false);
         }}

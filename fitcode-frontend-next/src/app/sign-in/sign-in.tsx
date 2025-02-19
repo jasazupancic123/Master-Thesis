@@ -4,6 +4,7 @@ import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import {
   LINK_CALENDAR,
   LINK_GROUPS,
+  LINK_TRAININGS,
   LINK_USERS,
   LINKS_AUTH,
 } from '@/common/constant/navigation.constant';
@@ -25,7 +26,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { signInUpTheme } from '../style';
 
 const mapper = {
-  [UserRole.ATHLETE]: LINK_CALENDAR,
+  [UserRole.ATHLETE]: LINK_TRAININGS,
   [UserRole.TRAINER]: LINK_GROUPS,
   [UserRole.MANAGER]: LINK_GROUPS,
   [UserRole.ADMIN]: LINK_USERS,
