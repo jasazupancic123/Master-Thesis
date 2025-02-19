@@ -26,6 +26,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setComponent,
     setTraining,
   } = useGroup();
+
   const members = users.filter((user) => group.membersIds.includes(user.uid));
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
@@ -72,8 +73,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setSubgroups([defaultSubgroup, ...subgroups]);
   }, [training, component]);
 
-  const handleRightClickAvatar = async (member: User) => {
+  async function handleRightClickAvatar(member: User) {
     if (!training || !component) return;
+
     const createSubgroup = {
       name: member.displayName || member.email,
       membersIds: [member.uid],
@@ -82,27 +84,26 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     const sameSubgroup = component.subgroups.find(
       (subgroup) => subgroup.name === createSubgroup.name
     );
-    if (sameSubgroup) {
-      toast.error('Subgroup for this member already exists');
-      return;
-    }
+
+    if (sameSubgroup)
+      return toast.error('Subgroup for this member already exists');
 
     //check if the member already exists in a subgroup and if he does, remove him from that subgroup
     const memberSubgroup = component.subgroups.find((subgroup) =>
       subgroup.membersIds.includes(member.uid)
     );
+
     if (memberSubgroup) {
       const newSubgroup = {
         ...memberSubgroup,
         membersIds: memberSubgroup.membersIds.filter((id) => id !== member.uid),
       };
+
       const newSubgroups = component.subgroups.map((subgroup) =>
         subgroup.id === newSubgroup.id ? newSubgroup : subgroup
       );
-      const newComponent = {
-        ...component,
-        subgroups: newSubgroups,
-      };
+
+      const newComponent = { ...component, subgroups: newSubgroups };
       setComponent(newComponent);
       setTraining({
         ...training,
@@ -112,17 +113,15 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       });
     }
 
-    const setCreateSubgroup = undefined;
-
     await handleAddSubgroup({
       training,
       setTraining,
       component: component!,
       setComponent,
       createSubgroup,
-      setCreateSubgroup,
+      setCreateSubgroup: undefined,
     });
-  };
+  }
 
   if (!component) return null;
 

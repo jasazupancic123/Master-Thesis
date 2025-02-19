@@ -300,6 +300,7 @@ export default function TrainerDayView() {
             </Box>
           </Box>
         </Stack>
+
         <Box
           display="flex"
           flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
@@ -309,6 +310,7 @@ export default function TrainerDayView() {
           sx={{ p: isSticky ? 0 : undefined, pt: 0, pb: component ? 0 : 2 }}
         >
           <TrainingMembers isSticky={isSticky} />
+
           {!isSticky && component && (
             <Tooltip title="Show subgroups">
               <IconButton
