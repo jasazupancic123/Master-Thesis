@@ -43,6 +43,8 @@ export default function Subgroups(props: SubgroupProps) {
     token,
     training,
     component,
+    group,
+    setComponent,
     setTrainings,
     setTraining,
     setFilteredTrainings,
@@ -53,7 +55,6 @@ export default function Subgroups(props: SubgroupProps) {
 
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
 
-  const [detectedSubgroupChanges, setDetectedSubgroupChanges] = useState(false);
   const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
@@ -68,12 +69,60 @@ export default function Subgroups(props: SubgroupProps) {
     if (!training || !component) return;
 
     setSubgroups(component.subgroups);
-    setAvailableMembers(
-      TrainingService.mapAvailableMembers(training).availableMembersIds!.map(
-        (userId) => users.find((u) => u.uid === userId)!
-      )
+    const availableMembers = group.membersIds.filter(
+      (id) =>
+        !component.subgroups.some((subgroup) =>
+          subgroup.membersIds.includes(id)
+        )
     );
-  }, [training]);
+    setAvailableMembers(
+      availableMembers.map((id) => users.find((user) => user.uid === id)!)
+    );
+  }, [training, component]);
+
+  const handleAddSubgroup = async () => {
+    if (!training || !component) return;
+
+    const newSubgroup: Subgroup = {
+      id: `subgroup-${component.subgroups.length + 1}`,
+      name: createSubgroup.name,
+      supersets: component.supersets,
+      membersIds: [],
+    };
+
+    setComponent((prev) => ({
+      ...prev!,
+      subgroups: [...prev!.subgroups, newSubgroup],
+    }));
+    setTraining((prev) => ({
+      ...prev!,
+      components: prev!.components.map((c) =>
+        c.id === component.id
+          ? { ...c, subgroups: [...c.subgroups, newSubgroup] }
+          : c
+      ),
+    }));
+    setCreateSubgroup({ name: '', membersIds: [] });
+  };
+
+  const handleDeleteSubgroup = (subgroupId: string) => {
+    if (!training || !component) return;
+
+    const updatedSubgroups = component.subgroups.filter(
+      (subgroup) => subgroup.id !== subgroupId
+    );
+
+    setComponent((prev) => ({
+      ...prev!,
+      subgroups: updatedSubgroups,
+    }));
+    setTraining((prev) => ({
+      ...prev!,
+      components: prev!.components.map((c) =>
+        c.id === component.id ? { ...c, subgroups: updatedSubgroups } : c
+      ),
+    }));
+  };
 
   if (!training) return null;
 
@@ -89,45 +138,10 @@ export default function Subgroups(props: SubgroupProps) {
             availableMembers,
             setAvailableMembers,
             users,
-            setDetectedSubgroupChanges,
             setTraining,
           })
         }
       >
-        {/* Subgroups Section */}
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          width="100%"
-        >
-          {detectedSubgroupChanges && showSubgroups && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() =>
-                handleSaveSubgroupChanges(token, {
-                  router,
-                  training,
-                  setTraining,
-                  setTrainings,
-                  setFilteredTrainings,
-                  subgroups,
-                  setSubgroups,
-                  setDetectedSubgroupChanges,
-                  components,
-                  exercises,
-                })
-              }
-              sx={{
-                mt: 1,
-              }}
-            >
-              Save Subgroup Changes
-            </Button>
-          )}
-        </Box>
-
         {showSubgroups && (
           <>
             <Box
@@ -197,7 +211,13 @@ export default function Subgroups(props: SubgroupProps) {
                               <EditIcon fontSize="small" />
                             </IconButton>
 
-                            <IconButton size="small" sx={{ p: 0.5 }}>
+                            <IconButton
+                              size="small"
+                              sx={{ p: 0.5 }}
+                              onClick={() => {
+                                handleDeleteSubgroup(subgroup.id);
+                              }}
+                            >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
                           </Box>
@@ -263,8 +283,9 @@ export default function Subgroups(props: SubgroupProps) {
                                               setFilteredTrainings,
                                               setTrainings,
                                               setAvailableMembers,
+                                              component,
+                                              setComponent,
                                               users,
-                                              setDetectedSubgroupChanges,
                                             }
                                           );
                                         }}
@@ -341,6 +362,7 @@ export default function Subgroups(props: SubgroupProps) {
         title="Create Subgroup"
         onCancel={() => setModal((prev) => ({ ...prev, subgroup: false }))}
         onConfirm={() => {
+          handleAddSubgroup();
           setModal((prev) => ({ ...prev, subgroup: false }));
         }}
       >

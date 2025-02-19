@@ -6,6 +6,7 @@ import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { DEFAULT_SUBGROUP } from './constant';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 
 export function onDragEndSubgroup(
   { destination, draggableId }: any,
@@ -17,7 +18,6 @@ export function onDragEndSubgroup(
     availableMembers: User[];
     setAvailableMembers: SetState<User[]>;
     users: User[];
-    setDetectedSubgroupChanges: SetState<boolean>;
     setTraining: SetStateNullable<Training>;
   }
 ) {
@@ -29,7 +29,6 @@ export function onDragEndSubgroup(
     availableMembers,
     setAvailableMembers,
     users,
-    setDetectedSubgroupChanges,
     setTraining,
   } = state;
 
@@ -78,7 +77,6 @@ export function onDragEndSubgroup(
     return { ...prev, subgroups: updatedSubgroups };
   });
 
-  setDetectedSubgroupChanges(true);
   setSubgroups(updatedSubgroups);
 }
 
@@ -95,8 +93,9 @@ export function handleRightClickSubgroup(
     setTrainings: SetState<Training[]>;
     setFilteredTrainings: SetState<Training[]>;
     setAvailableMembers: SetState<User[]>;
+    component: TrainingComponent | undefined;
+    setComponent: SetStateNullable<TrainingComponent>;
     users: User[];
-    setDetectedSubgroupChanges: SetState<boolean>;
   }
 ) {
   const { memberId, subgroupId } = input;
@@ -108,25 +107,41 @@ export function handleRightClickSubgroup(
     setTrainings,
     setFilteredTrainings,
     setAvailableMembers,
+    component,
+    setComponent,
     users,
-    setDetectedSubgroupChanges,
   } = state;
 
-  if (subgroupId === 'default' || !training) return;
+  if (subgroupId === 'default' || !training || !component) return;
 
   const updatedSubgroups = subgroups.map((s) => ({
     ...s,
     membersIds: s.membersIds.filter((id) => id !== memberId),
   }));
 
-  setDetectedSubgroupChanges(true);
   setSubgroups(updatedSubgroups);
   setAvailableMembers((prev) => [
     ...prev,
     users.find((user) => user.uid === memberId)!,
   ]);
 
-  setTraining((prev) => ({ ...prev!, subgroups: updatedSubgroups }));
+  const newComponent = {
+    ...component,
+    subgroups: updatedSubgroups,
+  };
+
+  setComponent(newComponent);
+  //update component in training
+  setTraining((prev: any) => {
+    if (!prev) return null;
+    return {
+      ...prev,
+      components: prev.components.map((c: any) =>
+        c.id === newComponent.id ? newComponent : c
+      ),
+    };
+  });
+
   setTrainings((prev) =>
     prev.map((t) =>
       t.id === training?.id ? { ...t, subgroups: updatedSubgroups } : t

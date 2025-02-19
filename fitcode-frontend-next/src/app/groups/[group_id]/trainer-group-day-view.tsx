@@ -73,6 +73,14 @@ export default function TrainerDayView() {
 
   useEffect(() => {
     const handleScroll = () => {
+      if (screenSize.isSmallerThanLaptop) {
+        if (!isSticky) {
+          return;
+        } else {
+          setIsSticky(false);
+          return;
+        }
+      }
       const scrollY = window.scrollY;
       setIsSticky(scrollY > 150);
     };
@@ -98,6 +106,8 @@ export default function TrainerDayView() {
 
   async function handleUpdateTraining() {
     if (!training) return;
+
+    console.log('training', training);
 
     await handleApiRequest(
       router,
@@ -303,7 +313,7 @@ export default function TrainerDayView() {
           width="100%"
           justifyContent="center"
           alignItems="center"
-          sx={{ p: isSticky ? 0 : undefined, pt: 0 }}
+          sx={{ p: isSticky ? 0 : undefined, pt: 0, pb: component ? 0 : 2 }}
         >
           <TrainingMembers isSticky={isSticky} />
           {!isSticky && component && (

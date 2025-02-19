@@ -22,8 +22,11 @@ export async function handleApiRequest<T>(
     console.error(e);
     if (onError) onError(e);
 
-    if (e.message === REDIRECT_TO_SIGN_IN || e.message === 'NEXT_REDIRECT')
+    if (e.message === REDIRECT_TO_SIGN_IN || e.message === 'NEXT_REDIRECT'){
       router.push(LINK_SIGN_IN.href);
+      toast.error('Please sign in again');
+      return;
+    }
 
     toast.error(e.message || errorMessage);
   }

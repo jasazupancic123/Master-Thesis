@@ -101,15 +101,12 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
                     variant={isSelected ? 'outlined' : 'contained'}
                     color="primary"
                     onClick={() => {
-                      if (isSelected)
-                        setSelectedExercisesIds((prev) =>
-                          prev.filter((id) => id !== exercise.id)
-                        );
-                      else
+                      if (!isSelected) {
                         setSelectedExercisesIds((prev) => [
                           ...prev,
                           exercise.id,
                         ]);
+                      }
                     }}
                   >
                     {isSelected ? 'Selected' : 'Select'}

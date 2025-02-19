@@ -128,8 +128,18 @@ export async function handleAddTrainingComponents(
     components,
   } = state;
 
-  if (!restInput.componentsIds.length)
-    return toast.error('Select at least one component to add');
+  if (!restInput.componentsIds.length){
+    try {
+      await TrainingController.delete(token, trainingId)
+      setTraining(undefined);
+      setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+      toast.success('Training deleted successfully');
+    }
+    catch(e){
+      toast.error('Failed to delete training');
+    }
+    return
+  }
 
   handleApiRequest(
     router,
@@ -180,6 +190,18 @@ export async function handleDeleteTrainingComponent(
     router,
     () => TrainingController.deleteComponent(token, trainingId, componentId),
     (training) => {
+      if (training.components.length === 0) {
+        TrainingController.delete(token, trainingId)
+          .then(() => {
+            setTraining(undefined);
+            setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+            toast.success('Training deleted successfully');
+          })
+          .catch(() => {
+            toast.error('Failed to delete training');
+          });
+        return;
+      }
       const mapped = TrainingService.mapComponents(training, components);
 
       if (mapped.components.length === 0) {
@@ -199,8 +221,6 @@ export async function handleDeleteTrainingComponent(
           prev.map((t) => (t.id === trainingId ? mapped : t))
         );
       }
-
-      // toast.success('Training component deleted successfully');
     },
     undefined,
     'Failed to delete training component'
