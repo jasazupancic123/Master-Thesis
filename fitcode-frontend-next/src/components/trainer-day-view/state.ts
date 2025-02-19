@@ -117,7 +117,7 @@ export function handleRightClickSubgroup(
 
   const updatedComponents = [...training.components];
   const i = training.components.findIndex((c) => c.id === component.id);
-  if (!i || i === -1) return;
+  if (i === undefined || i === -1) return;
 
   const updatedSubgroups = subgroups.map((s) => ({
     ...s,
@@ -154,7 +154,7 @@ export async function handleAddSubgroup(state: {
   component: TrainingComponent;
   setComponent: SetStateNullable<TrainingComponent>;
   createSubgroup: { name: string; membersIds: string[] };
-  setCreateSubgroup: SetState<{ name: string; membersIds: string[] }>;
+  setCreateSubgroup: SetState<{ name: string; membersIds: string[] }> | undefined;
 }) {
   const {
     training,
@@ -168,10 +168,10 @@ export async function handleAddSubgroup(state: {
   if (!training || !component) return;
 
   const newSubgroup: Subgroup = {
-    id: `subgroup-${component.subgroups.length + 1}`,
+    id: `subgroup-${String(Date.now())}`,
     name: createSubgroup.name,
     supersets: component.supersets,
-    membersIds: [],
+    membersIds: createSubgroup.membersIds || [],
   };
 
   setComponent((prev) => ({
@@ -188,7 +188,7 @@ export async function handleAddSubgroup(state: {
     ),
   }));
 
-  setCreateSubgroup({ name: '', membersIds: [] });
+  setCreateSubgroup?({ name: '', membersIds: [] }) : null;
 }
 
 export function handleDeleteSubgroup(
@@ -333,7 +333,8 @@ export async function onDragEnd(
     (e) => e.id === draggableId
   );
 
-  if (!exerciseIndex || exerciseIndex === -1) return;
+  //ĆORI TU MORE BIT UNDEFINED KER !exerciseIndex se kliče tudi te ko je 0!
+  if (exerciseIndex === undefined || exerciseIndex === -1) return;
 
   supersetWithNewExercise.exercises.push(
     supersetWithExercise.exercises[exerciseIndex]
@@ -367,6 +368,7 @@ export async function onDragEnd(
       c.id === component.id ? { ...c, supersets: finalSupersetsCopy } : c
     ),
   });
+  console.log('updated')
 }
 
 export function handleDeleteExercise(

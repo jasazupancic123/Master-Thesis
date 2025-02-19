@@ -168,7 +168,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                       <Box
                         key={key}
                         borderRadius={2}
-                        sx={{ cursor: 'pointer' }}
+                        sx={{ cursor: 'pointer', p: 0, m: 0, height: '100%' }}
                         onClick={(e) => {
                           if (!props.selected) return;
                           e.stopPropagation();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GENDERS } from '@/common/constant/gender.constant';
 import {
   Avatar,
@@ -16,11 +16,12 @@ import { useTheme } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { SPORT_LEVELS } from '@/common/constant/sport-level.constant';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { ProfilePageProps } from './type';
+import { Auth, updateCurrentUser } from '@firebase/auth';
 
 export default function ProfilePage(props: ProfilePageProps) {
   const { token, user } = props;
@@ -39,8 +40,22 @@ export default function ProfilePage(props: ProfilePageProps) {
   const [sportLevel, setSportLevel] = useState('');
 
   const handleSaveProfile = async () => {
-    // implement functionality
+    // Update user profile
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const names = user.displayName?.split(' ');
+    setFirstName(names ? names[0] : '');
+    setLastName(names && names.length > 1 ? names[1] : '');
+    setGender(GENDERS[0]); //not on user yet
+    setDob(dayjs('2001-09-14'));
+    setEmail(user.email);
+    setPhoneNumber('+38670739540'); //not on user yet
+    setSport(SPORTS[0]); //not on user yet
+    setSportLevel(SPORT_LEVELS[0]); //not on user yet
+  }, []);
 
   return (
     <Box
@@ -49,7 +64,7 @@ export default function ProfilePage(props: ProfilePageProps) {
       alignItems="center"
       height="100vh"
       overflow="auto"
-      pt={screenSize.isMobile || screenSize.isLandscapeMobile ? 2 : 8}
+      pt={screenSize.isMobile || screenSize.isLandscapeMobile ? 0 : 8}
       pb={screenSize.isLandscapeMobile ? 15 : undefined}
     >
       <Avatar
@@ -68,15 +83,17 @@ export default function ProfilePage(props: ProfilePageProps) {
       {/* First & Last Name - Ensuring Equal Width */}
       <Box display="flex" width="100%" my={defaultMargin} gap={defaultMargin}>
         <TextField
-          label="First Name"
+          label={!firstName ? 'First Name' : undefined}
           variant="outlined"
           sx={{ flex: 1 }}
+          value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
         />
         <TextField
-          label="Last Name"
+          label={!lastName ? 'Last Name' : undefined}
           variant="outlined"
           sx={{ flex: 1 }}
+          value={lastName}
           onChange={(e) => setLastName(e.target.value)}
         />
       </Box>
@@ -115,7 +132,8 @@ export default function ProfilePage(props: ProfilePageProps) {
         </LocalizationProvider>
       </Box>
       <TextField
-        label="Email"
+        label={!email ? 'Email' : undefined}
+        value={email}
         variant="outlined"
         fullWidth
         sx={{ my: defaultMargin }}
@@ -123,7 +141,8 @@ export default function ProfilePage(props: ProfilePageProps) {
       />
       {/* Phone Number Input */}
       <TextField
-        label="Phone number"
+        label={!phoneNumber ? 'Phone number' : undefined}
+        value={phoneNumber}
         variant="outlined"
         type="tel" // Triggers numeric keyboard on mobile
         inputProps={{
