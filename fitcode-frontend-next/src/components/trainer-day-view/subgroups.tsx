@@ -5,6 +5,7 @@ import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -207,6 +208,7 @@ export default function Subgroups(props: SubgroupProps) {
                               const userId = training!.membersIds.find(
                                 (memberId) => memberId === id
                               );
+
                               const user = users.find(
                                 (user) => user.uid === userId
                               );
@@ -277,35 +279,25 @@ export default function Subgroups(props: SubgroupProps) {
                   </Droppable>
                 )
               )}
-
-              {/* Add New Subgroup Button */}
-              <Card
-                onClick={() =>
-                  setModal((prev: any) => ({
-                    ...prev,
-                    subgroup: true,
-                  }))
-                }
-                sx={{
-                  flex: '1 1 70%',
-                  minWidth: 250,
-                  maxWidth: screenSize.isLaptop ? 420 : 500,
-                  minHeight: 210,
-                  maxHeight: 210,
-                  margin: 1,
-                  transition: 'border 0.2s',
-                  border: '1px dashed #999',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                }}
-              >
-                <Typography variant="h3" sx={{ color: '#666' }}>
-                  +
-                </Typography>
-              </Card>
             </Box>
+
+            {/* Add New Subgroup Button */}
+            <IconButton
+              sx={{ p: 0, m: 0, mb: 2 }}
+              onClick={() =>
+                setModal((prev: any) => ({ ...prev, subgroup: true }))
+              }
+            >
+              <AddIcon
+                sx={{
+                  width: 30,
+                  height: 30,
+                  backgroundColor: '#1EB980',
+                  color: 'white',
+                  borderRadius: '50%',
+                }}
+              />
+            </IconButton>
           </>
         )}
       </DragDropContext>
