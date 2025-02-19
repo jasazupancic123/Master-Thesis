@@ -1,35 +1,26 @@
 'use client';
 
 import { COLOR } from '@/common/constant/browser.constant';
+import { SetState } from '@/common/type/state.type';
 import BorderColor from '@/components/border-color';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Effort } from '@/controller/training/enum/effort.enum';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 import { WorkloadType } from '@/controller/training/enum/workload-type.enum';
 import {
-  ExerciseMeta,
   Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
-import { Update } from '@mui/icons-material';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 import MyModal from '../modal';
 import AddExerciseForm from './add-exercise-form';
+import { SupersetsProps } from './props';
+import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCard from './training-exercise-card';
-import { SetState } from '@/common/type/state.type';
-
-interface SupersetsProps {
-  openAddExerciseModal: boolean;
-  setOpenAddExerciseModal: SetState<boolean>;
-}
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
@@ -58,175 +49,22 @@ export default function Supersets(props: SupersetsProps) {
     if (!component) setSelectedExercisesIds([]);
   }, [component]);
 
-  async function onDragEnd({ destination, draggableId }: any) {
-    if (!destination || !training || !component) return;
-
-    if (destination.droppableId === 'addSupersetDroppable') {
-      if (supersets.length >= 4)
-        return toast.error('You can only have 4 supersets per component');
-
-      const supersetsCopy = [...supersetsWithAdd];
-
-      const supersetWithExercise = supersetsCopy.find((superset) =>
-        superset.exercises.find((e) => e.id === draggableId)
-      );
-      if (!supersetWithExercise) return;
-
-      const draggedExercise = supersetWithExercise?.exercises.find(
-        (e) => e.id === draggableId
-      );
-      if (!draggedExercise) return;
-
-      const newSuperset = {
-        color: undefined,
-        exercises: [draggedExercise],
-      } as Superset;
-
-      const newSupersets = [...supersetsCopy, newSuperset];
-
-      supersetWithExercise.exercises = supersetWithExercise.exercises.filter(
-        (e) => e.id !== draggableId
-      );
-
-      setComponent({ ...component, supersets: newSupersets });
-      setTraining({
-        ...training,
-        components: training.components.map((c) =>
-          c.id === component.id ? { ...c, supersets: newSupersets } : c
-        ),
-      });
-      setSupersetsWithAdd([...newSupersets]);
-      return;
-    }
-
-    const supersetIndex = parseInt(destination.droppableId.split('-')[1]);
-    const supersetWithNewExercise = supersetsWithAdd[supersetIndex];
-    const supersetsCopy = [...supersetsWithAdd];
-
-    const supersetWithExercise = supersetsCopy.find((superset) =>
-      superset.exercises.find((e) => e.id === draggableId)
-    );
-
-    if (!supersetWithExercise) return;
-
-    if (supersetWithExercise === supersetWithNewExercise) {
-      // Get y coordinates of all exercises in the superset
-      const sortedExercises = supersetWithExercise.exercises
-        .map((e) => ({
-          exercise: e,
-          y:
-            document.getElementById(e.id)?.getBoundingClientRect().top ??
-            Infinity, // Default to Infinity if not found
-        }))
-        .sort((a, b) => a.y - b.y) // Sort by y coordinate
-        .map((item) => item.exercise); // Extract only exercises
-
-      const newSuprset = {
-        ...supersetWithExercise,
-        exercises: sortedExercises,
-      };
-      setComponent({
-        ...component,
-        supersets: supersetsCopy.map((superset) =>
-          superset === supersetWithExercise ? newSuprset : superset
-        ),
-      });
-      setTraining({
-        ...training,
-        components: training.components.map((c) =>
-          c.id === component.id ? { ...c, supersets: supersetsCopy } : c
-        ),
-      });
-      setSupersetsWithAdd(
-        supersets.map((s) => (s === supersetWithExercise ? newSuprset : s))
-      );
-      return;
-    }
-
-    if (supersetWithNewExercise.exercises.length >= 4)
-      return toast.error('You can only have 4 exercises per superset');
-
-    const exerciseIndex = supersetWithExercise.exercises.findIndex(
-      (e) => e.id === draggableId
-    );
-
-    if (exerciseIndex === undefined || exerciseIndex === -1) return;
-
-    supersetWithNewExercise.exercises.push(
-      supersetWithExercise.exercises[exerciseIndex]
-    );
-    const newExercises = supersetWithNewExercise.exercises;
-    const sortedExercises = newExercises
-      .map((e) => ({
-        exercise: e,
-        y:
-          document.getElementById(e.id)?.getBoundingClientRect().top ??
-          Infinity, // Default to Infinity if not found
-      }))
-      .sort((a, b) => a.y - b.y) // Sort by y coordinate
-      .map((item) => item.exercise); // Extract only exercises
-    supersetWithNewExercise.exercises = sortedExercises;
-    const oldFinalSuperset = supersetWithExercise.exercises.filter(
-      (e) => e.id !== draggableId
-    );
-
-    const finalSupersetsCopy = supersetsCopy.map((superset) =>
-      superset === supersetWithExercise
-        ? { ...superset, exercises: oldFinalSuperset }
-        : superset
-    );
-    setComponent({ ...component, supersets: finalSupersetsCopy });
-    setTraining({
-      ...training,
-      components: training.components.map((c) =>
-        c.id === component.id ? { ...c, supersets: finalSupersetsCopy } : c
-      ),
-    });
-    setSupersetsWithAdd(finalSupersetsCopy);
-  }
-
-  const handleDeleteExercise = (exerciseId: string) => {
-    if (!component || !training) return;
-    const updatedSupersets = supersetsWithAdd.map((superset) => ({
-      ...superset,
-      exercises: superset.exercises.filter((e) => e.id !== exerciseId),
-    }));
-
-    const newComponent = {
-      ...component,
-      supersets: updatedSupersets,
-    };
-    setComponent(newComponent);
-    setTraining({
-      ...training,
-      components: training.components.map((c) =>
-        c.id === component.id ? newComponent : c
-      ),
-    });
-    setSupersetsWithAdd(updatedSupersets);
-  };
-
-  const handleDeleteSuperset = (index: number) => {
-    if (!component || !training) return;
-    const updatedSupersets = supersetsWithAdd.filter((_, i) => i !== index);
-    const newComponent = {
-      ...component,
-      supersets: updatedSupersets,
-    };
-    setComponent(newComponent);
-    setTraining({
-      ...training,
-      components: training.components.map((c) =>
-        c.id === component.id ? newComponent : c
-      ),
-    });
-    setSupersetsWithAdd(updatedSupersets);
-  };
-
   if (!component || !training) return null;
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DragDropContext
+      onDragEnd={(input) =>
+        onDragEnd(input, {
+          training,
+          setTraining,
+          component,
+          setComponent,
+          supersets,
+          supersetsWithAdd,
+          setSupersetsWithAdd,
+        })
+      }
+    >
       <Box display="flex" flexWrap="wrap" gap={2} justifyContent="center">
         {supersetsWithAdd.map((superset, i) => (
           <Droppable
@@ -250,7 +88,19 @@ export default function Supersets(props: SupersetsProps) {
                 flexDirection="column"
               >
                 <Box
-                  onClick={() => handleDeleteSuperset(i)}
+                  onClick={() =>
+                    handleDeleteSuperset(
+                      { index: i },
+                      {
+                        training,
+                        setTraining,
+                        component,
+                        setComponent,
+                        supersetsWithAdd,
+                        setSupersetsWithAdd,
+                      }
+                    )
+                  }
                   sx={{ cursor: 'pointer' }}
                 >
                   <BorderColor color={superset.color || COLOR[i]} />
@@ -288,7 +138,17 @@ export default function Supersets(props: SupersetsProps) {
                               <IconButton
                                 size="small"
                                 onClick={() =>
-                                  handleDeleteExercise(exercise.id)
+                                  handleDeleteExercise(
+                                    { exerciseId: exercise.id },
+                                    {
+                                      training,
+                                      setTraining,
+                                      component,
+                                      setComponent,
+                                      supersetsWithAdd,
+                                      setSupersetsWithAdd,
+                                    }
+                                  )
                                 }
                               >
                                 <DeleteIcon />
@@ -308,7 +168,19 @@ export default function Supersets(props: SupersetsProps) {
                 </Box>
 
                 <Box
-                  onClick={() => handleDeleteSuperset(i)}
+                  onClick={() =>
+                    handleDeleteSuperset(
+                      { index: i },
+                      {
+                        training,
+                        setTraining,
+                        component,
+                        setComponent,
+                        supersetsWithAdd,
+                        setSupersetsWithAdd,
+                      }
+                    )
+                  }
                   sx={{ cursor: 'pointer' }}
                 >
                   <BorderColor

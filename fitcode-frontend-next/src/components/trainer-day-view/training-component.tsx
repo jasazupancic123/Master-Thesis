@@ -71,15 +71,12 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             >
                               <IconButton
                                 onClick={() => {
-                                  console.log(component, trainingComponent);
                                   if (
                                     component &&
                                     trainingComponent &&
                                     trainingComponent.id === component.id
-                                  ) {
-                                    console.log('here');
+                                  )
                                     setOpenAddExerciseModal(true);
-                                  }
                                 }}
                                 sx={{ p: 0, m: 0 }}
                               >

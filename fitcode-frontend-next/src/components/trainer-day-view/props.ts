@@ -28,3 +28,12 @@ export interface TrainingExerciseCardProps {
   exercise: TrainingExercise;
   onChange: (data: Partial<ExerciseMeta>) => void;
 }
+
+export interface SubgroupProps {
+  showSubgroups: boolean;
+}
+
+export interface SupersetsProps {
+  openAddExerciseModal: boolean;
+  setOpenAddExerciseModal: SetState<boolean>;
+}
