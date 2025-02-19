@@ -1,24 +1,6 @@
 import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
 
-const sx = {
-  border: 'none',
-  size: 'small',
-  backgroundColor: 'transparent',
-  '& .MuiSelect-icon': { display: 'none' },
-  '& .MuiSelect-select': {
-    padding: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 25,
-    fontSize: '0.7rem',
-    color: 'lightgrey',
-    backgroundColor: 'transparent',
-    borderBottom: 'none',
-  },
-};
-
 interface State {
   option: string;
   value: string;
@@ -36,6 +18,24 @@ interface SetExerciseAttributeProps {
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const { options, state, onChange, disabled = false } = props;
+
+  const sx = {
+    border: 'none',
+    size: 'small',
+    backgroundColor: 'transparent',
+    '& .MuiSelect-icon': { display: 'none' },
+    '& .MuiSelect-select': {
+      padding: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 25,
+      fontSize: '0.7rem',
+      color: 'lightgrey',
+      backgroundColor: 'transparent',
+      borderBottom: 'none',
+    },
+  };
 
   return (
     <Stack direction="column" m={0}>
@@ -80,7 +80,9 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         <FormControl variant="filled" size="small" sx={sx} disabled={disabled}>
           <Select
             variant="filled"
-            sx={{ ...sx['& .MuiSelect-select'], width: 60 }}
+            sx={{
+              ...sx['& .MuiSelect-select'],
+            }}
             value={state.value}
             disabled={disabled}
             onChange={(e) => {

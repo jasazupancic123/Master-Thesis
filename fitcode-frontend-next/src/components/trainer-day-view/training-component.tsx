@@ -71,11 +71,13 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             >
                               <IconButton
                                 onClick={() => {
+                                  console.log(component, trainingComponent);
                                   if (
                                     component &&
                                     trainingComponent &&
                                     trainingComponent.id === component.id
                                   ) {
+                                    console.log('here');
                                     setOpenAddExerciseModal(true);
                                   }
                                 }}
@@ -248,8 +250,15 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             component &&
             trainingComponent.id === component.id &&
             training.id === selectedTraining?.id && (
-              <Box bgcolor="background.paper" p={2}>
-                <Supersets />
+              <Box
+                bgcolor="background.paper"
+                p={2}
+                px={screenSize.isLaptop ? 0 : undefined}
+              >
+                <Supersets
+                  openAddExerciseModal={openAddExerciseModal}
+                  setOpenAddExerciseModal={setOpenAddExerciseModal}
+                />
               </Box>
             )}
         </Box>
