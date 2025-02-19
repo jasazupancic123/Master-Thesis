@@ -147,14 +147,14 @@ export default function Subgroups(props: SubgroupProps) {
                           >
                             <IconButton
                               size="small"
+                              sx={{ p: 0.5 }}
                               onClick={() => {
+                                setEditedSubgroup(subgroup as Subgroup);
                                 setModal((prev) => ({
                                   ...prev,
                                   editSubgroup: true,
                                 }));
-                                setEditedSubgroup(subgroup as Subgroup);
                               }}
-                              sx={{ p: 0.5 }}
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>

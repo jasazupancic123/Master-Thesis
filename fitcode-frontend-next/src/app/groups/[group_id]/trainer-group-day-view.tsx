@@ -32,6 +32,7 @@ export default function TrainerDayView() {
     group,
     cycle,
     components,
+    exercises,
     training,
     setTrainings,
     setFilteredTrainings,
@@ -106,7 +107,8 @@ export default function TrainerDayView() {
       router,
       () => TrainingController.update(token, training.id, training),
       (newTraining) => {
-        const mapped = TrainingService.mapComponents(newTraining, components);
+        let mapped = TrainingService.mapComponents(newTraining, components);
+        mapped = TrainingService.mapExercises(newTraining, exercises);
 
         setTrainings((prev) =>
           prev.map((t) => (t.id === newTraining.id ? mapped : t))
