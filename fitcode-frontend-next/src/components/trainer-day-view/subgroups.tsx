@@ -5,6 +5,7 @@ import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -29,7 +30,6 @@ import {
   handleRightClickSubgroup,
   onDragEndSubgroup,
 } from './state';
-import AddIcon from '@mui/icons-material/Add';
 
 export default function Subgroups(props: SubgroupProps) {
   const { showSubgroups } = props;
@@ -208,6 +208,7 @@ export default function Subgroups(props: SubgroupProps) {
                               const userId = training!.membersIds.find(
                                 (memberId) => memberId === id
                               );
+
                               const user = users.find(
                                 (user) => user.uid === userId
                               );

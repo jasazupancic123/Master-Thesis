@@ -298,25 +298,24 @@ export default function Supersets(props: SupersetsProps) {
               const exerciseToAdd = exercisesToAdd.shift(); // Remove from the front
               if (exerciseToAdd) superset.exercises.push(exerciseToAdd);
             }
+
             if (exercisesToAdd.length === 0) break; // Stop if no exercises left
+
             if (supersets.indexOf(superset) === supersets.length - 1) {
-              if (supersets.length === 4) {
-                toast.error(
+              if (supersets.length === 4)
+                return toast.error(
                   'Added exercises exceed the maximum number of exercises allowed'
                 );
-                return;
-              } else {
-                const newSuperset: Superset = {
-                  exercises: exercisesToAdd,
-                  color: COLOR[supersets.length],
-                };
-                supersets.push(newSuperset);
-                break;
-              }
+
+              const newSuperset: Superset = {
+                exercises: exercisesToAdd,
+                color: COLOR[supersets.length],
+              };
+
+              supersets.push(newSuperset);
+              break;
             }
           }
-
-          setSupersetsWithAdd([...supersets]);
 
           const updatedComponents = [...training.components];
           updatedComponents[trainingComponentIndex] = {
@@ -324,6 +323,7 @@ export default function Supersets(props: SupersetsProps) {
             supersets: [...supersets],
           };
 
+          setSupersetsWithAdd([...supersets]);
           setTraining({ ...training, components: updatedComponents });
           setOpenAddExerciseModal(false);
         }}

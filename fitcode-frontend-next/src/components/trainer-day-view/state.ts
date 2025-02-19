@@ -154,7 +154,9 @@ export async function handleAddSubgroup(state: {
   component: TrainingComponent;
   setComponent: SetStateNullable<TrainingComponent>;
   createSubgroup: { name: string; membersIds: string[] };
-  setCreateSubgroup: SetState<{ name: string; membersIds: string[] }> | undefined;
+  setCreateSubgroup:
+    | SetState<{ name: string; membersIds: string[] }>
+    | undefined;
 }) {
   const {
     training,
@@ -188,7 +190,7 @@ export async function handleAddSubgroup(state: {
     ),
   }));
 
-  setCreateSubgroup?({ name: '', membersIds: [] }) : null;
+  setCreateSubgroup?.({ name: '', membersIds: [] });
 }
 
 export function handleDeleteSubgroup(
@@ -333,9 +335,8 @@ export async function onDragEnd(
     (e) => e.id === draggableId
   );
 
-  //ĆORI TU MORE BIT UNDEFINED KER !exerciseIndex se kliče tudi te ko je 0!
+  // ČORI TU MORE BIT UNDEFINED KER !exerciseIndex se kliče tudi te ko je 0!
   if (exerciseIndex === undefined || exerciseIndex === -1) return;
-
   supersetWithNewExercise.exercises.push(
     supersetWithExercise.exercises[exerciseIndex]
   );
@@ -368,7 +369,6 @@ export async function onDragEnd(
       c.id === component.id ? { ...c, supersets: finalSupersetsCopy } : c
     ),
   });
-  console.log('updated')
 }
 
 export function handleDeleteExercise(
