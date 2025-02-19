@@ -4,8 +4,11 @@ import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { User } from '@/controller/user/type/user.type';
 import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { handleAddSubgroup } from './state';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -14,7 +17,15 @@ interface TrainingMembersProps {
 export default function TrainingMembers(props: TrainingMembersProps) {
   const screenSize = useScreenSize();
   const { isSticky } = props;
-  const { group, users, training, setSelectedSubgroup, component } = useGroup();
+  const {
+    group,
+    users,
+    training,
+    setSelectedSubgroup,
+    component,
+    setComponent,
+    setTraining,
+  } = useGroup();
   const members = users.filter((user) => group.membersIds.includes(user.uid));
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
@@ -60,6 +71,58 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
     setSubgroups([defaultSubgroup, ...subgroups]);
   }, [training, component]);
+
+  const handleRightClickAvatar = async (member: User) => {
+    if (!training || !component) return;
+    const createSubgroup = {
+      name: member.displayName || member.email,
+      membersIds: [member.uid],
+    };
+
+    const sameSubgroup = component.subgroups.find(
+      (subgroup) => subgroup.name === createSubgroup.name
+    );
+    if (sameSubgroup) {
+      toast.error('Subgroup for this member already exists');
+      return;
+    }
+
+    //check if the member already exists in a subgroup and if he does, remove him from that subgroup
+    const memberSubgroup = component.subgroups.find((subgroup) =>
+      subgroup.membersIds.includes(member.uid)
+    );
+    if (memberSubgroup) {
+      const newSubgroup = {
+        ...memberSubgroup,
+        membersIds: memberSubgroup.membersIds.filter((id) => id !== member.uid),
+      };
+      const newSubgroups = component.subgroups.map((subgroup) =>
+        subgroup.id === newSubgroup.id ? newSubgroup : subgroup
+      );
+      const newComponent = {
+        ...component,
+        subgroups: newSubgroups,
+      };
+      setComponent(newComponent);
+      setTraining({
+        ...training,
+        components: training.components.map((c) =>
+          c.id === newComponent.id ? newComponent : c
+        ),
+      });
+    }
+
+    const setCreateSubgroup = undefined;
+
+    await handleAddSubgroup({
+      training,
+      setTraining,
+      component: component!,
+      setComponent,
+      createSubgroup,
+      setCreateSubgroup,
+    });
+  };
 
   if (!component) return null;
 
@@ -267,18 +330,26 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             title={member.email}
                             sx={{ mx: 1, p: 0 }}
                           >
-                            <Avatar
-                              className="avatar-border"
-                              src="/user_avatar.png" // Path to the image in the public folder
-                              sx={{
-                                width: screenSize.isMobile ? 40 : 50,
-                                height: screenSize.isMobile ? 40 : 50,
-                                mx: 0.5,
-                                my: 1,
+                            <Box
+                              onContextMenu={(event) => {
+                                event.preventDefault(); // prevent default right-click menu
+                                handleRightClickAvatar(member);
                               }}
+                              sx={{ p: 0, m: 0 }}
                             >
-                              {/* {member.email[0].toUpperCase()} */}
-                            </Avatar>
+                              <Avatar
+                                className="avatar-border"
+                                src="/user_avatar.png" // Path to the image in the public folder
+                                sx={{
+                                  width: screenSize.isMobile ? 40 : 50,
+                                  height: screenSize.isMobile ? 40 : 50,
+                                  mx: 0.5,
+                                  my: 1,
+                                }}
+                              >
+                                {/* {member.email[0].toUpperCase()} */}
+                              </Avatar>
+                            </Box>
                           </Tooltip>
                         );
                       })}
