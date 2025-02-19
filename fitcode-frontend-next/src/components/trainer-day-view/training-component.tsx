@@ -75,9 +75,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                     component &&
                                     trainingComponent &&
                                     trainingComponent.id === component.id
-                                  ) {
+                                  )
                                     setOpenAddExerciseModal(true);
-                                  }
                                 }}
                                 sx={{ p: 0, m: 0 }}
                               >
@@ -248,8 +247,15 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             component &&
             trainingComponent.id === component.id &&
             training.id === selectedTraining?.id && (
-              <Box bgcolor="background.paper" p={2}>
-                <Supersets />
+              <Box
+                bgcolor="background.paper"
+                p={2}
+                px={screenSize.isLaptop ? 0 : undefined}
+              >
+                <Supersets
+                  openAddExerciseModal={openAddExerciseModal}
+                  setOpenAddExerciseModal={setOpenAddExerciseModal}
+                />
               </Box>
             )}
         </Box>
