@@ -74,13 +74,10 @@ export default function TrainerDayView() {
   useEffect(() => {
     const handleScroll = () => {
       if (screenSize.isSmallerThanLaptop) {
-        if (!isSticky) {
-          return;
-        } else {
-          setIsSticky(false);
-          return;
-        }
+        if (isSticky) setIsSticky(false);
+        return;
       }
+
       const scrollY = window.scrollY;
       setIsSticky(scrollY > 150);
     };
@@ -90,9 +87,7 @@ export default function TrainerDayView() {
   }, []);
 
   useEffect(() => {
-    if (!component) {
-      setSelectedSubgroup(null);
-    }
+    if (!component) setSelectedSubgroup(null);
   }, [component]);
 
   const todaysTrainings = filteredTrainings.filter((t) =>
@@ -106,8 +101,6 @@ export default function TrainerDayView() {
 
   async function handleUpdateTraining() {
     if (!training) return;
-
-    console.log('training', training);
 
     await handleApiRequest(
       router,
