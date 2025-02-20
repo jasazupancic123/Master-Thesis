@@ -6,6 +6,7 @@ export type Subgroup = IdEntity & {
   name: string;
   membersIds: string[];
   supersets: Superset[];
+  color?: string;
 
   // mapped properties
   members?: User[];

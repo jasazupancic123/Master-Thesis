@@ -67,6 +67,9 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
           (cycle ? t.cycleId === cycle.id : true)
       )
     );
+    setTraining(undefined);
+    setSelectedSubgroup(null);
+    setComponent(undefined);
   }, [cycle, dateFrom, dateTo]);
 
   const value: GroupContextProps = {

@@ -10,7 +10,7 @@ import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { TrainerDayViewProvider } from '@/context/trainer-day-view-provider';
 import { Box, useTheme } from '@mui/material';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import GroupDateFilterButtonGroup from '../group-date-filter-button-group';
 
 export default function TrainerGroupPage() {
@@ -19,6 +19,10 @@ export default function TrainerGroupPage() {
   const theme = useTheme();
 
   const { group, groups, filter, setFilter } = context;
+
+  useEffect(() => {
+    console.log('TrainerGroupPage: forcing a re-render', filter);
+  }, [filter]);
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
     day: (
@@ -32,7 +36,11 @@ export default function TrainerGroupPage() {
   };
 
   return (
-    <Box mt="16px" sx={{ px: screenSize.isMobile ? 1 : undefined }}>
+    <Box
+      mt="16px"
+      sx={{ px: screenSize.isMobile ? 1 : undefined }}
+      width="100%"
+    >
       <GroupSidebar groups={groups} group={group} />
 
       <Box

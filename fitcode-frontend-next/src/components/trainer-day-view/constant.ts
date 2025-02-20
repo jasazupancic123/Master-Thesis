@@ -30,7 +30,8 @@ export const METHODS: Method[] = [
 
 export const DEFAULT_SUBGROUP = (availableMembers: User[]): Subgroup => ({
   id: 'default',
-  name: 'Default',
+  name: 'Main Group',
+  color: '#9e9e9e',
   membersIds: availableMembers.map((user) => user.uid),
   supersets: [],
 });

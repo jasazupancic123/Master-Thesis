@@ -17,12 +17,13 @@ export default function GroupDateFilterButtonGroup(
       <ToggleButtonGroup
         value={filter}
         exclusive
-        onChange={(_, val: GroupDateFilter) =>
-          setFilter((prev) => (!val ? prev : val))
-        }
+        onChange={(_, val: GroupDateFilter) => {
+          console.log('val', val, 'prev', filter);
+          setFilter((prev) => (!val ? val : val));
+        }}
         sx={{
           display: 'flex',
-          bgcolor: 'background.paper',
+          bgcolor: 'background.default',
           width: screenSize.isMobile
             ? '90%'
             : screenSize.isLandscapeMobile
