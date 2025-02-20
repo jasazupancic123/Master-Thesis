@@ -5,6 +5,7 @@ import AddCycleForm from '@/components/add-cycle-form';
 import EditCycleModal from '@/components/edit-cycle-modal';
 import MyModal from '@/components/modal';
 import MultiCycleSlider from '@/components/multi-cycle-slider';
+import CycleComponents from '@/components/training-year-view/cycle-components';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { GroupController } from '@/controller/group/group.controller';
@@ -178,7 +179,12 @@ export default function TrainerYearView() {
           <MultiCycleSlider setShowModal={setShowAddCycleModal} />
         </Box>
 
-        <Typography variant="h6" gutterBottom mt={3}>
+        <CycleComponents
+          setEditModal={setShowEditCycleModal}
+          setEditCycle={setEditCycle}
+        />
+
+        {/* <Typography variant="h6" gutterBottom mt={3}>
           Cycles
         </Typography>
 
@@ -232,6 +238,7 @@ export default function TrainerYearView() {
             }}
           />
         </Box>
+       */}
       </Box>
 
       {editCycle && (

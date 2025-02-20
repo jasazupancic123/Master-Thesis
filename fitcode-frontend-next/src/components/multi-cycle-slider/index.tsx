@@ -342,24 +342,43 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       </Box>
 
       {/* Cycle Legends */}
-      <Stack direction="row" p={3} spacing={2}>
+      <Stack
+        direction="row"
+        p={3}
+        spacing={2}
+        flexWrap="wrap"
+        justifyContent="center"
+      >
         {sortedCycles.map((cycle, index) => (
           <Stack
             direction="row"
             key={cycle.id}
             spacing={0.5}
             alignItems="center"
+            maxWidth="100%"
+            flexWrap="wrap" // ✅ Allow content to wrap
           >
-            <div
-              style={{
-                width: 12,
-                height: 12,
-                backgroundColor: COLORS[index % COLORS.length],
-                borderRadius: '50%',
+            <Typography
+              sx={{
+                color: COLORS[index % COLORS.length],
+                whiteSpace: 'normal', // ✅ Allow text to wrap
+                wordBreak: 'break-word', // ✅ Break long words if necessary
+                maxWidth: '100%', // ✅ Prevents overflow
               }}
-            />
-            <Typography sx={{ color: COLORS[index % COLORS.length] }}>
-              {cycle.name}
+            >
+              <Box display="flex" alignItems="center">
+                <div
+                  style={{
+                    flexShrink: 0,
+                    width: 12,
+                    height: 12,
+                    backgroundColor: COLORS[index % COLORS.length],
+                    borderRadius: '50%',
+                    marginRight: 4,
+                  }}
+                />
+                {cycle.name}
+              </Box>
             </Typography>
           </Stack>
         ))}

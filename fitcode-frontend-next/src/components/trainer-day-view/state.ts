@@ -180,8 +180,6 @@ export async function handleAddSubgroup(state: {
     membersIds: createSubgroup.membersIds || [],
   };
 
-  console.log('newSubgroup supersets:', newSubgroup.supersets);
-
   const newComponent = {
     ...component,
     subgroups: [...component.subgroups, newSubgroup],

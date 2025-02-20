@@ -3,14 +3,18 @@
 import { GroupDateFilter } from '@/common/type/filter.type';
 import FilterButton from '@/components/filter-button';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Box, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, ToggleButtonGroup, Typography } from '@mui/material';
 import { GroupDateFilterButtonGroupProps } from './props';
+import toast from 'react-hot-toast';
 
 export default function GroupDateFilterButtonGroup(
   props: GroupDateFilterButtonGroupProps
 ) {
   const { filter, setFilter } = props;
   const screenSize = useScreenSize();
+  let alertedDay = false;
+  let alertedYear = false;
+  let toastId: string | null = null;
 
   return (
     <Box mx="auto" justifyContent="center">
@@ -18,8 +22,36 @@ export default function GroupDateFilterButtonGroup(
         value={filter}
         exclusive
         onChange={(_, val: GroupDateFilter) => {
-          console.log('val', val, 'prev', filter);
-          setFilter((prev) => (!val ? val : val));
+          if (!val) return;
+          if (
+            (filter === 'day' && !alertedDay) ||
+            (filter === 'year' && !alertedYear)
+          ) {
+            toastId = toast.custom((t: any) => (
+              <Box
+                sx={{
+                  backgroundColor: 'white',
+                  color: 'white',
+                  borderRadius: '10px',
+                  padding: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="body1" sx={{ color: 'black' }}>
+                  ⚠️ Any unsaved changes will be lost
+                </Typography>
+              </Box>
+            ));
+            if (filter === 'day') alertedDay = true;
+            if (filter === 'year') alertedYear = true;
+            return;
+          }
+          if (toastId) {
+            toast.dismiss(toastId);
+            toastId = null;
+          }
+          setFilter((prev) => (!val ? prev : val));
         }}
         sx={{
           display: 'flex',

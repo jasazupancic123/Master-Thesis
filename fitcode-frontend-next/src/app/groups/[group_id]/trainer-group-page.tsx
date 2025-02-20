@@ -20,9 +20,6 @@ export default function TrainerGroupPage() {
 
   const { group, groups, filter, setFilter } = context;
 
-  useEffect(() => {
-    console.log('TrainerGroupPage: forcing a re-render', filter);
-  }, [filter]);
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
     day: (

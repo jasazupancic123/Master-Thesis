@@ -10,9 +10,32 @@ import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { GroupController } from '@/controller/group/group.controller';
 export default function TrainerGroupPageContainer() {
   const router = useRouter();
-  const { token, components, setTrainings, setFilteredTrainings } = useGroup();
+  const {
+    token,
+    components,
+    setTrainings,
+    setFilteredTrainings,
+    group,
+    setGroup,
+  } = useGroup();
+
+  async function handleUpdateGroup() {
+    if (!group) return;
+
+    await handleApiRequest(
+      router,
+      () => GroupController.update(token, group.id, group),
+      (newGroup) => {
+        setGroup(newGroup);
+        toast.success('Group updated successfully');
+      },
+      undefined,
+      'Error when updating group'
+    );
+  }
 
   async function handleUpdateTraining() {
     if (!training) return;
@@ -39,7 +62,7 @@ export default function TrainerGroupPageContainer() {
   }
 
   const screenSize = useScreenSize();
-  const { training } = useGroup();
+  const { training, filter } = useGroup();
   return screenSize.isSmallerThanLaptop ? (
     <TrainerGroupPage />
   ) : (
@@ -48,15 +71,29 @@ export default function TrainerGroupPageContainer() {
       width="100%"
       alignItems="center"
       justifyContent="center"
-      sx={{pl: 6}}
+      sx={{ pl: 6 }}
     >
       <TrainerGroupPage />
-      <Tooltip title="Save training">
+      <Tooltip
+        title={
+          filter === 'day'
+            ? 'Save training'
+            : filter === 'year'
+              ? 'Save cycles'
+              : ''
+        }
+      >
         <IconButton
           onClick={() => {
-            handleUpdateTraining();
+            if (filter === 'day') handleUpdateTraining();
+            else if (filter === 'year') handleUpdateGroup();
           }}
-          sx={{ pr: 1, ml: 2 }}
+          sx={{
+            pr: 1,
+            ml: 2,
+            visibility:
+              filter === 'cycle' || filter === 'week' ? 'hidden' : 'visible', // Keep space but hide visually
+          }}
         >
           <SaveAsIcon sx={{ mr: 0, cursor: 'pointer' }} />
         </IconButton>

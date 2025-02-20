@@ -34,18 +34,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
   useEffect(() => {}, [component]);
 
-  useEffect(() => {
-    console.log('TrainingComponentCard: filter changed to', filter);
-  }, [filter]);
-
-  console.log(
-    'Rendering Supersets? ',
-    trainingComponent?.id,
-    component?.id,
-    training?.id,
-    selectedTraining?.id
-  );
-
   return (
     <Box my={1} p={0} px={1}>
       <>
@@ -258,17 +246,36 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             </Stack>
           </Box>
 
-          {trainingComponent &&
-            component &&
-            trainingComponent.id === component.id &&
-            training.id === selectedTraining?.id && (
-              <Box bgcolor="background.paper" p={2} key={filter}>
-                <Supersets
-                  openAddExerciseModal={openAddExerciseModal}
-                  setOpenAddExerciseModal={setOpenAddExerciseModal}
-                />
-              </Box>
-            )}
+          {
+            // trainingComponent &&
+            // component &&
+            // trainingComponent.id === component.id &&
+            // training.id === selectedTraining?.id && (
+            //   <Box bgcolor="background.paper" p={2} key={filter}>
+            //     <Supersets
+            //       openAddExerciseModal={openAddExerciseModal}
+            //       setOpenAddExerciseModal={setOpenAddExerciseModal}
+            //       trainingComponent={trainingComponent}
+            //     />
+            //   </Box>
+            // )}
+          }
+
+          <Box
+            bgcolor="background.paper"
+            p={2}
+            key={filter}
+            sx={{
+              display:
+                training.id !== selectedTraining?.id ? 'none' : undefined,
+            }}
+          >
+            <Supersets
+              openAddExerciseModal={openAddExerciseModal}
+              setOpenAddExerciseModal={setOpenAddExerciseModal}
+              trainingComponent={trainingComponent}
+            />
+          </Box>
         </Box>
       </>
     </Box>
