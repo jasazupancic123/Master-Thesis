@@ -176,7 +176,10 @@ export async function handleAddSubgroup(state: {
   const newSubgroup: Subgroup = {
     id: `subgroup-${String(Date.now())}`,
     name: createSubgroup.name,
-    supersets: [...component.supersets],
+    supersets: component.supersets.map((superset) => ({
+      ...superset,
+      exercises: [...superset.exercises], // Ensuring exercises are copied too
+    })),
     membersIds: createSubgroup.membersIds || [],
   };
 
@@ -341,12 +344,14 @@ export async function onDragEnd(
       const newTraining = { ...training, components: updatedComponents };
       setTraining(newTraining);
 
-      const updatedTrainings = filteredTrainings.map((filteredTraining) => {
-        if (filteredTraining.id === training.id) {
-          return newTraining;
+      const updatedTrainings = [...filteredTrainings].map(
+        (filteredTraining) => {
+          if (filteredTraining.id === training.id) {
+            return newTraining;
+          }
+          return filteredTraining;
         }
-        return filteredTraining;
-      });
+      );
 
       setFilteredTrainings(updatedTrainings);
     } else {

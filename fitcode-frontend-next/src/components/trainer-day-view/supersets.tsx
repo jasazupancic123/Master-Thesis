@@ -76,7 +76,6 @@ export default function Supersets(props: SupersetsProps) {
   }, [component, selectedSubgroup]);
 
   if (!component || !training) {
-    console.log('setting to null');
     return null;
   }
 
