@@ -2,29 +2,28 @@
 
 import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Range } from 'react-range';
-import { MultiCycleSliderProps } from './props';
+import { handleAddCycle } from '../add-cycle-form/state';
 import {
   changeYear,
   handleDrag,
   handleDragChange,
   handleUpdateCycleDates,
 } from './state';
-import { useScreenSize } from '@/context/screen-size-provider';
 
 dayjs.extend(dayOfYear);
 
-export default function MultiCycleSlider(props: MultiCycleSliderProps) {
+export default function MultiCycleSlider() {
   const screenSize = useScreenSize();
-  const { setShowModal } = props;
 
   const { token, group, setGroup, cycle, setCycle } = useGroup();
   const theme = useTheme();
@@ -151,7 +150,30 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
             mr: 1,
             '&:hover': { backgroundColor: 'primary.dark' },
           }}
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            const lastCycle = group.cycles[group.cycles.length - 1];
+
+            const from =
+              group.cycles.length === 0
+                ? dayjs().startOf('w')
+                : dayjs(lastCycle.to).add(1, 'w').startOf('w');
+
+            const to =
+              group.cycles.length === 0
+                ? dayjs().add(1, 'w').endOf('w')
+                : dayjs(lastCycle.to).add(2, 'w').endOf('w');
+
+            handleAddCycle(
+              token,
+              {
+                name: `Cycle ${group.cycles.length + 1}`,
+                description: '',
+                from: from?.toDate()!,
+                to: to?.toDate()!,
+              },
+              { router, group, setGroup }
+            );
+          }}
         >
           <Add />
         </IconButton>

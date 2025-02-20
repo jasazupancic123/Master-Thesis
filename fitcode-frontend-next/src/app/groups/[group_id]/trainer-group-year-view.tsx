@@ -15,7 +15,7 @@ import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -27,7 +27,6 @@ export default function TrainerYearView() {
 
   const theme = useTheme();
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
-  const [showAddCycleModal, setShowAddCycleModal] = useState(false);
   const [editCycle, setEditCycle] = useState<Cycle | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 10,
@@ -175,7 +174,7 @@ export default function TrainerYearView() {
             borderBottomRightRadius: 20,
           }}
         >
-          <MultiCycleSlider setShowModal={setShowAddCycleModal} />
+          <MultiCycleSlider />
         </Box>
 
         <Typography variant="h6" gutterBottom mt={3}>
@@ -253,16 +252,6 @@ export default function TrainerYearView() {
           />
         </MyModal>
       )}
-
-      {/* Add cycle modal */}
-      <MyModal
-        isOpen={showAddCycleModal}
-        setIsOpen={(open) => setShowAddCycleModal(open)}
-        onCancel={() => setShowAddCycleModal(false)}
-        cancelText="Close"
-      >
-        <AddCycleForm onClose={() => setShowAddCycleModal(false)} />
-      </MyModal>
     </>
   );
 }

@@ -25,6 +25,7 @@ import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 import MyModal from '../modal';
 import AddExerciseForm from './add-exercise-form';
+import { NUM_MAX_SUPERSETS } from './constant';
 import { SupersetsProps } from './props';
 import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCard from './training-exercise-card';
@@ -72,7 +73,7 @@ export default function Supersets(props: SupersetsProps) {
         })
       }
     >
-      <Grid2 container>
+      <Grid2 container rowSpacing={2}>
         {supersetsWithAdd.map((superset, i) => (
           <Grid2 size={{ xs: 12, sm: 6, md: 3 }} key={`${component.id}-${i}`}>
             <Droppable
@@ -176,7 +177,6 @@ export default function Supersets(props: SupersetsProps) {
                               <TrainingExerciseCard
                                 supersetIndex={i}
                                 exercise={exercise}
-                                onChange={() => {}}
                               />
                             </Box>
                           )}
@@ -215,8 +215,8 @@ export default function Supersets(props: SupersetsProps) {
           </Grid2>
         ))}
 
-        {supersetsWithAdd.length < 4 && (
-          <Grid2 size={{ xs: 12, sm: 6, md: 3 }} mx={1}>
+        {supersetsWithAdd.length < NUM_MAX_SUPERSETS && (
+          <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
             <Droppable
               key="addSupersetDroppable"
               droppableId="addSupersetDroppable"
@@ -229,7 +229,8 @@ export default function Supersets(props: SupersetsProps) {
                   border="1px dashed #B2B3B7"
                   borderRadius={2}
                   sx={{ cursor: 'pointer' }}
-                  p={2}
+                  p={1}
+                  mx={1}
                 >
                   <Typography variant="body2" align="center">
                     Drop here to add a new superset
@@ -253,6 +254,7 @@ export default function Supersets(props: SupersetsProps) {
               .flat()
               .includes(id)
           );
+
           setSelectedExercisesIds(oldExercises);
           setOpenAddExerciseModal(false);
         }}
@@ -292,7 +294,10 @@ export default function Supersets(props: SupersetsProps) {
             training.components[trainingComponentIndex].supersets;
 
           for (const superset of supersets) {
-            while (superset.exercises.length < 4 && exercisesToAdd.length > 0) {
+            while (
+              superset.exercises.length < NUM_MAX_SUPERSETS &&
+              exercisesToAdd.length > 0
+            ) {
               const exerciseToAdd = exercisesToAdd.shift(); // Remove from the front
               if (exerciseToAdd) superset.exercises.push(exerciseToAdd);
             }
@@ -300,7 +305,7 @@ export default function Supersets(props: SupersetsProps) {
             if (exercisesToAdd.length === 0) break; // Stop if no exercises left
 
             if (supersets.indexOf(superset) === supersets.length - 1) {
-              if (supersets.length === 4)
+              if (supersets.length === NUM_MAX_SUPERSETS)
                 return toast.error(
                   'Added exercises exceed the maximum number of exercises allowed'
                 );
