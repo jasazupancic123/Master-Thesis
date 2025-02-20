@@ -23,7 +23,8 @@ import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCard from './training-exercise-card';
 
 export default function Supersets(props: SupersetsProps) {
-  const { openAddExerciseModal, setOpenAddExerciseModal } = props;
+  const { openAddExerciseModal, setOpenAddExerciseModal, trainingComponent } =
+    props;
   const screenSize = useScreenSize();
   const {
     training,
@@ -36,7 +37,6 @@ export default function Supersets(props: SupersetsProps) {
     filteredTrainings,
     setFilteredTrainings,
     filter,
-    setFilter,
   } = useGroup();
 
   const supersets =
@@ -47,17 +47,6 @@ export default function Supersets(props: SupersetsProps) {
       ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
       : []
   );
-
-  useEffect(() => {
-    console.log('Supersets Mounted');
-  }, []);
-
-  console.log('Supersets Context:', useGroup());
-
-  useEffect(() => {
-    console.log('Supersets: filter changed to', filter);
-    setSupersetsWithAdd([]); // Reset state when changing views
-  }, [filter]);
 
   useEffect(() => {
     setSelectedExercisesIds(
@@ -79,7 +68,17 @@ export default function Supersets(props: SupersetsProps) {
     }
   }, [component, selectedSubgroup]);
 
-  if (!component || !training) return null;
+  useEffect(() => {
+    console.log('filter', filter);
+  }, [filter]);
+
+  if (
+    !component ||
+    !training ||
+    !trainingComponent ||
+    trainingComponent.id !== component.id
+  )
+    return null;
 
   return (
     <DragDropContext

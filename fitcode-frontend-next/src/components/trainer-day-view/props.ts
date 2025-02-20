@@ -36,4 +36,5 @@ export interface SubgroupProps {
 export interface SupersetsProps {
   openAddExerciseModal: boolean;
   setOpenAddExerciseModal: SetState<boolean>;
+  trainingComponent: TrainingComponent;
 }
