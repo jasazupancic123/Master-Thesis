@@ -1,17 +1,19 @@
 export const exerciseCardSetAttributeSx = {
-  border: 'none',
-  size: 'small',
-  backgroundColor: 'transparent',
   '& .MuiSelect-icon': { display: 'none' },
+  '& .MuiInputBase-root': {
+    borderBottom: 'none',
+    '&:before': { borderBottom: 'none' },
+    '&:after': { borderBottom: 'none' },
+    '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+  },
   '& .MuiSelect-select': {
-    padding: 0,
+    padding: '2px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    height: 25,
+    justifyContent: 'self-start',
+    height: 20,
     fontSize: '0.7rem',
-    color: 'lightgrey',
+    color: '#bcb4b1',
     backgroundColor: 'transparent',
-    borderBottom: 'none',
   },
 };

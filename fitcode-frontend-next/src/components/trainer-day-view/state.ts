@@ -7,7 +7,7 @@ import {
 import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import toast from 'react-hot-toast';
-import { DEFAULT_SUBGROUP } from './constant';
+import { DEFAULT_SUBGROUP, NUM_MAX_SUPERSETS } from './constant';
 
 export function onDragEndSubgroup(
   { destination, draggableId }: any,
@@ -194,7 +194,7 @@ export async function handleAddSubgroup(state: {
   const newTraining = { ...training, components: updatedComponents };
   setTraining(newTraining);
 
-  const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+  const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
     if (filteredTraining.id === training.id) {
       return newTraining;
     }
@@ -295,8 +295,10 @@ export async function onDragEnd(
   if (!destination || !training || !component) return;
 
   if (destination.droppableId === 'addSupersetDroppable') {
-    if (supersets.length >= 4)
-      return toast.error('You can only have 4 supersets per component');
+    if (supersets.length >= NUM_MAX_SUPERSETS)
+      return toast.error(
+        `You can only have ${NUM_MAX_SUPERSETS} supersets per component`
+      );
 
     const supersetsCopy = [...supersetsWithAdd];
     const supersetWithExercise = supersetsCopy.find((s) =>
@@ -470,8 +472,10 @@ export async function onDragEnd(
     return;
   }
 
-  if (supersetWithNewExercise.exercises.length >= 4)
-    return toast.error('You can only have 4 exercises per superset');
+  if (supersetWithNewExercise.exercises.length >= NUM_MAX_SUPERSETS)
+    return toast.error(
+      `You can only have ${NUM_MAX_SUPERSETS} exercises per superset`
+    );
 
   const exerciseIndex = supersetWithExercise.exercises.findIndex(
     (e) => e.id === draggableId

@@ -252,14 +252,12 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                       y < BORDER_WIDTH ||
                       y > rect.height - BORDER_WIDTH;
 
-                    if (isBorderClick && subgroupIndex > 0) {
+                    if (subgroupIndex > 0)
                       setSelectedSubgroup({
                         subgroup: subgroup || null,
                         index: subgroupIndex - 1,
                       });
-                    } else if (subgroupIndex === 0) {
-                      setSelectedSubgroup(null);
-                    }
+                    else if (subgroupIndex === 0) setSelectedSubgroup(null);
                   }}
                   style={{
                     display: 'inline-block',
@@ -345,6 +343,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         const member = members.find(
                           (user) => user.uid === memberId
                         );
+
                         if (!member) return null;
 
                         return (

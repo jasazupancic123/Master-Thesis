@@ -4,7 +4,7 @@ import { useGroup } from '@/context/group-provider';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AddCycleModalProps } from './props';
@@ -17,8 +17,8 @@ export default function AddCycleForm(props: AddCycleModalProps) {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [from, setFrom] = useState<dayjs.Dayjs | null>(null);
-  const [to, setTo] = useState<dayjs.Dayjs | null>(null);
+  const [from, setFrom] = useState<Dayjs>(dayjs().startOf('w'));
+  const [to, setTo] = useState<Dayjs>(dayjs().add(1, 'w').endOf('w'));
 
   return (
     <Box
@@ -55,14 +55,18 @@ export default function AddCycleForm(props: AddCycleModalProps) {
           <DatePicker
             label="Start Date"
             value={from}
-            onChange={(date) => setFrom(date)}
+            onChange={(date) => {
+              if (date) setFrom(date);
+            }}
             sx={{ mr: 1 }}
           />
 
           <DatePicker
             label="End Date"
             value={to}
-            onChange={(date) => setTo(date)}
+            onChange={(date) => {
+              if (date) setTo(date);
+            }}
             sx={{ ml: 1 }}
           />
         </LocalizationProvider>
@@ -72,7 +76,7 @@ export default function AddCycleForm(props: AddCycleModalProps) {
         variant="contained"
         color="primary"
         sx={{ mt: 3 }}
-        onClick={() =>
+        onClick={() => {
           handleAddCycle(
             token,
             {
@@ -81,10 +85,9 @@ export default function AddCycleForm(props: AddCycleModalProps) {
               from: from?.toDate()!,
               to: to?.toDate()!,
             },
-            { router, group, setGroup },
-            onClose
-          )
-        }
+            { router, group, setGroup }
+          );
+        }}
       >
         Add Cycle
       </Button>

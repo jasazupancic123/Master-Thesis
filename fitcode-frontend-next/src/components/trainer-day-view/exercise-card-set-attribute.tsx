@@ -1,27 +1,12 @@
-import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
+import { SetExerciseAttributeProps, SetExerciseState } from './props';
 import { exerciseCardSetAttributeSx } from './style';
-
-interface State {
-  option: string;
-  value: string;
-  type: SetExerciseOption['type'];
-  values?: SetExerciseOption['values'];
-  format: SetExerciseOption['format'];
-}
-
-interface SetExerciseAttributeProps {
-  state: State;
-  onChange: (data: State) => void;
-  options: SetExerciseOption[];
-  disabled?: boolean;
-}
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const { options, state, onChange, disabled = false } = props;
 
   return (
-    <Stack direction="column" m={0}>
+    <Stack direction="column">
       {/* On option change */}
       <FormControl
         variant="filled"
@@ -30,7 +15,9 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
       >
         <Select
           variant="filled"
-          sx={{ ...exerciseCardSetAttributeSx['& .MuiSelect-select'] }}
+          sx={{
+            ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
+          }}
           disableUnderline={true}
           value={state.option}
           disabled={disabled}
@@ -45,17 +32,11 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               type: option.type,
               values: option.values ?? [],
               value: option.values ? option.values[0].toString() : '10',
-            } as State);
+            } as SetExerciseState);
           }}
         >
           {options.map((option) => (
-            <MenuItem
-              key={option.label}
-              value={option.label}
-              sx={{
-                width: '10px',
-              }}
-            >
+            <MenuItem key={option.label} value={option.label}>
               {option.label.toUpperCase()}
             </MenuItem>
           ))}
@@ -100,25 +81,21 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             const value = e.target.value;
             onChange({ ...state, value });
           }}
-          InputLabelProps={{ shrink: true }}
           sx={{
+            ...exerciseCardSetAttributeSx,
             mt: 0,
             bgcolor: 'transparent',
-            height: exerciseCardSetAttributeSx['& .MuiSelect-select'].height,
-            width: 60,
-            '& .MuiInputBase-root': {
-              borderBottom: 'none',
-              border: 'none',
-            },
             '& .MuiInputBase-input': {
               border: 'none',
               borderBottom: 'none',
-              padding: '1px',
+              padding: '0px',
+              paddingLeft: '4px',
               textAlign: 'center',
-              backgroundColor: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: '#263646',
+              fontSize: '0.7rem',
+              height: exerciseCardSetAttributeSx['& .MuiSelect-select'].height,
+              color: '#bcb4b1',
+              textAlignLast: 'left',
             },
           }}
         />
