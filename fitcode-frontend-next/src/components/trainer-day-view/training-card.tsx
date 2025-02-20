@@ -4,12 +4,31 @@ import { useGroup } from '@/context/group-provider';
 import { Box, Typography } from '@mui/material';
 import { TrainingCardProps } from './props';
 import TrainingComponentCard from './training-component';
+import { useEffect } from 'react';
 
 const commonService = CommonService.instance;
 
 export default function TrainingCard(props: TrainingCardProps) {
   const { day, training, period } = props;
-  const { training: selectedTraining, selectedSubgroup } = useGroup();
+  const {
+    training: selectedTraining,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    component,
+  } = useGroup();
+
+  useEffect(() => {
+    if (!component || !selectedSubgroup || !selectedSubgroup?.subgroup) return;
+    //check if subgroup is still inside the component.subgroups, cuz the selected one might get deleted
+    if (
+      selectedSubgroup &&
+      component.subgroups.findIndex(
+        (subgroup) => subgroup.id === selectedSubgroup?.subgroup?.id
+      ) === -1
+    ) {
+      setSelectedSubgroup(null);
+    }
+  }, [component]);
 
   return (
     <Box width="100%">

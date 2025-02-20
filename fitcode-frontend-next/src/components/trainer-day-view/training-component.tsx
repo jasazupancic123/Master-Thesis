@@ -6,7 +6,7 @@ import { MainSet } from '@/controller/component/type/main-set.type';
 import { Method } from '@/controller/component/type/method.type';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MyModal from '../modal';
 import SelectInput from '../select-input';
 import AddExerciseForm from './add-exercise-form';
@@ -24,12 +24,27 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     setTraining,
     component,
     setComponent,
+    filter,
   } = useGroup();
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
   const [method, setMethod] = useState<Method | null>();
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
+
+  useEffect(() => {}, [component]);
+
+  useEffect(() => {
+    console.log('TrainingComponentCard: filter changed to', filter);
+  }, [filter]);
+
+  console.log(
+    'Rendering Supersets? ',
+    trainingComponent?.id,
+    component?.id,
+    training?.id,
+    selectedTraining?.id
+  );
 
   return (
     <Box my={1} p={0} px={1}>
@@ -247,11 +262,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             component &&
             trainingComponent.id === component.id &&
             training.id === selectedTraining?.id && (
-              <Box
-                bgcolor="background.paper"
-                p={2}
-                px={screenSize.isLaptop ? 0 : undefined}
-              >
+              <Box bgcolor="background.paper" p={2} key={filter}>
                 <Supersets
                   openAddExerciseModal={openAddExerciseModal}
                   setOpenAddExerciseModal={setOpenAddExerciseModal}

@@ -31,23 +31,53 @@ export default function Supersets(props: SupersetsProps) {
     component,
     setComponent,
     exercises: allExercises,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    filteredTrainings,
+    setFilteredTrainings,
+    filter,
+    setFilter,
   } = useGroup();
 
-  const supersets = component?.supersets || [];
+  const supersets =
+    selectedSubgroup?.subgroup?.supersets || component?.supersets || [];
   const [supersetsWithAdd, setSupersetsWithAdd] = useState(supersets);
   const [selectedExercisesIds, setSelectedExercisesIds] = useState(
-    supersets.flatMap((s) => s.exercises.map((e) => e.id))
+    supersets && supersets.length
+      ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
+      : []
   );
 
   useEffect(() => {
+    console.log('Supersets Mounted');
+  }, []);
+
+  console.log('Supersets Context:', useGroup());
+
+  useEffect(() => {
+    console.log('Supersets: filter changed to', filter);
+    setSupersetsWithAdd([]); // Reset state when changing views
+  }, [filter]);
+
+  useEffect(() => {
     setSelectedExercisesIds(
-      supersets.flatMap((s) => s.exercises.map((e) => e.id))
+      supersets && supersets.length
+        ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
+        : []
     );
   }, [supersets, supersets.length]);
 
   useEffect(() => {
-    if (!component) setSelectedExercisesIds([]);
-  }, [component]);
+    if (selectedSubgroup?.subgroup?.supersets) {
+      setSupersetsWithAdd(selectedSubgroup.subgroup.supersets);
+    } else {
+      if (!component) {
+        setSelectedExercisesIds([]);
+      } else if (component.supersets) {
+        setSupersetsWithAdd(component.supersets);
+      }
+    }
+  }, [component, selectedSubgroup]);
 
   if (!component || !training) return null;
 
@@ -59,153 +89,176 @@ export default function Supersets(props: SupersetsProps) {
           setTraining,
           component,
           setComponent,
+          selectedSubgroup,
+          setSelectedSubgroup,
           supersets,
           supersetsWithAdd,
           setSupersetsWithAdd,
+          filteredTrainings,
+          setFilteredTrainings,
         })
       }
     >
       <Box display="flex" flexWrap="wrap" gap={2} justifyContent="center">
-        {supersetsWithAdd.map((superset, i) => (
-          <Droppable
-            key={`${component.id}-${i}`}
-            droppableId={`${component.id}-${i}`}
-            direction="vertical"
-          >
-            {(provided) => (
-              <Box
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                flexBasis={{
-                  xs: '100%',
-                  sm: '48%', // Two per row on small screens
-                  md: '48%', // Three per row on medium screens
-                  lg: '23%', // Four per row on large screens
-                }}
-                minWidth="250px" // Prevent excessive shrinking
-                p={screenSize.isLaptop ? 0 : 2}
-                display="flex"
-                flexDirection="column"
-              >
+        {supersetsWithAdd && supersetsWithAdd.length ? (
+          supersetsWithAdd.map((superset, i) => (
+            <Droppable
+              key={`${component.id}-${i}`}
+              droppableId={`${component.id}-${i}`}
+              direction="vertical"
+            >
+              {(provided) => (
                 <Box
-                  onClick={() =>
-                    handleDeleteSuperset(
-                      { index: i },
-                      {
-                        training,
-                        setTraining,
-                        component,
-                        setComponent,
-                        supersetsWithAdd,
-                        setSupersetsWithAdd,
-                      }
-                    )
-                  }
-                  sx={{ cursor: 'pointer' }}
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  flexBasis={{
+                    xs: '100%',
+                    sm: '48%', // Two per row on small screens
+                    md: '48%', // Three per row on medium screens
+                    lg: '23%', // Four per row on large screens
+                  }}
+                  minWidth="250px" // Prevent excessive shrinking
+                  p={screenSize.isLaptop ? 0 : 2}
+                  display="flex"
+                  flexDirection="column"
                 >
-                  <BorderColor color={superset.color || COLOR[i]} />
-                </Box>
+                  <Box
+                    onClick={() =>
+                      handleDeleteSuperset(
+                        { index: i },
+                        {
+                          training,
+                          setTraining,
+                          component,
+                          setComponent,
+                          selectedSubgroup,
+                          setSelectedSubgroup,
+                          supersetsWithAdd,
+                          setSupersetsWithAdd,
+                          filteredTrainings,
+                          setFilteredTrainings,
+                        }
+                      )
+                    }
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <BorderColor color={superset.color || COLOR[i]} />
+                  </Box>
 
-                <Box>
-                  {superset.exercises.map((exercise, k) => (
-                    <Draggable
-                      key={exercise.id}
-                      draggableId={exercise.id.toString()}
-                      index={k}
-                    >
-                      {(provided, snapshot) => (
-                        <Box
-                          id={exercise.id}
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          position="relative"
-                          bgcolor={
-                            snapshot.isDragging ? '#f0f0f0' : 'transparent'
-                          }
-                          p={1}
-                          borderRadius={1}
-                          boxShadow={snapshot.isDragging ? 2 : 0}
-                        >
+                  <Box>
+                    {superset.exercises.map((exercise, k) => (
+                      <Draggable
+                        key={exercise.id}
+                        draggableId={exercise.id.toString()}
+                        index={k}
+                      >
+                        {(provided, snapshot) => (
                           <Box
-                            position="absolute"
-                            top={10}
-                            left={10}
-                            display="flex"
-                            flexDirection="column"
+                            id={exercise.id}
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            position="relative"
+                            bgcolor={
+                              snapshot.isDragging ? '#f0f0f0' : 'transparent'
+                            }
+                            p={1}
+                            borderRadius={1}
+                            boxShadow={snapshot.isDragging ? 2 : 0}
                           >
-                            <Typography variant="caption" color="textSecondary">
-                              {`${i + 1}${String.fromCharCode(65 + k)}`}
-                            </Typography>
-                          </Box>
-                          <Box
-                            position="absolute"
-                            top={5}
-                            right={5}
-                            display="flex"
-                            flexDirection="column"
-                          >
-                            <Tooltip title="Delete exercise" placement="left">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleDeleteExercise(
-                                    { exerciseId: exercise.id },
-                                    {
-                                      training,
-                                      setTraining,
-                                      component,
-                                      setComponent,
-                                      supersetsWithAdd,
-                                      setSupersetsWithAdd,
-                                    }
-                                  )
-                                }
+                            <Box
+                              position="absolute"
+                              top={10}
+                              left={10}
+                              display="flex"
+                              flexDirection="column"
+                            >
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
                               >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
+                                {`${i + 1}${String.fromCharCode(65 + k)}`}
+                              </Typography>
+                            </Box>
+                            <Box
+                              position="absolute"
+                              top={5}
+                              right={5}
+                              display="flex"
+                              flexDirection="column"
+                            >
+                              <Tooltip title="Delete exercise" placement="left">
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    handleDeleteExercise(
+                                      { exerciseId: exercise.id },
+                                      {
+                                        training,
+                                        setTraining,
+                                        component,
+                                        setComponent,
+                                        selectedSubgroup,
+                                        setSelectedSubgroup,
+                                        supersetsWithAdd,
+                                        setSupersetsWithAdd,
+                                        filteredTrainings,
+                                        setFilteredTrainings,
+                                      }
+                                    )
+                                  }
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                            <TrainingExerciseCard
+                              exercise={exercise}
+                              onChange={() => {}}
+                            />
                           </Box>
-                          <TrainingExerciseCard
-                            exercise={exercise}
-                            onChange={() => {}}
-                          />
-                        </Box>
-                      )}
-                    </Draggable>
-                  ))}
+                        )}
+                      </Draggable>
+                    ))}
 
-                  {provided.placeholder}
+                    {provided.placeholder}
+                  </Box>
+
+                  <Box
+                    onClick={() =>
+                      handleDeleteSuperset(
+                        { index: i },
+                        {
+                          training,
+                          setTraining,
+                          component,
+                          setComponent,
+                          selectedSubgroup,
+                          setSelectedSubgroup,
+                          supersetsWithAdd,
+                          setSupersetsWithAdd,
+                          filteredTrainings,
+                          setFilteredTrainings,
+                        }
+                      )
+                    }
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <BorderColor
+                      color={superset.color || COLOR[i]}
+                      lower
+                      applyMargin={superset.exercises.length === 0}
+                    />
+                  </Box>
                 </Box>
+              )}
+            </Droppable>
+          ))
+        ) : (
+          <></>
+        )}
 
-                <Box
-                  onClick={() =>
-                    handleDeleteSuperset(
-                      { index: i },
-                      {
-                        training,
-                        setTraining,
-                        component,
-                        setComponent,
-                        supersetsWithAdd,
-                        setSupersetsWithAdd,
-                      }
-                    )
-                  }
-                  sx={{ cursor: 'pointer' }}
-                >
-                  <BorderColor
-                    color={superset.color || COLOR[i]}
-                    lower
-                    applyMargin={superset.exercises.length === 0}
-                  />
-                </Box>
-              </Box>
-            )}
-          </Droppable>
-        ))}
-
-        {supersetsWithAdd.length < 4 && (
+        {supersetsWithAdd.length < 4 && supersetsWithAdd.length > 0 && (
           <Droppable
             key="addSupersetDroppable"
             droppableId="addSupersetDroppable"
@@ -260,14 +313,16 @@ export default function Supersets(props: SupersetsProps) {
         }}
         onConfirm={() => {
           //get only new exercises
-
-          const exercisesIdsToAdd = selectedExercisesIds.filter(
-            (id) =>
-              !supersetsWithAdd
-                .map((s) => s.exercises.map((e) => e.id))
-                .flat()
-                .includes(id)
-          );
+          const exercisesIdsToAdd =
+            supersetsWithAdd && supersetsWithAdd.length
+              ? [...selectedExercisesIds].filter(
+                  (id) =>
+                    !supersetsWithAdd
+                      .map((s) => s.exercises.map((e) => e.id))
+                      .flat()
+                      .includes(id)
+                )
+              : selectedExercisesIds;
 
           const exercisesToAdd: TrainingExercise[] = exercisesIdsToAdd.map(
             (id) => ({
@@ -285,47 +340,84 @@ export default function Supersets(props: SupersetsProps) {
           );
 
           // get training component index
-          const trainingComponentIndex = training.components.findIndex(
+          const trainingComponentIndex = [...training.components].findIndex(
             (c) => c.id === component.id
           );
 
           // last superset index
-          const supersets =
-            training.components[trainingComponentIndex].supersets;
+          let supersets = selectedSubgroup?.subgroup?.supersets
+            ? [...selectedSubgroup.subgroup.supersets]
+            : training.components[trainingComponentIndex]?.supersets
+              ? [...training.components[trainingComponentIndex].supersets]
+              : [];
 
-          for (const superset of supersets) {
+          if (!Array.isArray(supersets)) supersets = [];
+
+          if (supersets.length === 0) {
+            supersets.push({ exercises: [], color: COLOR[supersets.length] });
+          }
+
+          const newSupersets = [...supersets];
+
+          for (const superset of newSupersets) {
             while (superset.exercises.length < 4 && exercisesToAdd.length > 0) {
               const exerciseToAdd = exercisesToAdd.shift(); // Remove from the front
-              if (exerciseToAdd) superset.exercises.push(exerciseToAdd);
+              if (exerciseToAdd) superset.exercises.push({ ...exerciseToAdd });
             }
 
             if (exercisesToAdd.length === 0) break; // Stop if no exercises left
 
-            if (supersets.indexOf(superset) === supersets.length - 1) {
-              if (supersets.length === 4)
+            if (newSupersets.indexOf(superset) === newSupersets.length - 1) {
+              if (newSupersets.length === 4)
                 return toast.error(
                   'Added exercises exceed the maximum number of exercises allowed'
                 );
 
               const newSuperset: Superset = {
                 exercises: exercisesToAdd,
-                color: COLOR[supersets.length],
+                color: COLOR[newSupersets.length],
               };
 
-              supersets.push(newSuperset);
+              newSupersets.push(newSuperset);
               break;
             }
           }
 
           const updatedComponents = [...training.components];
-          updatedComponents[trainingComponentIndex] = {
-            ...updatedComponents[trainingComponentIndex],
-            supersets: [...supersets],
-          };
+          if (!selectedSubgroup?.subgroup) {
+            // update training component's supersets
+            updatedComponents[trainingComponentIndex] = {
+              ...updatedComponents[trainingComponentIndex],
+              supersets: [...newSupersets],
+            };
 
-          setSupersetsWithAdd([...supersets]);
-          setTraining({ ...training, components: updatedComponents });
-          setOpenAddExerciseModal(false);
+            //setSupersetsWithAdd([]);
+            setTraining({ ...training, components: updatedComponents });
+            setOpenAddExerciseModal(false);
+          } else {
+            // update subgroup's supersets
+            const updatedSubgroup = {
+              ...selectedSubgroup.subgroup,
+              supersets: [...newSupersets],
+            };
+
+            const updatedSubgroups = [...component.subgroups];
+            updatedSubgroups[selectedSubgroup.index] = updatedSubgroup;
+
+            const updatedComponents = [...training.components];
+            updatedComponents[trainingComponentIndex] = {
+              ...updatedComponents[trainingComponentIndex],
+              subgroups: updatedSubgroups,
+            };
+
+            setSelectedSubgroup({
+              index: selectedSubgroup.index,
+              subgroup: updatedSubgroup,
+            });
+            setComponent({ ...component, subgroups: updatedSubgroups });
+            setTraining({ ...training, components: updatedComponents });
+            setOpenAddExerciseModal(false);
+          }
         }}
       >
         <AddExerciseForm
