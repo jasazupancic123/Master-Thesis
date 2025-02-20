@@ -28,7 +28,6 @@ export interface AddExerciseFormProps {
 export interface TrainingExerciseCardProps {
   supersetIndex: number;
   exercise: TrainingExercise;
-  onChange: (data: Partial<ExerciseMeta>) => void;
 }
 
 export interface SubgroupProps {
@@ -42,6 +41,7 @@ export interface SupersetsProps {
 
 export interface SetExerciseState {
   option: keyof ExerciseMeta;
+  label: string;
   value: string;
   type: SetExerciseOption['type'];
   values?: SetExerciseOption['values'];

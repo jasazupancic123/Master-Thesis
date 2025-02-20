@@ -95,8 +95,7 @@ export const REC_OPTIONS: SetExerciseOption = {
 };
 
 export const WORKLOAD = [RM_OPTIONS, BW_OPTIONS, INT_OPTIONS, KG_OPTIONS];
-export const EFFORT = [EFFORT_OPTIONS];
-export const TEMPO = [TEMPO_OPTIONS];
+export const TEMPO = [TEMPO_OPTIONS, EFFORT_OPTIONS];
 export const RECOVERY = [REC_OPTIONS];
 export const SET = [SET_OPTIONS];
 export const SET_TYPE = [

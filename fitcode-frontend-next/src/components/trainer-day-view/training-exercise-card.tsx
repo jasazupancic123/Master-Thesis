@@ -1,27 +1,21 @@
-'use client';
-
 import {
-  EFFORT,
   RECOVERY,
   SET,
   SET_TYPE,
   TEMPO,
-  TEMPO_OPTIONS,
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
 import { useGroup } from '@/context/group-provider';
-import { useScreenSize } from '@/context/screen-size-provider';
 import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
 import { Grid2 } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
-import { SetExerciseState, TrainingExerciseCardProps } from './props';
+import { TrainingExerciseCardProps } from './props';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
-  const screenSize = useScreenSize();
-  const { exercise, onChange, supersetIndex: j } = props;
+  const { exercise, supersetIndex: j } = props;
   const { training, setTraining, component } = useGroup();
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
@@ -30,41 +24,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   );
 
   const state = training?.components[i!].supersets[j!].exercises[k!]?.meta;
-
-  /**
-   * Update set exercise on state change
-   */
-  /* useEffect(() => {
-    // manual data object to avoid id, createdAt, updatedAt, etc.
-    const data = {
-      sets: state.sets,
-      setType: state.setType,
-      setTypeValue: state.setTypeValue,
-      workloadType: state.workloadType,
-      workloadValue: state.workloadValue,
-      rec: state.rec,
-      // tempo: state.tempo,
-      effort: state.effort,
-    };
-
-    // if data didn't change, don't update
-    if (
-      JSON.stringify(data) ===
-      JSON.stringify({
-        sets: exercise.meta.sets,
-        setType: exercise.meta.setType,
-        setTypeValue: exercise.meta.setTypeValue,
-        workloadType: exercise.meta.workloadType,
-        workloadValue: exercise.meta.workloadValue,
-        rec: exercise.meta.rec,
-        // tempo: setExercise.superExerciseInfo?.tempo,
-        effort: exercise.meta.effort,
-      })
-    )
-      return;
-
-    onChange(data);
-  }, [exercise.meta, exercise, state]); */
+  const [tempoOrEffort, setTempoOrEffort] = useState<'temp' | 'eff'>(
+    !state || state?.tempo ? 'temp' : 'eff'
+  );
 
   function updateSelectedTraining(
     pairs: { field: keyof ExerciseMeta; value: string | number }[]
@@ -87,11 +49,11 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   return (
     <Stack
       spacing={1}
-      p={0.5}
+      p={1}
       pb={3}
       sx={{
+        my: -1,
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: 2,
         boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
       }}
     >
@@ -107,15 +69,16 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Typography>
       </Stack>
 
-      <Grid2 container spacing={1}>
+      <Grid2 container spacing={1} columns={10}>
         {/* Sets */}
-        <Grid2 size={{ xs: 6, sm: 4 }}>
+        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
           <SetExerciseAttribute
             options={SET}
             state={(() => {
               const option = SET.find((option) => option.label === 'sets')!;
               return {
                 type: option.type,
+                label: option.label,
                 values: option.values,
                 option: option.label as keyof ExerciseMeta,
                 format: option.format,
@@ -130,7 +93,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Grid2>
 
         {/* Set Type */}
-        <Grid2 size={{ xs: 6, sm: 4 }}>
+        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
           <SetExerciseAttribute
             options={SET_TYPE}
             state={(() => {
@@ -140,6 +103,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
               return {
                 type: option.type,
+                label: option.label,
                 values: option.values,
                 option: option.label as keyof ExerciseMeta,
                 format: option.format,
@@ -155,7 +119,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                 { field: 'setType', value: setType },
                 {
                   field: 'setTypeValue',
-                  value: isNaN(setTypeValue) ? 0 : setTypeValue,
+                  value: isNaN(setTypeValue) ? 5 : setTypeValue,
                 }, // 5 because all set type options include 5
               ]);
             }}
@@ -163,7 +127,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Grid2>
 
         {/* Workload */}
-        <Grid2 size={{ xs: 6, sm: 4 }}>
+        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
           <SetExerciseAttribute
             options={WORKLOAD}
             state={(() => {
@@ -173,6 +137,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
               return {
                 type: option.type,
+                label: option.label,
                 values: option.values,
                 option: option.label as keyof ExerciseMeta,
                 format: option.format,
@@ -198,57 +163,56 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           />
         </Grid2>
 
-        {/* Effort */}
-        <Grid2 size={{ xs: 6, sm: 4 }}>
-          <SetExerciseAttribute
-            options={EFFORT}
-            state={(() => {
-              const option = EFFORT.find((option) => option.label === 'eff')!;
-              return {
-                type: option.type,
-                values: option.values,
-                option: option.label as keyof ExerciseMeta,
-                format: option.format,
-                value: state.effort ?? option.values![1].toString(),
-              };
-            })()}
-            onChange={(state) => {
-              const effort = state.value as ExerciseMeta['effort'];
-              updateSelectedTraining([{ field: 'effort', value: effort! }]);
-            }}
-          />
-        </Grid2>
-
         {/* Tempo */}
-        <Grid2 size={{ xs: 6, sm: 4 }}>
+        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
           <SetExerciseAttribute
             options={TEMPO}
             state={(() => {
-              const option = TEMPO.find((option) => option.label === 'temp')!;
+              const option = TEMPO.find(
+                (option) => option.label === tempoOrEffort
+              )!;
 
               return {
                 type: option.type,
+                label: option.label,
                 values: option.values,
                 option: option.label as keyof ExerciseMeta,
                 format: option.format,
-                value: state.tempo ?? option.values![1].toString(),
+                value:
+                  (tempoOrEffort === 'temp' ? state.tempo : state.effort) ??
+                  option.values![1].toString(),
               };
             })()}
             onChange={(state) => {
-              const tempo = state.value as ExerciseMeta['tempo'];
-              updateSelectedTraining([{ field: 'tempo', value: tempo! }]);
+              if (state.label === 'eff' && tempoOrEffort === 'temp') {
+                setTempoOrEffort('eff');
+                return;
+              }
+
+              if (state.label === 'temp' && tempoOrEffort === 'eff') {
+                setTempoOrEffort('temp');
+                return;
+              }
+
+              updateSelectedTraining([
+                {
+                  field: tempoOrEffort === 'temp' ? 'tempo' : 'effort',
+                  value: state.value,
+                },
+              ]);
             }}
           />
         </Grid2>
 
         {/* Recovery */}
-        <Grid2 size={{ xs: 6, sm: 4 }}>
+        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
           <SetExerciseAttribute
             options={RECOVERY}
             state={(() => {
               const option = RECOVERY.find((option) => option.label === 'rec')!;
               return {
                 type: option.type,
+                label: option.label,
                 values: option.values,
                 option: option.label as keyof ExerciseMeta,
                 format: option.format,
