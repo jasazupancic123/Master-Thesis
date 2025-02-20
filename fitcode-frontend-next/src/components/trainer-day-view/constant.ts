@@ -4,6 +4,8 @@ import { Method } from '@/controller/component/type/method.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 
+export const NUM_MAX_SUPERSETS = 8;
+
 export const MAIN_SETS: MainSet[] = [
   { id: '1', name: 'Circuit' },
   { id: '2', name: 'Block' },

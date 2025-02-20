@@ -246,36 +246,16 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             </Stack>
           </Box>
 
-          {
-            // trainingComponent &&
-            // component &&
-            // trainingComponent.id === component.id &&
-            // training.id === selectedTraining?.id && (
-            //   <Box bgcolor="background.paper" p={2} key={filter}>
-            //     <Supersets
-            //       openAddExerciseModal={openAddExerciseModal}
-            //       setOpenAddExerciseModal={setOpenAddExerciseModal}
-            //       trainingComponent={trainingComponent}
-            //     />
-            //   </Box>
-            // )}
-          }
-
-          <Box
-            bgcolor="background.paper"
-            p={2}
-            key={filter}
-            sx={{
-              display:
-                training.id !== selectedTraining?.id ? 'none' : undefined,
-            }}
-          >
-            <Supersets
-              openAddExerciseModal={openAddExerciseModal}
-              setOpenAddExerciseModal={setOpenAddExerciseModal}
-              trainingComponent={trainingComponent}
-            />
-          </Box>
+          {component &&
+            trainingComponent.id === component.id &&
+            training.id === selectedTraining?.id && (
+              <Box bgcolor="background.paper" p={2} key={filter}>
+                <Supersets
+                  openAddExerciseModal={openAddExerciseModal}
+                  setOpenAddExerciseModal={setOpenAddExerciseModal}
+                />
+              </Box>
+            )}
         </Box>
       </>
     </Box>

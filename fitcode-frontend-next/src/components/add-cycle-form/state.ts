@@ -12,8 +12,7 @@ export async function handleAddCycle(
     router: AppRouterInstance;
     group: Group;
     setGroup: SetState<Group>;
-  },
-  onClose: () => void
+  }
 ) {
   const { group, setGroup } = state;
   const { name, description, from, to } = input;
@@ -44,7 +43,6 @@ export async function handleAddCycle(
       }));
 
       toast.success('Cycle added successfully.');
-      onClose();
     },
     (e) => {
       if (e.message?.toLowerCase().includes('overlap')) {

@@ -28,7 +28,7 @@ export const REP_OPTIONS: SetExerciseOption = {
 
 export const DISTANCE_OPTIONS: SetExerciseOption = {
   type: 'select',
-  label: 'distance',
+  label: 'dist',
   values: getValues(36, 5),
   format: (value) => `${value} m`,
 };
@@ -67,22 +67,22 @@ export const INT_OPTIONS: SetExerciseOption = {
 };
 
 export const KG_OPTIONS: SetExerciseOption = {
-  type: 'select',
+  type: 'number',
   label: 'kg',
-  values: getValues(120),
+  // values: getValues(120),
   format: (value) => value,
 };
 
 export const TEMPO_OPTIONS: SetExerciseOption = {
   type: 'select',
-  label: 'tempo',
+  label: 'temp',
   values: ['0:0:0', '1:0:1', '2:0:1', '1:1:1', '1:2:1', '3:0:1'],
   format: (value) => value,
 };
 
 export const EFFORT_OPTIONS: SetExerciseOption = {
   type: 'select',
-  label: 'effort',
+  label: 'eff',
   values: ['easy', 'moderate', 'hard', 'max'],
   format: (value) => value,
 };
@@ -95,8 +95,7 @@ export const REC_OPTIONS: SetExerciseOption = {
 };
 
 export const WORKLOAD = [RM_OPTIONS, BW_OPTIONS, INT_OPTIONS, KG_OPTIONS];
-export const EFFORT = [EFFORT_OPTIONS];
-export const TEMPO = [TEMPO_OPTIONS];
+export const TEMPO = [TEMPO_OPTIONS, EFFORT_OPTIONS];
 export const RECOVERY = [REC_OPTIONS];
 export const SET = [SET_OPTIONS];
 export const SET_TYPE = [
