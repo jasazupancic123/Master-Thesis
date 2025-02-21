@@ -12,6 +12,7 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { AddCycleInput } from '../add-cycle-form/input';
+import { set } from 'date-fns';
 
 export function changeYear(
   direction: 'prev' | 'next',
@@ -29,8 +30,10 @@ export function handleDragChange(
   },
   state: {
     setValuesReal: SetState<number[]>;
-  }
+  },
+  setDetectedChanges: SetState<boolean>
 ) {
+  setDetectedChanges(true);
   const { newValues, draggingIndex, mouseX } = input;
   const { setValuesReal } = state;
 
@@ -68,8 +71,10 @@ export function handleDrag(
     setDraggedDay: SetState<number | null>;
     setValuesReal: SetState<number[]>;
     sortedCycles: Cycle[];
-  }
+  },
+  setDetectedChanges: SetState<boolean>
 ) {
+  setDetectedChanges(true);
   const { index, value, selectedYear } = input;
   const { setDraggedDay, setValuesReal, sortedCycles } = state;
 
@@ -113,7 +118,8 @@ export async function handleUpdateCycleDates(
     setSortedCycles: SetState<Cycle[]>;
     valuesReal: number[];
     selectedYear: number;
-  }
+  },
+  setDetectedChanges: SetState<boolean>
 ) {
   const { groupId, sortedCycles } = input;
   const {
@@ -192,6 +198,7 @@ export async function handleUpdateCycleDates(
       setDetectedChange(false);
       setSortedCycles(newCycles);
       setCycle(cycles.find((c) => cycle?.id === c.id)!);
+      setDetectedChanges(false);
 
       toast.success('Cycles updated successfully!');
     },

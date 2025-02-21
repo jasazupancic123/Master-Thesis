@@ -1,14 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/context/group-provider';
-import {
-  Box,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
-  Typography,
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import SelectInput from '../select-input';
 import { Component } from '@/controller/component/type/component.type';
@@ -17,15 +9,13 @@ import toast from 'react-hot-toast';
 import { SetState } from '@/common/type/state.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 
-const commonService = CommonService.instance;
-
 interface CycleComponentsProps {
   setEditModal: SetState<boolean>;
-  setEditCycle: React.Dispatch<React.SetStateAction<Cycle | null>>
+  setEditCycle: React.Dispatch<React.SetStateAction<Cycle | null>>;
 }
 
 export default function CycleComponents(props: CycleComponentsProps) {
-  const { group, components, setGroup } = useGroup();
+  const { group, components, setGroup, setDetectedChanges } = useGroup();
   const [cycles, setCycles] = useState(group.cycles);
   const parentComponents = components.filter(
     (component) => component.parent === null
@@ -38,7 +28,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
   return (
     <Box display="flex" width="100%" mt={2} gap={1} sx={{ overflowX: 'auto' }}>
       {cycles.map((cycle) => (
-        <Box display="flex" flexDirection="column">
+        <Box key={cycle.id} display="flex" flexDirection="column" width={200}>
           {/*Header*/}
           <Box
             display="flex"
@@ -51,7 +41,6 @@ export default function CycleComponents(props: CycleComponentsProps) {
               borderTopRightRadius: 10,
               cursor: 'pointer',
             }}
-            width={200}
             py={1}
             onClick={() => {
               props.setEditModal(true);
@@ -128,6 +117,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                   itemName="name"
                   enableRemove={true}
                   setValue={(value) => {
+                    setDetectedChanges(true);
                     if (value === 'Remove Component') {
                       const newCycle = {
                         ...cycle,
@@ -188,6 +178,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 itemName="name"
                 sx={{ width: '90%' }}
                 setValue={(value) => {
+                  setDetectedChanges(true);
                   const component = components.find(
                     (component) => component.id === value
                   );

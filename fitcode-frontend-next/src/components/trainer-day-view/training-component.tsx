@@ -25,6 +25,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     component,
     setComponent,
     filter,
+    setDetectedChanges,
   } = useGroup();
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
@@ -63,48 +64,76 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
                       return (
                         <Box display="flex" alignItems="center">
-                          {component &&
-                          trainingComponent &&
-                          trainingComponent.id === component.id ? (
-                            <Tooltip
-                              title="Add exercise"
-                              sx={{
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <IconButton
-                                onClick={() => {
-                                  if (
-                                    component &&
-                                    trainingComponent &&
-                                    trainingComponent.id === component.id
-                                  )
-                                    setOpenAddExerciseModal(true);
-                                }}
-                                sx={{ p: 0, m: 0 }}
-                              >
-                                <IconComponent
-                                  fontSize="medium"
-                                  color="primary"
-                                />
-                              </IconButton>
-                            </Tooltip>
-                          ) : (
-                            <IconComponent fontSize="medium" color="primary" />
-                          )}
-
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: '#1EB980',
-                              pl: 1,
-                              mb: 0,
-                              textTransform: 'uppercase',
-                              fontWeight: 'bold',
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            sx={{ cursor: 'pointer', p: 0, m: 0 }}
+                            onClick={() => {
+                              if (trainingComponent && !component) {
+                                setTraining(training);
+                                setComponent(trainingComponent);
+                              }
                             }}
                           >
-                            {trainingComponent.component.name}
-                          </Typography>
+                            {component &&
+                            trainingComponent &&
+                            trainingComponent.id === component.id ? (
+                              <Tooltip
+                                title="Add exercise"
+                                sx={{
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <IconButton
+                                  onClick={() => {
+                                    if (
+                                      component &&
+                                      trainingComponent &&
+                                      trainingComponent.id === component.id
+                                    )
+                                      setOpenAddExerciseModal(true);
+                                  }}
+                                  sx={{ p: 0, m: 0 }}
+                                >
+                                  <IconComponent
+                                    fontSize="medium"
+                                    color="primary"
+                                  />
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              <IconComponent
+                                fontSize="medium"
+                                color="primary"
+                              />
+                            )}
+
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: '#1EB980',
+                                pl: 1,
+                                mb: 0,
+                                textTransform: 'uppercase',
+                                fontWeight: 'bold',
+                              }}
+                              onClick={() => {
+                                if (
+                                  trainingComponent &&
+                                  component &&
+                                  trainingComponent.id === component.id
+                                ) {
+                                  setTraining(undefined);
+                                  setComponent(undefined);
+                                } else {
+                                  setTraining(training);
+                                  setComponent(trainingComponent);
+                                }
+                              }}
+                            >
+                              {trainingComponent.component.name}
+                            </Typography>
+                          </Box>
 
                           <Typography variant="caption" ml={2}>
                             {commonService.date.formatTime(
@@ -171,6 +200,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           placeholder="Main Set"
                           displayInputLabel={true}
                           setValue={(mainSetId) => {
+                            setDetectedChanges(true);
                             const mainSet = MAIN_SETS.find(
                               (g) => g.id === mainSetId
                             )!;
@@ -189,6 +219,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           placeholder="After Set"
                           displayInputLabel={true}
                           setValue={(afterSetId) => {
+                            setDetectedChanges(true);
                             const afterSet = AFTER_SETS.find(
                               (g) => g.id === afterSetId
                             )!;
@@ -207,6 +238,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           placeholder="Method"
                           displayInputLabel={true}
                           setValue={(methodId) => {
+                            setDetectedChanges(true);
                             const method = METHODS.find(
                               (g) => g.id === methodId
                             )!;

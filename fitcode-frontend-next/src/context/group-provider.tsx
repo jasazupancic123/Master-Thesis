@@ -13,6 +13,7 @@ import { Group } from '@/controller/group/type/group.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
+import { User } from '@/controller/user/type/user.type';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -52,11 +53,16 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(users);
+  const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>(
+    undefined
+  );
 
   const [selectedSubgroup, setSelectedSubgroup] = useState<{
     subgroup: Subgroup | null;
     index: number;
   } | null>(null);
+
+  const [detectedChanges, setDetectedChanges] = useState(false);
 
   // filter trainings every time date changes
   useEffect(() => {
@@ -70,6 +76,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setTraining(undefined);
     setSelectedSubgroup(null);
     setComponent(undefined);
+    setSelectedAthlete(undefined);
   }, [cycle, dateFrom, dateTo]);
 
   const value: GroupContextProps = {
@@ -101,6 +108,10 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setFilteredUsers,
     selectedSubgroup,
     setSelectedSubgroup,
+    selectedAthlete,
+    setSelectedAthlete,
+    detectedChanges,
+    setDetectedChanges,
   };
 
   return (

@@ -6,12 +6,14 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { Box, Button, ToggleButtonGroup, Typography } from '@mui/material';
 import { GroupDateFilterButtonGroupProps } from './props';
 import toast from 'react-hot-toast';
+import { useGroup } from '@/context/group-provider';
 
 export default function GroupDateFilterButtonGroup(
   props: GroupDateFilterButtonGroupProps
 ) {
   const { filter, setFilter } = props;
   const screenSize = useScreenSize();
+  const { detectedChanges, setDetectedChanges } = useGroup();
   let alertedDay = false;
   let alertedYear = false;
   let toastId: string | null = null;
@@ -24,8 +26,9 @@ export default function GroupDateFilterButtonGroup(
         onChange={(_, val: GroupDateFilter) => {
           if (!val) return;
           if (
-            (filter === 'day' && !alertedDay) ||
-            (filter === 'year' && !alertedYear)
+            ((filter === 'day' && !alertedDay) ||
+              (filter === 'year' && !alertedYear)) &&
+            detectedChanges
           ) {
             toastId = toast.custom((t: any) => (
               <Box
@@ -51,6 +54,7 @@ export default function GroupDateFilterButtonGroup(
             toast.dismiss(toastId);
             toastId = null;
           }
+          setDetectedChanges(false);
           setFilter((prev) => (!val ? prev : val));
         }}
         sx={{

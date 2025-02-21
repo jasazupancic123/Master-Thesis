@@ -15,6 +15,8 @@ export default function TrainingCard(props: TrainingCardProps) {
     selectedSubgroup,
     setSelectedSubgroup,
     component,
+    selectedAthlete,
+    setSelectedAthlete,
   } = useGroup();
 
   useEffect(() => {
@@ -29,6 +31,21 @@ export default function TrainingCard(props: TrainingCardProps) {
       setSelectedSubgroup(null);
     }
   }, [component]);
+
+  useEffect(() => {
+    if (!selectedSubgroup?.subgroup) {
+      setSelectedAthlete(undefined);
+      return;
+    }
+    console.log(selectedSubgroup.subgroup.membersIds);
+    console.log(selectedAthlete);
+    if (
+      selectedSubgroup.subgroup.membersIds?.findIndex(
+        (member) => member === selectedAthlete?.uid
+      ) === -1
+    )
+      setSelectedAthlete(undefined);
+  }, [training, selectedSubgroup?.subgroup]);
 
   return (
     <Box width="100%">
@@ -52,7 +69,7 @@ export default function TrainingCard(props: TrainingCardProps) {
               backgroundColor:
                 selectedSubgroup?.subgroup &&
                 selectedTraining?.id === training.id
-                  ? COLORS[(selectedSubgroup.index % COLORS.length) + 1]
+                  ? COLORS[selectedSubgroup.index % COLORS.length]
                   : 'background.paper',
               borderTopLeftRadius: 10,
             }}

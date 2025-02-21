@@ -12,7 +12,7 @@ export default function BorderColor(props: {
     return (
       <Box
         sx={{
-          height: 6,
+          height: 8,
           borderBottomRightRadius: 25,
           borderBottomLeftRadius: 25,
           backgroundColor: props.color,
@@ -25,7 +25,7 @@ export default function BorderColor(props: {
   return (
     <Box
       sx={{
-        height: 6,
+        height: 8,
         borderTopRightRadius: 25,
         borderTopLeftRadius: 25,
         backgroundColor: props.color,
