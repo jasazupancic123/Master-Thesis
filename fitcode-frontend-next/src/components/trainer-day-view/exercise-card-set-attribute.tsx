@@ -85,17 +85,34 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             ...exerciseCardSetAttributeSx,
             mt: 0,
             bgcolor: 'transparent',
+            '& .MuiInputBase-root': {
+              backgroundColor: 'transparent',
+              '&:hover': {
+                backgroundColor: 'transparent',
+              },
+              '&.Mui-focused': {
+                backgroundColor: 'transparent',
+              },
+            },
             '& .MuiInputBase-input': {
               border: 'none',
               borderBottom: 'none',
               padding: '0px',
               paddingLeft: '4px',
               textAlign: 'center',
-              backgroundColor: '#263646',
               fontSize: '0.7rem',
               height: exerciseCardSetAttributeSx['& .MuiSelect-select'].height,
               color: '#bcb4b1',
               textAlignLast: 'left',
+            },
+            '&:before, &:after': {
+              display: 'none', // Removes the default MUI underline
+            },
+            '& .MuiFilledInput-underline:before': {
+              borderBottom: 'none !important',
+            },
+            '& .MuiFilledInput-underline:after': {
+              borderBottom: 'none !important',
             },
           }}
         />

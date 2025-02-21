@@ -29,6 +29,7 @@ import { NUM_MAX_SUPERSETS } from './constant';
 import { SupersetsProps } from './props';
 import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCard from './training-exercise-card';
+import TrainingExerciseCardContainer from './training-exercise-card-container';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
@@ -43,7 +44,8 @@ export default function Supersets(props: SupersetsProps) {
     setSelectedSubgroup,
     filteredTrainings,
     setFilteredTrainings,
-    filter,
+    selectedAthlete,
+    setDetectedChanges,
   } = useGroup();
 
   const supersets =
@@ -54,6 +56,8 @@ export default function Supersets(props: SupersetsProps) {
       ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
       : []
   );
+  const [selectedExercise, setSelectedExercise] =
+    useState<TrainingExercise | null>(null);
 
   useEffect(() => {
     setSelectedExercisesIds(
@@ -62,6 +66,10 @@ export default function Supersets(props: SupersetsProps) {
         : []
     );
   }, [supersets, supersets.length]);
+
+  useEffect(() => {
+    if (!selectedAthlete) setSelectedExercise(null);
+  }, [selectedAthlete]);
 
   useEffect(() => {
     if (selectedSubgroup?.subgroup?.supersets) {
@@ -94,14 +102,32 @@ export default function Supersets(props: SupersetsProps) {
           setSupersetsWithAdd,
           filteredTrainings,
           setFilteredTrainings,
+          setDetectedChanges,
         })
       }
     >
       <Grid2 container rowSpacing={2}>
         {supersetsWithAdd &&
-          supersetsWithAdd.length &&
+          supersetsWithAdd.length > 0 &&
           supersetsWithAdd.map((superset, i) => (
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }} key={`${component.id}-${i}`}>
+            <Grid2
+              size={{
+                xs: 12,
+                sm:
+                  selectedExercise &&
+                  selectedAthlete &&
+                  superset.exercises.some((e) => e.id === selectedExercise.id)
+                    ? 12
+                    : 6,
+                md:
+                  selectedExercise &&
+                  selectedAthlete &&
+                  superset.exercises.some((e) => e.id === selectedExercise.id)
+                    ? 6
+                    : 3,
+              }}
+              key={`${component.id}-${i}`}
+            >
               <Droppable
                 key={`${component.id}-${i}`}
                 droppableId={`${component.id}-${i}`}
@@ -129,11 +155,12 @@ export default function Supersets(props: SupersetsProps) {
                             setSupersetsWithAdd,
                             filteredTrainings,
                             setFilteredTrainings,
+                            setDetectedChanges,
                           }
                         )
                       }
                     >
-                      <BorderColor color={superset.color || COLOR[i]} />
+                      <BorderColor color={COLOR[i % COLOR.length]} />
                     </Box>
 
                     <Grid2 container>
@@ -143,6 +170,11 @@ export default function Supersets(props: SupersetsProps) {
                             key={exercise.id}
                             draggableId={exercise.id.toString()}
                             index={k}
+                            isDragDisabled={
+                              !!(
+                                selectedAthlete && selectedExercise === exercise
+                              )
+                            } // Disable dragging
                           >
                             {(provided, snapshot) => (
                               <Box
@@ -152,6 +184,12 @@ export default function Supersets(props: SupersetsProps) {
                                 {...provided.dragHandleProps}
                                 position="relative"
                                 p={1}
+                                py={
+                                  selectedAthlete &&
+                                  selectedExercise === exercise
+                                    ? 0
+                                    : undefined
+                                }
                                 borderRadius={1}
                                 boxShadow={snapshot.isDragging ? 2 : 0}
                                 bgcolor={
@@ -174,9 +212,14 @@ export default function Supersets(props: SupersetsProps) {
 
                                 <Box
                                   position="absolute"
-                                  top={10}
+                                  top={5}
                                   right={10}
-                                  display="flex"
+                                  display={
+                                    selectedAthlete &&
+                                    exercise === selectedExercise
+                                      ? 'none'
+                                      : 'flex'
+                                  }
                                   flexDirection="column"
                                 >
                                   <Tooltip
@@ -199,6 +242,7 @@ export default function Supersets(props: SupersetsProps) {
                                             setSupersetsWithAdd,
                                             filteredTrainings,
                                             setFilteredTrainings,
+                                            setDetectedChanges,
                                           }
                                         )
                                       }
@@ -210,9 +254,11 @@ export default function Supersets(props: SupersetsProps) {
                                   </Tooltip>
                                 </Box>
 
-                                <TrainingExerciseCard
+                                <TrainingExerciseCardContainer
                                   supersetIndex={i}
                                   exercise={exercise}
+                                  selectedExercise={selectedExercise}
+                                  setSelectedExercise={setSelectedExercise}
                                 />
                               </Box>
                             )}
@@ -239,12 +285,13 @@ export default function Supersets(props: SupersetsProps) {
                             setSupersetsWithAdd,
                             filteredTrainings,
                             setFilteredTrainings,
+                            setDetectedChanges,
                           }
                         )
                       }
                     >
                       <BorderColor
-                        color={superset.color || COLOR[i]}
+                        color={COLOR[i % COLOR.length]}
                         lower
                         applyMargin={superset.exercises.length === 0}
                       />
@@ -377,7 +424,14 @@ export default function Supersets(props: SupersetsProps) {
               supersets: [...supersets],
             };
 
-            //setSupersetsWithAdd([]);
+            const updatedComponent = {
+              ...component,
+              supersets: [...supersets],
+            };
+
+            setDetectedChanges(true);
+            setSupersetsWithAdd([...supersets]);
+            setComponent({ ...updatedComponent });
             setTraining({ ...training, components: updatedComponents });
             setOpenAddExerciseModal(false);
           } else {
@@ -396,6 +450,7 @@ export default function Supersets(props: SupersetsProps) {
               subgroups: updatedSubgroups,
             };
 
+            setDetectedChanges(true);
             setSelectedSubgroup({
               index: selectedSubgroup.index,
               subgroup: updatedSubgroup,

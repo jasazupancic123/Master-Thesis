@@ -119,6 +119,7 @@ export function handleRightClickSubgroup(
   const i = training.components.findIndex((c) => c.id === component.id);
   if (i === undefined || i === -1) return;
 
+
   const updatedSubgroups = subgroups.map((s) => ({
     ...s,
     membersIds: s.membersIds.filter((id) => id !== memberId),
@@ -159,6 +160,7 @@ export async function handleAddSubgroup(state: {
     | undefined;
   filteredTrainings: Training[];
   setFilteredTrainings: SetState<Training[]>;
+  setDetectedChanges: SetState<boolean>;
 }) {
   const {
     training,
@@ -169,6 +171,7 @@ export async function handleAddSubgroup(state: {
     setCreateSubgroup,
     filteredTrainings,
     setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!training || !component) return;
@@ -207,6 +210,7 @@ export async function handleAddSubgroup(state: {
   setFilteredTrainings(updatedTrainings);
 
   setCreateSubgroup?.({ name: '', membersIds: [] });
+  setDetectedChanges(true);
 }
 
 export function handleDeleteSubgroup(
@@ -218,6 +222,7 @@ export function handleDeleteSubgroup(
     setComponent: SetStateNullable<TrainingComponent>;
     filteredTrainings: Training[];
     setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { subgroupId } = input;
@@ -228,8 +233,11 @@ export function handleDeleteSubgroup(
     setComponent,
     filteredTrainings,
     setFilteredTrainings,
+    setDetectedChanges,
   } = state;
   if (!training || !component) return;
+
+  setDetectedChanges(true);
 
   const subgroupsCopy = [...component.subgroups];
 
@@ -278,6 +286,7 @@ export async function onDragEnd(
     setSupersetsWithAdd: SetState<Superset[]>;
     filteredTrainings: Training[];
     setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { destination, draggableId } = input;
@@ -293,6 +302,7 @@ export async function onDragEnd(
     setSupersetsWithAdd,
     filteredTrainings,
     setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!destination || !training || !component) return;
@@ -319,6 +329,8 @@ export async function onDragEnd(
     supersetWithExercise.exercises = supersetWithExercise.exercises.filter(
       (e) => e.id !== draggableId
     );
+
+    setDetectedChanges(true);
 
     setSupersetsWithAdd([...newSupersets]);
     if (selectedSubgroup?.subgroup) {
@@ -359,6 +371,9 @@ export async function onDragEnd(
         ...component,
         supersets: newSupersets,
       };
+
+      setDetectedChanges(true);
+
       setComponent(updatedComponent);
       const updatedComponents = [...training.components].map((c) =>
         c.id === component.id ? updatedComponent : c
@@ -420,6 +435,8 @@ export async function onDragEnd(
         ),
       };
 
+      setDetectedChanges(true);
+
       setSelectedSubgroup({
         subgroup: updatedSubgroup,
         index: selectedSubgroup.index,
@@ -452,6 +469,9 @@ export async function onDragEnd(
           superset === supersetWithExercise ? newSuperset : superset
         ),
       };
+
+      setDetectedChanges(true);
+
       setComponent(updatedComponent);
 
       const updatedComponents = [...training.components].map((c) =>
@@ -502,15 +522,25 @@ export async function onDragEnd(
     .map((item) => item.exercise); // Extract only exercises
 
   supersetWithNewExercise.exercises = sortedExercises;
-  const oldFinalSuperset = supersetWithExercise.exercises.filter(
+  const oldFinalSupersetExercises = supersetWithExercise.exercises.filter(
     (e) => e.id !== draggableId
   );
 
-  const finalSupersetsCopy = supersetsCopy.map((superset) =>
-    superset === supersetWithExercise
-      ? { ...superset, exercises: oldFinalSuperset }
-      : superset
-  );
+  let finalSupersetsCopy;
+
+  if (oldFinalSupersetExercises.length > 0) {
+    finalSupersetsCopy = supersetsCopy.map((superset) =>
+      superset === supersetWithExercise
+        ? { ...superset, exercises: oldFinalSupersetExercises }
+        : superset
+    );
+  } else {
+    finalSupersetsCopy = supersetsCopy.filter(
+      (superset) => superset !== supersetWithExercise
+    );
+  }
+
+  setDetectedChanges(true);
 
   setSupersetsWithAdd(finalSupersetsCopy);
   if (selectedSubgroup?.subgroup) {
@@ -569,6 +599,7 @@ export async function onDragEnd(
 
     setFilteredTrainings(updatedTrainings);
   }
+  setDetectedChanges(true);
 }
 
 export function handleDeleteExercise(
@@ -587,6 +618,7 @@ export function handleDeleteExercise(
     setSupersetsWithAdd: SetState<Superset[]>;
     filteredTrainings: Training[];
     setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { exerciseId } = input;
@@ -601,14 +633,22 @@ export function handleDeleteExercise(
     setSupersetsWithAdd,
     filteredTrainings,
     setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!component || !training) return;
 
-  const updatedSupersets = supersetsWithAdd.map((superset) => ({
+  setDetectedChanges(true);
+
+  let updatedSupersets = supersetsWithAdd.map((superset) => ({
     ...superset,
     exercises: superset.exercises.filter((e) => e.id !== exerciseId),
   }));
+
+  //check if a superset is empty, if it is, delete it
+  updatedSupersets = updatedSupersets.filter(
+    (superset) => superset.exercises.length > 0
+  );
 
   if (selectedSubgroup?.subgroup) {
     // update selected subgroup's supersets
@@ -687,6 +727,7 @@ export function handleDeleteSuperset(
     setSupersetsWithAdd: SetState<Superset[]>;
     filteredTrainings: Training[];
     setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { index } = input;
@@ -701,9 +742,12 @@ export function handleDeleteSuperset(
     setSupersetsWithAdd,
     filteredTrainings,
     setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!component || !training) return;
+
+  setDetectedChanges(true);
 
   if (selectedSubgroup?.subgroup) {
     // update selected subgroup's supersets

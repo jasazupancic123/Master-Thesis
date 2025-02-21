@@ -25,7 +25,8 @@ dayjs.extend(dayOfYear);
 export default function MultiCycleSlider() {
   const screenSize = useScreenSize();
 
-  const { token, group, setGroup, cycle, setCycle } = useGroup();
+  const { token, group, setGroup, cycle, setCycle, setDetectedChanges } =
+    useGroup();
   const theme = useTheme();
   const router = useRouter();
 
@@ -194,7 +195,8 @@ export default function MultiCycleSlider() {
                 handleDragChange(
                   sliderRef,
                   { newValues, draggingIndex, mouseX },
-                  { setValuesReal }
+                  { setValuesReal },
+                  setDetectedChanges
                 )
               }
               onFinalChange={handleDragEnd}
@@ -306,7 +308,8 @@ export default function MultiCycleSlider() {
                     onMouseMove={() =>
                       handleDrag(
                         { index, value, selectedYear },
-                        { setDraggedDay, setValuesReal, sortedCycles }
+                        { setDraggedDay, setValuesReal, sortedCycles },
+                        setDetectedChanges
                       )
                     }
                     style={{
@@ -426,7 +429,8 @@ export default function MultiCycleSlider() {
                 selectedYear,
                 cycle,
                 setCycle,
-              }
+              },
+              setDetectedChanges
             )
           }
           style={{

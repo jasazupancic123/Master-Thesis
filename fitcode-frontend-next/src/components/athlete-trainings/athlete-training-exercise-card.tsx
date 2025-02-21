@@ -236,7 +236,7 @@ export default function AthleteTrainingExerciseCard(
               {component.supersets.map((superset, i) => (
                 <Box key={`superset-${i}-${i}`}>
                   <BorderColor
-                    color={superset.color || COLOR[i]}
+                    color={COLOR[i % COLOR.length]}
                     applyMargin={superset.exercises.length === 0}
                   />
 
@@ -450,13 +450,11 @@ export default function AthleteTrainingExerciseCard(
                     })}
                   </Box>
 
-                  {superset.exercises.length === 0 && (
-                    <BorderColor
-                      color={superset.color || COLOR[i]}
-                      lower
-                      applyMargin={superset.exercises.length === 0}
-                    />
-                  )}
+                  <BorderColor
+                    color={COLOR[i % COLOR.length]}
+                    lower
+                    applyMargin={superset.exercises.length === 0}
+                  />
                 </Box>
               ))}
             </Box>

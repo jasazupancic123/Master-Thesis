@@ -7,16 +7,34 @@ import {
 } from '@/common/constant/training-exercise.constant';
 import { useGroup } from '@/context/group-provider';
 import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
-import { Grid2 } from '@mui/material';
+import { Box, Grid2, IconButton, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
+import { handleDeleteExercise } from './state';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
-  const { exercise, supersetIndex: j } = props;
-  const { training, setTraining, component, selectedSubgroup } = useGroup();
+  const {
+    exercise,
+    supersetIndex: j,
+    selectedExercise,
+    setSelectedExercise,
+  } = props;
+  const {
+    training,
+    setTraining,
+    component,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    filteredTrainings,
+    setFilteredTrainings,
+    setComponent,
+    selectedAthlete,
+    setDetectedChanges,
+  } = useGroup();
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =
@@ -45,6 +63,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
       return updatedTraining;
     });
+    setDetectedChanges(true);
   }
 
   if (!training || !component || !state) return null;
@@ -60,7 +79,19 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <Stack direction="row" justifyContent="center">
+      <Stack
+        direction="row"
+        justifyContent="center"
+        sx={{
+          cursor:
+            selectedExercise !== exercise && selectedAthlete
+              ? 'pointer'
+              : undefined,
+        }}
+        onClick={() => {
+          if (selectedAthlete) setSelectedExercise(exercise);
+        }}
+      >
         <Typography
           variant="body1"
           fontWeight="bold"

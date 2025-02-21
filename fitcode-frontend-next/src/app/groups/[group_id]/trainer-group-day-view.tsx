@@ -41,6 +41,7 @@ export default function TrainerDayView() {
     setDateTo,
     component,
     setSelectedSubgroup,
+    setDetectedChanges,
   } = useGroup();
 
   const router = useRouter();
@@ -58,6 +59,7 @@ export default function TrainerDayView() {
 
   const [showSubgroups, setShowSubgroups] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
@@ -82,7 +84,9 @@ export default function TrainerDayView() {
       }
 
       const scrollY = window.scrollY;
-      setIsSticky(scrollY > 200);
+      //get screen height
+      const screenHeight = window.innerHeight;
+      setIsSticky(scrollY > screenHeight * 0.5);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -99,6 +103,10 @@ export default function TrainerDayView() {
 
   const amTraining = todaysTrainings.find((t) => dayjs(t.from).hour() < 12);
   const pmTraining = todaysTrainings.find((t) => dayjs(t.from).hour() >= 12);
+
+  useEffect(() => {
+    setLoading(false);
+  }, [todaysTrainings]);
 
   if (!cycle)
     return (
@@ -131,6 +139,7 @@ export default function TrainerDayView() {
         setFilteredTrainings((prev) =>
           prev.map((t) => (t.id === newTraining.id ? mapped : t))
         );
+        setDetectedChanges(false);
 
         toast.success('Training updated successfully');
       },
@@ -146,14 +155,13 @@ export default function TrainerDayView() {
         flexDirection="column"
         alignItems="center"
         width="100%"
+        minHeight={195}
         sx={{
           borderBottomRightRadius: todaysTrainings.length === 0 ? 0 : '20px',
           borderBottomLeftRadius: todaysTrainings.length === 0 ? 0 : '20px',
           bgcolor: 'background.paper',
         }}
-        justifyContent={
-          screenSize.isSmallerThanLaptop ? 'center' : 'space-between'
-        }
+        justifyContent="space-evenly"
       >
         <Stack
           direction="row"
@@ -256,9 +264,11 @@ export default function TrainerDayView() {
                     .map(({ label, date }) => ({
                       label: label[0],
                       value: date.toString(),
-                      sublabel: commonService.date.format(date, {
-                        withYear: false,
-                      }),
+                      sublabel: screenSize.isSmallerThanLaptop
+                        ? commonService.date.format(date, {
+                            withYear: false,
+                          })
+                        : undefined,
                     }))
                 );
               }}
@@ -359,7 +369,7 @@ export default function TrainerDayView() {
         }}
       >
         {/* Training set groups with set exercises */}
-        {todaysTrainings.length === 0 ? (
+        {!loading && todaysTrainings.length === 0 ? (
           <Box
             display="flex"
             bgcolor={'background.paper'}

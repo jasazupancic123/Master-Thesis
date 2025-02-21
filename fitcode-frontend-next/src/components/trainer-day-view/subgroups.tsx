@@ -44,6 +44,7 @@ export default function Subgroups(props: SubgroupProps) {
     filteredTrainings,
     setFilteredTrainings,
     users,
+    setDetectedChanges,
   } = useGroup();
 
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
@@ -129,7 +130,7 @@ export default function Subgroups(props: SubgroupProps) {
                           maxHeight: 210,
                           margin: 1,
                           transition: 'border 0.2s',
-                          border: `1px solid ${subgroup.color ? subgroup.color : COLORS[index % 20]}`,
+                          border: `1px solid ${subgroup.color ? subgroup.color : COLORS[(index % COLORS.length) - 1]}`,
                           display: 'flex',
                           flexDirection: 'column',
                           position: 'relative', // Needed for absolute positioning of icons
@@ -173,6 +174,7 @@ export default function Subgroups(props: SubgroupProps) {
                                     setComponent,
                                     filteredTrainings,
                                     setFilteredTrainings,
+                                    setDetectedChanges,
                                   }
                                 );
                               }}
@@ -323,6 +325,7 @@ export default function Subgroups(props: SubgroupProps) {
             setCreateSubgroup,
             filteredTrainings,
             setFilteredTrainings,
+            setDetectedChanges,
           });
 
           setModal((prev) => ({ ...prev, subgroup: false }));

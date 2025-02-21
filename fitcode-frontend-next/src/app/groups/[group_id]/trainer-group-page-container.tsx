@@ -11,6 +11,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { GroupController } from '@/controller/group/group.controller';
+
 export default function TrainerGroupPageContainer() {
   const router = useRouter();
   const {
@@ -20,6 +21,7 @@ export default function TrainerGroupPageContainer() {
     setFilteredTrainings,
     group,
     setGroup,
+    setDetectedChanges,
   } = useGroup();
 
   async function handleUpdateGroup() {
@@ -30,6 +32,7 @@ export default function TrainerGroupPageContainer() {
       () => GroupController.update(token, group.id, group),
       (newGroup) => {
         setGroup(newGroup);
+        setDetectedChanges(false);
         toast.success('Group updated successfully');
       },
       undefined,
@@ -54,6 +57,7 @@ export default function TrainerGroupPageContainer() {
           prev.map((t) => (t.id === newTraining.id ? mapped : t))
         );
 
+        setDetectedChanges(false);
         toast.success('Training updated successfully');
       },
       undefined,

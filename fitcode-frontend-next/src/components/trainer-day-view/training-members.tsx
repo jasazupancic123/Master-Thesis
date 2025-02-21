@@ -29,6 +29,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setTraining,
     filteredTrainings,
     setFilteredTrainings,
+    selectedAthlete,
+    setSelectedAthlete,
+    setDetectedChanges,
   } = useGroup();
 
   const members = users.filter((user) => group.membersIds.includes(user.uid));
@@ -107,6 +110,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           c.id === newComponent.id ? newComponent : c
         ),
       });
+      setDetectedChanges(true);
       return;
     }
 
@@ -144,6 +148,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       setCreateSubgroup: undefined,
       filteredTrainings,
       setFilteredTrainings,
+      setDetectedChanges,
     });
   }
 
@@ -154,6 +159,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         px={2}
         justifyContent={isSticky ? 'center' : undefined}
       >
+        {isSticky && (
+          <div style={{ height: 116, width: '100%' }} /> // Mock Stack to maintain layout
+        )}
         <Stack
           direction="row"
           spacing={1}
@@ -189,6 +197,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             px: !component ? 1 : 0,
             boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
             border: isSticky ? '1px solid grey' : 'none',
+
+            transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
+            transform: isSticky ? 'translateY(0)' : 'translateY(0)',
           }}
         >
           {/* No members to display*/}
@@ -232,7 +243,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
               // Assign border color based on the subgroup index
               const borderColor = subgroup.color
                 ? subgroup.color
-                : COLORS[subgroupIndex % COLORS.length];
+                : COLORS[(subgroupIndex % COLORS.length) - 1];
 
               return (
                 <div
@@ -282,7 +293,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         backgroundColor: '#283444',
                         borderTopLeftRadius: 10,
                       }}
-                      height={screenSize.isMobile ? 55 : 70}
+                      height={screenSize.isMobile ? 50 : 60}
                     >
                       {/* First Typography (Green Box) */}
                       <Box
@@ -358,6 +369,22 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                                 handleRightClickAvatar(member);
                               }}
                               sx={{ p: 0, m: 0 }}
+                              onClick={() => {
+                                if (selectedAthlete === member) {
+                                  setSelectedAthlete(undefined);
+                                  return;
+                                }
+                                setSelectedAthlete(member);
+                              }}
+                              borderRadius={
+                                selectedAthlete === member ? '50%' : 0
+                              }
+                              border={
+                                selectedAthlete === member
+                                  ? '2px solid #1EB980'
+                                  : 'none'
+                              }
+                              zIndex={1000}
                             >
                               <Avatar
                                 className="avatar-border"
@@ -365,8 +392,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                                 sx={{
                                   width: screenSize.isMobile ? 40 : 50,
                                   height: screenSize.isMobile ? 40 : 50,
-                                  mx: 0.5,
-                                  my: 1,
+                                  m: selectedAthlete === member ? 0.25 : 0.5,
                                 }}
                               >
                                 {/* {member.email[0].toUpperCase()} */}

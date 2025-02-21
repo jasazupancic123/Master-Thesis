@@ -24,7 +24,8 @@ import toast from 'react-hot-toast';
 export default function TrainerYearView() {
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { token, group, setGroup, cycle, setCycle } = useGroup();
+  const { token, group, setGroup, cycle, setCycle, setDetectedChanges } =
+    useGroup();
 
   const theme = useTheme();
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
@@ -55,6 +56,7 @@ export default function TrainerYearView() {
         if (cycle?.id === editCycle.id) setCycle(updatedCycle);
 
         toast.success('Cycle updated successfully.');
+        setDetectedChanges(false);
         setEditCycle(null);
       },
       undefined,
@@ -169,6 +171,7 @@ export default function TrainerYearView() {
           display="flex"
           flexDirection="column"
           alignItems="center"
+          minHeight={195}
           sx={{
             backgroundColor: theme.palette.background.paper,
             borderBottomLeftRadius: 20,

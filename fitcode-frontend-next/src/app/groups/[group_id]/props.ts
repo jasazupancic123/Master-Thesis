@@ -54,6 +54,10 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilteredTrainings: SetState<Training[]>;
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
+  selectedAthlete: User | undefined;
+  setSelectedAthlete: SetStateNullable<User>;
+  detectedChanges: boolean;
+  setDetectedChanges: SetState<boolean>;
 };
 
 export type TrainerDayViewContextProps = {
