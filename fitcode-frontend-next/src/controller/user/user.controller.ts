@@ -17,7 +17,11 @@ export class UserController {
   }
 
   static async findMe(token: string) {
-    return api.get<User>(`/user/me`, { token });
+    return api.get<User>('/user/me', { token });
+  }
+
+  static async findProfile(token: string) {
+    return api.get<UserEntity>('/user/me/profile', { token });
   }
 
   static async findById(token: string, id: string) {

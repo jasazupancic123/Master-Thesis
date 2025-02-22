@@ -17,6 +17,7 @@ import {
   UserWorkloadRef,
 } from '../../common/type/firestore.type';
 import { UserWorkload } from '../entity/user-workload.entity';
+import { SetStatus } from '../enum/set-status.enum';
 import { TrainingRepository } from './training.repository';
 
 @Injectable()
@@ -61,9 +62,13 @@ export class UserWorkloadRepository
         userId: ref.userId,
         trainingId: data.trainingId,
         exerciseId: data.exerciseId,
+        sets: data.sets,
+        setType: data.setType,
+        setTypeValue: data.setTypeValue,
         workloadType: data.workloadType,
         workloadValue: data.workloadValue,
-        sets: data.sets,
+        status: SetStatus.NOT_STARTED,
+        data: [],
       },
       { timestamps: true },
     );

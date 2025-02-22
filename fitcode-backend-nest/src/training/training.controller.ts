@@ -67,27 +67,21 @@ export class TrainingController {
     return {};
   }
 
-  @Patch(
-    ':trainingId/component/:componentId/superset/:superset/exercise/:exerciseId/set',
-  )
+  @Patch(':trainingId/exercise/:exerciseId')
   @Auth()
   async updateAthleteWorkload(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-    @Param('superset', ParseIntPipe) superset: number,
     @Param('exerciseId') exerciseId: string,
     @Body() body: UpdateAthleteSetDataDto,
   ) {
     const ref = {
       trainingId,
-      componentId,
-      superset,
-      exerciseId,
       userId: user.uid,
+      exerciseId,
     };
 
-    await this.trainingService.updateAthleteWorkload(ref, body.sets, user);
+    await this.trainingService.updateAthleteWorkloadData(ref, body.data, user);
     return {};
   }
 

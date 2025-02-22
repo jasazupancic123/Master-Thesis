@@ -45,6 +45,13 @@ export class UserController {
     return {};
   }
 
+  @Get('me/profile')
+  @Auth()
+  async findProfile(@RequestUser() user: User) {
+    const ref = { uid: user.uid };
+    return await this.userService.findProfile(ref);
+  }
+
   @Patch('me/profile')
   @Auth()
   async updateProfile(

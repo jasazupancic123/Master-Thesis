@@ -2,14 +2,14 @@
 
 import { CommonService } from '@/common/service/common.service';
 import AthleteTrainingExerciseCard from '@/components/athlete-trainings/athlete-training-exercise-card';
-import { Box, Divider, Stack, TextField, Typography } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { Box, Stack, Typography } from '@mui/material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { endOfDay, startOfDay } from 'date-fns';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { TrainingPageProps } from './type';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { useScreenSize } from '@/context/screen-size-provider';
 
 const commonService = CommonService.instance;
 
@@ -23,6 +23,7 @@ export default function TrainingPage(props: TrainingPageProps) {
       commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
     )
   );
+
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs>(
     dayjs(new Date())
   );
@@ -39,6 +40,7 @@ export default function TrainingPage(props: TrainingPageProps) {
         )
       )
     );
+
     setLoading(false);
   }, [selectedDate]);
 
@@ -55,21 +57,15 @@ export default function TrainingPage(props: TrainingPageProps) {
               if (!newDate) return;
               setSelectedDate(newDate);
             }}
-            sx={{
-              textAlign: 'center',
-            }}
+            sx={{ textAlign: 'center' }}
             closeOnSelect={true}
             format="DD-MMM-YYYY"
           />
         </LocalizationProvider>
       </Box>
+
       {/* Trainings */}
-      <Stack
-        sx={{
-          borderRadius: 2,
-          width: '100%',
-        }}
-      >
+      <Stack sx={{ borderRadius: 2, width: '100%' }}>
         <Box
           display="flex"
           width="100%"
@@ -81,7 +77,7 @@ export default function TrainingPage(props: TrainingPageProps) {
               No trainings scheduled for this day
             </Typography>
           ) : (
-            trainings?.map((training, i) => (
+            trainings.map((training, i) => (
               <Box
                 key={i}
                 sx={{
@@ -93,12 +89,7 @@ export default function TrainingPage(props: TrainingPageProps) {
                 }}
               >
                 {/* Training Time Header */}
-                <Stack
-                  direction="row"
-                  sx={{
-                    borderRadius: 5,
-                  }}
-                >
+                <Stack direction="row" sx={{ borderRadius: 5 }}>
                   <Box
                     sx={{
                       width: 25,
@@ -134,6 +125,7 @@ export default function TrainingPage(props: TrainingPageProps) {
                     </Typography>
                   </Stack>
                 </Stack>
+
                 {/* Components */}
                 <Stack spacing={3}>
                   <AthleteTrainingExerciseCard

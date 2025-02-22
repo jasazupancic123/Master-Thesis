@@ -1,36 +1,38 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import {
-  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   Min,
 } from 'class-validator';
 import { IsStringOrNumber } from 'src/common/decorator/is-string-or-number.decorator';
-import { SetStatus } from '../enum/set-status.enum';
 
-export class SetData {
-  @IsEnum(SetStatus)
-  @IsNotEmpty()
+export class WorkloadData {
+  @IsInt()
+  @Min(1)
+  @Max(10)
   @ApiProperty()
   @Expose()
-  status: SetStatus;
+  setNumber: number;
 
   @IsInt()
-  @IsOptional()
-  @Min(0)
-  @ApiPropertyOptional()
+  @Min(1)
+  @ApiProperty()
   @Expose()
-  setTypeValue?: number; // actual user reps / distance / time / ... completed
+  repNumber: number;
+
+  @IsInt()
+  @Min(1)
+  @Expose()
+  setTypeValue: number; // actual user reps / distance / time / ... completed
 
   @IsStringOrNumber()
-  @IsOptional()
   @IsNotEmpty()
-  @ApiPropertyOptional()
   @Expose()
-  workloadValue?: string | number; // actual user kg completed
+  workloadValue: string | number; // actual user kg completed
 
   @IsString()
   @IsOptional()
