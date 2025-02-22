@@ -1,12 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
-import { SetData } from '../entity/set-data';
+import { PickType } from '@nestjs/mapped-types';
+import { UserWorkload } from '../entity/user-workload.entity';
 
-export class UpdateAthleteSetDataDto {
-  @ValidateNested({ each: true })
-  @Type(() => SetData)
-  @ApiProperty()
-  @Expose()
-  sets: SetData[];
-}
+export class UpdateAthleteSetDataDto extends PickType(UserWorkload, [
+  'data',
+] as const) {}

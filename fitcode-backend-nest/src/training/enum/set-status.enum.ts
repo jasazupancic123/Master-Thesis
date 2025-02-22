@@ -1,5 +1,5 @@
 export enum SetStatus {
-  NOT_STARTED,
-  IN_PROGRESS,
-  COMPLETED,
+  NOT_STARTED = 0,
+  IN_PROGRESS = 1,
+  DONE = 2,
 }

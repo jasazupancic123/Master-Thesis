@@ -51,23 +51,6 @@ export class UserService {
     return user;
   }
 
-  async upsert(data: CreateUser): Promise<User> {
-    const { auth } = this.firebaseService;
-    const { email, password, displayName, customClaims } = data;
-
-    let user: UserRecord;
-    try {
-      user = await auth.getUserByEmail(email);
-    } catch (e) {
-      this.logger.log(`Creating user (${email}, ${JSON.stringify(data)})`);
-      user = await auth.createUser({ email, password, displayName });
-    } finally {
-      if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
-    }
-
-    return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
-  }
-
   async findOneBy(key: 'id' | 'email', value: string): Promise<User> {
     switch (key) {
       case 'id':
@@ -77,6 +60,10 @@ export class UserService {
       default:
         throw new Error('Invalid key');
     }
+  }
+
+  async findProfile(ref: UserRef) {
+    return await this.userRepository.getDoc(ref.uid);
   }
 
   async findAll(filter?: FilterUserQueryDto): Promise<User[]> {
@@ -93,6 +80,23 @@ export class UserService {
     }
 
     return users;
+  }
+
+  async upsert(data: CreateUser): Promise<User> {
+    const { auth } = this.firebaseService;
+    const { email, password, displayName, customClaims } = data;
+
+    let user: UserRecord;
+    try {
+      user = await auth.getUserByEmail(email);
+    } catch (e) {
+      this.logger.log(`Creating user (${email}, ${JSON.stringify(data)})`);
+      user = await auth.createUser({ email, password, displayName });
+    } finally {
+      if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
+    }
+
+    return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
   async getAdminId(): Promise<string> {
