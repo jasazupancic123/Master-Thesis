@@ -10,7 +10,7 @@ import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { TrainerDayViewProvider } from '@/context/trainer-day-view-provider';
 import { Box, useTheme } from '@mui/material';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import GroupDateFilterButtonGroup from '../group-date-filter-button-group';
 
 export default function TrainerGroupPage() {
@@ -19,7 +19,6 @@ export default function TrainerGroupPage() {
   const theme = useTheme();
 
   const { group, groups, filter, setFilter } = context;
-
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
     day: (

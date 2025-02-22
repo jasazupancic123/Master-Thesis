@@ -1,9 +1,8 @@
 import { theme } from '@/app/style';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Box, Typography } from '@mui/material';
-import { Props } from 'next/script';
 
-export default function PageTitle({ title }: Props) {
+export default function PageTitle({ title }: { title: string }) {
   const screenSize = useScreenSize();
   return (
     <Box

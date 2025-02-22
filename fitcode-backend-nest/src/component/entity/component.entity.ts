@@ -20,6 +20,7 @@ export class Component extends IdEntity {
   @Expose()
   name: string;
 
-  children: string[]; // virtual field of children components, cannot be Component[] because of circular dependency of Populate interface
-  parents: string[]; // virtual field of parent components, cannot be Component[] because of circular dependency of Populate interface
+  // virtual fields
+  children?: string[];
+  parents?: string[];
 }

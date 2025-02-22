@@ -1,18 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { addHours, endOfHour, startOfHour } from 'date-fns';
 import {
   CollectionReference,
   DocumentReference,
-  DocumentSnapshot,
   Query,
-  QueryDocumentSnapshot,
-  Timestamp,
 } from 'firebase-admin/firestore';
+import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
 import { CommonService } from 'src/common/service/common.service';
-import { Component } from 'src/component/entity/component.entity';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
+import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { TrainingComponent } from '../entity/training-component.entity';
 import { Training } from '../entity/training.entity';
 
 @Injectable()
@@ -28,82 +25,71 @@ export class TrainingRepository
     query: (query: Query) => Query = (query) => query,
   ): Promise<Training[]> {
     const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map((doc) => this.serialize(doc));
+
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(doc.data() as FirestoreEntity<Training>),
+    );
   }
 
   async getDoc(id: string): Promise<Training | null> {
     const snapshot = await this.doc(id).get();
     if (!snapshot.exists) return null;
-    return this.serialize(snapshot);
+
+    return this.firebaseService.serialize(
+      snapshot.data() as FirestoreEntity<Training>,
+    );
   }
 
-  async addDoc(
-    input: Partial<
-      Omit<Training, 'components'> & {
-        components: Partial<TrainingComponent>[];
-      }
-    >,
-  ): Promise<string> {
+  async addDoc(input: Create<Training>): Promise<string> {
     if (input.membersIds?.length === 0)
       throw new BadRequestException('Training must have atleast one member');
 
     if (input.components?.length === 0)
       throw new BadRequestException('Training must have atleast one component');
 
-    const result = await this.collection().add({
-      groupId: input.groupId,
-      cycleId: input.cycleId,
-      ownerId: input.ownerId,
-      from: Timestamp.fromDate(input.from),
-      to: Timestamp.fromDate(input.to),
-      membersIds: input.membersIds || [],
-      copiedFromId: input.copiedFromId || null,
-      components: input.components.map((c) => ({
-        id: c.id,
-        color: c.color || this.commonService.color.random(),
-        from: Timestamp.fromDate(c.from ? c.from : new Date()),
-        to: Timestamp.fromDate(c.to ? c.to : new Date()),
-        subgroups: c.subgroups || [],
-        supersets: c.supersets || [
-          {
-            color: this.commonService.color.random(),
-            exercises: [],
-          },
-        ],
-      })),
-      meta: input.meta || [],
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      deletedAt: null,
-    });
+    const { id } = this.collection().doc();
+    const query = this.firebaseService.buildCreateQuery<Training>(
+      {
+        id,
+        groupId: input.groupId,
+        cycleId: input.cycleId,
+        ownerId: input.ownerId,
+        from: input.from || startOfHour(new Date()),
+        to:
+          input.to || endOfHour(addHours(new Date(), input.components.length)),
+        membersIds: input.membersIds || [],
+        copiedFromId: input.copiedFromId || null,
+        meta: input.meta || [],
+        components: input.components.map((c, i) => ({
+          id: c.id,
+          color: c.color || null,
+          from: c.from ? c.from : startOfHour(addHours(new Date(), i)),
+          to: c.to ? c.to : endOfHour(addHours(new Date(), i)),
+          subgroups: [],
+          supersets: [{ color: null, exercises: [] }],
+        })),
+      },
+      { timestamps: true },
+    );
 
-    return result.id;
+    await this.doc(id).set(query);
+    return id;
   }
 
-  async updateDoc(id: string, input: Partial<Training>) {
-    await this.doc(id).update({
-      ...(input.from && { from: Timestamp.fromDate(input.from) }),
-      ...(input.to && { to: Timestamp.fromDate(input.to) }),
-      ...(input.components && {
-        components: input.components.map((c) => ({
-          id: c.id,
-          from: Timestamp.fromDate(c.from || new Date()),
-          to: Timestamp.fromDate(c.to || new Date()),
-          color: c.color || null,
-          subgroups: c.subgroups.map((s) => ({
-            id: s.id,
-            name: s.name,
-            membersIds: s.membersIds,
-            supersets: s.supersets.map((s) => ({
-              color: s.color,
-              exercises: s.exercises.map((e) => ({
-                id: e.id,
-                color: e.color,
-                meta: { ...e.meta },
-              })),
-            })),
-          })),
-          supersets: c.supersets.map((s) => ({
+  async updateDoc(id: string, input: Update<Training>) {
+    const query = this.firebaseService.buildUpdateQuery<Training>({
+      from: input.from,
+      to: input.to,
+      components: input.components?.map((c) => ({
+        id: c.id,
+        from: c.from || startOfHour(new Date()),
+        to: c.to || endOfHour(new Date()),
+        color: c.color,
+        subgroups: c.subgroups.map((s) => ({
+          id: s.id,
+          name: s.name,
+          membersIds: s.membersIds,
+          supersets: s.supersets.map((s) => ({
             color: s.color,
             exercises: s.exercises.map((e) => ({
               id: e.id,
@@ -112,13 +98,21 @@ export class TrainingRepository
             })),
           })),
         })),
-        updatedAt: Timestamp.now(),
-      }),
+        supersets: c.supersets.map((s) => ({
+          color: s.color,
+          exercises: s.exercises.map((e) => ({
+            id: e.id,
+            color: e.color,
+            meta: { ...e.meta },
+          })),
+        })),
+      })),
     });
+
+    await this.doc(id).update(query);
   }
 
   async deleteDoc(id: string) {
-    // await this.doc(id).update({ deletedAt: Timestamp.now() });
     await this.doc(id).delete();
   }
 
@@ -130,32 +124,5 @@ export class TrainingRepository
     return this.firebaseService.firestore.collection(
       FirestoreCollection.TRAINING,
     );
-  }
-
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Training {
-    const data = snapshot.data();
-
-    return {
-      id: snapshot.id,
-      groupId: data.groupId,
-      cycleId: data.cycleId,
-      ownerId: data.ownerId,
-      membersIds: data.membersIds,
-      copiedFromId: data.copiedFromId || null,
-      from: (data.from as Timestamp).toDate(),
-      to: (data.to as Timestamp).toDate(),
-      components: (data.components || []).map((c: any) => ({
-        id: c.id,
-        color: c.color || null,
-        from: (c.from as Timestamp).toDate(),
-        to: (c.to as Timestamp).toDate(),
-        supersets: c.supersets || [],
-        subgroups: c.subgroups || [],
-      })),
-      meta: data.meta || [],
-      createdAt: (data.createdAt as Timestamp).toDate(),
-      updatedAt: (data.updatedAt as Timestamp).toDate(),
-      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
-    };
   }
 }

@@ -4,11 +4,13 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { CommonService } from '../../common/service/common.service';
-import { ExerciseAttributeRepository } from '../repository/exercise-attribute.repository';
-import { ExerciseAttribute } from '../entity/exercise-attribute.entity';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+import { Create, Update } from 'src/common/type/entity.type';
 import { Wrapper } from 'src/common/type/wrapper.type';
+import { FirebaseService } from 'src/firebase/firebase.service';
+import { CommonService } from '../../common/service/common.service';
+import { ExerciseAttribute } from '../entity/exercise-attribute.entity';
+import { ExerciseAttributeRepository } from '../repository/exercise-attribute.repository';
 
 @Injectable()
 export class ExerciseAttributeService {
@@ -23,29 +25,17 @@ export class ExerciseAttributeService {
     return await this.exerciseAttributeRepository.getDocs();
   }
 
-  async create(input: Partial<ExerciseAttribute>): Promise<ExerciseAttribute> {
+  async create(input: Create<ExerciseAttribute>): Promise<ExerciseAttribute> {
     const id = await this.exerciseAttributeRepository.addDoc(input);
-    return { ...input, field: id } as ExerciseAttribute;
+    return { ...input, field: id };
   }
 
-  async update(input: Partial<ExerciseAttribute>): Promise<ExerciseAttribute> {
+  async update(input: Update<ExerciseAttribute>): Promise<ExerciseAttribute> {
     if (!input.field) throw new Error('Exercise attribute field is required');
 
     const oldExerciseAttribute = await this.exerciseAttributeRepository.getDoc(
       input.field,
     );
-
-    const data = {
-      field: input.field,
-      name: input.name,
-      required: input.required,
-      type: input.type,
-      unit: input.unit,
-      values: input.values,
-    };
-
-    // update exercise attribute
-    await this.exerciseAttributeRepository.updateDoc(input.field, data);
 
     // TODO - update all exercise attribute values if values changed
     if (
@@ -57,7 +47,7 @@ export class ExerciseAttributeService {
       // TODO
     }
 
-    return { ...oldExerciseAttribute, ...data };
+    return { ...oldExerciseAttribute };
   }
 
   async validate(input: Record<string, any>): Promise<void> {

@@ -13,7 +13,7 @@ import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { TrainingCycleViewWeekProps } from './type';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
-  const { index, week, selected, setSelected } = props;
+  const { index, week, selected } = props;
 
   const router = useRouter();
   const screenSize = useScreenSize();
@@ -22,9 +22,9 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     group,
     cycle,
     components,
+    trainings,
     setCycle,
     setFilteredTrainings,
-    trainings,
     filteredTrainings,
     setTrainings,
   } = useGroup();

@@ -7,14 +7,12 @@ import {
 } from '@/common/constant/training-exercise.constant';
 import { useGroup } from '@/context/group-provider';
 import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
-import { Box, Grid2, IconButton, Tooltip } from '@mui/material';
+import { Grid2 } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
-import { handleDeleteExercise } from './state';
-import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const {
@@ -28,10 +26,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setTraining,
     component,
     selectedSubgroup,
-    setSelectedSubgroup,
-    filteredTrainings,
-    setFilteredTrainings,
-    setComponent,
     selectedAthlete,
     setDetectedChanges,
   } = useGroup();
@@ -39,12 +33,14 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =
     selectedSubgroup?.subgroup || training?.components?.[i!];
+
   const k = selectedTrainingOrSubgroup?.supersets?.[j!]?.exercises?.findIndex(
     (e) => e.id === exercise.id
   );
 
   const state =
     selectedTrainingOrSubgroup?.supersets?.[j!]?.exercises?.[k!]?.meta;
+
   const [tempoOrEffort, setTempoOrEffort] = useState<'temp' | 'eff'>(
     !state || state?.tempo ? 'temp' : 'eff'
   );
@@ -63,6 +59,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
       return updatedTraining;
     });
+
     setDetectedChanges(true);
   }
 

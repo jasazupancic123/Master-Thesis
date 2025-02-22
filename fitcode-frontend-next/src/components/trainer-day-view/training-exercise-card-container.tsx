@@ -1,13 +1,13 @@
 'use client';
 
-import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
-import TrainingExerciseCard from './training-exercise-card';
-import { LineChart, Line, Tooltip, ResponsiveContainer } from 'recharts';
-import { Dispatch, SetStateAction, useState } from 'react';
 import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
 import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { useScreenSize } from '@/context/screen-size-provider';
+import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
+import TrainingExerciseCard from './training-exercise-card';
 
 const data = [
   { name: 'A', intensity: 50, volume: 80 },
@@ -33,12 +33,11 @@ export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
   const screenSize = useScreenSize();
+  const { selectedAthlete } = useGroup();
   const { supersetIndex, exercise, selectedExercise, setSelectedExercise } =
     props;
-  const { selectedAthlete } = useGroup();
 
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
-
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setRange(newValue as number[]);
   };
@@ -65,7 +64,10 @@ export default function TrainingExerciseCardContainer(
           setSelectedExercise={setSelectedExercise}
         />
       </Grid2>
-      <Grid2 size={{ xs: screenSize.isSmallerThanLaptop ? 12 : 6 }} sx={{pt: screenSize.isSmallerThanLaptop ? 2 : 0}}>
+      <Grid2
+        size={{ xs: screenSize.isSmallerThanLaptop ? 12 : 6 }}
+        sx={{ pt: screenSize.isSmallerThanLaptop ? 2 : 0 }}
+      >
         <Box
           width="100%"
           display="flex"
@@ -122,9 +124,7 @@ export default function TrainingExerciseCardContainer(
           <Box sx={{ position: 'absolute', top: 5, right: 20 }}>
             <IconButton
               sx={{ p: 0, m: 0 }}
-              onClick={() => {
-                setSelectedExercise(null);
-              }}
+              onClick={() => setSelectedExercise(null)}
             >
               <RemoveIcon />
             </IconButton>

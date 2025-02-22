@@ -6,11 +6,11 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
+import { sub } from 'date-fns';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { handleAddSubgroup } from './state';
-import { sub } from 'date-fns';
 import { DEFAULT_SUBGROUP } from './constant';
+import { handleAddSubgroup } from './state';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -110,6 +110,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           c.id === newComponent.id ? newComponent : c
         ),
       });
+
       setDetectedChanges(true);
       return;
     }
@@ -249,20 +250,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                 <div
                   key={subgroup.id}
                   onClick={(event) => {
-                    const BORDER_WIDTH = 2; // Match the border width
-
-                    // Get the bounding box of the div
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    const x = event.clientX - rect.left;
-                    const y = event.clientY - rect.top;
-
-                    // Check if the click is within the border region
-                    const isBorderClick =
-                      x < BORDER_WIDTH ||
-                      x > rect.width - BORDER_WIDTH ||
-                      y < BORDER_WIDTH ||
-                      y > rect.height - BORDER_WIDTH;
-
                     if (subgroupIndex > 0)
                       setSelectedSubgroup({
                         subgroup: subgroup || null,
@@ -365,7 +352,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           >
                             <Box
                               onContextMenu={(event) => {
-                                event.preventDefault(); // prevent default right-click menu
+                                event.preventDefault();
                                 handleRightClickAvatar(member);
                               }}
                               sx={{ p: 0, m: 0 }}
@@ -374,6 +361,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                                   setSelectedAthlete(undefined);
                                   return;
                                 }
+
                                 setSelectedAthlete(member);
                               }}
                               borderRadius={

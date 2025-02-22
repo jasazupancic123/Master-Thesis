@@ -7,15 +7,13 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { GroupService } from './service/group.service';
+import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
-import { Auth } from '../common/decorator/auth.decorator';
 import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { AddCycleDto } from './dto/add-cycle.dto';
-import { UpdateCycleDto } from './dto/update-cycle.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { GroupService } from './service/group.service';
 
 @Controller('group')
 export class GroupController {
@@ -27,16 +25,16 @@ export class GroupController {
     return await this.groupService.findAll(user);
   }
 
-  @Post()
-  @Auth([UserRole.TRAINER, UserRole.MANAGER, UserRole.ADMIN])
-  async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {
-    return await this.groupService.create(user, body);
-  }
-
   @Get(':groupId')
   @Auth()
   async findById(@RequestUser() user: User, @Param('groupId') groupId: string) {
     return await this.groupService.findByIdOrFail(user, { groupId });
+  }
+
+  @Post()
+  @Auth()
+  async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {
+    return await this.groupService.create(user, body);
   }
 
   @Patch(':groupId')
@@ -53,40 +51,6 @@ export class GroupController {
   @Auth()
   async delete(@RequestUser() user: User, @Param('groupId') groupId: string) {
     await this.groupService.delete(user, { groupId });
-    return {};
-  }
-
-  @Post(':groupId/cycle')
-  @Auth()
-  async addCycle(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Body() body: AddCycleDto,
-  ) {
-    return await this.groupService.addCycle(user, { groupId }, body);
-  }
-
-  @Patch(':groupId/cycle/:cycleId')
-  @Auth()
-  async updateCycle(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Body() body: UpdateCycleDto,
-  ) {
-    const ref = { groupId, cycleId };
-    return await this.groupService.updateCycle(user, ref, body);
-  }
-
-  @Delete(':groupId/cycle/:cycleId')
-  @Auth()
-  async deleteCycle(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-  ) {
-    const ref = { groupId, cycleId };
-    await this.groupService.deleteCycle(ref, user);
     return {};
   }
 }

@@ -1,15 +1,19 @@
 import {
   BadRequestException,
+  ConflictException,
   forwardRef,
   Inject,
   Injectable,
   Logger,
 } from '@nestjs/common';
 import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
+import { NUM_MAX_EXERCISES } from 'src/common/constant/limit.constant';
+import { Create, Update } from 'src/common/type/entity.type';
+import { UserService } from 'src/user/service/user.service';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
 import { User } from '../../common/type/firebase-auth.type';
-import { ExerciseRef } from '../../common/type/firebase-firestore.type';
+import { ExerciseRef } from '../../common/type/firestore.type';
 import {
   Filter,
   FindManyOptions,
@@ -40,6 +44,8 @@ export class ExerciseService {
     private readonly exerciseAttributeService: ExerciseAttributeService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: Wrapper<UserService>,
   ) {}
 
   /**
@@ -48,33 +54,28 @@ export class ExerciseService {
    * OR queries, these two conditions for user must be queried separately.
    * Therefore, pagination must be performed in plain JS, not Firestore.
    */
-  async findAllGlobal(
-    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
-  ): Promise<Exercise[]> {
+  async findAllGlobal(filter?: Filter<Exercise>): Promise<Exercise[]> {
     let query = this.exerciseRepository
       .collection()
       .where('global', '==', true);
 
-    return this.findAllByQuery(query, options);
+    return this.findAllByQuery(query, filter);
   }
 
   async findAllByUser(
     user: User,
-    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
+    filter?: Filter<Exercise>,
   ): Promise<Exercise[]> {
     const query = this.exerciseRepository
       .collection()
       .where('userId', '==', user.uid);
 
-    return this.findAllByQuery(query, options);
+    return this.findAllByQuery(query, filter);
   }
 
-  async findAll(
-    user: User,
-    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
-  ): Promise<Exercise[]> {
-    const userExercises = await this.findAllByUser(user, options);
-    const globalExercises = await this.findAllGlobal(options);
+  async findAll(user: User, filter?: Filter<Exercise>): Promise<Exercise[]> {
+    const userExercises = await this.findAllByUser(user, filter);
+    const globalExercises = await this.findAllGlobal(filter);
 
     return this.commonService.array.unique([
       ...userExercises,
@@ -104,21 +105,21 @@ export class ExerciseService {
     return exercise;
   }
 
-  async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
+  async create(
+    user: User,
+    data: Create<Omit<Exercise, 'userId' | 'global' | 'id' | 'values'>>,
+  ): Promise<Exercise> {
     this.logger.log(`Creating new exercise for user ${user.uid}`);
 
-    // validate exercise attributes
+    // validate
+    await this.checkLimit(user.uid);
     await this.exerciseAttributeService.validate(data.attributeValues || {});
-
-    // validate exercise data
-    // at least one component must be selected
     if (!data.componentsIds?.length)
-      throw new BadRequestException('No components selected');
+      throw new BadRequestException('No components selected'); // at least one component must be selected
 
     // check that all components exist and are leafs
     const components = await this.cacheManagerService.getComponents();
     const leafs = this.componentService.leafsFromFlat(components);
-
     for (const slug of data.componentsIds!) {
       const component = this.componentService.getLeafBySlug(slug, leafs);
       if (!component)
@@ -127,6 +128,7 @@ export class ExerciseService {
 
     // create exercise
     const exerciseId = await this.exerciseRepository.addDoc({
+      id: null,
       userId: user.uid,
       name: data.name,
       componentsIds: data.componentsIds,
@@ -150,7 +152,7 @@ export class ExerciseService {
         attributeId: field,
         value,
       })),
-    } as Exercise;
+    };
   }
 
   /**
@@ -161,11 +163,9 @@ export class ExerciseService {
     user: User,
     exerciseIds: string[],
     componentId: string,
-  ): Promise<void> {
-    // TODO
-  }
+  ): Promise<void> {}
 
-  async update(user: User, ref: ExerciseRef, input: UpdateExerciseDto) {
+  async update(user: User, ref: ExerciseRef, input: Update<Exercise>) {
     return {} as Exercise;
   }
 
@@ -210,10 +210,10 @@ export class ExerciseService {
 
   private async findAllByQuery(
     query: Query,
-    options?: Omit<FindManyOptions<Exercise>, 'paginate'>,
+    filter?: Filter<Exercise>,
   ): Promise<Exercise[]> {
     const components = await this.componentService.findAllFlat();
-    if (options?.filter) query = this.filter(query, options.filter, components);
+    if (filter) query = this.filter(query, filter, components);
 
     const exercises = await query
       .get()
@@ -284,5 +284,11 @@ export class ExerciseService {
       );
 
     return query;
+  }
+
+  private async checkLimit(userId: string) {
+    const user = await this.userService.findOneOrFail(userId);
+    if (user.groupsIds.length === NUM_MAX_EXERCISES - 1)
+      throw new ConflictException('Exercise limit reached');
   }
 }

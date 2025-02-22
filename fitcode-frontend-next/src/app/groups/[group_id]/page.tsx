@@ -11,6 +11,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ReactNode, Suspense } from 'react';
 import { GroupIdPageParams, GroupIdPageProps } from './props';
+import TrainerGroupPage from './trainer-group-page';
 import TrainerGroupPageContainer from './trainer-group-page-container';
 
 export default async function Page(props: GroupIdPageParams) {

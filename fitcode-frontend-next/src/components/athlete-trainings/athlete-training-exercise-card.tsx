@@ -11,11 +11,11 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
-import { SetData } from '@/controller/training/type/set-data';
 import {
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
+import { SetData } from '@/controller/training/type/user-workload';
 import { ScreenSearchDesktop, SvgIconComponent } from '@mui/icons-material';
 import FitnessCenter from '@mui/icons-material/FitnessCenter';
 import VisibilityIcon from '@mui/icons-material/Visibility';

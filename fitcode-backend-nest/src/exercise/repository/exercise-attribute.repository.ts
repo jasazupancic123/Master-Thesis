@@ -1,49 +1,47 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
-import { ExerciseAttribute } from '../entity/exercise-attribute.entity';
-import { CommonService } from '../../common/service/common.service';
-import { FirebaseService } from '../../firebase/firebase.service';
+import { Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
-  DocumentSnapshot,
   Query,
-  QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
+import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { ExerciseAttribute } from '../entity/exercise-attribute.entity';
 
 @Injectable()
 export class ExerciseAttributeRepository
   implements RootFirestoreCollectionRepository<ExerciseAttribute>
 {
-  private logger = new Logger(ExerciseAttributeRepository.name);
-
-  constructor(
-    private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
   ): Promise<ExerciseAttribute[]> {
     const snapshot = await query(this.collection()).get();
-    this.logger.debug(`Read ${snapshot.docs.length} docs`);
-    return snapshot.docs.map((doc) => this.serialize(doc));
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(
+        doc.data() as FirestoreEntity<ExerciseAttribute>,
+      ),
+    );
   }
 
   async getDoc(field: string): Promise<ExerciseAttribute | null> {
     const snapshot = await this.doc(field).get();
     if (!snapshot.exists) return null;
-    return this.serialize(snapshot);
+
+    return this.firebaseService.serialize(
+      snapshot.data() as FirestoreEntity<ExerciseAttribute>,
+    );
   }
 
-  async addDoc(input: Partial<ExerciseAttribute>) {
+  async addDoc(input: Create<ExerciseAttribute>) {
     if (!input.field) throw new Error('Exercise attribute field is required');
-
     if (input.type === 'select' && !input.values?.length)
       throw new Error('Select attribute type must have values');
 
-    await this.doc(input.field).set({
+    const query = this.firebaseService.buildCreateQuery<ExerciseAttribute>({
       field: input.field,
       name: input.name,
       required: input.required ?? false,
@@ -52,16 +50,17 @@ export class ExerciseAttributeRepository
       values: input.values ?? null,
     });
 
+    await this.doc(input.field).set(query);
     return input.field;
   }
 
-  async updateDoc(field: string, input: Partial<ExerciseAttribute>) {
-    const data = this.commonService.object.clean(input);
-    await this.doc(field).update(data);
+  async updateDoc(field: string, input: Update<ExerciseAttribute>) {
+    const query = this.firebaseService.buildUpdateQuery(input);
+    await this.doc(field).update(query);
   }
 
   async deleteDoc(field: string) {
-    await this.doc(field).update({ deleted: true });
+    await this.doc(field).delete();
   }
 
   doc(field: string): DocumentReference {
@@ -72,20 +71,5 @@ export class ExerciseAttributeRepository
     return this.firebaseService.firestore.collection(
       FirestoreCollection.EXERCISE_ATTRIBUTE,
     );
-  }
-
-  serialize(
-    snapshot: DocumentSnapshot | QueryDocumentSnapshot,
-  ): ExerciseAttribute {
-    const data = snapshot.data();
-
-    return {
-      field: data.field,
-      name: data.name,
-      required: data.required,
-      type: data.type,
-      unit: data.unit ?? null,
-      values: data.values ?? [],
-    };
   }
 }
