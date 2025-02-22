@@ -17,9 +17,15 @@ type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 
 export async function handleAddCycle(
   input: AddCycleInput,
-  state: { setGroup: SetState<Group> }
+  state: {
+    selectedGroup: Group;
+    setSelectedGroup: SetState<Group | null>;
+    setCycles: SetState<Cycle[]>;
+    setDetectedChanges: SetState<boolean>;
+  }
 ) {
-  const { setGroup } = state;
+  const { selectedGroup, setSelectedGroup, setCycles, setDetectedChanges } =
+    state;
   const { name, description, from, to } = input;
 
   if (!name || !from || !to) {
@@ -32,24 +38,25 @@ export async function handleAddCycle(
     return;
   }
 
-  setGroup((prev) => ({
-    ...prev,
-    cycles: [
-      ...prev.cycles,
-      {
-        id: v4(),
-        name,
-        from,
-        to,
-        description,
-        leafComponentsIds: [],
-        rootComponentsIds: [],
-        weeks: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
-  }));
+  const newCycles = [
+    ...state.selectedGroup.cycles,
+    {
+      id: v4(),
+      name,
+      from,
+      to,
+      description,
+      leafComponentsIds: [],
+      rootComponentsIds: [],
+      weeks: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+  setDetectedChanges(true);
+  setCycles(newCycles);
+  const newGroup = { ...selectedGroup, cycles: newCycles };
+  setSelectedGroup(newGroup);
 }
 
 export function changeYear(
@@ -68,12 +75,11 @@ export function handleDragChange(
   },
   state: {
     setValuesReal: SetState<number[]>;
-    setGroup: SetState<Group>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { newValues, draggingIndex, mouseX } = input;
-  const { setValuesReal, setDetectedChanges, setGroup } = state;
+  const { setValuesReal, setDetectedChanges } = state;
 
   setDetectedChanges(true);
 

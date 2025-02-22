@@ -22,8 +22,7 @@ import toast from 'react-hot-toast';
 
 export default function TrainerYearView() {
   const router = useRouter();
-  const screenSize = useScreenSize();
-  const { token, group, setGroup, setCycle } = useGroup();
+  const { selectedGroup, setSelectedGroup } = useGroup();
 
   const theme = useTheme();
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
@@ -32,20 +31,6 @@ export default function TrainerYearView() {
     pageSize: 10,
     page: 0,
   });
-
-  async function handleSaveGroup() {
-    handleApiRequest(
-      router,
-      () => GroupController.update(token, group.id, { cycles: group.cycles }),
-      (response) => {
-        setGroup(response);
-        setCycle(response.cycles[group.cycles.length - 1]);
-        toast.success('Group successfully saved');
-      },
-      undefined,
-      'Failed to save group'
-    );
-  }
 
   const columns: GridColDef[] = [
     {
@@ -140,6 +125,17 @@ export default function TrainerYearView() {
     },
   ];
 
+  const handleDeleteCycle = () => {
+    if (!editCycle || !selectedGroup) return;
+
+    const updatedCycles = [...selectedGroup.cycles].filter(
+      (cycle) => cycle.id !== editCycle.id
+    );
+
+    setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
+    setEditCycle(null);
+  };
+
   return (
     <>
       <Box
@@ -147,12 +143,16 @@ export default function TrainerYearView() {
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
+        width="100%"
+        maxWidth="100%"
         mb={3}
+        sx={{
+          overflowX: 'hidden', // Prevents parent from expanding with children
+        }}
       >
-        <Button onClick={handleSaveGroup}>Save</Button>
-
         <Box
           width="100%"
+          maxWidth="100%"
           display="flex"
           flexDirection="column"
           alignItems="center"
@@ -166,10 +166,18 @@ export default function TrainerYearView() {
           <MultiCycleSlider />
         </Box>
 
-        <CycleComponents
-          setEditModal={setShowEditCycleModal}
-          setEditCycle={setEditCycle}
-        />
+        <Box
+          width="100%"
+          maxWidth="100%"
+          sx={{
+            overflowX: 'hidden', // Prevents unexpected expansion
+          }}
+        >
+          <CycleComponents
+            setEditModal={setShowEditCycleModal}
+            setEditCycle={setEditCycle}
+          />
+        </Box>
 
         {/* <Typography variant="h6" gutterBottom mt={3}>
           Cycles
@@ -242,6 +250,7 @@ export default function TrainerYearView() {
           <EditCycleForm
             selectedCycle={editCycle}
             setSelectedCycle={setEditCycle}
+            handleDeleteCycle={handleDeleteCycle}
           />
         </MyModal>
       )}

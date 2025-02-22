@@ -176,12 +176,20 @@ export async function handleAddSubgroup(state: {
 
   if (!training || !component) return;
 
+  const exercisesCopy = [...component.supersets].map((superset) => ({
+    ...superset,
+    exerises: [...superset.exercises],
+  }));
+
   const newSubgroup: Subgroup = {
     id: `subgroup-${String(Date.now())}`,
     name: createSubgroup.name,
-    supersets: component.supersets.map((superset) => ({
+    supersets: [...component.supersets].map((superset) => ({
       ...superset,
-      exercises: [...superset.exercises], // Ensuring exercises are copied too
+      exercises: [...superset.exercises].map((exercise) => ({
+        ...exercise,
+        meta: { ...exercise.meta },
+      })),
     })),
     membersIds: createSubgroup.membersIds || [],
   };

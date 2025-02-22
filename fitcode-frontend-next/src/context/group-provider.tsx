@@ -41,6 +41,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     groups,
     group: providedGroup,
     trainings: allTrainings,
+    refreshUsers,
   } = props;
 
   const router = useRouter();
@@ -60,6 +61,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [filteredUsers, setFilteredUsers] = useState(users);
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
 
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedSubgroup, setSelectedSubgroup] = useState<{
     subgroup: Subgroup | null;
     index: number;
@@ -68,11 +70,11 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   async function handleUpdateGroup() {
-    if (!group) return;
+    if (!selectedGroup) return;
 
     await handleApiRequest(
       router,
-      () => GroupController.update(token, group.id, group),
+      () => GroupController.update(token, selectedGroup.id, selectedGroup),
       (newGroup) => {
         setGroup(newGroup);
         setDetectedChanges(false);
@@ -143,6 +145,8 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setComponent,
     training,
     setTraining,
+    selectedGroup,
+    setSelectedGroup,
     dateFrom,
     setDateFrom,
     dateTo,
@@ -161,6 +165,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setDetectedChanges,
     handleUpdateGroup,
     handleUpdateTraining,
+    refreshUsers,
   };
 
   return (

@@ -26,6 +26,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setTraining,
     component,
     selectedSubgroup,
+    setSelectedSubgroup,
     selectedAthlete,
     setDetectedChanges,
   } = useGroup();
@@ -48,17 +49,29 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   function updateSelectedTraining(
     pairs: { field: keyof ExerciseMeta; value: string | number }[]
   ) {
-    setTraining((training) => {
-      if (!training) return undefined;
+    if (!selectedSubgroup?.subgroup) {
+      setTraining((training) => {
+        if (!training) return undefined;
 
-      const updatedTraining = { ...training };
+        const updatedTraining = { ...training };
+        for (const { field, value } of pairs)
+          (updatedTraining.components[i!].supersets[j!].exercises[k!].meta[
+            field
+          ] as any) = value;
+
+        return updatedTraining;
+      });
+    } else {
+      const updatedSubgroup = { ...selectedSubgroup.subgroup };
       for (const { field, value } of pairs)
-        (updatedTraining.components[i!].supersets[j!].exercises[k!].meta[
-          field
-        ] as any) = value;
+        (updatedSubgroup.supersets[j!].exercises[k!].meta[field] as any) =
+          value;
 
-      return updatedTraining;
-    });
+      setSelectedSubgroup({
+        subgroup: updatedSubgroup,
+        index: selectedSubgroup.index,
+      });
+    }
 
     setDetectedChanges(true);
   }

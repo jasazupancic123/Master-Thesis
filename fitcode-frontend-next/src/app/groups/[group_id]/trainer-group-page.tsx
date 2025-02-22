@@ -34,7 +34,7 @@ export default function TrainerGroupPage() {
   return (
     <Box
       mt="16px"
-      sx={{ px: screenSize.isMobile ? 1 : undefined }}
+      sx={{ px: screenSize.isMobile ? 1 : undefined, overflowX: 'hidden' }}
       width="100%"
     >
       <GroupSidebar groups={groups} group={group} />
@@ -44,6 +44,7 @@ export default function TrainerGroupPage() {
           backgroundColor: theme.palette.background.paper,
           borderTopLeftRadius: '20px',
           borderTopRightRadius: '20px',
+          overflowX: 'hidden',
           pb: 1,
         }}
       >

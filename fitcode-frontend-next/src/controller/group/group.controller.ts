@@ -21,6 +21,17 @@ export class GroupController {
     return api.post<Group>('/group', body, { token });
   }
 
+  static async addCycle(
+    token: string,
+    groupId: string,
+    body: Required<DateRange> & {
+      name: string;
+      description?: string;
+    }
+  ) {
+    return api.post<Cycle>(`/group/${groupId}/cycle`, body, { token });
+  }
+
   static async update(
     token: string,
     groupId: string,
