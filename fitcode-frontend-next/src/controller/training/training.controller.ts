@@ -3,7 +3,7 @@ import { DateRange } from '@/common/type/date-range.type';
 import { Subgroup } from './type/subgroup.type';
 import { TrainingComponent } from './type/training-plan.type';
 import { Training } from './type/training.type';
-import { SetData } from './type/user-workload';
+import { WorkloadData } from './type/user-workload';
 
 const api = CommonService.instance.api;
 
@@ -42,19 +42,14 @@ export class TrainingController {
     return null;
   }
 
-  static async updateAthleteWorkload(
+  static async updateAthleteWorkloadData(
     token: string,
     trainingId: string,
-    componentId: string,
-    superset: number,
     exerciseId: string,
-    body: {
-      subgroupId?: string;
-      sets: SetData[];
-    }
+    body: { data: WorkloadData[] }
   ) {
     return api.patch<{}>(
-      `/training/${trainingId}/component/${componentId}/superset/${superset}/exercise/${exerciseId}/set`,
+      `/training/${trainingId}/exercise/${exerciseId}`,
       body,
       { token }
     );
