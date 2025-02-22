@@ -1,72 +1,16 @@
 'use client';
 
+import { useGroup } from '@/context/group-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import TrainerGroupPage from './trainer-group-page';
-import SaveAsIcon from '@mui/icons-material/SaveAs';
-import { useScreenSize } from '@/context/screen-size-provider';
-import { useGroup } from '@/context/group-provider';
-import { handleApiRequest } from '@/common/type/state.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
-import { GroupController } from '@/controller/group/group.controller';
 
 export default function TrainerGroupPageContainer() {
-  const router = useRouter();
-  const {
-    token,
-    components,
-    setTrainings,
-    setFilteredTrainings,
-    group,
-    setGroup,
-    setDetectedChanges,
-  } = useGroup();
-
-  async function handleUpdateGroup() {
-    if (!group) return;
-
-    await handleApiRequest(
-      router,
-      () => GroupController.update(token, group.id, group),
-      (newGroup) => {
-        setGroup(newGroup);
-        setDetectedChanges(false);
-        toast.success('Group updated successfully');
-      },
-      undefined,
-      'Error when updating group'
-    );
-  }
-
-  async function handleUpdateTraining() {
-    if (!training) return;
-
-    await handleApiRequest(
-      router,
-      () => TrainingController.update(token, training.id, training),
-      (newTraining) => {
-        const mapped = TrainingService.mapComponents(newTraining, components);
-
-        setTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-
-        setFilteredTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-
-        setDetectedChanges(false);
-        toast.success('Training updated successfully');
-      },
-      undefined,
-      'Error when updating training'
-    );
-  }
-
+  const { handleUpdateGroup, handleUpdateTraining } = useGroup();
   const screenSize = useScreenSize();
-  const { training, filter } = useGroup();
+  const { filter } = useGroup();
+
   return screenSize.isSmallerThanLaptop ? (
     <TrainerGroupPage />
   ) : (
@@ -78,6 +22,7 @@ export default function TrainerGroupPageContainer() {
       sx={{ pl: 6 }}
     >
       <TrainerGroupPage />
+
       <Tooltip
         title={
           filter === 'day'

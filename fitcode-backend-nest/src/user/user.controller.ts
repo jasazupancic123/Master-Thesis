@@ -13,7 +13,8 @@ import type { User } from '../common/type/firebase-auth.type';
 import { AddAthleteDto } from './dto/add-athlete.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { SaveUserMetaDto } from './dto/save-user-meta.dto';
-import { UpdateUserClaimsDto } from './dto/update-user.dto';
+import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserRole } from './enum/user-role.enum';
 import { UserService } from './service/user.service';
 
@@ -38,9 +39,20 @@ export class UserController {
   @Auth([UserRole.ADMIN])
   async updateClaims(
     @Param('id') id: string,
-    @Body() data: UpdateUserClaimsDto,
+    @Body() body: UpdateUserClaimsDto,
   ) {
-    await this.userService.updateClaims(id, data);
+    await this.userService.updateClaims(id, body);
+    return {};
+  }
+
+  @Patch('me/profile')
+  @Auth()
+  async updateProfile(
+    @RequestUser() user: User,
+    @Body() body: UpdateUserProfileDto,
+  ) {
+    const ref = { uid: user.uid };
+    await this.userService.updateProfile(ref, body);
     return {};
   }
 
@@ -53,10 +65,10 @@ export class UserController {
 
   @Post('me/meta')
   @Auth([UserRole.ATHLETE])
-  async saveMeta(@RequestUser() user: User, @Body() input: SaveUserMetaDto) {
+  async saveMeta(@RequestUser() user: User, @Body() body: SaveUserMetaDto) {
     const ref = { uid: user.uid, date: new Date() };
     return await this.userService.addOrUpdateMeta(ref, {
-      ...input,
+      ...body,
       userId: user.uid,
       date: ref.date,
     });

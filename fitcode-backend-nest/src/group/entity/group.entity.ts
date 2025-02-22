@@ -6,9 +6,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Timestamp } from 'firebase-admin/firestore';
 import { BaseEntity } from '../../common/entity/base.entity';
-import { Cycle, CycleFirestore } from './cycle.entity';
+import { Cycle } from './cycle.entity';
 
 export class Group extends BaseEntity {
   @IsString()
@@ -34,14 +33,3 @@ export class Group extends BaseEntity {
   @Expose()
   cycles: Cycle[]; // array
 }
-
-export type GroupFirestore = {
-  id: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  deletedAt: Timestamp;
-  name: string;
-  ownerId: string;
-  membersIds: string[];
-  cycles: CycleFirestore[];
-};

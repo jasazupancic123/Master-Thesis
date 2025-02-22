@@ -7,9 +7,7 @@ import { Method } from '@/controller/component/type/method.type';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import MyModal from '../modal';
 import SelectInput from '../select-input';
-import AddExerciseForm from './add-exercise-form';
 import { AFTER_SETS, MAIN_SETS, METHODS } from './constant';
 import { TrainingComponentProps } from './props';
 import Supersets from './supersets';
@@ -32,8 +30,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
   const [method, setMethod] = useState<Method | null>();
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
-
-  useEffect(() => {}, [component]);
 
   return (
     <Box my={1} p={0} px={1}>
@@ -184,69 +180,67 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 alignItems="center"
                 flexDirection={screenSize.isMobile ? 'column' : 'row'}
               >
-                {!screenSize.isMobile ||
-                  (screenSize.isMobile &&
-                    trainingComponent &&
-                    component &&
-                    trainingComponent.id === component.id && (
-                      <>
-                        <SelectInput<MainSet>
-                          label={'Main Set'}
-                          value={mainSet?.id || ''}
-                          icon={null}
-                          items={MAIN_SETS}
-                          itemKey="id"
-                          itemName="name"
-                          placeholder="Main Set"
-                          displayInputLabel={true}
-                          setValue={(mainSetId) => {
-                            setDetectedChanges(true);
-                            const mainSet = MAIN_SETS.find(
-                              (g) => g.id === mainSetId
-                            )!;
+                {trainingComponent &&
+                  component &&
+                  trainingComponent.id === component.id && (
+                    <>
+                      <SelectInput<MainSet>
+                        label={'Main Set'}
+                        value={mainSet?.id || ''}
+                        icon={null}
+                        items={MAIN_SETS}
+                        itemKey="id"
+                        itemName="name"
+                        placeholder="Main Set"
+                        displayInputLabel={true}
+                        setValue={(mainSetId) => {
+                          setDetectedChanges(true);
+                          const mainSet = MAIN_SETS.find(
+                            (g) => g.id === mainSetId
+                          )!;
 
-                            setMainSet(mainSet);
-                          }}
-                        />
+                          setMainSet(mainSet);
+                        }}
+                      />
 
-                        <SelectInput<AfterSet>
-                          label={'After Set'}
-                          value={afterSet?.id || ''}
-                          icon={null}
-                          items={AFTER_SETS}
-                          itemKey="id"
-                          itemName="name"
-                          placeholder="After Set"
-                          displayInputLabel={true}
-                          setValue={(afterSetId) => {
-                            setDetectedChanges(true);
-                            const afterSet = AFTER_SETS.find(
-                              (g) => g.id === afterSetId
-                            )!;
+                      <SelectInput<AfterSet>
+                        label={'After Set'}
+                        value={afterSet?.id || ''}
+                        icon={null}
+                        items={AFTER_SETS}
+                        itemKey="id"
+                        itemName="name"
+                        placeholder="After Set"
+                        displayInputLabel={true}
+                        setValue={(afterSetId) => {
+                          setDetectedChanges(true);
+                          const afterSet = AFTER_SETS.find(
+                            (g) => g.id === afterSetId
+                          )!;
 
-                            setAfterSet(afterSet);
-                          }}
-                        />
+                          setAfterSet(afterSet);
+                        }}
+                      />
 
-                        <SelectInput<MainSet>
-                          label={'Method'}
-                          value={method?.id || ''}
-                          icon={null}
-                          items={METHODS}
-                          itemKey="id"
-                          itemName="name"
-                          placeholder="Method"
-                          displayInputLabel={true}
-                          setValue={(methodId) => {
-                            setDetectedChanges(true);
-                            const method = METHODS.find(
-                              (g) => g.id === methodId
-                            )!;
-                            setMethod(method);
-                          }}
-                        />
-                      </>
-                    ))}
+                      <SelectInput<MainSet>
+                        label={'Method'}
+                        value={method?.id || ''}
+                        icon={null}
+                        items={METHODS}
+                        itemKey="id"
+                        itemName="name"
+                        placeholder="Method"
+                        displayInputLabel={true}
+                        setValue={(methodId) => {
+                          setDetectedChanges(true);
+                          const method = METHODS.find(
+                            (g) => g.id === methodId
+                          )!;
+                          setMethod(method);
+                        }}
+                      />
+                    </>
+                  )}
 
                 {!screenSize.isMobile && (
                   <IconButton

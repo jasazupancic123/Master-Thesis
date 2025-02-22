@@ -5,11 +5,11 @@ import {
   Query,
   QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
-import { UserEntity } from '../../user/entity/user.entity';
 import { Component } from '../../component/entity/component.entity';
 import { ExerciseAttribute } from '../../exercise/entity/exercise-attribute.entity';
-import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import { Exercise } from '../../exercise/entity/exercise.entity';
+import { UserEntity } from '../../user/entity/user.entity';
+import { FirestoreCollection } from '../enum/firestore-collection.enum';
 
 export interface FirestoreCollectionRepository<
   Model = any,
@@ -34,8 +34,6 @@ export interface FirestoreCollectionRepository<
   ): Promise<void>;
 
   deleteDoc(ref: Ref): Promise<void>;
-
-  serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
 export interface RootFirestoreCollectionRepository<Model = any> {
@@ -57,8 +55,6 @@ export interface RootFirestoreCollectionRepository<Model = any> {
   ): Promise<void>;
 
   deleteDoc(id: string): Promise<void>;
-
-  serialize(data: DocumentSnapshot | QueryDocumentSnapshot): Model;
 }
 
 export type ComponentRef = { componentId: string };
@@ -74,7 +70,7 @@ export type SubgroupRef = TrainingRef & { subgroupId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
 export type TrainingSupersetRef = TrainingComponentRef & { superset: number };
 export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
-export type UserWorkloadRef = TrainingRef & { userId: string };
+export type UserWorkloadRef = TrainingRef & { userId: string } & ExerciseRef;
 export type UserWorkloadExerciseRef = UserWorkloadRef & ExerciseRef;
 
 // root collections

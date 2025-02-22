@@ -58,6 +58,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setSelectedAthlete: SetStateNullable<User>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
+  handleUpdateGroup: () => Promise<void>;
+  handleUpdateTraining: () => Promise<void>;
 };
 
 export type TrainerDayViewContextProps = {

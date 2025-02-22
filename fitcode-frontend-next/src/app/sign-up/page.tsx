@@ -1,18 +1,18 @@
 'use client';
 
-import React, { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Grid, TextField, ThemeProvider } from '@mui/material';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { LINKS_AUTH } from '@/common/constant/navigation.constant';
-import toast from 'react-hot-toast';
-import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 import { CommonService } from '@/common/service/common.service';
+import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { Grid, TextField, ThemeProvider } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { FormEvent, useState } from 'react';
+import toast from 'react-hot-toast';
 import { signInUpTheme } from '../style';
 
 export default function Page() {
@@ -31,9 +31,8 @@ export default function Page() {
         password,
         `${firstName} ${lastName}`
       );
-      toast.success('Account created successfully');
 
-      await CommonService.instance.generic.sleep(0.25);
+      toast.success('Account created successfully');
       router.push(LINKS_AUTH.login.href);
     } catch (e: any) {
       toast.error(e.message);

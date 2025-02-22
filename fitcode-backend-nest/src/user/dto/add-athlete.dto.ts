@@ -1,9 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
-import { CreateUser } from '../entity/user.entity';
 
-export class AddAthleteDto implements Omit<CreateUser, 'customClaims'> {
+export class AddAthleteDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

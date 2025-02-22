@@ -7,13 +7,15 @@ import {
   Timestamp,
 } from 'firebase-admin/firestore';
 import { Query } from 'firebase-admin/lib/firestore';
+import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { Wrapper } from 'src/common/type/wrapper.type';
+import { FirebaseService } from 'src/firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   FirestoreCollectionRepository,
   TrainingRef,
   UserWorkloadRef,
-} from '../../common/type/firebase-firestore.type';
+} from '../../common/type/firestore.type';
 import { UserWorkload } from '../entity/user-workload.entity';
 import { TrainingRepository } from './training.repository';
 
@@ -22,41 +24,57 @@ export class UserWorkloadRepository
   implements FirestoreCollectionRepository<UserWorkload, TrainingRef>
 {
   constructor(
+    private readonly firebaseService: FirebaseService,
     @Inject(forwardRef(() => TrainingRepository))
     private readonly trainingRepository: Wrapper<TrainingRepository>,
   ) {}
+
+  getKey(ref: UserWorkloadRef): string {
+    return `${ref.userId}-${ref.exerciseId}`;
+  }
 
   async getDocs(
     ref: TrainingRef,
     query: (ref: Query) => Query = (ref) => ref,
   ): Promise<UserWorkload[]> {
     const snapshot = await query(this.collection(ref)).get();
-    return snapshot.docs.map((doc) => this.serialize(doc));
+
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(
+        doc.data() as FirestoreEntity<UserWorkload>,
+      ),
+    );
   }
 
   async getDoc(ref: UserWorkloadRef): Promise<UserWorkload | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
-    return this.serialize(snapshot);
+
+    return this.firebaseService.serialize(
+      snapshot.data() as FirestoreEntity<UserWorkload>,
+    );
   }
 
-  async addDoc(ref: UserWorkloadRef, data: UserWorkload) {
-    await this.doc(ref).set({
-      userId: ref.userId,
-      trainingId: data.trainingId,
-      exerciseId: data.exerciseId,
-      workloadType: data.workloadType,
-      workloadValue: data.workloadValue,
-      sets: data.sets,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    });
+  async addDoc(ref: UserWorkloadRef, data: Create<UserWorkload>) {
+    const query = this.firebaseService.buildCreateQuery<UserWorkload>(
+      {
+        userId: ref.userId,
+        trainingId: data.trainingId,
+        exerciseId: data.exerciseId,
+        workloadType: data.workloadType,
+        workloadValue: data.workloadValue,
+        sets: data.sets,
+      },
+      { timestamps: true },
+    );
 
+    await this.doc(ref).set(query);
     return ref.userId;
   }
 
-  async updateDoc(ref: UserWorkloadRef, data: Partial<UserWorkload>) {
-    await this.doc(ref).update(data);
+  async updateDoc(ref: UserWorkloadRef, data: Update<UserWorkload>) {
+    const query = this.firebaseService.buildUpdateQuery(data);
+    await this.doc(ref).update(query);
   }
 
   async deleteDoc(ref: UserWorkloadRef) {
@@ -64,28 +82,12 @@ export class UserWorkloadRepository
   }
 
   doc(ref: UserWorkloadRef): DocumentReference {
-    return this.collection(ref).doc(ref.userId);
+    return this.collection(ref).doc(this.getKey(ref));
   }
 
   collection(ref: TrainingRef): CollectionReference {
     return this.trainingRepository
       .doc(ref.trainingId)
       .collection(FirestoreCollection.TRAINING_WORKLOAD);
-  }
-
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): UserWorkload {
-    const data = snapshot.data();
-
-    return {
-      userId: snapshot.id,
-      trainingId: data.trainingId,
-      exerciseId: data.exerciseId,
-      workloadType: data.workloadType,
-      workloadValue: data.workloadValue,
-      sets: data.sets,
-      createdAt: (data.createdAt as Timestamp).toDate(),
-      updatedAt: (data.updatedAt as Timestamp).toDate(),
-      deletedAt: data.deletedAt ? (data.deletedAt as Timestamp).toDate() : null,
-    };
   }
 }

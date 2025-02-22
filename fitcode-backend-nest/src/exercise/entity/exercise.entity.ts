@@ -1,3 +1,5 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsNotEmpty,
@@ -5,8 +7,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Expose, Transform, Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { ExerciseAttributeValue } from './exercise-attribute-value.entity';
 
@@ -55,5 +55,6 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   @Expose()
   values: ExerciseAttributeValue[]; // sub collection where each document has attribute id and value
-  attributeValues: Record<string, any>; // for nested object display for frontend
+
+  attributeValues?: Record<string, any>; // for nested object display for frontend
 }

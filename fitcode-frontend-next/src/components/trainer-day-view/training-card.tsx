@@ -2,9 +2,9 @@ import { COLORS } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/context/group-provider';
 import { Box, Typography } from '@mui/material';
+import { useEffect } from 'react';
 import { TrainingCardProps } from './props';
 import TrainingComponentCard from './training-component';
-import { useEffect } from 'react';
 
 const commonService = CommonService.instance;
 
@@ -21,7 +21,7 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   useEffect(() => {
     if (!component || !selectedSubgroup || !selectedSubgroup?.subgroup) return;
-    //check if subgroup is still inside the component.subgroups, cuz the selected one might get deleted
+    // check if subgroup is still inside the component.subgroups, cuz the selected one might get deleted
     if (
       selectedSubgroup &&
       component.subgroups.findIndex(
@@ -37,8 +37,7 @@ export default function TrainingCard(props: TrainingCardProps) {
       setSelectedAthlete(undefined);
       return;
     }
-    console.log(selectedSubgroup.subgroup.membersIds);
-    console.log(selectedAthlete);
+
     if (
       selectedSubgroup.subgroup.membersIds?.findIndex(
         (member) => member === selectedAthlete?.uid

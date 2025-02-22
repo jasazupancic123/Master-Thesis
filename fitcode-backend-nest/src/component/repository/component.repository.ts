@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
-import { Component } from '../entity/component.entity';
-import { CommonService } from '../../common/service/common.service';
-import { FirebaseService } from '../../firebase/firebase.service';
 import {
   CollectionReference,
   DocumentReference,
-  DocumentSnapshot,
   Query,
-  QueryDocumentSnapshot,
 } from 'firebase-admin/lib/firestore';
+import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { CommonService } from '../../common/service/common.service';
+import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { Component } from '../entity/component.entity';
 
 @Injectable()
 export class ComponentRepository
@@ -25,30 +24,39 @@ export class ComponentRepository
     query: (query: Query) => Query = (query) => query,
   ): Promise<Component[]> {
     const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map((doc) => this.serialize(doc));
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(doc.data() as FirestoreEntity<Component>),
+    );
   }
 
   async getDoc(slug: string): Promise<Component | null> {
     const snapshot = await this.doc(slug).get();
     if (!snapshot.exists) return null;
-    return this.serialize(snapshot);
+
+    const data = snapshot.data() as FirestoreEntity<Component>;
+    return this.firebaseService.serialize(data);
   }
 
-  async addDoc(input: Partial<Component>) {
+  async addDoc(input: Create<Component, 'name' | 'parent'>) {
     const slug = await this.slug(input.name);
-    await this.doc(slug).set({
+
+    const query = this.firebaseService.buildCreateQuery<Component>({
       id: slug,
       slug,
-      parent: input.parent ?? null,
+      parent: input.parent || null,
       name: input.name,
     });
 
+    await this.doc(slug).set(query);
     return slug;
   }
 
-  async updateDoc(slug: string, input: Partial<Component>) {
-    const data = this.commonService.object.clean(input);
-    await this.doc(slug).update(data);
+  async updateDoc(
+    slug: string,
+    input: Update<Component, 'name' | 'parent' | 'slug'>,
+  ) {
+    const query = this.firebaseService.buildUpdateQuery<Component>(input);
+    await this.doc(slug).update(query);
   }
 
   async deleteDoc(slug: string) {
@@ -63,19 +71,6 @@ export class ComponentRepository
     return this.firebaseService.firestore.collection(
       FirestoreCollection.COMPONENT,
     );
-  }
-
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Component {
-    const data = snapshot.data();
-
-    return {
-      id: snapshot.id,
-      slug: snapshot.id,
-      parent: data.parent ?? null,
-      name: data.name,
-      children: data.children ?? [],
-      parents: data.parents ?? [],
-    };
   }
 
   private async slug(name: string): Promise<string> {
