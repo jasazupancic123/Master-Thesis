@@ -30,6 +30,7 @@ import {
   handleRightClickSubgroup,
   onDragEndSubgroup,
 } from './state';
+import { set } from 'date-fns';
 
 export default function Subgroups(props: SubgroupProps) {
   const { showSubgroups } = props;
@@ -360,7 +361,25 @@ export default function Subgroups(props: SubgroupProps) {
           setModal((prev) => ({ ...prev, editSubgroup: false }));
           setEditedSubgroup(null);
         }}
-        onConfirm={() => console.log('edit')}
+        onConfirm={() => {
+          if (!editedSubgroup || !component || !training) return;
+          const updatedSubgroups = [...subgroups].map((subgroup) =>
+            subgroup.id === editedSubgroup.id ? editedSubgroup : subgroup
+          );
+          setSubgroups(updatedSubgroups);
+          const newComponent = { ...component!, subgroups: updatedSubgroups };
+          setComponent(newComponent);
+          const newTraining = {
+            ...training,
+            components: training.components.map((c) =>
+              c.id === newComponent.id ? newComponent : c
+            ),
+          };
+          setTraining(newTraining);
+          setModal((prev) => ({ ...prev, editSubgroup: false }));
+          setEditedSubgroup(null);
+          setDetectedChanges(true);
+        }}
       >
         <Stack spacing={4} p={1}>
           {/* Name */}

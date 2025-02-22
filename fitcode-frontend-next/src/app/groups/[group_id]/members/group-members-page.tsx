@@ -18,6 +18,8 @@ import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { handleUpdateMembers } from './state';
+import RegisterMembersModal from '@/components/register-members-modal';
+import { UserController } from '@/controller/user/user.controller';
 
 export default function GroupMembersPage() {
   const { token, group, setGroup, users, groups } = useGroup();
@@ -26,7 +28,10 @@ export default function GroupMembersPage() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [modal, setModal] = useState({
+    showAddUser: false,
+    registerUser: false,
+  });
   const [searchQueryMembers, setSearchQueryMembers] = useState('');
   const [filteredMembers, setFilteredMembers] = useState<User[]>();
   const [members, setMembers] = useState<User[]>(() =>
@@ -148,11 +153,21 @@ export default function GroupMembersPage() {
             {/* Add User Button */}
             <Button
               variant="contained"
-              onClick={() => setShowAddUserModal(true)}
+              onClick={() => setModal({ ...modal, showAddUser: true })}
               color="primary"
               sx={{ textTransform: 'none', fontWeight: 'bold' }}
             >
               Add Member
+            </Button>
+
+            {/* Register User Button */}
+            <Button
+              variant="contained"
+              onClick={() => setModal({ ...modal, registerUser: true })}
+              color="primary"
+              sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            >
+              Register Member
             </Button>
           </Box>
         </Box>
@@ -187,11 +202,11 @@ export default function GroupMembersPage() {
           Save Changes
         </Button>
 
-        {/* Members modal */}
+        {/* Add Members modal */}
         <MyModal
-          isOpen={showAddUserModal}
-          setIsOpen={(open) => setShowAddUserModal(open)}
-          onCancel={() => setShowAddUserModal(false)}
+          isOpen={modal.showAddUser}
+          setIsOpen={(open) => setModal({ ...modal, showAddUser: open })}
+          onCancel={() => setModal({ ...modal, showAddUser: false })}
           cancelText="Close"
         >
           <AddMembersModal
@@ -200,6 +215,16 @@ export default function GroupMembersPage() {
             setMembers={setMembers}
             addUserToEnd={false}
           />
+        </MyModal>
+
+        {/* Register Member modal */}
+        <MyModal
+          isOpen={modal.registerUser}
+          setIsOpen={(open) => setModal({ ...modal, registerUser: open })}
+          onCancel={() => setModal({ ...modal, registerUser: false })}
+          cancelText="Close"
+        >
+          <RegisterMembersModal />
         </MyModal>
       </Box>
     </Box>

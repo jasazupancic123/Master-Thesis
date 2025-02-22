@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { GENDERS } from '@/common/constant/gender.constant';
 import {
   Avatar,
   Box,
@@ -17,11 +16,13 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
-import { SPORT_LEVELS } from '@/common/constant/sport-level.constant';
 import { SPORTS } from '@/common/constant/sport.constant';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { ProfilePageProps } from './type';
-import { Auth, updateCurrentUser } from '@firebase/auth';
+import { UserController } from '@/controller/user/user.controller';
+import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+import { Gender } from '@/controller/user/enum/gender.enum';
+import toast from 'react-hot-toast';
 
 export default function ProfilePage(props: ProfilePageProps) {
   const { token, user } = props;
@@ -32,15 +33,35 @@ export default function ProfilePage(props: ProfilePageProps) {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState<Gender>();
   const [dob, setDob] = useState<Dayjs | null>();
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [sport, setSport] = useState('');
-  const [sportLevel, setSportLevel] = useState('');
+  const [sportLevel, setSportLevel] = useState<SportLevel>(SportLevel.BEGINNER);
 
   const handleSaveProfile = async () => {
-    // Update user profile
+    if (!firstName || !lastName || !email || !phoneNumber) {
+      console.log('Please fill in all fields');
+      return;
+    }
+
+    try {
+      await UserController.updateProfile(token, {
+        sport,
+        level: sportLevel,
+        gender,
+        firstName,
+        lastName,
+        phone: phoneNumber,
+        birthDate: dob?.toDate(),
+        //groupsIds: user.groupsIds,
+        groupsIds: [],
+      });
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error('Failed to update profile');
+    }
   };
 
   useEffect(() => {
@@ -49,12 +70,12 @@ export default function ProfilePage(props: ProfilePageProps) {
     const names = user.displayName?.split(' ');
     setFirstName(names ? names[0] : '');
     setLastName(names && names.length > 1 ? names[1] : '');
-    setGender(GENDERS[0]); //not on user yet
+    setGender(Gender.F); //not on user yet
     setDob(dayjs('2001-09-14'));
     setEmail(user.email);
     setPhoneNumber('+38670739540'); //not on user yet
     setSport(SPORTS[0]); //not on user yet
-    setSportLevel(SPORT_LEVELS[0]); //not on user yet
+    setSportLevel(SportLevel.BEGINNER); //not on user yet
   }, []);
 
   return (
@@ -105,9 +126,9 @@ export default function ProfilePage(props: ProfilePageProps) {
           <Select
             value={gender}
             label="Gender"
-            onChange={(e) => setGender(e.target.value)}
+            onChange={(e) => setGender(e.target.value as Gender)}
           >
-            {GENDERS.map((gender) => (
+            {Object.values(Gender).map((gender) => (
               <MenuItem key={gender} value={gender}>
                 {gender}
               </MenuItem>
@@ -171,17 +192,22 @@ export default function ProfilePage(props: ProfilePageProps) {
           <Select
             value={sportLevel}
             label="Sport Level"
-            onChange={(e) => setSportLevel(e.target.value)}
+            onChange={(e) => setSportLevel(e.target.value as SportLevel)}
           >
-            {SPORT_LEVELS.map((sl) => (
+            {Object.values(SportLevel).map((sl) => (
               <MenuItem key={sl} value={sl}>
-                {sl}
+                {sl.charAt(0).toUpperCase() + sl.slice(1).toLowerCase()}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
       </Box>
-      <Button variant="contained" color="primary" sx={{ my: defaultMargin }}>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{ my: defaultMargin }}
+        onClick={handleSaveProfile}
+      >
         Save Profile
       </Button>
     </Box>

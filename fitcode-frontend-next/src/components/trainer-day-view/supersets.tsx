@@ -1,7 +1,6 @@
 'use client';
 
 import { COLOR } from '@/common/constant/browser.constant';
-import { SetState } from '@/common/type/state.type';
 import BorderColor from '@/components/border-color';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
@@ -28,7 +27,6 @@ import AddExerciseForm from './add-exercise-form';
 import { NUM_MAX_SUPERSETS } from './constant';
 import { SupersetsProps } from './props';
 import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
-import TrainingExerciseCard from './training-exercise-card';
 import TrainingExerciseCardContainer from './training-exercise-card-container';
 
 export default function Supersets(props: SupersetsProps) {

@@ -13,7 +13,16 @@ import { RotateRight, Save } from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GroupIcon from '@mui/icons-material/Group';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { Fab, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Fab,
+  IconButton,
+  Menu,
+  MenuItem,
+  Select,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -42,6 +51,7 @@ export default function TrainerDayView() {
     component,
     setSelectedSubgroup,
     setDetectedChanges,
+    setCycle,
   } = useGroup();
 
   const router = useRouter();
@@ -314,17 +324,28 @@ export default function TrainerDayView() {
               display="flex"
               alignItems="center"
             >
-              <Typography
-                variant="body1"
+              <RotateRight sx={{ color: 'white' }} />
+              <Select
+                value={cycle.name}
+                onChange={(e) =>
+                  setCycle(group.cycles.find((c) => c.name === e.target.value))
+                }
                 sx={{
+                  color: 'white',
+                  fontSize: 20,
+                  bgcolor: 'transparent',
+                  border: 'none',
                   pl: 1,
-                  pr: 4,
-                  fontSize: !screenSize.isDesktop ? 15 : 20,
+                  '&:before, &:after': { borderBottom: 'none !important' },
                 }}
+                variant="standard"
               >
-                {cycle.name}
-              </Typography>
-              <RotateRight />
+                {group.cycles.map((cycle) => (
+                  <MenuItem key={cycle.name} value={cycle.name}>
+                    {cycle.name}
+                  </MenuItem>
+                ))}
+              </Select>
             </Box>
           </Box>
         </Stack>

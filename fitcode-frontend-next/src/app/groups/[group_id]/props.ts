@@ -23,6 +23,7 @@ export interface GroupIdPageProps {
   exercises: Exercise[];
   groups: Group[];
   trainings: Training[];
+  refreshUsers?: () => Promise<void>;
 }
 
 export type GroupContextProps = GroupIdPageProps & {
@@ -36,6 +37,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setComponent: SetStateNullable<TrainingComponent>;
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
+  selectedGroup: Group | null;
+  setSelectedGroup: SetState<Group | null>;
   selectedSubgroup: {
     subgroup: Subgroup | null;
     index: number;

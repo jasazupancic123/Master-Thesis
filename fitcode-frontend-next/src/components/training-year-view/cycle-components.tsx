@@ -15,146 +15,226 @@ interface CycleComponentsProps {
 }
 
 export default function CycleComponents(props: CycleComponentsProps) {
-  const { group, components, setGroup, setDetectedChanges } = useGroup();
-  const [cycles, setCycles] = useState(group.cycles);
+  const {
+    group,
+    selectedGroup,
+    setSelectedGroup,
+    components,
+    setGroup,
+    setDetectedChanges,
+  } = useGroup();
+  const [cycles, setCycles] = useState(selectedGroup?.cycles);
   const parentComponents = components.filter(
     (component) => component.parent === null
   );
 
   useEffect(() => {
-    setCycles(group.cycles);
+    setSelectedGroup({ ...group, cycles: [...group.cycles] });
   }, [group]);
 
+  useEffect(() => {
+    if (!selectedGroup) return;
+    const sortedCycles = [...selectedGroup.cycles].sort(
+      (a, b) => dayjs(a.from).unix() - dayjs(b.from).unix()
+    );
+    setCycles(sortedCycles);
+  }, [selectedGroup]);
+
   return (
-    <Box display="flex" width="100%" mt={2} gap={1} sx={{ overflowX: 'auto' }}>
-      {cycles.map((cycle) => (
-        <Box key={cycle.id} display="flex" flexDirection="column" width={200}>
-          {/*Header*/}
+    <Box
+      display="flex"
+      width="100%"
+      maxWidth="100%"
+      mt={2}
+      gap={1}
+      sx={{
+        overflowX: 'auto',
+        whiteSpace: 'nowrap',
+        minWidth: 0,
+        flexWrap: 'nowrap', // Ensures no unintended wrapping
+      }}
+    >
+      {cycles &&
+        cycles.map((cycle) => (
           <Box
+            key={cycle.id}
             display="flex"
             flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            bgcolor="#1EB980"
+            width={200}
             sx={{
-              borderTopLeftRadius: 10,
-              borderTopRightRadius: 10,
-              cursor: 'pointer',
-            }}
-            py={1}
-            onClick={() => {
-              props.setEditModal(true);
-              props.setEditCycle(cycle);
+              minWidth: '200px',
+              maxWidth: '200px', // Fix width explicitly
+              flexShrink: 0, // Prevents flex-based expansion
             }}
           >
-            <Typography
-              variant="body1"
+            {/*Header*/}
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              bgcolor="#1EB980"
               sx={{
-                color: 'background.paper',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '100%',
-                display: 'block',
+                borderTopLeftRadius: 10,
+                borderTopRightRadius: 10,
+                cursor: 'pointer',
+              }}
+              py={1}
+              onClick={() => {
+                props.setEditModal(true);
+                props.setEditCycle(cycle);
               }}
             >
-              {cycle.name.toUpperCase()}
-            </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: 'background.paper',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: '100%',
+                  display: 'block',
+                }}
+              >
+                {cycle.name.toUpperCase()}
+              </Typography>
 
-            <Typography variant="body2" sx={{ color: 'background.paper' }}>
-              {dayjs(cycle.from).format('DD. MMM.').toLowerCase()} -{' '}
-              {dayjs(cycle.to).format('DD. MMM.').toLowerCase()}
-            </Typography>
-          </Box>
+              <Typography variant="body2" sx={{ color: 'background.paper' }}>
+                {dayjs(cycle.from).format('DD. MMM.').toLowerCase()} -{' '}
+                {dayjs(cycle.to).format('DD. MMM.').toLowerCase()}
+              </Typography>
+            </Box>
 
-          {/*Components*/}
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap={1}
-            minHeight={265}
-            width="100%"
-            bgcolor="background.paper"
-            sx={{
-              p: 0,
-              px: 1,
-              pt: 2,
-              borderBottomLeftRadius: 10,
-              borderBottomRightRadius: 10,
-              overflowY: 'auto',
-            }}
-            alignItems="center"
-          >
-            {cycle.rootComponentsIds.map((componentId, i) => {
-              const component = components.find(
-                (component) => component.id === componentId
-              );
-              const leafComponents = components.filter(
-                (c) => c.parent === componentId
-              );
+            {/*Components*/}
+            <Box
+              key={cycle.id}
+              display="flex"
+              flexDirection="column"
+              gap={1}
+              minHeight={265}
+              width="100%"
+              bgcolor="background.paper"
+              sx={{
+                p: 0,
+                px: 1,
+                pt: 2,
+                borderBottomLeftRadius: 10,
+                borderBottomRightRadius: 10,
+                overflowY: 'auto',
+              }}
+              alignItems="center"
+            >
+              {cycle.rootComponentsIds.map((componentId, i) => {
+                const component = components.find(
+                  (component) => component.id === componentId
+                );
+                const leafComponents = components.filter(
+                  (c) => c.parent === componentId
+                );
 
-              const selectedLeafComponent = leafComponents.find(
-                (c) => cycle.leafComponentsIds[i] === c.id
-              );
+                const selectedLeafComponent = leafComponents.find(
+                  (c) => cycle.leafComponentsIds[i] === c.id
+                );
 
-              if (!component) return <></>;
+                if (!component) return <></>;
 
-              return (
-                <SelectInput<Component>
-                  label={component.name}
-                  icon={null}
-                  value={
-                    selectedLeafComponent
-                      ? selectedLeafComponent.id
-                      : component.id
-                  }
-                  items={components.filter((c) => c.parent === component.id)}
-                  placeholder="Remove Component"
-                  sx={{ width: '90%' }}
-                  displayInputLabel={false}
-                  itemKey="id"
-                  useRenderValue={true}
-                  itemName="name"
-                  enableRemove={true}
-                  setValue={(value) => {
-                    setDetectedChanges(true);
-                    if (value === 'Remove Component') {
+                return (
+                  <SelectInput<Component>
+                    key={i}
+                    label={component.name}
+                    icon={null}
+                    value={
+                      selectedLeafComponent
+                        ? selectedLeafComponent.id
+                        : component.id
+                    }
+                    items={components.filter((c) => c.parent === component.id)}
+                    placeholder="Remove Component"
+                    sx={{ width: '90%' }}
+                    displayInputLabel={false}
+                    itemKey="id"
+                    useRenderValue={true}
+                    itemName="name"
+                    enableRemove={true}
+                    setValue={(value) => {
+                      setDetectedChanges(true);
+                      if (value === 'Remove Component') {
+                        const newCycle = {
+                          ...cycle,
+                          rootComponentsIds: cycle.rootComponentsIds.filter(
+                            (cId, k) => i !== k
+                          ),
+                          leafComponentsIds: cycle.leafComponentsIds.filter(
+                            (cId, k) => i !== k
+                          ),
+                        };
+                        const newCycles = cycles.map((c) => {
+                          if (c.id === cycle.id) return newCycle;
+                          return c;
+                        });
+                        setCycles(newCycles);
+                        setGroup({ ...group, cycles: newCycles });
+                        return;
+                      }
+                      const component = components.find(
+                        (component) => component.id === value
+                      );
+                      if (!component) return;
+
+                      if (cycle.leafComponentsIds.includes(component.id)) {
+                        toast.error('Component already added');
+                        return;
+                      }
+
                       const newCycle = {
                         ...cycle,
-                        rootComponentsIds: cycle.rootComponentsIds.filter(
-                          (cId, k) => i !== k
-                        ),
-                        leafComponentsIds: cycle.leafComponentsIds.filter(
-                          (cId, k) => i !== k
-                        ),
+                        leafComponentsIds: [
+                          ...cycle.leafComponentsIds.slice(0, i),
+                          component.id,
+                          ...cycle.leafComponentsIds.slice(i + 1),
+                        ],
                       };
+
                       const newCycles = cycles.map((c) => {
                         if (c.id === cycle.id) return newCycle;
                         return c;
                       });
                       setCycles(newCycles);
                       setGroup({ ...group, cycles: newCycles });
-                      return;
-                    }
+                    }}
+                  />
+                );
+              })}
+
+              {cycle.rootComponentsIds.length < 4 && (
+                <SelectInput<Component>
+                  label={'Select component'}
+                  icon={null}
+                  value={''}
+                  items={parentComponents}
+                  displayInputLabel={true}
+                  itemKey="id"
+                  itemName="name"
+                  sx={{ width: '90%' }}
+                  setValue={(value) => {
+                    setDetectedChanges(true);
                     const component = components.find(
                       (component) => component.id === value
                     );
                     if (!component) return;
 
-                    if (cycle.leafComponentsIds.includes(component.id)) {
+                    if (cycle.rootComponentsIds.includes(component.id)) {
                       toast.error('Component already added');
                       return;
                     }
 
                     const newCycle = {
                       ...cycle,
-                      leafComponentsIds: [
-                        ...cycle.leafComponentsIds.slice(0, i),
+                      rootComponentsIds: [
+                        ...cycle.rootComponentsIds,
                         component.id,
-                        ...cycle.leafComponentsIds.slice(i + 1),
                       ],
                     };
-
                     const newCycles = cycles.map((c) => {
                       if (c.id === cycle.id) return newCycle;
                       return c;
@@ -163,51 +243,10 @@ export default function CycleComponents(props: CycleComponentsProps) {
                     setGroup({ ...group, cycles: newCycles });
                   }}
                 />
-              );
-            })}
-
-            {cycle.rootComponentsIds.length < 4 && (
-              <SelectInput<Component>
-                label={'Select component'}
-                icon={null}
-                value={cycle.id}
-                items={parentComponents}
-                placeholder="Select Component"
-                displayInputLabel={true}
-                itemKey="id"
-                itemName="name"
-                sx={{ width: '90%' }}
-                setValue={(value) => {
-                  setDetectedChanges(true);
-                  const component = components.find(
-                    (component) => component.id === value
-                  );
-                  if (!component) return;
-
-                  if (cycle.rootComponentsIds.includes(component.id)) {
-                    toast.error('Component already added');
-                    return;
-                  }
-
-                  const newCycle = {
-                    ...cycle,
-                    rootComponentsIds: [
-                      ...cycle.rootComponentsIds,
-                      component.id,
-                    ],
-                  };
-                  const newCycles = cycles.map((c) => {
-                    if (c.id === cycle.id) return newCycle;
-                    return c;
-                  });
-                  setCycles(newCycles);
-                  setGroup({ ...group, cycles: newCycles });
-                }}
-              />
-            )}
+              )}
+            </Box>
           </Box>
-        </Box>
-      ))}
+        ))}
     </Box>
   );
 }

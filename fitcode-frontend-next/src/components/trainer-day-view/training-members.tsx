@@ -130,11 +130,24 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         subgroup.id === newSubgroup.id ? newSubgroup : subgroup
       );
 
-      const newComponent = { ...component, subgroups: newSubgroups };
+      let supersetsCopy = [...component.supersets];
+      supersetsCopy = [...supersetsCopy].map((superset) => {
+        const exercisesCopy = [...superset.exercises].map((exercise) => {
+          const newMeta = { ...exercise.meta };
+          return { ...exercise, meta: newMeta };
+        });
+        return { ...superset, exercises: exercisesCopy };
+      });
+
+      const newComponent = {
+        ...component,
+        subgroups: newSubgroups,
+        supersets: supersetsCopy,
+      };
       setComponent(newComponent);
       setTraining({
         ...training,
-        components: training.components.map((c) =>
+        components: [...training.components].map((c) =>
           c.id === newComponent.id ? newComponent : c
         ),
       });
