@@ -272,7 +272,7 @@ export default function Supersets(props: SupersetsProps) {
           const exercisesToAdd: TrainingExercise[] = exercisesIdsToAdd.map(
             (id) => ({
               id,
-              exercise: allExercises.find((e) => e.id === id) || null,
+              exercise: allExercises.find((e) => e.id === id),
               meta: {
                 sets: 3,
                 setType: SetType.REPS,

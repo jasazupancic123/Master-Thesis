@@ -1,8 +1,7 @@
 'use client';
 
 import { handleApiRequest } from '@/common/type/state.type';
-import AddCycleForm from '@/components/add-cycle-form';
-import EditCycleModal from '@/components/edit-cycle-modal';
+import EditCycleForm from '@/components/edit-cycle-form';
 import MyModal from '@/components/modal';
 import MultiCycleSlider from '@/components/multi-cycle-slider';
 import { useGroup } from '@/context/group-provider';
@@ -11,11 +10,11 @@ import { GroupController } from '@/controller/group/group.controller';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import EditIcon from '@mui/icons-material/Edit';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
-import { Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -23,7 +22,7 @@ import toast from 'react-hot-toast';
 export default function TrainerYearView() {
   const router = useRouter();
   const screenSize = useScreenSize();
-  const { token, group, setGroup, cycle, setCycle } = useGroup();
+  const { token, group, setGroup, setCycle } = useGroup();
 
   const theme = useTheme();
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
@@ -33,31 +32,17 @@ export default function TrainerYearView() {
     page: 0,
   });
 
-  async function handleUpdateCycle() {
-    setShowEditCycleModal(false);
-    if (!editCycle) return toast.error('No cycle selected.');
-
+  async function handleSaveGroup() {
     handleApiRequest(
       router,
-      () =>
-        GroupController.updateCycle(token, group.id, editCycle.id, {
-          name: editCycle.name,
-          from: editCycle.from,
-          to: editCycle.to,
-        }),
-      (updatedCycle) => {
-        const updatedCycles = group.cycles.map((cycle) =>
-          cycle.id === updatedCycle.id ? updatedCycle : cycle
-        );
-
-        setGroup({ ...group, cycles: updatedCycles });
-        if (cycle?.id === editCycle.id) setCycle(updatedCycle);
-
-        toast.success('Cycle updated successfully.');
-        setEditCycle(null);
+      () => GroupController.update(token, group.id, { cycles: group.cycles }),
+      (response) => {
+        setGroup(response);
+        setCycle(response.cycles[group.cycles.length - 1]);
+        toast.success('Group successfully saved');
       },
       undefined,
-      'Failed to update cycle.'
+      'Failed to save group'
     );
   }
 
@@ -163,6 +148,8 @@ export default function TrainerYearView() {
         justifyContent="center"
         mb={3}
       >
+        <Button onClick={handleSaveGroup}>Save</Button>
+
         <Box
           width="100%"
           display="flex"
@@ -239,16 +226,14 @@ export default function TrainerYearView() {
           setIsOpen={(open) => setShowEditCycleModal(open)}
           onCancel={() => setShowEditCycleModal(false)}
           cancelText="Close"
-          onConfirm={handleUpdateCycle}
+          onConfirm={() => {
+            setShowEditCycleModal(false);
+            setEditCycle(null);
+          }}
         >
-          <EditCycleModal
-            token={token}
+          <EditCycleForm
             selectedCycle={editCycle}
             setSelectedCycle={setEditCycle}
-            onClose={() => {
-              setShowEditCycleModal(false);
-              setEditCycle(null);
-            }}
           />
         </MyModal>
       )}
