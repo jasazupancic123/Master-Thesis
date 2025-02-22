@@ -1,6 +1,5 @@
 import {
   GroupContextProps,
-  GroupIdPageProps,
   TrainerDayViewContextProps,
 } from '@/app/groups/[group_id]/props';
 import { Pagination } from '@/common/type/paginate.type';

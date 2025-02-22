@@ -32,10 +32,12 @@ export default async function Layout({ children }: ChildrenProps) {
       <Container
         component="main"
         maxWidth={false}
+        disableGutters
         sx={{
           display: 'flex',
           flexDirection: 'column',
           p: 0,
+          px: 2,
           pb: 2,
           mx: 0,
           width: '100%',

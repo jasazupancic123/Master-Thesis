@@ -19,7 +19,7 @@ export default function FilterButton(props: Props) {
         px: 2,
         py: 1,
         color: '#fff',
-        backgroundColor: 'background.paper',
+        backgroundColor: 'background.default',
         '&.Mui-selected': {
           backgroundColor: '#1EB980',
           color: '#fff',

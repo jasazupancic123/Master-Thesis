@@ -41,6 +41,7 @@ export default function TrainerDayView() {
     setDateTo,
     component,
     setSelectedSubgroup,
+    setDetectedChanges,
   } = useGroup();
 
   const router = useRouter();
@@ -50,12 +51,15 @@ export default function TrainerDayView() {
     commonService.date.getWeekDays().map(({ label, date }) => ({
       label: label[0],
       value: date.toString(),
-      // sublabel: commonService.date.format(date, { withYear: false }),
+      sublabel: screenSize.isSmallerThanLaptop
+        ? commonService.date.format(date, { withYear: false })
+        : undefined,
     }))
   );
 
   const [showSubgroups, setShowSubgroups] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
@@ -80,7 +84,9 @@ export default function TrainerDayView() {
       }
 
       const scrollY = window.scrollY;
-      setIsSticky(scrollY > 150);
+      //get screen height
+      const screenHeight = window.innerHeight;
+      setIsSticky(scrollY > screenHeight * 0.5);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -98,7 +104,23 @@ export default function TrainerDayView() {
   const amTraining = todaysTrainings.find((t) => dayjs(t.from).hour() < 12);
   const pmTraining = todaysTrainings.find((t) => dayjs(t.from).hour() >= 12);
 
-  if (!cycle) return <>Select cycle</>;
+  useEffect(() => {
+    setLoading(false);
+  }, [todaysTrainings]);
+
+  if (!cycle)
+    return (
+      <Box
+        bgcolor={'background.paper'}
+        width="100%"
+        p={2}
+        justifyContent="center"
+      >
+        <Typography variant="h6" textAlign="center">
+          Select a cycle
+        </Typography>
+      </Box>
+    );
 
   async function handleUpdateTraining() {
     if (!training) return;
@@ -117,6 +139,7 @@ export default function TrainerDayView() {
         setFilteredTrainings((prev) =>
           prev.map((t) => (t.id === newTraining.id ? mapped : t))
         );
+        setDetectedChanges(false);
 
         toast.success('Training updated successfully');
       },
@@ -132,14 +155,13 @@ export default function TrainerDayView() {
         flexDirection="column"
         alignItems="center"
         width="100%"
+        minHeight={195}
         sx={{
           borderBottomRightRadius: todaysTrainings.length === 0 ? 0 : '20px',
           borderBottomLeftRadius: todaysTrainings.length === 0 ? 0 : '20px',
           bgcolor: 'background.paper',
         }}
-        justifyContent={
-          screenSize.isSmallerThanLaptop ? 'center' : 'space-between'
-        }
+        justifyContent="space-evenly"
       >
         <Stack
           direction="row"
@@ -230,8 +252,8 @@ export default function TrainerDayView() {
               onArrowClick={(direction) => {
                 const newDay =
                   direction === 'left'
-                    ? day.date.subtract(1, 'day')
-                    : day.date.add(1, 'day');
+                    ? day.date.subtract(1, 'week')
+                    : day.date.add(1, 'week');
 
                 setDay({ label: '', date: newDay });
                 setDateFrom(newDay.startOf('day'));
@@ -242,7 +264,11 @@ export default function TrainerDayView() {
                     .map(({ label, date }) => ({
                       label: label[0],
                       value: date.toString(),
-                      //sublabel: commonService.date.format(date, { withYear: false }),
+                      sublabel: screenSize.isSmallerThanLaptop
+                        ? commonService.date.format(date, {
+                            withYear: false,
+                          })
+                        : undefined,
                     }))
                 );
               }}
@@ -343,7 +369,7 @@ export default function TrainerDayView() {
         }}
       >
         {/* Training set groups with set exercises */}
-        {todaysTrainings.length === 0 ? (
+        {!loading && todaysTrainings.length === 0 ? (
           <Box
             display="flex"
             bgcolor={'background.paper'}
@@ -362,45 +388,34 @@ export default function TrainerDayView() {
         ) : (
           <>
             {amTraining && (
-              <>
-                {training && training?.id === amTraining.id && (
-                  <Fab
-                    size="small"
-                    color="secondary"
-                    aria-label="add"
-                    onClick={() => {
-                      handleUpdateTraining();
-                    }}
-                  >
-                    <Save />
-                  </Fab>
-                )}
-
-                <TrainingCard day={day} training={amTraining} period="AM" />
-              </>
+              <TrainingCard day={day} training={amTraining} period="AM" />
             )}
 
             {pmTraining && (
-              <>
-                {training && training?.id === pmTraining.id && (
-                  <Fab
-                    size="small"
-                    color="secondary"
-                    aria-label="add"
-                    onClick={() => {
-                      handleUpdateTraining();
-                    }}
-                  >
-                    <Save />
-                  </Fab>
-                )}
-
-                <TrainingCard day={day} training={pmTraining} period="PM" />
-              </>
+              <TrainingCard day={day} training={pmTraining} period="PM" />
             )}
           </>
         )}
       </Box>
+      {screenSize.isSmallerThanLaptop && (
+        <IconButton
+          onClick={() => {
+            handleUpdateTraining();
+          }}
+          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
+        >
+          <Save
+            sx={{
+              mr: 0,
+              cursor: 'pointer',
+              backgroundColor: '#1EB980',
+              borderRadius: '50%',
+              p: 1,
+              fontSize: 40,
+            }}
+          />
+        </IconButton>
+      )}
     </Box>
   );
 }

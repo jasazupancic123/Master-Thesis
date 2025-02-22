@@ -2,6 +2,7 @@ import { COLORS } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/context/group-provider';
 import { Box, Typography } from '@mui/material';
+import { useEffect } from 'react';
 import { TrainingCardProps } from './props';
 import TrainingComponentCard from './training-component';
 
@@ -9,7 +10,41 @@ const commonService = CommonService.instance;
 
 export default function TrainingCard(props: TrainingCardProps) {
   const { day, training, period } = props;
-  const { training: selectedTraining, selectedSubgroup } = useGroup();
+  const {
+    training: selectedTraining,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    component,
+    selectedAthlete,
+    setSelectedAthlete,
+  } = useGroup();
+
+  useEffect(() => {
+    if (!component || !selectedSubgroup || !selectedSubgroup?.subgroup) return;
+    // check if subgroup is still inside the component.subgroups, cuz the selected one might get deleted
+    if (
+      selectedSubgroup &&
+      component.subgroups.findIndex(
+        (subgroup) => subgroup.id === selectedSubgroup?.subgroup?.id
+      ) === -1
+    ) {
+      setSelectedSubgroup(null);
+    }
+  }, [component]);
+
+  useEffect(() => {
+    if (!selectedSubgroup?.subgroup) {
+      setSelectedAthlete(undefined);
+      return;
+    }
+
+    if (
+      selectedSubgroup.subgroup.membersIds?.findIndex(
+        (member) => member === selectedAthlete?.uid
+      ) === -1
+    )
+      setSelectedAthlete(undefined);
+  }, [training, selectedSubgroup?.subgroup]);
 
   return (
     <Box width="100%">
@@ -33,7 +68,7 @@ export default function TrainingCard(props: TrainingCardProps) {
               backgroundColor:
                 selectedSubgroup?.subgroup &&
                 selectedTraining?.id === training.id
-                  ? COLORS[(selectedSubgroup.index % COLORS.length) + 1]
+                  ? COLORS[selectedSubgroup.index % COLORS.length]
                   : 'background.paper',
               borderTopLeftRadius: 10,
             }}

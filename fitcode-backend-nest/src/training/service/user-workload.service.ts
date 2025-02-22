@@ -1,32 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { FieldValue, Timestamp, Transaction } from 'firebase-admin/firestore';
+import { Timestamp, Transaction, WriteBatch } from 'firebase-admin/firestore';
+import { Create, FirestoreEntity } from 'src/common/type/entity.type';
+import { UserMeta } from 'src/user/entity/user-meta.entity';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import {
   ExerciseRef,
   SubgroupRef,
   TrainingExerciseRef,
-  TrainingRef,
   UserWorkloadExerciseRef,
-} from '../../common/type/firebase-firestore.type';
+} from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
+import { ExerciseMeta } from '../entity/exercise-meta.entity';
 import { SetData } from '../entity/set-data';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
 import { UserWorkload } from '../entity/user-workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadType } from '../enum/workload-type.enum';
 import { UserWorkloadRepository } from '../repository/user-workload.repository';
-import {
-  CreateUserWorkload,
-  UpdateUserWorkload,
-} from '../type/user-workload.type';
 
 @Injectable()
 export class UserWorkloadService {
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly trainingWorkloadRepository: UserWorkloadRepository,
+    private readonly userWorkloadRepository: UserWorkloadRepository,
   ) {}
 
   /**
@@ -39,7 +39,11 @@ export class UserWorkloadService {
       .where('exerciseId', '==', ref.exerciseId)
       .get()
       .then(({ docs }) =>
-        docs.map((doc) => this.trainingWorkloadRepository.serialize(doc)),
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<UserWorkload>,
+          ),
+        ),
       );
   }
 
@@ -49,41 +53,33 @@ export class UserWorkloadService {
       .where('trainingId', '==', trainingId)
       .get()
       .then(({ docs }) =>
-        docs.map((doc) => this.trainingWorkloadRepository.serialize(doc)),
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<UserWorkload>,
+          ),
+        ),
       );
   }
 
-  async findAllByMembers(
-    exerciseId: string,
-    membersIds: string[],
-  ): Promise<{ [userId: string]: UserWorkload[] }> {
-    const workloads = await this.firebaseService.firestore
+  async findAllByMembers(membersIds: string[]): Promise<UserWorkload[]> {
+    return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)
-      .where('exerciseId', '==', exerciseId)
       .get()
       .then(({ docs }) =>
-        docs.map((doc) => this.trainingWorkloadRepository.serialize(doc)),
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<UserWorkload>,
+          ),
+        ),
       );
-
-    // group workloads by userId
-    const result: { [userId: string]: UserWorkload[] } = {};
-    workloads.forEach((w) => {
-      const { userId } = w;
-      if (!result[userId]) result[userId] = [];
-      result[userId].push(w);
-    });
-
-    return result;
   }
 
   /**
    * Update athlete's set data.
    */
   async updateSets(ref: UserWorkloadExerciseRef, input: SetData[]) {
-    await this.trainingWorkloadRepository.updateDoc(ref, {
-      [`exercises.${ref.exerciseId}.sets`]: input.map((set) => ({ ...set })),
-    });
+    await this.userWorkloadRepository.updateDoc(ref, { sets: input });
   }
 
   /**
@@ -92,25 +88,90 @@ export class UserWorkloadService {
    * correct training component exercise user data document.
    */
   createForTraining(
-    transaction: Transaction,
-    ref: TrainingExerciseRef & SubgroupRef,
-    membersData: {
-      [id: string]: {
-        weight: number; // to calculate bodyweight %
-        workloads: UserWorkload[]; // to calculate RMs
+    batch: WriteBatch,
+    training: Training,
+    workloads: UserWorkload[], // to calculate RMs
+  ) {
+    const membersMap: {
+      [userId: string]: {
+        exercises: TrainingExercise[];
+        bodyweight: number;
+        history: UserWorkload[];
       };
-    },
-    input: CreateUserWorkload,
-  ): UserWorkload[] {
-    const result: UserWorkload[] = [];
+    } = {};
 
+    for (const userId of training.membersIds)
+      membersMap[userId] = {
+        exercises: [],
+        bodyweight: training.meta.find((m) => m.userId === userId)?.weight ?? 0,
+        history: workloads.filter((w) => w.userId === userId),
+      };
+
+    for (const component of training.components) {
+      // workloads for main training group
+      for (const superset of component.supersets)
+        for (const exercise of superset.exercises)
+          for (const userId of training.membersIds)
+            membersMap[userId].exercises.push(exercise);
+
+      // workloads for subgroups
+      for (const subgroup of component.subgroups)
+        for (const superset of subgroup.supersets)
+          for (const exercise of superset.exercises)
+            for (const userId of subgroup.membersIds)
+              membersMap[userId].exercises.push(exercise);
+    }
+
+    // for each member, calculate individual values for exercise user data
+    for (const userId of Object.keys(membersMap)) {
+      const { exercises, bodyweight, history } = membersMap[userId];
+
+      for (const exercise of exercises) {
+        const { workloadType, workloadValue, sets } = exercise.meta;
+        const setData = history // filter workload history for selected user and exercise
+          .filter((e) => e.exerciseId === exercise.id)
+          .flatMap((w) => w.sets);
+
+        const calculatedWorkloadValue = this.calculateWorkloadValue(
+          workloadType,
+          workloadValue,
+          bodyweight,
+          setData,
+        );
+
+        const data: Create<UserWorkload> = {
+          userId,
+          trainingId: training.id,
+          exerciseId: exercise.id,
+          workloadType,
+          workloadValue: calculatedWorkloadValue,
+          sets: Array.from({ length: sets }).map(() => ({
+            status: SetStatus.NOT_STARTED,
+            setTypeValue: null,
+            workloadValue: null,
+            notes: null,
+          })),
+        };
+
+        const docRef = this.userWorkloadRepository.doc({
+          trainingId: training.id,
+          exerciseId: exercise.id,
+          userId,
+        });
+
+        const query = this.firebaseService.buildCreateQuery(data);
+        batch.set(docRef, query);
+      }
+    }
+
+    /* const result: UserWorkload[] = [];
     // for each member, calculate individual values for exercise user data
     for (const userId of Object.keys(membersData)) {
       const userWorkloads = membersData[userId]?.workloads || [];
       const userData = userWorkloads.flatMap((item) => item.sets);
       const workloadValue = this.calculateWorkloadValue(
-        input.meta.workloadType,
-        input.meta.workloadValue,
+        meta.workloadType,
+        meta.workloadValue,
         membersData[userId].weight,
         userData,
       );
@@ -119,9 +180,9 @@ export class UserWorkloadService {
         userId,
         trainingId: ref.trainingId,
         exerciseId: ref.exerciseId,
-        workloadType: input.meta.workloadType,
+        workloadType: meta.workloadType,
         workloadValue,
-        sets: Array.from({ length: input.meta.sets }).map(() => ({
+        sets: Array.from({ length: meta.sets }).map(() => ({
           status: SetStatus.NOT_STARTED,
           setTypeValue: null,
           workloadValue: null,
@@ -129,7 +190,7 @@ export class UserWorkloadService {
         })),
       };
 
-      const docRef = this.trainingWorkloadRepository.doc({ ...ref, userId });
+      const docRef = this.userWorkloadRepository.doc({ ...ref, userId });
       transaction.set(docRef, {
         ...data,
         createdAt: Timestamp.now(),
@@ -139,7 +200,7 @@ export class UserWorkloadService {
       result.push({ ...data, createdAt: new Date(), updatedAt: new Date() });
     }
 
-    return result;
+    return result; */
   }
 
   /**
@@ -156,7 +217,7 @@ export class UserWorkloadService {
         workloads: UserWorkload[]; // to calculate RMs
       };
     },
-    input: UpdateUserWorkload,
+    meta: ExerciseMeta,
   ): UserWorkload[] {
     const result: UserWorkload[] = [];
 
@@ -165,8 +226,8 @@ export class UserWorkloadService {
       const userWorkloads = membersData[userId]?.workloads || [];
       const userData = userWorkloads.flatMap((item) => item.sets);
       const workloadValue = this.calculateWorkloadValue(
-        input.meta.workloadType,
-        input.meta.workloadValue,
+        meta.workloadType,
+        meta.workloadValue,
         membersData[userId].weight,
         userData,
       );
@@ -175,9 +236,9 @@ export class UserWorkloadService {
         userId,
         trainingId: ref.trainingId,
         exerciseId: ref.exerciseId,
-        workloadType: input.meta.workloadType,
+        workloadType: meta.workloadType,
         workloadValue,
-        sets: Array.from({ length: input.meta.sets }).map(() => ({
+        sets: Array.from({ length: meta.sets }).map(() => ({
           status: SetStatus.NOT_STARTED,
           setTypeValue: null,
           workloadValue: null,
@@ -185,7 +246,7 @@ export class UserWorkloadService {
         })),
       };
 
-      const docRef = this.trainingWorkloadRepository.doc({ ...ref, userId });
+      const docRef = this.userWorkloadRepository.doc({ ...ref, userId });
       transaction.set(docRef, {
         ...data,
         updatedAt: Timestamp.now(),
@@ -200,8 +261,8 @@ export class UserWorkloadService {
   private calculateWorkloadValue(
     workloadType: WorkloadType,
     workloadValue: number,
-    bodyweight: number,
-    data: SetData[],
+    bodyweight: number, // for bodyweight %
+    data: SetData[], // history data for RM
   ) {
     switch (workloadType) {
       case WorkloadType.RM:

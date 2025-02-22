@@ -1,27 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
-  CollectionGroup,
   CollectionReference,
   DocumentReference,
   DocumentSnapshot,
   Query,
   QueryDocumentSnapshot,
-  Timestamp,
 } from 'firebase-admin/firestore';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
-import { Exercise } from '../entity/exercise.entity';
-import { CommonService } from '../../common/service/common.service';
+import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
+import { Exercise } from '../entity/exercise.entity';
 
 @Injectable()
 export class ExerciseRepository
   implements RootFirestoreCollectionRepository<Exercise>
 {
-  constructor(
-    private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -36,27 +31,33 @@ export class ExerciseRepository
     return this.serialize(snapshot);
   }
 
-  async addDoc(input: Partial<Exercise>) {
-    const result = await this.collection().add({
-      userId: input.userId,
-      name: input.name,
-      componentIds: input.componentsIds,
-      global: input.global ?? false,
-      imageUrl: input.imageUrl ?? null,
-      videoUrl: input.videoUrl ?? null,
-      values: !input.values?.length ? [] : input.values,
-    });
+  async addDoc(input: Create<Exercise>) {
+    const { id } = this.collection().doc();
+    const query = this.firebaseService.buildCreateQuery<Exercise>(
+      {
+        id,
+        userId: input.userId,
+        name: input.name,
+        componentsIds: input.componentsIds,
+        global: input.global ?? false,
+        imageUrl: input.imageUrl,
+        videoUrl: input.videoUrl,
+        values: !input.values?.length ? [] : input.values,
+      },
+      { timestamps: true },
+    );
 
-    return result.id;
+    await this.doc(id).set(query);
+    return id;
   }
 
-  async updateDoc(exerciseId: string, input: Partial<Exercise>) {
-    const data = this.commonService.object.clean(input);
+  async updateDoc(exerciseId: string, input: Update<Exercise>) {
+    const data = this.firebaseService.buildUpdateQuery(input);
     await this.doc(exerciseId).update(data);
   }
 
   async deleteDoc(exerciseId: string) {
-    await this.doc(exerciseId).update({ deletedAt: Timestamp.now() });
+    await this.doc(exerciseId).delete();
   }
 
   doc(exerciseId: string): DocumentReference {
@@ -70,26 +71,18 @@ export class ExerciseRepository
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Exercise {
-    const data = snapshot.data();
+    const serialized = this.firebaseService.serialize(
+      snapshot.data() as FirestoreEntity<Exercise>,
+    );
 
-    return {
-      id: snapshot.id,
-      userId: data.userId,
-      name: data.name,
-      componentsIds: data.componentIds,
-      global: data.global ?? false,
-      imageUrl: data.imageUrl ?? null,
-      videoUrl: data.videoUrl ?? null,
-      values: data.values ?? [],
-      attributeValues: this.attributesToObject(data as Exercise),
-    } as Exercise;
+    serialized.attributeValues = this.attributesToObject(serialized);
+    return serialized;
   }
 
   /**
    * Convert exercise's attribute values to nested object for frontend.
    */
   private attributesToObject(exercise: Exercise): Record<string, any> {
-    // convert found attributes and attribute values to nested object for frontend
     const nested: Record<string, any> = {};
     for (const { attributeId, value } of exercise.values)
       nested[attributeId] = value;

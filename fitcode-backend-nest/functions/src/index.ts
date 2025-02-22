@@ -1,7 +1,7 @@
-import { auth, config } from 'firebase-functions';
-import { getAuth } from 'firebase-admin/auth';
 import * as admin from 'firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { auth, config } from 'firebase-functions';
 
 admin.initializeApp(config().firebase);
 
@@ -16,7 +16,6 @@ export const createUserRole = auth.user().onCreate(async (user) => {
     .doc(user.uid)
     .set({
       id: user.uid,
-      level: 'beginner',
       createdAt: Timestamp.fromDate(new Date()),
       updatedAt: Timestamp.fromDate(new Date()),
     });

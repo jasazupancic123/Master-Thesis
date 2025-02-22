@@ -15,15 +15,32 @@ import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
-  const { exercise, supersetIndex: j } = props;
-  const { training, setTraining, component } = useGroup();
+  const {
+    exercise,
+    supersetIndex: j,
+    selectedExercise,
+    setSelectedExercise,
+  } = props;
+  const {
+    training,
+    setTraining,
+    component,
+    selectedSubgroup,
+    selectedAthlete,
+    setDetectedChanges,
+  } = useGroup();
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
-  const k = training?.components[i!].supersets[j!].exercises.findIndex(
+  const selectedTrainingOrSubgroup =
+    selectedSubgroup?.subgroup || training?.components?.[i!];
+
+  const k = selectedTrainingOrSubgroup?.supersets?.[j!]?.exercises?.findIndex(
     (e) => e.id === exercise.id
   );
 
-  const state = training?.components[i!].supersets[j!].exercises[k!]?.meta;
+  const state =
+    selectedTrainingOrSubgroup?.supersets?.[j!]?.exercises?.[k!]?.meta;
+
   const [tempoOrEffort, setTempoOrEffort] = useState<'temp' | 'eff'>(
     !state || state?.tempo ? 'temp' : 'eff'
   );
@@ -42,6 +59,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
       return updatedTraining;
     });
+
+    setDetectedChanges(true);
   }
 
   if (!training || !component || !state) return null;
@@ -57,7 +76,19 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <Stack direction="row" justifyContent="center">
+      <Stack
+        direction="row"
+        justifyContent="center"
+        sx={{
+          cursor:
+            selectedExercise !== exercise && selectedAthlete
+              ? 'pointer'
+              : undefined,
+        }}
+        onClick={() => {
+          if (selectedAthlete) setSelectedExercise(exercise);
+        }}
+      >
         <Typography
           variant="body1"
           fontWeight="bold"

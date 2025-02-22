@@ -1,11 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Training } from '../entity/training.entity';
 
-/**
- * NOTE - this is a "private" service, meaning there are no
- * controller methods here, and there are no user checks or
- * other checks you would expect
- */
 @Injectable()
 export class SubgroupService {
   findAllByTraining(training: Training) {

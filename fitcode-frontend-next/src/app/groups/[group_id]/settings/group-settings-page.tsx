@@ -1,8 +1,6 @@
 'use client';
 
-import AddCycleForm from '@/components/add-cycle-form';
 import GroupSidebar from '@/components/group-sidebar';
-import MyModal from '@/components/modal';
 import PageTitle from '@/components/page-title';
 import { useGroup } from '@/context/group-provider';
 import { Box, Button, TextField } from '@mui/material';
@@ -12,9 +10,7 @@ import { handleDeleteGroup, handleUpdateGroup } from './state';
 
 export default function GroupSettingsPage() {
   const { token, group, setGroup, groups } = useGroup();
-
   const router = useRouter();
-  const [showCycleModal, setShowCyclesModal] = useState(false);
 
   return (
     <>
@@ -62,15 +58,6 @@ export default function GroupSettingsPage() {
           Update Group
         </Button>
       </Box>
-
-      <MyModal
-        isOpen={showCycleModal}
-        setIsOpen={(open) => setShowCyclesModal(open)}
-        onCancel={() => setShowCyclesModal(false)}
-        cancelText="Close"
-      >
-        <AddCycleForm onClose={() => setShowCyclesModal(false)} />
-      </MyModal>
     </>
   );
 }

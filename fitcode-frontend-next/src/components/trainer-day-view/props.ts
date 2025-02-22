@@ -1,13 +1,13 @@
 import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
 import { Day } from '@/common/service/util/date.util';
 import { SetState } from '@/common/type/state.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
 import {
   ExerciseMeta,
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
+import { Dispatch, SetStateAction } from 'react';
 
 export interface TrainingCardProps {
   day: Day;
@@ -28,6 +28,8 @@ export interface AddExerciseFormProps {
 export interface TrainingExerciseCardProps {
   supersetIndex: number;
   exercise: TrainingExercise;
+  selectedExercise: TrainingExercise | null;
+  setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
 }
 
 export interface SubgroupProps {

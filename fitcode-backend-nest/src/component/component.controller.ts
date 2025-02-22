@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
-import { ComponentService } from './component.service';
-import { UpdateComponentDto } from './dto/update-component.dto';
 import { Auth } from '../common/decorator/auth.decorator';
 import { UserRole } from '../user/enum/user-role.enum';
+import { ComponentService } from './component.service';
+import { UpdateComponentDto } from './dto/update-component.dto';
 
 @Controller('component')
 export class ComponentController {
@@ -10,9 +10,7 @@ export class ComponentController {
 
   @Get()
   async findAll() {
-    return await this.componentService.findAllFlat({
-      populate: ['parents', 'children'],
-    });
+    return await this.componentService.findAllFlat();
   }
 
   // TODO - create components and move exercises to new components

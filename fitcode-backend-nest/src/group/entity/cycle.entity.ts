@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import { IsDate, IsOptional, IsString } from 'class-validator';
-import { Timestamp } from 'firebase-admin/firestore';
 import { BaseEntity } from '../../common/entity/base.entity';
 
 export interface Week {
@@ -32,10 +31,6 @@ export class Cycle extends BaseEntity {
   @Transform(({ value }) => new Date(value))
   to: Date;
 
-  @ApiProperty()
-  @Expose()
-  weeks: Week[][]; // virtual
-
   @IsString({ each: true })
   @IsOptional()
   @ApiPropertyOptional()
@@ -47,17 +42,7 @@ export class Cycle extends BaseEntity {
   @ApiPropertyOptional()
   @Expose()
   leafComponentsIds: string[];
+
+  // virtual
+  weeks?: Week[][];
 }
-
-export type CycleFirestore = {
-  id: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  deletedAt: Timestamp;
-  name: string;
-  description?: string;
-  from: Timestamp;
-  to: Timestamp;
-  rootComponentsIds: string[];
-  leafComponentsIds: string[];
-};

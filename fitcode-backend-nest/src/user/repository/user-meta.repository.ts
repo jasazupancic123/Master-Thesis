@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  FirestoreCollectionRepository,
-  UserMetaRef,
-  UserRef,
-} from '../../common/type/firebase-firestore.type';
-import { CommonService } from '../../common/service/common.service';
-import { UserRepository } from './user.repository';
+import { startOfDay } from 'date-fns';
 import {
   DocumentSnapshot,
   Query,
@@ -13,8 +7,14 @@ import {
   Timestamp,
 } from 'firebase-admin/firestore';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { startOfDay } from 'date-fns';
+import { CommonService } from '../../common/service/common.service';
+import {
+  FirestoreCollectionRepository,
+  UserMetaRef,
+  UserRef,
+} from '../../common/type/firestore.type';
 import { UserMeta } from '../entity/user-meta.entity';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserMetaRepository

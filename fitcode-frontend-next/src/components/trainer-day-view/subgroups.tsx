@@ -41,8 +41,10 @@ export default function Subgroups(props: SubgroupProps) {
     setComponent,
     setTrainings,
     setTraining,
+    filteredTrainings,
     setFilteredTrainings,
     users,
+    setDetectedChanges,
   } = useGroup();
 
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
@@ -128,7 +130,7 @@ export default function Subgroups(props: SubgroupProps) {
                           maxHeight: 210,
                           margin: 1,
                           transition: 'border 0.2s',
-                          border: `1px solid ${COLORS[index % 20]}`,
+                          border: `1px solid ${subgroup.color ? subgroup.color : COLORS[(index % COLORS.length) - 1]}`,
                           display: 'flex',
                           flexDirection: 'column',
                           position: 'relative', // Needed for absolute positioning of icons
@@ -170,6 +172,9 @@ export default function Subgroups(props: SubgroupProps) {
                                     setTraining,
                                     component: component!,
                                     setComponent,
+                                    filteredTrainings,
+                                    setFilteredTrainings,
+                                    setDetectedChanges,
                                   }
                                 );
                               }}
@@ -282,22 +287,24 @@ export default function Subgroups(props: SubgroupProps) {
             </Box>
 
             {/* Add New Subgroup Button */}
-            <IconButton
-              sx={{ p: 0, m: 0, mb: 2 }}
-              onClick={() =>
-                setModal((prev: any) => ({ ...prev, subgroup: true }))
-              }
-            >
-              <AddIcon
-                sx={{
-                  width: 30,
-                  height: 30,
-                  backgroundColor: '#1EB980',
-                  color: 'white',
-                  borderRadius: '50%',
-                }}
-              />
-            </IconButton>
+            <Tooltip title="Add Subgroup" arrow>
+              <IconButton
+                sx={{ p: 0, m: 0, mb: 2 }}
+                onClick={() =>
+                  setModal((prev: any) => ({ ...prev, subgroup: true }))
+                }
+              >
+                <AddIcon
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    backgroundColor: '#1EB980',
+                    color: 'white',
+                    borderRadius: '50%',
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
           </>
         )}
       </DragDropContext>
@@ -316,6 +323,9 @@ export default function Subgroups(props: SubgroupProps) {
             setComponent,
             createSubgroup,
             setCreateSubgroup,
+            filteredTrainings,
+            setFilteredTrainings,
+            setDetectedChanges,
           });
 
           setModal((prev) => ({ ...prev, subgroup: false }));

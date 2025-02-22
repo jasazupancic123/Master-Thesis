@@ -2,11 +2,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import {
   IsEnum,
-  IsNotEmpty,
   IsInt,
+  IsNotEmpty,
   IsOptional,
-  Min,
   IsString,
+  Min,
 } from 'class-validator';
 import { IsStringOrNumber } from 'src/common/decorator/is-string-or-number.decorator';
 import { SetStatus } from '../enum/set-status.enum';
@@ -25,7 +25,6 @@ export class SetData {
   @Expose()
   setTypeValue?: number; // actual user reps / distance / time / ... completed
 
-  // actual user reps / distance / time / ... completed
   @IsStringOrNumber()
   @IsOptional()
   @IsNotEmpty()

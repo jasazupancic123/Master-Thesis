@@ -11,11 +11,11 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
-import { SetData } from '@/controller/training/type/set-data';
 import {
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
+import { SetData } from '@/controller/training/type/user-workload';
 import { ScreenSearchDesktop, SvgIconComponent } from '@mui/icons-material';
 import FitnessCenter from '@mui/icons-material/FitnessCenter';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -236,7 +236,7 @@ export default function AthleteTrainingExerciseCard(
               {component.supersets.map((superset, i) => (
                 <Box key={`superset-${i}-${i}`}>
                   <BorderColor
-                    color={superset.color || COLOR[i]}
+                    color={COLOR[i % COLOR.length]}
                     applyMargin={superset.exercises.length === 0}
                   />
 
@@ -450,13 +450,11 @@ export default function AthleteTrainingExerciseCard(
                     })}
                   </Box>
 
-                  {superset.exercises.length === 0 && (
-                    <BorderColor
-                      color={superset.color || COLOR[i]}
-                      lower
-                      applyMargin={superset.exercises.length === 0}
-                    />
-                  )}
+                  <BorderColor
+                    color={COLOR[i % COLOR.length]}
+                    lower
+                    applyMargin={superset.exercises.length === 0}
+                  />
                 </Box>
               ))}
             </Box>

@@ -57,7 +57,6 @@ export default function SignIn() {
       );
 
       toast.success('Logged in successfully');
-      await CommonService.instance.generic.sleep(0.35);
       router.push(mapper[role].href);
     } catch (e: any) {
       toast.error(e.message);
