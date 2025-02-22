@@ -32,7 +32,11 @@ export default function TrainerGroupPage() {
   };
 
   return (
-    <Box mt="16px" sx={{ px: screenSize.isMobile ? 1 : undefined }}>
+    <Box
+      mt="16px"
+      sx={{ px: screenSize.isMobile ? 1 : undefined }}
+      width="100%"
+    >
       <GroupSidebar groups={groups} group={group} />
 
       <Box

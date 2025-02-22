@@ -5,9 +5,11 @@ export type Cycle = BaseEntity &
   Required<DateRange> & {
     name: string;
     description?: string;
-    weeks: Week[][];
     rootComponentsIds: string[];
     leafComponentsIds: string[];
+
+    // virtual
+    weeks: Week[][];
   };
 
 export interface Week {

@@ -15,12 +15,12 @@ export class TrainingService {
     for (const tc of item.components) {
       for (const s of tc.supersets)
         for (const e of s.exercises)
-          e.exercise = exercises.find(({ id }) => id === e.id) || null;
+          e.exercise = exercises.find(({ id }) => id === e.id);
 
       for (const subgroup of tc.subgroups)
         for (const s of subgroup.supersets)
           for (const e of s.exercises)
-            e.exercise = exercises.find(({ id }) => id === e.id) || null;
+            e.exercise = exercises.find(({ id }) => id === e.id);
     }
 
     return item;

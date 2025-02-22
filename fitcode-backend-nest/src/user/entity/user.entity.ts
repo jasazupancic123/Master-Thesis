@@ -1,28 +1,61 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Transform } from 'class-transformer';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { CustomClaims, User } from '../../common/type/firebase-auth.type';
-import { Group } from '../../group/entity/group.entity';
+import { Gender } from '../enum/gender.enum';
 import { SportLevel } from '../enum/sport-level.enum';
 
 export class UserEntity extends BaseEntity {
-  @IsEnum(SportLevel)
-  @Expose()
-  @ApiProperty({ example: SportLevel.BEGINNER })
-  level: SportLevel;
-
   @IsString({ each: true })
   @Expose()
   @ApiProperty()
   groupsIds: string[]; // array of group ids user is owner or member of
 
-  @ValidateNested({ each: true })
-  @Type(() => Group)
   @IsOptional()
-  @ApiProperty()
+  @IsString()
+  @ApiPropertyOptional()
   @Expose()
-  groups: Group[];
+  sport?: string;
+
+  @IsEnum(SportLevel)
+  @IsOptional()
+  @Expose()
+  @ApiProperty({ example: SportLevel.BEGINNER })
+  level?: SportLevel;
+
+  @IsEnum(Gender)
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  gender?: Gender;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  @Expose()
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  @Expose()
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  @Expose()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  @Transform(({ value }) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date;
+  })
+  birthDate?: Date;
 }
 
 export type CreateUser = Pick<User, 'email' | 'displayName'> & {

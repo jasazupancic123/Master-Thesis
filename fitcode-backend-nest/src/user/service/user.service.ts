@@ -6,26 +6,27 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { startOfDay } from 'date-fns';
-import { FieldPath, FieldValue, Transaction } from 'firebase-admin/firestore';
+import { FieldValue, Transaction } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
+import { Update } from 'src/common/type/entity.type';
 import { Wrapper } from 'src/common/type/wrapper.type';
 import { TrainingService } from 'src/training/service/training.service';
-import { User } from '../../common/type/firebase-auth.type';
-import {
-  UserMetaRef,
-  UserRef,
-} from '../../common/type/firebase-firestore.type';
+import { CustomClaims, User } from '../../common/type/firebase-auth.type';
+import { UserMetaRef, UserRef } from '../../common/type/firestore.type';
 import { Environment } from '../../config/environment-validation-schema';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { FilterUserQueryDto } from '../dto/filter-user-query.dto';
-import { UpdateUserClaimsDto } from '../dto/update-user.dto';
+import { UpdateUserClaimsDto } from '../dto/update-user-claims.dto';
 import { UserMeta } from '../entity/user-meta.entity';
-import { CreateUser, UserEntity } from '../entity/user.entity';
+import { UserEntity } from '../entity/user.entity';
 import { SportLevel } from '../enum/sport-level.enum';
 import { UserMetaRepository } from '../repository/user-meta.repository';
 import { UserRepository } from '../repository/user.repository';
+
+type CreateUser = Pick<User, 'email' | 'displayName'> & {
+  password: string;
+} & { customClaims: CustomClaims };
 
 @Injectable()
 export class UserService {
@@ -112,6 +113,10 @@ export class UserService {
     });
   }
 
+  async updateProfile(ref: UserRef, input: Update<UserEntity>) {
+    await this.userRepository.updateDoc(ref.uid, input);
+  }
+
   async addAthlete(input: Omit<CreateUser, 'customClaims'>) {
     const { email, displayName, password } = input;
 
@@ -124,18 +129,17 @@ export class UserService {
     await this.userRepository.addDoc({
       id: firebaseAuthUser.uid,
       groupsIds: [],
-      level: SportLevel.BEGINNER,
     });
 
     return firebaseAuthUser;
   }
 
-  async addGroup(transaction: Transaction, userId: string, groupId: string) {
+  addGroup(transaction: Transaction, userId: string, groupId: string) {
     const docRef = this.userRepository.doc(userId);
     transaction.update(docRef, { groupsIds: FieldValue.arrayUnion(groupId) });
   }
 
-  async removeGroup(transaction: Transaction, userId: string, groupId: string) {
+  removeGroup(transaction: Transaction, userId: string, groupId: string) {
     const docRef = this.userRepository.doc(userId);
     transaction.update(docRef, { groupsIds: FieldValue.arrayRemove(groupId) });
   }

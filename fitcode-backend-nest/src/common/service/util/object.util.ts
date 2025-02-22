@@ -10,15 +10,12 @@ export class ObjectUtil {
    */
   clean<T extends object>(obj: T, removeNull = false): Partial<T> {
     return Object.entries(obj).reduce((acc, [key, value]) => {
-      if (
-        value !== undefined &&
-        (!removeNull || value !== null) &&
-        !(value instanceof Date)
-      ) {
+      if (value !== undefined && (!removeNull || value !== null)) {
         if (
           typeof value === 'object' &&
           value !== null &&
-          !Array.isArray(value)
+          !Array.isArray(value) &&
+          !(value instanceof Date)
         )
           acc[key] = this.clean(value, removeNull);
         else acc[key] = value;

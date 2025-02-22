@@ -28,6 +28,7 @@ export default function TrainerWeekView() {
     setTrainings,
     setDateFrom,
     setDateTo,
+    setDetectedChanges,
   } = useGroup();
 
   const router = useRouter();
@@ -55,6 +56,7 @@ export default function TrainerWeekView() {
 
   return (
     <Box
+      minHeight={195}
       sx={{
         backgroundColor: '#1A2B3C',
         padding: '12px',
@@ -156,6 +158,7 @@ export default function TrainerWeekView() {
                                 )
                               );
 
+                              setDetectedChanges(false);
                               toast.success('Training updated successfully');
                             },
                             undefined,

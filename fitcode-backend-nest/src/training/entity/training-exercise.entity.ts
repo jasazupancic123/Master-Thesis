@@ -1,24 +1,11 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import {
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { ValidateNested } from 'class-validator';
+import { ColorEntity } from 'src/common/entity/color.entity';
 import { IdEntity } from 'src/common/entity/id.entity';
 import { ExerciseMeta } from './exercise-meta.entity';
 
-export class TrainingExercise extends IdEntity {
-  @IsString()
-  @IsOptional()
-  @IsNotEmpty()
-  @ApiPropertyOptional()
-  @Expose()
-  color?: string;
-
+export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {
   @ValidateNested()
   @Type(() => ExerciseMeta)
   @ApiProperty()

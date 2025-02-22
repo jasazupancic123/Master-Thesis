@@ -1,13 +1,27 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { App } from 'firebase-admin/app';
 import { ConfigService } from '@nestjs/config';
+import * as admin from 'firebase-admin';
+import { App } from 'firebase-admin/app';
+import { Auth, UserIdentifier } from 'firebase-admin/auth';
+import {
+  DocumentReference,
+  GeoPoint,
+  Timestamp,
+} from 'firebase-admin/firestore';
+import { Storage } from 'firebase-admin/storage';
+import { IdEntity } from 'src/common/entity/id.entity';
+import { TimestampEntity } from 'src/common/entity/timestamp.entity';
+import { CommonService } from 'src/common/service/common.service';
+import {
+  Create,
+  FirestoreEntity,
+  OmitIfExtends,
+  Update,
+} from 'src/common/type/entity.type';
+import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
-import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
-import { Auth, UserIdentifier } from 'firebase-admin/auth';
-import { Storage } from 'firebase-admin/storage';
-import * as admin from 'firebase-admin';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -19,12 +33,69 @@ export class FirebaseService implements OnApplicationBootstrap {
 
   constructor(
     private readonly configService: ConfigService<Environment>,
+    private readonly commonService: CommonService,
     @InjectFirebaseAdmin() private readonly firebaseAdmin: FirebaseClient,
   ) {
     this.app = this.firebaseAdmin.app;
     this.auth = this.firebaseAdmin.auth;
     this.firestore = this.firebaseAdmin.firestore;
     this.storage = this.firebaseAdmin.storage;
+  }
+
+  /**
+   * Build create query for Firebase Firestore database.
+   */
+  buildCreateQuery<T>(
+    obj: Create<T>,
+    options?: { timestamps?: boolean },
+  ): FirestoreEntity<T> {
+    const timestamps: TimestampEntity = {
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    };
+
+    const cleaned = this.commonService.object.clean({
+      ...obj,
+      ...(options?.timestamps ? timestamps : {}),
+    });
+
+    return this.convertDatesToTimestamps(cleaned) as FirestoreEntity<T>;
+  }
+
+  /**
+   * Build create query for Firebase Firestore database.
+   */
+  buildUpdateQuery<T>(obj: Update<T>): FirestoreEntity<Partial<T>> {
+    const cleaned = this.commonService.object.clean(obj, true);
+
+    return this.convertDatesToTimestamps({
+      ...cleaned,
+      updatedAt: new Date(),
+    }) as FirestoreEntity<Partial<T>>;
+  }
+
+  /**
+   * Serializes a Firestore object into a plain JavaScript object.
+   * Handles Firestore-specific data types like Timestamp, GeoPoint, and DocumentReference.
+   */
+  serialize<T>(obj: FirestoreEntity<T>): T {
+    if (obj === null || typeof obj !== 'object') return obj as T;
+    if (Array.isArray(obj)) return obj.map((item) => this.serialize(item)) as T;
+
+    if (obj instanceof Timestamp) return obj.toDate() as T;
+    if (obj instanceof DocumentReference) return obj.path as T;
+    if (obj instanceof GeoPoint)
+      return { latitude: obj.latitude, longitude: obj.longitude } as T;
+
+    const result: Record<string, any> = {};
+    for (const key in obj)
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        result[key] = this.serialize(value);
+      }
+
+    return result as T;
   }
 
   async findUserById(uid: string) {
@@ -69,7 +140,32 @@ export class FirebaseService implements OnApplicationBootstrap {
     );
   }
 
-  async onApplicationBootstrap() {
+  /**
+   * Recursively converts `Date` objects to Firestore `Timestamp` in an object.
+   */
+  convertDatesToTimestamps<T>(obj: T): FirestoreEntity<T> {
+    if (obj instanceof Date)
+      return Timestamp.fromDate(obj) as FirestoreEntity<T>;
+
+    if (obj === null || typeof obj !== 'object')
+      return obj as FirestoreEntity<T>;
+
+    if (Array.isArray(obj))
+      return obj.map((item) =>
+        this.convertDatesToTimestamps(item),
+      ) as FirestoreEntity<T>;
+
+    const result: Record<string, any> = {};
+    for (const key in obj)
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        result[key] = this.convertDatesToTimestamps(value);
+      }
+
+    return result as FirestoreEntity<T>;
+  }
+
+  onApplicationBootstrap() {
     this.logger.verbose(
       `Using Firestore Emulator: ${this.configService.get('FIRESTORE_EMULATOR_HOST')}`,
     );

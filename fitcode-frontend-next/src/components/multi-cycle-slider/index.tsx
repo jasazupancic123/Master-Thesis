@@ -5,34 +5,27 @@ import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import dayjs, { Dayjs } from 'dayjs';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
+import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
-import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Range } from 'react-range';
-import { handleAddCycle } from '../add-cycle-form/state';
 import {
   changeYear,
+  handleAddCycle,
   handleDrag,
   handleDragChange,
-  handleUpdateCycleDates,
 } from './state';
 
 dayjs.extend(dayOfYear);
 
 export default function MultiCycleSlider() {
   const screenSize = useScreenSize();
-
-  const { token, group, setGroup, cycle, setCycle } = useGroup();
-  const theme = useTheme();
-  const router = useRouter();
+  const { group, setGroup, setDetectedChanges } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [detectedChange, setDetectedChange] = useState<boolean>(false);
 
   const yearStart = dayjs(`${selectedYear}-01-01`).dayOfYear();
   const yearEnd = dayjs(`${selectedYear}-12-31`).dayOfYear();
@@ -81,7 +74,6 @@ export default function MultiCycleSlider() {
   }, [cycles, selectedYear]);
 
   const handleDragStart = (index: number) => {
-    setDetectedChange(true);
     setDraggingIndex(index);
   };
 
@@ -115,7 +107,7 @@ export default function MultiCycleSlider() {
       alignItems="center"
       p={screenSize.isMobile ? 1 : 3}
       pt={1}
-      pb={detectedChange ? 3 : 0}
+      pb={0}
       width="100%"
     >
       {/* Year Navigation */}
@@ -164,14 +156,13 @@ export default function MultiCycleSlider() {
                 : dayjs(lastCycle.to).add(2, 'w').endOf('w');
 
             handleAddCycle(
-              token,
               {
                 name: `Cycle ${group.cycles.length + 1}`,
                 description: '',
-                from: from?.toDate()!,
-                to: to?.toDate()!,
+                from: from.toDate()!,
+                to: to.toDate()!,
               },
-              { router, group, setGroup }
+              { setGroup }
             );
           }}
         >
@@ -194,7 +185,7 @@ export default function MultiCycleSlider() {
                 handleDragChange(
                   sliderRef,
                   { newValues, draggingIndex, mouseX },
-                  { setValuesReal }
+                  { setValuesReal, setDetectedChanges, setGroup }
                 )
               }
               onFinalChange={handleDragEnd}
@@ -306,7 +297,8 @@ export default function MultiCycleSlider() {
                     onMouseMove={() =>
                       handleDrag(
                         { index, value, selectedYear },
-                        { setDraggedDay, setValuesReal, sortedCycles }
+                        { setDraggedDay, setValuesReal, sortedCycles },
+                        setDetectedChanges
                       )
                     }
                     style={{
@@ -364,61 +356,47 @@ export default function MultiCycleSlider() {
       </Box>
 
       {/* Cycle Legends */}
-      <Stack direction="row" p={3} spacing={2}>
+      <Stack
+        direction="row"
+        p={3}
+        spacing={2}
+        flexWrap="wrap"
+        justifyContent="center"
+      >
         {sortedCycles.map((cycle, index) => (
           <Stack
             direction="row"
             key={cycle.id}
             spacing={0.5}
             alignItems="center"
+            maxWidth="100%"
+            flexWrap="wrap" // ✅ Allow content to wrap
           >
-            <div
-              style={{
-                width: 12,
-                height: 12,
-                backgroundColor: COLORS[index % COLORS.length],
-                borderRadius: '50%',
+            <Typography
+              sx={{
+                color: COLORS[index % COLORS.length],
+                whiteSpace: 'normal', // ✅ Allow text to wrap
+                wordBreak: 'break-word', // ✅ Break long words if necessary
+                maxWidth: '100%', // ✅ Prevents overflow
               }}
-            />
-            <Typography sx={{ color: COLORS[index % COLORS.length] }}>
-              {cycle.name}
+            >
+              <Box display="flex" alignItems="center">
+                <div
+                  style={{
+                    flexShrink: 0,
+                    width: 12,
+                    height: 12,
+                    backgroundColor: COLORS[index % COLORS.length],
+                    borderRadius: '50%',
+                    marginRight: 4,
+                  }}
+                />
+                {cycle.name}
+              </Box>
             </Typography>
           </Stack>
         ))}
       </Stack>
-
-      {detectedChange && (
-        <Button
-          onClick={() =>
-            handleUpdateCycleDates(
-              token,
-              {
-                groupId: group.id,
-                sortedCycles,
-              },
-              {
-                router,
-                group,
-                setGroup,
-                detectedChange,
-                setDetectedChange,
-                setSortedCycles,
-                valuesReal,
-                selectedYear,
-                cycle,
-                setCycle,
-              }
-            )
-          }
-          style={{
-            backgroundColor: theme.palette.info.main,
-            color: 'white',
-            marginRight: 5,
-          }}
-        >
-          Save Changes
-        </Button>
-      )}
     </Box>
   );
 }

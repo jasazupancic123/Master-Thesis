@@ -1,8 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { RootFirestoreCollectionRepository } from '../../common/type/firebase-firestore.type';
-import { UserEntity } from '../entity/user.entity';
-import { CommonService } from '../../common/service/common.service';
-import { FirebaseService } from '../../firebase/firebase.service';
 import {
   CollectionGroup,
   CollectionReference,
@@ -13,7 +9,12 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
+import { FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { CommonService } from '../../common/service/common.service';
+import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { UserEntity } from '../entity/user.entity';
 import { SportLevel } from '../enum/sport-level.enum';
 
 @Injectable()
@@ -29,35 +30,36 @@ export class UserRepository
     query: (query: Query) => Query = (query) => query,
   ): Promise<UserEntity[]> {
     const snapshot = await query(this.collection()).get();
-    return snapshot.docs.map((doc) => this.serialize(doc));
+
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(doc.data() as FirestoreEntity<UserEntity>),
+    );
   }
 
   async getDoc(id: string): Promise<UserEntity | null> {
     const snapshot = await this.doc(id).get();
     if (!snapshot.exists) return null;
-    return this.serialize(snapshot);
+
+    return this.firebaseService.serialize(
+      snapshot.data() as FirestoreEntity<UserEntity>,
+    );
   }
 
   async addDoc(input: Partial<UserEntity>) {
     if (!input.id) throw new Error('User ID is required');
 
-    await this.doc(input.id).set({
-      id: input.id,
-      level: input.level || SportLevel.BEGINNER,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      deletedAt: null,
-    });
+    const query = this.firebaseService.buildCreateQuery<UserEntity>(
+      { id: input.id, groupsIds: [] },
+      { timestamps: true },
+    );
 
+    await this.doc(input.id).set(query);
     return input.id;
   }
 
-  async updateDoc(id: string, input: Partial<UserEntity>) {
-    const data = this.commonService.object.clean({
-      level: input.level,
-    });
-
-    await this.doc(id).update({ ...data, updatedAt: Timestamp.now() });
+  async updateDoc(id: string, input: Update<UserEntity>) {
+    const query = this.firebaseService.buildUpdateQuery(input);
+    await this.doc(id).update(query);
   }
 
   async deleteDoc(id: string) {
@@ -80,18 +82,5 @@ export class UserRepository
    */
   collectionGroup(collectionGroupName: keyof UserEntity): CollectionGroup {
     return this.firebaseService.firestore.collectionGroup(collectionGroupName);
-  }
-
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): UserEntity {
-    const data = snapshot.data();
-
-    return {
-      id: snapshot.id,
-      level: data.level,
-      groupsIds: data.groupsIds || [],
-      groups: data.groups || [],
-      createdAt: (data.createdAt as Timestamp).toDate(),
-      updatedAt: (data.updatedAt as Timestamp).toDate(),
-    };
   }
 }

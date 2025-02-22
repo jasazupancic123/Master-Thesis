@@ -6,10 +6,8 @@ import { MainSet } from '@/controller/component/type/main-set.type';
 import { Method } from '@/controller/component/type/method.type';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import { useState } from 'react';
-import MyModal from '../modal';
+import { useEffect, useState } from 'react';
 import SelectInput from '../select-input';
-import AddExerciseForm from './add-exercise-form';
 import { AFTER_SETS, MAIN_SETS, METHODS } from './constant';
 import { TrainingComponentProps } from './props';
 import Supersets from './supersets';
@@ -24,6 +22,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     setTraining,
     component,
     setComponent,
+    filter,
+    setDetectedChanges,
   } = useGroup();
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
@@ -60,48 +60,76 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
                       return (
                         <Box display="flex" alignItems="center">
-                          {component &&
-                          trainingComponent &&
-                          trainingComponent.id === component.id ? (
-                            <Tooltip
-                              title="Add exercise"
-                              sx={{
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <IconButton
-                                onClick={() => {
-                                  if (
-                                    component &&
-                                    trainingComponent &&
-                                    trainingComponent.id === component.id
-                                  )
-                                    setOpenAddExerciseModal(true);
-                                }}
-                                sx={{ p: 0, m: 0 }}
-                              >
-                                <IconComponent
-                                  fontSize="medium"
-                                  color="primary"
-                                />
-                              </IconButton>
-                            </Tooltip>
-                          ) : (
-                            <IconComponent fontSize="medium" color="primary" />
-                          )}
-
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: '#1EB980',
-                              pl: 1,
-                              mb: 0,
-                              textTransform: 'uppercase',
-                              fontWeight: 'bold',
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            sx={{ cursor: 'pointer', p: 0, m: 0 }}
+                            onClick={() => {
+                              if (trainingComponent && !component) {
+                                setTraining(training);
+                                setComponent(trainingComponent);
+                              }
                             }}
                           >
-                            {trainingComponent.component.name}
-                          </Typography>
+                            {component &&
+                            trainingComponent &&
+                            trainingComponent.id === component.id ? (
+                              <Tooltip
+                                title="Add exercise"
+                                sx={{
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <IconButton
+                                  onClick={() => {
+                                    if (
+                                      component &&
+                                      trainingComponent &&
+                                      trainingComponent.id === component.id
+                                    )
+                                      setOpenAddExerciseModal(true);
+                                  }}
+                                  sx={{ p: 0, m: 0 }}
+                                >
+                                  <IconComponent
+                                    fontSize="medium"
+                                    color="primary"
+                                  />
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              <IconComponent
+                                fontSize="medium"
+                                color="primary"
+                              />
+                            )}
+
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                color: '#1EB980',
+                                pl: 1,
+                                mb: 0,
+                                textTransform: 'uppercase',
+                                fontWeight: 'bold',
+                              }}
+                              onClick={() => {
+                                if (
+                                  trainingComponent &&
+                                  component &&
+                                  trainingComponent.id === component.id
+                                ) {
+                                  setTraining(undefined);
+                                  setComponent(undefined);
+                                } else {
+                                  setTraining(training);
+                                  setComponent(trainingComponent);
+                                }
+                              }}
+                            >
+                              {trainingComponent.component.name}
+                            </Typography>
+                          </Box>
 
                           <Typography variant="caption" ml={2}>
                             {commonService.date.formatTime(
@@ -152,66 +180,67 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 alignItems="center"
                 flexDirection={screenSize.isMobile ? 'column' : 'row'}
               >
-                {!screenSize.isMobile ||
-                  (screenSize.isMobile &&
-                    trainingComponent &&
-                    component &&
-                    trainingComponent.id === component.id && (
-                      <>
-                        <SelectInput<MainSet>
-                          label={'Main Set'}
-                          value={mainSet?.id || ''}
-                          icon={null}
-                          items={MAIN_SETS}
-                          itemKey="id"
-                          itemName="name"
-                          placeholder="Main Set"
-                          displayInputLabel={true}
-                          setValue={(mainSetId) => {
-                            const mainSet = MAIN_SETS.find(
-                              (g) => g.id === mainSetId
-                            )!;
+                {trainingComponent &&
+                  component &&
+                  trainingComponent.id === component.id && (
+                    <>
+                      <SelectInput<MainSet>
+                        label={'Main Set'}
+                        value={mainSet?.id || ''}
+                        icon={null}
+                        items={MAIN_SETS}
+                        itemKey="id"
+                        itemName="name"
+                        placeholder="Main Set"
+                        displayInputLabel={true}
+                        setValue={(mainSetId) => {
+                          setDetectedChanges(true);
+                          const mainSet = MAIN_SETS.find(
+                            (g) => g.id === mainSetId
+                          )!;
 
-                            setMainSet(mainSet);
-                          }}
-                        />
+                          setMainSet(mainSet);
+                        }}
+                      />
 
-                        <SelectInput<AfterSet>
-                          label={'After Set'}
-                          value={afterSet?.id || ''}
-                          icon={null}
-                          items={AFTER_SETS}
-                          itemKey="id"
-                          itemName="name"
-                          placeholder="After Set"
-                          displayInputLabel={true}
-                          setValue={(afterSetId) => {
-                            const afterSet = AFTER_SETS.find(
-                              (g) => g.id === afterSetId
-                            )!;
+                      <SelectInput<AfterSet>
+                        label={'After Set'}
+                        value={afterSet?.id || ''}
+                        icon={null}
+                        items={AFTER_SETS}
+                        itemKey="id"
+                        itemName="name"
+                        placeholder="After Set"
+                        displayInputLabel={true}
+                        setValue={(afterSetId) => {
+                          setDetectedChanges(true);
+                          const afterSet = AFTER_SETS.find(
+                            (g) => g.id === afterSetId
+                          )!;
 
-                            setAfterSet(afterSet);
-                          }}
-                        />
+                          setAfterSet(afterSet);
+                        }}
+                      />
 
-                        <SelectInput<MainSet>
-                          label={'Method'}
-                          value={method?.id || ''}
-                          icon={null}
-                          items={METHODS}
-                          itemKey="id"
-                          itemName="name"
-                          placeholder="Method"
-                          displayInputLabel={true}
-                          setValue={(methodId) => {
-                            const method = METHODS.find(
-                              (g) => g.id === methodId
-                            )!;
-                            setMethod(method);
-                          }}
-                        />
-                      </>
-                    ))}
+                      <SelectInput<MainSet>
+                        label={'Method'}
+                        value={method?.id || ''}
+                        icon={null}
+                        items={METHODS}
+                        itemKey="id"
+                        itemName="name"
+                        placeholder="Method"
+                        displayInputLabel={true}
+                        setValue={(methodId) => {
+                          setDetectedChanges(true);
+                          const method = METHODS.find(
+                            (g) => g.id === methodId
+                          )!;
+                          setMethod(method);
+                        }}
+                      />
+                    </>
+                  )}
 
                 {!screenSize.isMobile && (
                   <IconButton
@@ -243,15 +272,10 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             </Stack>
           </Box>
 
-          {trainingComponent &&
-            component &&
+          {component &&
             trainingComponent.id === component.id &&
             training.id === selectedTraining?.id && (
-              <Box
-                bgcolor="background.paper"
-                p={2}
-                px={screenSize.isLaptop ? 0 : undefined}
-              >
+              <Box bgcolor="background.paper" p={2} key={filter}>
                 <Supersets
                   openAddExerciseModal={openAddExerciseModal}
                   setOpenAddExerciseModal={setOpenAddExerciseModal}

@@ -119,6 +119,7 @@ export function handleRightClickSubgroup(
   const i = training.components.findIndex((c) => c.id === component.id);
   if (i === undefined || i === -1) return;
 
+
   const updatedSubgroups = subgroups.map((s) => ({
     ...s,
     membersIds: s.membersIds.filter((id) => id !== memberId),
@@ -157,6 +158,9 @@ export async function handleAddSubgroup(state: {
   setCreateSubgroup:
     | SetState<{ name: string; membersIds: string[] }>
     | undefined;
+  filteredTrainings: Training[];
+  setFilteredTrainings: SetState<Training[]>;
+  setDetectedChanges: SetState<boolean>;
 }) {
   const {
     training,
@@ -165,6 +169,9 @@ export async function handleAddSubgroup(state: {
     setComponent,
     createSubgroup,
     setCreateSubgroup,
+    filteredTrainings,
+    setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!training || !component) return;
@@ -172,25 +179,38 @@ export async function handleAddSubgroup(state: {
   const newSubgroup: Subgroup = {
     id: `subgroup-${String(Date.now())}`,
     name: createSubgroup.name,
-    supersets: component.supersets,
+    supersets: component.supersets.map((superset) => ({
+      ...superset,
+      exercises: [...superset.exercises], // Ensuring exercises are copied too
+    })),
     membersIds: createSubgroup.membersIds || [],
   };
 
-  setComponent((prev) => ({
-    ...prev!,
-    subgroups: [...prev!.subgroups, newSubgroup],
-  }));
+  const newComponent = {
+    ...component,
+    subgroups: [...component.subgroups, newSubgroup],
+  };
 
-  setTraining((prev) => ({
-    ...prev!,
-    components: prev!.components.map((c) =>
-      c.id === component.id
-        ? { ...c, subgroups: [...c.subgroups, newSubgroup] }
-        : c
-    ),
-  }));
+  setComponent(newComponent);
+
+  const updatedComponents = [...training.components].map((c) =>
+    c.id === component.id ? newComponent : c
+  );
+
+  const newTraining = { ...training, components: updatedComponents };
+  setTraining(newTraining);
+
+  const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
+    if (filteredTraining.id === training.id) {
+      return newTraining;
+    }
+    return filteredTraining;
+  });
+
+  setFilteredTrainings(updatedTrainings);
 
   setCreateSubgroup?.({ name: '', membersIds: [] });
+  setDetectedChanges(true);
 }
 
 export function handleDeleteSubgroup(
@@ -200,27 +220,53 @@ export function handleDeleteSubgroup(
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
+    filteredTrainings: Training[];
+    setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { subgroupId } = input;
-  const { training, setTraining, component, setComponent } = state;
+  const {
+    training,
+    setTraining,
+    component,
+    setComponent,
+    filteredTrainings,
+    setFilteredTrainings,
+    setDetectedChanges,
+  } = state;
   if (!training || !component) return;
 
-  const updatedSubgroups = component.subgroups.filter(
+  setDetectedChanges(true);
+
+  const subgroupsCopy = [...component.subgroups];
+
+  const updatedSubgroups = subgroupsCopy.filter(
     (subgroup) => subgroup.id !== subgroupId
   );
 
-  setComponent((prev) => ({
-    ...prev!,
+  const newComponent = {
+    ...component,
     subgroups: updatedSubgroups,
-  }));
+  };
 
-  setTraining((prev) => ({
-    ...prev!,
-    components: prev!.components.map((c) =>
-      c.id === component.id ? { ...c, subgroups: updatedSubgroups } : c
-    ),
-  }));
+  setComponent(newComponent);
+
+  const updatedComponents = [...training.components].map((c) =>
+    c.id === component.id ? newComponent : c
+  );
+
+  const newTraining = { ...training, components: updatedComponents };
+  setTraining(newTraining);
+
+  const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+    if (filteredTraining.id === training.id) {
+      return newTraining;
+    }
+    return filteredTraining;
+  });
+
+  setFilteredTrainings(updatedTrainings);
 }
 
 export async function onDragEnd(
@@ -230,9 +276,17 @@ export async function onDragEnd(
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
+    selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
+    setSelectedSubgroup: SetState<{
+      subgroup: Subgroup | null;
+      index: number;
+    } | null>;
     supersets: Superset[];
     supersetsWithAdd: Superset[];
     setSupersetsWithAdd: SetState<Superset[]>;
+    filteredTrainings: Training[];
+    setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { destination, draggableId } = input;
@@ -241,9 +295,14 @@ export async function onDragEnd(
     setTraining,
     component,
     setComponent,
+    selectedSubgroup,
+    setSelectedSubgroup,
     supersets,
     supersetsWithAdd,
     setSupersetsWithAdd,
+    filteredTrainings,
+    setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!destination || !training || !component) return;
@@ -271,15 +330,67 @@ export async function onDragEnd(
       (e) => e.id !== draggableId
     );
 
-    setSupersetsWithAdd([...newSupersets]);
-    setComponent({ ...component, supersets: newSupersets });
-    setTraining({
-      ...training,
-      components: training.components.map((c) =>
-        c.id === component.id ? { ...c, supersets: newSupersets } : c
-      ),
-    });
+    setDetectedChanges(true);
 
+    setSupersetsWithAdd([...newSupersets]);
+    if (selectedSubgroup?.subgroup) {
+      const updatedSubgroup = {
+        ...selectedSubgroup.subgroup,
+        supersets: newSupersets,
+      };
+      const updatedComponent = {
+        ...component,
+        subgroups: component.subgroups.map((s, i) =>
+          i === selectedSubgroup.index ? updatedSubgroup : s
+        ),
+      };
+      setSelectedSubgroup({
+        subgroup: updatedSubgroup,
+        index: selectedSubgroup.index,
+      });
+      setComponent(updatedComponent);
+      const updatedComponents = [...training.components].map((c) =>
+        c.id === component.id ? updatedComponent : c
+      );
+
+      const newTraining = { ...training, components: updatedComponents };
+      setTraining(newTraining);
+
+      const updatedTrainings = [...filteredTrainings].map(
+        (filteredTraining) => {
+          if (filteredTraining.id === training.id) {
+            return newTraining;
+          }
+          return filteredTraining;
+        }
+      );
+
+      setFilteredTrainings(updatedTrainings);
+    } else {
+      const updatedComponent = {
+        ...component,
+        supersets: newSupersets,
+      };
+
+      setDetectedChanges(true);
+
+      setComponent(updatedComponent);
+      const updatedComponents = [...training.components].map((c) =>
+        c.id === component.id ? updatedComponent : c
+      );
+
+      const newTraining = { ...training, components: updatedComponents };
+      setTraining(newTraining);
+
+      const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+        if (filteredTraining.id === training.id) {
+          return newTraining;
+        }
+        return filteredTraining;
+      });
+
+      setFilteredTrainings(updatedTrainings);
+    }
     return;
   }
 
@@ -309,24 +420,80 @@ export async function onDragEnd(
       exercises: sortedExercises,
     };
 
-    setComponent({
-      ...component,
-      supersets: supersetsCopy.map((superset) =>
-        superset === supersetWithExercise ? newSuperset : superset
-      ),
-    });
+    if (selectedSubgroup?.subgroup) {
+      const updatedSubgroup = {
+        ...selectedSubgroup.subgroup,
+        supersets: supersetsCopy.map((superset) =>
+          superset === supersetWithExercise ? newSuperset : superset
+        ),
+      };
 
-    setTraining({
-      ...training,
-      components: training.components.map((c) =>
-        c.id === component.id ? { ...c, supersets: supersetsCopy } : c
-      ),
-    });
+      const updatedComponent = {
+        ...component,
+        subgroups: component.subgroups.map((s, i) =>
+          i === selectedSubgroup.index ? updatedSubgroup : s
+        ),
+      };
 
-    setSupersetsWithAdd(
-      supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
-    );
+      setDetectedChanges(true);
 
+      setSelectedSubgroup({
+        subgroup: updatedSubgroup,
+        index: selectedSubgroup.index,
+      });
+      setComponent(updatedComponent);
+
+      const updatedComponents = [...training.components].map((c) =>
+        c.id === component.id ? updatedComponent : c
+      );
+
+      const newTraining = { ...training, components: updatedComponents };
+      setTraining(newTraining);
+
+      const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+        if (filteredTraining.id === training.id) {
+          return newTraining;
+        }
+        return filteredTraining;
+      });
+
+      setFilteredTrainings(updatedTrainings);
+
+      setSupersetsWithAdd(
+        supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
+      );
+    } else {
+      const updatedComponent = {
+        ...component,
+        supersets: supersetsCopy.map((superset) =>
+          superset === supersetWithExercise ? newSuperset : superset
+        ),
+      };
+
+      setDetectedChanges(true);
+
+      setComponent(updatedComponent);
+
+      const updatedComponents = [...training.components].map((c) =>
+        c.id === component.id ? updatedComponent : c
+      );
+
+      const newTraining = { ...training, components: updatedComponents };
+      setTraining(newTraining);
+
+      const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+        if (filteredTraining.id === training.id) {
+          return newTraining;
+        }
+        return filteredTraining;
+      });
+
+      setFilteredTrainings(updatedTrainings);
+
+      setSupersetsWithAdd(
+        supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
+      );
+    }
     return;
   }
 
@@ -355,24 +522,84 @@ export async function onDragEnd(
     .map((item) => item.exercise); // Extract only exercises
 
   supersetWithNewExercise.exercises = sortedExercises;
-  const oldFinalSuperset = supersetWithExercise.exercises.filter(
+  const oldFinalSupersetExercises = supersetWithExercise.exercises.filter(
     (e) => e.id !== draggableId
   );
 
-  const finalSupersetsCopy = supersetsCopy.map((superset) =>
-    superset === supersetWithExercise
-      ? { ...superset, exercises: oldFinalSuperset }
-      : superset
-  );
+  let finalSupersetsCopy;
+
+  if (oldFinalSupersetExercises.length > 0) {
+    finalSupersetsCopy = supersetsCopy.map((superset) =>
+      superset === supersetWithExercise
+        ? { ...superset, exercises: oldFinalSupersetExercises }
+        : superset
+    );
+  } else {
+    finalSupersetsCopy = supersetsCopy.filter(
+      (superset) => superset !== supersetWithExercise
+    );
+  }
+
+  setDetectedChanges(true);
 
   setSupersetsWithAdd(finalSupersetsCopy);
-  setComponent({ ...component, supersets: finalSupersetsCopy });
-  setTraining({
-    ...training,
-    components: training.components.map((c) =>
-      c.id === component.id ? { ...c, supersets: finalSupersetsCopy } : c
-    ),
-  });
+  if (selectedSubgroup?.subgroup) {
+    const updatedSubgroup = {
+      ...selectedSubgroup.subgroup,
+      supersets: finalSupersetsCopy,
+    };
+    const updatedComponent = {
+      ...component,
+      subgroups: component.subgroups.map((s, i) =>
+        i === selectedSubgroup.index ? updatedSubgroup : s
+      ),
+    };
+
+    setComponent(updatedComponent);
+
+    const updatedComponents = [...training.components].map((c) =>
+      c.id === component.id ? updatedComponent : c
+    );
+
+    const newTraining = { ...training, components: updatedComponents };
+    setTraining(newTraining);
+
+    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
+
+    setFilteredTrainings(updatedTrainings);
+
+    setSelectedSubgroup({
+      subgroup: updatedSubgroup,
+      index: selectedSubgroup.index,
+    });
+  } else {
+    const updatedComponent = {
+      ...component,
+      supersets: finalSupersetsCopy,
+    };
+    setComponent(updatedComponent);
+    const updatedComponents = [...training.components].map((c) =>
+      c.id === component.id ? updatedComponent : c
+    );
+
+    const newTraining = { ...training, components: updatedComponents };
+    setTraining(newTraining);
+
+    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
+
+    setFilteredTrainings(updatedTrainings);
+  }
+  setDetectedChanges(true);
 }
 
 export function handleDeleteExercise(
@@ -382,8 +609,16 @@ export function handleDeleteExercise(
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
+    selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
+    setSelectedSubgroup: SetState<{
+      subgroup: Subgroup | null;
+      index: number;
+    } | null>;
     supersetsWithAdd: Superset[];
     setSupersetsWithAdd: SetState<Superset[]>;
+    filteredTrainings: Training[];
+    setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { exerciseId } = input;
@@ -392,30 +627,88 @@ export function handleDeleteExercise(
     setTraining,
     component,
     setComponent,
+    selectedSubgroup,
+    setSelectedSubgroup,
     supersetsWithAdd,
     setSupersetsWithAdd,
+    filteredTrainings,
+    setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!component || !training) return;
 
-  const updatedSupersets = supersetsWithAdd.map((superset) => ({
+  setDetectedChanges(true);
+
+  let updatedSupersets = supersetsWithAdd.map((superset) => ({
     ...superset,
     exercises: superset.exercises.filter((e) => e.id !== exerciseId),
   }));
 
-  const newComponent = {
-    ...component,
-    supersets: updatedSupersets,
-  };
+  //check if a superset is empty, if it is, delete it
+  updatedSupersets = updatedSupersets.filter(
+    (superset) => superset.exercises.length > 0
+  );
 
-  setSupersetsWithAdd(updatedSupersets);
-  setComponent(newComponent);
-  setTraining({
-    ...training,
-    components: training.components.map((c) =>
-      c.id === component.id ? newComponent : c
-    ),
-  });
+  if (selectedSubgroup?.subgroup) {
+    // update selected subgroup's supersets
+    const updatedSubgroup = {
+      ...selectedSubgroup.subgroup,
+      supersets: updatedSupersets,
+    };
+
+    const updatedComponent = {
+      ...component,
+      subgroups: component.subgroups.map((s, i) =>
+        i === selectedSubgroup.index ? updatedSubgroup : s
+      ),
+    };
+
+    setSelectedSubgroup({
+      subgroup: updatedSubgroup,
+      index: selectedSubgroup.index,
+    });
+
+    setComponent(updatedComponent);
+    const updatedComponents = [...training.components].map((c) =>
+      c.id === component.id ? updatedComponent : c
+    );
+
+    const newTraining = { ...training, components: updatedComponents };
+    setTraining(newTraining);
+
+    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
+
+    setFilteredTrainings(updatedTrainings);
+  } else {
+    const updatedComponent = {
+      ...component,
+      supersets: updatedSupersets,
+    };
+
+    setSupersetsWithAdd(updatedSupersets);
+    setComponent(updatedComponent);
+    const updatedComponents = [...training.components].map((c) =>
+      c.id === component.id ? updatedComponent : c
+    );
+
+    const newTraining = { ...training, components: updatedComponents };
+    setTraining(newTraining);
+
+    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
+
+    setFilteredTrainings(updatedTrainings);
+  }
 }
 
 export function handleDeleteSuperset(
@@ -425,8 +718,16 @@ export function handleDeleteSuperset(
     setTraining: SetStateNullable<Training>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
+    selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
+    setSelectedSubgroup: SetState<{
+      subgroup: Subgroup | null;
+      index: number;
+    } | null>;
     supersetsWithAdd: Superset[];
     setSupersetsWithAdd: SetState<Superset[]>;
+    filteredTrainings: Training[];
+    setFilteredTrainings: SetState<Training[]>;
+    setDetectedChanges: SetState<boolean>;
   }
 ) {
   const { index } = input;
@@ -435,24 +736,87 @@ export function handleDeleteSuperset(
     setTraining,
     component,
     setComponent,
+    selectedSubgroup,
+    setSelectedSubgroup,
     supersetsWithAdd,
     setSupersetsWithAdd,
+    filteredTrainings,
+    setFilteredTrainings,
+    setDetectedChanges,
   } = state;
 
   if (!component || !training) return;
 
-  const updatedSupersets = supersetsWithAdd.filter((_, i) => i !== index);
-  const newComponent = {
-    ...component,
-    supersets: updatedSupersets,
-  };
+  setDetectedChanges(true);
 
-  setSupersetsWithAdd(updatedSupersets);
-  setComponent(newComponent);
-  setTraining({
-    ...training,
-    components: training.components.map((c) =>
-      c.id === component.id ? newComponent : c
-    ),
-  });
+  if (selectedSubgroup?.subgroup) {
+    // update selected subgroup's supersets
+    const updatedSupersets = [...selectedSubgroup.subgroup.supersets].filter(
+      (_, i) => i !== index
+    );
+
+    const updatedSubgroup = {
+      ...selectedSubgroup.subgroup,
+      supersets: updatedSupersets,
+    };
+
+    const updatedComponent = {
+      ...component,
+      subgroups: component.subgroups.map((s, i) =>
+        i === selectedSubgroup.index ? updatedSubgroup : s
+      ),
+    };
+
+    setSelectedSubgroup({
+      subgroup: updatedSubgroup,
+      index: selectedSubgroup.index,
+    });
+
+    setComponent(updatedComponent);
+    const updatedComponents = [...training.components].map((c) =>
+      c.id === component.id ? updatedComponent : c
+    );
+
+    const newTraining = { ...training, components: updatedComponents };
+    setTraining(newTraining);
+
+    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
+
+    setFilteredTrainings(updatedTrainings);
+
+    setSupersetsWithAdd([...updatedSupersets]);
+  } else {
+    // update component's supersets
+    const updatedSupersets = [...supersetsWithAdd].filter(
+      (_, i) => i !== index
+    );
+
+    const updatedComponent = {
+      ...component,
+      supersets: updatedSupersets,
+    };
+
+    setSupersetsWithAdd([...updatedSupersets]);
+    setComponent(updatedComponent);
+    const updatedComponents = [...training.components].map((c) =>
+      c.id === component.id ? updatedComponent : c
+    );
+
+    const newTraining = { ...training, components: updatedComponents };
+    setTraining(newTraining);
+
+    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
+
+    setFilteredTrainings(updatedTrainings);
+  }
 }

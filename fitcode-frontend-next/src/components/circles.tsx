@@ -78,8 +78,8 @@ export default function Circles(props: Props) {
                 <Box
                   onClick={() => props.setValue(item.value)}
                   sx={{
-                    width: !screenSize.isDesktop ? 30 : 40,
-                    height: !screenSize.isDesktop ? 30 : 40,
+                    width: !screenSize.isDesktop ? 35 : 40,
+                    height: !screenSize.isDesktop ? 35 : 40,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

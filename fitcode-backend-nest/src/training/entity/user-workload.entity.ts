@@ -36,7 +36,6 @@ export class UserWorkload extends TimestampEntity {
   @Expose()
   workloadValue: string | number; // calculated value prescribed by trainer
 
-  // calculated value prescribed by trainer
   @ValidateNested({ each: true })
   @Expose()
   sets: SetData[];
