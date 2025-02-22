@@ -26,9 +26,9 @@ import { ExerciseService } from '../../exercise/service/exercise.service';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Group } from '../../group/entity/group.entity';
 import { GroupService } from '../../group/service/group.service';
-import { SetData } from '../entity/set-data';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { Training } from '../entity/training.entity';
+import { WorkloadData } from '../entity/workload-data';
 import { TrainingRepository } from '../repository/training.repository';
 import { SubgroupService } from './subgroup.service';
 import { TrainingPlanService } from './training-plan.service';
@@ -257,9 +257,9 @@ export class TrainingService {
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  async updateAthleteWorkload(
+  async updateAthleteWorkloadData(
     ref: UserWorkloadExerciseRef,
-    input: SetData[],
+    input: WorkloadData[],
     user: User,
   ) {
     this.logger.log(
@@ -267,7 +267,7 @@ export class TrainingService {
     );
 
     if (user.uid !== ref.userId) throw new UnauthorizedException();
-    await this.userWorkloadService.updateSets(ref, input);
+    await this.userWorkloadService.updateData(ref, input);
   }
 
   async addComponents(

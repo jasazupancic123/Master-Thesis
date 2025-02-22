@@ -5,7 +5,6 @@ import {
   TIME_OPTIONS,
   VO2_OPTIONS,
 } from '@/common/constant/training-exercise.constant';
-import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
@@ -15,9 +14,7 @@ import {
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
-import { SetData } from '@/controller/training/type/user-workload';
-import { ScreenSearchDesktop, SvgIconComponent } from '@mui/icons-material';
-import FitnessCenter from '@mui/icons-material/FitnessCenter';
+import { WorkloadData } from '@/controller/training/type/user-workload';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import {
@@ -29,20 +26,15 @@ import {
   MenuItem,
   Select,
   TextField,
+  useTheme,
 } from '@mui/material';
-import Avatar from '@mui/material/Avatar';
-import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Grid2 from '@mui/material/Grid2';
-import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import BorderColor from '../border-color';
 import { AthleteTrainingExerciseCardProps } from './props';
-
-const commonService = CommonService.instance;
 
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
@@ -54,61 +46,56 @@ export default function AthleteTrainingExerciseCard(
 
   // State to manage input values for each set
   const [setValues, setSetValues] = useState<
-    Record<string, Array<{ setValue: string; workloadValue: string }>>
+    Record<string, Array<{ setTypeValue: number; workloadValue: number }>>
   >({});
 
   const [component, setComponent] = useState(components[0]);
-
   const [selectedExercise, setSelectedExercise] =
     useState<TrainingExercise | null>(null);
 
   const handleSetValueChange = (
     exerciseId: string,
     setIndex: number,
-    value: string,
-    type: 'setValue' | 'workloadValue'
+    value: number,
+    type: 'setTypeValue' | 'workloadValue'
   ) => {
     setSetValues((prev) => {
       const updatedValues = { ...prev };
-      if (!updatedValues[exerciseId]) {
-        updatedValues[exerciseId] = Array(
-          component.supersets
-            .flatMap((s) => s.exercises)
-            .find((e) => e.id === exerciseId)?.meta?.sets || 0
-        ).fill({ setValue: '', workloadValue: '' });
-      }
-
-      updatedValues[exerciseId][setIndex] = {
-        ...updatedValues[exerciseId][setIndex],
-        [type]: value,
-      };
+      const updated = updatedValues?.[exerciseId]?.[setIndex];
+      if (updated)
+        updatedValues[exerciseId][setIndex] = { ...updated, [type]: value };
 
       return updatedValues;
     });
   };
 
-  async function handleSaveSets(
-    componentId: string,
-    superset: number,
-    exerciseId: string
-  ) {
-    const values: SetData[] = (setValues[exerciseId] || []).map((val, i) => ({
-      status: SetStatus.COMPLETED,
-      setNumber: i + 1,
-      setTypeValue: +val.setValue,
-      workloadValue: val.workloadValue,
-    }));
+  async function handleSaveSets(exerciseId: string) {
+    const data: WorkloadData[] = [];
+    const sets = setValues[exerciseId];
+    for (let i = 0; i < sets.length; i++) {
+      const { setTypeValue, workloadValue } = sets[i];
+      const setNumber = i + 1;
+
+      for (let j = 0; j < setTypeValue; j++) {
+        const repNumber = j + 1;
+        data.push({
+          setNumber,
+          repNumber,
+          setTypeValue,
+          workloadValue,
+          notes: '',
+        });
+      }
+    }
 
     handleApiRequest(
       router,
       () =>
-        TrainingController.updateAthleteWorkload(
+        TrainingController.updateAthleteWorkloadData(
           token,
           training!.id,
-          componentId,
-          superset,
           exerciseId,
-          { sets: values }
+          { data }
         ),
       () => {
         toast.success('Successfully updated sets!');
@@ -137,7 +124,7 @@ export default function AthleteTrainingExerciseCard(
   useEffect(() => {
     const initialSetValues: Record<
       string,
-      Array<{ setValue: string; workloadValue: string }>
+      Array<{ setTypeValue: number; workloadValue: number }>
     > = {};
 
     component.supersets.forEach((superset) => {
@@ -145,8 +132,8 @@ export default function AthleteTrainingExerciseCard(
         initialSetValues[exercise.id] = Array.from(
           { length: exercise.meta.sets },
           () => ({
-            setValue: exercise.meta.setTypeValue.toString(),
-            workloadValue: exercise.meta.workloadValue.toString(),
+            setTypeValue: exercise.meta.setTypeValue,
+            workloadValue: +exercise.meta.workloadValue,
           })
         );
       });
@@ -195,9 +182,9 @@ export default function AthleteTrainingExerciseCard(
               scrollbarColor: `rgba(187, 187, 187, 0.5) ${theme.palette.background.default}`, // For Firefox
             }}
           >
-            {components.map((comp: TrainingComponent, index, arr) => (
+            {components.map((c, _, arr) => (
               <Typography
-                key={`component-${comp.id}`}
+                key={`component-${c.id}`}
                 variant={screenSize.isMobile ? 'h6' : 'h5'}
                 sx={{
                   flex:
@@ -210,7 +197,7 @@ export default function AthleteTrainingExerciseCard(
                   fontWeight: 'bold',
                   textTransform: 'uppercase',
                   letterSpacing: '1.5px',
-                  color: comp.id === component.id ? 'primary.main' : 'white',
+                  color: c.id === component.id ? 'primary.main' : 'white',
                   backgroundColor: 'background.paper',
                   px: 2,
                   py: 1,
@@ -219,11 +206,11 @@ export default function AthleteTrainingExerciseCard(
                   cursor: 'pointer',
                 }}
                 onClick={() => {
-                  setComponent(comp);
+                  setComponent(c);
                 }}
               >
                 <Box display="flex" justifyContent="center" alignItems="center">
-                  {comp.id}
+                  {c.id}
                 </Box>
               </Typography>
             ))}
@@ -233,25 +220,20 @@ export default function AthleteTrainingExerciseCard(
             sx={{ backgroundColor: theme.palette.background.default }}
           >
             <Box display="flex" flexDirection="column" gap={2}>
-              {component.supersets.map((superset, i) => (
-                <Box key={`superset-${i}-${i}`}>
+              {component.supersets.map((s, i) => (
+                <Box key={`superset-${i}`}>
                   <BorderColor
                     color={COLOR[i % COLOR.length]}
-                    applyMargin={superset.exercises.length === 0}
+                    applyMargin={s.exercises.length === 0}
                   />
 
-                  <Box
-                    sx={{
-                      borderRadius: 2,
-                      boxShadow: 1,
-                    }}
-                  >
-                    {superset.exercises.map((exercise, exerciseIndex) => {
+                  <Box sx={{ borderRadius: 2, boxShadow: 1 }}>
+                    {s.exercises.map((exercise, exerciseIndex) => {
                       const options = getOptions(exercise);
 
                       return selectedExercise?.id === exercise.id ? (
                         <Box
-                          key={`exe ${exercise.id} - ${exercise.exercise?.name}`}
+                          key={exercise.id}
                           display="flex"
                           flexDirection={{ xs: 'column', sm: 'row' }}
                           gap={2}
@@ -345,17 +327,19 @@ export default function AthleteTrainingExerciseCard(
                                       {options.label[0].toUpperCase() +
                                         options.label.slice(1)}
                                     </InputLabel>
+
                                     <Select
                                       value={
-                                        setValues[exercise.id]?.[setIndex]
-                                          ?.setValue || ''
+                                        setValues[exercise.id]?.[
+                                          setIndex
+                                        ]?.setTypeValue?.toString() || ''
                                       }
                                       onChange={(e) =>
                                         handleSetValueChange(
                                           exercise.id,
                                           setIndex,
-                                          e.target.value as string,
-                                          'setValue'
+                                          +e.target.value,
+                                          'setTypeValue'
                                         )
                                       }
                                       label={options.label}
@@ -377,15 +361,16 @@ export default function AthleteTrainingExerciseCard(
                                     label={exercise.meta.workloadType.toUpperCase()}
                                     type="number"
                                     value={
-                                      setValues[exercise.id]?.[setIndex]
-                                        ?.setValue || ''
+                                      setValues[exercise.id]?.[
+                                        setIndex
+                                      ]?.workloadValue?.toString() || ''
                                     }
                                     onChange={(e) =>
                                       handleSetValueChange(
                                         exercise.id,
                                         setIndex,
-                                        e.target.value as string,
-                                        'setValue'
+                                        +e.target.value,
+                                        'workloadValue'
                                       )
                                     }
                                   />
@@ -395,9 +380,7 @@ export default function AthleteTrainingExerciseCard(
                               {/* Save Button */}
                               <Button
                                 variant="contained"
-                                onClick={() =>
-                                  handleSaveSets(component.id, i, exercise.id)
-                                }
+                                onClick={() => handleSaveSets(exercise.id)}
                                 sx={{ mt: 1 }}
                               >
                                 Save Sets
@@ -407,6 +390,7 @@ export default function AthleteTrainingExerciseCard(
                         </Box>
                       ) : (
                         <Box
+                          key={exercise.id}
                           display="flex"
                           width="100%"
                           justifyContent="center"
@@ -417,7 +401,7 @@ export default function AthleteTrainingExerciseCard(
                               : undefined
                           }
                           borderBottom={
-                            exerciseIndex < superset.exercises.length - 1
+                            exerciseIndex < s.exercises.length - 1
                               ? `3px solid ${theme.palette.background.paper}`
                               : undefined
                           }
@@ -453,7 +437,7 @@ export default function AthleteTrainingExerciseCard(
                   <BorderColor
                     color={COLOR[i % COLOR.length]}
                     lower
-                    applyMargin={superset.exercises.length === 0}
+                    applyMargin={s.exercises.length === 0}
                   />
                 </Box>
               ))}
