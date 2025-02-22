@@ -1,9 +1,9 @@
 import { CommonService } from '@/common/service/common.service';
 import { DateRange } from '@/common/type/date-range.type';
-import { SetData } from './type/set-data';
 import { Subgroup } from './type/subgroup.type';
 import { TrainingComponent } from './type/training-plan.type';
 import { Training } from './type/training.type';
+import { SetData } from './type/user-workload';
 
 const api = CommonService.instance.api;
 

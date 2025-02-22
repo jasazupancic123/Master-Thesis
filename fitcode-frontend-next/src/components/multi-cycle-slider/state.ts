@@ -11,7 +11,46 @@ import dayjs from 'dayjs';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { RefObject } from 'react';
 import toast from 'react-hot-toast';
-import { AddCycleInput } from '../add-cycle-form/input';
+import { v4 } from 'uuid';
+
+type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
+
+export async function handleAddCycle(
+  input: AddCycleInput,
+  state: { setGroup: SetState<Group> }
+) {
+  const { setGroup } = state;
+  const { name, description, from, to } = input;
+
+  if (!name || !from || !to) {
+    toast.error('Please fill in all required fields.');
+    return;
+  }
+
+  if (from > to) {
+    toast.error('Start date must be before end date.');
+    return;
+  }
+
+  setGroup((prev) => ({
+    ...prev,
+    cycles: [
+      ...prev.cycles,
+      {
+        id: v4(),
+        name,
+        from,
+        to,
+        description,
+        leafComponentsIds: [],
+        rootComponentsIds: [],
+        weeks: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+  }));
+}
 
 export function changeYear(
   direction: 'prev' | 'next',
@@ -29,6 +68,7 @@ export function handleDragChange(
   },
   state: {
     setValuesReal: SetState<number[]>;
+    setGroup: SetState<Group>;
   }
 ) {
   const { newValues, draggingIndex, mouseX } = input;
@@ -115,7 +155,7 @@ export async function handleUpdateCycleDates(
     selectedYear: number;
   }
 ) {
-  const { groupId, sortedCycles } = input;
+  /* const { groupId, sortedCycles } = input;
   const {
     router,
     cycle,
@@ -200,5 +240,5 @@ export async function handleUpdateCycleDates(
         return toast.error('Cycle dates overlap with an existing cycle.');
     },
     'Failed to update cycles.'
-  );
+  ); */
 }

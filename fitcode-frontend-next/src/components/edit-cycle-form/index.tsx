@@ -7,7 +7,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { EditCycleModalProps } from './type';
 
-export default function EditCycleModal(props: EditCycleModalProps) {
+export default function EditCycleForm(props: EditCycleModalProps) {
   const { selectedCycle, setSelectedCycle } = props;
 
   const [cycleName, setCycleName] = useState(selectedCycle.name);

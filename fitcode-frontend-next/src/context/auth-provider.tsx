@@ -1,17 +1,19 @@
 'use client';
 
-import { User } from 'firebase/auth';
-import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { auth } from '@/common/config/firebase.config';
-import { useLocalStorage } from 'usehooks-ts';
-import { useRouter } from 'next/navigation';
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { LINK_INDEX } from '@/common/constant/navigation.constant';
-import { AuthContextType } from '@/common/type/context.type';
 import { CommonService } from '@/common/service/common.service';
+import { AuthContextType } from '@/common/type/context.type';
+import { ChildrenProps } from '@/common/type/props.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { CustomClaims } from '@/controller/user/type/custom-claims.type';
+import { User } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { ChildrenProps } from '@/common/type/props.type';
+import { useLocalStorage } from 'usehooks-ts';
+
+const commonService = CommonService.instance;
 
 const AuthContext = createContext<AuthContextType>({
   loading: true,
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
 
   async function logout(): Promise<void> {
     await auth.signOut();
-    await CommonService.instance.generic.sleep(0.3);
+    commonService.browser.removeClientCookie(FIREBASE_COOKIE_NAME);
     router.push(LINK_INDEX.href);
     setUser(null);
     setRole([]);

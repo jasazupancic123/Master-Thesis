@@ -1,10 +1,17 @@
 import { BaseEntity } from '@/common/type/entity.type';
+import { Gender } from '../enum/gender.enum';
 import { SportLevel } from '../enum/sport-level.enum';
 import { CustomClaims } from './custom-claims.type';
 
 // Firestore Database User
 export type UserEntity = BaseEntity & {
-  level: SportLevel;
+  sport?: string;
+  level?: SportLevel;
+  gender?: Gender;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  birthDate?: Date;
   groupsIds: string[];
 };
 
