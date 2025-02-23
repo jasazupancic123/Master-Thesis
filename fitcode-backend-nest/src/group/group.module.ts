@@ -1,8 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { GroupService } from './service/group.service';
-import { GroupController } from './group.controller';
-import { UserModule } from '../user/user.module';
 import { TrainingModule } from '../training/training.module';
+import { UserModule } from '../user/user.module';
+import { GroupController } from './group.controller';
+import { GroupService } from './group.service';
 import { GroupRepository } from './repository/group.repository';
 
 @Module({

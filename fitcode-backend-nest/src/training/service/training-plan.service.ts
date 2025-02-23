@@ -1,18 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { endOfHour, startOfHour } from 'date-fns';
 import { CommonService } from 'src/common/service/common.service';
-import { FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { Update } from 'src/common/type/entity.type';
 import { TrainingComponentRef } from 'src/common/type/firestore.type';
-import { FirebaseService } from 'src/firebase/firebase.service';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { Training } from '../entity/training.entity';
 
 @Injectable()
 export class TrainingPlanService {
-  constructor(
-    private readonly commonService: CommonService,
-    private readonly firebaseService: FirebaseService,
-  ) {}
+  constructor(private readonly commonService: CommonService) {}
 
   getAddComponentsQuery(
     training: Training,
@@ -27,12 +23,7 @@ export class TrainingPlanService {
           from: c.from ? c.from : startOfHour(new Date()),
           to: c.to ? c.to : endOfHour(new Date()),
           subgroups: [],
-          supersets: [
-            {
-              exercises: [],
-              color: this.commonService.color.random(),
-            },
-          ],
+          supersets: [{ exercises: [] }],
         })),
       ],
     };

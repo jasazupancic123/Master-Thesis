@@ -63,19 +63,14 @@ export class ComponentService {
     return component;
   }
 
-  async findAllFlat(filter?: Filter<Component>): Promise<Component[]> {
-    const components = await this.componentRepository.getDocs((collection) => {
-      let query = collection;
-      if (filter) query = this.filter(query, filter);
-      return query;
-    });
-
+  async findAllFlat(): Promise<Component[]> {
+    const components = await this.componentRepository.getDocs();
     for (const component of components) this.populate(component, components);
     return components;
   }
 
   async findAllTree(filter?: Filter<Component>): Promise<Component[]> {
-    const components = await this.findAllFlat(filter);
+    const components = await this.findAllFlat();
     return this.commonService.tree.fromArray(components, {
       idPropertyName: 'id',
       parentIdPropertyName: 'parent',
@@ -133,15 +128,6 @@ export class ComponentService {
 
     await this.componentRepository.updateDoc(id, data);
     return component;
-  }
-
-  private filter(query: Query, filter: Filter<Component>) {
-    if (filter.ids)
-      query = query.where(FieldPath.documentId(), 'in', filter.ids);
-
-    if (filter.slug) query = query.where('slug', '==', filter.slug);
-
-    return query;
   }
 
   private populate(

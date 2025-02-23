@@ -11,3 +11,5 @@ node_modules/
 
 service-account.json
 *.log
+service-account-key.json
+.env
