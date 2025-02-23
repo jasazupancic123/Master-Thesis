@@ -1,9 +1,11 @@
 'use client';
 
 import { COLORS } from '@/common/constant/color.constant';
+import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
+import { Group } from '@/controller/group/type/group.type';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
@@ -19,9 +21,16 @@ import {
 
 dayjs.extend(dayOfYear);
 
-export default function MultiCycleSlider() {
+interface MultiCycleSliderProps {
+  selectedGroup: Group;
+  setSelectedGroup: SetState<Group>;
+}
+
+export default function MultiCycleSlider(props: MultiCycleSliderProps) {
+  const { selectedGroup, setSelectedGroup } = props;
+
   const screenSize = useScreenSize();
-  const { group, setGroup, setDetectedChanges } = useGroup();
+  const { group, setCycle, setDetectedChanges } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
@@ -44,7 +53,7 @@ export default function MultiCycleSlider() {
     })
   );
 
-  const cycles = group.cycles;
+  const [cycles, setCycles] = useState<Cycle[]>([]);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const onMouseMove = (e: any) => setMouseX(e.clientX);
 
@@ -73,14 +82,23 @@ export default function MultiCycleSlider() {
     );
   }, [cycles, selectedYear]);
 
-  const handleDragStart = (index: number) => {
-    setDraggingIndex(index);
-  };
+  useEffect(() => {
+    if (!selectedGroup) return;
+    setCycles([...selectedGroup.cycles]);
+  }, [selectedGroup]);
 
-  const handleDragEnd = () => {
-    setDraggingIndex(null);
-    setDraggedDay(null);
-  };
+  useEffect(() => {
+    const selectedGroup_ = {
+      ...group,
+      cycles: [...group.cycles].map((cycle) => {
+        return {
+          ...cycle,
+        };
+      }),
+    };
+    setCycles([...selectedGroup_.cycles]);
+    setSelectedGroup(selectedGroup_);
+  }, [group]);
 
   useEffect(() => {
     if (draggingIndex !== null) return; // prevent overriding dragged values
@@ -99,6 +117,48 @@ export default function MultiCycleSlider() {
       });
     });
   }, [selectedYear, sortedCycles]);
+
+  const handleDragStart = (index: number) => {
+    setDraggingIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    if (!selectedGroup) return;
+
+    if (draggingIndex === undefined || draggingIndex === null) return;
+    const cycleIndex = Math.floor(draggingIndex / 2);
+    if (!sortedCycles[cycleIndex]) return;
+
+    const cycle = { ...[...sortedCycles][cycleIndex] };
+    const isStartDot = draggingIndex % 2 === 0; // Even index = start, Odd index = end
+
+    // Ensure correct year boundaries
+    if (isStartDot && dayjs(cycle.from).year() < selectedYear) return; // Prevent the start dot from moving back into previous years
+    if (!isStartDot && dayjs(cycle.to).year() > selectedYear) return; // Prevent the end dot from moving back into previous years
+
+    const newCycle = {
+      ...cycle,
+      from: dayjs()
+        .dayOfYear(valuesReal[cycleIndex * 2])
+        .toDate(),
+      to: dayjs()
+        .dayOfYear(valuesReal[cycleIndex * 2 + 1])
+        .toDate(),
+    };
+
+    setCycle(newCycle);
+    const newCycles = [
+      ...selectedGroup.cycles.map(({ ...c }) =>
+        c.id === cycle.id ? newCycle : c
+      ),
+    ];
+
+    const newGroup = { ...selectedGroup, cycles: newCycles };
+    setSelectedGroup(newGroup);
+
+    setDraggingIndex(null);
+    setDraggedDay(null);
+  };
 
   return (
     <Box
@@ -143,26 +203,33 @@ export default function MultiCycleSlider() {
             '&:hover': { backgroundColor: 'primary.dark' },
           }}
           onClick={() => {
-            const lastCycle = group.cycles[group.cycles.length - 1];
+            if (!selectedGroup) return;
+            //find the last date
+
+            const lastCycle = selectedGroup.cycles.length
+              ? selectedGroup.cycles.reduce((prev, current) =>
+                  dayjs(prev.to).isAfter(dayjs(current.to)) ? prev : current
+                )
+              : undefined;
 
             const from =
-              group.cycles.length === 0
+              selectedGroup.cycles.length === 0 || !lastCycle
                 ? dayjs().startOf('w')
                 : dayjs(lastCycle.to).add(1, 'w').startOf('w');
 
             const to =
-              group.cycles.length === 0
+              selectedGroup.cycles.length === 0 || !lastCycle
                 ? dayjs().add(1, 'w').endOf('w')
                 : dayjs(lastCycle.to).add(2, 'w').endOf('w');
 
             handleAddCycle(
               {
-                name: `Cycle ${group.cycles.length + 1}`,
+                name: `Cycle ${selectedGroup.cycles.length + 1}`,
                 description: '',
                 from: from.toDate()!,
                 to: to.toDate()!,
               },
-              { setGroup }
+              { selectedGroup, setSelectedGroup, setCycles, setDetectedChanges }
             );
           }}
         >
@@ -185,7 +252,7 @@ export default function MultiCycleSlider() {
                 handleDragChange(
                   sliderRef,
                   { newValues, draggingIndex, mouseX },
-                  { setValuesReal, setDetectedChanges, setGroup }
+                  { setValuesReal, setDetectedChanges }
                 )
               }
               onFinalChange={handleDragEnd}
@@ -372,28 +439,29 @@ export default function MultiCycleSlider() {
             maxWidth="100%"
             flexWrap="wrap" // ✅ Allow content to wrap
           >
-            <Typography
-              sx={{
-                color: COLORS[index % COLORS.length],
-                whiteSpace: 'normal', // ✅ Allow text to wrap
-                wordBreak: 'break-word', // ✅ Break long words if necessary
-                maxWidth: '100%', // ✅ Prevents overflow
-              }}
-            >
-              <Box display="flex" alignItems="center">
-                <div
-                  style={{
-                    flexShrink: 0,
-                    width: 12,
-                    height: 12,
-                    backgroundColor: COLORS[index % COLORS.length],
-                    borderRadius: '50%',
-                    marginRight: 4,
-                  }}
-                />
+            <Box display="flex" alignItems="center">
+              <div
+                style={{
+                  flexShrink: 0,
+                  width: 12,
+                  height: 12,
+                  backgroundColor: COLORS[index % COLORS.length],
+                  borderRadius: '50%',
+                  marginRight: 4,
+                }}
+              />
+              <Typography
+                component="span" // ✅ Ensures it's inline and avoids <p> issues
+                sx={{
+                  color: COLORS[index % COLORS.length],
+                  whiteSpace: 'normal', // ✅ Allow text to wrap
+                  wordBreak: 'break-word', // ✅ Break long words if necessary
+                  maxWidth: '100%', // ✅ Prevents overflow
+                }}
+              >
                 {cycle.name}
-              </Box>
-            </Typography>
+              </Typography>
+            </Box>
           </Stack>
         ))}
       </Stack>

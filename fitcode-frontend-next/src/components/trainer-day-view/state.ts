@@ -119,7 +119,6 @@ export function handleRightClickSubgroup(
   const i = training.components.findIndex((c) => c.id === component.id);
   if (i === undefined || i === -1) return;
 
-
   const updatedSubgroups = subgroups.map((s) => ({
     ...s,
     membersIds: s.membersIds.filter((id) => id !== memberId),
@@ -179,9 +178,12 @@ export async function handleAddSubgroup(state: {
   const newSubgroup: Subgroup = {
     id: `subgroup-${String(Date.now())}`,
     name: createSubgroup.name,
-    supersets: component.supersets.map((superset) => ({
+    supersets: [...component.supersets].map((superset) => ({
       ...superset,
-      exercises: [...superset.exercises], // Ensuring exercises are copied too
+      exercises: [...superset.exercises].map((exercise) => ({
+        ...exercise,
+        meta: { ...exercise.meta },
+      })),
     })),
     membersIds: createSubgroup.membersIds || [],
   };
@@ -200,12 +202,9 @@ export async function handleAddSubgroup(state: {
   const newTraining = { ...training, components: updatedComponents };
   setTraining(newTraining);
 
-  const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
-    if (filteredTraining.id === training.id) {
-      return newTraining;
-    }
-    return filteredTraining;
-  });
+  const updatedTrainings = [...filteredTrainings].map((t) =>
+    t.id === training.id ? newTraining : t
+  );
 
   setFilteredTrainings(updatedTrainings);
 

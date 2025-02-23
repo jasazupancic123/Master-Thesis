@@ -51,15 +51,13 @@ export type GroupContextProps = GroupIdPageProps & {
   trainings: Training[];
   setTrainings: SetState<Training[]>;
   filteredTrainings: Training[];
-  setFilteredTrainings: SetState<Training[]>;
+  setFilteredTrainings: SetState<Training[]>; // filter by from & to & cycle
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
   selectedAthlete: User | undefined;
   setSelectedAthlete: SetStateNullable<User>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
-  handleUpdateGroup: () => Promise<void>;
-  handleUpdateTraining: () => Promise<void>;
 };
 
 export type TrainerDayViewContextProps = {

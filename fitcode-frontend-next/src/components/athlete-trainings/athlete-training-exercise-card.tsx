@@ -7,7 +7,6 @@ import {
 } from '@/common/constant/training-exercise.constant';
 import { handleApiRequest } from '@/common/type/state.type';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import {
@@ -39,7 +38,7 @@ import { AthleteTrainingExerciseCardProps } from './props';
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
 ) {
-  const { token, components, training } = props;
+  const { userId, token, components, training } = props;
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
@@ -52,6 +51,13 @@ export default function AthleteTrainingExerciseCard(
   const [component, setComponent] = useState(components[0]);
   const [selectedExercise, setSelectedExercise] =
     useState<TrainingExercise | null>(null);
+
+  function getSupersets(component: TrainingComponent) {
+    return (
+      component.subgroups.find((s) => s.membersIds.includes(userId)) ||
+      component
+    ).supersets;
+  }
 
   const handleSetValueChange = (
     exerciseId: string,
@@ -127,7 +133,7 @@ export default function AthleteTrainingExerciseCard(
       Array<{ setTypeValue: number; workloadValue: number }>
     > = {};
 
-    component.supersets.forEach((superset) => {
+    getSupersets(component).forEach((superset) => {
       superset.exercises.forEach((exercise) => {
         initialSetValues[exercise.id] = Array.from(
           { length: exercise.meta.sets },
@@ -220,227 +226,231 @@ export default function AthleteTrainingExerciseCard(
             sx={{ backgroundColor: theme.palette.background.default }}
           >
             <Box display="flex" flexDirection="column" gap={2}>
-              {component.supersets.map((s, i) => (
-                <Box key={`superset-${i}`}>
-                  <BorderColor
-                    color={COLOR[i % COLOR.length]}
-                    applyMargin={s.exercises.length === 0}
-                  />
+              {getSupersets(component).map((s, i) => {
+                return (
+                  <Box key={`superset-${i}`}>
+                    <BorderColor
+                      color={COLOR[i % COLOR.length]}
+                      applyMargin={s.exercises.length === 0}
+                    />
 
-                  <Box sx={{ borderRadius: 2, boxShadow: 1 }}>
-                    {s.exercises.map((exercise, exerciseIndex) => {
-                      const options = getOptions(exercise);
+                    <Box sx={{ borderRadius: 2, boxShadow: 1 }}>
+                      {s.exercises.map((exercise, exerciseIndex) => {
+                        const options = getOptions(exercise);
 
-                      return selectedExercise?.id === exercise.id ? (
-                        <Box
-                          key={exercise.id}
-                          display="flex"
-                          flexDirection={{ xs: 'column', sm: 'row' }}
-                          gap={2}
-                        >
+                        return selectedExercise?.id === exercise.id ? (
                           <Box
+                            key={exercise.id}
                             display="flex"
-                            flexDirection="column"
-                            width="100%"
-                            sx={{
-                              backgroundColor: 'background.paper',
-                            }}
+                            flexDirection={{ xs: 'column', sm: 'row' }}
+                            gap={2}
                           >
                             <Box
-                              flex={{ xs: '1 1 100%', sm: '1 1 30%' }}
                               display="flex"
                               flexDirection="column"
-                              alignItems="center"
-                              justifyContent="center"
-                              pb={1}
-                            >
-                              <Box
-                                sx={{
-                                  borderRadius: 2,
-                                  boxShadow: 0,
-                                  width: '100%',
-                                  backgroundColor: 'background.paper',
-                                }}
-                              >
-                                <Box sx={{ textAlign: 'center' }}>
-                                  <Box
-                                    display="flex"
-                                    justifyContent="center"
-                                    mt={1}
-                                  >
-                                    <IconButton
-                                      onClick={() => setSelectedExercise(null)}
-                                      sx={{
-                                        py: 0,
-                                        m: 0,
-                                        position: 'absolute',
-                                        right: 20,
-                                      }}
-                                    >
-                                      <VisibilityOffIcon />
-                                    </IconButton>
-                                  </Box>
-
-                                  <Typography
-                                    variant="h6"
-                                    sx={{
-                                      fontWeight: 'bold',
-                                      textTransform: 'uppercase',
-                                    }}
-                                  >
-                                    {exercise.exercise?.name ||
-                                      'Unnamed Exercise'}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </Box>
-
-                            {/* Set Details */}
-                            <Box
-                              flex={{ xs: '1 1 100%', sm: '1 1 70%' }}
-                              display="flex"
-                              flexDirection="column"
-                              py={1}
-                              px={screenSize.isMobile ? 1 : 0}
-                              alignItems="center"
-                              gap={1}
+                              width="100%"
                               sx={{
                                 backgroundColor: 'background.paper',
                               }}
                             >
-                              {Array.from({
-                                length: exercise.meta.sets,
-                              }).map((_, setIndex) => (
+                              <Box
+                                flex={{ xs: '1 1 100%', sm: '1 1 30%' }}
+                                display="flex"
+                                flexDirection="column"
+                                alignItems="center"
+                                justifyContent="center"
+                                pb={1}
+                              >
                                 <Box
-                                  key={`${exercise.id}-set-${setIndex}`}
-                                  display="flex"
-                                  gap={1}
-                                  minWidth={
-                                    !screenSize.isSmallerThanLaptop
-                                      ? 300
-                                      : undefined
-                                  }
+                                  sx={{
+                                    borderRadius: 2,
+                                    boxShadow: 0,
+                                    width: '100%',
+                                    backgroundColor: 'background.paper',
+                                  }}
                                 >
-                                  {/* Set Type Dropdown */}
-                                  <FormControl fullWidth>
-                                    <InputLabel>
-                                      {options.label[0].toUpperCase() +
-                                        options.label.slice(1)}
-                                    </InputLabel>
+                                  <Box sx={{ textAlign: 'center' }}>
+                                    <Box
+                                      display="flex"
+                                      justifyContent="center"
+                                      mt={1}
+                                    >
+                                      <IconButton
+                                        onClick={() =>
+                                          setSelectedExercise(null)
+                                        }
+                                        sx={{
+                                          py: 0,
+                                          m: 0,
+                                          position: 'absolute',
+                                          right: 20,
+                                        }}
+                                      >
+                                        <VisibilityOffIcon />
+                                      </IconButton>
+                                    </Box>
 
-                                    <Select
+                                    <Typography
+                                      variant="h6"
+                                      sx={{
+                                        fontWeight: 'bold',
+                                        textTransform: 'uppercase',
+                                      }}
+                                    >
+                                      {exercise.exercise?.name ||
+                                        'Unnamed Exercise'}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </Box>
+
+                              {/* Set Details */}
+                              <Box
+                                flex={{ xs: '1 1 100%', sm: '1 1 70%' }}
+                                display="flex"
+                                flexDirection="column"
+                                py={1}
+                                px={screenSize.isMobile ? 1 : 0}
+                                alignItems="center"
+                                gap={1}
+                                sx={{
+                                  backgroundColor: 'background.paper',
+                                }}
+                              >
+                                {Array.from({
+                                  length: exercise.meta.sets,
+                                }).map((_, setIndex) => (
+                                  <Box
+                                    key={`${exercise.id}-set-${setIndex}`}
+                                    display="flex"
+                                    gap={1}
+                                    minWidth={
+                                      !screenSize.isSmallerThanLaptop
+                                        ? 300
+                                        : undefined
+                                    }
+                                  >
+                                    {/* Set Type Dropdown */}
+                                    <FormControl fullWidth>
+                                      <InputLabel>
+                                        {options.label[0].toUpperCase() +
+                                          options.label.slice(1)}
+                                      </InputLabel>
+
+                                      <Select
+                                        value={
+                                          setValues[exercise.id]?.[
+                                            setIndex
+                                          ]?.setTypeValue?.toString() || ''
+                                        }
+                                        onChange={(e) =>
+                                          handleSetValueChange(
+                                            exercise.id,
+                                            setIndex,
+                                            +e.target.value,
+                                            'setTypeValue'
+                                          )
+                                        }
+                                        label={options.label}
+                                      >
+                                        {options.values?.map((value) => (
+                                          <MenuItem
+                                            key={`${exercise.id}-option-${value}-set-${setIndex}-type-${options.label}`}
+                                            value={value}
+                                          >
+                                            {options.format(value)}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </FormControl>
+
+                                    {/* Workload Input */}
+                                    <TextField
+                                      fullWidth
+                                      label={exercise.meta.workloadType.toUpperCase()}
+                                      type="number"
                                       value={
                                         setValues[exercise.id]?.[
                                           setIndex
-                                        ]?.setTypeValue?.toString() || ''
+                                        ]?.workloadValue?.toString() || ''
                                       }
                                       onChange={(e) =>
                                         handleSetValueChange(
                                           exercise.id,
                                           setIndex,
                                           +e.target.value,
-                                          'setTypeValue'
+                                          'workloadValue'
                                         )
                                       }
-                                      label={options.label}
-                                    >
-                                      {options.values?.map((value) => (
-                                        <MenuItem
-                                          key={`${exercise.id}-option-${value}-set-${setIndex}-type-${options.label}`}
-                                          value={value}
-                                        >
-                                          {options.format(value)}
-                                        </MenuItem>
-                                      ))}
-                                    </Select>
-                                  </FormControl>
+                                    />
+                                  </Box>
+                                ))}
 
-                                  {/* Workload Input */}
-                                  <TextField
-                                    fullWidth
-                                    label={exercise.meta.workloadType.toUpperCase()}
-                                    type="number"
-                                    value={
-                                      setValues[exercise.id]?.[
-                                        setIndex
-                                      ]?.workloadValue?.toString() || ''
-                                    }
-                                    onChange={(e) =>
-                                      handleSetValueChange(
-                                        exercise.id,
-                                        setIndex,
-                                        +e.target.value,
-                                        'workloadValue'
-                                      )
-                                    }
-                                  />
-                                </Box>
-                              ))}
-
-                              {/* Save Button */}
-                              <Button
-                                variant="contained"
-                                onClick={() => handleSaveSets(exercise.id)}
-                                sx={{ mt: 1 }}
-                              >
-                                Save Sets
-                              </Button>
+                                {/* Save Button */}
+                                <Button
+                                  variant="contained"
+                                  onClick={() => handleSaveSets(exercise.id)}
+                                  sx={{ mt: 1 }}
+                                >
+                                  Save Sets
+                                </Button>
+                              </Box>
                             </Box>
                           </Box>
-                        </Box>
-                      ) : (
-                        <Box
-                          key={exercise.id}
-                          display="flex"
-                          width="100%"
-                          justifyContent="center"
-                          alignItems="center"
-                          borderTop={
-                            exerciseIndex > 0
-                              ? `3px solid ${theme.palette.background.paper}`
-                              : undefined
-                          }
-                          borderBottom={
-                            exerciseIndex < s.exercises.length - 1
-                              ? `3px solid ${theme.palette.background.paper}`
-                              : undefined
-                          }
-                          sx={{ backgroundColor: 'background.default' }}
-                          py={0.5}
-                        >
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 'bold',
-                              textTransform: 'uppercase',
-                            }}
+                        ) : (
+                          <Box
+                            key={exercise.id}
+                            display="flex"
+                            width="100%"
+                            justifyContent="center"
+                            alignItems="center"
+                            borderTop={
+                              exerciseIndex > 0
+                                ? `3px solid ${theme.palette.background.paper}`
+                                : undefined
+                            }
+                            borderBottom={
+                              exerciseIndex < s.exercises.length - 1
+                                ? `3px solid ${theme.palette.background.paper}`
+                                : undefined
+                            }
+                            sx={{ backgroundColor: 'background.default' }}
+                            py={0.5}
                           >
-                            {exercise.exercise?.name || 'Unnamed Exercise'}
-                          </Typography>
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontWeight: 'bold',
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {exercise.exercise?.name || 'Unnamed Exercise'}
+                            </Typography>
 
-                          <IconButton
-                            onClick={() => setSelectedExercise(exercise)}
-                            sx={{
-                              py: 0,
-                              m: 0,
-                              position: 'absolute',
-                              right: 20,
-                            }}
-                          >
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Box>
-                      );
-                    })}
+                            <IconButton
+                              onClick={() => setSelectedExercise(exercise)}
+                              sx={{
+                                py: 0,
+                                m: 0,
+                                position: 'absolute',
+                                right: 20,
+                              }}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+
+                    <BorderColor
+                      color={COLOR[i % COLOR.length]}
+                      lower
+                      applyMargin={s.exercises.length === 0}
+                    />
                   </Box>
-
-                  <BorderColor
-                    color={COLOR[i % COLOR.length]}
-                    lower
-                    applyMargin={s.exercises.length === 0}
-                  />
-                </Box>
-              ))}
+                );
+              })}
             </Box>
           </CardContent>
         </Box>
