@@ -90,6 +90,7 @@ export class TrainingService {
 
   async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
     const dbUser = await this.userService.findOne(user.uid);
+    if (dbUser?.groupsIds?.length === 0) return [];
 
     return await this.trainingRepository.getDocs((q) => {
       // filter by roles
@@ -98,12 +99,12 @@ export class TrainingService {
         this.firebaseService.isManager(user)
       )
         q.where('ownerId', '==', user.uid);
-      else if (this.firebaseService.isAthlete(user)) {
-        if (dbUser?.groupsIds.length > 0)
-          q.where('groupId', 'in', dbUser.groupsIds);
-
-        q.where('membersIds', 'array-contains', user.uid);
-      }
+      else if (this.firebaseService.isAthlete(user))
+        q.where('groupId', 'in', dbUser.groupsIds).where(
+          'membersIds',
+          'array-contains',
+          user.uid,
+        );
 
       // filter by other params
       if (filter?.groupId?.value)

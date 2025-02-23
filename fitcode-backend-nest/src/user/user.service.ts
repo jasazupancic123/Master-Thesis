@@ -120,21 +120,18 @@ export class UserService {
     await this.userRepository.updateDoc(ref.uid, input);
   }
 
-  async addAthlete(input: Omit<CreateUser, 'customClaims'>) {
+  async addAthlete(user: User, input: Omit<CreateUser, 'customClaims'>) {
     const { email, displayName, password } = input;
 
-    const firebaseAuthUser = await this.firebaseService.auth.createUser({
+    this.logger.log(
+      `User ${user.uid} is registering new athlete: ${JSON.stringify(input)})`,
+    );
+
+    return await this.firebaseService.auth.createUser({
       email,
       displayName,
       password,
     });
-
-    await this.userRepository.addDoc({
-      id: firebaseAuthUser.uid,
-      groupsIds: [],
-    });
-
-    return firebaseAuthUser;
   }
 
   addGroup(transaction: Transaction, userId: string, groupId: string) {
