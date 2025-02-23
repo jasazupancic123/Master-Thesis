@@ -70,6 +70,8 @@ export class ExerciseService {
     const userExercises = await this.findAllByUser(user, filter);
     const globalExercises = await this.findAllGlobal(filter);
 
+    // if user is athlete, fetch all his trainer's exercises
+
     return this.commonService.array.unique([
       ...userExercises,
       ...globalExercises,

@@ -67,7 +67,12 @@ export class UserController {
   @Auth([UserRole.ATHLETE])
   async getMyMeta(@RequestUser() user: User) {
     const ref = { uid: user.uid };
-    return await this.userService.getLastMeta(ref);
+    return (
+      (await this.userService.getLastMeta(ref)) || {
+        date: new Date(),
+        userId: user.uid,
+      }
+    );
   }
 
   @Post('me/meta')
@@ -83,7 +88,7 @@ export class UserController {
 
   @Post('athlete/add')
   @Auth([UserRole.TRAINER])
-  async addAthlete(@Body() body: AddAthleteDto) {
-    return await this.userService.addAthlete(body);
+  async addAthlete(@RequestUser() user: User, @Body() body: AddAthleteDto) {
+    return await this.userService.addAthlete(user, body);
   }
 }
