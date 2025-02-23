@@ -1,38 +1,44 @@
-import { useState } from 'react';
+import { handleApiRequest } from '@/common/type/state.type';
+import { useGroup } from '@/context/group-provider';
+import { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
 import { Box, Button, TextField, Typography } from '@mui/material';
-import { useGroup } from '@/context/group-provider';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
+const EMPTY_MEMBER = {
+  email: '',
+  displayName: '',
+  password: '',
+  confirmPassword: '',
+};
+
 export default function RegisterMembersModal() {
+  const router = useRouter();
   const { token } = useGroup();
-  const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [member, setMember] = useState(EMPTY_MEMBER);
 
-  const handleRegisterMember = async () => {
-    if (!email || !displayName || !password || !confirmPassword) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
+  async function handleRegisterMember() {
+    const { email, displayName, password, confirmPassword } = member;
 
-    try {
-      await UserController.addAthlete(token, { email, displayName, password });
-      console.log('here123');
-      toast.success('Member registered successfully');
-      setEmail('');
-      setDisplayName('');
-      setPassword('');
-      setConfirmPassword('');
-    } catch (error: any) {
-      toast.error('Failed to register member');
-    }
-  };
+    if (!email || !displayName || !password || !confirmPassword)
+      return toast.error('Please fill in all fields');
+
+    if (password !== confirmPassword)
+      return toast.error('Passwords do not match');
+
+    handleApiRequest(
+      router,
+      () => UserController.addAthlete(token, { email, displayName, password }),
+      (_) => {
+        setMember(EMPTY_MEMBER);
+        toast.success('Member registered successfully');
+      },
+      undefined,
+      'Failed to register member'
+    );
+  }
 
   return (
     <Box
@@ -53,31 +59,42 @@ export default function RegisterMembersModal() {
         fullWidth
         label="Email"
         type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        value={member.email}
+        onChange={(e) =>
+          setMember((prev) => ({ ...prev, email: e.target.value }))
+        }
         margin="dense"
       />
+
       <TextField
         fullWidth
         label="Display Name"
-        value={displayName}
-        onChange={(e) => setDisplayName(e.target.value)}
+        value={member.displayName}
+        onChange={(e) =>
+          setMember((prev) => ({ ...prev, displayName: e.target.value }))
+        }
         margin="dense"
       />
+
       <TextField
         fullWidth
         label="Password"
         type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        value={member.password}
+        onChange={(e) =>
+          setMember((prev) => ({ ...prev, password: e.target.value }))
+        }
         margin="dense"
       />
+
       <TextField
         fullWidth
         label="Confirm Password"
         type="password"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
+        value={member.confirmPassword}
+        onChange={(e) =>
+          setMember((prev) => ({ ...prev, confirmPassword: e.target.value }))
+        }
         margin="dense"
       />
 

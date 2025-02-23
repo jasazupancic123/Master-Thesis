@@ -6,6 +6,8 @@ import { User } from '@/controller/user/type/user.type';
 
 export const NUM_MAX_SUPERSETS = 8;
 
+export const NUM_MAX_EXERCISES_PER_SUPERSET = 4;
+
 export const MAIN_SETS: MainSet[] = [
   { id: '1', name: 'Circuit' },
   { id: '2', name: 'Block' },

@@ -1,16 +1,17 @@
 'use client';
 
 import { COLORS } from '@/common/constant/color.constant';
+import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
+import { Group } from '@/controller/group/type/group.type';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useEffect, useRef, useState } from 'react';
 import { Range } from 'react-range';
-import { useRouter } from 'next/navigation';
 import {
   changeYear,
   handleAddCycle,
@@ -20,15 +21,16 @@ import {
 
 dayjs.extend(dayOfYear);
 
-export default function MultiCycleSlider() {
+interface MultiCycleSliderProps {
+  selectedGroup: Group;
+  setSelectedGroup: SetState<Group>;
+}
+
+export default function MultiCycleSlider(props: MultiCycleSliderProps) {
+  const { selectedGroup, setSelectedGroup } = props;
+
   const screenSize = useScreenSize();
-  const {
-    group,
-    setDetectedChanges,
-    setCycle,
-    selectedGroup,
-    setSelectedGroup,
-  } = useGroup();
+  const { group, setCycle, setDetectedChanges } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [draggedDay, setDraggedDay] = useState<number | null>(null);

@@ -1,44 +1,42 @@
-import { CommonService } from '@/common/service/common.service';
+import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/context/group-provider';
+import { Component } from '@/controller/component/type/component.type';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { Group } from '@/controller/group/type/group.type';
 import { Box, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import SelectInput from '../select-input';
-import { Component } from '@/controller/component/type/component.type';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { SetState } from '@/common/type/state.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
+import SelectInput from '../select-input';
 
 interface CycleComponentsProps {
+  selectedGroup: Group;
+  setSelectedGroup: SetState<Group>;
   setEditModal: SetState<boolean>;
   setEditCycle: React.Dispatch<React.SetStateAction<Cycle | null>>;
 }
 
 export default function CycleComponents(props: CycleComponentsProps) {
-  const {
-    group,
-    selectedGroup,
-    setSelectedGroup,
-    components,
-    setGroup,
-    setDetectedChanges,
-  } = useGroup();
-  const [cycles, setCycles] = useState(selectedGroup?.cycles);
-  const parentComponents = components.filter(
-    (component) => component.parent === null
+  const { selectedGroup, setSelectedGroup, setEditCycle, setEditModal } = props;
+  const { components, setDetectedChanges } = useGroup();
+
+  const [cycles, setCycles] = useState(
+    selectedGroup.cycles.sort(
+      (a, b) => dayjs(a.from).unix() - dayjs(b.from).unix()
+    )
   );
 
   useEffect(() => {
-    setSelectedGroup({ ...group, cycles: [...group.cycles] });
-  }, [group]);
-
-  useEffect(() => {
-    if (!selectedGroup) return;
-    const sortedCycles = [...selectedGroup.cycles].sort(
-      (a, b) => dayjs(a.from).unix() - dayjs(b.from).unix()
+    setCycles(
+      selectedGroup.cycles.sort(
+        (a, b) => dayjs(a.from).unix() - dayjs(b.from).unix()
+      )
     );
-    setCycles(sortedCycles);
   }, [selectedGroup]);
+
+  const parentComponents = components.filter(
+    (component) => component.parent === null
+  );
 
   return (
     <Box
@@ -51,7 +49,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
         overflowX: 'auto',
         whiteSpace: 'nowrap',
         minWidth: 0,
-        flexWrap: 'nowrap', // Ensures no unintended wrapping
+        flexWrap: 'nowrap',
       }}
     >
       {cycles &&
@@ -63,8 +61,8 @@ export default function CycleComponents(props: CycleComponentsProps) {
             width={200}
             sx={{
               minWidth: '200px',
-              maxWidth: '200px', // Fix width explicitly
-              flexShrink: 0, // Prevents flex-based expansion
+              maxWidth: '200px',
+              flexShrink: 0,
             }}
           >
             {/*Header*/}
@@ -81,8 +79,8 @@ export default function CycleComponents(props: CycleComponentsProps) {
               }}
               py={1}
               onClick={() => {
-                props.setEditModal(true);
-                props.setEditCycle(cycle);
+                setEditModal(true);
+                setEditCycle(cycle);
               }}
             >
               <Typography
@@ -128,6 +126,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 const component = components.find(
                   (component) => component.id === componentId
                 );
+
                 const leafComponents = components.filter(
                   (c) => c.parent === componentId
                 );
@@ -158,33 +157,36 @@ export default function CycleComponents(props: CycleComponentsProps) {
                     enableRemove={true}
                     setValue={(value) => {
                       setDetectedChanges(true);
+
                       if (value === 'Remove Component') {
                         const newCycle = {
                           ...cycle,
                           rootComponentsIds: cycle.rootComponentsIds.filter(
-                            (cId, k) => i !== k
+                            (_, k) => i !== k
                           ),
                           leafComponentsIds: cycle.leafComponentsIds.filter(
-                            (cId, k) => i !== k
+                            (_, k) => i !== k
                           ),
                         };
-                        const newCycles = cycles.map((c) => {
-                          if (c.id === cycle.id) return newCycle;
-                          return c;
-                        });
+
+                        const newCycles = cycles.map((c) =>
+                          c.id === cycle.id ? newCycle : c
+                        );
+
                         setCycles(newCycles);
-                        setGroup({ ...group, cycles: newCycles });
+                        setSelectedGroup({
+                          ...selectedGroup,
+                          cycles: [...newCycles],
+                        });
+
                         return;
                       }
-                      const component = components.find(
-                        (component) => component.id === value
-                      );
+
+                      const component = components.find((c) => c.id === value);
                       if (!component) return;
 
-                      if (cycle.leafComponentsIds.includes(component.id)) {
-                        toast.error('Component already added');
-                        return;
-                      }
+                      if (cycle.leafComponentsIds.includes(component.id))
+                        return toast.error('Component already added');
 
                       const newCycle = {
                         ...cycle,
@@ -199,8 +201,12 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         if (c.id === cycle.id) return newCycle;
                         return c;
                       });
+
                       setCycles(newCycles);
-                      setGroup({ ...group, cycles: newCycles });
+                      setSelectedGroup({
+                        ...selectedGroup,
+                        cycles: [...newCycles],
+                      });
                     }}
                   />
                 );
@@ -218,15 +224,12 @@ export default function CycleComponents(props: CycleComponentsProps) {
                   sx={{ width: '90%' }}
                   setValue={(value) => {
                     setDetectedChanges(true);
-                    const component = components.find(
-                      (component) => component.id === value
-                    );
+
+                    const component = components.find((c) => c.id === value);
                     if (!component) return;
 
-                    if (cycle.rootComponentsIds.includes(component.id)) {
-                      toast.error('Component already added');
-                      return;
-                    }
+                    if (cycle.rootComponentsIds.includes(component.id))
+                      return toast.error('Component already added');
 
                     const newCycle = {
                       ...cycle,
@@ -235,12 +238,16 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         component.id,
                       ],
                     };
-                    const newCycles = cycles.map((c) => {
-                      if (c.id === cycle.id) return newCycle;
-                      return c;
-                    });
+
+                    const newCycles = cycles.map((c) =>
+                      c.id === cycle.id ? newCycle : c
+                    );
+
                     setCycles(newCycles);
-                    setGroup({ ...group, cycles: newCycles });
+                    setSelectedGroup({
+                      ...selectedGroup,
+                      cycles: [...newCycles],
+                    });
                   }}
                 />
               )}

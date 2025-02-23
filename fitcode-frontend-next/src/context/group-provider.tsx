@@ -41,7 +41,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     groups,
     group: providedGroup,
     trainings: allTrainings,
-    refreshUsers,
   } = props;
 
   const router = useRouter();
@@ -54,63 +53,17 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [training, setTraining] = useState<Training | undefined>();
   const [dateFrom, setDateFrom] = useState(dayjs().startOf('day'));
   const [dateTo, setDateTo] = useState(dayjs().endOf('day'));
+  const [detectedChanges, setDetectedChanges] = useState(false);
 
   // state for arrays
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(users);
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
-
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedSubgroup, setSelectedSubgroup] = useState<{
     subgroup: Subgroup | null;
     index: number;
   } | null>(null);
-
-  const [detectedChanges, setDetectedChanges] = useState(false);
-
-  async function handleUpdateGroup() {
-    if (!selectedGroup) return;
-
-    await handleApiRequest(
-      router,
-      () => GroupController.update(token, selectedGroup.id, selectedGroup),
-      (newGroup) => {
-        setGroup(newGroup);
-        setDetectedChanges(false);
-        toast.success('Group updated successfully');
-      },
-      undefined,
-      'Error when updating group'
-    );
-  }
-
-  async function handleUpdateTraining() {
-    if (!training) return;
-
-    await handleApiRequest(
-      router,
-      () => TrainingController.update(token, training.id, training),
-      (newTraining) => {
-        let mapped = TrainingService.mapComponents(newTraining, components);
-        mapped = TrainingService.mapExercises(newTraining, exercises);
-
-        if (training && newTraining.id === training.id) setTraining(mapped);
-        setTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-
-        setFilteredTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-
-        setDetectedChanges(false);
-        toast.success('Training updated successfully');
-      },
-      undefined,
-      'Error when updating training'
-    );
-  }
 
   // filter trainings every time date changes
   useEffect(() => {
@@ -145,8 +98,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setComponent,
     training,
     setTraining,
-    selectedGroup,
-    setSelectedGroup,
     dateFrom,
     setDateFrom,
     dateTo,
@@ -163,9 +114,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setSelectedAthlete,
     detectedChanges,
     setDetectedChanges,
-    handleUpdateGroup,
-    handleUpdateTraining,
-    refreshUsers,
   };
 
   return (
