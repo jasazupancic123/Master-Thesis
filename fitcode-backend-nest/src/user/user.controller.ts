@@ -16,7 +16,7 @@ import { SaveUserMetaDto } from './dto/save-user-meta.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserRole } from './enum/user-role.enum';
-import { UserService } from './service/user.service';
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {

@@ -34,7 +34,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const {
     children,
     token,
-    users,
+    users: allUsers,
     components,
     attributes,
     exercises,
@@ -56,9 +56,10 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   // state for arrays
+  const [users, setUsers] = useState(allUsers);
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
-  const [filteredUsers, setFilteredUsers] = useState(users);
+  const [filteredUsers, setFilteredUsers] = useState(allUsers);
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
   const [selectedSubgroup, setSelectedSubgroup] = useState<{
     subgroup: Subgroup | null;
@@ -84,6 +85,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const value: GroupContextProps = {
     token,
     users,
+    setUsers,
     groups,
     components,
     attributes,

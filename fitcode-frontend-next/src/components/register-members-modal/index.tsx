@@ -16,7 +16,7 @@ const EMPTY_MEMBER = {
 
 export default function RegisterMembersModal() {
   const router = useRouter();
-  const { token } = useGroup();
+  const { token, setUsers } = useGroup();
   const [member, setMember] = useState(EMPTY_MEMBER);
 
   async function handleRegisterMember() {
@@ -31,7 +31,8 @@ export default function RegisterMembersModal() {
     handleApiRequest(
       router,
       () => UserController.addAthlete(token, { email, displayName, password }),
-      (_) => {
+      (user) => {
+        setUsers((prev) => [...prev, user]);
         setMember(EMPTY_MEMBER);
         toast.success('Member registered successfully');
       },

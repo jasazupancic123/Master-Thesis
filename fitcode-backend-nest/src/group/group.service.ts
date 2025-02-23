@@ -11,18 +11,17 @@ import { FieldPath, Query } from 'firebase-admin/firestore';
 import { NUM_MAX_GROUPS } from 'src/common/constant/limit.constant';
 import { Create, Update } from 'src/common/type/entity.type';
 import { Training } from 'src/training/entity/training.entity';
-import { CommonService } from '../../common/service/common.service';
-import { User } from '../../common/type/firebase-auth.type';
-import { GroupRef } from '../../common/type/firestore.type';
-import { Filter, FindManyOptions } from '../../common/type/orm.type';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { Subgroup } from '../../training/entity/subgroup.entity';
-import { TrainingService } from '../../training/service/training.service';
-import { UserService } from '../../user/service/user.service';
-import { Cycle } from '../entity/cycle.entity';
-import { Group } from '../entity/group.entity';
-import { GroupRepository } from '../repository/group.repository';
+import { CommonService } from '../common/service/common.service';
+import { User } from '../common/type/firebase-auth.type';
+import { GroupRef } from '../common/type/firestore.type';
+import { Wrapper } from '../common/type/wrapper.type';
+import { FirebaseService } from '../firebase/firebase.service';
+import { Subgroup } from '../training/entity/subgroup.entity';
+import { TrainingService } from '../training/service/training.service';
+import { UserService } from '../user/user.service';
+import { Cycle } from './entity/cycle.entity';
+import { Group } from './entity/group.entity';
+import { GroupRepository } from './repository/group.repository';
 
 @Injectable()
 export class GroupService {
@@ -50,19 +49,13 @@ export class GroupService {
     return groupOrTraining.ownerId === userId;
   }
 
-  async findAll(
-    user: User,
-    options?: FindManyOptions<Group>,
-  ): Promise<Group[]> {
+  async findAll(user: User): Promise<Group[]> {
     const groups = await this.groupRepository.getDocs((collection) => {
-      let query = this.firebaseService.isTrainer(user)
+      return this.firebaseService.isTrainer(user)
         ? collection.where('ownerId', '==', user.uid)
         : this.firebaseService.isAthlete(user)
           ? collection.where('membersIds', 'array-contains', user.uid)
           : collection;
-
-      if (options?.filter) query = this.filter(query, options.filter);
-      return query;
     });
 
     return groups;
@@ -227,14 +220,6 @@ export class GroupService {
     const cycle = this.findCycle(cycleId, group);
     if (!cycle) throw new BadRequestException('Cycle does not exist');
     return cycle;
-  }
-
-  private filter(query: Query, filter: Filter<Group>) {
-    if (filter.ids)
-      query = query.where(FieldPath.documentId(), 'in', filter.ids);
-
-    if (filter.ownerId) query = query.where('ownerId', '==', filter.ownerId);
-    return query;
   }
 
   private checkCycleOverlap(cycles: Cycle[]) {

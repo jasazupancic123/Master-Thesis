@@ -7,30 +7,28 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { addHours, endOfHour, isAfter, isBefore, startOfHour } from 'date-fns';
-import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
+import { Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { CommonService } from 'src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
-import { Component } from 'src/component/entity/component.entity';
-import { UserService } from 'src/user/service/user.service';
-import { User } from '../../common/type/firebase-auth.type';
+import { User } from 'src/common/type/firebase-auth.type';
 import {
   SubgroupRef,
   TrainingComponentRef,
   TrainingRef,
   UserWorkloadExerciseRef,
-} from '../../common/type/firestore.type';
-import { Filter, FindManyOptions } from '../../common/type/orm.type';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { ExerciseService } from '../../exercise/service/exercise.service';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { Group } from '../../group/entity/group.entity';
-import { GroupService } from '../../group/service/group.service';
+} from 'src/common/type/firestore.type';
+import { Filter } from 'src/common/type/orm.type';
+import { Wrapper } from 'src/common/type/wrapper.type';
+import { Component } from 'src/component/entity/component.entity';
+import { FirebaseService } from 'src/firebase/firebase.service';
+import { Group } from 'src/group/entity/group.entity';
+import { GroupService } from 'src/group/group.service';
+import { UserService } from 'src/user/user.service';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { Training } from '../entity/training.entity';
 import { WorkloadData } from '../entity/workload-data';
 import { TrainingRepository } from '../repository/training.repository';
-import { SubgroupService } from './subgroup.service';
 import { TrainingPlanService } from './training-plan.service';
 import { UserWorkloadService } from './user-workload.service';
 
@@ -43,8 +41,6 @@ export class TrainingService {
     private readonly cacheManagerService: CacheManagerService,
     private readonly commonService: CommonService,
     private readonly trainingRepository: TrainingRepository,
-    private readonly exerciseService: ExerciseService,
-    private readonly subgroupService: SubgroupService,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly userWorkloadService: UserWorkloadService,
     @Inject(forwardRef(() => GroupService))
@@ -92,27 +88,46 @@ export class TrainingService {
     return training;
   }
 
-  async findAll(
-    user: User,
-    options?: FindManyOptions<Training>,
-  ): Promise<Training[]> {
-    let filter = options?.filter || {};
+  async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
+    const dbUser = await this.userService.findOne(user.uid);
 
-    if (this.firebaseService.isTrainer(user))
-      filter.ownerId = { value: user.uid };
+    return await this.trainingRepository.getDocs((q) => {
+      // filter by roles
+      if (
+        this.firebaseService.isTrainer(user) ||
+        this.firebaseService.isManager(user)
+      )
+        q.where('ownerId', '==', user.uid);
+      else if (this.firebaseService.isAthlete(user)) {
+        if (dbUser?.groupsIds.length > 0)
+          q.where('groupId', 'in', dbUser.groupsIds);
 
-    if (this.firebaseService.isAthlete(user)) {
-      const dbUser = await this.userService.findOne(user.uid);
-      if (dbUser?.groupsIds.length > 0)
-        filter.groupId = { op: 'in', value: dbUser.groupsIds };
+        q.where('membersIds', 'array-contains', user.uid);
+      }
 
-      filter.membersIds = { value: user.uid };
-    }
+      // filter by other params
+      if (filter?.groupId?.value)
+        q.where('groupId', '==', filter.groupId.value);
 
-    return await this.trainingRepository.getDocs((collection) => {
-      let query = this.filter(collection, filter);
-      query = query.orderBy('from', 'asc');
-      return query;
+      if (filter?.cycleId?.value)
+        q.where('cycleId', '==', filter.cycleId.value);
+
+      // filter by date
+      if (filter?.from?.value || filter?.to?.value) {
+        const from = filter?.from?.value
+          ? Timestamp.fromDate(filter.from.value)
+          : undefined;
+
+        const to = filter?.to?.value
+          ? Timestamp.fromDate(filter.to.value)
+          : undefined;
+
+        if (from) q.where('from', '>=', from);
+        if (to) q.where('to', '<=', to);
+      }
+
+      q.orderBy('from', 'asc');
+      return q;
     });
   }
 
@@ -327,59 +342,6 @@ export class TrainingService {
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 
     return updatedTraining;
-  }
-
-  private filter(query: Query, filter: Filter<Training>) {
-    if (filter.ids?.length)
-      query = query.where(FieldPath.documentId(), 'in', filter.ids);
-
-    if (filter.groupId?.value)
-      query = query.where(
-        'groupId',
-        filter.groupId?.op || '==',
-        filter.groupId.value,
-      );
-
-    if (filter.cycleId?.value)
-      query = query.where('cycleId', '==', filter.cycleId.value);
-
-    if (filter.ownerId)
-      query = query.where('ownerId', '==', filter.ownerId.value);
-
-    if (filter.membersIds)
-      query = query.where(
-        'membersIds',
-        'array-contains',
-        filter.membersIds.value,
-      );
-
-    if (filter.copiedFromId)
-      query = query.where(
-        'copiedFromId',
-        filter.copiedFromId.op || '==',
-        filter.copiedFromId.value,
-      );
-
-    if (filter.from && filter.to) {
-      query = query.where('from', '>=', Timestamp.fromDate(filter.from.value));
-      query = query.where('to', '<=', Timestamp.fromDate(filter.to.value));
-    }
-
-    if (filter.from)
-      query = query.where(
-        'from',
-        filter.from.op || '>=',
-        Timestamp.fromDate(filter.from.value),
-      );
-
-    if (filter.to)
-      query = query.where(
-        'to',
-        filter.to.op || '<=',
-        Timestamp.fromDate(filter.to.value),
-      );
-
-    return query;
   }
 
   private isAuthorized(user: User, training: Training): boolean {
