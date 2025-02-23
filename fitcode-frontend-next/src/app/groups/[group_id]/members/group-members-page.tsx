@@ -4,6 +4,7 @@ import { AddMembersModal } from '@/components/add-members-modal';
 import GroupSidebar from '@/components/group-sidebar';
 import MyModal from '@/components/modal';
 import PageTitle from '@/components/page-title';
+import RegisterMembersModal from '@/components/register-members-modal';
 import { SearchBar } from '@/components/search-bar';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
@@ -18,8 +19,6 @@ import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { handleUpdateMembers } from './state';
-import RegisterMembersModal from '@/components/register-members-modal';
-import { UserController } from '@/controller/user/user.controller';
 
 export default function GroupMembersPage() {
   const { token, group, setGroup, users, groups } = useGroup();

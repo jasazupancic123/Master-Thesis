@@ -19,6 +19,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { set } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import MyModal from '../modal';
@@ -30,7 +31,6 @@ import {
   handleRightClickSubgroup,
   onDragEndSubgroup,
 } from './state';
-import { set } from 'date-fns';
 
 export default function Subgroups(props: SubgroupProps) {
   const { showSubgroups } = props;
@@ -363,19 +363,23 @@ export default function Subgroups(props: SubgroupProps) {
         }}
         onConfirm={() => {
           if (!editedSubgroup || !component || !training) return;
+
           const updatedSubgroups = [...subgroups].map((subgroup) =>
             subgroup.id === editedSubgroup.id ? editedSubgroup : subgroup
           );
-          setSubgroups(updatedSubgroups);
+
           const newComponent = { ...component!, subgroups: updatedSubgroups };
-          setComponent(newComponent);
           const newTraining = {
             ...training,
             components: training.components.map((c) =>
               c.id === newComponent.id ? newComponent : c
             ),
           };
+
+          setSubgroups(updatedSubgroups);
+          setComponent(newComponent);
           setTraining(newTraining);
+
           setModal((prev) => ({ ...prev, editSubgroup: false }));
           setEditedSubgroup(null);
           setDetectedChanges(true);

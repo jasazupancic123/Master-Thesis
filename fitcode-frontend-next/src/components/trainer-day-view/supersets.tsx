@@ -24,7 +24,7 @@ import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
 import MyModal from '../modal';
 import AddExerciseForm from './add-exercise-form';
-import { NUM_MAX_SUPERSETS } from './constant';
+import { NUM_MAX_EXERCISES_PER_SUPERSET, NUM_MAX_SUPERSETS } from './constant';
 import { SupersetsProps } from './props';
 import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCardContainer from './training-exercise-card-container';
@@ -73,17 +73,12 @@ export default function Supersets(props: SupersetsProps) {
     if (selectedSubgroup?.subgroup?.supersets) {
       setSupersetsWithAdd(selectedSubgroup.subgroup.supersets);
     } else {
-      if (!component) {
-        setSelectedExercisesIds([]);
-      } else if (component.supersets) {
-        setSupersetsWithAdd(component.supersets);
-      }
+      if (!component) setSelectedExercisesIds([]);
+      else if (component.supersets) setSupersetsWithAdd(component.supersets);
     }
   }, [component, selectedSubgroup]);
 
-  if (!component || !training) {
-    return null;
-  }
+  if (!component || !training) return null;
 
   return (
     <DragDropContext
@@ -384,20 +379,19 @@ export default function Supersets(props: SupersetsProps) {
               : [];
 
           if (!Array.isArray(supersets)) supersets = [];
-          if (supersets.length === 0) {
+          if (supersets.length === 0)
             supersets.push({ exercises: [], color: COLOR[supersets.length] });
-          }
+
           for (const superset of supersets) {
             while (
-              superset.exercises.length < NUM_MAX_SUPERSETS &&
+              superset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
               exercisesToAdd.length > 0
             ) {
-              const exerciseToAdd = exercisesToAdd.shift(); // Remove from the front
+              const exerciseToAdd = exercisesToAdd.shift(); // remove from the front
               if (exerciseToAdd) superset.exercises.push({ ...exerciseToAdd });
             }
 
-            if (exercisesToAdd.length === 0) break; // Stop if no exercises left
-
+            if (exercisesToAdd.length === 0) break; // stop if no exercises left
             if (supersets.indexOf(superset) === supersets.length - 1) {
               if (supersets.length === NUM_MAX_SUPERSETS)
                 return toast.error(
@@ -449,13 +443,13 @@ export default function Supersets(props: SupersetsProps) {
             };
 
             setDetectedChanges(true);
+            setOpenAddExerciseModal(false);
+            setComponent({ ...component, subgroups: updatedSubgroups });
+            setTraining({ ...training, components: updatedComponents });
             setSelectedSubgroup({
               index: selectedSubgroup.index,
               subgroup: updatedSubgroup,
             });
-            setComponent({ ...component, subgroups: updatedSubgroups });
-            setTraining({ ...training, components: updatedComponents });
-            setOpenAddExerciseModal(false);
           }
         }}
       >

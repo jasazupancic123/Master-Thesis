@@ -27,14 +27,18 @@ export default async function Page() {
 
   if ([UserRole.ADMIN, UserRole.MANAGER].includes(role)) return notFound();
 
-  const mappedTrainings = trainings.map((t) =>
-    TrainingService.mapComponents(
-      TrainingService.mapExercises(t, exercises),
-      components
-    )
-  );
+  const mappedTrainings = trainings.map((t) => {
+    t = TrainingService.mapComponents(t, components);
+    t = TrainingService.mapExercises(t, exercises);
+    return t;
+  });
 
   return (
-    <TrainingPage token={token} profile={profile} trainings={mappedTrainings} />
+    <TrainingPage
+      userId={profile.uid}
+      token={token}
+      profile={profile}
+      trainings={mappedTrainings}
+    />
   );
 }

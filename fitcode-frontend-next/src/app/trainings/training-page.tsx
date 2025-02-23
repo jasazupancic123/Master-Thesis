@@ -15,7 +15,7 @@ const commonService = CommonService.instance;
 
 export default function TrainingPage(props: TrainingPageProps) {
   const screenSize = useScreenSize();
-  const { token, trainings: allTrainings } = props;
+  const { userId, token, trainings: allTrainings } = props;
 
   const [loading, setLoading] = useState(true);
   const [trainings, setTrainings] = useState(() =>
@@ -129,6 +129,7 @@ export default function TrainingPage(props: TrainingPageProps) {
                 {/* Components */}
                 <Stack spacing={3}>
                   <AthleteTrainingExerciseCard
+                    userId={userId}
                     token={token}
                     components={training.components}
                     training={training}

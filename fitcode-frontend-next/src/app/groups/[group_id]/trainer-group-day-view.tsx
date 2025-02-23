@@ -2,6 +2,7 @@ import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import Circles from '@/components/circles';
+import FloatingButton from '@/components/floating-button';
 import Subgroups from '@/components/trainer-day-view/subgroups';
 import TrainingCard from '@/components/trainer-day-view/training-card';
 import TrainingMembers from '@/components/trainer-day-view/training-members';
@@ -14,9 +15,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GroupIcon from '@mui/icons-material/Group';
 import GroupsIcon from '@mui/icons-material/Groups';
 import {
-  Fab,
   IconButton,
-  Menu,
   MenuItem,
   Select,
   Stack,
@@ -43,6 +42,7 @@ export default function TrainerDayView() {
     components,
     exercises,
     training,
+    setTraining,
     setTrainings,
     setFilteredTrainings,
     filteredTrainings,
@@ -71,17 +71,42 @@ export default function TrainerDayView() {
   const [isSticky, setIsSticky] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  async function handleUpdateTraining() {
+    if (!training) return;
+
+    await handleApiRequest(
+      router,
+      () => TrainingController.update(token, training.id, training),
+      (newTraining) => {
+        let mapped = TrainingService.mapComponents(newTraining, components);
+        mapped = TrainingService.mapExercises(newTraining, exercises);
+
+        if (training && newTraining.id === training.id) setTraining(mapped);
+        setTrainings((prev) =>
+          prev.map((t) => (t.id === newTraining.id ? mapped : t))
+        );
+
+        setFilteredTrainings((prev) =>
+          prev.map((t) => (t.id === newTraining.id ? mapped : t))
+        );
+
+        setDetectedChanges(false);
+        toast.success('Training updated successfully');
+      },
+      undefined,
+      'Error when updating training'
+    );
+  }
+
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
     setDateTo(day.date.endOf('day'));
-
     if (!cycle?.from) return;
 
     const cycleStart = dayjs(cycle.from).startOf('day');
-    const cycleWeek = cycleStart.week(); // Get week number of cycle start
-    const currentWeek = day.date.subtract(1, 'day').week(); // Get current week number
-
-    const diff = currentWeek - cycleWeek + 1; // Calculate week difference
+    const cycleWeek = cycleStart.week();
+    const currentWeek = day.date.subtract(1, 'day').week();
+    const diff = currentWeek - cycleWeek + 1;
 
     setWeek(diff);
   }, [day, cycle]);
@@ -94,7 +119,6 @@ export default function TrainerDayView() {
       }
 
       const scrollY = window.scrollY;
-      //get screen height
       const screenHeight = window.innerHeight;
       setIsSticky(scrollY > screenHeight * 0.5);
     };
@@ -132,34 +156,10 @@ export default function TrainerDayView() {
       </Box>
     );
 
-  async function handleUpdateTraining() {
-    if (!training) return;
-
-    await handleApiRequest(
-      router,
-      () => TrainingController.update(token, training.id, training),
-      (newTraining) => {
-        let mapped = TrainingService.mapComponents(newTraining, components);
-        mapped = TrainingService.mapExercises(newTraining, exercises);
-
-        setTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-
-        setFilteredTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-        setDetectedChanges(false);
-
-        toast.success('Training updated successfully');
-      },
-      undefined,
-      'Error when updating training'
-    );
-  }
-
   return (
-    <Box>
+    <>
+      <FloatingButton label="Save training" onClick={handleUpdateTraining} />
+
       <Box
         display="flex"
         flexDirection="column"
@@ -437,6 +437,6 @@ export default function TrainerDayView() {
           />
         </IconButton>
       )}
-    </Box>
+    </>
   );
 }

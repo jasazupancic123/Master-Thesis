@@ -19,7 +19,7 @@ export async function handleAddCycle(
   input: AddCycleInput,
   state: {
     selectedGroup: Group;
-    setSelectedGroup: SetState<Group | null>;
+    setSelectedGroup: SetState<Group>;
     setCycles: SetState<Cycle[]>;
     setDetectedChanges: SetState<boolean>;
   }

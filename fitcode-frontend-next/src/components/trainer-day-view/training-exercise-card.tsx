@@ -21,6 +21,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     selectedExercise,
     setSelectedExercise,
   } = props;
+
   const {
     training,
     setTraining,
