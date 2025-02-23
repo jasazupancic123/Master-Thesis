@@ -1,9 +1,9 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { UserController } from './user.controller';
-import { UserService } from './service/user.service';
-import { UserRepository } from './repository/user.repository';
-import { UserMetaRepository } from './repository/user-meta.repository';
+import { Module } from '@nestjs/common';
 import { TrainingModule } from 'src/training/training.module';
+import { UserMetaRepository } from './repository/user-meta.repository';
+import { UserRepository } from './repository/user.repository';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
 
 @Module({
   imports: [TrainingModule],

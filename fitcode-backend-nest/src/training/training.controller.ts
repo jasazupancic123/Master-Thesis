@@ -9,6 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { CommonService } from 'src/common/service/common.service';
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
@@ -21,7 +22,10 @@ import { TrainingService } from './service/training.service';
 
 @Controller('training')
 export class TrainingController {
-  constructor(private readonly trainingService: TrainingService) {}
+  constructor(
+    private readonly commonService: CommonService,
+    private readonly trainingService: TrainingService,
+  ) {}
 
   @Get()
   @Auth()
@@ -29,13 +33,13 @@ export class TrainingController {
     @RequestUser() user: User,
     @Query() filter: FilterTrainingQueryDto,
   ) {
+    filter = this.commonService.object.clean(filter);
+
     return this.trainingService.findAll(user, {
-      filter: {
-        groupId: { value: filter.groupId },
-        cycleId: { value: filter.cycleId },
-        ...(filter.from && { from: { value: filter.from, op: '>=' } }),
-        ...(filter.to && { to: { value: filter.to, op: '<=' } }),
-      },
+      groupId: { value: filter.groupId },
+      cycleId: { value: filter.cycleId },
+      ...(filter.from && { from: { value: filter.from } }),
+      ...(filter.to && { to: { value: filter.to } }),
     });
   }
 

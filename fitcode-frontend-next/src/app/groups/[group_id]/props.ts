@@ -28,6 +28,7 @@ export interface GroupIdPageProps {
 export type GroupContextProps = GroupIdPageProps & {
   filter: GroupDateFilter;
   setFilter: SetState<GroupDateFilter>;
+  setUsers: SetState<User[]>;
   group: Group;
   setGroup: SetState<Group>;
   cycle: Cycle | undefined;

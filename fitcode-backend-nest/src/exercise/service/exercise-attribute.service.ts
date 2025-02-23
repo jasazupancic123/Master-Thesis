@@ -7,7 +7,6 @@ import {
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { Create, Update } from 'src/common/type/entity.type';
 import { Wrapper } from 'src/common/type/wrapper.type';
-import { FirebaseService } from 'src/firebase/firebase.service';
 import { CommonService } from '../../common/service/common.service';
 import { ExerciseAttribute } from '../entity/exercise-attribute.entity';
 import { ExerciseAttributeRepository } from '../repository/exercise-attribute.repository';

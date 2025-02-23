@@ -38,6 +38,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
         if (exception.code.includes(FirebaseAuthError.USER_NOT_FOUND))
           message = 'User not found';
+
+        if (exception.code.includes(FirebaseAuthError.INVALID_EMAIL))
+          message = exception.message || 'Invalid email';
+
+        if (exception.code.includes(FirebaseAuthError.INVALID_PASSWORD))
+          message = exception.message || 'Invalid password';
       }
 
       response.status(status).send({ message });
