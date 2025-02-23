@@ -6,27 +6,20 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { FieldPath, Query, Timestamp } from 'firebase-admin/firestore';
+import { FieldPath, Query } from 'firebase-admin/firestore';
 import { NUM_MAX_EXERCISES } from 'src/common/constant/limit.constant';
 import { Create, Update } from 'src/common/type/entity.type';
-import { UserService } from 'src/user/service/user.service';
+import { UserService } from 'src/user/user.service';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
 import { User } from '../../common/type/firebase-auth.type';
 import { ExerciseRef } from '../../common/type/firestore.type';
-import {
-  Filter,
-  FindManyOptions,
-  FindOneOptions,
-  Populate,
-} from '../../common/type/orm.type';
+import { Filter } from '../../common/type/orm.type';
 import { Validate } from '../../common/type/validate.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ComponentService } from '../../component/component.service';
 import { Component } from '../../component/entity/component.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { CreateExerciseDto } from '../dto/create-exercise.dto';
-import { UpdateExerciseDto } from '../dto/update-exercise.dto';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseRepository } from '../repository/exercise.repository';
 import { ExerciseAttributeService } from './exercise-attribute.service';
@@ -263,25 +256,6 @@ export class ExerciseService {
           componentsIds,
         );
     }
-
-    if (filter.name)
-      query = query
-        .where('name', '>=', filter.name.value)
-        .where('name', '<=', filter.name.value + '\uf8ff');
-
-    if (filter.createdAt)
-      query = query.where(
-        'createdAt',
-        filter.createdAt.op || '>=',
-        Timestamp.fromDate(filter.createdAt.value),
-      );
-
-    if (filter.updatedAt)
-      query = query.where(
-        'updatedAt',
-        filter.updatedAt.op || '>=',
-        Timestamp.fromDate(filter.updatedAt.value),
-      );
 
     return query;
   }

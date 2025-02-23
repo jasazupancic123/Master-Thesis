@@ -1,5 +1,4 @@
 import { CommonService } from '@/common/service/common.service';
-import { DateRange } from '@/common/type/date-range.type';
 import { Cycle } from './type/cycle.type';
 import { Group } from './type/group.type';
 
@@ -19,17 +18,6 @@ export class GroupController {
     body: { name: string; membersIds: string[] }
   ) {
     return api.post<Group>('/group', body, { token });
-  }
-
-  static async addCycle(
-    token: string,
-    groupId: string,
-    body: Required<DateRange> & {
-      name: string;
-      description?: string;
-    }
-  ) {
-    return api.post<Cycle>(`/group/${groupId}/cycle`, body, { token });
   }
 
   static async update(

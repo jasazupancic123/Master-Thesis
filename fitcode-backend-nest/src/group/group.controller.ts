@@ -13,7 +13,7 @@ import { User } from '../common/type/firebase-auth.type';
 import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
-import { GroupService } from './service/group.service';
+import { GroupService } from './group.service';
 
 @Controller('group')
 export class GroupController {
