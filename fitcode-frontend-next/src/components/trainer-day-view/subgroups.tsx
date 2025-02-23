@@ -19,6 +19,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { set } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import MyModal from '../modal';
@@ -360,7 +361,29 @@ export default function Subgroups(props: SubgroupProps) {
           setModal((prev) => ({ ...prev, editSubgroup: false }));
           setEditedSubgroup(null);
         }}
-        onConfirm={() => console.log('edit')}
+        onConfirm={() => {
+          if (!editedSubgroup || !component || !training) return;
+
+          const updatedSubgroups = [...subgroups].map((subgroup) =>
+            subgroup.id === editedSubgroup.id ? editedSubgroup : subgroup
+          );
+
+          const newComponent = { ...component!, subgroups: updatedSubgroups };
+          const newTraining = {
+            ...training,
+            components: training.components.map((c) =>
+              c.id === newComponent.id ? newComponent : c
+            ),
+          };
+
+          setSubgroups(updatedSubgroups);
+          setComponent(newComponent);
+          setTraining(newTraining);
+
+          setModal((prev) => ({ ...prev, editSubgroup: false }));
+          setEditedSubgroup(null);
+          setDetectedChanges(true);
+        }}
       >
         <Stack spacing={4} p={1}>
           {/* Name */}

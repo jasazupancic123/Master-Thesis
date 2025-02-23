@@ -115,7 +115,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       return;
     }
 
-    //check if the member already exists in a subgroup and if he does, remove him from that subgroup
+    // check if the member already exists in a subgroup and if he does, remove him from that subgroup
     const memberSubgroup = component.subgroups.find((subgroup) =>
       subgroup.membersIds.includes(member.uid)
     );
@@ -130,11 +130,24 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         subgroup.id === newSubgroup.id ? newSubgroup : subgroup
       );
 
-      const newComponent = { ...component, subgroups: newSubgroups };
+      const supersets = [...component.supersets].map((s) => ({
+        ...s,
+        exercises: [...s.exercises].map((e) => ({
+          ...e,
+          meta: { ...e.meta },
+        })),
+      }));
+
+      const newComponent = {
+        ...component,
+        subgroups: newSubgroups,
+        supersets: supersets,
+      };
+
       setComponent(newComponent);
       setTraining({
         ...training,
-        components: training.components.map((c) =>
+        components: [...training.components].map((c) =>
           c.id === newComponent.id ? newComponent : c
         ),
       });

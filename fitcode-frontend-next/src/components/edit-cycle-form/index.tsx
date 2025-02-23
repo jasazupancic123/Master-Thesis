@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, TextField } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { EditCycleModalProps } from './type';
 
 export default function EditCycleForm(props: EditCycleModalProps) {
-  const { selectedCycle, setSelectedCycle } = props;
+  const { selectedCycle, setSelectedCycle, handleDeleteCycle } = props;
 
   const [cycleName, setCycleName] = useState(selectedCycle.name);
   const [startDate, setStartDate] = useState<Dayjs | null>(
@@ -18,7 +18,13 @@ export default function EditCycleForm(props: EditCycleModalProps) {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box display="flex" flexDirection="column" gap={2} mt={2}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        gap={2}
+        mt={2}
+        alignItems="center"
+      >
         <TextField
           label="Cycle Name"
           variant="outlined"
@@ -29,7 +35,6 @@ export default function EditCycleForm(props: EditCycleModalProps) {
             setSelectedCycle({ ...selectedCycle, name: e.target.value });
           }}
         />
-
         <DatePicker
           format="DD/MM/YYYY"
           label="Start Date"
@@ -43,7 +48,6 @@ export default function EditCycleForm(props: EditCycleModalProps) {
             });
           }}
         />
-
         <DatePicker
           format="DD/MM/YYYY"
           label="End Date"
@@ -57,6 +61,16 @@ export default function EditCycleForm(props: EditCycleModalProps) {
             });
           }}
         />
+
+        <Button
+          variant="contained"
+          color="error"
+          onClick={() => {
+            handleDeleteCycle();
+          }}
+        >
+          Delete Cycle
+        </Button>
       </Box>
     </LocalizationProvider>
   );

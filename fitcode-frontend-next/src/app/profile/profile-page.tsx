@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { GENDERS } from '@/common/constant/gender.constant';
+import { SPORTS } from '@/common/constant/sport.constant';
+import { handleApiRequest } from '@/common/type/state.type';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { Gender } from '@/controller/user/enum/gender.enum';
+import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+import { UserEntity } from '@/controller/user/type/user.type';
+import { UserController } from '@/controller/user/user.controller';
 import {
   Avatar,
   Box,
@@ -11,50 +16,79 @@ import {
   MenuItem,
   Select,
   TextField,
+  useTheme,
 } from '@mui/material';
-import { useTheme } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs, { Dayjs } from 'dayjs';
-import { SPORT_LEVELS } from '@/common/constant/sport-level.constant';
-import { SPORTS } from '@/common/constant/sport.constant';
-import { useScreenSize } from '@/context/screen-size-provider';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { ProfilePageProps } from './type';
-import { Auth, updateCurrentUser } from '@firebase/auth';
+
+const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage(props: ProfilePageProps) {
   const { token, user } = props;
 
+  const router = useRouter();
   const screenSize = useScreenSize();
   const theme = useTheme();
-  const defaultMargin = 1;
+  const [profile, setProfile] = useState({
+    sport: '',
+    level: SportLevel.BEGINNER,
+    gender: undefined,
+    firstName: '',
+    lastName: '',
+    phone: '',
+    birthDate: null as Dayjs | null,
+  });
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [gender, setGender] = useState('');
-  const [dob, setDob] = useState<Dayjs | null>();
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [sport, setSport] = useState('');
-  const [sportLevel, setSportLevel] = useState('');
+  function handleChangeProfile(key: keyof UserEntity, value: any) {
+    setProfile((prev) => ({ ...prev, [key]: value }));
+  }
 
-  const handleSaveProfile = async () => {
-    // Update user profile
-  };
+  async function handleSaveProfile() {
+    const { sport, level, gender, firstName, lastName, phone, birthDate } =
+      profile;
+
+    if (!firstName || !lastName || !phone)
+      return toast.error('Please fill in all fields');
+
+    handleApiRequest(
+      router,
+      () =>
+        UserController.updateProfile(token, {
+          sport,
+          level,
+          gender,
+          firstName,
+          lastName,
+          phone,
+          birthDate: birthDate?.toDate(),
+        }),
+      (_) => {
+        toast.success('Profile updated successfully');
+      },
+      undefined,
+      'Failed to update profile'
+    );
+  }
 
   useEffect(() => {
     if (!user) return;
-
     const names = user.displayName?.split(' ');
-    setFirstName(names ? names[0] : '');
-    setLastName(names && names.length > 1 ? names[1] : '');
-    setGender(GENDERS[0]); //not on user yet
-    setDob(dayjs('2001-09-14'));
-    setEmail(user.email);
-    setPhoneNumber('+38670739540'); //not on user yet
-    setSport(SPORTS[0]); //not on user yet
-    setSportLevel(SPORT_LEVELS[0]); //not on user yet
+
+    setProfile({
+      sport: SPORTS[0],
+      level: SportLevel.BEGINNER,
+      gender: undefined,
+      firstName: names ? names[0] : '',
+      lastName: names && names.length > 1 ? names[1] : '',
+      phone: '+38670739540',
+      birthDate: dayjs('2001-09-14'),
+    });
   }, []);
 
   return (
@@ -71,43 +105,46 @@ export default function ProfilePage(props: ProfilePageProps) {
         sx={{
           color: 'white',
           backgroundColor: theme.palette.primary.main,
-          m: defaultMargin,
+          m: DEFAULT_MARGIN,
           width: 64,
           height: 64,
         }}
       />
-      <Button variant="contained" color="primary" sx={{ my: defaultMargin }}>
+      <Button variant="contained" color="primary" sx={{ my: DEFAULT_MARGIN }}>
         Upload Photo
       </Button>
 
       {/* First & Last Name - Ensuring Equal Width */}
-      <Box display="flex" width="100%" my={defaultMargin} gap={defaultMargin}>
+      <Box display="flex" width="100%" my={DEFAULT_MARGIN} gap={DEFAULT_MARGIN}>
         <TextField
-          label={!firstName ? 'First Name' : undefined}
+          label={!profile.firstName ? 'First Name' : undefined}
           variant="outlined"
           sx={{ flex: 1 }}
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
+          value={profile.firstName}
+          onChange={(e) => handleChangeProfile('firstName', e.target.value)}
         />
+
         <TextField
-          label={!lastName ? 'Last Name' : undefined}
+          label={!profile.lastName ? 'Last Name' : undefined}
           variant="outlined"
           sx={{ flex: 1 }}
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
+          value={profile.lastName}
+          onChange={(e) => handleChangeProfile('lastName', e.target.value)}
         />
       </Box>
 
-      <Box display="flex" width="100%" my={defaultMargin}>
+      <Box display="flex" width="100%" my={DEFAULT_MARGIN}>
         {/* Gender Dropdown */}
-        <FormControl sx={{ flex: 1, mr: defaultMargin }}>
+        <FormControl sx={{ flex: 1, mr: DEFAULT_MARGIN }}>
           <InputLabel>Gender</InputLabel>
           <Select
-            value={gender}
+            value={profile.gender || Gender.M}
             label="Gender"
-            onChange={(e) => setGender(e.target.value)}
+            onChange={(e) =>
+              handleChangeProfile('gender', e.target.value as Gender)
+            }
           >
-            {GENDERS.map((gender) => (
+            {Object.values(Gender).map((gender) => (
               <MenuItem key={gender} value={gender}>
                 {gender}
               </MenuItem>
@@ -119,45 +156,33 @@ export default function ProfilePage(props: ProfilePageProps) {
         <LocalizationProvider dateAdapter={AdapterDayjs as any}>
           <DatePicker
             label="Date of Birth"
-            value={dob || null}
-            onChange={(newValue) => setDob(newValue)}
+            value={profile.birthDate || null}
+            onChange={(newValue) => handleChangeProfile('birthDate', newValue)}
             format="DD/MM/YYYY"
-            slotProps={{
-              textField: {
-                fullWidth: true,
-              },
-            }}
+            slotProps={{ textField: { fullWidth: true } }}
             sx={{ flex: 1 }}
           />
         </LocalizationProvider>
       </Box>
-      <TextField
-        label={!email ? 'Email' : undefined}
-        value={email}
-        variant="outlined"
-        fullWidth
-        sx={{ my: defaultMargin }}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+
       {/* Phone Number Input */}
       <TextField
-        label={!phoneNumber ? 'Phone number' : undefined}
-        value={phoneNumber}
+        label={!profile.phone ? 'Phone number' : undefined}
+        value={profile.phone}
         variant="outlined"
         type="tel" // Triggers numeric keyboard on mobile
-        inputProps={{
-          pattern: '[0-9]*', // Allows only numbers
-        }}
-        sx={{ width: '100%', my: defaultMargin }}
-        onChange={(e) => setPhoneNumber(e.target.value)}
+        inputProps={{ pattern: '[0-9]*' }}
+        sx={{ width: '100%', my: DEFAULT_MARGIN }}
+        onChange={(e) => handleChangeProfile('phone', e.target.value)}
       />
-      <Box display="flex" width="100%" gap={defaultMargin} my={defaultMargin}>
+
+      <Box display="flex" width="100%" gap={DEFAULT_MARGIN} my={DEFAULT_MARGIN}>
         <FormControl sx={{ flex: 1 }}>
           <InputLabel>Sport</InputLabel>
           <Select
-            value={sport}
+            value={profile.sport}
             label="Sport"
-            onChange={(e) => setSport(e.target.value)}
+            onChange={(e) => handleChangeProfile('sport', e.target.value)}
           >
             {SPORTS.map((s) => (
               <MenuItem key={s} value={s}>
@@ -169,19 +194,26 @@ export default function ProfilePage(props: ProfilePageProps) {
         <FormControl sx={{ flex: 1 }}>
           <InputLabel>Sport Level</InputLabel>
           <Select
-            value={sportLevel}
+            value={profile.level}
             label="Sport Level"
-            onChange={(e) => setSportLevel(e.target.value)}
+            onChange={(e) =>
+              handleChangeProfile('level', e.target.value as SportLevel)
+            }
           >
-            {SPORT_LEVELS.map((sl) => (
+            {Object.values(SportLevel).map((sl) => (
               <MenuItem key={sl} value={sl}>
-                {sl}
+                {sl.charAt(0).toUpperCase() + sl.slice(1).toLowerCase()}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
       </Box>
-      <Button variant="contained" color="primary" sx={{ my: defaultMargin }}>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{ my: DEFAULT_MARGIN }}
+        onClick={handleSaveProfile}
+      >
         Save Profile
       </Button>
     </Box>

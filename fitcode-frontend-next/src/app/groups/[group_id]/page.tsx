@@ -12,7 +12,6 @@ import { notFound } from 'next/navigation';
 import { ReactNode, Suspense } from 'react';
 import { GroupIdPageParams, GroupIdPageProps } from './props';
 import TrainerGroupPage from './trainer-group-page';
-import TrainerGroupPageContainer from './trainer-group-page-container';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -65,7 +64,7 @@ export default async function Page(props: GroupIdPageParams) {
     [UserRole.ADMIN]: null,
     [UserRole.ATHLETE]: null,
     [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: <TrainerGroupPageContainer />,
+    [UserRole.TRAINER]: <TrainerGroupPage />,
   };
 
   return (
