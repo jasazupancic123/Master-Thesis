@@ -6,6 +6,7 @@ import {
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
 import { useGroup } from '@/context/group-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
 import { Grid2 } from '@mui/material';
 import Stack from '@mui/material/Stack';
@@ -22,6 +23,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setSelectedExercise,
   } = props;
 
+  const { setDetectedChanges } = useGroup();
   const {
     training,
     setTraining,
@@ -29,8 +31,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,
-    setDetectedChanges,
-  } = useGroup();
+  } = useTrainerDayViewContext();
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =

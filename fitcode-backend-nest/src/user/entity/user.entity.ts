@@ -12,6 +12,11 @@ export class UserEntity extends BaseEntity {
   @ApiProperty()
   groupsIds: string[]; // array of group ids user is owner or member of
 
+  @IsString({ each: true })
+  @Expose()
+  @ApiProperty()
+  trainersIds: string[]; // for athlete, this is a list of trainer ids, and for trainer, this is a list of manager ids
+
   @IsOptional()
   @IsString()
   @ApiPropertyOptional()

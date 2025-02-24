@@ -68,20 +68,33 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
                   }}
                 >
                   {/* Exercise Image */}
-                  <Box
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      borderRadius: '8px',
-                      flexShrink: 0,
-                      backgroundImage: `url(${
-                        exercise.imageUrl ||
-                        'https://mui.com/static/images/cards/contemplative-reptile.jpg'
-                      })`,
-                    }}
-                  />
+                  {exercise.videoUrl ? (
+                    <>
+                      <video
+                        src={exercise.videoUrl}
+                        muted
+                        style={{
+                          width: 60,
+                          height: 60,
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <Box
+                      sx={{
+                        width: 60,
+                        height: 60,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderRadius: '8px',
+                        flexShrink: 0,
+                        backgroundImage: `url(${
+                          exercise.imageUrl ||
+                          'https://mui.com/static/images/cards/contemplative-reptile.jpg'
+                        })`,
+                      }}
+                    />
+                  )}
 
                   {/* Exercise Name */}
                   <Typography
