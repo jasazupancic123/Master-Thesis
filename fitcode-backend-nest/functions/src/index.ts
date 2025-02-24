@@ -29,5 +29,6 @@ export const createUserRole = auth.user().onCreate(async (user) => {
       updatedAt: Timestamp.fromDate(new Date()),
       deletedAt: null,
       groupsIds: [],
+      trainersIds: [],
     });
 });

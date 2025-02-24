@@ -44,6 +44,16 @@ export class UserService {
     return await this.userRepository.getDoc(id);
   }
 
+  async findOneByIdOrFail(id: string): Promise<UserEntity> {
+    const item = await this.userRepository.getDoc(id);
+    if (!item) throw new BadRequestException('User not found');
+    return item;
+  }
+
+  getDoc(id: string) {
+    return this.userRepository.doc(id);
+  }
+
   async findOneOrFail(id: string): Promise<UserEntity> {
     const user = await this.findOne(id);
     if (!user) throw new BadRequestException('User not found');
