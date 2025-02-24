@@ -2,7 +2,6 @@
 
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import {
-  LINK_CALENDAR,
   LINK_GROUPS,
   LINK_TRAININGS,
   LINK_USERS,

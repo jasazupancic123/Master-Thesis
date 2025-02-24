@@ -23,8 +23,6 @@ export default function TrainerWeekView() {
     components,
     cycle,
     filteredTrainings,
-    training: selectedTraining,
-    setTraining,
     setTrainings,
     setDateFrom,
     setDateTo,
@@ -148,9 +146,6 @@ export default function TrainerWeekView() {
                                 training,
                                 components
                               );
-
-                              if (training.id === selectedTraining?.id)
-                                setTraining(mapped);
 
                               setTrainings((prev) =>
                                 prev.map((t) =>

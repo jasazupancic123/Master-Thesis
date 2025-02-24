@@ -1,10 +1,11 @@
-import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
 import { storage } from '@/common/config/firebase.config';
+import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
 
 export class FirebaseStorageUtil {
   static async uploadFile(file: File, path: string) {
     const reference = ref(storage, path);
     await uploadBytes(reference, file);
+    return await getDownloadURL(reference);
   }
 
   async exerciseUrl(path: string) {

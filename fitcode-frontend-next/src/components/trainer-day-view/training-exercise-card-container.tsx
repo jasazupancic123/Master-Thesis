@@ -1,7 +1,7 @@
 'use client';
 
-import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
@@ -44,7 +44,7 @@ export default function TrainingExerciseCardContainer(
     superior,
   } = props;
 
-  const selectedAthlete = !onAthleteView ? useGroup().selectedAthlete : null;
+  const { selectedAthlete } = useTrainerDayViewContext();
 
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
   const handleChange = (_event: Event, newValue: number | number[]) => {

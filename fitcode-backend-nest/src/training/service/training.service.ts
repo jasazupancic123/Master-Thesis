@@ -6,8 +6,15 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { addHours, endOfHour, isAfter, isBefore, startOfHour } from 'date-fns';
-import { Query, Timestamp } from 'firebase-admin/firestore';
+import {
+  addHours,
+  addMinutes,
+  endOfHour,
+  isAfter,
+  isBefore,
+  startOfHour,
+} from 'date-fns';
+import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { CommonService } from 'src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
@@ -99,10 +106,13 @@ export class TrainingService {
       )
         q.where('ownerId', '==', user.uid);
       else if (this.firebaseService.isAthlete(user)) {
-        if (dbUser?.groupsIds.length > 0)
-          q.where('groupId', 'in', dbUser.groupsIds);
-
-        q.where('membersIds', 'array-contains', user.uid);
+        if (dbUser?.groupsIds?.length === 0) return q;
+        else
+          q.where('groupId', 'in', dbUser.groupsIds).where(
+            'membersIds',
+            'array-contains',
+            user.uid,
+          );
       }
 
       // filter by other params
@@ -167,21 +177,44 @@ export class TrainingService {
       ownerId: user.uid,
       copiedFromId: null,
       from: input.from,
-      to: input.to,
+      to: addMinutes(startOfHour(input.from), input.componentsIds.length * 30),
       membersIds: group.membersIds,
       meta,
-      components: input.componentsIds.map((id) => ({
-        id,
-        color: null,
-        from: startOfHour(new Date()),
-        to: addHours(endOfHour(new Date()), 1),
-        subgroups: [],
-        supersets: [{ exercises: [] }],
-      })),
+      components: input.componentsIds.map((id, i) => {
+        const from = addMinutes(startOfHour(input.from), i * 30);
+        const to = addMinutes(from, 30);
+
+        return {
+          id,
+          from,
+          to,
+          color: null,
+          subgroups: [],
+          supersets: [{ exercises: [] }],
+        };
+      }),
     };
 
-    // create training
-    const trainingId = await this.trainingRepository.addDoc(data);
+    let trainingId: string;
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      // create training
+      const docRef = this.trainingRepository.collection().doc();
+      const query = this.firebaseService.buildCreateQuery<Training>(
+        { ...data, id: docRef.id },
+        { timestamps: true },
+      );
+
+      trainingId = docRef.id;
+      transaction.set(docRef, query);
+
+      // add trainer to users
+      for (const userId of group.membersIds) {
+        const docRef = this.userService.getDoc(userId);
+        transaction.update(docRef, {
+          trainersIds: FieldValue.arrayUnion(user.uid),
+        });
+      }
+    });
 
     // NOTE - there are no exercises yet, so no calculation of user workloads
 

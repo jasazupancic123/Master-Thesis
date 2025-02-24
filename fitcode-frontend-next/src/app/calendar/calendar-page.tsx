@@ -2,21 +2,13 @@
 
 import { CommonService } from '@/common/service/common.service';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Component } from '@/controller/component/type/component.type';
 import { Box, Paper } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { addMonths, subMonths } from 'date-fns';
 import dayjs from 'dayjs';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import {
-  Calendar,
-  momentLocalizer,
-  NavigateAction,
-  ToolbarProps,
-  View,
-} from 'react-big-calendar';
+import { Calendar, momentLocalizer, ToolbarProps } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import CustomToolbar from './custom-toolbar';
 import { CalendarPageProps } from './props';

@@ -11,6 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingCardProps } from './props';
 import TrainingComponentCard from './training-component';
 import { FileCopy } from '@mui/icons-material';
@@ -35,13 +36,7 @@ export default function TrainingCard(props: TrainingCardProps) {
   const {
     token,
     group,
-    training: selectedTraining,
     trainings,
-    selectedSubgroup,
-    setSelectedSubgroup,
-    component,
-    selectedAthlete,
-    setSelectedAthlete,
     cycle,
     setCycle,
     filteredTrainings,
@@ -49,6 +44,14 @@ export default function TrainingCard(props: TrainingCardProps) {
     setTrainings,
     components,
   } = useGroup();
+  const {
+    training: selectedTraining,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    component,
+    selectedAthlete,
+    setSelectedAthlete,
+  } = useTrainerDayViewContext();
 
   const screenSize = useScreenSize();
   const router = useRouter();

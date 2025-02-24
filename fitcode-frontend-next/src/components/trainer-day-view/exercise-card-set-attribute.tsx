@@ -66,7 +66,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
                 p: 2,
               }}
             >
-              {option.label.toUpperCase()}
+              {option.label[0].toUpperCase() + option.label.slice(1)}
             </MenuItem>
           ))}
         </Select>

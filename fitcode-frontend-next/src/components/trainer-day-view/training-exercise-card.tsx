@@ -11,6 +11,7 @@ import {
   Superset,
   TrainingComponent,
 } from '@/controller/training/type/training-plan.type';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { Grid2 } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -30,6 +31,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     superior,
   } = props;
 
+  const { setDetectedChanges } = useGroup();
   const {
     training,
     setTraining,
@@ -37,8 +39,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,
-    setDetectedChanges,
-  } = useGroup();
+  } = useTrainerDayViewContext();
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =
