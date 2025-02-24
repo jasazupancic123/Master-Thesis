@@ -4,6 +4,7 @@ import { COLOR } from '@/common/constant/browser.constant';
 import BorderColor from '@/components/border-color';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 import { WorkloadType } from '@/controller/training/enum/workload-type.enum';
 import {
@@ -32,19 +33,23 @@ import TrainingExerciseCardContainer from './training-exercise-card-container';
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
   const screenSize = useScreenSize();
+
+  const {
+    exercises: allExercises,
+    filteredTrainings,
+    setFilteredTrainings,
+    setDetectedChanges,
+  } = useGroup();
+
   const {
     training,
     setTraining,
     component,
     setComponent,
-    exercises: allExercises,
     selectedSubgroup,
     setSelectedSubgroup,
-    filteredTrainings,
-    setFilteredTrainings,
     selectedAthlete,
-    setDetectedChanges,
-  } = useGroup();
+  } = useTrainerDayViewContext();
 
   const supersets =
     selectedSubgroup?.subgroup?.supersets || component?.supersets || [];

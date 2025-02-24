@@ -37,7 +37,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         >
           {options.map((option) => (
             <MenuItem key={option.label} value={option.label}>
-              {option.label.toUpperCase()}
+              {option.label[0].toUpperCase() + option.label.slice(1)}
             </MenuItem>
           ))}
         </Select>

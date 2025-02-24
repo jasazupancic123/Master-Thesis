@@ -1,6 +1,5 @@
 import { handleApiRequest } from '@/common/type/state.type';
 import { useGroup } from '@/context/group-provider';
-import { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';

@@ -1,6 +1,6 @@
 import { COLORS } from '@/common/constant/color.constant';
 import { CommonService } from '@/common/service/common.service';
-import { useGroup } from '@/context/group-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { Box, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import { TrainingCardProps } from './props';
@@ -17,7 +17,7 @@ export default function TrainingCard(props: TrainingCardProps) {
     component,
     selectedAthlete,
     setSelectedAthlete,
-  } = useGroup();
+  } = useTrainerDayViewContext();
 
   useEffect(() => {
     if (!component || !selectedSubgroup || !selectedSubgroup?.subgroup) return;

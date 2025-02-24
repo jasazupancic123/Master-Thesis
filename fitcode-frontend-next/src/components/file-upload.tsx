@@ -1,7 +1,7 @@
-import { Accept, useDropzone } from 'react-dropzone';
-import { ReactNode, useCallback, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { Accept, useDropzone } from 'react-dropzone';
 
 interface Props {
   label: string;
@@ -22,7 +22,7 @@ export default function FileUpload(props: Props) {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const url = URL.createObjectURL(acceptedFiles[0]);
-    setPreview(prev => ({ ...prev, url }));
+    setPreview((prev) => ({ ...prev, url }));
   }, []);
 
   const maxSize = input === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
@@ -31,18 +31,20 @@ export default function FileUpload(props: Props) {
     ...(input === 'video' && { 'video/*': ['.mp4'] }),
   };
 
-  const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
-    onDrop,
-    accept,
-    maxSize,
-    maxFiles: 1,
-  });
+  const { getRootProps, getInputProps, isDragActive, acceptedFiles } =
+    useDropzone({
+      onDrop,
+      accept,
+      maxSize,
+      maxFiles: 1,
+    });
 
   /**
    * Clean up the previewUrl when the component unmounts
    */
   useEffect(() => {
-    if (preview.error) // reset the previewUrl if there is an error
+    if (preview.error)
+      // reset the previewUrl if there is an error
       setPreview({ url: '', error: preview.error });
 
     return () => {
@@ -55,18 +57,14 @@ export default function FileUpload(props: Props) {
    */
   useEffect(() => {
     const file = acceptedFiles[0];
-    if (!file)
-      return;
+    if (!file) return;
 
-    const uploadFile = async () => {
-      try {
-        await onFileUpload(file);
-      } catch (e: any) {
-        setPreview(prev => ({ ...prev, error: e.message || 'An error occurred' }));
-      }
-    };
-
-    uploadFile().then();
+    onFileUpload(file).catch((e) => {
+      setPreview((prev) => ({
+        ...prev,
+        error: e.message || 'An error occurred',
+      }));
+    });
   }, [acceptedFiles]);
 
   return (
@@ -76,20 +74,21 @@ export default function FileUpload(props: Props) {
       <DragAndDropPlaceholder
         onClick={() => {
           // set error to empty string to remove the error message
-          setPreview(prev => ({ ...prev, error: '' }));
+          setPreview((prev) => ({ ...prev, error: '' }));
         }}
       >
         <Box p={1}>
           <Typography>{label}</Typography>
 
-          {preview.error
-            ? <Typography color="error">{preview.error}</Typography>
-            : preview.url
-              ? null
-              : isDragActive
-                ? <Typography width="100%">Drop</Typography>
-                : <Typography width="100%">Drop file here or click to select</Typography>
-          }
+          {preview.error ? (
+            <Typography color="error">{preview.error}</Typography>
+          ) : preview.url ? null : isDragActive ? (
+            <Typography width="100%">Drop</Typography>
+          ) : (
+            <Typography width="100%">
+              Drop file here or click to select
+            </Typography>
+          )}
         </Box>
 
         {!preview.error && preview.url && (
@@ -97,11 +96,11 @@ export default function FileUpload(props: Props) {
             {input === 'video' ? (
               <video
                 src={preview.url}
-                controls
+                // controls
                 muted
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 onError={() => {
-                  setPreview(prev => ({ ...prev, error: 'Invalid video' }));
+                  setPreview((prev) => ({ ...prev, error: 'Invalid video' }));
                 }}
               />
             ) : (
@@ -110,17 +109,9 @@ export default function FileUpload(props: Props) {
                 alt="Image Preview"
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 onError={() => {
-                  setPreview(prev => ({ ...prev, error: 'Invalid image' }));
+                  setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
                 }}
               />
-
-              /*<Image
-                src={previewUrl}
-                alt="Image Preview"
-                style={{ objectFit: 'cover' }}
-                fill
-                onError={() => setPreviewUrl(null)}
-              />*/
             )}
           </Box>
         )}
@@ -129,7 +120,10 @@ export default function FileUpload(props: Props) {
   );
 }
 
-function DragAndDropPlaceholder(props: { children: ReactNode, onClick: () => void }) {
+function DragAndDropPlaceholder(props: {
+  children: ReactNode;
+  onClick: () => void;
+}) {
   return (
     <Box
       height="100%"
@@ -138,7 +132,8 @@ function DragAndDropPlaceholder(props: { children: ReactNode, onClick: () => voi
       sx={{
         border: '1px dashed grey',
         cursor: 'pointer',
-      }}>
+      }}
+    >
       {props.children}
     </Box>
   );

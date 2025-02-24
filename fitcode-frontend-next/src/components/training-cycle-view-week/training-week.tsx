@@ -22,7 +22,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     group,
     cycle,
     components,
-    trainings,
     setCycle,
     setFilteredTrainings,
     filteredTrainings,
