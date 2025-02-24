@@ -30,6 +30,8 @@ export interface TrainingExerciseCardProps {
   exercise: TrainingExercise;
   selectedExercise: TrainingExercise | null;
   setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
+  chartView?: boolean;
+  superior?: { row: boolean; column: boolean; all: boolean };
 }
 
 export interface SubgroupProps {
@@ -55,4 +57,5 @@ export interface SetExerciseAttributeProps {
   onChange: (data: SetExerciseState) => void;
   options: SetExerciseOption[];
   disabled?: boolean;
+  canEdit?: boolean;
 }

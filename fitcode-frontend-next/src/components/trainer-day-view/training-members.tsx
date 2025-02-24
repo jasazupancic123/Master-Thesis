@@ -19,6 +19,8 @@ interface TrainingMembersProps {
 export default function TrainingMembers(props: TrainingMembersProps) {
   const screenSize = useScreenSize();
   const { isSticky } = props;
+  console.log('isSticky', isSticky);
+
   const {
     group,
     users,

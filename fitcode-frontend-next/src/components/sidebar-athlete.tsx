@@ -11,9 +11,19 @@ import * as React from 'react';
 import { useState } from 'react';
 import BottomNavigation from './bottom-navigation';
 import Sidebar from './sidebar';
+import { Avatar, Grid2, MenuItem, Select } from '@mui/material';
+import { LocalizationProvider, MobileDatePicker } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import { useRouter } from 'next/navigation';
+import { useAthlete } from '@/context/athlete-provider';
 
 export default function SidebarAthlete() {
+  const { selectedDate, setSelectedDate, selectedPeriod, setSelectedPeriod } =
+    useAthlete();
+
   const screenSize = useScreenSize();
+  const router = useRouter();
   const path = usePathname();
   const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map(
     (link) => link.href
@@ -26,17 +36,127 @@ export default function SidebarAthlete() {
 
   return (
     <>
-      <Stack
-        direction="row"
-        spacing={2}
+      <Box
+        display="flex"
         bgcolor="background.default"
         width="100%"
-        height={50}
-        justifyContent="center"
+        height={80}
+        justifyContent="space-between"
+        px={screenSize.isMobile ? 2 : screenSize.isSmallerThanLaptop ? 5 : 10}
+        position="relative"
         alignItems="center"
       >
-        <Logo width={52} height={35} version="narrow" />
-      </Stack>
+        <Box
+          sx={{ p: 0, m: 0, cursor: 'pointer' }}
+          onClick={() => router.push('/trainings')}
+        >
+          <Logo width={52} height={35} version="narrow" />
+        </Box>
+        <Box
+          sx={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          <Avatar
+            className="avatar-border"
+            src="/user_avatar.png" // Path to the image in the public folder
+            sx={{
+              width: 70,
+              height: 70,
+              mx: 0,
+              my: 1,
+            }}
+          />
+        </Box>
+        <Box
+          display="flex"
+          sx={{ p: 0, m: 0 }}
+          justifyContent="flex-end"
+          flexDirection="column"
+          alignItems="center"
+        >
+          <LocalizationProvider dateAdapter={AdapterDayjs as any}>
+            <MobileDatePicker
+              value={selectedDate}
+              onChange={(newDate) => {
+                if (!newDate) return;
+                setSelectedDate(newDate);
+              }}
+              format="DD-MMM-YY"
+              closeOnSelect={true}
+              slotProps={{
+                textField: {
+                  variant: 'standard',
+                  InputProps: {
+                    disableUnderline: true,
+                    sx: {
+                      userSelect: 'none',
+                      border: 'none !important',
+                      backgroundColor: 'transparent !important',
+                      color: 'white',
+                      textAlign: 'center',
+                      textTransform: 'uppercase',
+                      display: 'inline-flex', // ✅ Ensures it only takes necessary space
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: 'auto', // ✅ Prevents extra width
+                      padding: 0,
+                      margin: 0,
+                      fontSize: 15,
+                    },
+                  },
+                  sx: {
+                    userSelect: 'none',
+                    cursor: 'pointer',
+                    width: 75,
+                    padding: 0,
+                    margin: 0,
+                    border: 'none !important',
+                    backgroundColor: 'transparent !important',
+                    '& .react-datetime-picker__wrapper': {
+                      border: 'none !important',
+                    },
+                  },
+                  inputProps: {
+                    style: {
+                      userSelect: 'none',
+                      border: 'none !important',
+                      backgroundColor: 'transparent !important',
+                      padding: '0px',
+                      textAlign: 'center',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                    },
+                  },
+                },
+              }}
+            />
+          </LocalizationProvider>
+          <Select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value as 'AM' | 'PM')}
+            sx={{
+              fontSize: 12,
+              '.MuiSelect-select': {
+                paddingTop: '0px !important',
+                paddingBottom: '0px !important',
+                minHeight: 'auto', // Prevents extra height
+                display: 'flex',
+                alignItems: 'center',
+              },
+              '.MuiInputBase-input': {
+                minHeight: 'auto', // Prevents extra height
+              },
+            }}
+          >
+            <MenuItem value="AM">AM</MenuItem>
+            <MenuItem value="PM">PM</MenuItem>
+          </Select>
+        </Box>
+      </Box>
 
       <Box
         position="fixed"

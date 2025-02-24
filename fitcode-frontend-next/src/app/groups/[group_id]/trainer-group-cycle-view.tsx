@@ -37,6 +37,8 @@ export default function TrainerCycleView() {
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [isSticky, setIsSticky] = useState(false);
 
+  console.log('cycle', cycle);
+
   // effect to track scroll position and set sticky mode
   useEffect(() => {
     const handleScroll = () => {

@@ -8,6 +8,7 @@ import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import TrainingPage from './training-page';
+import { AthleteProvider } from '@/context/athlete-provider';
 
 export default async function Page() {
   // fetch data

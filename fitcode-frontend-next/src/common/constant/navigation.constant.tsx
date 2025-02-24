@@ -111,8 +111,8 @@ export const LINKS_NAVBAR = {
 export const LINKS_SIDEBAR = {
   [UserRole.ATHLETE]: {
     groups: LINK_TRAININGS,
-    // chart: LINK_CHART,
     calendar: LINK_CALENDAR,
+    chart: LINK_CHART,
     wellness: LINK_META,
     profile: LINK_PROFILE,
   },

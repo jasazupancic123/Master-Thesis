@@ -47,7 +47,6 @@ export default function SignIn() {
       const result = await FirebaseAuthUtil.login(email, password);
       const tokenResult = await result.user.getIdTokenResult();
 
-      // set cookie and local storage
       const role = tokenResult.claims.role as UserRole;
       setToken(tokenResult.token);
       commonService.browser.setClientCookie(

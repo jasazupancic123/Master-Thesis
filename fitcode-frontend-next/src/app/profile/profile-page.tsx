@@ -37,13 +37,39 @@ export default function ProfilePage(props: ProfilePageProps) {
   const theme = useTheme();
   const [profile, setProfile] = useState({
     sport: '',
-    level: SportLevel.BEGINNER,
-    gender: undefined,
+    level: undefined as SportLevel | undefined,
+    gender: undefined as Gender | undefined,
     firstName: '',
     lastName: '',
     phone: '',
     birthDate: null as Dayjs | null,
   });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchProfile = async () => {
+      try {
+        const profile = await UserController.findProfile(token);
+        if (profile) {
+          const newProfile = {
+            sport: profile.sport || '',
+            level: (profile.level as SportLevel) || SportLevel.BEGINNER,
+            gender: profile.gender || undefined,
+            firstName: profile.firstName || '',
+            lastName: profile.lastName || '',
+            phone: profile.phone || '',
+            birthDate: profile.birthDate ? dayjs(profile.birthDate) : null,
+          };
+          setProfile(newProfile);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [user, token]);
 
   function handleChangeProfile(key: keyof UserEntity, value: any) {
     setProfile((prev) => ({ ...prev, [key]: value }));
@@ -75,21 +101,6 @@ export default function ProfilePage(props: ProfilePageProps) {
       'Failed to update profile'
     );
   }
-
-  useEffect(() => {
-    if (!user) return;
-    const names = user.displayName?.split(' ');
-
-    setProfile({
-      sport: SPORTS[0],
-      level: SportLevel.BEGINNER,
-      gender: undefined,
-      firstName: names ? names[0] : '',
-      lastName: names && names.length > 1 ? names[1] : '',
-      phone: '+38670739540',
-      birthDate: dayjs('2001-09-14'),
-    });
-  }, []);
 
   return (
     <Box
@@ -138,15 +149,18 @@ export default function ProfilePage(props: ProfilePageProps) {
         <FormControl sx={{ flex: 1, mr: DEFAULT_MARGIN }}>
           <InputLabel>Gender</InputLabel>
           <Select
-            value={profile.gender || Gender.M}
+            value={profile.gender ?? ''} // Use nullish coalescing (??) to allow empty value
             label="Gender"
             onChange={(e) =>
               handleChangeProfile('gender', e.target.value as Gender)
             }
           >
+            <MenuItem value="" disabled>
+              Select Gender
+            </MenuItem>
             {Object.values(Gender).map((gender) => (
               <MenuItem key={gender} value={gender}>
-                {gender}
+                {gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase()}
               </MenuItem>
             ))}
           </Select>
@@ -194,12 +208,15 @@ export default function ProfilePage(props: ProfilePageProps) {
         <FormControl sx={{ flex: 1 }}>
           <InputLabel>Sport Level</InputLabel>
           <Select
-            value={profile.level}
+            value={profile.level ?? ''}
             label="Sport Level"
             onChange={(e) =>
               handleChangeProfile('level', e.target.value as SportLevel)
             }
           >
+            <MenuItem value="" disabled>
+              Select Sport Level
+            </MenuItem>
             {Object.values(SportLevel).map((sl) => (
               <MenuItem key={sl} value={sl}>
                 {sl.charAt(0).toUpperCase() + sl.slice(1).toLowerCase()}

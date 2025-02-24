@@ -44,6 +44,9 @@ export async function handleCreateTraining(
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 
+  if (dayjs(cycle.from).isAfter(date) || dayjs(cycle.to).isBefore(date))
+    return toast.error('Selected date is not within the cycle');
+
   // get number of trainings in the selected period
   const periodTrainings = filteredTrainings.filter((training) => {
     const trainingDate = dayjs(training.from);
@@ -99,7 +102,7 @@ export async function handleCreateTraining(
       const mapped = TrainingService.mapComponents(training, components);
       setTrainings((prev) => [...prev, mapped]);
       setFilteredTrainings((prev) => [...prev, mapped]);
-      // toast.success('Training created successfully');
+      toast.success('Training created successfully');
     },
     undefined,
     'Failed to create training'
