@@ -1,7 +1,7 @@
 'use client';
 
-import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
@@ -33,7 +33,7 @@ export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
   const screenSize = useScreenSize();
-  const { selectedAthlete } = useGroup();
+  const { selectedAthlete } = useTrainerDayViewContext();
   const { supersetIndex, exercise, selectedExercise, setSelectedExercise } =
     props;
 

@@ -20,11 +20,7 @@ import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import {
-  handleAddExercise,
-  handleFileUpload,
-  handlePaginateExercises,
-} from './state';
+import { handleAddExercise, handlePaginateExercises } from './state';
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -193,9 +189,6 @@ export function ExercisesPage() {
           isOpen={modal.add}
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
-          onFileUpload={(file, path) =>
-            handleFileUpload({ file, path }, { router })
-          }
           icons={
             <>
               <IconButton
@@ -226,9 +219,6 @@ export function ExercisesPage() {
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
           title={'Update Exercise'}
-          onFileUpload={(file, path) =>
-            handleFileUpload({ file, path }, { router })
-          }
           icons={
             <>
               <IconButton onClick={() => {}}>

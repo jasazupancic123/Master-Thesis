@@ -1,5 +1,5 @@
-import { ContentState } from '@/common/enum/video-state.enum';
 import { CommonService } from '@/common/service/common.service';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { SetState } from '@/common/type/state.type';
 import FileUpload from '@/components/file-upload';
 import MyModal from '@/components/modal';
@@ -29,7 +29,6 @@ interface Props {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   title: string;
-  onFileUpload: (file: File, path: string) => Promise<void>;
 }
 
 export default function ExerciseModal(props: Props) {
@@ -48,10 +47,6 @@ export default function ExerciseModal(props: Props) {
   const [selectedComponents, setSelectedComponents] = useState<{
     [key: number]: string;
   }>({});
-  const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
-  const [videoState, setVideoState] = useState<ContentState>(ContentState.NONE);
-  const [imageState, setImageState] = useState<ContentState>(ContentState.NONE);
 
   useEffect(() => {
     // set the selected components to the data's components
@@ -78,38 +73,6 @@ export default function ExerciseModal(props: Props) {
 
     selected[component.parents.length] = component.id;
     setSelectedComponents(selected);
-
-    async function fetchUrls() {
-      setExistingImageUrl(null);
-      setExistingVideoUrl(null);
-
-      if (!data.imageUrl && !data.videoUrl) {
-        setVideoState(ContentState.NONE);
-        setImageState(ContentState.NONE);
-        return;
-      }
-
-      if (data.videoUrl) setVideoState(ContentState.LOADING);
-      if (data.imageUrl) setImageState(ContentState.LOADING);
-
-      if (data.imageUrl) {
-        setExistingImageUrl(
-          await CommonService.instance.firebase.storage.exerciseUrl(
-            data.imageUrl
-          )
-        );
-        setImageState(ContentState.LOADED);
-      } else setExistingImageUrl(null);
-      if (data.videoUrl) {
-        setExistingVideoUrl(
-          await CommonService.instance.firebase.storage.exerciseUrl(
-            data.videoUrl
-          )
-        );
-        setVideoState(ContentState.LOADED);
-      } else setExistingVideoUrl(null);
-    }
-    fetchUrls().then();
   }, [data?.id]);
 
   function handleSelectChange(field: string, value: string) {
@@ -157,7 +120,9 @@ export default function ExerciseModal(props: Props) {
               variant="outlined"
               autoFocus
               value={data.name}
-              onChange={(e) => setData({ ...data, name: e.target.value })}
+              onChange={(e) =>
+                setData((prev) => ({ ...prev, name: e.target.value }))
+              }
             />
           </Grid>
 
@@ -180,132 +145,31 @@ export default function ExerciseModal(props: Props) {
           {/* Video url and image url */}
           <Grid size={{ xs: 6 }}>
             <Stack direction="column" alignItems="center" height="100%">
-              {
-                // Update an existing exercise
-                (() => {
-                  switch (videoState) {
-                    case ContentState.LOADING:
-                      return (
-                        <div
-                          style={{
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          }}
-                        >
-                          Loading...
-                        </div>
-                      );
-
-                    default:
-                      return (
-                        <FileUpload
-                          label="Video"
-                          input="video"
-                          onFileUpload={async (file: File) => {
-                            const path = `media/exercise/${Date.now()}-${
-                              file.name
-                            }`;
-                            await props.onFileUpload(file, path);
-                            const url =
-                              await CommonService.instance.firebase.storage.exerciseUrl(
-                                path
-                              );
-                            setData({ ...data, videoUrl: url });
-                          }}
-                          initialFileUrl={
-                            videoState == ContentState.LOADED &&
-                            existingVideoUrl
-                              ? existingVideoUrl
-                              : data.videoUrl
-                          }
-                        />
-                      );
-                  }
-                })()
-              }
-
-              {/*<TextField
-              fullWidth
-              label="Or paste video URL"
-              variant="outlined"
-              value={data.videoUrl || ''}
-              onChange={(e) => setData({ ...data, videoUrl: e.target.value })}
-            />*/}
+              <FileUpload
+                label="Video"
+                input="video"
+                initialFileUrl={data.videoUrl}
+                onFileUpload={async (file: File) => {
+                  const path = `media/exercise/${Date.now()}-${file.name}`;
+                  const url = await FirebaseStorageUtil.uploadFile(file, path);
+                  setData((prev) => ({ ...prev, videoUrl: url }));
+                }}
+              />
             </Stack>
           </Grid>
 
           <Grid size={{ xs: 6 }}>
             <Stack direction="column" alignItems="center">
-              {
-                // Update an existing exercise
-                (() => {
-                  switch (imageState) {
-                    case ContentState.LOADING:
-                      return (
-                        <div
-                          style={{
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          }}
-                        >
-                          Loading...
-                        </div>
-                      );
-
-                    default:
-                      return (
-                        <FileUpload
-                          label="Image"
-                          input="image"
-                          onFileUpload={async (file: File) => {
-                            const path = `media/exercise/${Date.now()}-${
-                              file.name
-                            }`;
-                            await props.onFileUpload(file, path);
-                            const url =
-                              await CommonService.instance.firebase.storage.exerciseUrl(
-                                path
-                              );
-                            setData({ ...data, imageUrl: url });
-                          }}
-                          initialFileUrl={
-                            imageState == ContentState.LOADED &&
-                            existingImageUrl
-                              ? existingImageUrl
-                              : data.imageUrl
-                          }
-                        />
-                      );
-                  }
-                })()
-              }
-              {/* <FileUpload
+              <FileUpload
                 label="Image"
                 input="image"
+                initialFileUrl={data.imageUrl}
                 onFileUpload={async (file: File) => {
                   const path = `media/exercise/${Date.now()}-${file.name}`;
-                  setData({ ...data, imageUrl: path });
-
-                  await props.onFileUpload(file, path);
+                  const url = await FirebaseStorageUtil.uploadFile(file, path);
+                  setData((prev) => ({ ...prev, imageUrl: url }));
                 }}
-                initialFileUrl={
-                  existingImageUrl === null ? data.imageUrl : existingImageUrl
-                }
-                // fileUrl={data.imageUrl}
-                // setFileUrl={(url) => setData({ ...data, imageUrl: url })}
-              /> */}
-
-              {/*<TextField
-              fullWidth
-              label="Or paste image URL"
-              variant="outlined"
-              value={data.imageUrl || ''}
-              onChange={(e) => setData({ ...data, imageUrl: e.target.value })}
-            />*/}
+              />
             </Stack>
           </Grid>
 

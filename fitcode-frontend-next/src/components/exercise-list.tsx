@@ -25,22 +25,22 @@ export default function ExerciseList(props: Props) {
             const index = selectedExercises.findIndex(
               (e) => e.id === exercise.id
             );
-            if (index === -1) {
+
+            if (index === -1)
               setSelectedExercises([...selectedExercises, exercise]);
-            } else {
+            else
               setSelectedExercises(
                 selectedExercises.filter((e) => e.id !== exercise.id)
               );
-            }
           }}
         >
           <CardMedia
             sx={{ height: 160 }}
+            title={exercise.name}
             image={
               exercise.imageUrl ??
               'https://mui.com/static/images/cards/contemplative-reptile.jpg'
             }
-            title={exercise.name}
           />
           <CardContent
             sx={{

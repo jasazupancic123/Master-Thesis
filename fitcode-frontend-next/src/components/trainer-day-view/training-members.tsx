@@ -3,6 +3,7 @@
 import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
@@ -19,20 +20,24 @@ interface TrainingMembersProps {
 export default function TrainingMembers(props: TrainingMembersProps) {
   const screenSize = useScreenSize();
   const { isSticky } = props;
+
   const {
     group,
     users,
-    training,
-    setSelectedSubgroup,
-    component,
-    setComponent,
-    setTraining,
     filteredTrainings,
     setFilteredTrainings,
-    selectedAthlete,
-    setSelectedAthlete,
     setDetectedChanges,
   } = useGroup();
+
+  const {
+    component,
+    setComponent,
+    training,
+    setTraining,
+    setSelectedSubgroup,
+    selectedAthlete,
+    setSelectedAthlete,
+  } = useTrainerDayViewContext();
 
   const members = users.filter((user) => group.membersIds.includes(user.uid));
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
