@@ -1,10 +1,4 @@
-import { IdEntity } from '@/common/type/entity.type';
-import {
-  handleApiRequest,
-  SetState,
-  SetStateNullable,
-} from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
+import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import dayjs from 'dayjs';

@@ -12,22 +12,6 @@ import toast from 'react-hot-toast';
 
 const commonService = CommonService.instance;
 
-export async function handleFileUpload(
-  input: { file: File; path: string },
-  state: { router: AppRouterInstance }
-) {
-  const { file, path } = input;
-  const { router } = state;
-
-  handleApiRequest(
-    router,
-    () => FirebaseStorageUtil.uploadFile(file, path),
-    () => {},
-    undefined,
-    'Failed to upload file'
-  );
-}
-
 export function handlePaginateExercises(
   filter: { componentsIds?: string[]; name?: string },
   state: {
@@ -96,9 +80,9 @@ export async function handleAddExercise(
   if (!input.name) return toast.error('Name is required');
   if (!input.componentsIds?.length)
     return toast.error('Select at least one component to add');
-  const attributeValues: Record<string, any> = {};
 
   // find all nested select attributes and convert them to a multi-level object
+  const attributeValues: Record<string, any> = {};
   const nestedSelectAttributes = attributes
     .filter(
       (attribute) =>
