@@ -111,13 +111,19 @@ export default function Supersets(props: SupersetsProps) {
                   selectedAthlete &&
                   superset.exercises.some((e) => e.id === selectedExercise.id)
                     ? 12
-                    : 6,
+                    : screenSize.isLandscapeMobile
+                      ? 4
+                      : 6,
                 md:
                   selectedExercise &&
                   selectedAthlete &&
                   superset.exercises.some((e) => e.id === selectedExercise.id)
-                    ? 6
-                    : 3,
+                    ? screenSize.isLandscapeMobile
+                      ? 4
+                      : 6
+                    : screenSize.isLandscapeMobile
+                      ? 4
+                      : 3,
               }}
               key={`${component.id}-${i}`}
             >
@@ -130,10 +136,19 @@ export default function Supersets(props: SupersetsProps) {
                   <Stack
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    p={screenSize.isLaptop ? 0 : 2}
+                    p={
+                      screenSize.isLaptop || screenSize.isMobile
+                        ? 0
+                        : screenSize.isLandscapeMobile
+                          ? 0.5
+                          : 2
+                    }
                   >
                     <Box
-                      sx={{ cursor: 'pointer', px: 1 }}
+                      sx={{
+                        cursor: 'pointer',
+                        px: screenSize.isLaptop ? 0.5 : 0,
+                      }}
                       onClick={() =>
                         handleDeleteSuperset(
                           { index: i },
@@ -153,12 +168,27 @@ export default function Supersets(props: SupersetsProps) {
                         )
                       }
                     >
-                      <BorderColor color={COLOR[i % COLOR.length]} />
+                      <BorderColor
+                        color={COLOR[i % COLOR.length]}
+                        applyMargin
+                        marginValue={
+                          superset.exercises.length === 0 ? '3px' : '5px'
+                        }
+                      />
                     </Box>
 
                     <Grid2 container>
                       {superset.exercises.map((exercise, k) => (
-                        <Grid2 size={{ xs: 12 }} key={exercise.id}>
+                        <Grid2
+                          size={{ xs: 12 }}
+                          key={exercise.id}
+                          sx={{
+                            mb:
+                              superset.exercises.length - 1 !== k
+                                ? 0.4
+                                : undefined,
+                          }}
+                        >
                           <Draggable
                             key={exercise.id}
                             draggableId={exercise.id.toString()}
@@ -177,6 +207,7 @@ export default function Supersets(props: SupersetsProps) {
                                 {...provided.dragHandleProps}
                                 position="relative"
                                 p={1}
+                                px={screenSize.isLaptop ? 0.5 : 0}
                                 py={
                                   selectedAthlete &&
                                   selectedExercise === exercise
@@ -206,7 +237,7 @@ export default function Supersets(props: SupersetsProps) {
                                 <Box
                                   position="absolute"
                                   top={5}
-                                  right={10}
+                                  right={screenSize.isLandscapeMobile ? 0 : 10}
                                   display={
                                     selectedAthlete &&
                                     exercise === selectedExercise
@@ -252,6 +283,11 @@ export default function Supersets(props: SupersetsProps) {
                                   exercise={exercise}
                                   selectedExercise={selectedExercise}
                                   setSelectedExercise={setSelectedExercise}
+                                  superior={{
+                                    row: i === 0,
+                                    column: k === 0,
+                                    all: i === 0 && k === 0,
+                                  }}
                                 />
                               </Box>
                             )}
@@ -263,7 +299,10 @@ export default function Supersets(props: SupersetsProps) {
                     </Grid2>
 
                     <Box
-                      sx={{ cursor: 'pointer', px: 1 }}
+                      sx={{
+                        cursor: 'pointer',
+                        px: screenSize.isLaptop ? 0.5 : 0,
+                      }}
                       onClick={() =>
                         handleDeleteSuperset(
                           { index: i },
@@ -286,7 +325,10 @@ export default function Supersets(props: SupersetsProps) {
                       <BorderColor
                         color={COLOR[i % COLOR.length]}
                         lower
-                        applyMargin={superset.exercises.length === 0}
+                        applyMargin
+                        marginValue={
+                          superset.exercises.length === 0 ? '3px' : '5px'
+                        }
                       />
                     </Box>
                   </Stack>
@@ -296,7 +338,9 @@ export default function Supersets(props: SupersetsProps) {
           ))}
 
         {supersetsWithAdd.length < NUM_MAX_SUPERSETS && (
-          <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid2
+            size={{ xs: 12, sm: screenSize.isLandscapeMobile ? 4 : 6, md: 3 }}
+          >
             <Droppable
               key="addSupersetDroppable"
               droppableId="addSupersetDroppable"

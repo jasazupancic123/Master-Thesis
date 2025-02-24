@@ -34,8 +34,8 @@ export default function BottomNavigation({
       }}
       showLabels
       sx={{
-        backgroundColor: '#303E4A',
-        height: '70px',
+        backgroundColor: 'background.paper',
+        height: '65px',
         width: '100%',
         '& .Mui-selected': { color: '#1EB980 !important' },
       }}

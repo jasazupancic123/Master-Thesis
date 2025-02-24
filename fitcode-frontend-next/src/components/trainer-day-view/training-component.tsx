@@ -32,7 +32,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
 
   return (
-    <Box my={1} p={0} px={1}>
+    <Box my={1} p={0} px={0}>
       <>
         <Box sx={{ bgcolor: 'background.paper', my: 0.5 }}>
           <Box
@@ -43,7 +43,13 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             }}
           >
             <Stack
-              direction={screenSize.isMobile ? 'column' : 'row'}
+              direction={
+                screenSize.isMobile ||
+                (screenSize.isLandscapeMobile &&
+                  trainingComponent === component)
+                  ? 'column'
+                  : 'row'
+              }
               alignItems="center"
               mt={1}
               width="100%"
@@ -275,7 +281,16 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           {component &&
             trainingComponent.id === component.id &&
             training.id === selectedTraining?.id && (
-              <Box bgcolor="background.paper" p={2} key={filter}>
+              <Box
+                bgcolor="background.paper"
+                p={2}
+                px={
+                  screenSize.isMobile || screenSize.isLandscapeMobile
+                    ? 0
+                    : undefined
+                }
+                key={filter}
+              >
                 <Supersets
                   openAddExerciseModal={openAddExerciseModal}
                   setOpenAddExerciseModal={setOpenAddExerciseModal}

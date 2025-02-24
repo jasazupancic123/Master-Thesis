@@ -120,6 +120,11 @@ export default function TrainerYearView() {
           onCancel={() => setShowEditCycleModal(false)}
           cancelText="Close"
           onConfirm={() => {
+            const newCycles = selectedGroup.cycles.map((c) =>
+              c.id === editCycle.id ? { ...editCycle } : c
+            );
+            setSelectedGroup({ ...selectedGroup, cycles: newCycles });
+            setDetectedChanges(true);
             setShowEditCycleModal(false);
             setEditCycle(null);
           }}

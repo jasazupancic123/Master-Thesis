@@ -27,15 +27,24 @@ interface TrainingExerciseCardContainerProps {
   exercise: TrainingExercise;
   selectedExercise: TrainingExercise | null;
   setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
+  onAthleteView?: boolean;
+  superior?: { row: boolean; column: boolean; all: boolean };
 }
 
 export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
   const screenSize = useScreenSize();
-  const { selectedAthlete } = useGroup();
-  const { supersetIndex, exercise, selectedExercise, setSelectedExercise } =
-    props;
+  const {
+    supersetIndex,
+    exercise,
+    selectedExercise,
+    setSelectedExercise,
+    onAthleteView,
+    superior,
+  } = props;
+
+  const selectedAthlete = !onAthleteView ? useGroup().selectedAthlete : null;
 
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
   const handleChange = (_event: Event, newValue: number | number[]) => {
@@ -62,6 +71,8 @@ export default function TrainingExerciseCardContainer(
           exercise={exercise}
           selectedExercise={selectedExercise}
           setSelectedExercise={setSelectedExercise}
+          chartView={true}
+          superior={superior}
         />
       </Grid2>
       <Grid2
@@ -234,6 +245,7 @@ export default function TrainingExerciseCardContainer(
       exercise={exercise}
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
+      superior={superior}
     />
   );
 }

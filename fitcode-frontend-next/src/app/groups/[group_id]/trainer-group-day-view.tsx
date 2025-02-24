@@ -112,9 +112,12 @@ export default function TrainerDayView() {
   }, [day, cycle]);
 
   useEffect(() => {
+    if (screenSize.isMobile || screenSize.isLandscapeMobile) return;
+
     const handleScroll = () => {
+      if (screenSize.isMobile || screenSize.isLandscapeMobile) return;
       if (screenSize.isSmallerThanLaptop) {
-        if (isSticky) setIsSticky(false);
+        setIsSticky(false);
         return;
       }
 
@@ -125,7 +128,7 @@ export default function TrainerDayView() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [screenSize]);
 
   useEffect(() => {
     if (!component) setSelectedSubgroup(null);
@@ -158,7 +161,14 @@ export default function TrainerDayView() {
 
   return (
     <>
-      <FloatingButton label="Save training" onClick={handleUpdateTraining} />
+      {!screenSize.isSmallerThanLaptop && (
+        <Box position="absolute" top="50%" right={0}>
+          <FloatingButton
+            label="Save training"
+            onClick={handleUpdateTraining}
+          />
+        </Box>
+      )}
 
       <Box
         display="flex"

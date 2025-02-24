@@ -69,7 +69,7 @@ export const INT_OPTIONS: SetExerciseOption = {
 export const KG_OPTIONS: SetExerciseOption = {
   type: 'number',
   label: 'kg',
-  // values: getValues(120),
+  values: getValues(300),
   format: (value) => value,
 };
 

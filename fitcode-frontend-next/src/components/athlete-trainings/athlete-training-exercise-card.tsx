@@ -1,15 +1,22 @@
 import { COLOR } from '@/common/constant/browser.constant';
 import {
   DISTANCE_OPTIONS,
+  RECOVERY,
   REP_OPTIONS,
+  SET,
+  SET_TYPE,
+  TEMPO,
   TIME_OPTIONS,
   VO2_OPTIONS,
+  WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
 import { handleApiRequest } from '@/common/type/state.type';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { SetType } from '@/controller/training/enum/set-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import {
+  ExerciseMeta,
+  Superset,
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
@@ -20,6 +27,7 @@ import {
   Box,
   Button,
   FormControl,
+  Grid2,
   IconButton,
   InputLabel,
   MenuItem,
@@ -34,23 +42,41 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import BorderColor from '../border-color';
 import { AthleteTrainingExerciseCardProps } from './props';
+import TrainingExerciseCardContainer from '../trainer-day-view/training-exercise-card-container';
+import TrainingExerciseCard from '../trainer-day-view/training-exercise-card';
+import { SetExerciseAttribute } from '../trainer-day-view/exercise-card-set-attribute';
+import dayjs from 'dayjs';
 
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
 ) {
-  const { userId, token, components, training } = props;
+  const { userId, components, training } = props;
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const router = useRouter();
 
-  // State to manage input values for each set
-  const [setValues, setSetValues] = useState<
-    Record<string, Array<{ setTypeValue: number; workloadValue: number }>>
-  >({});
+  const [component, setComponent] = useState<TrainingComponent>(components[0]);
+  const [selectedSuperset, setSelectedSuperset] = useState<Superset | null>(
+    null
+  );
+  const [selectedExercises, setSelectedExercises] = useState<
+    TrainingExercise[]
+  >([]);
+  const [states, setStates] = useState<ExerciseMeta[]>([]);
+  const [tempoOrEfforts, setTempoOrEfforts] = useState<('temp' | 'eff')[]>([]);
 
-  const [component, setComponent] = useState(components[0]);
-  const [selectedExercise, setSelectedExercise] =
-    useState<TrainingExercise | null>(null);
+  useEffect(() => {
+    if (!selectedSuperset) return;
+    const newExercises = selectedSuperset.exercises;
+    setSelectedExercises(newExercises);
+    if (!newExercises || newExercises.length === 0) return;
+    const newStates = newExercises.map((exercise) => exercise.meta);
+    setStates(newStates);
+    if (!newStates || newStates.length === 0) return;
+    const newTempoOrEfforts = newStates.map((state) =>
+      state.tempo ? 'temp' : 'eff'
+    );
+    setTempoOrEfforts(newTempoOrEfforts);
+  }, [selectedSuperset]);
 
   function getSupersets(component: TrainingComponent) {
     return (
@@ -58,95 +84,6 @@ export default function AthleteTrainingExerciseCard(
       component
     ).supersets;
   }
-
-  const handleSetValueChange = (
-    exerciseId: string,
-    setIndex: number,
-    value: number,
-    type: 'setTypeValue' | 'workloadValue'
-  ) => {
-    setSetValues((prev) => {
-      const updatedValues = { ...prev };
-      const updated = updatedValues?.[exerciseId]?.[setIndex];
-      if (updated)
-        updatedValues[exerciseId][setIndex] = { ...updated, [type]: value };
-
-      return updatedValues;
-    });
-  };
-
-  async function handleSaveSets(exerciseId: string) {
-    const data: WorkloadData[] = [];
-    const sets = setValues[exerciseId];
-    for (let i = 0; i < sets.length; i++) {
-      const { setTypeValue, workloadValue } = sets[i];
-      const setNumber = i + 1;
-
-      for (let j = 0; j < setTypeValue; j++) {
-        const repNumber = j + 1;
-        data.push({
-          setNumber,
-          repNumber,
-          setTypeValue,
-          workloadValue,
-          notes: '',
-        });
-      }
-    }
-
-    handleApiRequest(
-      router,
-      () =>
-        TrainingController.updateAthleteWorkloadData(
-          token,
-          training!.id,
-          exerciseId,
-          { data }
-        ),
-      () => {
-        toast.success('Successfully updated sets!');
-      },
-      undefined
-    );
-  }
-
-  // Helper function to get options based on set type and workload type
-  function getOptions(exercise: TrainingExercise) {
-    switch (exercise.meta.setType) {
-      case SetType.REPS:
-        return REP_OPTIONS;
-      case SetType.DISTANCE:
-        return DISTANCE_OPTIONS;
-      case SetType.TIME:
-        return TIME_OPTIONS;
-      case SetType.VO2:
-        return VO2_OPTIONS;
-      default:
-        return REP_OPTIONS;
-    }
-  }
-
-  // Set initial values based on trainer's exercise meta
-  useEffect(() => {
-    const initialSetValues: Record<
-      string,
-      Array<{ setTypeValue: number; workloadValue: number }>
-    > = {};
-
-    getSupersets(component).forEach((superset) => {
-      superset.exercises.forEach((exercise) => {
-        initialSetValues[exercise.id] = Array.from(
-          { length: exercise.meta.sets },
-          () => ({
-            setTypeValue: exercise.meta.setTypeValue,
-            workloadValue: +exercise.meta.workloadValue,
-          })
-        );
-      });
-    });
-
-    setSetValues(initialSetValues);
-  }, [component]);
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
@@ -157,7 +94,6 @@ export default function AthleteTrainingExerciseCard(
           width="100%"
           sx={{
             borderRadius: 2,
-            boxShadow: 3,
             position: 'relative',
             overflow: 'visible',
           }}
@@ -165,292 +101,370 @@ export default function AthleteTrainingExerciseCard(
           <Box
             display="flex"
             width="100%"
+            alignItems="center"
             sx={{
               overflow: 'visible',
               whiteSpace: 'nowrap',
-              '-webkit-overflow-scrolling': 'touch', // Smooth scrolling on iOS
+              WebkitOverflowScrolling: 'touch',
               overflowX: screenSize.isSmallerThanLaptop
                 ? 'scroll'
                 : components.length > 4
                   ? 'scroll'
                   : 'hidden',
-              '&::-webkit-scrollbar': {
-                height: '8px', // Scrollbar height
-              },
+              '&::-webkit-scrollbar': { height: '8px' },
               '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'rgba(0, 0, 0, 0.5)', // Scrollbar color
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
                 borderRadius: '4px',
               },
               '&::-webkit-scrollbar-track': {
-                backgroundColor: 'rgba(0, 0, 0, 0.1)', // Track color
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
               },
-              scrollbarWidth: 'thin', // For Firefox
-              scrollbarColor: `rgba(187, 187, 187, 0.5) ${theme.palette.background.default}`, // For Firefox
+              scrollbarWidth: 'thin',
+              scrollbarColor: `rgba(187, 187, 187, 0.5) ${theme.palette.background.default}`,
+              backgroundColor: '#253544',
+              px: 1,
             }}
           >
-            {components.map((c, _, arr) => (
-              <Typography
-                key={`component-${c.id}`}
-                variant={screenSize.isMobile ? 'h6' : 'h5'}
-                sx={{
-                  flex:
-                    arr.length > 4 ? '0 0 auto' : `1 1 ${100 / arr.length}%`,
-                  width: screenSize.isSmallerThanLaptop
-                    ? undefined
-                    : arr.length > 4
-                      ? '25%'
-                      : `${100 / arr.length}%`, // Ensures even distribution for 3 or less
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1.5px',
-                  color: c.id === component.id ? 'primary.main' : 'white',
-                  backgroundColor: 'background.paper',
-                  px: 2,
-                  py: 1,
-                  zIndex: 1,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                }}
-                onClick={() => {
-                  setComponent(c);
-                }}
-              >
-                <Box display="flex" justifyContent="center" alignItems="center">
-                  {c.id}
+            {components.map((c, _, arr) =>
+              c.id === component.id ? (
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  key={`${c.id}`}
+                  sx={{
+                    backgroundColor: 'background.paper',
+                    border: '1px solid #1eb980',
+                    borderRadius: 3,
+                    px: 2,
+                    py: 0.5,
+                    flex:
+                      arr.length > 4 ? '0 0 auto' : `1 1 ${100 / arr.length}%`,
+                    width: screenSize.isSmallerThanLaptop
+                      ? undefined
+                      : arr.length > 4
+                        ? '25%'
+                        : `${100 / arr.length}%`,
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      color: '#1eb980',
+                      zIndex: 1,
+                      height: 25,
+                      mb: 0.5,
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {c.id}
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      color: 'white',
+                      zIndex: 1,
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {dayjs(c.from).format('hh:mm A')[0] === '0'
+                      ? dayjs(c.from).format('hh:mm A').substring(1)
+                      : dayjs(c.from).format('hh:mm A')}
+                  </Typography>
                 </Box>
-              </Typography>
-            ))}
+              ) : (
+                <Typography
+                  key={`component-${c.id}`}
+                  variant={screenSize.isMobile ? 'h6' : 'h5'}
+                  sx={{
+                    flex:
+                      arr.length > 4 ? '0 0 auto' : `1 1 ${100 / arr.length}%`,
+                    width: screenSize.isSmallerThanLaptop
+                      ? undefined
+                      : arr.length > 4
+                        ? '25%'
+                        : `${100 / arr.length}%`,
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1.5px',
+                    color: '#a7a9ae',
+                    backgroundColor: '#253544',
+                    px: 2,
+                    py: 1,
+                    zIndex: 1,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setComponent(c)}
+                >
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    {c.id}
+                  </Box>
+                </Typography>
+              )
+            )}
           </Box>
 
           <CardContent
-            sx={{ backgroundColor: theme.palette.background.default }}
+            sx={{
+              backgroundColor: theme.palette.background.default,
+              px: 2,
+            }}
           >
             <Box display="flex" flexDirection="column" gap={2}>
-              {getSupersets(component).map((s, i) => {
-                return (
-                  <Box key={`superset-${i}`}>
-                    <BorderColor
-                      color={COLOR[i % COLOR.length]}
-                      applyMargin={s.exercises.length === 0}
-                    />
+              {component.supersets.map((superset, i) => (
+                <Box key={`superset-${component.id}-${i}`}>
+                  <BorderColor
+                    color={COLOR[i % COLOR.length]}
+                    applyMargin
+                    marginValue={
+                      superset.exercises.length === 0 ? '3px' : '2px'
+                    }
+                  />
 
-                    <Box sx={{ borderRadius: 2, boxShadow: 1 }}>
-                      {s.exercises.map((exercise, exerciseIndex) => {
-                        const options = getOptions(exercise);
+                  {superset.exercises.map((exercise, exerciseIndex) => (
+                    <React.Fragment key={`exercise-fragment-${exercise.id}`}>
+                      <Box
+                        key={exercise.id}
+                        display="flex"
+                        width="100%"
+                        justifyContent="center"
+                        alignItems="center"
+                        borderTop="3px solid #323f4b"
+                        sx={{ backgroundColor: '#3c4854' }}
+                        py={0.5}
+                      >
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {exercise.exercise?.name || 'Unnamed Exercise'}
+                        </Typography>
 
-                        return selectedExercise?.id === exercise.id ? (
+                        {exerciseIndex === 0 && (
+                          <IconButton
+                            onClick={() => {
+                              if (superset === selectedSuperset) {
+                                setSelectedSuperset(null);
+                                setSelectedExercises([]);
+                                setStates([]);
+                                setTempoOrEfforts([]);
+                              } else {
+                                setSelectedSuperset(superset);
+                              }
+                            }}
+                            sx={{
+                              py: 0,
+                              m: 0,
+                              position: 'absolute',
+                              right: screenSize.isMobile ? 11 : 20,
+                            }}
+                          >
+                            {selectedSuperset === superset &&
+                            states.length > 0 &&
+                            tempoOrEfforts.length > 0 ? (
+                              <VisibilityOffIcon />
+                            ) : (
+                              <VisibilityIcon />
+                            )}
+                          </IconButton>
+                        )}
+                      </Box>
+                      {selectedExercises.includes(exercise) &&
+                        states.length > 0 &&
+                        tempoOrEfforts.length > 0 && (
                           <Box
-                            key={exercise.id}
-                            display="flex"
-                            flexDirection={{ xs: 'column', sm: 'row' }}
-                            gap={2}
+                            key={`${exercise.id}-box`}
+                            sx={{
+                              p: 0,
+                              m: 0,
+                              pb: 2,
+                              position: 'relative',
+                              backgroundColor: '#3c4854',
+                            }}
                           >
                             <Box
+                              position="absolute"
                               display="flex"
                               flexDirection="column"
-                              width="100%"
-                              sx={{
-                                backgroundColor: 'background.paper',
-                              }}
+                              top={-30}
+                              left={10}
+                              zIndex={1000}
                             >
-                              <Box
-                                flex={{ xs: '1 1 100%', sm: '1 1 30%' }}
-                                display="flex"
-                                flexDirection="column"
-                                alignItems="center"
-                                justifyContent="center"
-                                pb={1}
+                              <Typography
+                                variant="caption"
+                                color="rgb(124, 128, 132)"
                               >
-                                <Box
-                                  sx={{
-                                    borderRadius: 2,
-                                    boxShadow: 0,
-                                    width: '100%',
-                                    backgroundColor: 'background.paper',
-                                  }}
-                                >
-                                  <Box sx={{ textAlign: 'center' }}>
-                                    <Box
-                                      display="flex"
-                                      justifyContent="center"
-                                      mt={1}
-                                    >
-                                      <IconButton
-                                        onClick={() =>
-                                          setSelectedExercise(null)
-                                        }
-                                        sx={{
-                                          py: 0,
-                                          m: 0,
-                                          position: 'absolute',
-                                          right: 20,
-                                        }}
-                                      >
-                                        <VisibilityOffIcon />
-                                      </IconButton>
-                                    </Box>
-
-                                    <Typography
-                                      variant="h6"
-                                      sx={{
-                                        fontWeight: 'bold',
-                                        textTransform: 'uppercase',
-                                      }}
-                                    >
-                                      {exercise.exercise?.name ||
-                                        'Unnamed Exercise'}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Box>
-
-                              {/* Set Details */}
-                              <Box
-                                flex={{ xs: '1 1 100%', sm: '1 1 70%' }}
-                                display="flex"
-                                flexDirection="column"
-                                py={1}
-                                px={screenSize.isMobile ? 1 : 0}
-                                alignItems="center"
-                                gap={1}
-                                sx={{
-                                  backgroundColor: 'background.paper',
-                                }}
-                              >
-                                {Array.from({
-                                  length: exercise.meta.sets,
-                                }).map((_, setIndex) => (
-                                  <Box
-                                    key={`${exercise.id}-set-${setIndex}`}
-                                    display="flex"
-                                    gap={1}
-                                    minWidth={
-                                      !screenSize.isSmallerThanLaptop
-                                        ? 300
-                                        : undefined
-                                    }
-                                  >
-                                    {/* Set Type Dropdown */}
-                                    <FormControl fullWidth>
-                                      <InputLabel>
-                                        {options.label[0].toUpperCase() +
-                                          options.label.slice(1)}
-                                      </InputLabel>
-
-                                      <Select
-                                        value={
-                                          setValues[exercise.id]?.[
-                                            setIndex
-                                          ]?.setTypeValue?.toString() || ''
-                                        }
-                                        onChange={(e) =>
-                                          handleSetValueChange(
-                                            exercise.id,
-                                            setIndex,
-                                            +e.target.value,
-                                            'setTypeValue'
-                                          )
-                                        }
-                                        label={options.label}
-                                      >
-                                        {options.values?.map((value) => (
-                                          <MenuItem
-                                            key={`${exercise.id}-option-${value}-set-${setIndex}-type-${options.label}`}
-                                            value={value}
-                                          >
-                                            {options.format(value)}
-                                          </MenuItem>
-                                        ))}
-                                      </Select>
-                                    </FormControl>
-
-                                    {/* Workload Input */}
-                                    <TextField
-                                      fullWidth
-                                      label={exercise.meta.workloadType.toUpperCase()}
-                                      type="number"
-                                      value={
-                                        setValues[exercise.id]?.[
-                                          setIndex
-                                        ]?.workloadValue?.toString() || ''
-                                      }
-                                      onChange={(e) =>
-                                        handleSetValueChange(
-                                          exercise.id,
-                                          setIndex,
-                                          +e.target.value,
-                                          'workloadValue'
-                                        )
-                                      }
-                                    />
-                                  </Box>
-                                ))}
-
-                                {/* Save Button */}
-                                <Button
-                                  variant="contained"
-                                  onClick={() => handleSaveSets(exercise.id)}
-                                  sx={{ mt: 1 }}
-                                >
-                                  Save Sets
-                                </Button>
-                              </Box>
+                                {`${i + 1}${String.fromCharCode(65 + exerciseIndex)}`}
+                              </Typography>
                             </Box>
-                          </Box>
-                        ) : (
-                          <Box
-                            key={exercise.id}
-                            display="flex"
-                            width="100%"
-                            justifyContent="center"
-                            alignItems="center"
-                            borderTop={
-                              exerciseIndex > 0
-                                ? `3px solid ${theme.palette.background.paper}`
-                                : undefined
-                            }
-                            borderBottom={
-                              exerciseIndex < s.exercises.length - 1
-                                ? `3px solid ${theme.palette.background.paper}`
-                                : undefined
-                            }
-                            sx={{ backgroundColor: 'background.default' }}
-                            py={0.5}
-                          >
-                            <Typography
-                              variant="h6"
-                              sx={{
-                                fontWeight: 'bold',
-                                textTransform: 'uppercase',
-                              }}
-                            >
-                              {exercise.exercise?.name || 'Unnamed Exercise'}
-                            </Typography>
+                            <Grid2 container spacing={1} columns={10}>
+                              {/* Sets */}
+                              <Grid2 size={2}>
+                                <SetExerciseAttribute
+                                  options={SET}
+                                  disabled={true}
+                                  state={(() => {
+                                    const option = SET.find(
+                                      (option) => option.label === 'sets'
+                                    )!;
+                                    return {
+                                      type: option.type,
+                                      label: option.label,
+                                      values: option.values,
+                                      option:
+                                        option.label as keyof ExerciseMeta,
+                                      format: option.format,
+                                      value:
+                                        states[exerciseIndex].sets.toString() ??
+                                        option.values![1].toString(),
+                                    };
+                                  })()}
+                                  onChange={() => {}}
+                                />
+                              </Grid2>
+                              {/* Set Type */}
+                              <Grid2 size={2}>
+                                <SetExerciseAttribute
+                                  options={SET_TYPE}
+                                  disabled={true}
+                                  state={(() => {
+                                    const option = SET_TYPE.find(
+                                      (option) =>
+                                        option.label ===
+                                        states[exerciseIndex].setType
+                                    )!;
 
-                            <IconButton
-                              onClick={() => setSelectedExercise(exercise)}
-                              sx={{
-                                py: 0,
-                                m: 0,
-                                position: 'absolute',
-                                right: 20,
-                              }}
-                            >
-                              <VisibilityIcon />
-                            </IconButton>
-                          </Box>
-                        );
-                      })}
-                    </Box>
+                                    return {
+                                      type: option.type,
+                                      label: option.label,
+                                      values: option.values,
+                                      option:
+                                        option.label as keyof ExerciseMeta,
+                                      format: option.format,
+                                      value:
+                                        states[
+                                          exerciseIndex
+                                        ].setTypeValue.toString() ??
+                                        option.values![1].toString(),
+                                    };
+                                  })()}
+                                  onChange={() => {}}
+                                />
+                              </Grid2>
+                              {/* Workload */}
+                              <Grid2 size={2}>
+                                <SetExerciseAttribute
+                                  options={WORKLOAD}
+                                  disabled={true}
+                                  state={(() => {
+                                    const option = WORKLOAD.find(
+                                      (option) =>
+                                        option.label ===
+                                        states[exerciseIndex].workloadType
+                                    )!;
 
+                                    return {
+                                      type: option.type,
+                                      label: option.label,
+                                      values: option.values,
+                                      option:
+                                        option.label as keyof ExerciseMeta,
+                                      format: option.format,
+                                      value: (
+                                        states[exerciseIndex].workloadValue ||
+                                        10
+                                      ).toString(),
+                                    };
+                                  })()}
+                                  onChange={() => {}}
+                                />
+                              </Grid2>
+
+                              {/* Tempo */}
+                              <Grid2 size={2}>
+                                <SetExerciseAttribute
+                                  options={TEMPO}
+                                  disabled={true}
+                                  state={(() => {
+                                    const option = TEMPO.find(
+                                      (option) =>
+                                        option.label ===
+                                        tempoOrEfforts[exerciseIndex]
+                                    )!;
+
+                                    return {
+                                      type: option.type,
+                                      label: option.label,
+                                      values: option.values,
+                                      option:
+                                        option.label as keyof ExerciseMeta,
+                                      format: option.format,
+                                      value:
+                                        (tempoOrEfforts[exerciseIndex] ===
+                                        'temp'
+                                          ? states[exerciseIndex].tempo
+                                          : states[exerciseIndex].effort) ??
+                                        option.values![1].toString(),
+                                    };
+                                  })()}
+                                  onChange={() => {}}
+                                />
+                              </Grid2>
+                              {/* Recovery */}
+                              <Grid2 size={2}>
+                                <SetExerciseAttribute
+                                  options={RECOVERY}
+                                  disabled={true}
+                                  state={(() => {
+                                    const option = RECOVERY.find(
+                                      (option) => option.label === 'rec'
+                                    )!;
+                                    return {
+                                      type: option.type,
+                                      label: option.label,
+                                      values: option.values,
+                                      option:
+                                        option.label as keyof ExerciseMeta,
+                                      format: option.format,
+                                      value: states[exerciseIndex].rec
+                                        ? states[exerciseIndex].rec.toString()
+                                        : '',
+                                    };
+                                  })()}
+                                  onChange={() => {}}
+                                />
+                              </Grid2>
+                            </Grid2>
+                          </Box>
+                        )}
+                    </React.Fragment>
+                  ))}
+
+                  {superset.exercises.length === 0 && (
                     <BorderColor
                       color={COLOR[i % COLOR.length]}
                       lower
-                      applyMargin={s.exercises.length === 0}
+                      applyMargin
+                      marginValue={
+                        superset.exercises.length === 0 ? '3px' : '5px'
+                      }
                     />
-                  </Box>
-                );
-              })}
+                  )}
+                </Box>
+              ))}
             </Box>
           </CardContent>
         </Box>

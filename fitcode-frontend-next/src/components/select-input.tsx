@@ -18,10 +18,11 @@ interface Props<T> {
   itemKey: keyof T;
   itemName: keyof T;
   placeholder?: string;
-  displayInputLabel?: boolean;
+  disableInputLabel?: boolean;
   enableRemove?: boolean;
   sx?: SxProps<Theme>;
   useRenderValue?: boolean;
+  displayEmpty?: boolean;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -33,7 +34,7 @@ export default function SelectInput<T>(props: Props<T>) {
           : { mr: 1, minWidth: 120 }
       }
     >
-      {props.displayInputLabel === true ? (
+      {props.disableInputLabel === true ? (
         <></>
       ) : (
         <InputLabel id={`${props.label}-label`}>{props.label}</InputLabel>
@@ -47,7 +48,7 @@ export default function SelectInput<T>(props: Props<T>) {
         startAdornment={
           <InputAdornment position="start">{props.icon}</InputAdornment>
         }
-        displayEmpty={props.placeholder ? true : false}
+        displayEmpty={props.displayEmpty}
         renderValue={
           props.useRenderValue
             ? (selected) => {
