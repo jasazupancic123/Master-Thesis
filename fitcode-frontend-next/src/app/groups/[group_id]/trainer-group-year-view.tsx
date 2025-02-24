@@ -17,15 +17,8 @@ import toast from 'react-hot-toast';
 
 export default function TrainerYearView() {
   const router = useRouter();
-  const {
-    token,
-    filter,
-    group,
-    setGroup,
-    cycle,
-    setCycle,
-    setDetectedChanges,
-  } = useGroup();
+  const { token, group, setGroup, cycle, setCycle, setDetectedChanges } =
+    useGroup();
 
   const theme = useTheme();
   const [selectedGroup, setSelectedGroup] = useState(group);

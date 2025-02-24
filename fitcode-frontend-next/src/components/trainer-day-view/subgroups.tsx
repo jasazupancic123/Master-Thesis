@@ -3,6 +3,7 @@
 import { COLORS } from '@/common/constant/color.constant';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 import AddIcon from '@mui/icons-material/Add';
@@ -19,7 +20,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { set } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import MyModal from '../modal';
@@ -35,18 +35,18 @@ import {
 export default function Subgroups(props: SubgroupProps) {
   const { showSubgroups } = props;
   const screenSize = useScreenSize();
+
   const {
-    training,
-    component,
     group,
-    setComponent,
     setTrainings,
-    setTraining,
     filteredTrainings,
     setFilteredTrainings,
     users,
     setDetectedChanges,
   } = useGroup();
+
+  const { component, setComponent, training, setTraining } =
+    useTrainerDayViewContext();
 
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
 

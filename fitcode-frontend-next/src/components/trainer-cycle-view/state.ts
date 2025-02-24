@@ -114,22 +114,13 @@ export async function handleAddTrainingComponents(
   input: AddTrainingComponents & { trainingId: string },
   state: {
     router: AppRouterInstance;
-    training: Training | undefined;
-    setTraining: SetStateNullable<Training>;
     setTrainings: SetState<Training[]>;
     setFilteredTrainings: SetState<Training[]>;
     components: Component[];
   }
 ) {
   const { trainingId, ...restInput } = input;
-  const {
-    router,
-    training: selectedTraining,
-    setTraining,
-    setFilteredTrainings,
-    setTrainings,
-    components,
-  } = state;
+  const { router, setFilteredTrainings, setTrainings, components } = state;
 
   handleApiRequest(
     router,
@@ -142,7 +133,6 @@ export async function handleAddTrainingComponents(
     (training) => {
       if (!training) {
         // training was deleted
-        if (trainingId === selectedTraining?.id) setTraining(undefined);
         setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
         setFilteredTrainings((prev) => prev.filter((t) => t.id !== trainingId));
         return;
@@ -150,8 +140,6 @@ export async function handleAddTrainingComponents(
 
       // add components to training
       const mapped = TrainingService.mapComponents(training, components);
-      if (training.id === selectedTraining?.id) setTraining(mapped);
-
       setTrainings((prev) =>
         prev.map((t) => (t.id === trainingId ? mapped : t))
       );
@@ -173,22 +161,13 @@ export async function handleDeleteTrainingComponent(
   },
   state: {
     router: AppRouterInstance;
-    training: Training | undefined;
-    setTraining: SetStateNullable<Training>;
     setTrainings: SetState<Training[]>;
     setFilteredTrainings: SetState<Training[]>;
     components: Component[];
   }
 ) {
   const { trainingId, componentId } = input;
-  const {
-    router,
-    setTrainings,
-    setFilteredTrainings,
-    training: selectedTraining,
-    setTraining,
-    components,
-  } = state;
+  const { router, setTrainings, setFilteredTrainings, components } = state;
 
   handleApiRequest(
     router,
@@ -198,13 +177,11 @@ export async function handleDeleteTrainingComponent(
 
       if (mapped.components.length === 0) {
         // traning was deleted
-        if (training.id === selectedTraining?.id) setTraining(undefined);
         setTrainings((prev) => prev.filter((t) => t.id !== training.id));
         setFilteredTrainings((prev) =>
           prev.filter((t) => t.id !== training.id)
         );
       } else {
-        if (training.id === selectedTraining?.id) setTraining(mapped);
         setTrainings((prev) =>
           prev.map((t) => (t.id === trainingId ? mapped : t))
         );

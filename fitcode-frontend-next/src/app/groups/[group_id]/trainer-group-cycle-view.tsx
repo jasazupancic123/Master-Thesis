@@ -24,8 +24,6 @@ export default function TrainerCycleView() {
     components,
     cycle,
     setCycle,
-    training,
-    setTraining,
     setTrainings,
     setFilteredTrainings,
     setDateFrom,
@@ -141,8 +139,6 @@ export default function TrainerCycleView() {
                       {
                         router,
                         components,
-                        training,
-                        setTraining,
                         setTrainings,
                         setFilteredTrainings,
                       }
@@ -154,8 +150,6 @@ export default function TrainerCycleView() {
                       { trainingId, componentId },
                       {
                         router,
-                        training,
-                        setTraining,
                         setTrainings,
                         setFilteredTrainings,
                         components,

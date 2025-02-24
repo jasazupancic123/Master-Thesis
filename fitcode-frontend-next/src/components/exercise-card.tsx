@@ -29,7 +29,7 @@ export function ExerciseCard(props: Props) {
         }}
         src={exercise.videoUrl || exercise.imageUrl}
         title={exercise.name}
-        controls={exercise.videoUrl ? true : undefined}
+        // controls={exercise.videoUrl ? true : undefined}
         muted={exercise.videoUrl ? true : undefined}
         autoPlay={exercise.videoUrl ? true : undefined}
         loop={exercise.videoUrl ? true : undefined}

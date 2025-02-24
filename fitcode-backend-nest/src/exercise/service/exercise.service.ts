@@ -66,12 +66,31 @@ export class ExerciseService {
     return this.findAllByQuery(query, filter);
   }
 
+  async findAllByTrainers(
+    trainersIds: string[],
+    filter?: Filter<Exercise>,
+  ): Promise<Exercise[]> {
+    const query = this.exerciseRepository
+      .collection()
+      .where('userId', 'in', trainersIds);
+
+    return this.findAllByQuery(query, filter);
+  }
+
   async findAll(user: User, filter?: Filter<Exercise>): Promise<Exercise[]> {
+    const dbUser = await this.userService.findOneByIdOrFail(user.uid);
     const userExercises = await this.findAllByUser(user, filter);
     const globalExercises = await this.findAllGlobal(filter);
+    const trainerExercises =
+      dbUser.trainersIds.length > 0
+        ? await this.findAllByTrainers(dbUser.trainersIds, filter)
+        : [];
+
+    // if user is athlete, fetch all his trainer's exercises
 
     return this.commonService.array.unique([
       ...userExercises,
+      ...trainerExercises,
       ...globalExercises,
     ]);
   }
@@ -102,7 +121,9 @@ export class ExerciseService {
     user: User,
     data: Create<Omit<Exercise, 'userId' | 'global' | 'id' | 'values'>>,
   ): Promise<Exercise> {
-    this.logger.log(`Creating new exercise for user ${user.uid}`);
+    this.logger.log(
+      `User ${user.uid} is creating new exercise: ${JSON.stringify(data)}`,
+    );
 
     // validate
     await this.checkLimit(user.uid);

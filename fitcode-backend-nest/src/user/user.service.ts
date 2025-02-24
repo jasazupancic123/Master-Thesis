@@ -44,6 +44,16 @@ export class UserService {
     return await this.userRepository.getDoc(id);
   }
 
+  async findOneByIdOrFail(id: string): Promise<UserEntity> {
+    const item = await this.userRepository.getDoc(id);
+    if (!item) throw new BadRequestException('User not found');
+    return item;
+  }
+
+  getDoc(id: string) {
+    return this.userRepository.doc(id);
+  }
+
   async findOneOrFail(id: string): Promise<UserEntity> {
     const user = await this.findOne(id);
     if (!user) throw new BadRequestException('User not found');
@@ -120,21 +130,18 @@ export class UserService {
     await this.userRepository.updateDoc(ref.uid, input);
   }
 
-  async addAthlete(input: Omit<CreateUser, 'customClaims'>) {
+  async addAthlete(user: User, input: Omit<CreateUser, 'customClaims'>) {
     const { email, displayName, password } = input;
 
-    const firebaseAuthUser = await this.firebaseService.auth.createUser({
+    this.logger.log(
+      `User ${user.uid} is registering new athlete: ${JSON.stringify(input)})`,
+    );
+
+    return await this.firebaseService.auth.createUser({
       email,
       displayName,
       password,
     });
-
-    await this.userRepository.addDoc({
-      id: firebaseAuthUser.uid,
-      groupsIds: [],
-    });
-
-    return firebaseAuthUser;
   }
 
   addGroup(transaction: Transaction, userId: string, groupId: string) {

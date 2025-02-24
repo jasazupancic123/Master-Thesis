@@ -9,7 +9,6 @@ typings/
 node_modules/
 *.local
 
-service-account.json
 *.log
 service-account-key.json
 .env

@@ -94,13 +94,8 @@ export const REC_OPTIONS: SetExerciseOption = {
   format: (value) => `${value} s`,
 };
 
-export const WORKLOAD = [RM_OPTIONS, BW_OPTIONS, INT_OPTIONS, KG_OPTIONS];
+export const WORKLOAD = [RM_OPTIONS, BW_OPTIONS, KG_OPTIONS];
 export const TEMPO = [TEMPO_OPTIONS, EFFORT_OPTIONS];
 export const RECOVERY = [REC_OPTIONS];
 export const SET = [SET_OPTIONS];
-export const SET_TYPE = [
-  REP_OPTIONS,
-  DISTANCE_OPTIONS,
-  TIME_OPTIONS,
-  VO2_OPTIONS,
-];
+export const SET_TYPE = [REP_OPTIONS, DISTANCE_OPTIONS, TIME_OPTIONS];

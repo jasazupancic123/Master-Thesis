@@ -33,18 +33,6 @@ export type GroupContextProps = GroupIdPageProps & {
   setGroup: SetState<Group>;
   cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
-  component: TrainingComponent | undefined; // selected training component
-  setComponent: SetStateNullable<TrainingComponent>;
-  training: Training | undefined;
-  setTraining: SetStateNullable<Training>;
-  selectedSubgroup: {
-    subgroup: Subgroup | null;
-    index: number;
-  } | null;
-  setSelectedSubgroup: SetState<{
-    subgroup: Subgroup | null;
-    index: number;
-  } | null>;
   dateFrom: Dayjs;
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;
@@ -55,13 +43,25 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilteredTrainings: SetState<Training[]>; // filter by from & to & cycle
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
-  selectedAthlete: User | undefined;
-  setSelectedAthlete: SetStateNullable<User>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
 };
 
 export type TrainerDayViewContextProps = {
+  training: Training | undefined;
+  setTraining: SetStateNullable<Training>;
+  component: TrainingComponent | undefined; // selected training component
+  setComponent: SetStateNullable<TrainingComponent>;
+  selectedAthlete: User | undefined;
+  setSelectedAthlete: SetStateNullable<User>;
+  selectedSubgroup: {
+    subgroup: Subgroup | null;
+    index: number;
+  } | null;
+  setSelectedSubgroup: SetState<{
+    subgroup: Subgroup | null;
+    index: number;
+  } | null>;
   filteredExercises: Exercise[];
   setFilteredExercises: SetState<Exercise[]>;
   pagination: Pagination;

@@ -8,6 +8,7 @@ import TrainingCard from '@/components/trainer-day-view/training-card';
 import TrainingMembers from '@/components/trainer-day-view/training-members';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { RotateRight, Save } from '@mui/icons-material';
@@ -41,18 +42,17 @@ export default function TrainerDayView() {
     cycle,
     components,
     exercises,
-    training,
-    setTraining,
     setTrainings,
     setFilteredTrainings,
     filteredTrainings,
     setDateFrom,
     setDateTo,
-    component,
-    setSelectedSubgroup,
     setDetectedChanges,
     setCycle,
   } = useGroup();
+
+  const { training, setTraining, component, setSelectedSubgroup } =
+    useTrainerDayViewContext();
 
   const router = useRouter();
   const [day, setDay] = useState<Day>(commonService.date.getToday());

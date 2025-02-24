@@ -1,9 +1,9 @@
-import { GroupContextProps } from '@/app/groups/[group_id]/props';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { Training } from '@/controller/training/type/training.type';
 
-export type AthleteTrainingExerciseCardProps = Required<
-  Pick<GroupContextProps, 'token' | 'training'>
-> & {
+export type AthleteTrainingExerciseCardProps = {
+  token: string;
   userId: string;
   components: TrainingComponent[];
+  training: Training;
 };

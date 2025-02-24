@@ -1,6 +1,7 @@
 import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
 import { Method } from '@/controller/component/type/method.type';
@@ -17,14 +18,13 @@ const commonService = CommonService.instance;
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
   const { training, trainingComponent } = props;
+  const { filter, setDetectedChanges } = useGroup();
   const {
     training: selectedTraining,
     setTraining,
     component,
     setComponent,
-    filter,
-    setDetectedChanges,
-  } = useGroup();
+  } = useTrainerDayViewContext();
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
