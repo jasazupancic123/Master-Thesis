@@ -9,6 +9,7 @@ import {
 import { FieldPath, Query } from 'firebase-admin/firestore';
 import { NUM_MAX_EXERCISES } from 'src/common/constant/limit.constant';
 import { Create, Update } from 'src/common/type/entity.type';
+import { UserEntity } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/user.service';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
@@ -126,10 +127,18 @@ export class ExerciseService {
     );
 
     // validate
-    await this.checkLimit(user.uid);
-    await this.exerciseAttributeService.validate(data.attributeValues || {});
+    const dbUser = await this.userService.findOneOrFail(user.uid);
+    const exercises = await this.findAllByUser(user);
+    this.checkLimit(dbUser, exercises);
+
+    const attributes = await this.cacheManagerService.getAttributes();
+    this.exerciseAttributeService.validate(
+      data.attributeValues || {},
+      attributes,
+    );
+
     if (!data.componentsIds?.length)
-      throw new BadRequestException('No components selected'); // at least one component must be selected
+      throw new BadRequestException('No components provided for exercise'); // at least one component must be selected
 
     // check that all components exist and are leafs
     const components = await this.cacheManagerService.getComponents();
@@ -167,6 +176,80 @@ export class ExerciseService {
         value,
       })),
     };
+  }
+
+  async createMany(
+    user: User,
+    exercises: Create<Omit<Exercise, 'userId' | 'global' | 'id' | 'values'>>[],
+  ) {
+    this.logger.log(
+      `User ${user.uid} is creating new exercises: ${JSON.stringify(exercises)}`,
+    );
+
+    // validate
+    if (!this.firebaseService.isAdmin(user)) {
+      const dbUser = await this.userService.findOneOrFail(user.uid);
+      const userExercises = await this.findAllByUser(user);
+      this.checkLimit(dbUser, [...(exercises as Exercise[]), ...userExercises]);
+    }
+
+    const attributes = await this.cacheManagerService.getAttributes();
+    const components = await this.cacheManagerService.getComponents();
+    exercises.forEach((e) => {
+      // at least one component must be selected
+      if (!e.componentsIds?.length)
+        throw new BadRequestException('No components provided for exercise');
+
+      // validaite attribute values
+      this.exerciseAttributeService.validate(
+        e.attributeValues || {},
+        attributes,
+      );
+
+      // check that all components exist and are leafs
+      const leafs = this.componentService.leafsFromFlat(components);
+      for (const slug of e.componentsIds!) {
+        const component = this.componentService.getLeafBySlug(slug, leafs);
+        if (!component)
+          throw new BadRequestException(`Component ${slug} does not exist`);
+      }
+    });
+
+    const batch = this.firebaseService.firestore.batch();
+    const result: Exercise[] = [];
+
+    exercises.forEach((e) => {
+      const docRef = this.exerciseRepository.collection().doc();
+
+      const item: Create<Exercise> = {
+        id: docRef.id,
+        userId: user.uid,
+        name: e.name,
+        componentsIds: e.componentsIds,
+        global: this.firebaseService.isAdmin(user),
+        imageUrl: e.imageUrl,
+        videoUrl: e.videoUrl,
+        values: Object.entries(e.attributeValues).map(([field, value]) => ({
+          attributeId: field,
+          value,
+        })),
+      };
+
+      const query = this.firebaseService.buildCreateQuery<Exercise>(item, {
+        timestamps: true,
+      });
+
+      batch.set(docRef, query);
+      result.push({
+        ...e,
+        ...item,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    });
+
+    await batch.commit();
+    return result;
   }
 
   /**
@@ -281,9 +364,9 @@ export class ExerciseService {
     return query;
   }
 
-  private async checkLimit(userId: string) {
-    const user = await this.userService.findOneOrFail(userId);
-    if (user.groupsIds.length === NUM_MAX_EXERCISES - 1)
-      throw new ConflictException('Exercise limit reached');
+  private checkLimit(user: UserEntity, exercises: Exercise[]) {
+    // user entity for subscription check
+    if (exercises.length > NUM_MAX_EXERCISES)
+      throw new ConflictException('Exercises limit reached');
   }
 }
