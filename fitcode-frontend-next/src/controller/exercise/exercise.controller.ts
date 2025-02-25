@@ -30,6 +30,21 @@ export class ExerciseController {
     return api.post<Exercise>(`/exercise`, body, { token });
   }
 
+  static async createMany(
+    token: string,
+    body: {
+      exercises: {
+        name: string;
+        componentsIds: string[];
+        imageUrl?: string;
+        videoUrl?: string;
+        attributeValues: Record<string, any>;
+      }[];
+    }
+  ) {
+    return api.post<Exercise[]>(`/exercise/many`, body, { token });
+  }
+
   static async update(
     token: string,
     exerciseId: string,

@@ -6,12 +6,13 @@ import { Accept, useDropzone } from 'react-dropzone';
 interface Props {
   label: string;
   onFileUpload: (file: File) => Promise<void>;
-  input: 'image' | 'video';
+  input: 'image' | 'video' | 'csv';
   initialFileUrl?: string;
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_CSV_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function FileUpload(props: Props) {
   const { label, onFileUpload, input, initialFileUrl } = props;
@@ -21,14 +22,27 @@ export default function FileUpload(props: Props) {
   }));
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const url = URL.createObjectURL(acceptedFiles[0]);
-    setPreview((prev) => ({ ...prev, url }));
+    const file = acceptedFiles[0];
+    if (input === 'csv')
+      // For CSV files, no preview is needed
+      setPreview((prev) => ({ ...prev, url: '', error: '' }));
+    else {
+      const url = URL.createObjectURL(file);
+      setPreview((prev) => ({ ...prev, url }));
+    }
   }, []);
 
-  const maxSize = input === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
+  const maxSize =
+    input === 'image'
+      ? MAX_IMAGE_SIZE
+      : input === 'video'
+        ? MAX_VIDEO_SIZE
+        : MAX_CSV_SIZE;
+
   const accept: Accept = {
     ...(input === 'image' && { 'image/*': ['.png', '.jpeg'] }),
     ...(input === 'video' && { 'video/*': ['.mp4'] }),
+    ...(input === 'csv' && { 'text/csv': ['.csv'] }),
   };
 
   const { getRootProps, getInputProps, isDragActive, acceptedFiles } =
@@ -91,7 +105,7 @@ export default function FileUpload(props: Props) {
           )}
         </Box>
 
-        {!preview.error && preview.url && (
+        {!preview.error && preview.url && input !== 'csv' && (
           <Box height={100} position="relative">
             {input === 'video' ? (
               <video
@@ -113,6 +127,12 @@ export default function FileUpload(props: Props) {
                 }}
               />
             )}
+          </Box>
+        )}
+
+        {input === 'csv' && acceptedFiles.length > 0 && (
+          <Box height={100} position="relative" p={1}>
+            <Typography>CSV File: {acceptedFiles[0].name}</Typography>
           </Box>
         )}
       </DragAndDropPlaceholder>

@@ -4,7 +4,9 @@ import { Pagination as PaginationType } from '@/common/type/paginate.type';
 import { ExerciseCard } from '@/components/exercise-card';
 import ExerciseChips from '@/components/exercise-chips';
 import ExerciseModal from '@/components/exercise-modal';
+import FileUpload from '@/components/file-upload';
 import GroupSidebar from '@/components/group-sidebar';
+import MyModal from '@/components/modal';
 import PageTitle from '@/components/page-title';
 import { SearchBar } from '@/components/search-bar';
 import { useGroup } from '@/context/group-provider';
@@ -13,14 +15,19 @@ import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import { Pagination } from '@mui/material';
+import PublishIcon from '@mui/icons-material/Publish';
+import { Pagination, Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { handleAddExercise, handlePaginateExercises } from './state';
+import {
+  handleAddExercise,
+  handleCsvFileUpload,
+  handlePaginateExercises,
+} from './state';
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -57,8 +64,12 @@ export function ExercisesPage() {
   });
 
   // modals
-  const [modal, setModal] = useState({ add: false, edit: false });
   const [exercise, setExercise] = useState<Partial<Exercise>>(DEFAULT_EXERCISE);
+  const [modal, setModal] = useState({
+    add: false,
+    edit: false,
+    import: false,
+  });
 
   /**
    * Filter exercises
@@ -131,15 +142,30 @@ export function ExercisesPage() {
             />
           </Box>
 
-          {/* Add Button */}
-          <IconButton
-            onClick={() => {
-              setModal({ ...modal, add: true });
-              setExercise(DEFAULT_EXERCISE);
-            }}
-          >
-            <AddIcon />
-          </IconButton>
+          <Stack direction="row">
+            {/* Add Button */}
+            <Tooltip title="Create">
+              <IconButton
+                onClick={() => {
+                  setModal({ ...modal, add: true });
+                  setExercise(DEFAULT_EXERCISE);
+                }}
+              >
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+
+            {/* Import Button */}
+            <Tooltip title="Import">
+              <IconButton
+                onClick={() => {
+                  setModal({ ...modal, import: true });
+                }}
+              >
+                <PublishIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </Box>
 
         <Stack direction="row" justifyContent="center" my={2} width="100%">
@@ -227,6 +253,21 @@ export function ExercisesPage() {
             </>
           }
         />
+
+        {/* Import exercises modal */}
+        <MyModal
+          isOpen={modal.import}
+          setIsOpen={(open) => setModal((prev) => ({ ...prev, import: open }))}
+          width={screenSize.isMobile ? undefined : 500}
+        >
+          <FileUpload
+            label="Import Exercises"
+            input="csv"
+            onFileUpload={async (file) => {
+              handleCsvFileUpload(token, file, { router, setExercises });
+            }}
+          />
+        </MyModal>
       </Box>
     </>
   );

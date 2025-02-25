@@ -1,5 +1,4 @@
 import { CommonService } from '@/common/service/common.service';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { Pagination } from '@/common/type/paginate.type';
 import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { Component } from '@/controller/component/type/component.type';
@@ -140,5 +139,41 @@ export async function handleAddExercise(
 
       setExercises((prev) => [...prev!, { ...input, id } as Exercise]);
     }
+  );
+}
+
+export async function handleCsvFileUpload(
+  token: string,
+  file: File,
+  state: {
+    router: AppRouterInstance;
+    setExercises: SetState<Exercise[]>;
+  }
+) {
+  const { router, setExercises } = state;
+
+  const text = await file.text();
+  const rows = text.split('\n').filter((row) => row);
+
+  const formattedExercises = rows.map((row) => {
+    const [name, componentSlug, videoUrl, imageUrl] = row.split(',');
+    return {
+      name,
+      componentsIds: [componentSlug],
+      videoUrl,
+      imageUrl,
+      attributeValues: {},
+    };
+  });
+
+  handleApiRequest(
+    router,
+    () =>
+      ExerciseController.createMany(token, { exercises: formattedExercises }),
+    (exercises) => {
+      setExercises((prev) => [...prev, ...exercises]);
+    },
+    undefined,
+    'Failed to import exercises'
   );
 }
