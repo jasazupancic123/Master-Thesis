@@ -6,21 +6,30 @@ import {
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
 import { useGroup } from '@/context/group-provider';
+import {
+  ExerciseMeta,
+  Superset,
+  TrainingComponent,
+} from '@/controller/training/type/training-plan.type';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { ExerciseMeta } from '@/controller/training/type/training-plan.type';
 import { Grid2 } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
+  const screenSize = useScreenSize();
   const {
     exercise,
     supersetIndex: j,
     selectedExercise,
     setSelectedExercise,
+    chartView,
+    superior,
+    setOpenVideoPlayerModal,
   } = props;
 
   const { setDetectedChanges } = useGroup();
@@ -48,6 +57,57 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     !state || state?.tempo ? 'temp' : 'eff'
   );
 
+  function handleSuperiorExerciseUpdating(
+    supersets: Superset[],
+    pairs: { field: keyof ExerciseMeta; value: string | number }[]
+  ): Superset[] {
+    if (superior?.all) {
+      for (const { field, value } of pairs) {
+        for (const superset of supersets) {
+          for (const exercise of superset.exercises) {
+            //check if field exists in meta - posodobijo se samo tiste vrednosti, ki so na obeh exercisih
+            if (exercise.meta[field] !== undefined) {
+              console.log('found and setting:', exercise.meta, 'field:', field);
+              (exercise.meta[field] as any) = value;
+            } else {
+              console.log('undefined field', field, 'on', exercise.meta);
+            }
+          }
+        }
+      }
+      // Čori to more bit tu tak - spomni se šolanja ;)
+    } else if (superior?.column && j !== undefined && j !== null) {
+      const columnIndex = j;
+      for (const { field, value } of pairs) {
+        const superset = supersets[columnIndex];
+        if (!superset) continue;
+        for (const exercise of superset.exercises) {
+          //check if field exists in meta - posodobijo se samo tiste vrednosti, ki so na obeh exercisih
+          if (exercise.meta[field] !== undefined) {
+            (exercise.meta[field] as any) = value;
+          }
+        }
+      }
+      // Čori to more bit tu tak - spomni se šolanja ;)
+    } else if (superior?.row && k !== undefined && k !== null) {
+      const rowIndex = k;
+      for (const { field, value } of pairs) {
+        for (const superset of supersets) {
+          const exercise = superset.exercises[rowIndex];
+          if (!exercise) continue;
+          //check if field exists in meta - posodobijo se samo tiste vrednosti, ki so na obeh exercisih
+          if (exercise.meta[field] !== undefined) {
+            (exercise.meta[field] as any) = value;
+          }
+        }
+      }
+    }
+    for (const { field, value } of pairs)
+      (supersets[j!].exercises[k!].meta[field] as any) = value;
+
+    return supersets;
+  }
+
   function updateSelectedTraining(
     pairs: { field: keyof ExerciseMeta; value: string | number }[]
   ) {
@@ -56,21 +116,29 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         if (!training) return undefined;
 
         const updatedTraining = { ...training };
-        for (const { field, value } of pairs)
-          (updatedTraining.components[i!].supersets[j!].exercises[k!].meta[
-            field
-          ] as any) = value;
+        const updatedSupersets = handleSuperiorExerciseUpdating(
+          updatedTraining.components[i!].supersets,
+          pairs
+        );
+        updatedTraining.components[i!] = {
+          ...updatedTraining.components[i!],
+          supersets: updatedSupersets,
+        };
 
         return updatedTraining;
       });
     } else {
       const updatedSubgroup = { ...selectedSubgroup.subgroup };
-      for (const { field, value } of pairs)
-        (updatedSubgroup.supersets[j!].exercises[k!].meta[field] as any) =
-          value;
+      const updatedSupersets = handleSuperiorExerciseUpdating(
+        updatedSubgroup.supersets,
+        pairs
+      );
 
       setSelectedSubgroup({
-        subgroup: updatedSubgroup,
+        subgroup: {
+          ...updatedSubgroup,
+          supersets: updatedSupersets,
+        },
         index: selectedSubgroup.index,
       });
     }
@@ -84,24 +152,24 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     <Stack
       spacing={1}
       p={1}
-      pb={3}
+      px={screenSize.isMobile ? 0 : undefined}
+      pb={2}
       sx={{
         my: -1,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
+        backgroundColor: chartView
+          ? 'transparent'
+          : 'rgba(255, 255, 255, 0.05)',
       }}
     >
       <Stack
         direction="row"
         justifyContent="center"
         sx={{
-          cursor:
-            selectedExercise !== exercise && selectedAthlete
-              ? 'pointer'
-              : undefined,
+          cursor: 'pointer',
         }}
         onClick={() => {
-          if (selectedAthlete) setSelectedExercise(exercise);
+          setSelectedExercise(exercise);
+          setOpenVideoPlayerModal(true);
         }}
       >
         <Typography
@@ -109,7 +177,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           fontWeight="bold"
           fontSize={14}
           textTransform="uppercase"
-          sx={{ color: '#bcb4b1', textAlign: 'center' }}
+          sx={{ textAlign: 'center' }}
         >
           {exercise.exercise?.name}
         </Typography>
@@ -117,7 +185,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
       <Grid2 container spacing={1} columns={10}>
         {/* Sets */}
-        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
+        <Grid2 size={2}>
           <SetExerciseAttribute
             options={SET}
             state={(() => {
@@ -139,7 +207,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Grid2>
 
         {/* Set Type */}
-        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
+        <Grid2 size={2}>
           <SetExerciseAttribute
             options={SET_TYPE}
             state={(() => {
@@ -173,7 +241,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Grid2>
 
         {/* Workload */}
-        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
+        <Grid2 size={2}>
           <SetExerciseAttribute
             options={WORKLOAD}
             state={(() => {
@@ -210,7 +278,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Grid2>
 
         {/* Tempo */}
-        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
+        <Grid2 size={2}>
           <SetExerciseAttribute
             options={TEMPO}
             state={(() => {
@@ -251,7 +319,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Grid2>
 
         {/* Recovery */}
-        <Grid2 size={{ xs: 5, sm: 3.33, lg: 2 }}>
+        <Grid2 size={2}>
           <SetExerciseAttribute
             options={RECOVERY}
             state={(() => {

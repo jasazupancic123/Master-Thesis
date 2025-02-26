@@ -20,6 +20,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   role: [],
   logout: () => Promise.resolve(),
+  hasJustLoggedIn: false,
+  setHasJustLoggedIn: (value: boolean) => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -33,6 +35,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
     FIREBASE_COOKIE_NAME,
     null
   );
+  const [hasJustLoggedIn, setHasJustLoggedIn] = useState<boolean>(true);
 
   useEffect(
     () =>
@@ -64,10 +67,21 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
     setUser(null);
     setRole([]);
     setToken(null);
+    await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for 5 sec, then set
+    setHasJustLoggedIn(true);
   }
 
   return (
-    <AuthContext.Provider value={{ loading, user, role, logout }}>
+    <AuthContext.Provider
+      value={{
+        loading,
+        user,
+        role,
+        logout,
+        hasJustLoggedIn,
+        setHasJustLoggedIn,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

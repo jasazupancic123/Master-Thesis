@@ -34,8 +34,8 @@ export default function BottomNavigation({
       }}
       showLabels
       sx={{
-        backgroundColor: '#303E4A',
-        height: '70px',
+        backgroundColor: 'rgb(25, 39, 58)',
+        height: screenSize.isLandscapeMobile ? '45px' : '50px',
         width: '100%',
         '& .Mui-selected': { color: '#1EB980 !important' },
       }}
@@ -43,14 +43,10 @@ export default function BottomNavigation({
       {Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link, i) => (
         <BNAction
           key={i}
-          label={link.label}
           icon={
             React.isValidElement(link.icon)
               ? React.cloneElement(
-                  link.icon as React.ReactElement<{ sx?: object }>,
-                  {
-                    sx: { fontSize: 20, p: 0 },
-                  }
+                  link.icon as React.ReactElement<{ sx?: object }>
                 )
               : link.icon
           }
@@ -62,30 +58,32 @@ export default function BottomNavigation({
               minWidth: '48px', // Override MUI default min-width
             },
             '& .MuiSvgIcon-root': {
-              fontSize: '20px !important', // Force smaller icon
+              fontSize: screenSize.isLandscapeMobile
+                ? '24px !important'
+                : '27.5px !important', // Force smaller icon
             },
           }}
         />
       ))}
       <BNAction
         key="logout"
-        label="Sign out"
         icon={
           <LogoutRounded
             sx={{
+              color: 'rgb(104, 115, 123)',
               fontSize: screenSize.isLandscapeMobile ? 20 : undefined,
             }}
           />
-        } // Just pass the icon directly
-        onClick={logout} // Add onClick here instead
+        }
+        onClick={logout}
         sx={{
-          minWidth: '48px', // Reduce the minimum width
-          padding: '4px', // Reduce padding
+          minWidth: '48px',
+          padding: '4px',
           '& .MuiBottomNavigationAction-root': {
-            minWidth: '48px', // Override MUI default min-width
+            minWidth: '48px',
           },
           '& .MuiSvgIcon-root': {
-            fontSize: '20px !important', // Force smaller icon
+            fontSize: '27.5px !important',
           },
         }}
       />
