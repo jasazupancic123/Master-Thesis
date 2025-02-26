@@ -1,9 +1,9 @@
+import { Inject } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { Inject, Logger } from '@nestjs/common';
 
 export const FIREBASE_ADMIN = Symbol('FirebaseAdmin');
 

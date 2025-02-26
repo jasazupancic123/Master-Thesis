@@ -12,15 +12,21 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Save } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import { Pagination } from '@mui/material';
+import { Pagination, Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { handleAddExercise, handlePaginateExercises } from './state';
+import {
+  handleAddExercise,
+  handleDeleteExercise,
+  handlePaginateExercises,
+  handleUpdateExercise,
+} from './state';
 
 const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -57,8 +63,12 @@ export function ExercisesPage() {
   });
 
   // modals
-  const [modal, setModal] = useState({ add: false, edit: false });
   const [exercise, setExercise] = useState<Partial<Exercise>>(DEFAULT_EXERCISE);
+  const [modal, setModal] = useState({
+    add: false,
+    edit: false,
+    import: false,
+  });
 
   /**
    * Filter exercises
@@ -131,15 +141,19 @@ export function ExercisesPage() {
             />
           </Box>
 
-          {/* Add Button */}
-          <IconButton
-            onClick={() => {
-              setModal({ ...modal, add: true });
-              setExercise(DEFAULT_EXERCISE);
-            }}
-          >
-            <AddIcon />
-          </IconButton>
+          <Stack direction="row">
+            {/* Add Button */}
+            <Tooltip title="Create">
+              <IconButton
+                onClick={() => {
+                  setModal({ ...modal, add: true });
+                  setExercise(DEFAULT_EXERCISE);
+                }}
+              >
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </Box>
 
         <Stack direction="row" justifyContent="center" my={2} width="100%">
@@ -190,52 +204,66 @@ export function ExercisesPage() {
         </Box>
 
         {/* Add Exercise Modal*/}
-        <ExerciseModal
-          data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
-          setData={setExercise}
-          attributes={attributes}
-          components={components}
-          isOpen={modal.add}
-          setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
-          title={'Add Exercise'}
-          icons={
-            <>
-              <IconButton
-                onClick={() =>
-                  handleAddExercise(token, exercise, {
-                    router,
-                    components,
-                    attributes,
-                    component: selectedComponent!,
-                    filteredExercises,
-                    setFilteredExercises,
-                    setExercises,
-                  })
-                }
-              >
-                <AddIcon />
-              </IconButton>
-            </>
-          }
-        />
+        {modal.add && (
+          <ExerciseModal
+            data={{ ...exercise, imageUrl: undefined, videoUrl: undefined }}
+            setData={setExercise}
+            attributes={attributes}
+            components={components}
+            isOpen={modal.add}
+            setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
+            title={'Add Exercise'}
+            onConfirm={async () => {
+              handleAddExercise(token, exercise, {
+                router,
+                components,
+                attributes,
+                component: selectedComponent!,
+                filteredExercises,
+                setFilteredExercises,
+                setExercises,
+              });
+
+              setModal((prev) => ({ ...prev, add: false }));
+              setExercise(DEFAULT_EXERCISE);
+            }}
+          />
+        )}
 
         {/* Edit Exercise Modal */}
-        <ExerciseModal
-          data={exercise}
-          setData={setExercise}
-          attributes={attributes}
-          components={components}
-          isOpen={modal.edit}
-          setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
-          title={'Update Exercise'}
-          icons={
-            <>
-              <IconButton onClick={() => {}}>
-                <AddIcon />
-              </IconButton>
-            </>
-          }
-        />
+        {modal.edit && (
+          <ExerciseModal
+            data={exercise}
+            setData={setExercise}
+            attributes={attributes}
+            components={components}
+            isOpen={modal.edit}
+            setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
+            title={exercise.global ? 'Exercise Details' : 'Update Exercise'}
+            {...(!exercise.global && {
+              onConfirm: async () => {
+                handleUpdateExercise(token, exercise!.id!, exercise, {
+                  router,
+                  components,
+                  attributes,
+                  setFilteredExercises,
+                  setExercises,
+                  setExercise,
+                });
+
+                setModal((prev) => ({ ...prev, edit: false }));
+              },
+              onDelete: async () => {
+                handleDeleteExercise(token, exercise!.id!, {
+                  router,
+                  setFilteredExercises,
+                  setExercises,
+                });
+              },
+              cancelText: 'Delete',
+            })}
+          />
+        )}
       </Box>
     </>
   );

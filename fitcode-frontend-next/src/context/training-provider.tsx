@@ -5,10 +5,10 @@ import { TrainingComponent } from '@/controller/training/type/training-plan.type
 import { Training } from '@/controller/training/type/training.type';
 import {
   createContext,
-  useState,
-  useEffect,
   ReactNode,
   useContext,
+  useEffect,
+  useState,
 } from 'react';
 
 interface TrainingContextType {
@@ -114,11 +114,4 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom Hook for easy access
-export const useTraining = (): TrainingContextType => {
-  const context = useContext(TrainingContext);
-  if (!context) {
-    throw new Error('useTraining must be used within a TrainingProvider');
-  }
-  return context;
-};
+export const useTraining = () => useContext(TrainingContext)!;
