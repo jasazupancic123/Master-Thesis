@@ -7,6 +7,7 @@ import { AuthProvider } from '@/context/auth-provider';
 import ThemeRegistry from '@/context/theme-registry';
 import { ScreenSizeProvider } from '@/context/screen-size-provider';
 import { ChildrenProps } from '@/common/type/props.type';
+import { TrainingProvider } from '@/context/training-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,9 +23,10 @@ export default function RootLayout({ children }: ChildrenProps) {
         <AppRouterCacheProvider>
           <ThemeRegistry>
             <AuthProvider>
-              <ScreenSizeProvider>{children}</ScreenSizeProvider>
+              <TrainingProvider>
+                <ScreenSizeProvider>{children}</ScreenSizeProvider>
+              </TrainingProvider>
             </AuthProvider>
-
             <Toaster />
           </ThemeRegistry>
         </AppRouterCacheProvider>
