@@ -1,8 +1,10 @@
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
 import { SetExerciseAttributeProps, SetExerciseState } from './props';
 import { exerciseCardSetAttributeSx } from './style';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
+  const screenSize = useScreenSize();
   const { options, state, onChange, disabled = false, canEdit } = props;
 
   return (
@@ -89,7 +91,6 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               pr: '0px !important', // Override MUI's default right padding
               pl: '0px !important', // Consistent left padding
               WebkitTextFillColor: 'white',
-              fontSize: 15,
               '& .MuiSelect-select': {
                 textAlign: 'center',
                 display: 'flex',
@@ -99,7 +100,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
                 pl: '0px !important', // Consistent left padding
                 color: 'white',
                 WebkitTextFillColor: 'white',
-                fontSize: 15,
+                fontSize: screenSize.isBetween(600, 750) ? 11 : 15,
               },
               '& .MuiInputBase-input': {
                 textAlign: 'center',
@@ -107,7 +108,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
                 paddingLeft: '0px !important',
                 color: 'white',
                 WebkitTextFillColor: 'white',
-                fontSize: 15,
+                fontSize: screenSize.isBetween(600, 750) ? 11 : 15,
               },
               '&.Mui-disabled': {
                 backgroundColor: 'transparent',

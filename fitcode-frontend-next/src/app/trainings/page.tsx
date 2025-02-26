@@ -9,6 +9,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import TrainingPage from './training-page';
 import { AthleteProvider } from '@/context/athlete-provider';
+import { TrainingProvider } from '@/context/training-provider';
 
 export default async function Page() {
   // fetch data
@@ -35,11 +36,13 @@ export default async function Page() {
   });
 
   return (
-    <TrainingPage
-      userId={profile.uid}
-      token={token}
-      profile={profile}
-      trainings={mappedTrainings}
-    />
+    <TrainingProvider>
+      <TrainingPage
+        userId={profile.uid}
+        token={token}
+        profile={profile}
+        trainings={mappedTrainings}
+      />
+    </TrainingProvider>
   );
 }

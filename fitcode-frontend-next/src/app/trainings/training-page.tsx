@@ -39,7 +39,7 @@ export default function TrainingPage(props: TrainingPageProps) {
     )
   );
 
-  const [view, setView] = useState<'exercises' | 'training'>('exercises');
+  const { view, setView } = useTraining();
   const [statuses, setStatuses] = useState<TrainingStatus[]>([]);
 
   const {

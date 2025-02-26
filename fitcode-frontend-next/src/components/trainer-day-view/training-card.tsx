@@ -3,7 +3,6 @@ import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { Component } from '@/controller/component/type/component.type';
 import { FileCopy } from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import {
@@ -87,6 +86,7 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   const isDateUnavailable = (date: Dayjs): boolean => {
     const thisCycleTrainings = trainings.filter((t) => t.cycleId === cycle?.id);
+
     if (
       cycle &&
       (dayjs(cycle.from).isAfter(date) || dayjs(cycle.to).isBefore(date))
