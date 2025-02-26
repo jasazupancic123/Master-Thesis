@@ -70,12 +70,12 @@ export function CalendarPage(props: CalendarPageProps) {
       alignItems="center"
       justifyContent="center"
       sx={{
-        [theme.breakpoints.down('sm')]: {
-          color: theme.palette.background.paper,
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: 1,
-        },
+        color: theme.palette.background.paper,
+        alignItems: 'center',
+        justifyContent: 'center',
+        m: screenSize.isMobile ? 1 : undefined,
+        pb: 10,
+        overflowY: 'scroll',
       }}
     >
       <Paper

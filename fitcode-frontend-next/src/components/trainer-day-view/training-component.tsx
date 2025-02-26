@@ -32,7 +32,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
 
   return (
-    <Box my={1} p={0} px={1}>
+    <Box my={1} p={0} px={0}>
       <>
         <Box sx={{ bgcolor: 'background.paper', my: 0.5 }}>
           <Box
@@ -43,13 +43,26 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             }}
           >
             <Stack
-              direction={screenSize.isMobile ? 'column' : 'row'}
+              direction={
+                screenSize.isMobile ||
+                (screenSize.isLandscapeMobile &&
+                  trainingComponent === component)
+                  ? 'column'
+                  : 'row'
+              }
               alignItems="center"
-              mt={1}
               width="100%"
               justifyContent="space-between"
             >
-              <Box display="flex" p={0}>
+              <Box
+                display="flex"
+                p={0}
+                justifyContent="space-between"
+                alignItems="flex-start"
+                flexDirection={screenSize.isMobile ? 'column' : 'row'}
+                mt={1}
+                width="100%"
+              >
                 <Box display="flex" p={0}>
                   {trainingComponent.component &&
                     (() => {
@@ -171,103 +184,113 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                       );
                     })()}
                 </Box>
-              </Box>
 
-              <Box
-                display="flex"
-                p={0}
-                mr={1}
-                alignItems="center"
-                flexDirection={screenSize.isMobile ? 'column' : 'row'}
-              >
-                {trainingComponent &&
-                  component &&
-                  trainingComponent.id === component.id && (
-                    <>
-                      <SelectInput<MainSet>
-                        label={'Main Set'}
-                        value={mainSet?.id || ''}
-                        icon={null}
-                        items={MAIN_SETS}
-                        itemKey="id"
-                        itemName="name"
-                        placeholder="Main Set"
-                        displayInputLabel={true}
-                        setValue={(mainSetId) => {
-                          setDetectedChanges(true);
-                          const mainSet = MAIN_SETS.find(
-                            (g) => g.id === mainSetId
-                          )!;
-
-                          setMainSet(mainSet);
-                        }}
-                      />
-
-                      <SelectInput<AfterSet>
-                        label={'After Set'}
-                        value={afterSet?.id || ''}
-                        icon={null}
-                        items={AFTER_SETS}
-                        itemKey="id"
-                        itemName="name"
-                        placeholder="After Set"
-                        displayInputLabel={true}
-                        setValue={(afterSetId) => {
-                          setDetectedChanges(true);
-                          const afterSet = AFTER_SETS.find(
-                            (g) => g.id === afterSetId
-                          )!;
-
-                          setAfterSet(afterSet);
-                        }}
-                      />
-
-                      <SelectInput<MainSet>
-                        label={'Method'}
-                        value={method?.id || ''}
-                        icon={null}
-                        items={METHODS}
-                        itemKey="id"
-                        itemName="name"
-                        placeholder="Method"
-                        displayInputLabel={true}
-                        setValue={(methodId) => {
-                          setDetectedChanges(true);
-                          const method = METHODS.find(
-                            (g) => g.id === methodId
-                          )!;
-                          setMethod(method);
-                        }}
-                      />
-                    </>
-                  )}
-
-                {!screenSize.isMobile && (
-                  <IconButton
-                    onClick={() => {
-                      if (
-                        trainingComponent &&
-                        component &&
-                        trainingComponent.id === component.id
-                      ) {
-                        setTraining(undefined);
-                        setComponent(undefined);
-                      } else {
-                        setTraining(training);
-                        setComponent(trainingComponent);
-                      }
-                    }}
-                  >
-                    {trainingComponent &&
+                <Box
+                  display="flex"
+                  width={screenSize.isMobile ? '100%' : undefined}
+                  p={0}
+                  mt={0.5}
+                  mr={1}
+                  alignItems="center"
+                  flexDirection={screenSize.isMobile ? 'column' : 'row'}
+                >
+                  {trainingComponent &&
                     component &&
-                    training.id === selectedTraining?.id &&
-                    trainingComponent.id === component.id ? (
-                      <VisibilityOff />
-                    ) : (
-                      <Visibility />
+                    trainingComponent.id === component.id && (
+                      <Box
+                        width={screenSize.isMobile ? '100%' : undefined}
+                        display={screenSize.isMobile ? 'flex' : undefined}
+                        flexDirection={
+                          screenSize.isMobile ? 'column' : undefined
+                        }
+                        alignItems={screenSize.isMobile ? 'center' : undefined}
+                        mt={screenSize.isMobile ? 1 : undefined}
+                      >
+                        <SelectInput<MainSet>
+                          label={'Main Set'}
+                          value={mainSet?.id || ''}
+                          icon={null}
+                          items={MAIN_SETS}
+                          itemKey="id"
+                          itemName="name"
+                          placeholder="Main Set"
+                          disableInputLabel={false}
+                          setValue={(mainSetId) => {
+                            setDetectedChanges(true);
+                            const mainSet = MAIN_SETS.find(
+                              (g) => g.id === mainSetId
+                            )!;
+
+                            setMainSet(mainSet);
+                          }}
+                        />
+
+                        <SelectInput<AfterSet>
+                          label={'After Set'}
+                          value={afterSet?.id || ''}
+                          icon={null}
+                          items={AFTER_SETS}
+                          itemKey="id"
+                          itemName="name"
+                          placeholder="After Set"
+                          disableInputLabel={false}
+                          setValue={(afterSetId) => {
+                            setDetectedChanges(true);
+                            const afterSet = AFTER_SETS.find(
+                              (g) => g.id === afterSetId
+                            )!;
+
+                            setAfterSet(afterSet);
+                          }}
+                        />
+
+                        <SelectInput<MainSet>
+                          label={'Method'}
+                          value={method?.id || ''}
+                          icon={null}
+                          items={METHODS}
+                          itemKey="id"
+                          itemName="name"
+                          placeholder="Method"
+                          disableInputLabel={false}
+                          setValue={(methodId) => {
+                            setDetectedChanges(true);
+                            const method = METHODS.find(
+                              (g) => g.id === methodId
+                            )!;
+                            setMethod(method);
+                          }}
+                        />
+                      </Box>
                     )}
-                  </IconButton>
-                )}
+
+                  {!screenSize.isMobile && (
+                    <IconButton
+                      onClick={() => {
+                        if (
+                          trainingComponent &&
+                          component &&
+                          trainingComponent.id === component.id
+                        ) {
+                          setTraining(undefined);
+                          setComponent(undefined);
+                        } else {
+                          setTraining(training);
+                          setComponent(trainingComponent);
+                        }
+                      }}
+                    >
+                      {trainingComponent &&
+                      component &&
+                      training.id === selectedTraining?.id &&
+                      trainingComponent.id === component.id ? (
+                        <VisibilityOff />
+                      ) : (
+                        <Visibility />
+                      )}
+                    </IconButton>
+                  )}
+                </Box>
               </Box>
             </Stack>
           </Box>
@@ -275,7 +298,16 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           {component &&
             trainingComponent.id === component.id &&
             training.id === selectedTraining?.id && (
-              <Box bgcolor="background.paper" p={2} key={filter}>
+              <Box
+                bgcolor="background.paper"
+                p={2}
+                px={
+                  screenSize.isMobile || screenSize.isLandscapeMobile
+                    ? 0
+                    : undefined
+                }
+                key={filter}
+              >
                 <Supersets
                   openAddExerciseModal={openAddExerciseModal}
                   setOpenAddExerciseModal={setOpenAddExerciseModal}

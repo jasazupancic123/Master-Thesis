@@ -10,10 +10,10 @@ export const exerciseCardSetAttributeSx = {
     padding: '2px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'self-start',
+    justifyContent: 'center',
     height: 20,
     fontSize: '0.7rem',
-    color: '#bcb4b1',
+    color: 'white',
     backgroundColor: 'transparent',
   },
 };
