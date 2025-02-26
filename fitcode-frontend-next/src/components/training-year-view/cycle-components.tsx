@@ -143,12 +143,11 @@ export default function CycleComponents(props: CycleComponentsProps) {
                     label={component.name}
                     icon={null}
                     value={
-                      selectedLeafComponent
-                        ? selectedLeafComponent.id
-                        : component.id
+                      selectedLeafComponent ? selectedLeafComponent.id : ''
                     }
                     items={components.filter((c) => c.parent === component.id)}
                     placeholder="Remove Component"
+                    displayEmpty={false}
                     sx={{ width: '90%' }}
                     displayInputLabel={false}
                     itemKey="id"

@@ -9,13 +9,19 @@ export default function PageTitle({ title }: { title: string }) {
       display="flex"
       justifyContent="center"
       alignItems="center"
-      px={3}
+      px={screenSize.isMobile ? 5 : 3}
       pt={1}
-      minWidth={screenSize.isMobile ? undefined : '600px'}
+      minWidth={
+        screenSize.isMobile
+          ? undefined
+          : screenSize.isSmallerThanLaptop
+            ? '400px'
+            : '600px'
+      }
       width={screenSize.isMobile ? '90%' : undefined}
       sx={{
         backgroundColor: theme.palette.background.default,
-        borderRadius: '0 0 40px 40px',
+        borderRadius: screenSize.isMobile ? '0 0 40px 40px' : '0 0 40px 40px',
       }}
     >
       <Typography

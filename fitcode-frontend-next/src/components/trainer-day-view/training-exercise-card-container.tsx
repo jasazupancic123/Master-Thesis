@@ -27,15 +27,25 @@ interface TrainingExerciseCardContainerProps {
   exercise: TrainingExercise;
   selectedExercise: TrainingExercise | null;
   setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
+  onAthleteView?: boolean;
+  superior?: { row: boolean; column: boolean; all: boolean };
+  setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
   const screenSize = useScreenSize();
+  const {
+    supersetIndex,
+    exercise,
+    selectedExercise,
+    setSelectedExercise,
+    superior,
+    setOpenVideoPlayerModal,
+  } = props;
+
   const { selectedAthlete } = useTrainerDayViewContext();
-  const { supersetIndex, exercise, selectedExercise, setSelectedExercise } =
-    props;
 
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
   const handleChange = (_event: Event, newValue: number | number[]) => {
@@ -62,6 +72,9 @@ export default function TrainingExerciseCardContainer(
           exercise={exercise}
           selectedExercise={selectedExercise}
           setSelectedExercise={setSelectedExercise}
+          chartView={true}
+          superior={superior}
+          setOpenVideoPlayerModal={setOpenVideoPlayerModal}
         />
       </Grid2>
       <Grid2
@@ -234,6 +247,8 @@ export default function TrainingExerciseCardContainer(
       exercise={exercise}
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
+      superior={superior}
+      setOpenVideoPlayerModal={setOpenVideoPlayerModal}
     />
   );
 }
