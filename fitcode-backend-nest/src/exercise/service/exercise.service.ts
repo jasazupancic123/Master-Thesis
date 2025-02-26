@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { FieldPath, Query } from 'firebase-admin/firestore';
 import { NUM_MAX_EXERCISES } from 'src/common/constant/limit.constant';
@@ -187,15 +188,25 @@ export class ExerciseService {
     );
 
     // validate
+    const dbUser = await this.userService.findOneOrFail(user.uid);
+    const userExercises = await this.findAllByUser(user);
+
     if (!this.firebaseService.isAdmin(user)) {
-      const dbUser = await this.userService.findOneOrFail(user.uid);
-      const userExercises = await this.findAllByUser(user);
       this.checkLimit(dbUser, [...(exercises as Exercise[]), ...userExercises]);
     }
 
     const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
-    exercises.forEach((e) => {
+
+    let i = 0;
+    for (const e of exercises) {
+      // check limit
+      if (
+        !this.firebaseService.isAdmin(user) &&
+        userExercises.length + i + 1 > NUM_MAX_EXERCISES
+      )
+        break;
+
       // at least one component must be selected
       if (!e.componentsIds?.length)
         throw new BadRequestException('No components provided for exercise');
@@ -213,12 +224,12 @@ export class ExerciseService {
         if (!component)
           throw new BadRequestException(`Component ${slug} does not exist`);
       }
-    });
+    }
 
     const batch = this.firebaseService.firestore.batch();
     const result: Exercise[] = [];
 
-    exercises.forEach((e) => {
+    exercises.forEach((e, i) => {
       const docRef = this.exerciseRepository.collection().doc();
 
       const item: Create<Exercise> = {
@@ -263,11 +274,59 @@ export class ExerciseService {
   ): Promise<void> {}
 
   async update(user: User, ref: ExerciseRef, input: Update<Exercise>) {
-    return {} as Exercise;
+    this.logger.log(
+      `User ${user.uid} is updating exercise ${ref.exerciseId}: ${JSON.stringify(input)}`,
+    );
+
+    const exercise = await this.findByIdOrFail(user, ref);
+    this.validateOwner(user, exercise);
+
+    // validate
+    const attributes = await this.cacheManagerService.getAttributes();
+    this.exerciseAttributeService.validate(
+      input.attributeValues || {},
+      attributes,
+    );
+
+    if (!input.componentsIds?.length)
+      throw new BadRequestException('No components provided for exercise'); // at least one component must be selected
+
+    // check that all components exist and are leafs
+    const components = await this.cacheManagerService.getComponents();
+    const leafs = this.componentService.leafsFromFlat(components);
+    for (const slug of input.componentsIds!) {
+      const component = this.componentService.getLeafBySlug(slug, leafs);
+      if (!component)
+        throw new BadRequestException(`Component ${slug} does not exist`);
+
+      // leaf's root must be the same as previous exercise root
+    }
+
+    await this.exerciseRepository.updateDoc(ref.exerciseId, {
+      ...input,
+      values: Object.entries(input.attributeValues).map(([field, value]) => ({
+        attributeId: field,
+        value,
+      })),
+    });
+
+    return {
+      ...exercise,
+      ...this.commonService.object.clean(input),
+      values: Object.entries(input.attributeValues).map(([field, value]) => ({
+        attributeId: field,
+        value,
+      })),
+    };
   }
 
   async delete(user: User, ref: ExerciseRef) {
-    return {};
+    this.logger.log(`User ${user.uid} is deleting exercise ${ref.exerciseId}`);
+
+    const exercise = await this.findByIdOrFail(user, ref);
+    this.validateOwner(user, exercise);
+
+    await this.exerciseRepository.deleteDoc(ref.exerciseId);
   }
 
   /**
@@ -313,6 +372,7 @@ export class ExerciseService {
     if (filter) query = this.filter(query, filter, components);
 
     const exercises = await query
+      .where('deletedAt', '==', null)
       .get()
       .then((snapshot) =>
         snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
@@ -368,5 +428,10 @@ export class ExerciseService {
     // user entity for subscription check
     if (exercises.length > NUM_MAX_EXERCISES)
       throw new ConflictException('Exercises limit reached');
+  }
+
+  private validateOwner(user: User, exercise: Exercise) {
+    if (user.uid !== exercise.userId)
+      throw new UnauthorizedException("You don't have access to this exercise");
   }
 }

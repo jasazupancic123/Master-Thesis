@@ -91,7 +91,7 @@ export class UserWorkloadService {
         status:
           input.length === 0
             ? SetStatus.NOT_STARTED
-            : input.length === workload.sets * workload.setTypeValue
+            : input.length === workload.sets
               ? SetStatus.DONE
               : SetStatus.IN_PROGRESS,
       });

@@ -13,25 +13,13 @@ import { IsStringOrNumber } from 'src/common/decorator/is-string-or-number.decor
 export class WorkloadData {
   @IsInt()
   @Min(1)
-  @Max(10)
-  @ApiProperty()
-  @Expose()
-  setNumber: number;
-
-  @IsInt()
-  @Min(1)
-  @ApiProperty()
-  @Expose()
-  repNumber: number;
-
-  @IsInt()
-  @Min(1)
   @Expose()
   setTypeValue: number; // actual user reps / distance / time / ... completed
 
   @IsStringOrNumber()
   @IsNotEmpty()
   @Expose()
+  @Min(0)
   workloadValue: string | number; // actual user kg completed
 
   @IsString()
