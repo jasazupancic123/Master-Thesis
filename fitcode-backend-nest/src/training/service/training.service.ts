@@ -17,12 +17,14 @@ import {
 import { FieldValue, Query } from 'firebase-admin/firestore';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { DateFilterDto } from 'src/common/dto/date-filter.dto';
+import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
 import { CommonService } from 'src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { User } from 'src/common/type/firebase-auth.type';
 import {
   TrainingComponentRef,
   TrainingRef,
+  TrainingStatusRef,
   UserWorkloadExerciseRef,
 } from 'src/common/type/firestore.type';
 import { Filter } from 'src/common/type/orm.type';
@@ -33,6 +35,7 @@ import { Group } from 'src/group/entity/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { UserService } from 'src/user/user.service';
 import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
 import { WorkloadData } from '../entity/workload-data';
 import { TrainingRepository } from '../repository/training.repository';
@@ -377,17 +380,35 @@ export class TrainingService {
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  async updateAthleteWorkloadData(
-    ref: UserWorkloadExerciseRef,
-    input: WorkloadData[],
+  async createUserWorkloadsForComponent(
     user: User,
+    ref: TrainingStatusRef,
+    input: { exerciseId: string; data: WorkloadData[] }[],
   ) {
     this.logger.log(
-      `User ${user.uid} is updating workload sets (exercise ${ref.exerciseId}) for training ${ref.trainingId}: ${JSON.stringify([input])}`,
+      `User ${user.uid} is creating workloads for component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
     if (user.uid !== ref.userId) throw new UnauthorizedException();
-    await this.userWorkloadService.updateData(ref, input);
+    await this.userWorkloadService.updateExercisesWorkloadsByComponent(
+      ref,
+      input,
+    );
+  }
+
+  async findAllStatusesByTraining(user: User, ref: TrainingRef) {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_STATUS)
+      .where('trainingId', '==', ref.trainingId)
+      .where('userId', '==', user.uid)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<TrainingStatus>,
+          ),
+        ),
+      );
   }
 
   async addComponents(

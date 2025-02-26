@@ -6,6 +6,7 @@ import { WorkloadType } from '../enum/workload-type.enum';
 export type UserWorkload = TimestampEntity & {
   userId: string;
   trainingId: string;
+  componentId: string;
   exerciseId: string;
   sets: number;
   setType: SetType;
@@ -17,8 +18,6 @@ export type UserWorkload = TimestampEntity & {
 };
 
 export interface WorkloadData {
-  setNumber: number;
-  repNumber: number;
   setTypeValue: number; // actual user reps / distance / time / ... completed
   workloadValue: string | number; // actual user kg completed
   notes?: string;
@@ -28,12 +27,3 @@ export interface ExerciseMetaQuery {
   exerciseId: string;
   data: WorkloadData[];
 }
-
-export interface WorkloadDataForExercise {
-  setNumber: number;
-  setTypeValue: number; // actual user reps / distance / time / ... completed
-  workloadValue: string | number; // actual user kg completed
-  notes?: string;
-}
-
-

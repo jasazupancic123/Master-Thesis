@@ -1,7 +1,8 @@
 import { DateRange } from '@/common/type/date-range.type';
-import { BaseEntity } from '@/common/type/entity.type';
+import { BaseEntity, TimestampEntity } from '@/common/type/entity.type';
 import { UserMeta } from '@/controller/user/type/user-meta.type';
 import { User } from '@/controller/user/type/user.type';
+import { SetStatus } from '../enum/set-status.enum';
 import { TrainingComponent } from './training-plan.type';
 
 export type Training = BaseEntity &
@@ -20,3 +21,10 @@ export type Training = BaseEntity &
     members?: User[];
     availableMembersIds?: string[];
   };
+
+export type TrainingStatus = TimestampEntity & {
+  userId: string;
+  trainingId: string;
+  componentId: string;
+  status: SetStatus;
+};

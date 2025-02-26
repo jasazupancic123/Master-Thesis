@@ -1,26 +1,34 @@
 'use client';
 
 import { CommonService } from '@/common/service/common.service';
+import { handleApiRequest } from '@/common/type/state.type';
+import Animation from '@/components/animation';
 import AthleteTrainingExerciseCard from '@/components/athlete-trainings/athlete-training-exercise-card';
+import TrainingInProgress from '@/components/athlete-trainings/training-in-progress';
+import Logo from '@/components/logo';
+import { useAthlete } from '@/context/athlete-provider';
+import { useAuth } from '@/context/auth-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTraining } from '@/context/training-provider';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import {
+  Training,
+  TrainingStatus,
+} from '@/controller/training/type/training.type';
 import { Box, LinearProgress, Stack, Typography } from '@mui/material';
 import { endOfDay, startOfDay } from 'date-fns';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { TrainingPageProps } from './type';
-import { useAthlete } from '@/context/athlete-provider';
-import { Training } from '@/controller/training/type/training.type';
-import Logo from '@/components/logo';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
-import TrainingInProgress from '@/components/athlete-trainings/training-in-progress';
-import Animation from '@/components/animation';
-import { useAuth } from '@/context/auth-provider';
-import { useTraining } from '@/context/training-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainingPage(props: TrainingPageProps) {
   const screenSize = useScreenSize();
+  const router = useRouter();
+
   const { profile, token, trainings: allTrainings } = props;
   const { selectedDate } = useAthlete();
   const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
@@ -30,7 +38,9 @@ export default function TrainingPage(props: TrainingPageProps) {
       commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
     )
   );
+
   const [view, setView] = useState<'exercises' | 'training'>('exercises');
+  const [statuses, setStatuses] = useState<TrainingStatus[]>([]);
 
   const {
     trainingResult,
@@ -64,6 +74,22 @@ export default function TrainingPage(props: TrainingPageProps) {
       )
     );
   }, [selectedDate]);
+
+  useEffect(() => {
+    async function getTrainingStatus() {
+      for (const t of trainings)
+        handleApiRequest(
+          router,
+          () => TrainingController.getTrainingStatus(token, t.id),
+          (response) => {
+            setStatuses((prev) => [...prev, ...response]);
+          },
+          undefined
+        );
+    }
+
+    getTrainingStatus().then();
+  }, [selectedTraining]);
 
   return view === 'exercises' ? (
     hasJustLoggedIn === true ? (
@@ -135,6 +161,7 @@ export default function TrainingPage(props: TrainingPageProps) {
                   {/* Components */}
                   <Stack spacing={3}>
                     <AthleteTrainingExerciseCard
+                      statuses={statuses}
                       components={training.components}
                       setView={setView}
                       training={training}
@@ -156,6 +183,8 @@ export default function TrainingPage(props: TrainingPageProps) {
       token={token}
       setView={setView}
       setSelectedComponent={setSelectedComponent}
+      statuses={statuses}
+      setStatuses={setStatuses}
     />
   );
 }
