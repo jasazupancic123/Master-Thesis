@@ -14,7 +14,7 @@ import {
 } from '@/controller/training/type/training-plan.type';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { Box, Grid2, IconButton } from '@mui/material';
+import { Box, Grid2, IconButton, Tooltip } from '@mui/material';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
@@ -117,21 +117,31 @@ export default function AthleteTrainingExerciseCard(
                       position: 'relative',
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        textTransform: 'uppercase',
-                        color: '#1EB980',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => {
-                        setSelectedComponent(null);
-                        setSelectedTraining(null);
-                      }}
+                    <Tooltip
+                      title={c.id[0].toUpperCase() + c.id.slice(1)}
+                      placement="top"
                     >
-                      {c.id}
-                    </Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          textTransform: 'uppercase',
+                          color: '#1EB980',
+                          textAlign: 'center !important',
+                          cursor: 'pointer',
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          textOverflow: 'ellipsis',
+                          px: 7,
+                          maxWidth: '100%', // Adjust width as needed
+                        }}
+                        onClick={() => {
+                          setSelectedComponent(null);
+                          setSelectedTraining(null);
+                        }}
+                      >
+                        {c.id}
+                      </Typography>
+                    </Tooltip>
                     <IconButton
                       sx={{
                         p: 0,
@@ -182,16 +192,25 @@ export default function AthleteTrainingExerciseCard(
                                 sx={{ backgroundColor: '#273747' }}
                                 py={0.5}
                               >
-                                <Typography
-                                  variant="body1"
-                                  sx={{
-                                    fontWeight: 'bold',
-                                    textTransform: 'uppercase',
-                                  }}
+                                <Tooltip
+                                  title={exercise.exercise?.name}
+                                  placement="top"
                                 >
-                                  {exercise.exercise?.name ||
-                                    'Unnamed Exercise'}
-                                </Typography>
+                                  <Typography
+                                    variant="body1"
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      textTransform: 'uppercase',
+                                      overflow: 'hidden',
+                                      whiteSpace: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      maxWidth: '80%', // Adjust width as needed
+                                    }}
+                                  >
+                                    {exercise.exercise?.name ||
+                                      'Unnamed Exercise'}
+                                  </Typography>
+                                </Tooltip>
 
                                 {exerciseIndex === 0 && (
                                   <IconButton
@@ -439,6 +458,11 @@ export default function AthleteTrainingExerciseCard(
                       color: '#e4ece9',
                       textAlign: 'center',
                       cursor: 'pointer',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      px: 1,
+                      maxWidth: '100%', // Adjust width as needed
                     }}
                   >
                     {c.id}

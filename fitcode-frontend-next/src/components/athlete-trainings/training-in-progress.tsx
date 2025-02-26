@@ -28,6 +28,9 @@ import toast from 'react-hot-toast';
 import { useScreenSize } from '@/context/screen-size-provider';
 import Animation from '../animation';
 import { useTraining } from '@/context/training-provider';
+import CloseIcon from '@mui/icons-material/Close';
+import { useAthlete } from '@/context/athlete-provider';
+import { useAuth } from '@/context/auth-provider';
 
 interface TrainingInProgressProps {
   selectedTraining: Training;
@@ -39,6 +42,7 @@ interface TrainingInProgressProps {
 }
 
 export type TrainingResult = {
+  userId: string;
   supersets: {
     exercises: {
       id: string;
@@ -55,14 +59,14 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setTrainingResult,
     clearTrainingState,
     supersetIndex,
-    setSupersetIndex
+    setSupersetIndex,
+    setView,
   } = useTraining();
   const {
     selectedTraining,
     selectedComponent,
     profile,
     token,
-    setView,
     setSelectedComponent,
   } = props;
   const [selectedSuperset, setSelectedSuperset] = useState<
@@ -72,8 +76,11 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
+  const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [playAnimation, setPlayAnimation] = useState(true);
   const boxRef = useRef<HTMLDivElement | null>(null);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     let usersSupersets = undefined;
@@ -85,7 +92,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     }
     if (!usersSupersets) usersSupersets = selectedComponent.supersets; //default group
 
-    const result = { supersets: [] } as TrainingResult;
+    const result = { userId: user?.uid || '', supersets: [] } as TrainingResult;
     for (const superset of usersSupersets) {
       const exercises = [] as {
         id: string;
@@ -110,13 +117,10 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       result.supersets.push({ exercises });
     }
 
-    if(trainingResult === null)
-      setTrainingResult(result);
+    if (trainingResult === null) setTrainingResult(result);
     setSupersets(usersSupersets);
-    if(!supersetIndex)
-      setSelectedSuperset(usersSupersets[0]);
-    else 
-      setSelectedSuperset(usersSupersets[supersetIndex]);
+    if (!supersetIndex) setSelectedSuperset(usersSupersets[0]);
+    else setSelectedSuperset(usersSupersets[supersetIndex]);
   }, [selectedComponent]);
 
   useEffect(() => {
@@ -175,6 +179,13 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     } catch (e) {
       toast.error(e as any);
     }
+  };
+
+  const handleCancelTraining = () => {
+    clearTrainingState();
+    setView('exercises');
+    setSelectedComponent(null);
+    setSelectedSuperset(undefined);
   };
 
   const handleValueChange = (
@@ -285,7 +296,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
               zIndex={1000}
               pb={
                 screenSize.isMobile || screenSize.isLandscapeMobile
-                  ? 38
+                  ? 35
                   : undefined
               }
             >
@@ -445,17 +456,16 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                               );
                             }}
                             sx={{
-                              '& .mui-odhiz8-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input':
-                                {
-                                  whiteSpace: !screenSize.isUltraSmall
-                                    ? 'nowrap'
-                                    : undefined,
-                                  display: 'flex',
-                                  width: '100%',
-                                  ml: screenSize.isUltraSmall ? 1.4 : undefined,
-                                  justifyContent: 'center !important',
-                                  textAlign: 'center',
-                                },
+                              '& .MuiInputBase-input': {
+                                whiteSpace: !screenSize.isUltraSmall
+                                  ? 'nowrap'
+                                  : undefined,
+                                display: 'flex',
+                                width: '100%',
+                                ml: screenSize.isUltraSmall ? 1.4 : undefined,
+                                justifyContent: 'center !important',
+                                textAlign: 'center',
+                              },
                               '& .MuiSelect-select': {
                                 padding: '4px 16px', // Adjust as needed
                                 fontSize:
@@ -525,17 +535,16 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                               },
                             }}
                             sx={{
-                              '& .mui-odhiz8-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input':
-                                {
-                                  whiteSpace: !screenSize.isUltraSmall
-                                    ? 'nowrap'
-                                    : undefined,
-                                  display: 'flex',
-                                  width: '100%',
-                                  ml: screenSize.isUltraSmall ? 1.4 : undefined,
-                                  justifyContent: 'center !important',
-                                  textAlign: 'center',
-                                },
+                              '& .MuiInputBase-input': {
+                                whiteSpace: !screenSize.isUltraSmall
+                                  ? 'nowrap'
+                                  : undefined,
+                                display: 'flex',
+                                width: '100%',
+                                ml: screenSize.isUltraSmall ? 1.4 : undefined,
+                                justifyContent: 'center !important',
+                                textAlign: 'center',
+                              },
                               '& .MuiSelect-select': {
                                 padding: '4px 16px', // Adjust as needed
                                 fontSize:
@@ -579,7 +588,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         sx={{
           backgroundColor: '#1EB980',
           position: 'fixed',
-          bottom: screenSize.isLandscapeMobile ? 60 : 70,
+          bottom: 60,
           right: 16,
         }} // Adjust for mobile
         onClick={() => {
@@ -596,6 +605,19 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           <ArrowForwardIcon />
         )}
       </Fab>
+      <Fab
+        sx={{
+          backgroundColor: 'error.main',
+          position: 'fixed',
+          bottom: 60,
+          left: 16,
+        }} // Adjust for mobile
+        onClick={() => {
+          setOpenCancelTrainingModal(true);
+        }}
+      >
+        {<CloseIcon />}
+      </Fab>
       <MyModal
         isOpen={openNextSupersetModal}
         setIsOpen={(open) => setOpenNextSupersetModal(open)}
@@ -605,10 +627,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           setSelectedSuperset(
             supersets[supersets.indexOf(selectedSuperset) + 1]
           );
-          if(!supersetIndex)
-            setSupersetIndex(1)
-          else 
-            setSupersetIndex(supersetIndex + 1);
+          if (!supersetIndex) setSupersetIndex(1);
+          else setSupersetIndex(supersetIndex + 1);
           setOpenNextSupersetModal(false);
           if (boxRef.current) {
             boxRef.current.scrollTop = 0; // Scroll to the top
@@ -631,6 +651,20 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       >
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
           Finish Training?
+        </Typography>
+      </MyModal>
+      <MyModal
+        isOpen={openCancelTrainingModal}
+        setIsOpen={(open) => setOpenCancelTrainingModal(open)}
+        cancelText="Cancel"
+        onCancel={() => setOpenCancelTrainingModal(false)}
+        onConfirm={() => {
+          handleCancelTraining();
+          setOpenCancelTrainingModal(false);
+        }}
+      >
+        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
+          Cancel Training?
         </Typography>
       </MyModal>
     </Box>

@@ -23,9 +23,7 @@ export default function RootLayout({ children }: ChildrenProps) {
         <AppRouterCacheProvider>
           <ThemeRegistry>
             <AuthProvider>
-              <TrainingProvider>
-                <ScreenSizeProvider>{children}</ScreenSizeProvider>
-              </TrainingProvider>
+              <ScreenSizeProvider>{children}</ScreenSizeProvider>
             </AuthProvider>
             <Toaster />
           </ThemeRegistry>

@@ -10,6 +10,7 @@ import {
   ReactNode,
   useContext,
 } from 'react';
+import { useAuth } from './auth-provider';
 
 interface TrainingContextType {
   trainingResult: TrainingResult | null;
@@ -21,6 +22,8 @@ interface TrainingContextType {
   setSelectedComponent: (component: TrainingComponent | null) => void;
   supersetIndex: number | null;
   setSupersetIndex: (supersetIndex: number | null) => void;
+  view: 'exercises' | 'training';
+  setView: (view: 'exercises' | 'training') => void;
   isLoaded: boolean;
 }
 
@@ -39,6 +42,9 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
     useState<TrainingComponent | null>(null);
   const [isLoaded, setIsLoaded] = useState(false); // To prevent SSR mismatches
   const [supersetIndex, setSupersetIndex] = useState<number | null>(null);
+  const [view, setView] = useState<'exercises' | 'training'>('exercises');
+
+  const { user } = useAuth();
 
   // Load local storage data **AFTER** component mounts
   useEffect(() => {
@@ -54,22 +60,19 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
       setSelectedComponent(JSON.parse(storedSelectedComponent));
     if (storedSupersetIndex) setSupersetIndex(JSON.parse(storedSupersetIndex));
 
-    const timeout = setTimeout(() => {
-      setIsLoaded(true);
-    }, 1000);
-
-    // Cleanup in case component unmounts before timeout finishes
-    return () => clearTimeout(timeout);
+    setIsLoaded(true);
   }, []);
-
-  // Save to local storage when state changes
-  const updateTrainingResult = (newResult: TrainingResult) => {
-    localStorage.setItem('trainingState', JSON.stringify(trainingResult));
-    setTrainingResult(newResult);
-  };
 
   useEffect(() => {
     if (isLoaded) {
+      if (
+        trainingResult?.userId &&
+        user?.uid &&
+        trainingResult.userId !== user?.uid
+      ) {
+        clearTrainingState();
+        return;
+      }
       localStorage.setItem('trainingState', JSON.stringify(trainingResult));
       localStorage.setItem(
         'selectedTraining',
@@ -81,17 +84,19 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
       );
       localStorage.setItem('supersetIndex', JSON.stringify(supersetIndex));
     }
-  }, [trainingResult, supersetIndex]);
+  }, [trainingResult, supersetIndex, isLoaded]);
 
   const clearTrainingState = () => {
     setTrainingResult(null);
     setSelectedTraining(null);
     setSelectedComponent(null);
     setSupersetIndex(null);
+    setView('exercises');
     localStorage.removeItem('trainingState');
     localStorage.removeItem('selectedTraining');
     localStorage.removeItem('selectedComponent');
     localStorage.removeItem('supersetIndex');
+    localStorage.removeItem('userId');
   };
 
   return (
@@ -106,6 +111,8 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
         setSelectedComponent,
         supersetIndex,
         setSupersetIndex,
+        view,
+        setView,
         isLoaded,
       }}
     >
