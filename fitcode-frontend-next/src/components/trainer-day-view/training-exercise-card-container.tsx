@@ -29,6 +29,7 @@ interface TrainingExerciseCardContainerProps {
   setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
   onAthleteView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
+  setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function TrainingExerciseCardContainer(
@@ -40,8 +41,8 @@ export default function TrainingExerciseCardContainer(
     exercise,
     selectedExercise,
     setSelectedExercise,
-    onAthleteView,
     superior,
+    setOpenVideoPlayerModal,
   } = props;
 
   const { selectedAthlete } = useTrainerDayViewContext();
@@ -73,6 +74,7 @@ export default function TrainingExerciseCardContainer(
           setSelectedExercise={setSelectedExercise}
           chartView={true}
           superior={superior}
+          setOpenVideoPlayerModal={setOpenVideoPlayerModal}
         />
       </Grid2>
       <Grid2
@@ -246,6 +248,7 @@ export default function TrainingExerciseCardContainer(
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
       superior={superior}
+      setOpenVideoPlayerModal={setOpenVideoPlayerModal}
     />
   );
 }

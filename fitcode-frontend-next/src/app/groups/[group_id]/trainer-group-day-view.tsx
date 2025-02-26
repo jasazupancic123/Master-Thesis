@@ -11,10 +11,9 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { RotateRight, Save } from '@mui/icons-material';
+import { Save } from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GroupIcon from '@mui/icons-material/Group';
-import GroupsIcon from '@mui/icons-material/Groups';
 import {
   IconButton,
   MenuItem,
@@ -162,7 +161,7 @@ export default function TrainerDayView() {
   return (
     <>
       {!screenSize.isSmallerThanLaptop && (
-        <Box position="absolute" top="50%" right={0}>
+        <Box position="absolute" top="50%" right={-5}>
           <FloatingButton
             label="Save training"
             onClick={handleUpdateTraining}
@@ -177,8 +176,8 @@ export default function TrainerDayView() {
         width="100%"
         minHeight={195}
         sx={{
-          borderBottomRightRadius: todaysTrainings.length === 0 ? 0 : '20px',
-          borderBottomLeftRadius: todaysTrainings.length === 0 ? 0 : '20px',
+          borderBottomRightRadius: todaysTrainings.length === 0 ? 0 : 10,
+          borderBottomLeftRadius: todaysTrainings.length === 0 ? 0 : 10,
           bgcolor: 'background.paper',
         }}
         justifyContent="space-evenly"
@@ -218,7 +217,6 @@ export default function TrainerDayView() {
               >
                 {group.name}
               </Typography>
-              <GroupsIcon />
             </Box>
             <Box
               bgcolor="#283444"
@@ -334,7 +332,6 @@ export default function TrainerDayView() {
               display="flex"
               alignItems="center"
             >
-              <RotateRight sx={{ color: 'white' }} />
               <Select
                 value={cycle.name}
                 onChange={(e) =>
@@ -342,7 +339,7 @@ export default function TrainerDayView() {
                 }
                 sx={{
                   color: 'white',
-                  fontSize: 20,
+                  fontSize: screenSize.isDesktop ? 20 : undefined,
                   bgcolor: 'transparent',
                   border: 'none',
                   pl: 1,
@@ -392,11 +389,10 @@ export default function TrainerDayView() {
         flexDirection="column"
         alignItems="center"
         width="100%"
-        mt={todaysTrainings.length === 0 ? 0 : 2}
         pb={15}
         sx={{
-          borderBottomRightRadius: '20px',
-          borderBottomLeftRadius: '20px',
+          borderBottomRightRadius: 10,
+          borderBottomLeftRadius: 10,
         }}
       >
         {/* Training set groups with set exercises */}
@@ -408,8 +404,8 @@ export default function TrainerDayView() {
             p={2}
             justifyContent="center"
             sx={{
-              borderBottomRightRadius: '20px',
-              borderBottomLeftRadius: '20px',
+              borderBottomRightRadius: 10,
+              borderBottomLeftRadius: 10,
             }}
           >
             <Typography variant="h6" mb={2}>

@@ -62,6 +62,8 @@ export default function Supersets(props: SupersetsProps) {
   const [selectedExercise, setSelectedExercise] =
     useState<TrainingExercise | null>(null);
 
+  const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
+
   useEffect(() => {
     setSelectedExercisesIds(
       supersets && supersets.length
@@ -233,6 +235,14 @@ export default function Supersets(props: SupersetsProps) {
                                   left={10}
                                   display="flex"
                                   flexDirection="column"
+                                  onClick={() => {
+                                    if (selectedAthlete) {
+                                      setSelectedExercise(exercise);
+                                    }
+                                  }}
+                                  sx={{
+                                    cursor: 'pointer',
+                                  }}
                                 >
                                   <Typography variant="caption" color="#6d7b87">
                                     {`${i + 1}${String.fromCharCode(65 + k)}`}
@@ -293,6 +303,9 @@ export default function Supersets(props: SupersetsProps) {
                                     column: k === 0,
                                     all: i === 0 && k === 0,
                                   }}
+                                  setOpenVideoPlayerModal={
+                                    setOpenVideoPlayerModal
+                                  }
                                 />
                               </Box>
                             )}
@@ -506,6 +519,31 @@ export default function Supersets(props: SupersetsProps) {
           selectedExercisesIds={selectedExercisesIds}
           setSelectedExercisesIds={setSelectedExercisesIds}
         />
+      </MyModal>
+      <MyModal
+        isOpen={openVideoPlayerModal}
+        setIsOpen={(open) => setOpenVideoPlayerModal(open)}
+        cancelText="Close"
+        onCancel={() => {
+          setSelectedExercise(null);
+          setOpenVideoPlayerModal(false);
+        }}
+      >
+        {selectedExercise?.exercise?.videoUrl ? (
+          <Box
+            component="video"
+            src={selectedExercise?.exercise?.videoUrl}
+            controls
+            sx={{
+              width: '100%', // Make it responsive
+              maxWidth: 600, // Limit max width
+              borderRadius: 2, // Optional rounded corners
+              boxShadow: 3, // Optional shadow
+            }}
+          />
+        ) : (
+          <Typography variant="body2">No video available</Typography>
+        )}
       </MyModal>
     </DragDropContext>
   );

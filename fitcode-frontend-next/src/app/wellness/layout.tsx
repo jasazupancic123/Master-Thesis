@@ -10,7 +10,7 @@ export default function Layout({ children }: ChildrenProps) {
       <AthleteProvider>
         <SidebarAthlete />
 
-        <Container component="main" maxWidth="lg">
+        <Container component="main" maxWidth="lg" sx={{ px: '0px !important' }}>
           <Box>{children}</Box>
         </Container>
       </AthleteProvider>

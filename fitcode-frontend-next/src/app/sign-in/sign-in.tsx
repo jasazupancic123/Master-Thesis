@@ -81,7 +81,7 @@ export default function SignIn() {
               borderRadius: 3,
             }}
           >
-            <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
+            <Avatar sx={{ m: 1, bgcolor: '#1EB980' }}>
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
@@ -124,22 +124,19 @@ export default function SignIn() {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2, px: 2, py: 2 }}
+                sx={{ mt: 3, mb: 2, px: 2, py: 2, backgroundColor: '#1EB980' }}
               >
                 {LINKS_AUTH.login.label}
               </Button>
 
               <Grid2 container sx={{ justifyContent: 'center' }}>
                 <Grid2>
-                  <Typography>
-                    Don&apos;t have an account?{' '}
-                    <Link
-                      href={LINKS_AUTH.register.href}
-                      style={{ textDecoration: 'none', color: '#0f9d58' }}
-                    >
-                      Sign Up
-                    </Link>
-                  </Typography>
+                  <Link
+                    href={LINKS_AUTH.register.href}
+                    style={{ textDecoration: 'none', color: '#1EB980' }}
+                  >
+                    Sign Up
+                  </Link>
                 </Grid2>
               </Grid2>
             </Box>

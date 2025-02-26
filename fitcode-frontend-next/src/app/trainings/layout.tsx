@@ -6,11 +6,11 @@ import { AthleteProvider } from '@/context/athlete-provider';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
-    <Box bgcolor="#2f3e49" minHeight="100vh">
+    <Box bgcolor="rgb(47,62,72)" minHeight="100vh">
       <AthleteProvider>
         <SidebarAthlete />
 
-        <Container component="main" sx={{ px: 0 }}>
+        <Container component="main" sx={{ px: '0px !important' }}>
           <Box>{children}</Box>
         </Container>
       </AthleteProvider>

@@ -29,6 +29,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setSelectedExercise,
     chartView,
     superior,
+    setOpenVideoPlayerModal,
   } = props;
 
   const { setDetectedChanges } = useGroup();
@@ -164,13 +165,11 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         direction="row"
         justifyContent="center"
         sx={{
-          cursor:
-            selectedExercise !== exercise && selectedAthlete
-              ? 'pointer'
-              : undefined,
+          cursor: 'pointer',
         }}
         onClick={() => {
-          if (selectedAthlete) setSelectedExercise(exercise);
+          setSelectedExercise(exercise);
+          setOpenVideoPlayerModal(true);
         }}
       >
         <Typography

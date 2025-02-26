@@ -19,8 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useAthlete } from '@/context/athlete-provider';
 
 export default function SidebarAthlete() {
-  const { selectedDate, setSelectedDate, selectedPeriod, setSelectedPeriod } =
-    useAthlete();
+  const { selectedDate, setSelectedDate } = useAthlete();
 
   const screenSize = useScreenSize();
   const router = useRouter();
@@ -28,6 +27,7 @@ export default function SidebarAthlete() {
   const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map(
     (link) => link.href
   );
+  mapper.push('#'); //logout
 
   const [index, setIndex] = useState(() => {
     const index = mapper.findIndex((href) => path === href);
@@ -70,92 +70,65 @@ export default function SidebarAthlete() {
             }}
           />
         </Box>
-        <Box
-          display="flex"
-          sx={{ p: 0, m: 0 }}
-          justifyContent="flex-end"
-          flexDirection="column"
-          alignItems="center"
-        >
-          <LocalizationProvider dateAdapter={AdapterDayjs as any}>
-            <MobileDatePicker
-              value={selectedDate}
-              onChange={(newDate) => {
-                if (!newDate) return;
-                setSelectedDate(newDate);
-              }}
-              format="DD-MMM-YY"
-              closeOnSelect={true}
-              slotProps={{
-                textField: {
-                  variant: 'standard',
-                  InputProps: {
-                    disableUnderline: true,
-                    sx: {
-                      userSelect: 'none',
-                      border: 'none !important',
-                      backgroundColor: 'transparent !important',
-                      color: 'white',
-                      textAlign: 'center',
-                      textTransform: 'uppercase',
-                      display: 'inline-flex', // ✅ Ensures it only takes necessary space
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      minWidth: 'auto', // ✅ Prevents extra width
-                      padding: 0,
-                      margin: 0,
-                      fontSize: 15,
-                    },
-                  },
+
+        <LocalizationProvider dateAdapter={AdapterDayjs as any}>
+          <MobileDatePicker
+            value={selectedDate}
+            onChange={(newDate) => {
+              if (!newDate) return;
+              setSelectedDate(newDate);
+            }}
+            format="DD-MMM-YY"
+            closeOnSelect={true}
+            slotProps={{
+              textField: {
+                variant: 'standard',
+                InputProps: {
+                  disableUnderline: true,
                   sx: {
                     userSelect: 'none',
-                    cursor: 'pointer',
-                    width: 75,
-                    padding: 0,
-                    margin: 0,
                     border: 'none !important',
                     backgroundColor: 'transparent !important',
-                    '& .react-datetime-picker__wrapper': {
-                      border: 'none !important',
-                    },
-                  },
-                  inputProps: {
-                    style: {
-                      userSelect: 'none',
-                      border: 'none !important',
-                      backgroundColor: 'transparent !important',
-                      padding: '0px',
-                      textAlign: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      textTransform: 'uppercase',
-                    },
+                    color: 'white',
+                    textAlign: 'center',
+                    textTransform: 'uppercase',
+                    display: 'inline-flex', // ✅ Ensures it only takes necessary space
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 'auto', // ✅ Prevents extra width
+                    padding: 0,
+                    margin: 0,
+                    fontSize: 15,
                   },
                 },
-              }}
-            />
-          </LocalizationProvider>
-          <Select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as 'AM' | 'PM')}
-            sx={{
-              fontSize: 12,
-              '.MuiSelect-select': {
-                paddingTop: '0px !important',
-                paddingBottom: '0px !important',
-                minHeight: 'auto', // Prevents extra height
-                display: 'flex',
-                alignItems: 'center',
-              },
-              '.MuiInputBase-input': {
-                minHeight: 'auto', // Prevents extra height
+                sx: {
+                  userSelect: 'none',
+                  cursor: 'pointer',
+                  width: 75,
+                  padding: 0,
+                  margin: 0,
+                  border: 'none !important',
+                  backgroundColor: 'transparent !important',
+                  '& .react-datetime-picker__wrapper': {
+                    border: 'none !important',
+                  },
+                },
+                inputProps: {
+                  style: {
+                    userSelect: 'none',
+                    border: 'none !important',
+                    backgroundColor: 'transparent !important',
+                    padding: '0px',
+                    textAlign: 'center',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                  },
+                },
               },
             }}
-          >
-            <MenuItem value="AM">AM</MenuItem>
-            <MenuItem value="PM">PM</MenuItem>
-          </Select>
-        </Box>
+          />
+        </LocalizationProvider>
       </Box>
 
       <Box
