@@ -81,6 +81,7 @@ export class ExerciseController {
     @RequestUser() user: User,
     @Param('exerciseId') exerciseId: string,
   ) {
-    return this.exerciseService.delete(user, { exerciseId });
+    await this.exerciseService.delete(user, { exerciseId });
+    return {};
   }
 }

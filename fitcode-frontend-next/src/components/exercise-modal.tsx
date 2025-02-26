@@ -25,10 +25,12 @@ interface Props {
   setData: SetState<Partial<Exercise>>;
   attributes: ExerciseAttribute[];
   components: Component[];
-  icons: ReactNode;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   title: string;
+  cancelText?: string;
+  onDelete?: () => Promise<void>;
+  onConfirm?: () => Promise<void>;
 }
 
 export default function ExerciseModal(props: Props) {
@@ -40,8 +42,10 @@ export default function ExerciseModal(props: Props) {
     components,
     isOpen,
     setIsOpen,
-    icons,
     title,
+    cancelText,
+    onDelete,
+    onConfirm,
   } = props;
 
   const [selectedComponents, setSelectedComponents] = useState<{
@@ -91,7 +95,9 @@ export default function ExerciseModal(props: Props) {
 
     setData((prev) => ({
       ...prev,
-      componentsIds: [componentsIds[componentsIds.length - 1]], // only the leaf component (last one) is selected
+      componentsIds: [
+        componentsIds[componentsIds.length - 1] || componentsIds[0],
+      ], // only the leaf component (last one) is selected
     }));
   }, [selectedComponents]);
 
@@ -104,11 +110,13 @@ export default function ExerciseModal(props: Props) {
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       width={screenSize.isMobile ? undefined : 500}
+      onConfirm={onConfirm}
+      onDelete={onDelete}
+      cancelText={cancelText}
     >
       <Box p={1}>
         <Box display="flex" justifyContent="space-between" mb={3}>
           <Typography variant="h5">{title}</Typography>
-          <Box>{icons}</Box>
         </Box>
 
         <Grid container spacing={2}>

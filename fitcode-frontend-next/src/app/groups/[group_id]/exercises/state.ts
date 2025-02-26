@@ -138,42 +138,121 @@ export async function handleAddExercise(
         ]);
 
       setExercises((prev) => [...prev!, { ...input, id } as Exercise]);
+      toast.success('Successfully added exercise');
     }
   );
 }
 
-export async function handleCsvFileUpload(
+export async function handleUpdateExercise(
   token: string,
-  file: File,
+  exerciseId: string,
+  input: Partial<Exercise>,
   state: {
     router: AppRouterInstance;
+    components: Component[];
+    attributes: ExerciseAttribute[];
+    setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
+    setExercise: SetState<Partial<Exercise>>;
   }
 ) {
-  const { router, setExercises } = state;
+  const {
+    router,
+    components,
+    attributes,
+    setFilteredExercises,
+    setExercises,
+    setExercise,
+  } = state;
 
-  const text = await file.text();
-  const rows = text.split('\n').filter((row) => row);
+  if (!input.name) return toast.error('Name is required');
+  if (!input.componentsIds?.length)
+    return toast.error('Select at least one component to add');
 
-  const formattedExercises = rows.map((row) => {
-    const [name, componentSlug, videoUrl, imageUrl] = row.split(',');
-    return {
-      name,
-      componentsIds: [componentSlug],
-      videoUrl,
-      imageUrl,
-      attributeValues: {},
-    };
-  });
+  // find all nested select attributes and convert them to a multi-level object
+  const attributeValues: Record<string, any> = {};
+  const nestedSelectAttributes = attributes
+    .filter(
+      (attribute) =>
+        attribute.type === 'select' && typeof attribute.values?.[0] === 'object'
+    )
+    .map((attribute) => attribute.field);
+
+  for (const key of nestedSelectAttributes) {
+    const nested = commonService.object.nestObject(
+      input.attributeValues || {},
+      key
+    );
+
+    if (nested) attributeValues[key] = nested;
+  }
+
+  // add all other attributes
+  const otherAttributes = attributes.filter(
+    (attribute) => !nestedSelectAttributes.includes(attribute.field)
+  );
+
+  for (const attribute of otherAttributes)
+    attributeValues[attribute.field] = input.attributeValues?.[attribute.field];
+
+  // delete all keys with undefined values
+  Object.keys(attributeValues).forEach(
+    (key) => attributeValues[key] === undefined && delete attributeValues[key]
+  );
 
   handleApiRequest(
     router,
     () =>
-      ExerciseController.createMany(token, { exercises: formattedExercises }),
-    (exercises) => {
-      setExercises((prev) => [...prev, ...exercises]);
+      ExerciseController.update(token, exerciseId, {
+        name: input.name!,
+        componentsIds: input.componentsIds!,
+        imageUrl: input.imageUrl,
+        videoUrl: input.videoUrl,
+        attributeValues,
+      }),
+    (exercise) => {
+      console.log('updated', exercise);
+
+      exercise = ExerciseService.mapAttributes(exercise);
+      exercise = ExerciseService.mapComponents(exercise, components);
+      setExercise(exercise);
+
+      setFilteredExercises((prev) =>
+        prev.map((e) => (e.id === exercise.id ? exercise : e))
+      );
+
+      setExercises((prev) =>
+        prev.map((e) => (e.id === exercise.id ? exercise : e))
+      );
+
+      toast.success('Successfully updated exercise');
     },
     undefined,
-    'Failed to import exercises'
+    'Failed to update exercise'
+  );
+}
+
+export async function handleDeleteExercise(
+  token: string,
+  exerciseId: string,
+  state: {
+    router: AppRouterInstance;
+    setFilteredExercises: SetState<Exercise[]>;
+    setExercises: SetState<Exercise[]>;
+  }
+) {
+  const { router, setFilteredExercises, setExercises } = state;
+
+  handleApiRequest(
+    router,
+    () => ExerciseController.delete(token, exerciseId),
+    () => {
+      setFilteredExercises((prev) => prev.filter((e) => e.id !== exerciseId));
+      setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
+
+      toast.success('Successfully deleted exercise');
+    },
+    undefined,
+    'Failed to delete exercise'
   );
 }

@@ -74,5 +74,5 @@ export class UserWorkload extends TimestampEntity {
   @Type(() => WorkloadData)
   @ApiProperty()
   @Expose()
-  data: WorkloadData[];
+  data: WorkloadData[]; // each set has prescribed workload value
 }
