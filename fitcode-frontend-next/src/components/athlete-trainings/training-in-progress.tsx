@@ -1,33 +1,38 @@
+import { handleApiRequest, SetState } from '@/common/type/state.type';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { useTraining } from '@/context/training-provider';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
+import { TrainingController } from '@/controller/training/training.controller';
 import {
   Superset,
   TrainingComponent,
 } from '@/controller/training/type/training-plan.type';
-import { Training } from '@/controller/training/type/training.type';
+import {
+  Training,
+  TrainingStatus,
+} from '@/controller/training/type/training.type';
+import {
+  ExerciseMetaQuery,
+  WorkloadData,
+} from '@/controller/training/type/user-workload';
+import { User } from '@/controller/user/type/user.type';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import DoneIcon from '@mui/icons-material/Done';
 import {
   Box,
+  Fab,
   FormControl,
   Grid2,
   MenuItem,
   Select,
   Typography,
-  Fab,
 } from '@mui/material';
-import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { User } from '@/controller/user/type/user.type';
-import MyModal from '../modal';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import DoneIcon from '@mui/icons-material/Done';
-import {
-  ExerciseMetaQuery,
-  WorkloadData,
-  WorkloadDataForExercise,
-} from '@/controller/training/type/user-workload';
-import { TrainingController } from '@/controller/training/training.controller';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { useScreenSize } from '@/context/screen-size-provider';
 import Animation from '../animation';
-import { useTraining } from '@/context/training-provider';
+import MyModal from '../modal';
 
 interface TrainingInProgressProps {
   selectedTraining: Training;
@@ -36,6 +41,8 @@ interface TrainingInProgressProps {
   token: string;
   setView: (view: 'exercises' | 'training') => void;
   setSelectedComponent: (component: TrainingComponent | null) => void;
+  statuses: TrainingStatus[];
+  setStatuses: SetState<TrainingStatus[]>;
 }
 
 export type TrainingResult = {
@@ -43,20 +50,23 @@ export type TrainingResult = {
     exercises: {
       id: string;
       name: string;
-      meta: WorkloadDataForExercise[];
+      meta: WorkloadData[];
     }[];
   }[];
 };
 
 export default function TrainingInProgress(props: TrainingInProgressProps) {
   const screenSize = useScreenSize();
+  const router = useRouter();
+
   const {
     trainingResult,
     setTrainingResult,
     clearTrainingState,
     supersetIndex,
-    setSupersetIndex
+    setSupersetIndex,
   } = useTraining();
+
   const {
     selectedTraining,
     selectedComponent,
@@ -64,10 +74,14 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     token,
     setView,
     setSelectedComponent,
+    statuses,
+    setStatuses,
   } = props;
+
   const [selectedSuperset, setSelectedSuperset] = useState<
     Superset | undefined
   >();
+
   const [supersets, setSupersets] = useState<Superset[]>();
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
@@ -90,38 +104,37 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       const exercises = [] as {
         id: string;
         name: string;
-        meta: WorkloadDataForExercise[];
+        meta: WorkloadData[];
       }[];
+
       for (const exercise of superset.exercises) {
-        const exerciseObjet = {
+        const exerciseObject = {
           id: exercise.exercise?.id || '',
           name: exercise.exercise?.name || '',
-          meta: [] as WorkloadDataForExercise[],
+          meta: [] as WorkloadData[],
         };
-        for (let i = 0; i < exercise.meta.sets; i++) {
-          exerciseObjet.meta.push({
-            setNumber: i + 1,
+
+        for (let i = 0; i < exercise.meta.sets; i++)
+          exerciseObject.meta.push({
             setTypeValue: exercise.meta.setTypeValue,
             workloadValue: exercise.meta.workloadValue,
-          } as WorkloadDataForExercise);
-        }
-        exercises.push(exerciseObjet);
+          });
+
+        exercises.push(exerciseObject);
       }
+
       result.supersets.push({ exercises });
     }
 
-    if(trainingResult === null)
-      setTrainingResult(result);
+    if (trainingResult === null) setTrainingResult(result);
     setSupersets(usersSupersets);
-    if(!supersetIndex)
-      setSelectedSuperset(usersSupersets[0]);
-    else 
-      setSelectedSuperset(usersSupersets[supersetIndex]);
+
+    if (!supersetIndex) setSelectedSuperset(usersSupersets[0]);
+    else setSelectedSuperset(usersSupersets[supersetIndex]);
   }, [selectedComponent]);
 
   useEffect(() => {
     const startTime = Date.now();
-
     const interval = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
@@ -130,51 +143,53 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   }, []);
 
   const handleFinishTraining = async () => {
-    if (!trainingResult) {
-      toast.error('An error occurred');
-      return;
-    }
-    const queries = [] as ExerciseMetaQuery[];
-    const data = [] as WorkloadData[];
-    for (const superset of trainingResult.supersets) {
-      for (const exercise of superset.exercises) {
-        for (const set of exercise.meta) {
-          for (const rep of Array.from(
-            { length: set.setTypeValue },
-            (_, i) => i + 1
-          )) {
-            data.push({
-              setNumber: set.setNumber,
-              repNumber: rep,
-              setTypeValue: set.setTypeValue,
-              workloadValue: set.workloadValue,
-            } as WorkloadData);
-          }
-        }
-        queries.push({
-          exerciseId: exercise.id,
-          data,
-        });
-      }
-    }
+    if (!trainingResult) return toast.error('An error occurred');
 
-    try {
-      for (const query of queries) {
-        await TrainingController.updateAthleteWorkloadData(
+    const queries = [] as ExerciseMetaQuery[];
+
+    for (const superset of trainingResult.supersets)
+      for (const exercise of superset.exercises) {
+        const data = [] as WorkloadData[];
+        for (const set of exercise.meta) {
+          data.push({
+            setTypeValue: set.setTypeValue,
+            workloadValue: set.workloadValue,
+          });
+        }
+
+        queries.push({ exerciseId: exercise.id, data });
+      }
+
+    handleApiRequest(
+      router,
+      () =>
+        TrainingController.createUserWorkloadsForComponent(
           token,
           selectedTraining.id,
-          query.exerciseId,
-          { data: query.data }
-        );
-      }
-      toast.success('Training data updated successfully');
-      clearTrainingState();
-      setView('exercises');
-      setSelectedComponent(null);
-      setSelectedSuperset(undefined);
-    } catch (e) {
-      toast.error(e as any);
-    }
+          selectedComponent.id,
+          { workloads: queries }
+        ),
+      () => {
+        toast.success('Training data updated successfully');
+        setStatuses((prev) => [
+          ...prev,
+          {
+            componentId: selectedComponent.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            status: SetStatus.COMPLETED,
+            trainingId: selectedTraining.id,
+            userId: profile.uid,
+          },
+        ]);
+        clearTrainingState();
+        setView('exercises');
+        setSelectedComponent(null);
+        setSelectedSuperset(undefined);
+      },
+      undefined,
+      'Failed to update training data'
+    );
   };
 
   const handleValueChange = (
@@ -257,141 +272,89 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           maxHeight: '100vh',
         }}
       >
-        {selectedSuperset.exercises.map((exercise, i) => (
-          <Box
-            key={exercise.id}
-            width="100%"
-            display="flex"
-            flexDirection="column"
-            sx={{ position: 'relative' }}
-          >
-            <Typography
-              variant="body1"
-              sx={{
-                textAlign: 'center',
-                textTransform: 'uppercase',
-                fontWeight: 'bold',
-              }}
-            >
-              {exercise.exercise?.name || 'Un-named Exercise'}
-            </Typography>
-
+        {selectedSuperset.exercises.map((exercise, i) => {
+          return (
             <Box
-              position="absolute"
+              key={exercise.id}
+              width="100%"
               display="flex"
               flexDirection="column"
-              top={0}
-              left={10}
-              zIndex={1000}
-              pb={
-                screenSize.isMobile || screenSize.isLandscapeMobile
-                  ? 38
-                  : undefined
-              }
+              sx={{ position: 'relative' }}
             >
-              <Typography variant="body2" color="rgb(177, 183, 189)">
-                {`${supersets.indexOf(selectedSuperset) + 1}${String.fromCharCode(65 + i)}`}
+              <Typography
+                variant="body1"
+                sx={{
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold',
+                }}
+              >
+                {exercise.exercise?.name || 'Un-named Exercise'}
               </Typography>
-            </Box>
-            <Grid2
-              container
-              size={12}
-              width="100%"
-              mt={1}
-              display="flex"
-              alignItems="center"
-            >
+
+              <Box
+                position="absolute"
+                display="flex"
+                flexDirection="column"
+                top={0}
+                left={10}
+                zIndex={1000}
+                pb={
+                  screenSize.isMobile || screenSize.isLandscapeMobile
+                    ? 38
+                    : undefined
+                }
+              >
+                <Typography variant="body2" color="rgb(177, 183, 189)">
+                  {`${supersets.indexOf(selectedSuperset) + 1}${String.fromCharCode(65 + i)}`}
+                </Typography>
+              </Box>
               <Grid2
-                size={6}
+                container
+                size={12}
+                width="100%"
+                mt={1}
                 display="flex"
                 alignItems="center"
-                justifyContent="center"
-                sx={{ mt: 1 }}
               >
-                <Image
-                  src="/deadlift.png"
-                  alt="Exercise Image"
-                  width={!screenSize.isMobile ? 200 : 170}
-                  height={0}
-                  style={{
-                    maxWidth: !screenSize.isMobile ? '200px' : '170px',
-                    height: 'auto', // Maintains aspect ratio dynamically
-                    borderRadius: 15,
-                  }}
-                />
-              </Grid2>
-              <Grid2
-                size={6}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Box
-                  width="100%"
+                <Grid2
+                  size={6}
                   display="flex"
-                  flexDirection={'column'}
-                  px={1}
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ mt: 1 }}
                 >
-                  <Grid2
-                    container
-                    size={12}
-                    mt={1}
-                    gap={0.5}
-                    display={!screenSize.isMobile ? 'flex' : undefined}
-                    width={!screenSize.isMobile ? '100%' : undefined}
-                    justifyContent={!screenSize.isMobile ? 'center' : undefined}
+                  <Image
+                    src={
+                      exercise.exercise?.imageUrl?.trimEnd() || '/deadlift.png'
+                    }
+                    alt="Exercise Image"
+                    width={!screenSize.isMobile ? 200 : 170}
+                    height={0}
+                    style={{
+                      maxWidth: !screenSize.isMobile ? '200px' : '170px',
+                      height: 'auto',
+                      borderRadius: 15,
+                    }}
+                  />
+                </Grid2>
+                <Grid2
+                  size={6}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Box
+                    width="100%"
+                    display="flex"
+                    flexDirection={'column'}
+                    px={1}
                   >
-                    <Grid2
-                      size={!screenSize.isMobile ? 0.3 : 1}
-                      display="flex"
-                      alignItems="center"
-                    />
-                    <Grid2
-                      size={3}
-                      maxWidth={!screenSize.isMobile ? 80 : undefined}
-                      minWidth={screenSize.isMobile ? '42.5%' : 90}
-                      display="flex"
-                      justifyContent="center"
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: '#969da3',
-                          textAlign: 'center',
-                          fontSize: 11,
-                        }}
-                      >
-                        {exercise.meta.workloadType[0].toUpperCase() +
-                          exercise.meta.workloadType.slice(1)}
-                      </Typography>
-                    </Grid2>
-                    <Grid2
-                      size={3}
-                      maxWidth={!screenSize.isMobile ? 80 : undefined}
-                      minWidth={screenSize.isMobile ? '42.5%' : 90}
-                      display="flex"
-                      justifyContent="center"
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: '#969da3',
-                          textAlign: 'center',
-                          fontSize: 11,
-                        }}
-                      >
-                        {exercise.meta.setType[0].toUpperCase() +
-                          exercise.meta.setType.slice(1)}
-                      </Typography>
-                    </Grid2>
-                  </Grid2>
-                  {Array.from({ length: exercise.meta.sets }, (_, index) => (
                     <Grid2
                       container
                       size={12}
-                      key={index}
+                      mt={1}
                       gap={0.5}
-                      my={0.25}
                       display={!screenSize.isMobile ? 'flex' : undefined}
                       width={!screenSize.isMobile ? '100%' : undefined}
                       justifyContent={
@@ -399,21 +362,27 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                       }
                     >
                       <Grid2
-                        size={!screenSize.isMobile ? 0.5 : 1}
+                        size={!screenSize.isMobile ? 0.3 : 1}
                         display="flex"
                         alignItems="center"
+                      />
+                      <Grid2
+                        size={3}
+                        maxWidth={!screenSize.isMobile ? 80 : undefined}
+                        minWidth={screenSize.isMobile ? '42.5%' : 90}
+                        display="flex"
+                        justifyContent="center"
                       >
                         <Typography
                           variant="caption"
                           sx={{
                             color: '#969da3',
                             textAlign: 'center',
-                            writingMode: 'vertical-rl',
-                            transform: 'rotate(180deg)',
                             fontSize: 11,
                           }}
                         >
-                          Set {index + 1}
+                          {exercise.meta.workloadType[0].toUpperCase() +
+                            exercise.meta.workloadType.slice(1)}
                         </Typography>
                       </Grid2>
                       <Grid2
@@ -421,158 +390,212 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                         maxWidth={!screenSize.isMobile ? 80 : undefined}
                         minWidth={screenSize.isMobile ? '42.5%' : 90}
                         display="flex"
-                        alignItems="center"
+                        justifyContent="center"
                       >
-                        {/* Workload Input */}
-                        <FormControl
-                          fullWidth
+                        <Typography
+                          variant="caption"
                           sx={{
-                            maxWidth: !screenSize.isMobile ? 80 : undefined,
+                            color: '#969da3',
+                            textAlign: 'center',
+                            fontSize: 11,
                           }}
                         >
-                          <Select
-                            value={
-                              trainingResult?.supersets[
-                                supersets.indexOf(selectedSuperset)
-                              ].exercises[i].meta[index].workloadValue
-                            }
-                            onChange={(e) => {
-                              handleValueChange(
-                                e.target.value as number,
-                                'workloadValue',
-                                i,
-                                index
-                              );
-                            }}
-                            sx={{
-                              '& .mui-odhiz8-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input':
-                                {
-                                  whiteSpace: !screenSize.isUltraSmall
-                                    ? 'nowrap'
-                                    : undefined,
-                                  display: 'flex',
-                                  width: '100%',
-                                  ml: screenSize.isUltraSmall ? 1.4 : undefined,
-                                  justifyContent: 'center !important',
-                                  textAlign: 'center',
-                                },
-                              '& .MuiSelect-select': {
-                                padding: '4px 16px', // Adjust as needed
-                                fontSize:
-                                  screenSize.isReallySmall &&
-                                  !screenSize.isUltraSmall
-                                    ? '80%'
-                                    : screenSize.isUltraSmall
-                                      ? '80%'
-                                      : undefined,
-                                whiteSpace: 'nowrap',
-                              },
-                              '& .MuiSelect-input': {
-                                width: '100%',
-                                whiteSpace: 'nowrap',
-                              },
-                              '& .MuiSelect-icon': {
-                                display: screenSize.isUltraSmall
-                                  ? 'none'
-                                  : undefined,
-                              },
-                            }}
-                          >
-                            {Array.from({ length: 300 }, (_, i) => (
-                              <MenuItem
-                                key={i + 1}
-                                value={i + 1}
-                                sx={{ textAlign: 'center' }}
-                              >
-                                {i + 1}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid2>
-                      <Grid2
-                        size={3}
-                        maxWidth={!screenSize.isMobile ? 80 : undefined}
-                        minWidth={screenSize.isMobile ? '42.5%' : 90}
-                        display="flex"
-                        alignItems="center"
-                      >
-                        <FormControl
-                          fullWidth
-                          sx={{
-                            maxWidth: !screenSize.isMobile ? 80 : undefined,
-                          }}
-                        >
-                          <Select
-                            value={
-                              trainingResult?.supersets[
-                                supersets.indexOf(selectedSuperset)
-                              ].exercises[i].meta[index].setTypeValue
-                            }
-                            onChange={(e) => {
-                              handleValueChange(
-                                e.target.value as number,
-                                'setTypeValue',
-                                i,
-                                index
-                              );
-                            }}
-                            MenuProps={{
-                              PaperProps: {
-                                style: {
-                                  whiteSpace: 'nowrap',
-                                },
-                              },
-                            }}
-                            sx={{
-                              '& .mui-odhiz8-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input':
-                                {
-                                  whiteSpace: !screenSize.isUltraSmall
-                                    ? 'nowrap'
-                                    : undefined,
-                                  display: 'flex',
-                                  width: '100%',
-                                  ml: screenSize.isUltraSmall ? 1.4 : undefined,
-                                  justifyContent: 'center !important',
-                                  textAlign: 'center',
-                                },
-                              '& .MuiSelect-select': {
-                                padding: '4px 16px', // Adjust as needed
-                                fontSize:
-                                  screenSize.isReallySmall &&
-                                  !screenSize.isUltraSmall
-                                    ? '80%'
-                                    : screenSize.isUltraSmall
-                                      ? '80%'
-                                      : undefined,
-                                whiteSpace: 'nowrap',
-                              },
-                              '& .MuiSelect-input': {
-                                width: '100%',
-                                whiteSpace: 'nowrap',
-                              },
-                              '& .MuiSelect-icon': {
-                                display: screenSize.isUltraSmall
-                                  ? 'none'
-                                  : undefined,
-                              },
-                            }}
-                          >
-                            {Array.from({ length: 50 }, (_, i) => (
-                              <MenuItem key={i + 1} value={i + 1}>
-                                {i + 1}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
+                          {exercise.meta.setType[0].toUpperCase() +
+                            exercise.meta.setType.slice(1)}
+                        </Typography>
                       </Grid2>
                     </Grid2>
-                  ))}
-                </Box>
+
+                    {Array.from({ length: exercise.meta.sets }, (_, index) => (
+                      <Grid2
+                        container
+                        size={12}
+                        key={index}
+                        gap={0.5}
+                        my={0.25}
+                        display={!screenSize.isMobile ? 'flex' : undefined}
+                        width={!screenSize.isMobile ? '100%' : undefined}
+                        justifyContent={
+                          !screenSize.isMobile ? 'center' : undefined
+                        }
+                      >
+                        <Grid2
+                          size={!screenSize.isMobile ? 0.5 : 1}
+                          display="flex"
+                          alignItems="center"
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: '#969da3',
+                              textAlign: 'center',
+                              writingMode: 'vertical-rl',
+                              transform: 'rotate(180deg)',
+                              fontSize: 11,
+                            }}
+                          >
+                            Set {index + 1}
+                          </Typography>
+                        </Grid2>
+                        <Grid2
+                          size={3}
+                          maxWidth={!screenSize.isMobile ? 80 : undefined}
+                          minWidth={screenSize.isMobile ? '42.5%' : 90}
+                          display="flex"
+                          alignItems="center"
+                        >
+                          {/* Workload Input */}
+                          <FormControl
+                            fullWidth
+                            sx={{
+                              maxWidth: !screenSize.isMobile ? 80 : undefined,
+                            }}
+                          >
+                            <Select
+                              value={
+                                trainingResult?.supersets[
+                                  supersets.indexOf(selectedSuperset)
+                                ].exercises[i].meta[index].workloadValue
+                              }
+                              onChange={(e) => {
+                                handleValueChange(
+                                  e.target.value as number,
+                                  'workloadValue',
+                                  i,
+                                  index
+                                );
+                              }}
+                              sx={{
+                                '& .mui-odhiz8-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input':
+                                  {
+                                    whiteSpace: !screenSize.isUltraSmall
+                                      ? 'nowrap'
+                                      : undefined,
+                                    display: 'flex',
+                                    width: '100%',
+                                    ml: screenSize.isUltraSmall
+                                      ? 1.4
+                                      : undefined,
+                                    justifyContent: 'center !important',
+                                    textAlign: 'center',
+                                  },
+                                '& .MuiSelect-select': {
+                                  padding: '4px 16px', // Adjust as needed
+                                  fontSize:
+                                    screenSize.isReallySmall &&
+                                    !screenSize.isUltraSmall
+                                      ? '80%'
+                                      : screenSize.isUltraSmall
+                                        ? '80%'
+                                        : undefined,
+                                  whiteSpace: 'nowrap',
+                                },
+                                '& .MuiSelect-input': {
+                                  width: '100%',
+                                  whiteSpace: 'nowrap',
+                                },
+                                '& .MuiSelect-icon': {
+                                  display: screenSize.isUltraSmall
+                                    ? 'none'
+                                    : undefined,
+                                },
+                              }}
+                            >
+                              {Array.from({ length: 300 }, (_, i) => (
+                                <MenuItem
+                                  key={i + 1}
+                                  value={i + 1}
+                                  sx={{ textAlign: 'center' }}
+                                >
+                                  {i + 1}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid2>
+
+                        <Grid2
+                          size={3}
+                          maxWidth={!screenSize.isMobile ? 80 : undefined}
+                          minWidth={screenSize.isMobile ? '42.5%' : 90}
+                          display="flex"
+                          alignItems="center"
+                        >
+                          <FormControl
+                            fullWidth
+                            sx={{
+                              maxWidth: !screenSize.isMobile ? 80 : undefined,
+                            }}
+                          >
+                            <Select
+                              value={
+                                trainingResult?.supersets[
+                                  supersets.indexOf(selectedSuperset)
+                                ].exercises[i].meta[index].setTypeValue
+                              }
+                              onChange={(e) => {
+                                handleValueChange(
+                                  e.target.value as number,
+                                  'setTypeValue',
+                                  i,
+                                  index
+                                );
+                              }}
+                              MenuProps={{
+                                PaperProps: { style: { whiteSpace: 'nowrap' } },
+                              }}
+                              sx={{
+                                '& .mui-odhiz8-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input':
+                                  {
+                                    whiteSpace: !screenSize.isUltraSmall
+                                      ? 'nowrap'
+                                      : undefined,
+                                    display: 'flex',
+                                    width: '100%',
+                                    ml: screenSize.isUltraSmall
+                                      ? 1.4
+                                      : undefined,
+                                    justifyContent: 'center !important',
+                                    textAlign: 'center',
+                                  },
+                                '& .MuiSelect-select': {
+                                  padding: '4px 16px', // Adjust as needed
+                                  fontSize:
+                                    screenSize.isReallySmall &&
+                                    !screenSize.isUltraSmall
+                                      ? '80%'
+                                      : screenSize.isUltraSmall
+                                        ? '80%'
+                                        : undefined,
+                                  whiteSpace: 'nowrap',
+                                },
+                                '& .MuiSelect-input': {
+                                  width: '100%',
+                                  whiteSpace: 'nowrap',
+                                },
+                                '& .MuiSelect-icon': {
+                                  display: screenSize.isUltraSmall
+                                    ? 'none'
+                                    : undefined,
+                                },
+                              }}
+                            >
+                              {Array.from({ length: 50 }, (_, i) => (
+                                <MenuItem key={i + 1} value={i + 1}>
+                                  {i + 1}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid2>
+                      </Grid2>
+                    ))}
+                  </Box>
+                </Grid2>
               </Grid2>
-            </Grid2>
-          </Box>
-        ))}
+            </Box>
+          );
+        })}
       </Box>
 
       <Fab
@@ -596,6 +619,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           <ArrowForwardIcon />
         )}
       </Fab>
+
       <MyModal
         isOpen={openNextSupersetModal}
         setIsOpen={(open) => setOpenNextSupersetModal(open)}
@@ -605,20 +629,19 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           setSelectedSuperset(
             supersets[supersets.indexOf(selectedSuperset) + 1]
           );
-          if(!supersetIndex)
-            setSupersetIndex(1)
-          else 
-            setSupersetIndex(supersetIndex + 1);
+
+          if (!supersetIndex) setSupersetIndex(1);
+          else setSupersetIndex(supersetIndex + 1);
           setOpenNextSupersetModal(false);
-          if (boxRef.current) {
-            boxRef.current.scrollTop = 0; // Scroll to the top
-          }
+
+          if (boxRef.current) boxRef.current.scrollTop = 0;
         }}
       >
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
           Move to next superset?
         </Typography>
       </MyModal>
+
       <MyModal
         isOpen={openFinishTrainingModal}
         setIsOpen={(open) => setOpenFinishTrainingModal(open)}

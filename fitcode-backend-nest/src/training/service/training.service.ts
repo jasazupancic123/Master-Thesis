@@ -7,22 +7,24 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {
-  addHours,
   addMinutes,
-  endOfHour,
+  endOfDay,
   isAfter,
   isBefore,
+  startOfDay,
   startOfHour,
 } from 'date-fns';
-import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Query } from 'firebase-admin/firestore';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+import { DateFilterDto } from 'src/common/dto/date-filter.dto';
+import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
 import { CommonService } from 'src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { User } from 'src/common/type/firebase-auth.type';
 import {
-  SubgroupRef,
   TrainingComponentRef,
   TrainingRef,
+  TrainingStatusRef,
   UserWorkloadExerciseRef,
 } from 'src/common/type/firestore.type';
 import { Filter } from 'src/common/type/orm.type';
@@ -33,6 +35,7 @@ import { Group } from 'src/group/entity/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { UserService } from 'src/user/user.service';
 import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
 import { WorkloadData } from '../entity/workload-data';
 import { TrainingRepository } from '../repository/training.repository';
@@ -123,18 +126,10 @@ export class TrainingService {
         q.where('cycleId', '==', filter.cycleId.value);
 
       // filter by date
-      if (filter?.from?.value || filter?.to?.value) {
-        const from = filter?.from?.value
-          ? Timestamp.fromDate(filter.from.value)
-          : undefined;
-
-        const to = filter?.to?.value
-          ? Timestamp.fromDate(filter.to.value)
-          : undefined;
-
-        if (from) q.where('from', '>=', from);
-        if (to) q.where('to', '<=', to);
-      }
+      // TODO - doesn't work
+      const from = filter?.from?.value ? filter.from.value : undefined;
+      const to = filter?.to?.value ? filter.to.value : undefined;
+      if (from && to) q.where('from', '>', from).where('to', '<', to);
 
       q.orderBy('from', 'asc');
       return q;
@@ -228,9 +223,89 @@ export class TrainingService {
 
   async copy(
     user: User,
-    source: SubgroupRef, // training can be copied from subgroup
-    destination: SubgroupRef,
-  ) {}
+    ref: TrainingRef,
+    input: DateFilterDto,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    const from = startOfDay(input.from || new Date());
+    const to = endOfDay(input.from || new Date());
+    let trainingsOnDate = await this.findAll(user, {
+      from: { value: from },
+      to: { value: to },
+    });
+
+    trainingsOnDate = trainingsOnDate.filter((t) =>
+      this.commonService.date.isBetween(t.from, from, to),
+    );
+
+    if (trainingsOnDate.length >= 2)
+      throw new BadRequestException(
+        'Maximum number of trainings reached for selected day',
+      );
+
+    const training = await this.findOneOrFail(user, ref);
+
+    // create new training
+    const meta = await this.userService.getLastMetas(training.membersIds);
+    const data: Create<Training> = {
+      id: null,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+      ownerId: user.uid,
+      copiedFromId: training.id,
+      from: input.from,
+      to: addMinutes(startOfHour(input.from), training.components.length * 30),
+      membersIds: training.membersIds,
+      meta,
+      components: training.components.map((c, i) => {
+        const from = addMinutes(startOfHour(input.from), i * 30);
+        const to = addMinutes(from, 30);
+        return { ...c, from, to };
+      }),
+    };
+
+    const workloads = await this.userWorkloadService.findAllByMembers(
+      training.membersIds,
+    );
+
+    let updatedTraining: Training = {
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      // create training
+      const docRef = this.trainingRepository.collection().doc();
+      const query = this.firebaseService.buildCreateQuery<Training>(
+        { ...data, id: docRef.id },
+        { timestamps: true },
+      );
+
+      updatedTraining.id = docRef.id;
+      transaction.set(docRef, query);
+
+      // add trainer to users
+      for (const userId of training.membersIds) {
+        const docRef = this.userService.getDoc(userId);
+        transaction.update(docRef, {
+          trainersIds: FieldValue.arrayUnion(user.uid),
+        });
+      }
+
+      // create training worklaods for new copied training
+      this.userWorkloadService.createForTraining(
+        transaction,
+        updatedTraining,
+        workloads,
+      );
+    });
+
+    return updatedTraining;
+  }
 
   async update(
     user: User,
@@ -305,17 +380,35 @@ export class TrainingService {
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  async updateAthleteWorkloadData(
-    ref: UserWorkloadExerciseRef,
-    input: WorkloadData[],
+  async createUserWorkloadsForComponent(
     user: User,
+    ref: TrainingStatusRef,
+    input: { exerciseId: string; data: WorkloadData[] }[],
   ) {
     this.logger.log(
-      `User ${user.uid} is updating workload sets (exercise ${ref.exerciseId}) for training ${ref.trainingId}: ${JSON.stringify([input])}`,
+      `User ${user.uid} is creating workloads for component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
     if (user.uid !== ref.userId) throw new UnauthorizedException();
-    await this.userWorkloadService.updateData(ref, input);
+    await this.userWorkloadService.updateExercisesWorkloadsByComponent(
+      ref,
+      input,
+    );
+  }
+
+  async findAllStatusesByTraining(user: User, ref: TrainingRef) {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_STATUS)
+      .where('trainingId', '==', ref.trainingId)
+      .where('userId', '==', user.uid)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<TrainingStatus>,
+          ),
+        ),
+      );
   }
 
   async addComponents(

@@ -7,11 +7,14 @@ import {
   WORKLOAD,
 } from '@/common/constant/training-exercise.constant';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTraining } from '@/context/training-provider';
 import {
   ExerciseMeta,
   Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
+import { CheckCircle } from '@mui/icons-material';
+import SportsIcon from '@mui/icons-material/Sports';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Box, Grid2, IconButton } from '@mui/material';
@@ -19,18 +22,14 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 import BorderColor from '../border-color';
-import { AthleteTrainingExerciseCardProps } from './props';
-import { SetExerciseAttribute } from '../trainer-day-view/exercise-card-set-attribute';
-import SportsIcon from '@mui/icons-material/Sports';
-import { open } from 'node:inspector/promises';
 import MyModal from '../modal';
-import Animation from '../animation';
-import { useTraining } from '@/context/training-provider';
+import { SetExerciseAttribute } from '../trainer-day-view/exercise-card-set-attribute';
+import { AthleteTrainingExerciseCardProps } from './props';
 
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
 ) {
-  const { components, setView, training, profile } = props;
+  const { components, setView, training, profile, statuses } = props;
   const screenSize = useScreenSize();
 
   const {
@@ -132,6 +131,7 @@ export default function AthleteTrainingExerciseCard(
                     >
                       {c.id}
                     </Typography>
+
                     <IconButton
                       sx={{
                         p: 0,
@@ -432,6 +432,15 @@ export default function AthleteTrainingExerciseCard(
                     setSelectedComponent(c);
                   }}
                 >
+                  {statuses.find(
+                    (s) =>
+                      s.componentId === c.id && s.trainingId === training.id
+                  ) && (
+                    <Box p={1}>
+                      <CheckCircle color="success" />
+                    </Box>
+                  )}
+
                   <Typography
                     variant="h6"
                     sx={{
@@ -449,6 +458,7 @@ export default function AthleteTrainingExerciseCard(
           </Box>
         </Box>
       </Box>
+
       <MyModal
         isOpen={openAreYouSureModal}
         setIsOpen={(open) => setOpenAreYouSureModal(open)}

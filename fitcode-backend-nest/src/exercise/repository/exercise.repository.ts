@@ -21,7 +21,10 @@ export class ExerciseRepository
   async getDocs(
     query: (query: Query) => Query = (query) => query,
   ): Promise<Exercise[]> {
-    const snapshot = await query(this.collection()).get();
+    const snapshot = await query(this.collection())
+      .where('deletedAt', '==', null)
+      .get();
+
     return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
@@ -57,7 +60,12 @@ export class ExerciseRepository
   }
 
   async deleteDoc(exerciseId: string) {
-    await this.doc(exerciseId).delete();
+    // soft delete
+    const query = this.firebaseService.buildUpdateQuery<Exercise>({
+      deletedAt: new Date(),
+    });
+
+    await this.doc(exerciseId).update(query);
   }
 
   doc(exerciseId: string): DocumentReference {
