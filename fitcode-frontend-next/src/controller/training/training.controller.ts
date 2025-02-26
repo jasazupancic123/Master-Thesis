@@ -37,6 +37,14 @@ export class TrainingController {
     return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }
 
+  static async copy(
+    token: string,
+    trainingId: string,
+    body: { from: string; to: string }
+  ) {
+    return api.post<Training>(`/training/${trainingId}/copy`, body, { token });
+  }
+
   static async delete(token: string, trainingId: string) {
     await api.delete<{}>(`/training/${trainingId}`, { token });
     return null;
