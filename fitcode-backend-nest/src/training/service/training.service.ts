@@ -232,70 +232,57 @@ export class TrainingService {
     ref: TrainingRef,
     input: DateFilterDto,
   ): Promise<Training> {
-    const { groupId, cycleId } = input;
     this.logger.log(`User ${user.uid} is copying training ${ref.trainingId}`);
 
-    // validate parent references
-    const group = await this.groupService.findByIdOrFail(user, { groupId });
-    this.groupService.findCycleOrFail(cycleId, group);
-
-    // validate trainer and owner
-    this.validateTrainer(user);
-    this.validateOwner(user.uid, group);
-
-    // validate new trainings time and components
-    const components = await this.cacheManagerService.getComponents();
-    this.validateComponents(input.componentsIds, components);
-
     const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
-    this.validateOwner(user.uid, training);
 
-    // if no components, delete training
-    if (input.components.length === 0) {
-      await this.trainingRepository.deleteDoc(ref.trainingId);
-      return { ...training, ...input };
-    }
+    // create training
+    const meta = await this.userService.getLastMetas(training.membersIds);
+    const data: Create<Training> = {
+      id: null,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+      ownerId: user.uid,
+      copiedFromId: training.id,
+      from: input.from,
+      to: input.to,
+      membersIds: training.membersIds,
+      meta,
+      components: input.componentsIds.map((id, i) => {
+        const from = addMinutes(startOfHour(input.from), i * 30);
+        const to = addMinutes(from, 30);
 
-    // validate that data is valid
-    const allComponents = await this.cacheManagerService.getComponents();
-    // validate all training members to be valid
-    // validate all training components to be valid
-    // validate all subgroups have unique members (one member cannot be in multiple subgroups)
+        return {
+          id,
+          from,
+          to,
+          color: null,
+          subgroups: [],
+          supersets: [{ exercises: [] }],
+        };
+      }),
+    };
 
-    // validate limits
-    // max members == 20, max components == 5, max subgroups per component == training.members.length, max supersets == 8 per component, max exercises == 4 per superset
-    // => 5 components * 8 supersets * 4 exercises = 160 exercises per training * 20 subgroups = 3200 exercises ???
+    let trainingId: string;
+    await this.firebaseService.firestore.runTransaction(async (transaction) => {
+      // create training
+      const docRef = this.trainingRepository.collection().doc();
+      const query = this.firebaseService.buildCreateQuery<Training>(
+        { ...data, id: docRef.id },
+        { timestamps: true },
+      );
 
-    // validate dates
-    // validate each component has correct times (`from` < `to`)
-    // validate trainings overlap within the group
-    // set training `from` time to first component's `from`
-    // set training `to` time to last component's `to`
-    // check training is within cycle's from and to
+      trainingId = docRef.id;
+      transaction.set(docRef, query);
 
-    // if training in the future:
-    // - update training's meta to latest user data
-    // - recalculate workloads for all members and all subgroups
-
-    await this.trainingRepository.updateDoc(ref.trainingId, input);
-
-    // create user workloads
-    const batch = this.firebaseService.firestore.batch();
-    const updatedTraining: Training = { ...training, ...input };
-    const workloads = await this.userWorkloadService.findAllByMembers(
-      training.membersIds,
-    );
-
-    this.userWorkloadService.createForTraining(
-      batch,
-      updatedTraining,
-      workloads,
-    );
-
-    await batch.commit();
-
-    return { ...training, ...this.commonService.object.clean(input) };
+      // add trainer to users
+      for (const userId of group.membersIds) {
+        const docRef = this.userService.getDoc(userId);
+        transaction.update(docRef, {
+          trainersIds: FieldValue.arrayUnion(user.uid),
+        });
+      }
+    });
   }
 
   async update(
