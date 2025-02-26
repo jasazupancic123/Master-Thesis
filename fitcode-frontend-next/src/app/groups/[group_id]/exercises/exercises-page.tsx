@@ -105,7 +105,7 @@ export function ExercisesPage() {
         <GroupSidebar groups={groups} group={group} />
       </Box>
 
-      <Box p={2}>
+      <Box p={2} px={screenSize.isMobile ? 0 : undefined}>
         <Box
           display="flex"
           justifyContent="center"
@@ -176,13 +176,22 @@ export function ExercisesPage() {
             <Box
               key={exercise.id}
               width={{
-                xs: screenSize.isMobile ? '45%' : '30%',
-                sm: screenSize.isMobile ? '45%' : '30%',
+                xs: '100%',
+                sm: '100%',
+                ml: '45%',
               }}
               sx={{
                 cursor: 'pointer',
-                flexBasis: screenSize.isMobile ? '45%' : '30%',
-                maxWidth: screenSize.isMobile ? '45%' : '30%',
+                flexBasis: screenSize.isMobile
+                  ? '100%'
+                  : screenSize.isSmallerThanLaptop
+                    ? '45%'
+                    : '30%',
+                maxWidth: screenSize.isMobile
+                  ? '100%'
+                  : screenSize.isSmallerThanLaptop
+                    ? '45%'
+                    : '30%',
               }}
               onClick={() => {
                 setModal({ ...modal, edit: true });

@@ -41,7 +41,7 @@ export default function GroupDateFilterButtonGroup(
             : screenSize.isLandscapeMobile
               ? '90%'
               : '100%',
-          maxWidth: 700,
+          maxWidth: 600,
           mx: 'auto',
           borderBottomLeftRadius: '500px',
           borderBottomRightRadius: '500px',

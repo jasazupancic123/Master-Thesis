@@ -35,13 +35,8 @@ export default function UserWellnessForm(props: Props) {
   return (
     <Stack
       alignItems="center"
-      pb={screenSize.isLandscapeMobile ? 2 : 12}
+      pb={screenSize.isLandscapeMobile ? 10 : 12}
       sx={{
-        height: screenSize.isLandscapeMobile
-          ? '100vh'
-          : screenSize.isMobile
-            ? '90vh'
-            : 'auto', // Use 90% of viewport height on mobile
         maxHeight: screenSize.isMobile ? '90vh' : undefined,
         px: screenSize.isMobile ? 2 : 4,
         overflowY: 'auto', // Prevents content from being cut off on smaller screens
@@ -51,7 +46,7 @@ export default function UserWellnessForm(props: Props) {
       <Chip
         label={today}
         sx={{
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: 'bold',
           color: '#1EB980', // Match theme
           backgroundColor: '#303E4A', // Subtle dark background
@@ -67,12 +62,13 @@ export default function UserWellnessForm(props: Props) {
           height: screenSize.isMobile
             ? 'calc(90vh - 200px)'
             : screenSize.isLandscapeMobile
-              ? '30vh'
+              ? 200
               : 300, // Adjusts dynamically for mobile
           width: '100%',
           maxWidth: screenSize.isMobile ? '90%' : '60%',
           overflowY: 'auto', // Ensures scrollability if needed
           padding: screenSize.isLandscapeMobile ? 1 : 0,
+          px: screenSize.isMobile ? 5 : undefined,
         }}
         spacing={4}
         direction="row"
@@ -191,13 +187,13 @@ function UserWellnessSlider(props: {
         onChange={(_, value) => props.setValue(value as number)}
         valueLabelDisplay="auto"
         sx={{
-          width: 12,
+          width: 10,
           '& .MuiSlider-track': {
             backgroundColor: '#303E4A',
           },
           '& .MuiSlider-thumb': {
-            width: 30,
-            height: 30,
+            width: 26,
+            height: 26,
             backgroundColor: props.disabled ? 'gray' : '#1EB980',
           },
           '& .MuiSlider-rail': {

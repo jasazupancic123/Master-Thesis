@@ -23,3 +23,17 @@ export interface WorkloadData {
   workloadValue: string | number; // actual user kg completed
   notes?: string;
 }
+
+export interface ExerciseMetaQuery {
+  exerciseId: string;
+  data: WorkloadData[];
+}
+
+export interface WorkloadDataForExercise {
+  setNumber: number;
+  setTypeValue: number; // actual user reps / distance / time / ... completed
+  workloadValue: string | number; // actual user kg completed
+  notes?: string;
+}
+
+

@@ -50,7 +50,13 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
           boxShadow: 'none',
         }}
       >
-        <Toolbar>
+        <Toolbar
+          sx={{
+            height: '50px !important',
+            minHeight: '50px !important',
+            mt: '2px',
+          }}
+        >
           {/* Menu Button */}
           <IconButton
             color="inherit"
@@ -59,6 +65,8 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
             edge="start"
             sx={{
               marginRight: 2,
+              py: 0,
+              px: 0,
             }}
           >
             <MenuIcon />
@@ -72,6 +80,7 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
+                py: 0,
               }}
             >
               <Logo width={52} height={35} version="narrow" />
@@ -101,10 +110,11 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
         open={open}
         sx={{
           display: !open ? 'none' : undefined,
-          position: 'fixed',
           zIndex: 1200,
           transition: 'width 0.3s ease-in-out',
           '& .MuiDrawer-paper': {
+            mt: -1.6,
+            width: '50px',
             transition: 'width 0.3s ease-in-out',
             overflowX: 'hidden',
           },
@@ -115,7 +125,6 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
             display="flex"
             justifyContent="space-between"
             alignItems="center"
-            width="100%"
           >
             <IconButton onClick={() => setOpen(false)}>
               {theme.direction === 'rtl' ? (
@@ -127,7 +136,16 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
           </Box>
         </DrawerHeader>
 
-        <List sx={{ display: 'flex', flexDirection: 'column', pt: 0 }}>
+        <List
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            pt: 0,
+            top: 0,
+            width: '100%',
+            justifyContent: 'center',
+          }}
+        >
           {Object.values(
             LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(group?.id || '')
           ).map((link, i) => (
@@ -142,7 +160,7 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
                     disableRipple
                     disableTouchRipple
                     sx={[
-                      { minHeight: 48, px: 2.5 },
+                      { minHeight: 48, px: 0 },
                       open
                         ? { justifyContent: 'initial' }
                         : { justifyContent: 'center' },
@@ -150,8 +168,11 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
                   >
                     <ListItemIcon
                       sx={[
-                        { minWidth: 0, justifyContent: 'center' },
-                        open ? { mr: 3 } : { mr: 'auto' },
+                        {
+                          minWidth: 0,
+                          width: '100%',
+                          justifyContent: 'center',
+                        },
                       ]}
                     >
                       {link.icon}
@@ -184,8 +205,11 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
                     >
                       <ListItemIcon
                         sx={[
-                          { minWidth: 0, justifyContent: 'center' },
-                          open ? { mr: 3 } : { mr: 'auto' },
+                          {
+                            minWidth: 0,
+                            width: '100%',
+                            justifyContent: 'center',
+                          },
                         ]}
                       >
                         {link.icon}
