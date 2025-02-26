@@ -30,7 +30,8 @@ export default function TrainingPage(props: TrainingPageProps) {
       commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
     )
   );
-  const [view, setView] = useState<'exercises' | 'training'>('exercises');
+
+  const { view, setView } = useTraining();
 
   const {
     trainingResult,

@@ -89,7 +89,6 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   const isDateUnavailable = (date: Dayjs): boolean => {
     const thisCycleTrainings = trainings.filter((t) => t.cycleId === cycle?.id);
-    console.log('cycle from', cycle?.from, 'cycle to', cycle?.to, 'date', date);
 
     if (
       cycle &&

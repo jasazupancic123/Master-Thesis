@@ -12,7 +12,7 @@ import {
   TrainingComponent,
 } from '@/controller/training/type/training-plan.type';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { Grid2 } from '@mui/material';
+import { Grid2, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
@@ -67,10 +67,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           for (const exercise of superset.exercises) {
             //check if field exists in meta - posodobijo se samo tiste vrednosti, ki so na obeh exercisih
             if (exercise.meta[field] !== undefined) {
-              console.log('found and setting:', exercise.meta, 'field:', field);
               (exercise.meta[field] as any) = value;
-            } else {
-              console.log('undefined field', field, 'on', exercise.meta);
             }
           }
         }
@@ -172,15 +169,23 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setOpenVideoPlayerModal(true);
         }}
       >
-        <Typography
-          variant="body1"
-          fontWeight="bold"
-          fontSize={14}
-          textTransform="uppercase"
-          sx={{ textAlign: 'center' }}
-        >
-          {exercise.exercise?.name}
-        </Typography>
+        <Tooltip title={exercise.exercise?.name} placement="top">
+          <Typography
+            variant="body1"
+            fontWeight="bold"
+            fontSize={14}
+            textTransform="uppercase"
+            sx={{
+              textAlign: 'center',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              maxWidth: '80%', // Adjust width as needed
+            }}
+          >
+            {exercise.exercise?.name}
+          </Typography>
+        </Tooltip>
       </Stack>
 
       <Grid2 container spacing={1} columns={10}>
