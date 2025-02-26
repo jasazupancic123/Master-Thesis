@@ -70,8 +70,11 @@ export type SubgroupRef = TrainingRef & { subgroupId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
 export type TrainingSupersetRef = TrainingComponentRef & { superset: number };
 export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
-export type UserWorkloadRef = TrainingRef & { userId: string } & ExerciseRef;
+export type UserWorkloadRef = TrainingComponentRef & {
+  userId: string;
+} & ExerciseRef;
 export type UserWorkloadExerciseRef = UserWorkloadRef & ExerciseRef;
+export type TrainingStatusRef = TrainingComponentRef & { userId: string };
 
 // root collections
 export type DatabaseSchema = {

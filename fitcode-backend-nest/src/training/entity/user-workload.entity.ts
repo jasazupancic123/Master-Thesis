@@ -33,6 +33,12 @@ export class UserWorkload extends TimestampEntity {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
+  componentId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
   exerciseId: string;
 
   @IsInt()

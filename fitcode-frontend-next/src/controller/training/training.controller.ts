@@ -2,7 +2,7 @@ import { CommonService } from '@/common/service/common.service';
 import { DateRange } from '@/common/type/date-range.type';
 import { Subgroup } from './type/subgroup.type';
 import { TrainingComponent } from './type/training-plan.type';
-import { Training } from './type/training.type';
+import { Training, TrainingStatus } from './type/training.type';
 import { WorkloadData } from './type/user-workload';
 
 const api = CommonService.instance.api;
@@ -50,14 +50,20 @@ export class TrainingController {
     return null;
   }
 
-  static async updateAthleteWorkloadData(
+  static async getTrainingStatus(token: string, trainingId: string) {
+    return api.get<TrainingStatus[]>(`/training/${trainingId}/status`, {
+      token,
+    });
+  }
+
+  static async createUserWorkloadsForComponent(
     token: string,
     trainingId: string,
-    exerciseId: string,
-    body: { data: WorkloadData[] }
+    componentId: string,
+    body: { workloads: { exerciseId: string; data: WorkloadData[] }[] }
   ) {
     return api.patch<{}>(
-      `/training/${trainingId}/exercise/${exerciseId}`,
+      `/training/${trainingId}/component/${componentId}`,
       body,
       { token }
     );

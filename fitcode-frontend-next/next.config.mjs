@@ -7,6 +7,14 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'fitcode-testing.appspot.com',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost'
+      },
+      {
+        protocol: 'https',
+        hostname: 'iamaspire.aspire.qa'
+      }
     ],
   },
 };

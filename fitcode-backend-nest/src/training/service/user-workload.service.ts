@@ -5,15 +5,18 @@ import { FirestoreCollection } from '../../common/enum/firestore-collection.enum
 import { CommonService } from '../../common/service/common.service';
 import {
   ExerciseRef,
-  UserWorkloadExerciseRef,
+  TrainingComponentRef,
+  TrainingStatusRef,
 } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { TrainingExercise } from '../entity/training-exercise.entity';
+import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
 import { UserWorkload } from '../entity/user-workload.entity';
 import { WorkloadData } from '../entity/workload-data';
 import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadType } from '../enum/workload-type.enum';
+import { TrainingStatusRepository } from '../repository/training-status.repository';
 import { UserWorkloadRepository } from '../repository/user-workload.repository';
 
 @Injectable()
@@ -22,6 +25,7 @@ export class UserWorkloadService {
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly userWorkloadRepository: UserWorkloadRepository,
+    private readonly trainingStatusRepository: TrainingStatusRepository,
   ) {}
 
   /**
@@ -74,25 +78,40 @@ export class UserWorkloadService {
   }
 
   /**
-   * Update athlete's set data.
+   * Update athlete's set data for all exercises in the provided training's component.
    */
-  async updateData(ref: UserWorkloadExerciseRef, input: WorkloadData[]) {
-    const workload = await this.userWorkloadRepository.getDoc(ref);
+  async updateExercisesWorkloadsByComponent(
+    ref: TrainingStatusRef,
+    input: { exerciseId: string; data: WorkloadData[] }[],
+  ) {
+    const batch = this.firebaseService.firestore.batch();
 
-    await this.firebaseService.firestore.runTransaction(async (transaction) => {
-      const docRef = this.userWorkloadRepository.doc(ref);
+    input.map(({ exerciseId, data }) => {
+      // add user workload
+      const docRef = this.userWorkloadRepository.doc({ ...ref, exerciseId });
       const query = this.firebaseService.buildUpdateQuery<UserWorkload>({
-        data: input,
-        status:
-          input.length === 0
-            ? SetStatus.NOT_STARTED
-            : input.length === workload.sets
-              ? SetStatus.DONE
-              : SetStatus.IN_PROGRESS,
+        data,
+        status: SetStatus.DONE,
       });
 
-      transaction.update(docRef, query);
+      batch.update(docRef, query);
     });
+
+    // add training status doc
+    const query = this.firebaseService.buildCreateQuery<TrainingStatus>(
+      {
+        userId: ref.userId,
+        trainingId: ref.trainingId,
+        componentId: ref.componentId,
+        status: SetStatus.DONE,
+      },
+      { timestamps: true },
+    );
+
+    const docRef = this.trainingStatusRepository.doc(ref);
+    batch.set(docRef, query);
+
+    await batch.commit();
   }
 
   /**
@@ -107,7 +126,7 @@ export class UserWorkloadService {
   ) {
     const membersMap: {
       [userId: string]: {
-        exercises: TrainingExercise[];
+        exercises: (TrainingExercise & { componentId: string })[];
         bodyweight: number;
         history: UserWorkload[];
       };
@@ -125,14 +144,20 @@ export class UserWorkloadService {
       for (const superset of component.supersets)
         for (const exercise of superset.exercises)
           for (const userId of training.membersIds)
-            membersMap[userId].exercises.push(exercise);
+            membersMap[userId].exercises.push({
+              ...exercise,
+              componentId: component.id,
+            });
 
       // workloads for subgroups
       for (const subgroup of component.subgroups)
         for (const superset of subgroup.supersets)
           for (const exercise of superset.exercises)
             for (const userId of subgroup.membersIds)
-              membersMap[userId].exercises.push(exercise);
+              membersMap[userId].exercises.push({
+                ...exercise,
+                componentId: component.id,
+              });
     }
 
     // for each member, calculate individual values for exercise user data
@@ -157,6 +182,7 @@ export class UserWorkloadService {
         const data: Create<UserWorkload> = {
           userId,
           trainingId: training.id,
+          componentId: exercise.componentId,
           exerciseId: exercise.id,
           sets,
           setType,
@@ -169,6 +195,7 @@ export class UserWorkloadService {
 
         const docRef = this.userWorkloadRepository.doc({
           trainingId: training.id,
+          componentId: exercise.componentId,
           exerciseId: exercise.id,
           userId,
         });
