@@ -7,21 +7,20 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {
-  addHours,
   addMinutes,
-  endOfHour,
+  endOfDay,
   isAfter,
   isBefore,
+  startOfDay,
   startOfHour,
 } from 'date-fns';
-import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Query } from 'firebase-admin/firestore';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { DateFilterDto } from 'src/common/dto/date-filter.dto';
 import { CommonService } from 'src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { User } from 'src/common/type/firebase-auth.type';
 import {
-  SubgroupRef,
   TrainingComponentRef,
   TrainingRef,
   UserWorkloadExerciseRef,
@@ -124,18 +123,10 @@ export class TrainingService {
         q.where('cycleId', '==', filter.cycleId.value);
 
       // filter by date
-      if (filter?.from?.value || filter?.to?.value) {
-        const from = filter?.from?.value
-          ? Timestamp.fromDate(filter.from.value)
-          : undefined;
-
-        const to = filter?.to?.value
-          ? Timestamp.fromDate(filter.to.value)
-          : undefined;
-
-        if (from) q.where('from', '>=', from);
-        if (to) q.where('to', '<=', to);
-      }
+      // TODO - doesn't work
+      const from = filter?.from?.value ? filter.from.value : undefined;
+      const to = filter?.to?.value ? filter.to.value : undefined;
+      if (from && to) q.where('from', '>', from).where('to', '<', to);
 
       q.orderBy('from', 'asc');
       return q;
@@ -232,11 +223,29 @@ export class TrainingService {
     ref: TrainingRef,
     input: DateFilterDto,
   ): Promise<Training> {
-    this.logger.log(`User ${user.uid} is copying training ${ref.trainingId}`);
+    this.logger.log(
+      `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    const from = startOfDay(input.from || new Date());
+    const to = endOfDay(input.from || new Date());
+    let trainingsOnDate = await this.findAll(user, {
+      from: { value: from },
+      to: { value: to },
+    });
+
+    trainingsOnDate = trainingsOnDate.filter((t) =>
+      this.commonService.date.isBetween(t.from, from, to),
+    );
+
+    if (trainingsOnDate.length >= 2)
+      throw new BadRequestException(
+        'Maximum number of trainings reached for selected day',
+      );
 
     const training = await this.findOneOrFail(user, ref);
 
-    // create training
+    // create new training
     const meta = await this.userService.getLastMetas(training.membersIds);
     const data: Create<Training> = {
       id: null,
@@ -245,25 +254,26 @@ export class TrainingService {
       ownerId: user.uid,
       copiedFromId: training.id,
       from: input.from,
-      to: input.to,
+      to: addMinutes(startOfHour(input.from), training.components.length * 30),
       membersIds: training.membersIds,
       meta,
-      components: input.componentsIds.map((id, i) => {
+      components: training.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
-
-        return {
-          id,
-          from,
-          to,
-          color: null,
-          subgroups: [],
-          supersets: [{ exercises: [] }],
-        };
+        return { ...c, from, to };
       }),
     };
 
-    let trainingId: string;
+    const workloads = await this.userWorkloadService.findAllByMembers(
+      training.membersIds,
+    );
+
+    let updatedTraining: Training = {
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     await this.firebaseService.firestore.runTransaction(async (transaction) => {
       // create training
       const docRef = this.trainingRepository.collection().doc();
@@ -272,17 +282,26 @@ export class TrainingService {
         { timestamps: true },
       );
 
-      trainingId = docRef.id;
+      updatedTraining.id = docRef.id;
       transaction.set(docRef, query);
 
       // add trainer to users
-      for (const userId of group.membersIds) {
+      for (const userId of training.membersIds) {
         const docRef = this.userService.getDoc(userId);
         transaction.update(docRef, {
           trainersIds: FieldValue.arrayUnion(user.uid),
         });
       }
+
+      // create training worklaods for new copied training
+      this.userWorkloadService.createForTraining(
+        transaction,
+        updatedTraining,
+        workloads,
+      );
     });
+
+    return updatedTraining;
   }
 
   async update(

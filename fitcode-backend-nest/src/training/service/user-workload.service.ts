@@ -1,18 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { Timestamp, Transaction, WriteBatch } from 'firebase-admin/firestore';
+import { Transaction, WriteBatch } from 'firebase-admin/firestore';
 import { Create, FirestoreEntity } from 'src/common/type/entity.type';
-import { UserMeta } from 'src/user/entity/user-meta.entity';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import {
   ExerciseRef,
-  SubgroupRef,
-  TrainingExerciseRef,
   UserWorkloadExerciseRef,
 } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { ExerciseMeta } from '../entity/exercise-meta.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
 import { UserWorkload } from '../entity/user-workload.entity';
@@ -106,7 +101,7 @@ export class UserWorkloadService {
    * correct training component exercise user data document.
    */
   createForTraining(
-    batch: WriteBatch,
+    batch: WriteBatch | Transaction,
     training: Training,
     workloads: UserWorkload[], // to calculate RMs
   ) {
@@ -179,7 +174,9 @@ export class UserWorkloadService {
         });
 
         const query = this.firebaseService.buildCreateQuery(data);
-        batch.set(docRef, query);
+
+        if (batch instanceof Transaction) batch.set(docRef, query);
+        else batch.set(docRef, query);
       }
     }
   }

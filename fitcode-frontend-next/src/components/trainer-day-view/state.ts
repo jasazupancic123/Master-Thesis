@@ -1,4 +1,14 @@
-import { SetState, SetStateNullable } from '@/common/type/state.type';
+import { CommonService } from '@/common/service/common.service';
+import {
+  handleApiRequest,
+  SetState,
+  SetStateNullable,
+} from '@/common/type/state.type';
+import { Component } from '@/controller/component/type/component.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import {
   Superset,
@@ -6,8 +16,94 @@ import {
 } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
+import dayjs, { Dayjs } from 'dayjs';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { DEFAULT_SUBGROUP, NUM_MAX_SUPERSETS } from './constant';
+
+export async function handleCopyTraining(
+  token: string,
+  input: {
+    newDate: Dayjs;
+    period: string;
+  },
+  state: {
+    router: AppRouterInstance;
+    training: Training;
+    cycle: Cycle;
+    setTrainings: SetState<Training[]>;
+    setFilteredTrainings: SetState<Training[]>;
+    components: Component[];
+    exercises: Exercise[];
+  }
+) {
+  const { newDate, period } = input;
+  const {
+    router,
+    training,
+    cycle,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+  } = state;
+
+  if (dayjs(cycle.from).isAfter(newDate) || dayjs(cycle.to).isBefore(newDate))
+    return toast.error('Selected date is not within the cycle');
+
+  const amPair = { start: 8, end: 10 };
+  const pmPair = { start: 14, end: 16 };
+  const pair = period === 'AM' ? amPair : pmPair;
+
+  // set start time and end time to date
+  const from = newDate
+    .set('year', newDate.year())
+    .set('month', newDate.month())
+    .set('date', newDate.date())
+    .set('hour', pair.start)
+    .set('minute', 0)
+    .set('second', 0)
+    .toString();
+
+  const to = newDate
+    .set('year', newDate.year())
+    .set('month', newDate.month())
+    .set('date', newDate.date())
+    .set('hour', pair.end)
+    .set('minute', 0)
+    .set('second', 0)
+    .toString();
+
+  handleApiRequest(
+    router,
+    () => TrainingController.copy(token, training.id, { from, to }),
+    (copiedTraining) => {
+      copiedTraining.from = new Date(copiedTraining.from);
+      copiedTraining.to = new Date(copiedTraining.to);
+      copiedTraining = TrainingService.mapExercises(copiedTraining, exercises);
+      copiedTraining = TrainingService.mapComponents(
+        copiedTraining,
+        components
+      );
+
+      setTrainings((prev) =>
+        [...prev, copiedTraining].sort(
+          (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+        )
+      );
+
+      setFilteredTrainings((prev) =>
+        [...prev, copiedTraining].sort(
+          (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+        )
+      );
+
+      toast.success('Successfully copied training');
+    },
+    undefined,
+    'Failed to copy'
+  );
+}
 
 export function onDragEndSubgroup(
   { destination, draggableId }: any,
