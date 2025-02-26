@@ -3,6 +3,7 @@ import { ComponentModule } from '../component/component.module';
 import { ExerciseModule } from '../exercise/exercise.module';
 import { GroupModule } from '../group/group.module';
 import { UserModule } from '../user/user.module';
+import { TrainingStatusRepository } from './repository/training-status.repository';
 import { TrainingRepository } from './repository/training.repository';
 import { UserWorkloadRepository } from './repository/user-workload.repository';
 import { TrainingPlanService } from './service/training-plan.service';
@@ -18,6 +19,7 @@ import { TrainingController } from './training.controller';
     forwardRef(() => GroupModule),
   ],
   providers: [
+    TrainingStatusRepository,
     UserWorkloadRepository,
     TrainingRepository,
     UserWorkloadService,

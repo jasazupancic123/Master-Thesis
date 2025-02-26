@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -14,9 +13,10 @@ import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
+import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import { UpdateAthleteSetDataDto } from './dto/update-athlete-set-data.dto';
+import { CreateUserWorkloadsForComponentDto } from './dto/update-athlete-set-data.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
 
@@ -60,6 +60,17 @@ export class TrainingController {
     return await this.trainingService.update(user, ref, body);
   }
 
+  @Post(':trainingId/copy')
+  @Auth()
+  async copy(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() body: CopyTrainingDto,
+  ) {
+    const ref = { trainingId };
+    return await this.trainingService.copy(user, ref, body);
+  }
+
   @Delete(':trainingId')
   @Auth()
   async delete(
@@ -71,22 +82,38 @@ export class TrainingController {
     return {};
   }
 
-  @Patch(':trainingId/exercise/:exerciseId')
+  @Patch(':trainingId/component/:componentId')
   @Auth()
-  async updateAthleteWorkload(
+  async createUserWorkloadsForComponentDto(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Param('exerciseId') exerciseId: string,
-    @Body() body: UpdateAthleteSetDataDto,
+    @Param('componentId') componentId: string,
+    @Body() { workloads }: CreateUserWorkloadsForComponentDto,
   ) {
     const ref = {
       trainingId,
+      componentId,
       userId: user.uid,
-      exerciseId,
     };
 
-    await this.trainingService.updateAthleteWorkloadData(ref, body.data, user);
+    await this.trainingService.createUserWorkloadsForComponent(
+      user,
+      ref,
+      workloads,
+    );
+
     return {};
+  }
+
+  @Get(':trainingId/status')
+  @Auth()
+  async getTrainingStatus(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+  ) {
+    return await this.trainingService.findAllStatusesByTraining(user, {
+      trainingId,
+    });
   }
 
   @Post(':trainingId/component')

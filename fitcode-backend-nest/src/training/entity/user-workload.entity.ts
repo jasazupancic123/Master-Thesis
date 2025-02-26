@@ -33,6 +33,12 @@ export class UserWorkload extends TimestampEntity {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
+  componentId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
   exerciseId: string;
 
   @IsInt()
@@ -74,5 +80,5 @@ export class UserWorkload extends TimestampEntity {
   @Type(() => WorkloadData)
   @ApiProperty()
   @Expose()
-  data: WorkloadData[];
+  data: WorkloadData[]; // each set has prescribed workload value
 }

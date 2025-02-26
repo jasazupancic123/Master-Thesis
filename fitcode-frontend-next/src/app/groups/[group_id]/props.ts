@@ -16,6 +16,7 @@ export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
 export interface GroupIdPageProps {
   token: string;
+  userId: string;
   group: Group;
   users: User[];
   components: Component[];

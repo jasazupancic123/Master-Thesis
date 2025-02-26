@@ -49,10 +49,8 @@ export class ExerciseAttributeService {
     return { ...oldExerciseAttribute };
   }
 
-  async validate(input: Record<string, any>): Promise<void> {
-    const attributes = await this.cacheManagerService.getAttributes();
+  validate(input: Record<string, any>, attributes: ExerciseAttribute[]) {
     const fields = attributes.map((attribute) => attribute.field);
-
     for (const field of Object.keys(input))
       if (!fields.includes(field))
         throw new BadRequestException(`Attribute ${field} does not exist`);
