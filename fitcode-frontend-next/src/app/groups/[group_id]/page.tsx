@@ -67,9 +67,5 @@ export default async function Page(props: GroupIdPageParams) {
     [UserRole.TRAINER]: <TrainerGroupPage />,
   };
 
-  return (
-    <Suspense fallback={<div>Loading ...</div>}>
-      <GroupProvider {...context}>{mapper[role]}</GroupProvider>
-    </Suspense>
-  );
+  return <GroupProvider {...context}>{mapper[role]}</GroupProvider>;
 }

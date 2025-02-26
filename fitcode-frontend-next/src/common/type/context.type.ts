@@ -22,6 +22,8 @@ export type AuthContextType = {
   user: User | null;
   role: UserRole[];
   logout: () => Promise<void>;
+  hasJustLoggedIn: boolean;
+  setHasJustLoggedIn: (value: boolean) => void;
 };
 
 export type TrainerContextType = {

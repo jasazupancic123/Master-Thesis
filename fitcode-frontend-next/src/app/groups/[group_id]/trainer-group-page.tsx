@@ -12,6 +12,8 @@ import { TrainerDayViewProvider } from '@/context/trainer-day-view-provider';
 import { Box, useTheme } from '@mui/material';
 import { ReactNode } from 'react';
 import GroupDateFilterButtonGroup from '../group-date-filter-button-group';
+import { useAuth } from '@/context/auth-provider';
+import Animation from '@/components/animation';
 
 export default function TrainerGroupPage() {
   const screenSize = useScreenSize();
@@ -19,6 +21,7 @@ export default function TrainerGroupPage() {
   const theme = useTheme();
 
   const { group, groups, filter, setFilter } = context;
+  const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
     day: (
@@ -31,11 +34,16 @@ export default function TrainerGroupPage() {
     year: <TrainerYearView />,
   };
 
-  return (
+  return hasJustLoggedIn ? (
+    <Animation
+      text="PREPARING TRAINING PLAN"
+      onEnd={() => setHasJustLoggedIn(false)}
+    />
+  ) : (
     <Box
-      mt="16px"
+      mt="5px"
       sx={{
-        px: screenSize.isMobile ? 1 : '48px',
+        px: screenSize.isMobile ? 1 : '34px',
         overflowX: 'hidden',
       }}
       width="100%"
@@ -45,8 +53,8 @@ export default function TrainerGroupPage() {
       <Box
         sx={{
           backgroundColor: theme.palette.background.paper,
-          borderTopLeftRadius: '20px',
-          borderTopRightRadius: '20px',
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
           overflowX: 'hidden',
           pb: 1,
         }}

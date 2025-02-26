@@ -17,18 +17,18 @@ export default function FilterButton(props: Props) {
       sx={{
         width: '25%',
         px: 2,
-        py: 1,
+        py: 0.75,
         color: '#fff',
         backgroundColor: 'background.default',
         '&.Mui-selected': {
           backgroundColor: '#1EB980',
           color: '#fff',
-          borderBottomLeftRadius: '500px',
-          borderBottomRightRadius: '500px',
+          borderBottomLeftRadius: '80px',
+          borderBottomRightRadius: '80px',
         },
         border: 'none',
-        borderBottomLeftRadius: '500px',
-        borderBottomRightRadius: '500px',
+        borderBottomLeftRadius: '50px',
+        borderBottomRightRadius: '50px',
         '&:hover': {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           color: '#fff',

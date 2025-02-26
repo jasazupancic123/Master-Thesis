@@ -161,7 +161,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                   : selectedSubgroup?.subgroup &&
                       selectedTraining?.id === training.id
                     ? COLORS[selectedSubgroup.index % COLORS.length]
-                    : 'background.paper',
+                    : '#005D57',
               borderTopLeftRadius: 10,
             }}
           />
@@ -170,12 +170,7 @@ export default function TrainingCard(props: TrainingCardProps) {
           </Typography>
 
           <Typography variant="caption" sx={{ mx: 1 }}>
-            {commonService.date.format(day.date)}
-          </Typography>
-
-          <Typography variant="caption" sx={{ mx: 1 }}>
-            {commonService.date.formatTime(training.from)}:
-            {commonService.date.formatTime(training.to)}
+            {commonService.date.formatTime(training.from)}
           </Typography>
           <Tooltip title="Copy training">
             <IconButton
@@ -197,7 +192,8 @@ export default function TrainingCard(props: TrainingCardProps) {
           borderTopLeftRadius: 0,
           backgroundColor: 'background.paper',
           p: 1,
-          mt: 0,
+          py: 0,
+          mt: -1,
         }}
       >
         {training && (

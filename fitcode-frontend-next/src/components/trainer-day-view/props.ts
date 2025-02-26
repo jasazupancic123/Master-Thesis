@@ -32,6 +32,7 @@ export interface TrainingExerciseCardProps {
   setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
   chartView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
+  setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
 }
 
 export interface SubgroupProps {
