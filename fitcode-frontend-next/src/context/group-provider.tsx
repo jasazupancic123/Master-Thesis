@@ -21,6 +21,7 @@ export const useGroup = () => useContext(GroupContext)!;
 export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const {
     children,
+    userId,
     token,
     users: allUsers,
     components,
@@ -58,6 +59,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
 
   const value: GroupContextProps = {
     token,
+    userId,
     users,
     setUsers,
     groups,

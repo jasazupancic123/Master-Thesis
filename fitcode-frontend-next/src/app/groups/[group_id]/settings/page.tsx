@@ -35,6 +35,7 @@ export default async function Page(props: GroupIdPageParams) {
 
   const pageProps: GroupIdPageProps = {
     token,
+    userId: profile.uid,
     group,
     users,
     groups,

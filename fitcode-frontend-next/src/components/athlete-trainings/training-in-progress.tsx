@@ -1,36 +1,41 @@
+import { handleApiRequest, SetState } from '@/common/type/state.type';
+import { useAthlete } from '@/context/athlete-provider';
+import { useAuth } from '@/context/auth-provider';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { useTraining } from '@/context/training-provider';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
+import { TrainingController } from '@/controller/training/training.controller';
 import {
   Superset,
   TrainingComponent,
 } from '@/controller/training/type/training-plan.type';
-import { Training } from '@/controller/training/type/training.type';
+import {
+  Training,
+  TrainingStatus,
+} from '@/controller/training/type/training.type';
+import {
+  ExerciseMetaQuery,
+  WorkloadData,
+} from '@/controller/training/type/user-workload';
+import { User } from '@/controller/user/type/user.type';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CloseIcon from '@mui/icons-material/Close';
+import DoneIcon from '@mui/icons-material/Done';
 import {
   Box,
+  Fab,
   FormControl,
   Grid2,
   MenuItem,
   Select,
   Typography,
-  Fab,
 } from '@mui/material';
-import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { User } from '@/controller/user/type/user.type';
-import MyModal from '../modal';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import DoneIcon from '@mui/icons-material/Done';
-import {
-  ExerciseMetaQuery,
-  WorkloadData,
-  WorkloadDataForExercise,
-} from '@/controller/training/type/user-workload';
-import { TrainingController } from '@/controller/training/training.controller';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { useScreenSize } from '@/context/screen-size-provider';
 import Animation from '../animation';
-import { useTraining } from '@/context/training-provider';
-import CloseIcon from '@mui/icons-material/Close';
-import { useAthlete } from '@/context/athlete-provider';
-import { useAuth } from '@/context/auth-provider';
+import MyModal from '../modal';
 
 interface TrainingInProgressProps {
   selectedTraining: Training;
@@ -39,6 +44,8 @@ interface TrainingInProgressProps {
   token: string;
   setView: (view: 'exercises' | 'training') => void;
   setSelectedComponent: (component: TrainingComponent | null) => void;
+  statuses: TrainingStatus[];
+  setStatuses: SetState<TrainingStatus[]>;
 }
 
 export type TrainingResult = {
@@ -47,13 +54,15 @@ export type TrainingResult = {
     exercises: {
       id: string;
       name: string;
-      meta: WorkloadDataForExercise[];
+      meta: WorkloadData[];
     }[];
   }[];
 };
 
 export default function TrainingInProgress(props: TrainingInProgressProps) {
   const screenSize = useScreenSize();
+  const router = useRouter();
+
   const {
     trainingResult,
     setTrainingResult,
@@ -62,16 +71,21 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setSupersetIndex,
     setView,
   } = useTraining();
+
   const {
     selectedTraining,
     selectedComponent,
     profile,
     token,
     setSelectedComponent,
+    statuses,
+    setStatuses,
   } = props;
+
   const [selectedSuperset, setSelectedSuperset] = useState<
     Superset | undefined
   >();
+
   const [supersets, setSupersets] = useState<Superset[]>();
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
@@ -97,35 +111,37 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       const exercises = [] as {
         id: string;
         name: string;
-        meta: WorkloadDataForExercise[];
+        meta: WorkloadData[];
       }[];
+
       for (const exercise of superset.exercises) {
-        const exerciseObjet = {
+        const exerciseObject = {
           id: exercise.exercise?.id || '',
           name: exercise.exercise?.name || '',
-          meta: [] as WorkloadDataForExercise[],
+          meta: [] as WorkloadData[],
         };
-        for (let i = 0; i < exercise.meta.sets; i++) {
-          exerciseObjet.meta.push({
-            setNumber: i + 1,
+
+        for (let i = 0; i < exercise.meta.sets; i++)
+          exerciseObject.meta.push({
             setTypeValue: exercise.meta.setTypeValue,
             workloadValue: exercise.meta.workloadValue,
-          } as WorkloadDataForExercise);
-        }
-        exercises.push(exerciseObjet);
+          });
+
+        exercises.push(exerciseObject);
       }
+
       result.supersets.push({ exercises });
     }
 
     if (trainingResult === null) setTrainingResult(result);
     setSupersets(usersSupersets);
+
     if (!supersetIndex) setSelectedSuperset(usersSupersets[0]);
     else setSelectedSuperset(usersSupersets[supersetIndex]);
   }, [selectedComponent]);
 
   useEffect(() => {
     const startTime = Date.now();
-
     const interval = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
@@ -134,51 +150,53 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   }, []);
 
   const handleFinishTraining = async () => {
-    if (!trainingResult) {
-      toast.error('An error occurred');
-      return;
-    }
-    const queries = [] as ExerciseMetaQuery[];
-    const data = [] as WorkloadData[];
-    for (const superset of trainingResult.supersets) {
-      for (const exercise of superset.exercises) {
-        for (const set of exercise.meta) {
-          for (const rep of Array.from(
-            { length: set.setTypeValue },
-            (_, i) => i + 1
-          )) {
-            data.push({
-              setNumber: set.setNumber,
-              repNumber: rep,
-              setTypeValue: set.setTypeValue,
-              workloadValue: set.workloadValue,
-            } as WorkloadData);
-          }
-        }
-        queries.push({
-          exerciseId: exercise.id,
-          data,
-        });
-      }
-    }
+    if (!trainingResult) return toast.error('An error occurred');
 
-    try {
-      for (const query of queries) {
-        await TrainingController.updateAthleteWorkloadData(
+    const queries = [] as ExerciseMetaQuery[];
+
+    for (const superset of trainingResult.supersets)
+      for (const exercise of superset.exercises) {
+        const data = [] as WorkloadData[];
+        for (const set of exercise.meta) {
+          data.push({
+            setTypeValue: set.setTypeValue,
+            workloadValue: set.workloadValue,
+          });
+        }
+
+        queries.push({ exerciseId: exercise.id, data });
+      }
+
+    handleApiRequest(
+      router,
+      () =>
+        TrainingController.createUserWorkloadsForComponent(
           token,
           selectedTraining.id,
-          query.exerciseId,
-          { data: query.data }
-        );
-      }
-      toast.success('Training data updated successfully');
-      clearTrainingState();
-      setView('exercises');
-      setSelectedComponent(null);
-      setSelectedSuperset(undefined);
-    } catch (e) {
-      toast.error(e as any);
-    }
+          selectedComponent.id,
+          { workloads: queries }
+        ),
+      () => {
+        toast.success('Training data updated successfully');
+        setStatuses((prev) => [
+          ...prev,
+          {
+            componentId: selectedComponent.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            status: SetStatus.COMPLETED,
+            trainingId: selectedTraining.id,
+            userId: profile.uid,
+          },
+        ]);
+        clearTrainingState();
+        setView('exercises');
+        setSelectedComponent(null);
+        setSelectedSuperset(undefined);
+      },
+      undefined,
+      'Failed to update training data'
+    );
   };
 
   const handleCancelTraining = () => {

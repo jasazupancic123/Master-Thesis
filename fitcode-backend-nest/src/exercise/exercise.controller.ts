@@ -9,14 +9,16 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ExerciseService } from './service/exercise.service';
-import { Auth } from '../common/decorator/auth.decorator';
-import { CreateExerciseDto } from './dto/create-exercise.dto';
-import { RequestUser } from '../common/decorator/request-user.decorator';
-import { User } from '../common/type/firebase-auth.type';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { Wrapper } from 'src/common/type/wrapper.type';
+import { UserRole } from 'src/user/enum/user-role.enum';
+import { Auth } from '../common/decorator/auth.decorator';
+import { RequestUser } from '../common/decorator/request-user.decorator';
+import { User } from '../common/type/firebase-auth.type';
+import { CreateExerciseDto } from './dto/create-exercise.dto';
+import { CreateExercisesDto } from './dto/create-exercises.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
+import { ExerciseService } from './service/exercise.service';
 
 @Controller('exercise')
 export class ExerciseController {
@@ -54,6 +56,15 @@ export class ExerciseController {
     return this.exerciseService.create(user, data);
   }
 
+  @Post('many')
+  @Auth()
+  async createMany(
+    @RequestUser() user: User,
+    @Body() data: CreateExercisesDto,
+  ) {
+    return this.exerciseService.createMany(user, data.exercises);
+  }
+
   @Patch(':exerciseId')
   @Auth()
   async update(
@@ -70,6 +81,7 @@ export class ExerciseController {
     @RequestUser() user: User,
     @Param('exerciseId') exerciseId: string,
   ) {
-    return this.exerciseService.delete(user, { exerciseId });
+    await this.exerciseService.delete(user, { exerciseId });
+    return {};
   }
 }

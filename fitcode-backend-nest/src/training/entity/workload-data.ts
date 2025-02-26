@@ -1,29 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import {
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 import { IsStringOrNumber } from 'src/common/decorator/is-string-or-number.decorator';
 
 export class WorkloadData {
-  @IsInt()
-  @Min(1)
-  @Max(10)
-  @ApiProperty()
-  @Expose()
-  setNumber: number;
-
-  @IsInt()
-  @Min(1)
-  @ApiProperty()
-  @Expose()
-  repNumber: number;
-
   @IsInt()
   @Min(1)
   @Expose()
@@ -32,6 +12,7 @@ export class WorkloadData {
   @IsStringOrNumber()
   @IsNotEmpty()
   @Expose()
+  @Min(0)
   workloadValue: string | number; // actual user kg completed
 
   @IsString()
