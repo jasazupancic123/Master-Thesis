@@ -102,7 +102,13 @@ export default function SidebarAthlete() {
                   },
                 },
                 sx: {
-                  userSelect: 'none',
+                  '& .MuiInputBase-input': {
+                    cursor: 'pointer !important',
+                    WebkitUserSelect: 'none !important' /* Safari */,
+                    msUserSelect: 'none !important' /* IE 10 and IE 11 */,
+                    userSelect: 'none !important' /* Standard syntax */,
+                  },
+                  userSelect: 'none !important',
                   cursor: 'pointer',
                   width: 75,
                   padding: 0,

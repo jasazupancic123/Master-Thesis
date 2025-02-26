@@ -149,7 +149,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                     placeholder="Remove Component"
                     displayEmpty={false}
                     sx={{ width: '90%' }}
-                    displayInputLabel={false}
+                    disableInputLabel={false}
                     itemKey="id"
                     useRenderValue={true}
                     itemName="name"
@@ -217,7 +217,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                   icon={null}
                   value={''}
                   items={parentComponents}
-                  displayInputLabel={true}
+                  disableInputLabel={true}
                   itemKey="id"
                   itemName="name"
                   sx={{ width: '90%' }}
