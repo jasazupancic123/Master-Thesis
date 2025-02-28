@@ -1,7 +1,9 @@
 'use client';
 
 import { SPORTS } from '@/common/constant/sport.constant';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
+import FileUpload from '@/components/file-upload';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
@@ -39,6 +41,7 @@ export default function ProfilePage(props: ProfilePageProps) {
     sport: '',
     level: undefined as SportLevel | undefined,
     gender: undefined as Gender | undefined,
+    profileImageUrl: undefined as string | undefined,
     firstName: '',
     lastName: '',
     phone: '',
@@ -51,18 +54,17 @@ export default function ProfilePage(props: ProfilePageProps) {
     const fetchProfile = async () => {
       try {
         const profile = await UserController.findProfile(token);
-        if (profile) {
-          const newProfile = {
+        if (profile)
+          setProfile({
             sport: profile.sport || '',
             level: (profile.level as SportLevel) || SportLevel.BEGINNER,
             gender: profile.gender || undefined,
+            profileImageUrl: profile.profileImageUrl || undefined,
             firstName: profile.firstName || '',
             lastName: profile.lastName || '',
             phone: profile.phone || '',
             birthDate: profile.birthDate ? dayjs(profile.birthDate) : null,
-          };
-          setProfile(newProfile);
-        }
+          });
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -76,8 +78,16 @@ export default function ProfilePage(props: ProfilePageProps) {
   }
 
   async function handleSaveProfile() {
-    const { sport, level, gender, firstName, lastName, phone, birthDate } =
-      profile;
+    const {
+      sport,
+      level,
+      gender,
+      profileImageUrl,
+      firstName,
+      lastName,
+      phone,
+      birthDate,
+    } = profile;
 
     if (!firstName || !lastName || !phone)
       return toast.error('Please fill in all fields');
@@ -89,6 +99,7 @@ export default function ProfilePage(props: ProfilePageProps) {
           sport,
           level,
           gender,
+          profileImageUrl,
           firstName,
           lastName,
           phone,
@@ -121,9 +132,21 @@ export default function ProfilePage(props: ProfilePageProps) {
           height: 64,
         }}
       />
-      <Button variant="contained" color="primary" sx={{ my: DEFAULT_MARGIN }}>
+
+      {/* <Button variant="contained" color="primary" sx={{ my: DEFAULT_MARGIN }}>
         Upload Photo
-      </Button>
+      </Button> */}
+
+      <FileUpload
+        input="image"
+        label="Upload Profile Image"
+        initialFileUrl={profile.profileImageUrl}
+        onFileUpload={async (file) => {
+          const path = `user/${user.uid}/${file.name}`;
+          const url = await FirebaseStorageUtil.uploadFile(file, path);
+          setProfile((prev) => ({ ...prev, profileImageUrl: url }));
+        }}
+      />
 
       {/* First & Last Name - Ensuring Equal Width */}
       <Box display="flex" width="100%" my={DEFAULT_MARGIN} gap={DEFAULT_MARGIN}>
