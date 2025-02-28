@@ -91,7 +91,7 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
                 }}
                 style={{
                   color: '#fff',
-                  backgroundColor: '#303E4A',
+                  backgroundColor: 'background.default',
                   border: 'none',
                   padding: '4px',
                   borderRadius: '4px',
@@ -105,7 +105,7 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
                 onChange={(e) => onChange('to', e.target.value)}
                 style={{
                   color: '#fff',
-                  backgroundColor: '#303E4A',
+                  backgroundColor: 'background.default',
                   border: 'none',
                   padding: '4px',
                   borderRadius: '4px',

@@ -60,6 +60,8 @@ export default function TrainerWeekView() {
         padding: '12px',
         pb: '20px',
         borderRadius: '8px',
+        borderTopLeftRadius: '0',
+        borderTopRightRadius: '0',
       }}
     >
       {/* Week selector */}

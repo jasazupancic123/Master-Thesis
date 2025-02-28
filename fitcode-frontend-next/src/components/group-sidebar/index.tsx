@@ -54,7 +54,8 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
           sx={{
             height: '50px !important',
             minHeight: '50px !important',
-            mt: '2px',
+            pt: '2px',
+            backgroundColor: 'background.default',
           }}
         >
           {/* Menu Button */}

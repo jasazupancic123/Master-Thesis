@@ -39,7 +39,7 @@ export default function Animation(props: AnimationProps) {
         left: props.fullScreen ? 0 : undefined,
         width: props.fullScreen ? '100vw' : undefined,
         height: props.fullScreen ? '100vh' : undefined,
-        backgroundColor: props.fullScreen ? '#2f3e49' : undefined,
+        backgroundColor: props.fullScreen ? 'background.default' : undefined,
         display: 'flex',
         pt: !props.fullScreen ? 20 : undefined,
         flexDirection: 'column',

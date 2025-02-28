@@ -73,6 +73,7 @@ export function TrainerDayViewProvider(
   }, [component, pagination.page]);
 
   const value: TrainerDayViewContextProps = {
+    exercises,
     component,
     setComponent,
     training,

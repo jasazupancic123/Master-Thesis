@@ -36,7 +36,6 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
   const isSmallerThanLaptop = useMediaQuery('(max-width:1024px)');
 
   const isBetween = (min: number, max: number) => {
-    console.log(useMediaQuery(`(min-width:${min}px) and (max-width:${max}px)`));
     return useMediaQuery(`(min-width:${min}px) and (max-width:${max}px)`);
   };
 

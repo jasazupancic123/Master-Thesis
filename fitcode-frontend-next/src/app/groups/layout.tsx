@@ -43,7 +43,7 @@ export default async function Layout({ children }: ChildrenProps) {
           width: '100%',
         }}
       >
-        <Box mt="49px">{children}</Box>
+        <Box mt="48px">{children}</Box>
       </Container>
     </Box>
   );

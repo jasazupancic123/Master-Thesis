@@ -12,7 +12,7 @@ import {
   TrainingComponent,
 } from '@/controller/training/type/training-plan.type';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { Grid2, Tooltip } from '@mui/material';
+import { Box, Grid2, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
@@ -145,6 +145,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
   if (!training || !component || !state) return null;
 
+  console.log(exercise.exercise?.imageUrl);
+
   return (
     <Stack
       spacing={1}
@@ -153,11 +155,35 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       pb={2}
       sx={{
         my: -1,
+        position: 'relative',
         backgroundColor: chartView
           ? 'transparent'
-          : 'rgba(255, 255, 255, 0.05)',
+          : exercise.exercise?.imageUrl
+            ? 'rgba(0, 0, 0, 0.6)'
+            : 'rgba(255, 255, 255, 0.05)', // Darker background to improve contrast
+        backgroundImage: exercise.exercise?.imageUrl
+          ? `url(${exercise.exercise?.imageUrl})`
+          : undefined,
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+        overflow: 'hidden',
       }}
     >
+      {/* Background Overlay */}
+      {exercise.exercise?.imageUrl && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(38, 54, 70, 0.825)', // Darker overlay for better text contrast
+            zIndex: 0,
+            opacity: 100,
+          }}
+        />
+      )}
       <Stack
         direction="row"
         justifyContent="center"
@@ -180,7 +206,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               overflow: 'hidden',
               whiteSpace: 'nowrap',
               textOverflow: 'ellipsis',
-              maxWidth: '80%', // Adjust width as needed
+              maxWidth: '75%', // Adjust width as needed
+              zIndex: 1, // Ensures it's above overlay
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
             }}
           >
             {exercise.exercise?.name}
