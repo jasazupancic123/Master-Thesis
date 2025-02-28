@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { CustomClaims, User } from '../../common/type/firebase-auth.type';
 import { Gender } from '../enum/gender.enum';
@@ -34,6 +34,13 @@ export class UserEntity extends BaseEntity {
   @ApiPropertyOptional()
   @Expose()
   gender?: Gender;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  @IsOptional()
+  profileImageUrl?: string;
 
   @IsOptional()
   @IsString()

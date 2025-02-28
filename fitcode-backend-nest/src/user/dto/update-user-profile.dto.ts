@@ -7,6 +7,7 @@ export class UpdateUserProfileDto extends PartialType(
     'sport',
     'level',
     'gender',
+    'profileImageUrl',
     'firstName',
     'lastName',
     'phone',

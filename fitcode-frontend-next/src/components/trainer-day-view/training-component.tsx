@@ -147,10 +147,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           <Typography variant="caption" ml={2}>
                             {commonService.date.formatTime(
                               trainingComponent.from
-                            )}{' '}
-                            -{' '}
-                            {commonService.date.formatTime(
-                              trainingComponent.to
                             )}
                           </Typography>
 

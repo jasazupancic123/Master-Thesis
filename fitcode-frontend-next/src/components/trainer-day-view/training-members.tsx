@@ -241,7 +241,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   <Box sx={{ p: 0, m: 0 }}>
                     <Avatar
                       className="avatar-border"
-                      src="/user_avatar.png" // Path to the image in the public folder
+                      src={'/user_avatar.png'} // Path to the image in the public folder
                       sx={{
                         width: screenSize.isMobile ? 40 : 50,
                         height: screenSize.isMobile ? 40 : 50,

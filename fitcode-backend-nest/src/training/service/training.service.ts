@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -15,6 +16,7 @@ import {
   startOfHour,
 } from 'date-fns';
 import { FieldValue, Query } from 'firebase-admin/firestore';
+import { generateKey } from 'node:crypto';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { DateFilterDto } from 'src/common/dto/date-filter.dto';
 import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
@@ -31,9 +33,11 @@ import { Filter } from 'src/common/type/orm.type';
 import { Wrapper } from 'src/common/type/wrapper.type';
 import { Component } from 'src/component/entity/component.entity';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { Cycle } from 'src/group/entity/cycle.entity';
 import { Group } from 'src/group/entity/group.entity';
 import { GroupService } from 'src/group/group.service';
 import { UserService } from 'src/user/user.service';
+import { Subgroup } from '../entity/subgroup.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
@@ -101,7 +105,14 @@ export class TrainingService {
   async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
     const dbUser = await this.userService.findOne(user.uid);
 
-    return await this.trainingRepository.getDocs((q) => {
+    const from = filter?.from?.value ? filter.from.value : undefined;
+    const to = filter?.to?.value ? filter.to.value : undefined;
+
+    let trainings = await this.trainingRepository.getDocs((q) => {
+      // filter by date
+      // TODO - does not work yet
+      if (from && to) q.where('from', '>=', from).where('from', '<', to);
+
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
@@ -125,15 +136,16 @@ export class TrainingService {
       if (filter?.cycleId?.value)
         q.where('cycleId', '==', filter.cycleId.value);
 
-      // filter by date
-      // TODO - doesn't work
-      const from = filter?.from?.value ? filter.from.value : undefined;
-      const to = filter?.to?.value ? filter.to.value : undefined;
-      if (from && to) q.where('from', '>', from).where('to', '<', to);
-
       q.orderBy('from', 'asc');
       return q;
     });
+
+    if (from && to)
+      trainings = trainings.filter((t) =>
+        this.commonService.date.isBetween(t.from, from, to),
+      );
+
+    return trainings;
   }
 
   async create(
@@ -160,8 +172,12 @@ export class TrainingService {
     this.validateComponents(input.componentsIds, components);
 
     // check overlap between all other trainings
-    /* const groupTrainings = await this.getDocsByGroup(group.id);
-    await this.validateOverlap(input.from, input.to, groupTrainings); */
+    const trainings = await this.findAll(user, {
+      from: { value: startOfDay(input.from) },
+      to: { value: endOfDay(input.from) },
+    });
+
+    await this.validateOverlap(input.from, input.to, trainings);
 
     // create training
     const meta = await this.userService.getLastMetas(group.membersIds);
@@ -230,18 +246,17 @@ export class TrainingService {
       `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
-    const from = startOfDay(input.from || new Date());
-    const to = endOfDay(input.from || new Date());
-    let trainingsOnDate = await this.findAll(user, {
-      from: { value: from },
-      to: { value: to },
+    // check overlap between all other trainings
+    const trainings = await this.findAll(user, {
+      from: { value: startOfDay(input.from) },
+      to: { value: endOfDay(input.from) },
     });
 
-    trainingsOnDate = trainingsOnDate.filter((t) =>
-      this.commonService.date.isBetween(t.from, from, to),
-    );
+    console.log('found trainings:', trainings);
 
-    if (trainingsOnDate.length >= 2)
+    await this.validateOverlap(input.from, input.to, trainings);
+
+    if (trainings.length >= 2)
       throw new BadRequestException(
         'Maximum number of trainings reached for selected day',
       );
@@ -318,6 +333,10 @@ export class TrainingService {
 
     // validate ownership
     const training = await this.findOneOrFail(user, ref);
+    const group = await this.groupService.findByIdOrFail(user, {
+      groupId: training.groupId,
+    });
+    const cycle = this.groupService.findCycleOrFail(training.cycleId, group);
     this.validateTrainer(user);
     this.validateOwner(user.uid, training);
 
@@ -329,41 +348,50 @@ export class TrainingService {
 
     // validate that data is valid
     const allComponents = await this.cacheManagerService.getComponents();
-    // validate all training members to be valid
-    // validate all training components to be valid
+    this.validateComponents(
+      input.components.map((c) => c.id),
+      allComponents,
+    );
+
     // validate all subgroups have unique members (one member cannot be in multiple subgroups)
+    this.checkUniqueSubgroupMembers(
+      training.membersIds,
+      input.components.flatMap((c) => c.subgroups),
+    );
 
     // validate limits
-    // max members == 20, max components == 5, max subgroups per component == training.members.length, max supersets == 8 per component, max exercises == 4 per superset
-    // => 5 components * 8 supersets * 4 exercises = 160 exercises per training * 20 subgroups = 3200 exercises ???
+    this.checkLimits(training.membersIds, input.components);
+    this.validateTrainingComponentDates(input.components);
+    this.checkTrainingIsInCycle(input.from, cycle);
 
-    // validate dates
-    // validate each component has correct times (`from` < `to`)
     // validate trainings overlap within the group
-    // set training `from` time to first component's `from`
-    // set training `to` time to last component's `to`
-    // check training is within cycle's from and to
+    // TODO
 
-    // if training in the future:
-    // - update training's meta to latest user data
-    // - recalculate workloads for all members and all subgroups
+    if (isAfter(new Date(), training.from)) {
+      this.logger.log(
+        `Upcomming training, updating user meta and recalculating workloads`,
+      );
 
-    await this.trainingRepository.updateDoc(ref.trainingId, input);
+      // for future trainings, update latest meta and calculate workloads
+      const meta = await this.userService.getLastMetas(training.membersIds);
+      await this.trainingRepository.updateDoc(ref.trainingId, {
+        ...input,
+        meta,
+      });
 
-    // create user workloads
-    const batch = this.firebaseService.firestore.batch();
-    const updatedTraining: Training = { ...training, ...input };
-    const workloads = await this.userWorkloadService.findAllByMembers(
-      training.membersIds,
-    );
+      // create user workloads
+      const workloads = await this.userWorkloadService.findAllByMembers(
+        training.membersIds,
+      );
 
-    this.userWorkloadService.createForTraining(
-      batch,
-      updatedTraining,
-      workloads,
-    );
-
-    await batch.commit();
+      const batch = this.firebaseService.firestore.batch();
+      const updated: Training = { ...training, ...input };
+      this.userWorkloadService.createForTraining(batch, updated, workloads);
+      await batch.commit();
+    } else {
+      // for past trainings, don't update meta and workloads
+      await this.trainingRepository.updateDoc(ref.trainingId, input);
+    }
 
     return { ...training, ...this.commonService.object.clean(input) };
   }
@@ -476,9 +504,11 @@ export class TrainingService {
     );
   }
 
-  private validateTime(from: Date, to: Date) {
-    if (this.commonService.date.isAfter(from, to))
-      throw new BadRequestException('Invalid training time');
+  private checkTrainingIsInCycle(from: Date, cycle: Cycle) {
+    if (!this.commonService.date.isBetween(from, cycle.from, cycle.to))
+      throw new BadRequestException(
+        'Training falls outside of the selected cycle',
+      );
   }
 
   private validateTrainer(user: User) {
@@ -501,11 +531,6 @@ export class TrainingService {
       if (component.parent)
         throw new BadRequestException(`Component ${component.id} is not root`);
     }
-  }
-
-  private validateTrainingMembers(training: Training, memberIds: string[]) {
-    if (training.membersIds.some((memberId) => memberIds.includes(memberId)))
-      throw new BadRequestException('You cannot add these members to training');
   }
 
   private async validateOverlap(
@@ -548,8 +573,74 @@ export class TrainingService {
       throw new BadRequestException(`Duplicate components`);
   }
 
+  private checkUniqueSubgroupMembers(
+    membersIds: string[],
+    subgroups: Subgroup[],
+  ) {
+    // validate all subgroups have unique members (one member cannot be in multiple subgroups)
+    const trainingMemberIdsSet = new Set(membersIds);
+    const membersIdsSet = new Set<string>();
+
+    for (const subgroup of subgroups)
+      for (const userId of subgroup.membersIds) {
+        if (!trainingMemberIdsSet.has(userId) || membersIdsSet.has(userId))
+          return false;
+
+        membersIdsSet.add(userId);
+      }
+
+    return true;
+  }
+
+  private checkLimits(membersIds: string[], components: TrainingComponent[]) {
+    if (membersIds.length > 20)
+      throw new ConflictException('Training members limit reached');
+
+    // check training components limit
+    if (components.length > 5)
+      throw new ConflictException('Training components limit reached');
+
+    // check subgroups length limit
+    const subgroups = components.flatMap((c) => c.subgroups);
+    if (subgroups.length > membersIds.length)
+      throw new ConflictException('Training subgroups limit reached');
+
+    // check supersets and exercises limits for each component
+    for (const c of components) {
+      if (c.supersets.length > 8)
+        throw new ConflictException('Training superset limit reached');
+
+      for (const s of c.supersets)
+        if (s.exercises.length > 4)
+          throw new ConflictException(
+            'Training superset exercises limit reached',
+          );
+
+      for (const { supersets } of c.subgroups) {
+        if (supersets.length > 8)
+          throw new ConflictException('Training superset limit reached');
+
+        for (const s of supersets)
+          if (s.exercises.length > 4)
+            throw new ConflictException(
+              'Training su perset exercises limit reached',
+            );
+      }
+    }
+  }
+
   private validateComponent(training: Training, ref: TrainingComponentRef) {
     if (!training.components.find((c) => c.id === ref.componentId))
       throw new BadRequestException('Training component not found');
+  }
+
+  private validateTrainingComponentDates(components: TrainingComponent[]) {
+    for (let i = 0; i < components.length; i++) {
+      if (i < components.length - 1)
+        if (components[i].from >= components[i + 1].from)
+          throw new BadRequestException(
+            `Component at index ${components[i].id} has to start before ${components[i + 1].id}`,
+          );
+    }
   }
 }
