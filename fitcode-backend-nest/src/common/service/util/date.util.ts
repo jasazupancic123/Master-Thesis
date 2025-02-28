@@ -1,6 +1,6 @@
-import { Week } from '../../../group/entity/cycle.entity';
+import { addDays, isAfter, isBefore, isEqual, startOfWeek } from 'date-fns';
 import dayjs from 'dayjs';
-import { isAfter, isBefore, isEqual } from 'date-fns';
+import { Week } from '../../../group/entity/cycle.entity';
 
 export class DateUtil {
   isBetween(date: Date, start: Date, end: Date): boolean {
@@ -35,34 +35,20 @@ export class DateUtil {
    * // ]
    */
   weeks(startDate: Date, endDate: Date): Week[][] {
-    let weeks: Week[][] = [];
-    const start = dayjs(startDate);
-    const end = dayjs(endDate);
+    const weeksArray: Week[][] = [];
+    let currentDate = startOfWeek(startDate, { weekStartsOn: 1 }); // 1 = Monday
 
-    let startDateWeekStart = start.startOf('week').add(1, 'day');
-    let endDateWeekEnd = end.endOf('week').add(1, 'day');
-
-    // if start day is sunday, subtract 7 days
-    if (start.day() === 0) {
-      startDateWeekStart = startDateWeekStart.subtract(7, 'day');
-      endDateWeekEnd = endDateWeekEnd.subtract(7, 'day');
-    }
-
-    const totalDays = endDateWeekEnd.diff(startDateWeekStart, 'day') + 1;
-    const totalWeeks = Math.ceil(totalDays / 7);
-
-    let date = startDateWeekStart;
-    for (let i = 0; i < totalWeeks; i++) {
-      const week: Week[] = Array(7).fill(null);
-      for (let day = 0; day < 7; day++) {
-        week[day] = { date: date.toDate() };
-        date = date.add(1, 'day');
+    while (isBefore(currentDate, endDate)) {
+      const week: Week[] = [];
+      for (let i = 0; i < 7; i++) {
+        week.push({ date: new Date(currentDate) });
+        currentDate = addDays(currentDate, 1);
       }
 
-      weeks.push(week);
+      weeksArray.push(week);
     }
 
-    return weeks;
+    return weeksArray;
   }
 
   pretty(date: Date): string {
