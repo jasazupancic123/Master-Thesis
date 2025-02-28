@@ -127,6 +127,10 @@ export class UserService {
   }
 
   async updateProfile(ref: UserRef, input: Update<UserEntity>) {
+    this.logger.log(
+      `User ${ref.uid} is updating profile: ${JSON.stringify(input)}`,
+    );
+
     await this.userRepository.updateDoc(ref.uid, input);
   }
 

@@ -5,14 +5,15 @@ import { CustomClaims } from './custom-claims.type';
 
 // Firestore Database User
 export type UserEntity = BaseEntity & {
+  groupsIds: string[];
   sport?: string;
   level?: SportLevel;
   gender?: Gender;
+  profileImageUrl?: string;
   firstName?: string;
   lastName?: string;
   phone?: string;
   birthDate?: Date;
-  groupsIds: string[];
 };
 
 // Firebase Auth User

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { addHours, endOfHour, startOfHour } from 'date-fns';
+import { addHours, addMinutes, endOfHour, startOfHour } from 'date-fns';
 import {
   CollectionReference,
   DocumentReference,
@@ -54,9 +54,8 @@ export class TrainingRepository
         groupId: input.groupId,
         cycleId: input.cycleId,
         ownerId: input.ownerId,
-        from: input.from || startOfHour(new Date()),
-        to:
-          input.to || endOfHour(addHours(new Date(), input.components.length)),
+        from: input.from,
+        to: addMinutes(startOfHour(input.from), input.components.length * 30),
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
         meta: input.meta || [],
@@ -79,11 +78,10 @@ export class TrainingRepository
   async updateDoc(id: string, input: Update<Training>) {
     const query = this.firebaseService.buildUpdateQuery<Training>({
       from: input.from,
-      to: input.to,
       components: input.components?.map((c) => ({
         id: c.id,
-        from: c.from || startOfHour(new Date()),
-        to: c.to || endOfHour(new Date()),
+        from: c.from,
+        to: c.to,
         color: c.color,
         subgroups: c.subgroups.map((s) => ({
           id: s.id,
