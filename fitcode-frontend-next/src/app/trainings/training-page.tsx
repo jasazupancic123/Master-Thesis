@@ -45,7 +45,6 @@ export default function TrainingPage(props: TrainingPageProps) {
   const {
     trainingResult,
     selectedTraining,
-    setSelectedTraining,
     selectedComponent,
     setSelectedComponent,
     clearTrainingState,

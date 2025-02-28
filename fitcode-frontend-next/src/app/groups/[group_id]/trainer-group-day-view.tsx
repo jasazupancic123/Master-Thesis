@@ -50,8 +50,14 @@ export default function TrainerDayView() {
     setCycle,
   } = useGroup();
 
-  const { training, setTraining, component, setSelectedSubgroup } =
-    useTrainerDayViewContext();
+  const {
+    training,
+    setTraining,
+    component,
+    setSelectedSubgroup,
+    selectedAthlete,
+    selectedSubgroup,
+  } = useTrainerDayViewContext();
 
   const router = useRouter();
   const [day, setDay] = useState<Day>(commonService.date.getToday());
@@ -161,7 +167,7 @@ export default function TrainerDayView() {
   return (
     <>
       {!screenSize.isSmallerThanLaptop && (
-        <Box position="absolute" top="50%" right={-5}>
+        <Box position="absolute" top="50%" right={0}>
           <FloatingButton
             label="Save training"
             onClick={handleUpdateTraining}
@@ -215,7 +221,9 @@ export default function TrainerDayView() {
                   fontSize: !screenSize.isDesktop ? 15 : 20,
                 }}
               >
-                {group.name}
+                {selectedAthlete?.displayName ||
+                  selectedSubgroup?.subgroup?.name ||
+                  group.name}
               </Typography>
             </Box>
             <Box

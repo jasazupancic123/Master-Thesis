@@ -23,6 +23,7 @@ export interface TrainingComponentProps {
 export interface AddExerciseFormProps {
   selectedExercisesIds: string[];
   setSelectedExercisesIds: SetState<string[]>;
+  component: TrainingComponent;
 }
 
 export interface TrainingExerciseCardProps {

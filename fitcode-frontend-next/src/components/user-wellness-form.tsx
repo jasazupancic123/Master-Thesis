@@ -49,7 +49,7 @@ export default function UserWellnessForm(props: Props) {
           fontSize: 18,
           fontWeight: 'bold',
           color: '#1EB980', // Match theme
-          backgroundColor: '#303E4A', // Subtle dark background
+          backgroundColor: 'background.default', // Subtle dark background
           borderRadius: '8px',
           padding: 2,
           marginBottom: screenSize.isLandscapeMobile ? 2 : 4,
@@ -122,7 +122,7 @@ export default function UserWellnessForm(props: Props) {
             : screenSize.isLandscapeMobile
               ? '66%'
               : '30%',
-          backgroundColor: '#303E4A',
+          backgroundColor: 'background.default',
           borderRadius: '10px',
           '& .MuiOutlinedInput-root': {
             height: screenSize.isLandscapeMobile ? '20vh' : 'auto', // Set full field height
@@ -189,7 +189,7 @@ function UserWellnessSlider(props: {
         sx={{
           width: 10,
           '& .MuiSlider-track': {
-            backgroundColor: '#303E4A',
+            backgroundColor: 'background.default',
           },
           '& .MuiSlider-thumb': {
             width: 26,

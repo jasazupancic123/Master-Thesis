@@ -49,6 +49,7 @@ export default function Supersets(props: SupersetsProps) {
     selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,
+    setSearch,
   } = useTrainerDayViewContext();
 
   const supersets =
@@ -71,6 +72,15 @@ export default function Supersets(props: SupersetsProps) {
         : []
     );
   }, [supersets, supersets.length]);
+
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    console.log('supersetsWithAdd', supersetsWithAdd);
+    if (supersetsWithAdd.length > 0) {
+      setInitialized(true);
+    }
+  }, [supersetsWithAdd]);
 
   useEffect(() => {
     if (!selectedAthlete) setSelectedExercise(null);
@@ -150,6 +160,7 @@ export default function Supersets(props: SupersetsProps) {
                           ? 0.5
                           : 2
                     }
+                    pt={0}
                   >
                     <Box
                       sx={{
@@ -185,133 +196,160 @@ export default function Supersets(props: SupersetsProps) {
                     </Box>
 
                     <Grid2 container>
-                      {superset.exercises.map((exercise, k) => (
-                        <Grid2
-                          size={{ xs: 12 }}
-                          key={exercise.id}
-                          sx={{
-                            mb:
-                              superset.exercises.length - 1 !== k
-                                ? 0.4
-                                : undefined,
-                          }}
+                      {supersetsWithAdd.length === 1 &&
+                      superset.exercises.length === 0 ? (
+                        <Box
+                          border="1px dashed #B2B3B7"
+                          borderRadius={2}
+                          sx={{ cursor: 'pointer' }}
+                          p={1}
+                          py={3}
+                          width="100%"
+                          height="100%"
+                          textAlign="center"
+                          onClick={() => setOpenAddExerciseModal(true)}
                         >
-                          <Draggable
+                          <Typography variant="body2" align="center">
+                            Add exercise
+                          </Typography>
+                        </Box>
+                      ) : (
+                        superset.exercises.map((exercise, k) => (
+                          <Grid2
+                            size={{ xs: 12 }}
                             key={exercise.id}
-                            draggableId={exercise.id.toString()}
-                            index={k}
-                            isDragDisabled={
-                              !!(
-                                selectedAthlete && selectedExercise === exercise
-                              )
-                            } // Disable dragging
+                            sx={{
+                              mb:
+                                superset.exercises.length - 1 !== k
+                                  ? 0.4
+                                  : undefined,
+                            }}
                           >
-                            {(provided, snapshot) => (
-                              <Box
-                                id={exercise.id}
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                position="relative"
-                                p={1}
-                                px={screenSize.isLaptop ? 0.5 : 0}
-                                py={
+                            <Draggable
+                              key={exercise.id}
+                              draggableId={exercise.id.toString()}
+                              index={k}
+                              isDragDisabled={
+                                !!(
                                   selectedAthlete &&
                                   selectedExercise === exercise
-                                    ? 0
-                                    : undefined
-                                }
-                                borderRadius={1}
-                                boxShadow={snapshot.isDragging ? 2 : 0}
-                                bgcolor={
-                                  snapshot.isDragging
-                                    ? '#f0f0f0'
-                                    : 'transparent'
-                                }
-                              >
+                                )
+                              } // Disable dragging
+                            >
+                              {(provided, snapshot) => (
                                 <Box
-                                  position="absolute"
-                                  top={10}
-                                  left={10}
-                                  display="flex"
-                                  flexDirection="column"
-                                  onClick={() => {
-                                    if (selectedAthlete) {
-                                      setSelectedExercise(exercise);
-                                    }
-                                  }}
-                                  sx={{
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  <Typography variant="caption" color="#6d7b87">
-                                    {`${i + 1}${String.fromCharCode(65 + k)}`}
-                                  </Typography>
-                                </Box>
-
-                                <Box
-                                  position="absolute"
-                                  top={5}
-                                  right={screenSize.isLandscapeMobile ? 0 : 10}
-                                  display={
+                                  id={exercise.id}
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  position="relative"
+                                  p={1}
+                                  px={screenSize.isLaptop ? 0.5 : 0}
+                                  py={
                                     selectedAthlete &&
-                                    exercise === selectedExercise
-                                      ? 'none'
-                                      : 'flex'
+                                    selectedExercise === exercise
+                                      ? 0
+                                      : undefined
                                   }
-                                  flexDirection="column"
+                                  borderRadius={1}
+                                  boxShadow={snapshot.isDragging ? 2 : 0}
+                                  bgcolor={
+                                    snapshot.isDragging
+                                      ? '#f0f0f0'
+                                      : 'transparent'
+                                  }
                                 >
-                                  <Tooltip
-                                    title="Delete exercise"
-                                    placement="left"
-                                  >
-                                    <IconButton
-                                      size="small"
-                                      onClick={() =>
-                                        handleDeleteExercise(
-                                          { exerciseId: exercise.id },
-                                          {
-                                            training,
-                                            setTraining,
-                                            component,
-                                            setComponent,
-                                            selectedSubgroup,
-                                            setSelectedSubgroup,
-                                            supersetsWithAdd,
-                                            setSupersetsWithAdd,
-                                            filteredTrainings,
-                                            setFilteredTrainings,
-                                            setDetectedChanges,
-                                          }
-                                        )
+                                  <Box
+                                    position="absolute"
+                                    top={10}
+                                    left={10}
+                                    display="flex"
+                                    flexDirection="column"
+                                    onClick={() => {
+                                      if (selectedAthlete) {
+                                        setSelectedExercise(exercise);
                                       }
+                                    }}
+                                    sx={{
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="caption"
+                                      color="#6d7b87"
+                                      sx={{ zIndex: 1 }}
                                     >
-                                      <DeleteIcon
-                                        sx={{ width: 16, height: 16 }}
-                                      />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Box>
+                                      {`${i + 1}${String.fromCharCode(65 + k)}`}
+                                    </Typography>
+                                  </Box>
 
-                                <TrainingExerciseCardContainer
-                                  supersetIndex={i}
-                                  exercise={exercise}
-                                  selectedExercise={selectedExercise}
-                                  setSelectedExercise={setSelectedExercise}
-                                  superior={{
-                                    row: i === 0,
-                                    column: k === 0,
-                                    all: i === 0 && k === 0,
-                                  }}
-                                  setOpenVideoPlayerModal={
-                                    setOpenVideoPlayerModal
-                                  }
-                                />
-                              </Box>
-                            )}
-                          </Draggable>
-                        </Grid2>
-                      ))}
+                                  <Box
+                                    position="absolute"
+                                    top={5}
+                                    right={
+                                      screenSize.isLandscapeMobile ? 0 : 10
+                                    }
+                                    display={
+                                      selectedAthlete &&
+                                      exercise === selectedExercise
+                                        ? 'none'
+                                        : 'flex'
+                                    }
+                                    flexDirection="column"
+                                    zIndex={1}
+                                  >
+                                    <Tooltip
+                                      title="Delete exercise"
+                                      placement="left"
+                                    >
+                                      <IconButton
+                                        size="small"
+                                        onClick={() =>
+                                          handleDeleteExercise(
+                                            { exerciseId: exercise.id },
+                                            {
+                                              training,
+                                              setTraining,
+                                              component,
+                                              setComponent,
+                                              selectedSubgroup,
+                                              setSelectedSubgroup,
+                                              supersetsWithAdd,
+                                              setSupersetsWithAdd,
+                                              filteredTrainings,
+                                              setFilteredTrainings,
+                                              setDetectedChanges,
+                                            }
+                                          )
+                                        }
+                                      >
+                                        <DeleteIcon
+                                          sx={{ width: 16, height: 16 }}
+                                        />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Box>
+
+                                  <TrainingExerciseCardContainer
+                                    supersetIndex={i}
+                                    exercise={exercise}
+                                    selectedExercise={selectedExercise}
+                                    setSelectedExercise={setSelectedExercise}
+                                    superior={{
+                                      row: i === 0,
+                                      column: k === 0,
+                                      all: i === 0 && k === 0,
+                                    }}
+                                    setOpenVideoPlayerModal={
+                                      setOpenVideoPlayerModal
+                                    }
+                                  />
+                                </Box>
+                              )}
+                            </Draggable>
+                          </Grid2>
+                        ))
+                      )}
 
                       {provided.placeholder}
                     </Grid2>
@@ -399,8 +437,12 @@ export default function Supersets(props: SupersetsProps) {
 
           setSelectedExercisesIds(oldExercises);
           setOpenAddExerciseModal(false);
+          setSearch('');
         }}
+        width={500}
+        dialogueContentSx={{ px: screenSize.isMobile ? 0 : undefined }}
         onConfirm={() => {
+          setSearch('');
           //get only new exercises
           const exercisesIdsToAdd =
             supersetsWithAdd && supersetsWithAdd.length
@@ -518,6 +560,7 @@ export default function Supersets(props: SupersetsProps) {
         <AddExerciseForm
           selectedExercisesIds={selectedExercisesIds}
           setSelectedExercisesIds={setSelectedExercisesIds}
+          component={component}
         />
       </MyModal>
       <MyModal

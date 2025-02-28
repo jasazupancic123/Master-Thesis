@@ -36,13 +36,11 @@ export default async function Page() {
   });
 
   return (
-    <TrainingProvider>
-      <TrainingPage
-        userId={profile.uid}
-        token={token}
-        profile={profile}
-        trainings={mappedTrainings}
-      />
-    </TrainingProvider>
+    <TrainingPage
+      userId={profile.uid}
+      token={token}
+      profile={profile}
+      trainings={mappedTrainings}
+    />
   );
 }

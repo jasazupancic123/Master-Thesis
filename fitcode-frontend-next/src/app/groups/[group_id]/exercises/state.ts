@@ -211,8 +211,6 @@ export async function handleUpdateExercise(
         attributeValues,
       }),
     (exercise) => {
-      console.log('updated', exercise);
-
       exercise = ExerciseService.mapAttributes(exercise);
       exercise = ExerciseService.mapComponents(exercise, components);
       setExercise(exercise);

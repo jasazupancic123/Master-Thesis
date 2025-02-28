@@ -78,7 +78,7 @@ export default function ChartPage(props: ChartProps) {
           value={parentComponent ? parentComponent.id : ''}
           items={parentComponents}
           placeholder="Select component"
-          displayEmpty={!parentComponent ? true :  false}
+          displayEmpty={!parentComponent ? true : false}
           disableInputLabel={!parentComponent ? true : false}
           useRenderValue={true}
           itemKey="id"
@@ -93,22 +93,25 @@ export default function ChartPage(props: ChartProps) {
               (c) => c.parent === component.id
             );
             //check if any of the childComponents has got any children
-            const hasChildren = parentComponents.some((c) =>
-              components.some((cc) => cc.parent === c.id)
+            const hasChildren = components.some(
+              (cc) => cc.parent === component.id
             );
             if (hasChildren) {
               setParentComponents(childComponents);
               setIsOnParent(true);
             } else {
               setFilteredExercises(
-                exercises.filter((exercise) => exercise.componentsIds.includes(component.id))
+                exercises.filter((exercise) =>
+                  exercise.componentsIds.includes(component.id)
+                )
               );
               setIsOnParent(false);
             }
           }}
         />
       ) : (
-        filteredExercises && parentComponent && (
+        filteredExercises &&
+        parentComponent && (
           <SelectInput<Exercise>
             label={parentComponent.name}
             icon={null}
@@ -127,7 +130,10 @@ export default function ChartPage(props: ChartProps) {
                 setExercise(null);
                 setFilteredExercises([]);
                 setParentComponent(null);
-                setParentComponents(components.filter((component) => component.parent === null))
+                setParentComponents(
+                  components.filter((component) => component.parent === null)
+                );
+                setIsOnParent(true);
                 return;
               }
               const exercise = exercises.find((e) => e.id === value);
