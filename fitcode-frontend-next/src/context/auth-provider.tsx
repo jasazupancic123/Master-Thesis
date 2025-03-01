@@ -8,6 +8,8 @@ import { AuthContextType } from '@/common/type/context.type';
 import { ChildrenProps } from '@/common/type/props.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { CustomClaims } from '@/controller/user/type/custom-claims.type';
+import { UserEntity } from '@/controller/user/type/user.type';
+import { UserController } from '@/controller/user/user.controller';
 import { User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -22,6 +24,8 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => Promise.resolve(),
   hasJustLoggedIn: false,
   setHasJustLoggedIn: (value: boolean) => {},
+  profile: undefined,
+  setProfile: (profile: UserEntity) => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -30,6 +34,8 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserEntity>({} as UserEntity);
+
   const [role, setRole] = useState<UserRole[]>([]);
   const [_token, setToken] = useLocalStorage<string | null>(
     FIREBASE_COOKIE_NAME,
@@ -43,8 +49,10 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         if (user) {
           // user logged in
           const token = await user.getIdTokenResult();
+          const profile = await UserController.findProfile(token.token);
           const claims = token.claims as unknown as CustomClaims;
 
+          setProfile(profile);
           setUser(user);
           setRole(claims.role || []);
           setToken(token.token);
@@ -80,6 +88,8 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         logout,
         hasJustLoggedIn,
         setHasJustLoggedIn,
+        profile,
+        setProfile,
       }}
     >
       {children}

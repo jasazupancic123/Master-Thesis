@@ -8,7 +8,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BottomNavigation from './bottom-navigation';
 import Sidebar from './sidebar';
 import { Avatar, Grid2, MenuItem, Select } from '@mui/material';
@@ -17,6 +17,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useAthlete } from '@/context/athlete-provider';
+import { useAuth } from '@/context/auth-provider';
 
 export default function SidebarAthlete() {
   const { selectedDate, setSelectedDate } = useAthlete();
@@ -24,6 +25,7 @@ export default function SidebarAthlete() {
   const screenSize = useScreenSize();
   const router = useRouter();
   const path = usePathname();
+  const { profile } = useAuth();
   const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map(
     (link) => link.href
   );
@@ -33,6 +35,12 @@ export default function SidebarAthlete() {
     const index = mapper.findIndex((href) => path === href);
     return index === -1 ? 0 : index;
   });
+
+  const [avatarSrc, setAvatarSrc] = useState(profile?.profileImageUrl);
+
+  useEffect(() => {
+    setAvatarSrc(profile?.profileImageUrl);
+  }, [profile]);
 
   return (
     <>
@@ -61,7 +69,7 @@ export default function SidebarAthlete() {
         >
           <Avatar
             className="avatar-border"
-            src="/user_avatar.png" // Path to the image in the public folder
+            src={avatarSrc || '/user_avatar.png'} // Path to the image in the public folder
             sx={{
               width: 70,
               height: 70,
