@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FieldValue, Transaction } from 'firebase-admin/firestore';
+import { FieldValue, Query, Transaction } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
 import { Update } from 'src/common/type/entity.type';
@@ -52,6 +52,10 @@ export class UserService {
 
   getDoc(id: string) {
     return this.userRepository.doc(id);
+  }
+
+  async getDocs(query: (query: Query) => Query = (query) => query) {
+    return await this.userRepository.getDocs(query);
   }
 
   async findOneOrFail(id: string): Promise<UserEntity> {
