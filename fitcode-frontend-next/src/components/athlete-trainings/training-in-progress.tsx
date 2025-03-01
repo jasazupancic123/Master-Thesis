@@ -380,30 +380,24 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
               >
                 {!exercise.exercise?.imageUrl && exercise.exercise?.videoUrl ? (
                   //image is not available and video is available, display the video!
-                  (console.log(
-                    'exercise.exercise?.videoUrl',
-                    exercise.exercise?.videoUrl
-                  ),
-                  (
-                    <video
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      style={{
-                        width: 200,
-                        height: 100,
-                        objectFit: 'cover',
-                        padding: 5,
-                        borderRadius: 15,
-                      }}
-                    >
-                      <source
-                        src={exercise.exercise?.videoUrl}
-                        type="video/mp4"
-                      />
-                    </video>
-                  ))
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    style={{
+                      width: 200,
+                      height: 100,
+                      objectFit: 'cover',
+                      padding: 5,
+                      borderRadius: 15,
+                    }}
+                  >
+                    <source
+                      src={exercise.exercise?.videoUrl}
+                      type="video/mp4"
+                    />
+                  </video>
                 ) : (
                   <Image
                     src={

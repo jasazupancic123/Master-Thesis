@@ -106,7 +106,13 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
             direction="column"
             width="100%"
             overflow="auto"
-            sx={{ flexGrow: 1, minWidth: 0 }}
+            sx={{
+              flexGrow: 1,
+              minWidth: 0,
+              maxHeight: 500,
+              pr: 1,
+              flexWrap: 'nowrap',
+            }}
           >
             {filteredExercises
               .sort((a, b) => a.name.localeCompare(b.name))

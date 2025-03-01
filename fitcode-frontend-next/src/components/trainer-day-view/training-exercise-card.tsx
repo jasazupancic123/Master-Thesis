@@ -145,8 +145,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
   if (!training || !component || !state) return null;
 
-  console.log(exercise.exercise?.imageUrl);
-
   return (
     <Stack
       spacing={1}

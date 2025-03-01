@@ -76,7 +76,6 @@ export default function Supersets(props: SupersetsProps) {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    console.log('supersetsWithAdd', supersetsWithAdd);
     if (supersetsWithAdd.length > 0) {
       setInitialized(true);
     }
@@ -496,20 +495,31 @@ export default function Supersets(props: SupersetsProps) {
             }
 
             if (exercisesToAdd.length === 0) break; // stop if no exercises left
-            if (supersets.indexOf(superset) === supersets.length - 1) {
-              if (supersets.length === NUM_MAX_SUPERSETS)
-                return toast.error(
-                  'Added exercises exceed the maximum number of exercises allowed'
-                );
+          }
 
-              const newSuperset: Superset = {
-                exercises: exercisesToAdd,
-                color: COLOR[supersets.length],
-              };
-
-              supersets.push(newSuperset);
-              break;
+          // Keep creating new supersets until all exercises are added
+          while (exercisesToAdd.length > 0) {
+            if (supersets.length === NUM_MAX_SUPERSETS) {
+              return toast.error(
+                'Added exercises exceed the maximum number of exercises allowed'
+              );
             }
+
+            const newSuperset: Superset = {
+              exercises: [],
+              color: COLOR[supersets.length],
+            };
+
+            while (
+              newSuperset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
+              exercisesToAdd.length > 0
+            ) {
+              const exerciseToAdd = exercisesToAdd.shift();
+              if (exerciseToAdd)
+                newSuperset.exercises.push({ ...exerciseToAdd });
+            }
+
+            supersets.push(newSuperset);
           }
 
           const updatedComponents = [...training.components];
@@ -528,7 +538,12 @@ export default function Supersets(props: SupersetsProps) {
             setDetectedChanges(true);
             setSupersetsWithAdd([...supersets]);
             setComponent({ ...updatedComponent });
-            setTraining({ ...training, components: updatedComponents });
+            const newTraining = { ...training, components: updatedComponents };
+            setTraining(newTraining);
+            const newFilteredTrainings = [...filteredTrainings].map((t) =>
+              t.id === newTraining.id ? newTraining : t
+            );
+            setFilteredTrainings(newFilteredTrainings);
             setOpenAddExerciseModal(false);
           } else {
             // update subgroup's supersets

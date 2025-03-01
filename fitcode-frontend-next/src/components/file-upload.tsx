@@ -1,3 +1,4 @@
+import { SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { ReactNode, useCallback, useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ interface Props {
   onFileUpload: (file: File) => Promise<void>;
   input: 'image' | 'video' | 'csv';
   initialFileUrl?: string;
+  sx?: SxProps;
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -15,7 +17,7 @@ const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_CSV_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function FileUpload(props: Props) {
-  const { label, onFileUpload, input, initialFileUrl } = props;
+  const { label, onFileUpload, input, initialFileUrl, sx } = props;
   const [preview, setPreview] = useState(() => ({
     url: initialFileUrl || '',
     error: '',
@@ -90,6 +92,7 @@ export default function FileUpload(props: Props) {
           // set error to empty string to remove the error message
           setPreview((prev) => ({ ...prev, error: '' }));
         }}
+        sx={{ ...sx }}
       >
         <Box p={1}>
           <Typography>{label}</Typography>
@@ -106,11 +109,16 @@ export default function FileUpload(props: Props) {
         </Box>
 
         {!preview.error && preview.url && input !== 'csv' && (
-          <Box height={100} position="relative">
+          <Box
+            height={100}
+            position="relative"
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
             {input === 'video' ? (
               <video
                 src={preview.url}
-                // controls
                 muted
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                 onError={() => {
@@ -121,7 +129,11 @@ export default function FileUpload(props: Props) {
               <img
                 src={preview.url}
                 alt="Image Preview"
-                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                style={{
+                  objectFit: 'contain',
+                  height: 108,
+                  width: '100%', // Make sure the image stretches to cover the width.
+                }}
                 onError={() => {
                   setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
                 }}
@@ -143,6 +155,7 @@ export default function FileUpload(props: Props) {
 function DragAndDropPlaceholder(props: {
   children: ReactNode;
   onClick: () => void;
+  sx?: SxProps;
 }) {
   return (
     <Box
@@ -150,6 +163,7 @@ function DragAndDropPlaceholder(props: {
       width="100%"
       onClick={props.onClick}
       sx={{
+        ...props.sx,
         border: '1px dashed grey',
         cursor: 'pointer',
       }}
