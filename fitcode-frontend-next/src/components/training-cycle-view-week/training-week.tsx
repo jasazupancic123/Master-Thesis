@@ -8,9 +8,11 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { useState } from 'react';
 import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { TrainingCycleViewWeekProps } from './type';
+import MyModal from '../modal';
+import { Training } from '@/controller/training/type/training.type';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { index, week, selected } = props;
@@ -27,6 +29,11 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     filteredTrainings,
     setTrainings,
   } = useGroup();
+
+  const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(
+    null
+  );
 
   function getFilteredTrainings(date: Dayjs, period: string) {
     date = dayjs(date);
@@ -80,7 +87,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
             padding: '0px',
             textAlign: 'center',
             border: '1px solid',
-            borderColor: '#303E4A',
+            borderColor: 'background.default',
             backgroundColor: '#1A2B3C',
             height: '100%',
             cursor: components.length ? 'pointer' : 'default',
@@ -110,7 +117,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
               width="calc(100% / 7)"
               sx={{
                 border: '1px solid',
-                borderColor: '#303E4A',
+                borderColor: 'background.default',
                 backgroundColor: '#1A2B3C',
                 cursor: components.length ? 'pointer' : 'default',
                 minHeight: screenSize.isMobile ? 160 : 140,
@@ -169,9 +176,12 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                         borderRadius={2}
                         sx={{ cursor: 'pointer', p: 0, m: 0, height: '100%' }}
                         onClick={(e) => {
-                          if (!props.selected) return;
+                          if (!props.selected || props.selected?.length === 0) {
+                            setOpenAreYouSureModal(true);
+                            setSelectedTraining(training);
+                            return;
+                          }
                           e.stopPropagation();
-
                           props.addTrainingComponent(training.id, {
                             componentsIds: props.selected?.map((c) => c.id),
                           });
@@ -196,6 +206,28 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
           ))}
         </Stack>
       </Box>
+      <MyModal
+        isOpen={openAreYouSureModal}
+        setIsOpen={(open) => setOpenAreYouSureModal(open)}
+        cancelText="Cancel"
+        onCancel={() => {
+          setOpenAreYouSureModal(false);
+          setSelectedTraining(null);
+        }}
+        onConfirm={() => {
+          if (!selectedTraining) return;
+          props.addTrainingComponent(selectedTraining.id, {
+            componentsIds: [],
+          });
+          setSelectedTraining(null);
+          setOpenAreYouSureModal(false);
+        }}
+      >
+        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
+          Delete {dayjs(selectedTraining?.from).format('A')} training on{' '}
+          {dayjs(selectedTraining?.from).format('DD.MM')}
+        </Typography>
+      </MyModal>
     </Box>
   );
 }

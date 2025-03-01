@@ -110,7 +110,7 @@ export default function SidebarAthlete() {
                   },
                   userSelect: 'none !important',
                   cursor: 'pointer',
-                  width: 75,
+                  width: 80,
                   padding: 0,
                   margin: 0,
                   border: 'none !important',

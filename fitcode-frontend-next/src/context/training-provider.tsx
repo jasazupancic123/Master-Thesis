@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import { useAuth } from './auth-provider';
+import { Dayjs } from 'dayjs';
 
 interface TrainingContextType {
   trainingResult: TrainingResult | null;
@@ -24,6 +25,8 @@ interface TrainingContextType {
   setSupersetIndex: (supersetIndex: number | null) => void;
   view: 'exercises' | 'training';
   setView: (view: 'exercises' | 'training') => void;
+  startOfTraining: Dayjs | null;
+  setStartOfTraining: (startOfTraining: Dayjs | null) => void;
   isLoaded: boolean;
 }
 
@@ -43,6 +46,7 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
   const [isLoaded, setIsLoaded] = useState(false); // To prevent SSR mismatches
   const [supersetIndex, setSupersetIndex] = useState<number | null>(null);
   const [view, setView] = useState<'exercises' | 'training'>('exercises');
+  const [startOfTraining, setStartOfTraining] = useState<Dayjs | null>(null);
 
   const { user } = useAuth();
 
@@ -52,6 +56,7 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
     const storedSelectedTraining = localStorage.getItem('selectedTraining');
     const storedSelectedComponent = localStorage.getItem('selectedComponent');
     const storedSupersetIndex = localStorage.getItem('supersetIndex');
+    const storedStartOfTraining = localStorage.getItem('startOfTraining');
 
     if (storedTraining) setTrainingResult(JSON.parse(storedTraining));
     if (storedSelectedTraining)
@@ -59,6 +64,8 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
     if (storedSelectedComponent)
       setSelectedComponent(JSON.parse(storedSelectedComponent));
     if (storedSupersetIndex) setSupersetIndex(JSON.parse(storedSupersetIndex));
+    if (storedStartOfTraining)
+      setStartOfTraining(JSON.parse(storedStartOfTraining));
 
     setIsLoaded(true);
   }, []);
@@ -83,8 +90,9 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
         JSON.stringify(selectedComponent)
       );
       localStorage.setItem('supersetIndex', JSON.stringify(supersetIndex));
+      localStorage.setItem('startOfTraining', JSON.stringify(startOfTraining));
     }
-  }, [trainingResult, supersetIndex, isLoaded]);
+  }, [trainingResult, supersetIndex, startOfTraining, isLoaded]);
 
   const clearTrainingState = () => {
     setTrainingResult(null);
@@ -112,6 +120,8 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
         supersetIndex,
         setSupersetIndex,
         view,
+        startOfTraining,
+        setStartOfTraining,
         setView,
         isLoaded,
       }}
