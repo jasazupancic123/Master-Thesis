@@ -5,6 +5,7 @@ import {
 import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { UserEntity } from '@/controller/user/type/user.type';
 import { User } from 'firebase/auth';
 
 export type AppContextType = {
@@ -24,6 +25,8 @@ export type AuthContextType = {
   logout: () => Promise<void>;
   hasJustLoggedIn: boolean;
   setHasJustLoggedIn: (value: boolean) => void;
+  profile: UserEntity | undefined;
+  setProfile: (profile: UserEntity) => void;
 };
 
 export type TrainerContextType = {

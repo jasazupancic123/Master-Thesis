@@ -126,12 +126,15 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     );
 
     if (memberSubgroup) {
+      console.log('memberSubgroup');
       const newSubgroup = {
         ...memberSubgroup,
-        membersIds: memberSubgroup.membersIds.filter((id) => id !== member.uid),
+        membersIds: [...memberSubgroup.membersIds].filter(
+          (id) => id !== member.uid
+        ),
       };
 
-      const newSubgroups = component.subgroups.map((subgroup) =>
+      const newSubgroups = [...component.subgroups].map((subgroup) =>
         subgroup.id === newSubgroup.id ? newSubgroup : subgroup
       );
 
@@ -149,13 +152,19 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         supersets: supersets,
       };
 
-      setComponent(newComponent);
-      setTraining({
-        ...training,
-        components: [...training.components].map((c) =>
-          c.id === newComponent.id ? newComponent : c
-        ),
+      await handleAddSubgroup({
+        training,
+        setTraining,
+        component: newComponent!,
+        setComponent,
+        createSubgroup,
+        setCreateSubgroup: undefined,
+        filteredTrainings,
+        setFilteredTrainings,
+        setDetectedChanges,
       });
+
+      return;
     }
 
     await handleAddSubgroup({

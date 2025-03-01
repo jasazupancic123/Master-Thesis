@@ -152,6 +152,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       px={screenSize.isMobile ? 0 : undefined}
       pb={2}
       sx={{
+        width: '100% !important',
         my: -1,
         position: 'relative',
         backgroundColor: chartView
@@ -163,25 +164,25 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           ? `url(${exercise.exercise?.imageUrl})`
           : undefined,
         backgroundPosition: 'center',
-        backgroundSize: 'cover',
+        backgroundSize: '100% auto', // Ensures full width, height adjusts
+        backgroundRepeat: 'no-repeat',
         overflow: 'hidden',
       }}
     >
       {/* Background Overlay */}
-      {exercise.exercise?.imageUrl && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(38, 54, 70, 0.825)', // Darker overlay for better text contrast
-            zIndex: 0,
-            opacity: 100,
-          }}
-        />
-      )}
+      <Box
+        sx={{
+          width: '100% !important',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(38, 54, 70, 0.825)', // Darker overlay for better text contrast
+          zIndex: 0,
+          opacity: 100,
+        }}
+      />
       <Stack
         direction="row"
         justifyContent="center"

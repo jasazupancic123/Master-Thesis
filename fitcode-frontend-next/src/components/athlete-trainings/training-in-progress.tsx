@@ -378,54 +378,33 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                 justifyContent="center"
                 sx={{ mt: 1 }}
               >
-                {!exercise.exercise?.imageUrl && exercise.exercise?.videoUrl ? (
-                  //image is not available and video is available, display the video!
-                  <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    style={{
-                      width: 200,
-                      height: 100,
-                      objectFit: 'cover',
-                      padding: 5,
-                      borderRadius: 15,
-                    }}
-                  >
-                    <source
-                      src={exercise.exercise?.videoUrl}
-                      type="video/mp4"
-                    />
-                  </video>
-                ) : (
-                  <Image
-                    src={
-                      exercise.exercise?.imageUrl?.trim() ||
-                      '/fitcode_logo_transparent_square.png'
-                    }
-                    alt="Exercise Image"
-                    width={
-                      !screenSize.isMobile
-                        ? exercise.exercise?.imageUrl
-                          ? 200
-                          : 100
-                        : exercise.exercise?.imageUrl
-                          ? 170
-                          : 100
-                    }
-                    height={0}
-                    style={{
-                      maxWidth: !screenSize.isMobile ? '200px' : '170px',
-                      height: 'auto', // Maintains aspect ratio dynamically
-                      borderRadius: 15,
-                    }}
-                    onClick={() => {
-                      setOpenVideoPlayerModal(true);
-                      setVideoUrl(exercise.exercise?.videoUrl || '');
-                    }}
-                  />
-                )}
+                <Image
+                  src={
+                    exercise.exercise?.imageUrl?.trim() ||
+                    '/fitcode_logo_transparent_square.png'
+                  }
+                  alt="Exercise Image"
+                  width={
+                    !screenSize.isMobile
+                      ? exercise.exercise?.imageUrl
+                        ? 200
+                        : 100
+                      : exercise.exercise?.imageUrl &&
+                          exercise.exercise?.imageUrl.length > 2
+                        ? 170
+                        : 100
+                  }
+                  height={0}
+                  style={{
+                    maxWidth: !screenSize.isMobile ? '200px' : '170px',
+                    height: 'auto', // Maintains aspect ratio dynamically
+                    borderRadius: 15,
+                  }}
+                  onClick={() => {
+                    setOpenVideoPlayerModal(true);
+                    setVideoUrl(exercise.exercise?.videoUrl || '');
+                  }}
+                />
               </Grid2>
               <Grid2
                 size={6}
