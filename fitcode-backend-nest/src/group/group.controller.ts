@@ -10,7 +10,6 @@ import {
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
-import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupService } from './group.service';
@@ -29,6 +28,15 @@ export class GroupController {
   @Auth()
   async findById(@RequestUser() user: User, @Param('groupId') groupId: string) {
     return await this.groupService.findByIdOrFail(user, { groupId });
+  }
+
+  @Get(':groupId/members')
+  @Auth()
+  async findMembers(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+  ) {
+    return await this.groupService.findMembers(user, { groupId });
   }
 
   @Post()
