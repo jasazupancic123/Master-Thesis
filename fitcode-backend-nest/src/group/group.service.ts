@@ -7,7 +7,6 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { FieldPath, Query } from 'firebase-admin/firestore';
 import { NUM_MAX_GROUPS } from 'src/common/constant/limit.constant';
 import { Create, Update } from 'src/common/type/entity.type';
 import { Training } from 'src/training/entity/training.entity';
@@ -22,6 +21,7 @@ import { UserService } from '../user/user.service';
 import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
 import { GroupRepository } from './repository/group.repository';
+import { UserEntity } from 'src/user/entity/user.entity';
 
 @Injectable()
 export class GroupService {
@@ -75,6 +75,15 @@ export class GroupService {
     const group = await this.findById(user, ref);
     if (!group) throw new BadRequestException('Group not found');
     return group;
+  }
+
+  async findMembers(user: User, ref: GroupRef): Promise<UserEntity[]> {
+    const group = await this.findByIdOrFail(user, ref);
+    this.validateOwner(user.uid, group);
+
+    return await this.userService.getDocs((q) =>
+      q.where('id', 'in', group.membersIds),
+    );
   }
 
   async create(

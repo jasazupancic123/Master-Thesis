@@ -15,8 +15,7 @@ import {
   startOfDay,
   startOfHour,
 } from 'date-fns';
-import { FieldValue, Query } from 'firebase-admin/firestore';
-import { generateKey } from 'node:crypto';
+import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 import { DateFilterDto } from 'src/common/dto/date-filter.dto';
 import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
@@ -27,7 +26,6 @@ import {
   TrainingComponentRef,
   TrainingRef,
   TrainingStatusRef,
-  UserWorkloadExerciseRef,
 } from 'src/common/type/firestore.type';
 import { Filter } from 'src/common/type/orm.type';
 import { Wrapper } from 'src/common/type/wrapper.type';
@@ -111,7 +109,7 @@ export class TrainingService {
     let trainings = await this.trainingRepository.getDocs((q) => {
       // filter by date
       // TODO - does not work yet
-      if (from && to) q.where('from', '>=', from).where('from', '<', to);
+      // if (from && to) q.where('from', '>=', from).where('from', '<', to);
 
       // filter by roles
       if (
@@ -172,12 +170,25 @@ export class TrainingService {
     this.validateComponents(input.componentsIds, components);
 
     // check overlap between all other trainings
-    const trainings = await this.findAll(user, {
-      from: { value: startOfDay(input.from) },
-      to: { value: endOfDay(input.from) },
-    });
+    const trainings = await this.trainingRepository.getDocs((q) =>
+      q
+        .where('groupId', '==', input.groupId)
+        .where('cycleId', '==', input.cycleId)
+        .where('from', '>=', Timestamp.fromDate(startOfDay(input.from)))
+        .where('from', '<', Timestamp.fromDate(endOfDay(input.from))),
+    );
 
-    await this.validateOverlap(input.from, input.to, trainings);
+    this.validateOverlap(input.from, input.to, trainings);
+    this.checkLimits(
+      group.membersIds,
+      input.componentsIds.map((id) => ({
+        id,
+        subgroups: [],
+        supersets: [],
+        from: new Date(),
+        to: new Date(),
+      })),
+    );
 
     // create training
     const meta = await this.userService.getLastMetas(group.membersIds);
@@ -364,8 +375,8 @@ export class TrainingService {
     this.validateTrainingComponentDates(input.components);
     this.checkTrainingIsInCycle(input.from, cycle);
 
-    // validate trainings overlap within the group
-    // TODO
+    input.from = input.components[0].from;
+    input.to = input.components[training.components.length - 1].from;
 
     if (isAfter(new Date(), training.from)) {
       this.logger.log(
@@ -533,11 +544,11 @@ export class TrainingService {
     }
   }
 
-  private async validateOverlap(
+  private validateOverlap(
     from: Date,
     to: Date,
     trainings: Pick<Training, 'from' | 'to'>[],
-  ): Promise<void> {
+  ) {
     const isOverlap = trainings.some(
       (training) =>
         (isBefore(from, training.from) && isAfter(to, training.to)) ||
@@ -598,32 +609,40 @@ export class TrainingService {
 
     // check training components limit
     if (components.length > 5)
-      throw new ConflictException('Training components limit reached');
+      throw new ConflictException(
+        'You can only have up to 5 components per training',
+      );
 
     // check subgroups length limit
     const subgroups = components.flatMap((c) => c.subgroups);
     if (subgroups.length > membersIds.length)
-      throw new ConflictException('Training subgroups limit reached');
+      throw new ConflictException(
+        'Each member can be part of exactly one group',
+      );
 
     // check supersets and exercises limits for each component
     for (const c of components) {
       if (c.supersets.length > 8)
-        throw new ConflictException('Training superset limit reached');
+        throw new ConflictException(
+          'You can only have up to 8 supersets per training component',
+        );
 
       for (const s of c.supersets)
         if (s.exercises.length > 4)
           throw new ConflictException(
-            'Training superset exercises limit reached',
+            'You can only have up to 4 exercises per superset',
           );
 
       for (const { supersets } of c.subgroups) {
         if (supersets.length > 8)
-          throw new ConflictException('Training superset limit reached');
+          throw new ConflictException(
+            'You can only have up to 8 supersets per training component',
+          );
 
         for (const s of supersets)
           if (s.exercises.length > 4)
             throw new ConflictException(
-              'Training su perset exercises limit reached',
+              'You can only have up to 4 exercises per superset',
             );
       }
     }
@@ -639,7 +658,7 @@ export class TrainingService {
       if (i < components.length - 1)
         if (components[i].from >= components[i + 1].from)
           throw new BadRequestException(
-            `Component at index ${components[i].id} has to start before ${components[i + 1].id}`,
+            `Component ${components[i].id} has to start before ${components[i + 1].id}`,
           );
     }
   }
