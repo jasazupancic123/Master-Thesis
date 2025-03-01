@@ -1,6 +1,7 @@
 import { CommonService } from '@/common/service/common.service';
 import { Cycle } from './type/cycle.type';
 import { Group } from './type/group.type';
+import { UserEntity } from '../user/type/user.type';
 
 const api = CommonService.instance.api;
 
@@ -11,6 +12,10 @@ export class GroupController {
 
   static async findById(token: string, groupId: string) {
     return api.get<Group>(`/group/${groupId}`, { token });
+  }
+
+  static async findMembers(token: string, groupId: string) {
+    return api.get<UserEntity[]>(`/group/${groupId}/members`, { token });
   }
 
   static async create(

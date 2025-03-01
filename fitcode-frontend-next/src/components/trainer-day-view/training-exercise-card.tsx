@@ -9,7 +9,6 @@ import { useGroup } from '@/context/group-provider';
 import {
   ExerciseMeta,
   Superset,
-  TrainingComponent,
 } from '@/controller/training/type/training-plan.type';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { Grid2, Tooltip } from '@mui/material';
@@ -62,28 +61,20 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     pairs: { field: keyof ExerciseMeta; value: string | number }[]
   ): Superset[] {
     if (superior?.all) {
-      for (const { field, value } of pairs) {
-        for (const superset of supersets) {
-          for (const exercise of superset.exercises) {
-            //check if field exists in meta - posodobijo se samo tiste vrednosti, ki so na obeh exercisih
-            if (exercise.meta[field] !== undefined) {
+      for (const { field, value } of pairs)
+        for (const superset of supersets)
+          for (const exercise of superset.exercises)
+            if (exercise.meta[field] !== undefined)
               (exercise.meta[field] as any) = value;
-            }
-          }
-        }
-      }
       // Čori to more bit tu tak - spomni se šolanja ;)
     } else if (superior?.column && j !== undefined && j !== null) {
       const columnIndex = j;
       for (const { field, value } of pairs) {
         const superset = supersets[columnIndex];
         if (!superset) continue;
-        for (const exercise of superset.exercises) {
-          //check if field exists in meta - posodobijo se samo tiste vrednosti, ki so na obeh exercisih
-          if (exercise.meta[field] !== undefined) {
+        for (const exercise of superset.exercises)
+          if (exercise.meta[field] !== undefined)
             (exercise.meta[field] as any) = value;
-          }
-        }
       }
       // Čori to more bit tu tak - spomni se šolanja ;)
     } else if (superior?.row && k !== undefined && k !== null) {
@@ -92,13 +83,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         for (const superset of supersets) {
           const exercise = superset.exercises[rowIndex];
           if (!exercise) continue;
-          //check if field exists in meta - posodobijo se samo tiste vrednosti, ki so na obeh exercisih
-          if (exercise.meta[field] !== undefined) {
+          if (exercise.meta[field] !== undefined)
             (exercise.meta[field] as any) = value;
-          }
         }
       }
     }
+
     for (const { field, value } of pairs)
       (supersets[j!].exercises[k!].meta[field] as any) = value;
 

@@ -50,7 +50,7 @@ export default function TrainerDayView() {
     setCycle,
   } = useGroup();
 
-  const { training, setTraining, component, setSelectedSubgroup } =
+  const { members, training, setTraining, component, setSelectedSubgroup } =
     useTrainerDayViewContext();
 
   const router = useRouter();
@@ -414,12 +414,20 @@ export default function TrainerDayView() {
           </Box>
         ) : (
           <>
-            {amTraining && (
+            {!training && amTraining && (
               <TrainingCard day={day} training={amTraining} period="AM" />
             )}
 
-            {pmTraining && (
+            {!training && pmTraining && (
               <TrainingCard day={day} training={pmTraining} period="PM" />
+            )}
+
+            {training && (
+              <TrainingCard
+                day={day}
+                training={training}
+                period={amTraining ? 'AM' : 'PM'}
+              />
             )}
           </>
         )}

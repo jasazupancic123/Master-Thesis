@@ -4,12 +4,15 @@ import {
 } from '@/app/groups/[group_id]/props';
 import { Pagination } from '@/common/type/paginate.type';
 import { ChildrenProps } from '@/common/type/props.type';
+import { handleApiRequest } from '@/common/type/state.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { GroupController } from '@/controller/group/group.controller';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
-import { User } from '@/controller/user/type/user.type';
+import { User, UserEntity } from '@/controller/user/type/user.type';
+import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 export const TrainerDayViewContext =
@@ -21,7 +24,17 @@ export const useTrainerDayViewContext = () =>
 export function TrainerDayViewProvider(
   props: GroupContextProps & ChildrenProps
 ) {
-  const { children, components, exercises, cycle, dateFrom, dateTo } = props;
+  const router = useRouter();
+  const {
+    token,
+    children,
+    components,
+    exercises,
+    cycle,
+    dateFrom,
+    dateTo,
+    group,
+  } = props;
 
   // filtering selected component exercises
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
@@ -33,6 +46,7 @@ export function TrainerDayViewProvider(
     total: 0,
   });
 
+  const [members, setMembers] = useState<UserEntity[]>([]);
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [training, setTraining] = useState<Training | undefined>();
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
@@ -40,6 +54,22 @@ export function TrainerDayViewProvider(
     subgroup: Subgroup | null;
     index: number;
   } | null>(null);
+
+  /**
+   * Group members
+   */
+  useEffect(() => {
+    async function fetchMembers() {
+      handleApiRequest(
+        router,
+        () => GroupController.findMembers(token, group.id),
+        (members) => setMembers(members),
+        undefined
+      );
+    }
+
+    fetchMembers().then();
+  }, [group.id]);
 
   /**
    * Reset selected training and its children on certain changes
@@ -73,6 +103,7 @@ export function TrainerDayViewProvider(
   }, [component, pagination.page]);
 
   const value: TrainerDayViewContextProps = {
+    members,
     component,
     setComponent,
     training,
