@@ -30,6 +30,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   } = useGroup();
 
   const {
+    members: groupMembers,
     component,
     setComponent,
     training,
@@ -241,7 +242,10 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   <Box sx={{ p: 0, m: 0 }}>
                     <Avatar
                       className="avatar-border"
-                      src={'/user_avatar.png'} // Path to the image in the public folder
+                      src={
+                        groupMembers.find((m) => m.id === member.uid)
+                          ?.profileImageUrl || '/user_avatar.png'
+                      }
                       sx={{
                         width: screenSize.isMobile ? 40 : 50,
                         height: screenSize.isMobile ? 40 : 50,
@@ -394,7 +398,10 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             >
                               <Avatar
                                 className="avatar-border"
-                                src="/user_avatar.png" // Path to the image in the public folder
+                                src={
+                                  groupMembers.find((m) => m.id === member.uid)
+                                    ?.profileImageUrl || '/user_avatar.png'
+                                }
                                 sx={{
                                   width: screenSize.isMobile ? 40 : 50,
                                   height: screenSize.isMobile ? 40 : 50,

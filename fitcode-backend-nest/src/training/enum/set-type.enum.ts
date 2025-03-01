@@ -1,6 +1,6 @@
 export enum SetType {
   REPS = 'reps',
-  DISTANCE = 'distance',
+  DISTANCE = 'dist',
   TIME = 'time',
   VO2 = 'vo2',
 }

@@ -43,10 +43,7 @@ export async function handleDeleteGroup(
 
   handleApiRequest(
     router,
-    async () => {
-      // return await GroupController.deleteGroup(token, input.groupId);
-      return null;
-    },
+    async () => GroupController.delete(token, input.groupId),
     () => {
       toast.success('Group deleted successfully.');
       state.router.push(LINK_GROUPS.href);
