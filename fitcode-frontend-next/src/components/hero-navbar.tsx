@@ -10,27 +10,53 @@ import Logo from '@/components/logo';
 import { useAuth } from '@/context/auth-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Divider, Drawer } from '@mui/material';
+import {
+  Button,
+  Container,
+  Divider,
+  Drawer,
+  MenuItem,
+  Toolbar,
+} from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import MenuItem from '@mui/material/MenuItem';
-import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import NextLink from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
 
 export default function HeroNavbar({ showLogin = true }) {
   const { user, logout, role } = useAuth();
   const [open, setOpen] = React.useState(false);
   const toggleDrawer = (newOpen: boolean) => () => setOpen(newOpen);
+  const pathname = usePathname();
+  const router = useRouter();
 
   const mainPageMapper = {
     [UserRole.ATHLETE]: LINK_GROUPS,
     [UserRole.TRAINER]: LINK_GROUPS,
     [UserRole.MANAGER]: LINK_GROUPS,
     [UserRole.ADMIN]: LINK_USERS,
+  };
+
+  const handleScrollOrRedirect = (id: string) => async () => {
+    if (pathname !== '/') {
+      router.push(`/#${id}`);
+    } else {
+      const section = document.getElementById(id);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    setOpen(false); // Close mobile drawer after selection
+  };
+
+  const handleLogoClick = () => {
+    if (pathname !== '/') {
+      router.push('/');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -50,7 +76,10 @@ export default function HeroNavbar({ showLogin = true }) {
             }}
           >
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-              <Logo width={52} height={35} version="narrow" />
+              {/* Logo Click Handler */}
+              <Box onClick={handleLogoClick} sx={{ cursor: 'pointer' }}>
+                <Logo width={52} height={35} version="narrow" />
+              </Box>
               <Box mr={4} />
 
               <Box
@@ -60,12 +89,14 @@ export default function HeroNavbar({ showLogin = true }) {
                 }}
               >
                 {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
-                  <MenuItem key={id} sx={{ py: 0, px: 2 }}>
-                    <NextLink href={`/public#${id}`} passHref>
-                      <Typography variant="body2" color="text.primary">
-                        {label}
-                      </Typography>
-                    </NextLink>
+                  <MenuItem
+                    key={id}
+                    sx={{ py: 0, px: 2 }}
+                    onClick={handleScrollOrRedirect(id)}
+                  >
+                    <Typography variant="body2" color="text.primary">
+                      {label}
+                    </Typography>
                   </MenuItem>
                 ))}
               </Box>
@@ -119,12 +150,14 @@ export default function HeroNavbar({ showLogin = true }) {
                   }}
                 >
                   {Object.values(LINKS_NAVBAR).map(({ id, label }) => (
-                    <MenuItem key={id} sx={{ p: 1 }}>
-                      <NextLink href={`/public#${id}`} passHref>
-                        <Typography variant="body2" color="text.primary">
-                          {label}
-                        </Typography>
-                      </NextLink>
+                    <MenuItem
+                      key={id}
+                      sx={{ p: 1 }}
+                      onClick={handleScrollOrRedirect(id)}
+                    >
+                      <Typography variant="body2" color="text.primary">
+                        {label}
+                      </Typography>
                     </MenuItem>
                   ))}
 

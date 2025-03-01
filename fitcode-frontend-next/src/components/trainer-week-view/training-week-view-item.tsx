@@ -30,24 +30,6 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
 
   return (
     <Box>
-      {isChanged && (
-        <IconButton
-          onClick={() => {
-            updateTraining(training, {
-              from: training.from,
-              to: training.to,
-              components: updatedComponents,
-            });
-
-            setIsChanged(false);
-          }}
-        >
-          <Tooltip title="Save Training">
-            <Save />
-          </Tooltip>
-        </IconButton>
-      )}
-
       {/* Training components */}
       <Box
         sx={{
@@ -91,13 +73,21 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
                 }}
                 style={{
                   color: '#fff',
-                  backgroundColor: '#303E4A',
+                  backgroundColor: '#263646',
                   border: 'none',
                   padding: '4px',
                   borderRadius: '4px',
                   textAlign: 'center',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'textfield',
                 }}
               />
+              <style jsx>{`
+                input[type='time']::-webkit-calendar-picker-indicator {
+                  filter: invert(1);
+                  cursor: pointer;
+                }
+              `}</style>
 
               {/* <input
                 type="time"
@@ -105,7 +95,7 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
                 onChange={(e) => onChange('to', e.target.value)}
                 style={{
                   color: '#fff',
-                  backgroundColor: '#303E4A',
+                  backgroundColor: 'background.default',
                   border: 'none',
                   padding: '4px',
                   borderRadius: '4px',
@@ -116,6 +106,23 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
           </Stack>
         ))}
       </Box>
+      {isChanged && (
+        <IconButton
+          onClick={() => {
+            updateTraining(training, {
+              from: training.from,
+              to: training.to,
+              components: updatedComponents,
+            });
+
+            setIsChanged(false);
+          }}
+        >
+          <Tooltip title="Save Training">
+            <Save />
+          </Tooltip>
+        </IconButton>
+      )}
     </Box>
   );
 }

@@ -54,6 +54,7 @@ export default function ProfilePage(props: ProfilePageProps) {
     const fetchProfile = async () => {
       try {
         const profile = await UserController.findProfile(token);
+        console.log('profile', profile);
         if (profile)
           setProfile({
             sport: profile.sport || '',
@@ -88,9 +89,6 @@ export default function ProfilePage(props: ProfilePageProps) {
       phone,
       birthDate,
     } = profile;
-
-    if (!firstName || !lastName || !phone)
-      return toast.error('Please fill in all fields');
 
     handleApiRequest(
       router,
@@ -141,6 +139,7 @@ export default function ProfilePage(props: ProfilePageProps) {
         input="image"
         label="Upload Profile Image"
         initialFileUrl={profile.profileImageUrl}
+        sx={{ maxWidth: 200, margin: 'auto', maxHeight: 150 }}
         onFileUpload={async (file) => {
           const path = `user/${user.uid}/${file.name}`;
           const url = await FirebaseStorageUtil.uploadFile(file, path);

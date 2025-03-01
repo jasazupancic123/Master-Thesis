@@ -103,6 +103,7 @@ export function TrainerDayViewProvider(
   }, [component, pagination.page]);
 
   const value: TrainerDayViewContextProps = {
+    exercises,
     members,
     component,
     setComponent,

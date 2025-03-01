@@ -66,6 +66,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               sx={{
                 textAlign: 'center',
                 p: 2,
+                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
               }}
             >
               {option.label[0].toUpperCase() + option.label.slice(1)}
@@ -125,7 +126,14 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             }}
           >
             {(state.values || []).map((value) => (
-              <MenuItem key={value} value={value} sx={{ textAlign: 'center' }}>
+              <MenuItem
+                key={value}
+                value={value}
+                sx={{
+                  textAlign: 'center',
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                }}
+              >
                 {state.format(value)}
               </MenuItem>
             ))}
@@ -147,6 +155,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               onChange({ ...state, value });
             }}
             sx={{
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
               mt: 0,
               width: '100%',
               bgcolor: 'transparent',

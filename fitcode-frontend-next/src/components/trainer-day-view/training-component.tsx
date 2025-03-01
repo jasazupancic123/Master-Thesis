@@ -58,12 +58,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 display="flex"
                 p={0}
                 justifyContent="space-between"
-                alignItems="flex-start"
+                alignItems="center"
                 flexDirection={screenSize.isMobile ? 'column' : 'row'}
-                mt={1}
                 width="100%"
               >
-                <Box display="flex" p={0}>
+                <Box display="flex" p={0} py={1}>
                   {trainingComponent.component &&
                     (() => {
                       const IconComponent =
@@ -144,14 +143,27 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             </Typography>
                           </Box>
 
-                          <Typography variant="caption" ml={2}>
-                            {commonService.date.formatTime(
-                              trainingComponent.from
-                            )}
-                          </Typography>
+                          {screenSize.isMobile ? (
+                            <Typography variant="caption" ml={2}>
+                              {commonService.date.formatTime(
+                                trainingComponent.from
+                              )}
+                            </Typography>
+                          ) : (
+                            <Typography variant="caption" ml={2}>
+                              {commonService.date.formatTime(
+                                trainingComponent.from
+                              )}{' '}
+                              -{' '}
+                              {commonService.date.formatTime(
+                                trainingComponent.to
+                              )}
+                            </Typography>
+                          )}
 
                           {screenSize.isMobile && (
                             <IconButton
+                              sx={{ m: 0, ml: 2 }}
                               onClick={() => {
                                 if (
                                   trainingComponent &&
@@ -180,12 +192,10 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                       );
                     })()}
                 </Box>
-
                 <Box
                   display="flex"
                   width={screenSize.isMobile ? '100%' : undefined}
                   p={0}
-                  mt={0.5}
                   mr={1}
                   alignItems="center"
                   flexDirection={screenSize.isMobile ? 'column' : 'row'}
@@ -200,7 +210,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           screenSize.isMobile ? 'column' : undefined
                         }
                         alignItems={screenSize.isMobile ? 'center' : undefined}
-                        mt={screenSize.isMobile ? 1 : undefined}
+                        mt={screenSize.isMobile ? 2.5 : 1.5}
                       >
                         <SelectInput<MainSet>
                           label={'Main Set'}
@@ -262,6 +272,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
                   {!screenSize.isMobile && (
                     <IconButton
+                      sx={{ p: 0 }}
                       onClick={() => {
                         if (
                           trainingComponent &&
@@ -297,6 +308,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               <Box
                 bgcolor="background.paper"
                 p={2}
+                pt={0}
                 px={
                   screenSize.isMobile || screenSize.isLandscapeMobile
                     ? 0

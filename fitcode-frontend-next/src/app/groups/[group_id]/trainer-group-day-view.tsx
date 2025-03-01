@@ -11,6 +11,7 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
+import { Training } from '@/controller/training/type/training.type';
 import { Save } from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GroupIcon from '@mui/icons-material/Group';
@@ -50,8 +51,14 @@ export default function TrainerDayView() {
     setCycle,
   } = useGroup();
 
-  const { members, training, setTraining, component, setSelectedSubgroup } =
-    useTrainerDayViewContext();
+  const {
+    training,
+    setTraining,
+    component,
+    setSelectedSubgroup,
+    selectedAthlete,
+    selectedSubgroup,
+  } = useTrainerDayViewContext();
 
   const router = useRouter();
   const [day, setDay] = useState<Day>(commonService.date.getToday());
@@ -133,12 +140,26 @@ export default function TrainerDayView() {
     if (!component) setSelectedSubgroup(null);
   }, [component]);
 
-  const todaysTrainings = filteredTrainings.filter((t) =>
-    commonService.date.isSameDay(day.date, dayjs(t.from))
+  const [todaysTrainings, setTodaysTrainings] = useState<Training[]>(
+    filteredTrainings.filter((t) =>
+      commonService.date.isSameDay(day.date, dayjs(t.from))
+    )
   );
 
-  const amTraining = todaysTrainings.find((t) => dayjs(t.from).hour() < 12);
-  const pmTraining = todaysTrainings.find((t) => dayjs(t.from).hour() >= 12);
+  const [amTraining, setAmTraining] = useState<Training | undefined>(
+    todaysTrainings.find((t) => dayjs(t.from).hour() < 12)
+  );
+  const [pmTraining, setPmTraining] = useState<Training | undefined>(
+    todaysTrainings.find((t) => dayjs(t.from).hour() >= 12)
+  );
+  useEffect(() => {
+    const newTodaysTrainings = filteredTrainings.filter((t) =>
+      commonService.date.isSameDay(day.date, dayjs(t.from))
+    );
+    setTodaysTrainings(newTodaysTrainings);
+    setAmTraining(newTodaysTrainings.find((t) => dayjs(t.from).hour() < 12));
+    setPmTraining(newTodaysTrainings.find((t) => dayjs(t.from).hour() >= 12));
+  }, [filteredTrainings]);
 
   useEffect(() => {
     setLoading(false);
@@ -161,7 +182,7 @@ export default function TrainerDayView() {
   return (
     <>
       {!screenSize.isSmallerThanLaptop && (
-        <Box position="absolute" top="50%" right={-5}>
+        <Box position="absolute" top="50%" right={0}>
           <FloatingButton
             label="Save training"
             onClick={handleUpdateTraining}
@@ -215,7 +236,9 @@ export default function TrainerDayView() {
                   fontSize: !screenSize.isDesktop ? 15 : 20,
                 }}
               >
-                {group.name}
+                {selectedAthlete?.displayName ||
+                  selectedSubgroup?.subgroup?.name ||
+                  group.name}
               </Typography>
             </Box>
             <Box

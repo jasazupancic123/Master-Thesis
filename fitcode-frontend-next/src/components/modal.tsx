@@ -18,8 +18,9 @@ export interface Props {
   onConfirm?: () => void;
   onDelete?: () => void;
   cancelText?: string;
-  width?: number;
+  width?: number | string;
   sx?: SxProps;
+  dialogueContentSx?: SxProps;
 }
 
 export default function MyModal(props: Props) {
@@ -35,6 +36,7 @@ export default function MyModal(props: Props) {
     width,
     sx,
     cancelText = 'Cancel',
+    dialogueContentSx,
   } = props;
 
   function handleClose() {
@@ -52,7 +54,10 @@ export default function MyModal(props: Props) {
       {isOpen && (
         <Dialog open={isOpen} onClose={handleClose} scroll="paper" sx={sx}>
           {title && <DialogTitle>{title}</DialogTitle>}
-          <DialogContent dividers sx={{ width, bgcolor: 'background.default' }}>
+          <DialogContent
+            dividers
+            sx={{ ...dialogueContentSx, width, bgcolor: 'background.default' }}
+          >
             {children}
 
             {actions}

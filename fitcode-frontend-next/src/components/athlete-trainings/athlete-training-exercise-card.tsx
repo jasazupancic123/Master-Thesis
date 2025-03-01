@@ -434,6 +434,41 @@ export default function AthleteTrainingExerciseCard(
                     </Box>
                   </CardContent>
                 </Box>
+              ) : statuses.find(
+                  (s) => s.componentId === c.id && s.trainingId === training.id
+                ) ? (
+                <Box
+                  key={`${c.id}`}
+                  width="100%"
+                  sx={{
+                    backgroundColor: 'rgb(56, 64, 70)',
+                    py: 1,
+                    borderTopRightRadius: i === 0 ? 5 : 0,
+                    borderBottomRightRadius: i === arr.length - 1 ? 5 : 0,
+                    borderBottomLeftRadius: i === arr.length - 1 ? 5 : 0,
+                    position: 'relative',
+                  }}
+                >
+                  <Box p={1} sx={{ position: 'absolute', right: 0, top: 5 }}>
+                    <CheckCircle color="success" />
+                  </Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      textTransform: 'uppercase',
+                      color: 'rgb(178, 180, 179)',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      px: 4,
+                      maxWidth: '100%', // Adjust width as needed
+                    }}
+                  >
+                    {c.id}
+                  </Typography>
+                </Box>
               ) : (
                 <Box
                   key={`${c.id}`}
@@ -450,15 +485,6 @@ export default function AthleteTrainingExerciseCard(
                     setSelectedComponent(c);
                   }}
                 >
-                  {statuses.find(
-                    (s) =>
-                      s.componentId === c.id && s.trainingId === training.id
-                  ) && (
-                    <Box p={1}>
-                      <CheckCircle color="success" />
-                    </Box>
-                  )}
-
                   <Typography
                     variant="h6"
                     sx={{

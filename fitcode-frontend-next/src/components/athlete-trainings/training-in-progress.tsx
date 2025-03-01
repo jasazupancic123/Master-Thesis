@@ -26,9 +26,10 @@ import {
   Fab,
   FormControl,
   Grid2,
-  MenuItem,
   Select,
   Typography,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -36,6 +37,8 @@ import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import Animation from '../animation';
 import MyModal from '../modal';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import dayjs from 'dayjs';
 
 interface TrainingInProgressProps {
   selectedTraining: Training;
@@ -69,6 +72,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     clearTrainingState,
     supersetIndex,
     setSupersetIndex,
+    startOfTraining,
+    setStartOfTraining,
     setView,
   } = useTraining();
 
@@ -93,6 +98,9 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const [openCancelTrainingModal, setOpenCancelTrainingModal] = useState(false);
   const [playAnimation, setPlayAnimation] = useState(true);
   const boxRef = useRef<HTMLDivElement | null>(null);
+
+  const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
 
   const { user } = useAuth();
 
@@ -133,7 +141,10 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       result.supersets.push({ exercises });
     }
 
-    if (trainingResult === null) setTrainingResult(result);
+    if (trainingResult === null) {
+      setTrainingResult(result);
+      setStartOfTraining(dayjs());
+    }
     setSupersets(usersSupersets);
 
     if (!supersetIndex) setSelectedSuperset(usersSupersets[0]);
@@ -141,13 +152,16 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   }, [selectedComponent]);
 
   useEffect(() => {
-    const startTime = Date.now();
+    if (!startOfTraining) return; // Ensure startOfTraining is set
+
+    const startTime = dayjs(startOfTraining).valueOf(); // Convert to timestamp
     const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      const now = dayjs().valueOf();
+      setElapsedTime(Math.floor((now - startTime) / 1000)); // Get seconds difference
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [startOfTraining]); // Re-run if startOfTraining changes
 
   const handleFinishTraining = async () => {
     if (!trainingResult) return toast.error('An error occurred');
@@ -223,12 +237,37 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   };
 
   const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return '00:00:00'; // Default to zero time if invalid
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m
-      .toString()
-      .padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpenMenu = (event: any) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const handleContinue = () => {
+    if (!supersets || !selectedSuperset) return;
+    handleCloseMenu();
+    if (supersets.indexOf(selectedSuperset) === supersets.length - 1) {
+      setOpenFinishTrainingModal(true);
+    } else {
+      setOpenNextSupersetModal(true);
+    }
+  };
+
+  const handleCancel = () => {
+    handleCloseMenu();
+    setOpenCancelTrainingModal(true);
   };
 
   return playAnimation ? (
@@ -278,12 +317,14 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         ref={boxRef}
         pt={1.5}
         width="100%"
+        flexGrow={1} // Ensures it expands
         display="flex"
         flexDirection="column"
         gap={3}
         sx={{
-          overflowY: screenSize.isLandscapeMobile ? undefined : 'scroll',
-          maxHeight: '100vh',
+          overflowY: 'auto', // Allow full scroll
+          height: 'calc(100vh - 150px)', // Adjust as needed
+          minHeight: 0, // Ensures it doesn't restrict child elements
         }}
       >
         {selectedSuperset.exercises.map((exercise, i) => (
@@ -337,17 +378,54 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                 justifyContent="center"
                 sx={{ mt: 1 }}
               >
-                <Image
-                  src="/deadlift.png"
-                  alt="Exercise Image"
-                  width={!screenSize.isMobile ? 200 : 170}
-                  height={0}
-                  style={{
-                    maxWidth: !screenSize.isMobile ? '200px' : '170px',
-                    height: 'auto', // Maintains aspect ratio dynamically
-                    borderRadius: 15,
-                  }}
-                />
+                {!exercise.exercise?.imageUrl && exercise.exercise?.videoUrl ? (
+                  //image is not available and video is available, display the video!
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    style={{
+                      width: 200,
+                      height: 100,
+                      objectFit: 'cover',
+                      padding: 5,
+                      borderRadius: 15,
+                    }}
+                  >
+                    <source
+                      src={exercise.exercise?.videoUrl}
+                      type="video/mp4"
+                    />
+                  </video>
+                ) : (
+                  <Image
+                    src={
+                      exercise.exercise?.imageUrl?.trim() ||
+                      '/fitcode_logo_transparent_square.png'
+                    }
+                    alt="Exercise Image"
+                    width={
+                      !screenSize.isMobile
+                        ? exercise.exercise?.imageUrl
+                          ? 200
+                          : 100
+                        : exercise.exercise?.imageUrl
+                          ? 170
+                          : 100
+                    }
+                    height={0}
+                    style={{
+                      maxWidth: !screenSize.isMobile ? '200px' : '170px',
+                      height: 'auto', // Maintains aspect ratio dynamically
+                      borderRadius: 15,
+                    }}
+                    onClick={() => {
+                      setOpenVideoPlayerModal(true);
+                      setVideoUrl(exercise.exercise?.videoUrl || '');
+                    }}
+                  />
+                )}
               </Grid2>
               <Grid2
                 size={6}
@@ -605,37 +683,48 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       <Fab
         sx={{
           backgroundColor: '#1EB980',
-          position: 'fixed',
-          bottom: 60,
-          right: 16,
-        }} // Adjust for mobile
-        onClick={() => {
-          if (supersets.indexOf(selectedSuperset) === supersets.length - 1) {
-            setOpenFinishTrainingModal(true);
-          } else {
-            setOpenNextSupersetModal(true);
-          }
-        }}
-      >
-        {supersets.indexOf(selectedSuperset) === supersets.length - 1 ? (
-          <DoneIcon />
-        ) : (
-          <ArrowForwardIcon />
-        )}
-      </Fab>
-      <Fab
-        sx={{
-          backgroundColor: 'error.main',
-          position: 'fixed',
+          position: 'absolute',
           bottom: 60,
           left: 16,
-        }} // Adjust for mobile
-        onClick={() => {
-          setOpenCancelTrainingModal(true);
+        }}
+        onClick={handleOpenMenu}
+      >
+        <MoreVertIcon />
+      </Fab>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleCloseMenu}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        PaperProps={{
+          sx: { mb: 1 }, // Adds a small margin between the FAB and menu
         }}
       >
-        {<CloseIcon />}
-      </Fab>
+        <MenuItem onClick={handleContinue}>
+          {supersets.indexOf(selectedSuperset) === supersets.length - 1 ? (
+            <>
+              <DoneIcon sx={{ marginRight: 1 }} />
+              Finish Training
+            </>
+          ) : (
+            <>
+              <ArrowForwardIcon sx={{ marginRight: 1 }} />
+              Next Superset
+            </>
+          )}
+        </MenuItem>
+        <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
+          <CloseIcon sx={{ marginRight: 1 }} />
+          Cancel Training
+        </MenuItem>
+      </Menu>
       <MyModal
         isOpen={openNextSupersetModal}
         setIsOpen={(open) => setOpenNextSupersetModal(open)}
@@ -684,6 +773,34 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
           Cancel Training?
         </Typography>
+      </MyModal>
+      <MyModal
+        isOpen={openVideoPlayerModal}
+        setIsOpen={(open) => setOpenVideoPlayerModal(open)}
+        cancelText="Close"
+        onCancel={() => {
+          setVideoUrl('');
+          setOpenVideoPlayerModal(false);
+        }}
+        sx={{ p: videoUrl.length > 0 ? 0 : undefined }}
+        dialogueContentSx={{ p: videoUrl.length > 0 ? 0 : undefined }}
+      >
+        {videoUrl.length > 0 ? (
+          <Box
+            component="video"
+            src={videoUrl}
+            controls
+            autoPlay
+            muted
+            loop
+            sx={{
+              width: '100%', // Make it responsive
+              maxWidth: screenSize.isLandscapeMobile ? 400 : 600, // Limit max width
+            }}
+          />
+        ) : (
+          <Typography variant="body2">No video available</Typography>
+        )}
       </MyModal>
     </Box>
   ) : (
