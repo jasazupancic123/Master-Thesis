@@ -9,7 +9,7 @@ import { Group } from '@/controller/group/type/group.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
-import { User } from '@/controller/user/type/user.type';
+import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
@@ -49,6 +49,7 @@ export type GroupContextProps = GroupIdPageProps & {
 };
 
 export type TrainerDayViewContextProps = {
+  members: UserEntity[]; // group members
   training: Training | undefined;
   exercises: Exercise[];
   setTraining: SetStateNullable<Training>;

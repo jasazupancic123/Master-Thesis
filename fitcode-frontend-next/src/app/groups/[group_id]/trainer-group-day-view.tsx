@@ -437,12 +437,20 @@ export default function TrainerDayView() {
           </Box>
         ) : (
           <>
-            {amTraining && (
+            {!training && amTraining && (
               <TrainingCard day={day} training={amTraining} period="AM" />
             )}
 
-            {pmTraining && (
+            {!training && pmTraining && (
               <TrainingCard day={day} training={pmTraining} period="PM" />
+            )}
+
+            {training && (
+              <TrainingCard
+                day={day}
+                training={training}
+                period={amTraining ? 'AM' : 'PM'}
+              />
             )}
           </>
         )}
