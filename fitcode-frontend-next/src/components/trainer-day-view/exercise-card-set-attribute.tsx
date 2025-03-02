@@ -50,12 +50,16 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             const option = options.find((option) => option.label === value);
             if (!option) return;
 
+            const values = option.values
+              ? [...option.values.filter((v) => v.length > 0)]
+              : undefined;
+
             onChange({
               ...option,
               option: value,
               type: option.type,
               values: option.values ?? [],
-              value: option.values ? option.values[0].toString() : '10',
+              value: values ? values.toString() : '10',
             } as SetExerciseState);
           }}
         >

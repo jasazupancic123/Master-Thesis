@@ -165,7 +165,7 @@ export class UserWorkloadService {
       const { exercises, bodyweight, history } = membersMap[userId];
 
       for (const exercise of exercises) {
-        const { workloadType, workloadValue, sets, setType, setTypeValue } =
+        const { workloadType, workloadValue, set, setType, setTypeValue } =
           exercise.meta;
 
         const setData = history // filter workload history for selected user and exercise
@@ -184,7 +184,7 @@ export class UserWorkloadService {
           trainingId: training.id,
           componentId: exercise.componentId,
           exerciseId: exercise.id,
-          sets,
+          sets: set,
           setType,
           setTypeValue,
           workloadType,

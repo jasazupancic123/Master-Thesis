@@ -12,7 +12,7 @@ export class ExerciseMeta {
   @Min(0)
   @ApiProperty()
   @Expose()
-  sets: number;
+  set: number; // number of sets
 
   @IsEnum(SetType)
   @ApiProperty()
