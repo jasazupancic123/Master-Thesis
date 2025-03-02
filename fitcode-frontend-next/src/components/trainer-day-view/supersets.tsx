@@ -459,7 +459,7 @@ export default function Supersets(props: SupersetsProps) {
               id,
               exercise: allExercises.find((e) => e.id === id),
               meta: {
-                sets: 3,
+                set: 3,
                 setType: SetType.REPS,
                 setTypeValue: 12,
                 workloadType: WorkloadType.KG,

@@ -211,19 +211,20 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           <SetExerciseAttribute
             options={SET}
             state={(() => {
-              const option = SET.find((option) => option.label === 'sets')!;
+              const option = SET.find((option) => option.label === 'set')!;
+
               return {
                 type: option.type,
                 label: option.label,
                 values: option.values,
                 option: option.label as keyof ExerciseMeta,
                 format: option.format,
-                value: state.sets.toString() ?? option.values![1].toString(),
+                value: state.set.toString() ?? option.values![1].toString(),
               };
             })()}
             onChange={(state) => {
               const sets = parseInt(state.value);
-              updateSelectedTraining([{ field: 'sets', value: sets }]);
+              updateSelectedTraining([{ field: 'set', value: sets }]);
             }}
           />
         </Grid2>
