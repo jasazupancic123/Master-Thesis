@@ -129,7 +129,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           meta: [] as WorkloadData[],
         };
 
-        for (let i = 0; i < exercise.meta.sets; i++)
+        for (let i = 0; i < exercise.meta.set; i++)
           exerciseObject.meta.push({
             setTypeValue: exercise.meta.setTypeValue,
             workloadValue: exercise.meta.workloadValue,
@@ -471,7 +471,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                       </Typography>
                     </Grid2>
                   </Grid2>
-                  {Array.from({ length: exercise.meta.sets }, (_, index) => (
+                  {Array.from({ length: exercise.meta.set }, (_, index) => (
                     <Grid2
                       container
                       size={12}

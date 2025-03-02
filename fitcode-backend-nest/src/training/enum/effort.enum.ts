@@ -1,6 +1,6 @@
 export enum Effort {
   EASY = 'easy',
-  MODERATE = 'moderate',
+  MODERATE = 'mod',
   HARD = 'hard',
   MAX = 'max',
 }

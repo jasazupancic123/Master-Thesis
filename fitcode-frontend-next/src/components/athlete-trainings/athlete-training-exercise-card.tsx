@@ -276,9 +276,9 @@ export default function AthleteTrainingExerciseCard(
                                           disabled={true}
                                           state={(() => {
                                             const option = SET.find(
-                                              (option) =>
-                                                option.label === 'sets'
+                                              (option) => option.label === 'set'
                                             )!;
+
                                             return {
                                               type: option.type,
                                               label: option.label,
@@ -289,7 +289,7 @@ export default function AthleteTrainingExerciseCard(
                                               value:
                                                 states[
                                                   exerciseIndex
-                                                ].sets.toString() ??
+                                                ].set.toString() ??
                                                 option.values![1].toString(),
                                             };
                                           })()}

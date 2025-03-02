@@ -116,25 +116,23 @@ export class TrainingService {
         this.firebaseService.isTrainer(user) ||
         this.firebaseService.isManager(user)
       )
-        q.where('ownerId', '==', user.uid);
+        q = q.where('ownerId', '==', user.uid);
       else if (this.firebaseService.isAthlete(user)) {
         if (dbUser?.groupsIds?.length === 0) return q;
         else
-          q.where('groupId', 'in', dbUser.groupsIds).where(
-            'membersIds',
-            'array-contains',
-            user.uid,
-          );
+          q = q
+            .where('groupId', 'in', dbUser.groupsIds)
+            .where('membersIds', 'array-contains', user.uid);
       }
 
       // filter by other params
       if (filter?.groupId?.value)
-        q.where('groupId', '==', filter.groupId.value);
+        q = q.where('groupId', '==', filter.groupId.value);
 
       if (filter?.cycleId?.value)
-        q.where('cycleId', '==', filter.cycleId.value);
+        q = q.where('cycleId', '==', filter.cycleId.value);
 
-      q.orderBy('from', 'asc');
+      q = q.orderBy('from', 'asc');
       return q;
     });
 
@@ -378,31 +376,28 @@ export class TrainingService {
     input.from = input.components[0].from;
     input.to = input.components[training.components.length - 1].from;
 
-    if (isAfter(new Date(), training.from)) {
-      this.logger.log(
-        `Upcomming training, updating user meta and recalculating workloads`,
-      );
+    /* if (isAfter(new Date(), training.from)) { */
 
-      // for future trainings, update latest meta and calculate workloads
-      const meta = await this.userService.getLastMetas(training.membersIds);
-      await this.trainingRepository.updateDoc(ref.trainingId, {
-        ...input,
-        meta,
-      });
+    // for future trainings, update latest meta and calculate workloads
+    const meta = await this.userService.getLastMetas(training.membersIds);
+    await this.trainingRepository.updateDoc(ref.trainingId, {
+      ...input,
+      meta,
+    });
 
-      // create user workloads
-      const workloads = await this.userWorkloadService.findAllByMembers(
-        training.membersIds,
-      );
+    // create user workloads
+    const workloads = await this.userWorkloadService.findAllByMembers(
+      training.membersIds,
+    );
 
-      const batch = this.firebaseService.firestore.batch();
-      const updated: Training = { ...training, ...input };
-      this.userWorkloadService.createForTraining(batch, updated, workloads);
-      await batch.commit();
-    } else {
+    const batch = this.firebaseService.firestore.batch();
+    const updated: Training = { ...training, ...input };
+    this.userWorkloadService.createForTraining(batch, updated, workloads);
+    await batch.commit();
+    /* } else {
       // for past trainings, don't update meta and workloads
       await this.trainingRepository.updateDoc(ref.trainingId, input);
-    }
+    } */
 
     return { ...training, ...this.commonService.object.clean(input) };
   }

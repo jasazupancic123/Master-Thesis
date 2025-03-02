@@ -43,9 +43,6 @@ export default function ProfilePage(props: ProfilePageProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  console.log('profile', profile);
-  console.log('dayjs(profile?.birthDate)', profile?.birthDate);
-
   useEffect(() => {
     if (!user) return;
 
