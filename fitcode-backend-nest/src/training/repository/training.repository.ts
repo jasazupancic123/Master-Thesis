@@ -25,7 +25,6 @@ export class TrainingRepository
     query: (query: Query) => Query = (query) => query,
   ): Promise<Training[]> {
     const snapshot = await query(this.collection()).get();
-
     return snapshot.docs.map((doc) =>
       this.firebaseService.serialize(doc.data() as FirestoreEntity<Training>),
     );

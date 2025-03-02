@@ -55,6 +55,12 @@ export default function FileUpload(props: Props) {
       maxFiles: 1,
     });
 
+  useEffect(() => {
+    if (initialFileUrl) {
+      setPreview((prev) => ({ ...prev, url: initialFileUrl }));
+    }
+  }, [initialFileUrl]);
+
   /**
    * Clean up the previewUrl when the component unmounts
    */

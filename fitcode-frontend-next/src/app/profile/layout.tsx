@@ -11,7 +11,7 @@ export default function Layout({ children }: ChildrenProps) {
         <SidebarAthlete />
 
         <Container component="main" maxWidth="lg">
-          <Box mt="64px">{children}</Box>
+          <Box mt="10px">{children}</Box>
         </Container>
       </AthleteProvider>
     </Box>

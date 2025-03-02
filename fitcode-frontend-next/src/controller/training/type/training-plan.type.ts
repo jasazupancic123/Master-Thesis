@@ -30,7 +30,7 @@ export type TrainingExercise = IdEntity &
   };
 
 export type ExerciseMeta = {
-  sets: number;
+  set: number;
   setType: SetType;
   setTypeValue: number;
   workloadType: WorkloadType;

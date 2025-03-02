@@ -28,25 +28,20 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { ProfilePageProps } from './type';
+import { useAuth } from '@/context/auth-provider';
 
 const DEFAULT_MARGIN = 1;
 
 export default function ProfilePage(props: ProfilePageProps) {
   const { token, user } = props;
 
+  const { profile: profileGlobal, setProfile: setProfileGlobal } = useAuth();
+  const [profile, setProfile] = useState<UserEntity>({
+    ...profileGlobal,
+  } as UserEntity);
   const router = useRouter();
   const screenSize = useScreenSize();
   const theme = useTheme();
-  const [profile, setProfile] = useState({
-    sport: '',
-    level: undefined as SportLevel | undefined,
-    gender: undefined as Gender | undefined,
-    profileImageUrl: undefined as string | undefined,
-    firstName: '',
-    lastName: '',
-    phone: '',
-    birthDate: null as Dayjs | null,
-  });
 
   useEffect(() => {
     if (!user) return;
@@ -54,18 +49,7 @@ export default function ProfilePage(props: ProfilePageProps) {
     const fetchProfile = async () => {
       try {
         const profile = await UserController.findProfile(token);
-        console.log('profile', profile);
-        if (profile)
-          setProfile({
-            sport: profile.sport || '',
-            level: (profile.level as SportLevel) || SportLevel.BEGINNER,
-            gender: profile.gender || undefined,
-            profileImageUrl: profile.profileImageUrl || undefined,
-            firstName: profile.firstName || '',
-            lastName: profile.lastName || '',
-            phone: profile.phone || '',
-            birthDate: profile.birthDate ? dayjs(profile.birthDate) : null,
-          });
+        if (profile) setProfile(profile);
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -74,11 +58,16 @@ export default function ProfilePage(props: ProfilePageProps) {
     fetchProfile();
   }, [user, token]);
 
-  function handleChangeProfile(key: keyof UserEntity, value: any) {
-    setProfile((prev) => ({ ...prev, [key]: value }));
+  function handleChangeProfile<K extends keyof UserEntity>(
+    key: K,
+    value: UserEntity[K]
+  ) {
+    const newProfile = { ...profile, [key]: value };
+    setProfile(newProfile as UserEntity);
   }
 
   async function handleSaveProfile() {
+    if (!profile) return;
     const {
       sport,
       level,
@@ -101,9 +90,10 @@ export default function ProfilePage(props: ProfilePageProps) {
           firstName,
           lastName,
           phone,
-          birthDate: birthDate?.toDate(),
+          birthDate,
         }),
       (_) => {
+        setProfileGlobal(profile);
         toast.success('Profile updated successfully');
       },
       undefined,
@@ -138,12 +128,13 @@ export default function ProfilePage(props: ProfilePageProps) {
       <FileUpload
         input="image"
         label="Upload Profile Image"
-        initialFileUrl={profile.profileImageUrl}
+        initialFileUrl={profile?.profileImageUrl || undefined}
         sx={{ maxWidth: 200, margin: 'auto', maxHeight: 150 }}
         onFileUpload={async (file) => {
           const path = `user/${user.uid}/${file.name}`;
           const url = await FirebaseStorageUtil.uploadFile(file, path);
-          setProfile((prev) => ({ ...prev, profileImageUrl: url }));
+          const newProfile = { ...profile, profileImageUrl: url };
+          setProfile(newProfile as UserEntity);
         }}
       />
 
@@ -153,7 +144,7 @@ export default function ProfilePage(props: ProfilePageProps) {
           label={!profile.firstName ? 'First Name' : undefined}
           variant="outlined"
           sx={{ flex: 1 }}
-          value={profile.firstName}
+          value={profile?.firstName}
           onChange={(e) => handleChangeProfile('firstName', e.target.value)}
         />
 
@@ -161,7 +152,7 @@ export default function ProfilePage(props: ProfilePageProps) {
           label={!profile.lastName ? 'Last Name' : undefined}
           variant="outlined"
           sx={{ flex: 1 }}
-          value={profile.lastName}
+          value={profile?.lastName}
           onChange={(e) => handleChangeProfile('lastName', e.target.value)}
         />
       </Box>
@@ -171,7 +162,7 @@ export default function ProfilePage(props: ProfilePageProps) {
         <FormControl sx={{ flex: 1, mr: DEFAULT_MARGIN }}>
           <InputLabel>Gender</InputLabel>
           <Select
-            value={profile.gender ?? ''} // Use nullish coalescing (??) to allow empty value
+            value={profile?.gender ?? ''} // Use nullish coalescing (??) to allow empty value
             label="Gender"
             onChange={(e) =>
               handleChangeProfile('gender', e.target.value as Gender)
@@ -192,8 +183,10 @@ export default function ProfilePage(props: ProfilePageProps) {
         <LocalizationProvider dateAdapter={AdapterDayjs as any}>
           <DatePicker
             label="Date of Birth"
-            value={profile.birthDate || null}
-            onChange={(newValue) => handleChangeProfile('birthDate', newValue)}
+            value={profile?.birthDate ? dayjs(profile?.birthDate) : null}
+            onChange={(newValue) =>
+              handleChangeProfile('birthDate', newValue?.toDate())
+            }
             format="DD/MM/YYYY"
             slotProps={{ textField: { fullWidth: true } }}
             sx={{ flex: 1 }}
@@ -203,8 +196,8 @@ export default function ProfilePage(props: ProfilePageProps) {
 
       {/* Phone Number Input */}
       <TextField
-        label={!profile.phone ? 'Phone number' : undefined}
-        value={profile.phone}
+        label={!profile?.phone ? 'Phone Number' : undefined}
+        value={profile?.phone}
         variant="outlined"
         type="tel" // Triggers numeric keyboard on mobile
         inputProps={{ pattern: '[0-9]*' }}
@@ -216,7 +209,7 @@ export default function ProfilePage(props: ProfilePageProps) {
         <FormControl sx={{ flex: 1 }}>
           <InputLabel>Sport</InputLabel>
           <Select
-            value={profile.sport}
+            value={profile?.sport}
             label="Sport"
             onChange={(e) => handleChangeProfile('sport', e.target.value)}
           >
@@ -230,7 +223,7 @@ export default function ProfilePage(props: ProfilePageProps) {
         <FormControl sx={{ flex: 1 }}>
           <InputLabel>Sport Level</InputLabel>
           <Select
-            value={profile.level ?? ''}
+            value={profile?.level ?? ''}
             label="Sport Level"
             onChange={(e) =>
               handleChangeProfile('level', e.target.value as SportLevel)

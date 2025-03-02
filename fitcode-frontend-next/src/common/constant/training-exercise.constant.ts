@@ -14,14 +14,14 @@ function getValues(length: number, hop: number = 1) {
 
 export const SET_OPTIONS: SetExerciseOption = {
   type: 'select',
-  label: 'sets',
+  label: 'set',
   values: getValues(10),
   format: (value) => value,
 };
 
 export const REP_OPTIONS: SetExerciseOption = {
   type: 'select',
-  label: 'reps',
+  label: 'rep',
   values: getValues(20),
   format: (value) => value,
 };
@@ -83,7 +83,7 @@ export const TEMPO_OPTIONS: SetExerciseOption = {
 export const EFFORT_OPTIONS: SetExerciseOption = {
   type: 'select',
   label: 'eff',
-  values: ['easy', 'moderate', 'hard', 'max'],
+  values: ['easy', 'mod', 'hard', 'max'],
   format: (value) => value,
 };
 
