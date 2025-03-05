@@ -3,5 +3,5 @@ import { Component } from '../entity/component.entity';
 
 export class CreateComponentDto extends PickType(Component, [
   'name',
-  'parent',
+  'parentId',
 ] as const) {}

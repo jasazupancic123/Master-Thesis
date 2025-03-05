@@ -4,7 +4,6 @@ import { readFile } from 'node:fs/promises';
 import { ComponentService } from 'src/component/component.service';
 import { Component } from 'src/component/entity/component.entity';
 import { Exercise } from 'src/exercise/entity/exercise.entity';
-import { ExerciseAttributeService } from 'src/exercise/service/exercise-attribute.service';
 import { ExerciseService } from 'src/exercise/service/exercise.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { Group } from 'src/group/entity/group.entity';
@@ -19,12 +18,12 @@ import { FirestoreCollection } from '../enum/firestore-collection.enum';
 import { User } from '../type/firebase-auth.type';
 import { DatabaseSchema } from '../type/firestore.type';
 import { BaseSetup } from './base.setup';
+import { BodyRegion } from 'src/exercise/enum/body-region';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
   private readonly userService: UserService;
   private readonly componentService: ComponentService;
-  private readonly exerciseAttributeService: ExerciseAttributeService;
   private readonly exerciseService: ExerciseService;
   private readonly groupService: GroupService;
   private readonly trainingService: TrainingService;
@@ -35,7 +34,6 @@ export class DataSetup extends BaseSetup {
     this.firebaseService = app.get(FirebaseService);
     this.userService = app.get(UserService);
     this.componentService = app.get(ComponentService);
-    this.exerciseAttributeService = app.get(ExerciseAttributeService);
     this.exerciseService = app.get(ExerciseService);
     this.groupService = app.get(GroupService);
     this.trainingService = app.get(TrainingService);
@@ -69,10 +67,6 @@ export class DataSetup extends BaseSetup {
     // delete all data
     await this.firebaseService.deleteCollection(FirestoreCollection.GROUP);
     await this.firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await this.firebaseService.deleteCollection(
-      FirestoreCollection.EXERCISE_ATTRIBUTE,
-    );
-
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
 
     const foundUsers = await this.userService.findAll();
@@ -112,20 +106,6 @@ export class DataSetup extends BaseSetup {
     );
 
     this.logger.debug(`Successfully imported ${components.length} components`);
-
-    // import exercise attributes
-    const exerciseAttributes =
-      data[FirestoreCollection.EXERCISE_ATTRIBUTE] || [];
-
-    await Promise.all(
-      exerciseAttributes.map((attribute) =>
-        this.exerciseAttributeService.create(attribute),
-      ),
-    );
-
-    this.logger.debug(
-      `Successfully imported ${exerciseAttributes.length} exercise attributes`,
-    );
 
     // import users
     const usersData =
@@ -203,7 +183,8 @@ export class DataSetup extends BaseSetup {
 
         await this.exerciseService.create(user, {
           name: exercise.name,
-          componentsIds: [component.id],
+          componentId: component.id,
+          bodyRegion: BodyRegion.Core,
           attributeValues: exercise.attributes,
         });
       }

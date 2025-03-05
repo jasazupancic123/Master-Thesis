@@ -11,16 +11,9 @@
           "name": "Squats",
           "component": "concentric",
           "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Lower Body",
-            "sport-task": "Jump",
-            "method": "Power",
-            "muscle": "Quadriceps",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
+            "priority": "main",
             "equipment": {
-              "strength": "Barbells"
+              "strength": "barbells"
             }
           }
         },
@@ -28,15 +21,9 @@
           "name": "Deadlifts",
           "component": "concentric",
           "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Total Body",
-            "method": "Hypertrophy",
-            "muscle": "Hamstrings",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
+            "priority": "main",
             "equipment": {
-              "strength": "Barbells"
+              "strength": "barbells"
             }
           }
         },
@@ -44,15 +31,9 @@
           "name": "Bench Press",
           "component": "concentric",
           "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Upper Body",
-            "method": "Hypertrophy",
-            "muscle": "Pectoralis Major",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
+            "priority": "main",
             "equipment": {
-              "strength": "Barbells"
+              "strength": "barbells"
             }
           }
         },
@@ -60,77 +41,42 @@
           "name": "High Plank Reach",
           "component": "shoulder",
           "attributes": {
-            "priority": "Assistance Lift",
-            "body-region": "Core",
-            "muscle": "Transversus Abdominis",
-            "location": "Home",
-            "warm-up": true
+            "priority": "main"
           }
         },
         {
           "name": "Power Clean",
           "component": "olympic-lifts",
           "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Total Body",
-            "sport-task": "Jump",
-            "method": "Power",
-            "muscle": "Hamstrings",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
-            "equipment": {
-              "strength": "Barbells"
-            }
+            "priority": "main"
           }
         },
         {
           "name": "Sprint",
           "component": "peak-speed",
           "attributes": {
-            "body-region": "Total Body",
-            "sport-task": "Acceleration",
-            "method": "Explosive Strength",
-            "muscle": "Hamstrings",
-            "location": "Outdoor",
-            "movement-direction": "Linear",
-            "warm-up": true
+            "priority": "main"
           }
         },
         {
           "name": "Sleed Acceleration",
           "component": "generic",
           "attributes": {
-            "body-region": "Total Body",
-            "sport-task": "Acceleration",
-            "method": "Explosive Strength",
-            "muscle": "Hamstrings",
-            "location": "Outdoor",
-            "movement-direction": "Linear",
-            "warm-up": true
+            "priority": "main"
           }
         },
         {
           "name": "Jogging",
           "component": "aerobic-capacity",
           "attributes": {
-            "body-region": "Total Body",
-            "muscle": "Hamstrings",
-            "location": "Outdoor",
-            "movement-direction": "Linear",
-            "warm-up": true,
-            "cool-down": true
+            "priority": "main"
           }
         },
         {
           "name": "Bicep Stretching",
           "component": "passive-stretching",
           "attributes": {
-            "body-region": "Upper Body",
-            "muscle": "Biceps Brachii",
-            "location": "Home",
-            "movement-direction": "Linear",
-            "cool-down": true
+            "priority": "main"
           }
         }
       ]
@@ -153,16 +99,9 @@
           "name": "Power Snatch",
           "component": "olympic-lifts",
           "attributes": {
-            "priority": "Main Lift",
-            "body-region": "Total Body",
-            "sport-task": "Jump",
-            "method": "Power",
-            "muscle": "Hamstrings",
-            "location": "Gym",
-            "movement-direction": "Linear",
-            "warm-up": true,
+            "priority": "main",
             "equipment": {
-              "strength": "Barbells"
+              "strength": "barbells"
             }
           }
         }
@@ -175,131 +114,12 @@
             "john.doe@mail.com",
             "mike.tyson@mail.com",
             "bruce.lee@mail.com"
-          ],
-          "cycles": [
-            {
-              "name": "Preseason",
-              "description": "Preseason training",
-              "trainings": [
-                {
-                  "components": [
-                    {
-                      "component": "strength",
-                      "supersets": [
-                        {
-                          "exercises": [
-                            {
-                              "exercise": "Squats",
-                              "meta": {
-                                "sets": 4,
-                                "setType": "reps",
-                                "setTypeValue": 8,
-                                "workloadType": "kg",
-                                "workloadValue": 100
-                              }
-                            },
-                            {
-                              "exercise": "Bench Press",
-                              "meta": {
-                                "sets": 3,
-                                "setType": "reps",
-                                "setTypeValue": 5,
-                                "workloadType": "kg",
-                                "workloadValue": 60
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "component": "speed",
-                      "supersets": [
-                        {
-                          "exercises": [
-                            {
-                              "exercise": "Sprint",
-                              "meta": {
-                                "sets": 4,
-                                "setType": "distance",
-                                "setTypeValue": 20,
-                                "workloadType": "int",
-                                "workloadValue": 5
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Competition",
-              "description": "In-season training",
-              "trainings": [
-                {
-                  "components": [
-                    {
-                      "component": "strength",
-                      "supersets": [
-                        {
-                          "exercises": [
-                            {
-                              "exercise": "Squats",
-                              "meta": {
-                                "sets": 1,
-                                "setType": "reps",
-                                "setTypeValue": 5,
-                                "workloadType": "kg",
-                                "workloadTypeValue": 50
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "components": [
-                    {
-                      "component": "speed",
-                      "supersets": [
-                        {
-                          "exercises": [
-                            {
-                              "exercise": "Sprint",
-                              "meta": {
-                                "sets": 2,
-                                "setType": "distance",
-                                "setTypeValue": 5,
-                                "workloadType": "int",
-                                "workloadTypeValue": 1
-                              }
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Bulking",
-              "description": "Off-season training",
-              "trainings": []
-            }
           ]
         },
         {
-          "ownerMail": "trainer@mail.com",
+          "owner": "trainer@mail.com",
           "name": "Volleyball U23 Women",
-          "membersEmails": ["janja.garnbret@mail.com", "the.rock@mail.com"],
-          "subgroups": [],
-          "cycles": []
+          "membersEmails": ["janja.garnbret@mail.com", "the.rock@mail.com"]
         }
       ]
     },
@@ -343,6 +163,77 @@
     {
       "name": "Strength",
       "slug": "strength",
+      "attributes": [
+        {
+          "field": "prescription",
+          "name": "Prescription",
+          "type": "select",
+          "values": [
+            {"field": "elbil", "name": "EL BIL"},
+            {"field": "eluni", "name": "EL UNI"},
+            {"field": "inebil", "name": "INE BIL"},
+            {"field": "ineuni", "name": "INE UNI"}
+          ]
+        },
+        { 
+          "field": "priority",
+          "name": "Exercise Priority",
+          "type": "select",
+          "values": [
+            {"field": "main", "name": "Main Lift"},
+            {"field": "sup", "name": "Supplemental Lift"},
+            {"field": "as", "name": "Assistance Lift"}
+          ]
+        },
+        {
+          "field": "equipment",
+          "name": "Equipment Category",
+          "type": "select",
+          "values": [
+            {
+              "field": "cardio",
+              "name": "Cardio Equipment",
+              "values": [
+                {"field": "treadmills", "name": "Treadmills"},
+                {"field": "ellipticals", "name": "Ellipticals"},
+                {"field": "exercise-bikes", "name": "Exercise Bikes"},
+                {"field": "rowing-machines", "name": "Rowing Machines"},
+                {"field": "stair-climbers", "name": "Stair Climbers"}
+              ]
+            },
+            {
+              "field": "strength",
+              "name": "Strength Training Equipment",
+              "values": [
+                {"field": "barbells", "name": "Barbells"},
+                {"field": "olympic", "name": "Olympic Barbells"},
+                {"field": "ez", "name": "EZ Curl Bars"},
+                {"field": "tricep", "name": "Tricep Bars"}
+              ]
+            }
+          ]
+        }
+      ],
+      "setTypeParams": [
+        { "field": "rep", "name": "Rep", "unit": "" },
+        { "field": "dist", "name": "Distance", "unit": "m" },
+        { "field": "time", "name": "Time", "unit": "s" }
+      ],
+      "workloadTypeParams": [
+        { "field": "kg", "name": "KG" },
+        { "field": "rm", "name": "RM" },
+        { "field": "bw", "name": "BW" }
+      ],
+      "params": [
+        { 
+          "name": "tempo", 
+          "type": "select", 
+          "values": [
+            { "field": "fast", "name": "1-0-1" },
+            { "field": "slow", "name": "4-0-4" }
+          ]
+        }
+      ],
       "children": [
         {
           "name": "Power",
@@ -483,6 +374,44 @@
     {
       "name": "Speed",
       "slug": "speed",
+      "attributes": [
+        {
+          "field": "prescription",
+          "name": "Prescription",
+          "type": "select",
+          "values": [
+            {"field": "elbil", "name": "EL BIL"},
+            {"field": "eluni", "name": "EL UNI"},
+            {"field": "inebil", "name": "INE BIL"},
+            {"field": "ineuni", "name": "INE UNI"}
+          ]
+        },
+        { 
+          "field": "priority",
+          "name": "Exercise Priority",
+          "type": "select",
+          "values": [
+            {"field": "main", "name": "Main Lift"},
+            {"field": "sup", "name": "Supplemental Lift"},
+            {"field": "as", "name": "Assistance Lift"}
+          ]
+        }
+      ],
+      "setTypeParams": [
+        { "field": "dist", "name": "Distance", "unit": "m" },
+        { "field": "time", "name": "Time", "unit": "s" }
+      ],
+      "workloadTypeParams": [],
+      "params": [
+        { 
+          "name": "tempo", 
+          "type": "select", 
+          "values": [
+            { "field": "fast", "name": "1-0-1" },
+            { "field": "slow", "name": "4-0-4" }
+          ]
+        }
+      ],
       "children": [
         {
           "name": "Acceleration",
@@ -552,6 +481,47 @@
     {
       "name": "Endurance",
       "slug": "endurance",
+      "attributes": [
+        {
+          "field": "prescription",
+          "name": "Prescription",
+          "type": "select",
+          "values": [
+            {"field": "elbil", "name": "EL BIL"},
+            {"field": "eluni", "name": "EL UNI"},
+            {"field": "inebil", "name": "INE BIL"},
+            {"field": "ineuni", "name": "INE UNI"}
+          ]
+        },
+        { 
+          "field": "priority",
+          "name": "Exercise Priority",
+          "type": "select",
+          "values": [
+            {"field": "main", "name": "Main Lift"},
+            {"field": "sup", "name": "Supplemental Lift"},
+            {"field": "as", "name": "Assistance Lift"}
+          ]
+        }
+      ],
+      "setTypeParams": [
+        { "field": "rep", "name": "Rep", "unit": "" },
+        { "field": "dist", "name": "Distance", "unit": "m" },
+        { "field": "time", "name": "Time", "unit": "s" }
+      ],
+      "workloadTypeParams": [
+        { "field": "kg", "name": "KG" }
+      ],
+      "params": [
+        { 
+          "name": "tempo", 
+          "type": "select", 
+          "values": [
+            { "field": "fast", "name": "1-0-1" },
+            { "field": "slow", "name": "4-0-4" }
+          ]
+        }
+      ],
       "children": [
         {
           "name": "Aerobic Capacity",
@@ -578,6 +548,49 @@
     {
       "name": "Coordination",
       "slug": "coordination",
+      "attributes": [
+        {
+          "field": "prescription",
+          "name": "Prescription",
+          "type": "select",
+          "values": [
+            {"field": "elbil", "name": "EL BIL"},
+            {"field": "eluni", "name": "EL UNI"},
+            {"field": "inebil", "name": "INE BIL"},
+            {"field": "ineuni", "name": "INE UNI"}
+          ]
+        },
+        { 
+          "field": "priority",
+          "name": "Exercise Priority",
+          "type": "select",
+          "values": [
+            {"field": "main", "name": "Main Lift"},
+            {"field": "sup", "name": "Supplemental Lift"},
+            {"field": "as", "name": "Assistance Lift"}
+          ]
+        }
+      ],
+      "setTypeParams": [
+        { "field": "rep", "name": "Rep", "unit": "" },
+        { "field": "dist", "name": "Distance", "unit": "m" },
+        { "field": "time", "name": "Time", "unit": "s" }
+      ],
+      "workloadTypeParams": [
+        { "field": "kg", "name": "KG" },
+        { "field": "rm", "name": "RM" },
+        { "field": "bw", "name": "BW" }
+      ],
+      "params": [
+        { 
+          "name": "tempo", 
+          "type": "select", 
+          "values": [
+            { "field": "fast", "name": "1-0-1" },
+            { "field": "slow", "name": "4-0-4" }
+          ]
+        }
+      ],
       "children": [
         {
           "name": "Technical Work",
@@ -629,6 +642,43 @@
     {
       "name": "ROM",
       "slug": "rom",
+      "attributes": [
+        {
+          "field": "prescription",
+          "name": "Prescription",
+          "type": "select",
+          "values": [
+            {"field": "elbil", "name": "EL BIL"},
+            {"field": "eluni", "name": "EL UNI"},
+            {"field": "inebil", "name": "INE BIL"},
+            {"field": "ineuni", "name": "INE UNI"}
+          ]
+        },
+        { 
+          "field": "priority",
+          "name": "Exercise Priority",
+          "type": "select",
+          "values": [
+            {"field": "main", "name": "Main Lift"},
+            {"field": "sup", "name": "Supplemental Lift"},
+            {"field": "as", "name": "Assistance Lift"}
+          ]
+        }
+      ],
+      "setTypeParams": [
+        { "field": "rep", "name": "Rep", "unit": "" }
+      ],
+      "workloadTypeParams": [],
+      "params": [
+        { 
+          "name": "tempo", 
+          "type": "select", 
+          "values": [
+            { "field": "fast", "name": "1-0-1" },
+            { "field": "slow", "name": "4-0-4" }
+          ]
+        }
+      ],
       "children": [
         {
           "name": "Flexibility",
@@ -702,200 +752,11 @@
     {
       "name": "Other",
       "slug": "other",
+      "setTypeParams": [
+        { "field": "rep", "name": "Rep", "unit": "" }
+      ],
+      "workloadTypeParams": [],
       "children": []
-    }
-  ],
-  "attributes": [
-    {
-      "field": "warm-up",
-      "name": "Warm Up",
-      "type": "boolean"
-    },
-    {
-      "field": "cool-down",
-      "name": "Cool Down",
-      "type": "boolean"
-    },
-    {
-      "field": "prescription",
-      "name": "Prescription",
-      "type": "select",
-      "values": ["EL BIL", "EL UNI", "INE BIL", "INE UNI"]
-    },
-    {
-      "field": "priority",
-      "name": "Exercise Priority",
-      "type": "select",
-      "values": ["Main Lift", "Supplemental Lift", "Assistance Lift"]
-    },
-    {
-      "field": "method",
-      "name": "Method",
-      "type": "select",
-      "values": [
-        "Hypertrophy",
-        "Power",
-        "Reactive Strength",
-        "Explosive Strength",
-        "Braking Strength"
-      ]
-    },
-    {
-      "field": "body-region",
-      "name": "Body Region",
-      "type": "select",
-      "values": ["Total Body", "Upper Body", "Lower Body", "Core"]
-    },
-    {
-      "field": "diagnosis",
-      "name": "Diagnosis",
-      "type": "select",
-      "values": ["ACL Reconstruction", "Ankle Sprain"]
-    },
-    {
-      "field": "loading-side",
-      "name": "Loading Side",
-      "type": "select",
-      "values": ["Unilateral", "Bilateral", "Quadruped", "Monopedal", "Bipedal"]
-    },
-    {
-      "field": "location",
-      "name": "Location",
-      "type": "select",
-      "values": ["Home", "Gym", "Outdoor"]
-    },
-    {
-      "field": "movement-direction",
-      "name": "Movement Direction",
-      "type": "select",
-      "values": ["Linear", "Lateral"]
-    },
-    {
-      "field": "muscle",
-      "name": "Muscle",
-      "type": "select",
-      "values": [
-        "Frontalis",
-        "Orbicularis Oculi",
-        "Orbicularis Oris",
-        "Masseter",
-        "Temporalis",
-        "Sternocleidomastoid",
-        "Platysma",
-        "Pectoralis Major",
-        "Pectoralis Minor",
-        "Serratus Anterior",
-        "Trapezius",
-        "Rhomboid Major",
-        "Rhomboid Minor",
-        "Deltoid",
-        "Biceps Brachii",
-        "Brachialis",
-        "Triceps Brachii",
-        "Brachioradialis",
-        "Flexor Carpi Radialis",
-        "Flexor Carpi Ulnaris",
-        "Extensor Carpi Radialis",
-        "Extensor Carpi Ulnaris",
-        "Rectus Abdominis",
-        "External Oblique",
-        "Internal Oblique",
-        "Transversus Abdominis",
-        "Latissimus Dorsi",
-        "Erector Spinae",
-        "Gluteus Maximus",
-        "Gluteus Medius",
-        "Gluteus Minimus",
-        "Tensor Fasciae Latae",
-        "Quadriceps",
-        "Hamstrings",
-        "Adductor Group",
-        "Sartonius",
-        "Gastrocnemius",
-        "Soleus",
-        "Tibialis Anterior",
-        "Peroneus Longus",
-        "Extensor Digitorum Longus",
-        "Flexor Digitorum Longus"
-      ]
-    },
-    {
-      "field": "sport-task",
-      "name": "Sport Task",
-      "type": "select",
-      "values": [
-        "Sprint",
-        "Acceleration",
-        "Deceleration",
-        "Duel",
-        "Heading",
-        "Jump",
-        "Kicking",
-        "Falling Prone",
-        "Falling Supine"
-      ]
-    },
-    {
-      "field": "equipment",
-      "name": "Equipment Category",
-      "type": "select",
-      "values": [
-        {
-          "field": "cardio",
-          "name": "Cardio Equipment",
-          "values": [
-            "Treadmills",
-            "Ellipticals",
-            "Exercise Bikes",
-            "Rowing Machines",
-            "Stair Climbers",
-            "Step Machines",
-            "Cross Trainers",
-            "Arc Trainers",
-            "Air Bikes",
-            "Spin Bikes"
-          ]
-        },
-        {
-          "field": "strength",
-          "name": "Strength Training Equipment",
-          "values": [
-            "Barbells",
-            "Olympic Barbells",
-            "EZ Curl Bars",
-            "Tricep Bars",
-            "Trap Bars"
-          ]
-        },
-        {
-          "field": "free-weight",
-          "name": "Free Weight Equipment",
-          "values": [
-            "Weightlifting Belt",
-            "Lifting Straps",
-            "Wrist Wraps",
-            "Knee Wraps",
-            "Elbow Wraps"
-          ]
-        },
-        {
-          "field": "bodyweight",
-          "name": "Bodyweight Training Equipment",
-          "values": [
-            "Pull Up Bars",
-            "Dip Bars",
-            "Push Up Bars",
-            "Suspension Trainers",
-            "Parallettes",
-            "Gymnastic Rings"
-          ]
-        },
-        {
-          "field": "functional",
-          "name": "Functional Training Equipment",
-          "values": ["TRX", "Plyo Box", "Jump Rope", "Agility Ladder"]
-        }
-      ]
     }
   ]
 }

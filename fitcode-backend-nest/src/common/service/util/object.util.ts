@@ -1,7 +1,5 @@
-import {
-  ExerciseAttribute,
-  ExerciseAttributeSelectOption,
-} from '../../../exercise/entity/exercise-attribute.entity';
+import { Attribute } from 'src/component/entity/attribute.entity';
+import { AttributeValue } from 'src/training/entity/attribute-value.entity';
 
 export class ObjectUtil {
   /**
@@ -43,7 +41,10 @@ export class ObjectUtil {
    * isValidValue(attribute, { color: { blue: 'dark' } }) // false
    * ```
    */
-  isValidValue(attribute: Partial<ExerciseAttribute>, value: any): boolean {
+  isValidValue(
+    attribute: Partial<Attribute> & { type: string },
+    value: any,
+  ): boolean {
     if (attribute.required && (value === null || value === undefined))
       return false;
 
@@ -60,13 +61,12 @@ export class ObjectUtil {
         if (!attribute.values) return false;
 
         // single-level select
-        if (typeof attribute.values[0] === 'string') {
-          console.log('single level', attribute.values, value);
-          return (attribute.values as string[]).includes(value);
+        if (!attribute.values[0]?.values) {
+          return attribute.values.map((v) => v.field).includes(value);
         }
 
         // multi-level select
-        const values = attribute.values as ExerciseAttributeSelectOption[];
+        const values = attribute.values;
         return this.validateNestedSelect(values, value[attribute.field]);
       default:
         return true; // if type not defined, allow any value
@@ -115,7 +115,7 @@ export class ObjectUtil {
   }
 
   private validateNestedSelect(
-    options: ExerciseAttributeSelectOption[],
+    options: Attribute[],
     value: Record<string, any>,
   ): boolean {
     if (typeof value !== 'object' || value === null) return false;
@@ -129,16 +129,13 @@ export class ObjectUtil {
         if (!selectedOption.values || !Array.isArray(selectedOption.values))
           return false;
 
-        return this.validateNestedSelect(
-          selectedOption.values as ExerciseAttributeSelectOption[],
-          selectedValue,
-        );
+        return this.validateNestedSelect(selectedOption.values, selectedValue);
       }
 
       // leaf, validate against available values
       if (
         !selectedOption.values ||
-        !(selectedOption.values as string[]).includes(selectedValue)
+        !selectedOption.values.map((v) => v.field).includes(selectedValue)
       )
         return false;
     }

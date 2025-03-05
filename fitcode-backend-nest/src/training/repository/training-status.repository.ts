@@ -4,7 +4,7 @@ import {
   DocumentReference,
 } from 'firebase-admin/firestore';
 import { Query } from 'firebase-admin/lib/firestore';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { Wrapper } from 'src/common/type/wrapper.type';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
@@ -12,10 +12,8 @@ import {
   FirestoreCollectionRepository,
   TrainingRef,
   TrainingStatusRef,
-  UserWorkloadRef,
 } from '../../common/type/firestore.type';
 import { TrainingStatus } from '../entity/training-status.entity';
-import { UserWorkload } from '../entity/user-workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { TrainingRepository } from './training.repository';
 

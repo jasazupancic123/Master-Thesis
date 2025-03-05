@@ -1,20 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsNumber,
+  IsOptional,
   IsString,
   Max,
   Min,
-  ValidateNested,
 } from 'class-validator';
 import { IsStringOrNumber } from 'src/common/decorator/is-string-or-number.decorator';
 import { TimestampEntity } from 'src/common/entity/timestamp.entity';
 import { SetStatus } from '../enum/set-status.enum';
-import { SetType } from '../enum/set-type.enum';
-import { WorkloadType } from '../enum/workload-type.enum';
-import { WorkloadData } from './workload-data';
 
 export class UserWorkload extends TimestampEntity {
   @IsString()
@@ -48,27 +46,29 @@ export class UserWorkload extends TimestampEntity {
   @Expose()
   sets: number;
 
-  @IsEnum(SetType)
+  @IsString()
+  @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  setType: SetType;
+  setType: string;
 
   @IsInt()
   @Min(0)
   @ApiProperty()
   @Expose()
-  setTypeValue: number;
+  prescribedSetTypeValue: number;
 
-  @IsEnum(WorkloadType)
-  @ApiProperty()
-  @Expose()
-  workloadType: WorkloadType;
-
-  @IsStringOrNumber()
+  @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  workloadValue: number; // calculated value prescribed by trainer
+  workloadType: string;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  @Expose()
+  prescribedWorkloadValue: number; // calculated value prescribed by trainer
 
   @IsEnum(SetStatus)
   @IsNotEmpty()
@@ -76,9 +76,27 @@ export class UserWorkload extends TimestampEntity {
   @Expose()
   status: SetStatus;
 
-  @ValidateNested({ each: true })
-  @Type(() => WorkloadData)
+  @IsInt()
+  @Min(1)
+  @Max(10)
   @ApiProperty()
   @Expose()
-  data: WorkloadData[]; // each set has prescribed workload value
+  set: number; // current set number
+
+  @IsInt()
+  @Min(1)
+  @Expose()
+  setTypeValue: number; // actual user reps / distance / time / ... completed
+
+  @IsStringOrNumber()
+  @IsNotEmpty()
+  @Expose()
+  @Min(0)
+  workloadValue: string | number; // actual user kg completed
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  notes?: string;
 }

@@ -91,7 +91,7 @@ export class TrainingRepository
             exercises: s.exercises.map((e) => ({
               id: e.id,
               color: e.color,
-              meta: { ...e.meta },
+              params: { ...e.params },
             })),
           })),
         })),
@@ -100,7 +100,7 @@ export class TrainingRepository
           exercises: s.exercises.map((e) => ({
             id: e.id,
             color: e.color,
-            meta: { ...e.meta },
+            params: { ...e.params },
           })),
         })),
       })),

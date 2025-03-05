@@ -43,7 +43,7 @@ export class ComponentService {
     for (const child of children) {
       const childData = {
         ...child,
-        parent: component.id,
+        parentId: component.id,
         children: child.children as unknown as Component[],
       };
 
@@ -73,7 +73,7 @@ export class ComponentService {
     const components = await this.findAllFlat();
     return this.commonService.tree.fromArray(components, {
       idPropertyName: 'id',
-      parentIdPropertyName: 'parent',
+      parentIdPropertyName: 'parentId',
       childrenPropertyName: 'children',
     });
   }
@@ -117,7 +117,7 @@ export class ComponentService {
    */
   async update(
     id: string,
-    data: Update<Component, 'name' | 'parent' | 'slug'>,
+    data: Update<Component, 'name' | 'parentId' | 'slug'>,
   ): Promise<Component> {
     this.logger.debug(
       `Updating component #${id} with data ${JSON.stringify(data)}`,
@@ -136,17 +136,17 @@ export class ComponentService {
   ) {
     // populate parents
     const parents: Component[] = [];
-    let parent = components.find((c) => c.id === component.parent);
+    let parent = components.find((c) => c.id === component.parentId);
     while (parent) {
       parents.push(parent);
-      parent = components.find((c) => c.id === parent.parent);
+      parent = components.find((c) => c.id === parent.parentId);
     }
 
     component.parents = parents.map((p) => p.id);
 
     // populate children
     component.children = components
-      .filter((c) => c.parent === component.id)
+      .filter((c) => c.parentId === component.id)
       .map((c) => c.id);
   }
 }

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { addMinutes, endOfHour, startOfHour } from 'date-fns';
-import { CommonService } from 'src/common/service/common.service';
+import { addMinutes } from 'date-fns';
 import { Update } from 'src/common/type/entity.type';
 import { TrainingComponentRef } from 'src/common/type/firestore.type';
 import { TrainingComponent } from '../entity/training-component.entity';
@@ -8,8 +7,6 @@ import { Training } from '../entity/training.entity';
 
 @Injectable()
 export class TrainingPlanService {
-  constructor(private readonly commonService: CommonService) {}
-
   getAddComponentsQuery(
     training: Training,
     input: Update<TrainingComponent>[],
