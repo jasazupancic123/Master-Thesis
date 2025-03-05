@@ -4,7 +4,7 @@ import { COLORS } from '@/common/constant/color.constant';
 import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Cycle } from '@/controller/group/type/cycle.type';
+import { Cycle, Week } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
@@ -30,7 +30,13 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
   const { selectedGroup, setSelectedGroup } = props;
 
   const screenSize = useScreenSize();
-  const { group, setCycle, setDetectedChanges } = useGroup();
+  const {
+    group,
+    setCycle,
+    setGroup,
+    setDetectedChanges,
+    cycle: selectedCycle,
+  } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
@@ -136,17 +142,30 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     if (isStartDot && dayjs(cycle.from).year() < selectedYear) return; // Prevent the start dot from moving back into previous years
     if (!isStartDot && dayjs(cycle.to).year() > selectedYear) return; // Prevent the end dot from moving back into previous years
 
+    const from = dayjs()
+      .dayOfYear(valuesReal[cycleIndex * 2])
+      .toDate();
+    const to = dayjs()
+      .dayOfYear(valuesReal[cycleIndex * 2 + 1])
+      .toDate();
+
+    const weeks: Week[][] = Array.from(
+      { length: dayjs(to).diff(from, 'week') + 2 },
+      (_, i) => {
+        const startOfWeek = dayjs(from).add(i, 'w').startOf('w');
+        return Array.from({ length: 7 }, (_, j) => ({
+          date: startOfWeek.add(j, 'd').toDate(),
+        }));
+      }
+    );
+
     const newCycle = {
       ...cycle,
-      from: dayjs()
-        .dayOfYear(valuesReal[cycleIndex * 2])
-        .toDate(),
-      to: dayjs()
-        .dayOfYear(valuesReal[cycleIndex * 2 + 1])
-        .toDate(),
+      from: from,
+      to: to,
+      weeks: weeks,
     };
 
-    setCycle(newCycle);
     const newCycles = [
       ...selectedGroup.cycles.map(({ ...c }) =>
         c.id === cycle.id ? newCycle : c

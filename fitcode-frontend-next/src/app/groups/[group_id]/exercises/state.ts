@@ -8,6 +8,7 @@ import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+import { DEFAULT_EXERCISE } from './exercises-page';
 
 const commonService = CommonService.instance;
 
@@ -64,6 +65,8 @@ export async function handleAddExercise(
     filteredExercises: Exercise[];
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
+    setExercise: SetState<Partial<Exercise>>;
+    setModal: SetState<{ add: boolean; edit: boolean; import: boolean; confirmDelete: boolean }>;
   }
 ) {
   const {
@@ -74,6 +77,8 @@ export async function handleAddExercise(
     filteredExercises,
     setFilteredExercises,
     setExercises,
+    setExercise,
+    setModal,
   } = state;
 
   if (!input.name) return toast.error('Name is required');
@@ -139,6 +144,8 @@ export async function handleAddExercise(
 
       setExercises((prev) => [...prev!, { ...input, id } as Exercise]);
       toast.success('Successfully added exercise');
+      setExercise(DEFAULT_EXERCISE)
+      setModal((prev) => ({ ...prev, add: false }));
     }
   );
 }
@@ -154,6 +161,7 @@ export async function handleUpdateExercise(
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
+    setModal: SetState<{ add: boolean; edit: boolean; import: boolean; confirmDelete: boolean }>;
   }
 ) {
   const {
@@ -163,10 +171,12 @@ export async function handleUpdateExercise(
     setFilteredExercises,
     setExercises,
     setExercise,
+    setModal,
   } = state;
 
   if (!input.name) return toast.error('Name is required');
-  if (!input.componentsIds?.length)
+
+  if (!input.componentsIds?.length || (input.componentsIds[0] === '' && input.componentsIds.length === 1))
     return toast.error('Select at least one component to add');
 
   // find all nested select attributes and convert them to a multi-level object
@@ -224,6 +234,7 @@ export async function handleUpdateExercise(
       );
 
       toast.success('Successfully updated exercise');
+      setModal((prev) => ({ ...prev, edit: false }));
     },
     undefined,
     'Failed to update exercise'

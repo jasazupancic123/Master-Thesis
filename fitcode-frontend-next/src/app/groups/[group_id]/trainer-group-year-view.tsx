@@ -21,7 +21,7 @@ export default function TrainerYearView() {
     useGroup();
 
   const theme = useTheme();
-  const [selectedGroup, setSelectedGroup] = useState(group);
+  const [selectedGroup, setSelectedGroup] = useState({ ...group });
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
   const [editCycle, setEditCycle] = useState<Cycle | null>(null);
 
@@ -46,6 +46,11 @@ export default function TrainerYearView() {
           cycles: selectedGroup.cycles,
         }),
       (response) => {
+        if (cycle) {
+          const newCycle = response.cycles.find((c) => c.id === cycle.id);
+          setCycle(newCycle);
+        }
+
         setGroup(response);
         setSelectedGroup(response);
         setDetectedChanges(false);

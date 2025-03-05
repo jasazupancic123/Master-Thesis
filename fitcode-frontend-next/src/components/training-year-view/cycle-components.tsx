@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import SelectInput from '../select-input';
+import CycleComponentsSelect from './cycle-components-select';
 
 interface CycleComponentsProps {
   selectedGroup: Group;
@@ -109,7 +110,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
               display="flex"
               flexDirection="column"
               gap={1}
-              minHeight={265}
+              minHeight={275}
               width="100%"
               bgcolor="background.paper"
               sx={{
@@ -138,22 +139,16 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 if (!component) return <></>;
 
                 return (
-                  <SelectInput<Component>
+                  <CycleComponentsSelect
                     key={i}
                     label={component.name}
-                    icon={null}
-                    value={
-                      selectedLeafComponent ? selectedLeafComponent.id : ''
+                    selectedValue={
+                      components.find(
+                        (c) => c.id === cycle.leafComponentsIds[i]
+                      )?.name || ''
                     }
-                    items={components.filter((c) => c.parent === component.id)}
-                    placeholder="Remove Component"
-                    displayEmpty={false}
-                    sx={{ width: '90%' }}
-                    disableInputLabel={false}
-                    itemKey="id"
-                    useRenderValue={true}
-                    itemName="name"
-                    enableRemove={true}
+                    components={components}
+                    parentId={component.id}
                     setValue={(value) => {
                       setDetectedChanges(true);
 
@@ -171,41 +166,53 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         const newCycles = cycles.map((c) =>
                           c.id === cycle.id ? newCycle : c
                         );
-
                         setCycles(newCycles);
                         setSelectedGroup({
                           ...selectedGroup,
-                          cycles: [...newCycles],
+                          cycles: newCycles,
                         });
-
                         return;
                       }
 
-                      const component = components.find((c) => c.id === value);
-                      if (!component) return;
+                      const newComponent = components.find(
+                        (c) => c.id === value
+                      );
+                      if (!newComponent) return;
 
-                      if (cycle.leafComponentsIds.includes(component.id))
+                      if (cycle.leafComponentsIds.includes(newComponent.id))
                         return toast.error('Component already added');
 
-                      const newCycle = {
-                        ...cycle,
-                        leafComponentsIds: [
-                          ...cycle.leafComponentsIds.slice(0, i),
-                          component.id,
-                          ...cycle.leafComponentsIds.slice(i + 1),
-                        ],
-                      };
+                      const isNewComponentAParent = components.some(
+                        (c) => c.parent === newComponent.id
+                      );
+                      let newCycle = { ...cycle };
 
-                      const newCycles = cycles.map((c) => {
-                        if (c.id === cycle.id) return newCycle;
-                        return c;
-                      });
+                      if (isNewComponentAParent) {
+                        // It's a new root component
+                        newCycle.rootComponentsIds[i] = newComponent.id;
 
+                        // If the new root has no children, ensure `leafComponentsIds` gets `""`
+                        if (
+                          !components.some((c) => c.parent === newComponent.id)
+                        ) {
+                          newCycle.leafComponentsIds[i] = '';
+                        }
+                      } else {
+                        // It's a leaf component
+                        newCycle.leafComponentsIds[i] = newComponent.id;
+                      }
+
+                      // 🔹 **Ensure `leafComponentsIds` is the same length as `rootComponentsIds`**
+                      newCycle.leafComponentsIds =
+                        newCycle.rootComponentsIds.map((rootId, idx) => {
+                          return newCycle.leafComponentsIds[idx] || ''; // Fill empty slots with ""
+                        });
+
+                      const newCycles = cycles.map((c) =>
+                        c.id === cycle.id ? newCycle : c
+                      );
                       setCycles(newCycles);
-                      setSelectedGroup({
-                        ...selectedGroup,
-                        cycles: [...newCycles],
-                      });
+                      setSelectedGroup({ ...selectedGroup, cycles: newCycles });
                     }}
                   />
                 );

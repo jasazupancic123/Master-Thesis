@@ -44,7 +44,7 @@ export async function handleCreateTraining(
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 
-  if (dayjs(cycle.from).isAfter(date) || dayjs(cycle.to).isBefore(date))
+  if (!CommonService.instance.date.isBetween(date, dayjs(cycle.from), dayjs(cycle.to)))
     return toast.error('Selected date is not within the cycle');
 
   // get number of trainings in the selected period

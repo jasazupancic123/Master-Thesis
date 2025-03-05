@@ -48,7 +48,7 @@ export async function handleCopyTraining(
     exercises,
   } = state;
 
-  if (dayjs(cycle.from).isAfter(newDate) || dayjs(cycle.to).isBefore(newDate))
+  if (!CommonService.instance.date.isBetween(newDate, dayjs(cycle.from), dayjs(cycle.to)))
     return toast.error('Selected date is not within the cycle');
 
   const amPair = { start: 8, end: 10 };

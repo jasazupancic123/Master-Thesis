@@ -29,7 +29,7 @@ interface Props {
   setIsOpen: (isOpen: boolean) => void;
   title: string;
   cancelText?: string;
-  onDelete?: () => Promise<void>;
+  onDelete?: () => void;
   onConfirm?: () => Promise<void>;
 }
 

@@ -165,19 +165,19 @@ export default function TrainerDayView() {
     setLoading(false);
   }, [todaysTrainings]);
 
-  if (!cycle)
-    return (
-      <Box
-        bgcolor={'background.paper'}
-        width="100%"
-        p={2}
-        justifyContent="center"
-      >
-        <Typography variant="h6" textAlign="center">
-          Select a cycle
-        </Typography>
-      </Box>
-    );
+  // if (!cycle)
+  //   return (
+  //     <Box
+  //       bgcolor={'background.paper'}
+  //       width="100%"
+  //       p={2}
+  //       justifyContent="center"
+  //     >
+  //       <Typography variant="h6" textAlign="center">
+  //         Select a cycle
+  //       </Typography>
+  //     </Box>
+  //   );
 
   return (
     <>
@@ -197,8 +197,10 @@ export default function TrainerDayView() {
         width="100%"
         minHeight={195}
         sx={{
-          borderBottomRightRadius: todaysTrainings.length === 0 ? 0 : 10,
-          borderBottomLeftRadius: todaysTrainings.length === 0 ? 0 : 10,
+          borderBottomRightRadius:
+            todaysTrainings.length === 0 || !cycle ? 0 : 10,
+          borderBottomLeftRadius:
+            todaysTrainings.length === 0 || !cycle ? 0 : 10,
           bgcolor: 'background.paper',
         }}
         justifyContent="space-evenly"
@@ -230,6 +232,7 @@ export default function TrainerDayView() {
             >
               <Typography
                 variant="body1"
+                textAlign="center"
                 sx={{
                   px: 0,
                   pr: !screenSize.isDesktop ? 1 : 4,
@@ -255,6 +258,7 @@ export default function TrainerDayView() {
             >
               <Typography
                 variant="body1"
+                textAlign="center"
                 sx={{
                   px: 0,
                   pr: !screenSize.isDesktop ? 1 : 4,
@@ -269,9 +273,84 @@ export default function TrainerDayView() {
 
           <Box
             display="flex"
+            flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
+            gap={screenSize.isSmallerThanLaptop ? 2 : 0}
             justifyContent="center"
             alignItems={screenSize.isSmallerThanLaptop ? 'center' : undefined}
           >
+            <Box
+              display={screenSize.isSmallerThanLaptop ? 'flex' : 'none'}
+              justifyContent="center"
+              flex={1}
+            >
+              <Box
+                bgcolor="#283444"
+                p={!screenSize.isDesktop ? 0 : 1}
+                px={!screenSize.isDesktop ? 1 : 3}
+                sx={{
+                  borderTopLeftRadius: 10,
+                  borderBottomLeftRadius: 10,
+                }}
+                display="flex"
+                alignItems="center"
+              >
+                <Typography
+                  variant="body1"
+                  textAlign="center"
+                  sx={{
+                    px: 0,
+                    pr: !screenSize.isDesktop ? 1 : 4,
+                    fontSize: !screenSize.isDesktop ? 15 : 20,
+                  }}
+                >
+                  {selectedAthlete?.displayName ||
+                    selectedSubgroup?.subgroup?.name ||
+                    group.name}
+                </Typography>
+              </Box>
+              <Box
+                bgcolor="#283444"
+                p={1}
+                px={3}
+                ml={0.5}
+                sx={{
+                  borderTopRightRadius: 10,
+                  borderBottomRightRadius: 10,
+                }}
+                display="flex"
+                alignItems="center"
+              >
+                <Select
+                  value={cycle?.name || ''}
+                  onChange={(e) =>
+                    setCycle(
+                      group.cycles.find((c) => c.name === e.target.value)
+                    )
+                  }
+                  renderValue={(value) => value || 'Select cycle'}
+                  displayEmpty
+                  sx={{
+                    color: 'white',
+                    fontSize: screenSize.isDesktop ? 20 : undefined,
+                    bgcolor: 'transparent',
+                    border: 'none',
+                    pl: 1,
+                    '&:before, &:after': { borderBottom: 'none !important' },
+                  }}
+                  variant="standard"
+                >
+                  <MenuItem value="" disabled>
+                    Select cycle
+                  </MenuItem>
+
+                  {group.cycles.map((cycle) => (
+                    <MenuItem key={cycle.name} value={cycle.name}>
+                      {cycle.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
+            </Box>
             <Circles
               items={days}
               value={day.date.toString()}
@@ -334,9 +413,9 @@ export default function TrainerDayView() {
             >
               <Typography
                 variant="body1"
+                textAlign="center"
                 sx={{
-                  pl: 1,
-                  pr: 4,
+                  px: 3,
                   fontSize: !screenSize.isDesktop ? 15 : 20,
                 }}
               >
@@ -356,10 +435,12 @@ export default function TrainerDayView() {
               alignItems="center"
             >
               <Select
-                value={cycle.name}
+                value={cycle?.name || ''}
                 onChange={(e) =>
                   setCycle(group.cycles.find((c) => c.name === e.target.value))
                 }
+                renderValue={(value) => value || 'Select cycle'}
+                displayEmpty
                 sx={{
                   color: 'white',
                   fontSize: screenSize.isDesktop ? 20 : undefined,
@@ -370,6 +451,10 @@ export default function TrainerDayView() {
                 }}
                 variant="standard"
               >
+                <MenuItem value="" disabled>
+                  Select cycle
+                </MenuItem>
+
                 {group.cycles.map((cycle) => (
                   <MenuItem key={cycle.name} value={cycle.name}>
                     {cycle.name}
@@ -390,7 +475,7 @@ export default function TrainerDayView() {
         >
           <TrainingMembers isSticky={isSticky} />
 
-          {!isSticky && component && (
+          {!isSticky && component && !selectedAthlete && (
             <Tooltip title="Show subgroups">
               <IconButton
                 onClick={() =>
@@ -407,46 +492,64 @@ export default function TrainerDayView() {
         <Subgroups showSubgroups={showSubgroups} />
       </Box>
 
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        width="100%"
-        pb={15}
-        sx={{
-          borderBottomRightRadius: 10,
-          borderBottomLeftRadius: 10,
-        }}
-      >
-        {/* Training set groups with set exercises */}
-        {!loading && todaysTrainings.length === 0 ? (
-          <Box
-            display="flex"
-            bgcolor={'background.paper'}
-            width="100%"
-            p={2}
-            justifyContent="center"
-            sx={{
-              borderBottomRightRadius: 10,
-              borderBottomLeftRadius: 10,
-            }}
-          >
-            <Typography variant="h6" mb={2}>
-              No session for current date
-            </Typography>
-          </Box>
-        ) : (
-          <>
-            {amTraining && (
-              <TrainingCard day={day} training={amTraining} period="AM" />
-            )}
+      {!cycle ? (
+        <Box
+          display="flex"
+          bgcolor={'background.paper'}
+          width="100%"
+          p={2}
+          justifyContent="center"
+          sx={{
+            borderBottomRightRadius: 10,
+            borderBottomLeftRadius: 10,
+          }}
+        >
+          <Typography variant="h6" mb={2}>
+            Select a cycle
+          </Typography>
+        </Box>
+      ) : (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          width="100%"
+          pb={15}
+          sx={{
+            borderBottomRightRadius: 10,
+            borderBottomLeftRadius: 10,
+          }}
+        >
+          {/* Training set groups with set exercises */}
+          {!loading && todaysTrainings.length === 0 ? (
+            <Box
+              display="flex"
+              bgcolor={'background.paper'}
+              width="100%"
+              p={2}
+              justifyContent="center"
+              sx={{
+                borderBottomRightRadius: 10,
+                borderBottomLeftRadius: 10,
+              }}
+            >
+              <Typography variant="h6" mb={2}>
+                No session for current date
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              {amTraining && (
+                <TrainingCard day={day} training={amTraining} period="AM" />
+              )}
 
-            {pmTraining && (
-              <TrainingCard day={day} training={pmTraining} period="PM" />
-            )}
-          </>
-        )}
-      </Box>
+              {pmTraining && (
+                <TrainingCard day={day} training={pmTraining} period="PM" />
+              )}
+            </>
+          )}
+        </Box>
+      )}
       {screenSize.isSmallerThanLaptop && (
         <IconButton
           onClick={() => {
