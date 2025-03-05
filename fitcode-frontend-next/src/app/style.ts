@@ -1,4 +1,5 @@
 import { createTheme } from '@mui/material';
+import { Roboto_Condensed } from 'next/font/google';
 
 export const theme = createTheme({
   palette: {
@@ -12,7 +13,7 @@ export const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: 'Roboto Condensed, sans-serif',
     button: { textTransform: 'none' },
   },
   components: {
@@ -32,6 +33,11 @@ export const theme = createTheme({
     },
   },
 });
+
+const robotoCondensed = {
+  fontFamily: 'Roboto Condensed',
+  fontWeight: 400,
+};
 
 export const signInUpTheme = createTheme({
   ...theme,
