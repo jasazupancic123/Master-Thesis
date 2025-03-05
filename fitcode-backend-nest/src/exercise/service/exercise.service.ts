@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { FieldPath, Query } from 'firebase-admin/firestore';
 import { NUM_MAX_EXERCISES } from 'src/common/constant/limit.constant';
-import { Create, Update } from 'src/common/type/entity.type';
+import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { UserEntity } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/user.service';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
@@ -24,7 +24,9 @@ import { Component } from '../../component/entity/component.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseRepository } from '../repository/exercise.repository';
-import { ExerciseAttributeService } from './exercise-attribute.service';
+import { Attribute } from 'src/component/entity/attribute.entity';
+import { ExerciseAttributeValueRepository } from '../repository/exercise-attribute-value.repository';
+import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
 
 @Injectable()
 export class ExerciseService {
@@ -34,67 +36,26 @@ export class ExerciseService {
     @Inject(forwardRef(() => CacheManagerService))
     private readonly cacheManagerService: Wrapper<CacheManagerService>,
     private readonly exerciseRepository: ExerciseRepository,
+    private readonly exerciseAttributeValueRepository: ExerciseAttributeValueRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly exerciseAttributeService: ExerciseAttributeService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: Wrapper<UserService>,
   ) {}
 
-  /**
-   * Finds all exercises by user. Admin can create global exercises, and
-   * every user can create his own exercises. Since Firestore does not support
-   * OR queries, these two conditions for user must be queried separately.
-   * Therefore, pagination must be performed in plain JS, not Firestore.
-   */
-  async findAllGlobal(filter?: Filter<Exercise>): Promise<Exercise[]> {
-    let query = this.exerciseRepository
-      .collection()
-      .where('global', '==', true);
-
-    return this.findAllByQuery(query, filter);
-  }
-
-  async findAllByUser(
-    user: User,
-    filter?: Filter<Exercise>,
-  ): Promise<Exercise[]> {
-    const query = this.exerciseRepository
-      .collection()
-      .where('userId', '==', user.uid);
-
-    return this.findAllByQuery(query, filter);
-  }
-
-  async findAllByTrainers(
-    trainersIds: string[],
-    filter?: Filter<Exercise>,
-  ): Promise<Exercise[]> {
-    const query = this.exerciseRepository
-      .collection()
-      .where('userId', 'in', trainersIds);
-
-    return this.findAllByQuery(query, filter);
-  }
-
   async findAll(user: User, filter?: Filter<Exercise>): Promise<Exercise[]> {
     const dbUser = await this.userService.findOneByIdOrFail(user.uid);
-    const userExercises = await this.findAllByUser(user, filter);
-    const globalExercises = await this.findAllGlobal(filter);
-    const trainerExercises =
+    const userIds =
       dbUser.trainersIds.length > 0
-        ? await this.findAllByTrainers(dbUser.trainersIds, filter)
-        : [];
+        ? [...dbUser.trainersIds, user.uid]
+        : [user.uid];
+    userIds.push(null); // global exercises
 
-    // if user is athlete, fetch all his trainer's exercises
-
-    return this.commonService.array.unique([
-      ...userExercises,
-      ...trainerExercises,
-      ...globalExercises,
-    ]);
+    return await this.exerciseRepository.getDocs((q) =>
+      q.where('userId', 'in', userIds),
+    );
   }
 
   async findById(
@@ -106,7 +67,7 @@ export class ExerciseService {
     if (!exercise) return null;
 
     // authorize
-    if (!exercise.global && exercise.userId !== user.uid) return null;
+    if (!exercise.ownerId && exercise.ownerId !== user.uid) return null;
     return exercise;
   }
 
@@ -121,7 +82,7 @@ export class ExerciseService {
 
   async create(
     user: User,
-    data: Create<Omit<Exercise, 'userId' | 'global' | 'id' | 'values'>>,
+    data: Create<Omit<Exercise, 'ownerId' | 'id' | 'values'>>,
   ): Promise<Exercise> {
     this.logger.log(
       `User ${user.uid} is creating new exercise: ${JSON.stringify(data)}`,
@@ -129,51 +90,70 @@ export class ExerciseService {
 
     // validate
     const dbUser = await this.userService.findOneOrFail(user.uid);
-    const exercises = await this.findAllByUser(user);
-    this.checkLimit(dbUser, exercises);
-
-    const attributes = await this.cacheManagerService.getAttributes();
-    this.exerciseAttributeService.validate(
-      data.attributeValues || {},
-      attributes,
+    const exercises = await this.exerciseRepository.getDocs((q) =>
+      q.where('userId', '==', user.uid),
     );
 
-    if (!data.componentsIds?.length)
-      throw new BadRequestException('No components provided for exercise'); // at least one component must be selected
+    this.checkLimit(dbUser, exercises);
 
     // check that all components exist and are leafs
     const components = await this.cacheManagerService.getComponents();
-    const leafs = this.componentService.leafsFromFlat(components);
-    for (const slug of data.componentsIds!) {
-      const component = this.componentService.getLeafBySlug(slug, leafs);
-      if (!component)
-        throw new BadRequestException(`Component ${slug} does not exist`);
-    }
+    const component = components.find((c) => c.id === data.componentId);
+    if (component.children?.length > 0)
+      throw new BadRequestException(
+        `Component ${data.componentId} is not valid`,
+      );
+
+    // validate attributes
+    const root = this.componentService.getRoot(component, components);
+    this.validateAttributes(data.attributeValues || {}, root.attributes || []);
 
     // create exercise
     const exerciseId = await this.exerciseRepository.addDoc({
       id: null,
-      userId: user.uid,
+      ownerId: this.firebaseService.isAdmin(user) ? null : user.uid, // if user is admin, exercise is global
       name: data.name,
-      componentsIds: data.componentsIds,
-      global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
+      componentId: data.componentId,
       videoUrl: data.videoUrl,
       imageUrl: data.imageUrl,
-      values: Object.entries(data.attributeValues).map(([field, value]) => ({
-        attributeId: field,
-        value,
-      })),
+      bodyRegion: data.bodyRegion,
     });
+
+    // create attributes
+    const attributeValues: ExerciseAttributeValue[] = Object.entries(
+      data.attributeValues,
+    ).map(([field, value]) => ({
+      exerciseId,
+      ownerId: user.uid,
+      field,
+      value,
+    }));
+
+    const batch = this.firebaseService.firestore.batch();
+    attributeValues.forEach((val) => {
+      const docRef = this.exerciseAttributeValueRepository.doc({
+        exerciseId,
+        field: val.field,
+      });
+
+      const query =
+        this.firebaseService.buildCreateQuery<ExerciseAttributeValue>(val);
+
+      batch.set(docRef, query);
+    });
+
+    await batch.commit();
 
     return {
       ...data,
       id: exerciseId,
-      userId: user.uid,
-      global: this.firebaseService.isAdmin(user), // if user is admin, exercise is global
+      ownerId: this.firebaseService.isAdmin(user) ? null : user.uid,
       createdAt: new Date(),
       updatedAt: new Date(),
       values: Object.entries(data.attributeValues).map(([field, value]) => ({
-        attributeId: field,
+        exerciseId,
+        ownerId: user.uid,
+        field,
         value,
       })),
     };
@@ -181,7 +161,7 @@ export class ExerciseService {
 
   async createMany(
     user: User,
-    exercises: Create<Omit<Exercise, 'userId' | 'global' | 'id' | 'values'>>[],
+    exercises: Create<Omit<Exercise, 'userId' | 'id' | 'values'>>[],
   ) {
     this.logger.log(
       `User ${user.uid} is creating new exercises: ${JSON.stringify(exercises)}`,
@@ -189,13 +169,14 @@ export class ExerciseService {
 
     // validate
     const dbUser = await this.userService.findOneOrFail(user.uid);
-    const userExercises = await this.findAllByUser(user);
+    const userExercises = await this.exerciseRepository.getDocs((q) =>
+      q.where('userId', '==', user.uid),
+    );
 
     if (!this.firebaseService.isAdmin(user)) {
       this.checkLimit(dbUser, [...(exercises as Exercise[]), ...userExercises]);
     }
 
-    const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
 
     let i = 0;
@@ -207,23 +188,22 @@ export class ExerciseService {
       )
         break;
 
-      // at least one component must be selected
-      if (!e.componentsIds?.length)
-        throw new BadRequestException('No components provided for exercise');
+      // check that component is leaf
+      const leafs = this.componentService.leafsFromFlat(components);
+      const component = this.componentService.getLeafBySlug(
+        e.componentId,
+        leafs,
+      );
+      if (!component)
+        throw new BadRequestException(
+          `Component ${component.name} does not exist`,
+        );
 
       // validaite attribute values
-      this.exerciseAttributeService.validate(
+      this.validateAttributes(
         e.attributeValues || {},
-        attributes,
+        component.attributes || [],
       );
-
-      // check that all components exist and are leafs
-      const leafs = this.componentService.leafsFromFlat(components);
-      for (const slug of e.componentsIds!) {
-        const component = this.componentService.getLeafBySlug(slug, leafs);
-        if (!component)
-          throw new BadRequestException(`Component ${slug} does not exist`);
-      }
     }
 
     const batch = this.firebaseService.firestore.batch();
@@ -234,14 +214,16 @@ export class ExerciseService {
 
       const item: Create<Exercise> = {
         id: docRef.id,
-        userId: user.uid,
+        ownerId: this.firebaseService.isAdmin(user) ? null : user.uid,
         name: e.name,
-        componentsIds: e.componentsIds,
-        global: this.firebaseService.isAdmin(user),
+        componentId: e.componentId,
         imageUrl: e.imageUrl,
         videoUrl: e.videoUrl,
+        bodyRegion: e.bodyRegion,
         values: Object.entries(e.attributeValues).map(([field, value]) => ({
-          attributeId: field,
+          exerciseId: docRef.id,
+          ownerId: e.ownerId,
+          field,
           value,
         })),
       };
@@ -281,31 +263,31 @@ export class ExerciseService {
     const exercise = await this.findByIdOrFail(user, ref);
     this.validateOwner(user, exercise);
 
-    // validate
-    const attributes = await this.cacheManagerService.getAttributes();
-    this.exerciseAttributeService.validate(
-      input.attributeValues || {},
-      attributes,
-    );
-
-    if (!input.componentsIds?.length)
-      throw new BadRequestException('No components provided for exercise'); // at least one component must be selected
-
     // check that all components exist and are leafs
+    // leaf's root must be the same as previous exercise root
     const components = await this.cacheManagerService.getComponents();
     const leafs = this.componentService.leafsFromFlat(components);
-    for (const slug of input.componentsIds!) {
-      const component = this.componentService.getLeafBySlug(slug, leafs);
-      if (!component)
-        throw new BadRequestException(`Component ${slug} does not exist`);
+    const component = this.componentService.getLeafBySlug(
+      input.componentId,
+      leafs,
+    );
+    if (!component)
+      throw new BadRequestException(
+        `Component ${component.name} does not exist`,
+      );
 
-      // leaf's root must be the same as previous exercise root
-    }
+    // validate
+    this.validateAttributes(
+      input.attributeValues || {},
+      component.attributes || [],
+    );
 
     await this.exerciseRepository.updateDoc(ref.exerciseId, {
       ...input,
       values: Object.entries(input.attributeValues).map(([field, value]) => ({
-        attributeId: field,
+        exerciseId: exercise.id,
+        ownerId: exercise.ownerId,
+        field,
         value,
       })),
     });
@@ -314,7 +296,7 @@ export class ExerciseService {
       ...exercise,
       ...this.commonService.object.clean(input),
       values: Object.entries(input.attributeValues).map(([field, value]) => ({
-        attributeId: field,
+        field,
         value,
       })),
     };
@@ -346,7 +328,7 @@ export class ExerciseService {
 
     // check that parents of leaf are in training's root component ids
     for (const exercise of exercises)
-      for (const component of exercise.componentsIds) {
+      for (const component of exercise.componentId) {
         const leaf = leafs.find((leaf) => leaf.id === component);
 
         if (
@@ -364,23 +346,6 @@ export class ExerciseService {
     return { error: false };
   }
 
-  private async findAllByQuery(
-    query: Query,
-    filter?: Filter<Exercise>,
-  ): Promise<Exercise[]> {
-    const components = await this.componentService.findAllFlat();
-    if (filter) query = this.filter(query, filter, components);
-
-    const exercises = await query
-      .where('deletedAt', '==', null)
-      .get()
-      .then((snapshot) =>
-        snapshot.docs.map((doc) => this.exerciseRepository.serialize(doc)),
-      );
-
-    return exercises;
-  }
-
   private filter(
     query: Query,
     filter: Filter<Exercise>,
@@ -389,29 +354,28 @@ export class ExerciseService {
     if (filter.ids?.length)
       query = query.where(FieldPath.documentId(), 'in', filter.ids);
 
-    if (filter.componentsIds) {
+    if (filter.componentId) {
       // for each component id, find all children and filter by them
       const componentsIds: string[] = [];
-      for (const componentId of filter.componentsIds.value as string[]) {
-        const component = components.find((c) => c.id === componentId);
-        if (!component) continue;
+      const componentId = filter.componentId.value as string;
+      const component = components.find((c) => c.id === componentId);
+      if (!component) return;
 
-        // filter by root node
-        componentsIds.push(component.id);
+      // filter by root node
+      componentsIds.push(component.id);
 
-        // filter by all its children
-        const tree = this.commonService.tree.fromArray(components, {
-          rootId: component.id,
-          idPropertyName: 'id',
-          parentIdPropertyName: 'parent',
-          childrenPropertyName: 'children',
-        });
+      // filter by all its children
+      const tree = this.commonService.tree.fromArray(components, {
+        rootId: component.id,
+        idPropertyName: 'id',
+        parentIdPropertyName: 'parentId',
+        childrenPropertyName: 'children',
+      });
 
-        this.commonService.tree.forEach(tree, 'children', (item) => {
-          componentsIds.push(item.id);
-          return null;
-        });
-      }
+      this.commonService.tree.forEach(tree, 'children', (item) => {
+        componentsIds.push(item.id);
+        return null;
+      });
 
       if (componentsIds.length)
         query = query.where(
@@ -431,7 +395,17 @@ export class ExerciseService {
   }
 
   private validateOwner(user: User, exercise: Exercise) {
-    if (user.uid !== exercise.userId)
+    if (user.uid !== exercise.ownerId)
       throw new UnauthorizedException("You don't have access to this exercise");
+  }
+
+  private validateAttributes(
+    values: Record<string, any>,
+    attributes: Attribute[],
+  ) {
+    const fields = attributes.map((attribute) => attribute.field);
+    for (const field of Object.keys(values))
+      if (!fields.includes(field))
+        throw new BadRequestException(`Attribute ${field} does not exist`);
   }
 }

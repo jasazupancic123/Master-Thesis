@@ -39,10 +39,10 @@ import { Subgroup } from '../entity/subgroup.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
-import { WorkloadData } from '../entity/workload-data';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
 import { UserWorkloadService } from './user-workload.service';
+import { UserWorkload } from '../entity/user-workload.entity';
 
 @Injectable()
 export class TrainingService {
@@ -417,7 +417,7 @@ export class TrainingService {
   async createUserWorkloadsForComponent(
     user: User,
     ref: TrainingStatusRef,
-    input: { exerciseId: string; data: WorkloadData[] }[],
+    input: UserWorkload[],
   ) {
     this.logger.log(
       `User ${user.uid} is creating workloads for component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
@@ -534,7 +534,7 @@ export class TrainingService {
   private validateComponents(componentsIds: string[], components: Component[]) {
     for (const componentId of componentsIds) {
       const component = components.find((c) => c.id === componentId);
-      if (component.parent)
+      if (component.parentId)
         throw new BadRequestException(`Component ${component.id} is not root`);
     }
   }

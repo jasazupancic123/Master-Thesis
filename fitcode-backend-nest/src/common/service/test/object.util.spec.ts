@@ -73,8 +73,22 @@ describe('ObjectUtil::Unit', () => {
         field: 'color',
         type: 'select' as 'select',
         values: [
-          { name: 'Red', field: 'red', values: ['dark', 'light'] },
-          { name: 'Blue', field: 'blue', values: ['ocean', 'navy'] },
+          {
+            name: 'Red',
+            field: 'red',
+            values: [
+              { field: 'dark', name: 'Dark' },
+              { field: 'light', name: 'Light' },
+            ],
+          },
+          {
+            name: 'Blue',
+            field: 'blue',
+            values: [
+              { field: 'ocean', name: 'Ocean' },
+              { field: 'navy', name: 'Navy' },
+            ],
+          },
           {
             name: 'Nested',
             field: 'nested',
@@ -82,12 +96,18 @@ describe('ObjectUtil::Unit', () => {
               {
                 name: 'A',
                 field: 'nestedA',
-                values: ['A1', 'A2'],
+                values: [
+                  { field: 'a1', name: 'A1' },
+                  { field: 'a2', name: 'A2' },
+                ],
               },
               {
                 name: 'B',
                 field: 'nestedB',
-                values: ['B1', 'B2'],
+                values: [
+                  { field: 'b1', name: 'B1' },
+                  { field: 'b2', name: 'B2' },
+                ],
               },
             ],
           },
@@ -116,17 +136,17 @@ describe('ObjectUtil::Unit', () => {
       // deep nested select
       expect(
         objectUtil.isValidValue(attribute, {
-          color: { nested: { nestedA: 'A1' } },
+          color: { nested: { nestedA: 'a1' } },
         }),
       ).toBe(true);
       expect(
         objectUtil.isValidValue(attribute, {
-          color: { nested: { nestedB: 'B2' } },
+          color: { nested: { nestedB: 'b2' } },
         }),
       ).toBe(true);
       expect(
         objectUtil.isValidValue(attribute, {
-          color: { nested: 'A1' },
+          color: { nested: 'a1' },
         }),
       ).toBe(false);
       expect(

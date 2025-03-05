@@ -39,13 +39,13 @@ export class ExerciseRepository
     const query = this.firebaseService.buildCreateQuery<Exercise>(
       {
         id,
-        userId: input.userId,
+        ownerId: input.ownerId,
         name: input.name,
-        componentsIds: input.componentsIds,
-        global: input.global ?? false,
+        componentId: input.componentId,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         values: !input.values?.length ? [] : input.values,
+        bodyRegion: input.bodyRegion,
       },
       { timestamps: true },
     );
@@ -92,8 +92,7 @@ export class ExerciseRepository
    */
   private attributesToObject(exercise: Exercise): Record<string, any> {
     const nested: Record<string, any> = {};
-    for (const { attributeId, value } of exercise.values)
-      nested[attributeId] = value;
+    for (const { field, value } of exercise.values) nested[field] = value;
 
     return nested;
   }

@@ -37,14 +37,18 @@ export class ComponentRepository
     return this.firebaseService.serialize(data);
   }
 
-  async addDoc(input: Create<Component, 'name' | 'parent'>) {
+  async addDoc(input: Create<Component>) {
     const slug = await this.slug(input.name);
 
     const query = this.firebaseService.buildCreateQuery<Component>({
       id: slug,
       slug,
-      parent: input.parent || null,
+      parentId: input.parentId || null,
       name: input.name,
+      setTypeParams: input.setTypeParams || null,
+      workloadTypeParams: input.workloadTypeParams || null,
+      attributes: input.attributes || null,
+      params: input.params || null,
     });
 
     await this.doc(slug).set(query);
@@ -53,7 +57,7 @@ export class ComponentRepository
 
   async updateDoc(
     slug: string,
-    input: Update<Component, 'name' | 'parent' | 'slug'>,
+    input: Update<Component, 'name' | 'parentId' | 'slug'>,
   ) {
     const query = this.firebaseService.buildUpdateQuery<Component>(input);
     await this.doc(slug).update(query);

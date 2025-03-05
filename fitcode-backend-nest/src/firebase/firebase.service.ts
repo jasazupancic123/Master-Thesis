@@ -9,15 +9,9 @@ import {
   Timestamp,
 } from 'firebase-admin/firestore';
 import { Storage } from 'firebase-admin/storage';
-import { IdEntity } from 'src/common/entity/id.entity';
 import { TimestampEntity } from 'src/common/entity/timestamp.entity';
 import { CommonService } from 'src/common/service/common.service';
-import {
-  Create,
-  FirestoreEntity,
-  OmitIfExtends,
-  Update,
-} from 'src/common/type/entity.type';
+import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';

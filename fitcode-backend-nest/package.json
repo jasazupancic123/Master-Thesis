@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@golevelup/ts-jest": "^0.6.2",
     "@jest-mock/express": "^2.1.0",
     "@nestjs/cache-manager": "^3.0.0",
     "@nestjs/common": "^10.3.10",
@@ -74,7 +75,8 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": "./",
+    "modulePaths": ["<rootDir>"],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

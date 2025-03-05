@@ -1,12 +1,9 @@
 import {
   CollectionReference,
   DocumentReference,
-  DocumentSnapshot,
   Query,
-  QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 import { Component } from '../../component/entity/component.entity';
-import { ExerciseAttribute } from '../../exercise/entity/exercise-attribute.entity';
 import { Exercise } from '../../exercise/entity/exercise.entity';
 import { UserEntity } from '../../user/entity/user.entity';
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
@@ -59,8 +56,7 @@ export interface RootFirestoreCollectionRepository<Model = any> {
 
 export type ComponentRef = { componentId: string };
 export type ExerciseRef = { exerciseId: string };
-export type ExerciseAttributeRef = { attributeId: string };
-export type ExerciseAttributeValueRef = ExerciseRef & ExerciseAttributeRef;
+export type ExerciseAttributeValueRef = ExerciseRef & { field: string };
 export type UserRef = { uid: string }; // auth user uid
 export type UserMetaRef = UserRef & { date: Date };
 export type GroupRef = { groupId: string };
@@ -80,6 +76,5 @@ export type TrainingStatusRef = TrainingComponentRef & { userId: string };
 export type DatabaseSchema = {
   [FirestoreCollection.USER]: UserEntity[];
   [FirestoreCollection.COMPONENT]: Component[];
-  [FirestoreCollection.EXERCISE_ATTRIBUTE]: ExerciseAttribute[];
   [FirestoreCollection.EXERCISE]: Exercise[];
 };

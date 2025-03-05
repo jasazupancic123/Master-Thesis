@@ -6,9 +6,10 @@ import { Exercise } from '../entity/exercise.entity';
 
 export class CreateExerciseDto extends PickType(Exercise, [
   'name',
-  'componentsIds',
+  'componentId',
   'imageUrl',
   'videoUrl',
+  'bodyRegion',
 ] as const) {
   @IsObject()
   @ApiProperty()
