@@ -410,9 +410,10 @@ export default function Supersets(props: SupersetsProps) {
                   sx={{ cursor: 'pointer' }}
                   p={1}
                   mx={1}
+                  onClick={() => setOpenAddExerciseModal(true)}
                 >
                   <Typography variant="body2" align="center">
-                    Drop here to add a new superset
+                    Drop here to add a new superset or click to add an exercise
                   </Typography>
                 </Box>
               )}

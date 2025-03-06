@@ -14,7 +14,7 @@ import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Save } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
-import { Pagination, Tooltip } from '@mui/material';
+import { Pagination, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
@@ -27,8 +27,9 @@ import {
   handlePaginateExercises,
   handleUpdateExercise,
 } from './state';
+import MyModal from '@/components/modal';
 
-const DEFAULT_EXERCISE: Partial<Exercise> = {
+export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
   componentsIds: [],
   attributeValues: {},
@@ -68,6 +69,7 @@ export function ExercisesPage() {
     add: false,
     edit: false,
     import: false,
+    confirmDelete: false,
   });
 
   /**
@@ -222,10 +224,9 @@ export function ExercisesPage() {
                 filteredExercises,
                 setFilteredExercises,
                 setExercises,
+                setExercise,
+                setModal,
               });
-
-              setModal((prev) => ({ ...prev, add: false }));
-              setExercise(DEFAULT_EXERCISE);
             }}
           />
         )}
@@ -249,21 +250,38 @@ export function ExercisesPage() {
                   setFilteredExercises,
                   setExercises,
                   setExercise,
+                  setModal,
                 });
-
-                setModal((prev) => ({ ...prev, edit: false }));
               },
-              onDelete: async () => {
-                handleDeleteExercise(token, exercise!.id!, {
-                  router,
-                  setFilteredExercises,
-                  setExercises,
-                });
+              onDelete: () => {
+                setModal((prev) => ({ ...prev, confirmDelete: true }));
               },
               cancelText: 'Delete',
             })}
           />
         )}
+        <MyModal
+          isOpen={modal.confirmDelete}
+          setIsOpen={(open) =>
+            setModal((prev) => ({ ...prev, confirmDelete: open }))
+          }
+          cancelText="Cancel"
+          onCancel={() =>
+            setModal((prev) => ({ ...prev, confirmDelete: false }))
+          }
+          onConfirm={async () => {
+            await handleDeleteExercise(token, exercise!.id!, {
+              router,
+              setFilteredExercises,
+              setExercises,
+            });
+            setModal((prev) => ({ ...prev, confirmDelete: false }));
+          }}
+        >
+          <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
+            Delete exercise?
+          </Typography>
+        </MyModal>
       </Box>
     </>
   );

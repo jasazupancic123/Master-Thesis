@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { StarTwoTone } from '@mui/icons-material';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -66,16 +67,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           for (const exercise of superset.exercises)
             if (exercise.meta[field] !== undefined)
               (exercise.meta[field] as any) = value;
-      // Čori to more bit tu tak - spomni se šolanja ;)
-    } else if (superior?.column && j !== undefined && j !== null) {
-      const columnIndex = j;
-      for (const { field, value } of pairs) {
-        const superset = supersets[columnIndex];
-        if (!superset) continue;
-        for (const exercise of superset.exercises)
-          if (exercise.meta[field] !== undefined)
-            (exercise.meta[field] as any) = value;
-      }
       // Čori to more bit tu tak - spomni se šolanja ;)
     } else if (superior?.row && k !== undefined && k !== null) {
       const rowIndex = k;
@@ -278,7 +269,11 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                 values: option.values,
                 option: option.label as keyof ExerciseMeta,
                 format: option.format,
-                value: (state.workloadValue || 10).toString(),
+                value: (state.workloadValue !== undefined &&
+                state.workloadValue !== null
+                  ? state.workloadValue
+                  : 10
+                ).toString(),
               };
             })()}
             onChange={(state) => {
@@ -289,8 +284,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               if (
                 state.type === 'select' &&
                 !state.values!.includes(workloadValue.toString())
-              )
+              ) {
                 workloadValue = parseInt(state.values![1]);
+              }
 
               updateSelectedTraining([
                 { field: 'workloadType', value: workloadType },
