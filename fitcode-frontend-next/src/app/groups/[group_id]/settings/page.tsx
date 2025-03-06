@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { GroupIdPageParams, GroupIdPageProps } from '../props';
 import GroupSettingsPage from './group-settings-page';
+import { useState } from 'react';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -28,10 +29,8 @@ export default async function Page(props: GroupIdPageParams) {
 
   if ([UserRole.ATHLETE, UserRole.ADMIN].includes(role)) return notFound();
 
-  const [users, groups] = await Promise.all([
-    UserController.findAll(token),
-    GroupController.findAll(token),
-  ]);
+  const users = await UserController.findAll(token);
+  const groups = await GroupController.findAll(token);
 
   const pageProps: GroupIdPageProps = {
     token,
@@ -39,9 +38,9 @@ export default async function Page(props: GroupIdPageParams) {
     group,
     users,
     groups,
-    exercises: [],
-    attributes: [],
     components: [],
+    attributes: [],
+    exercises: [],
     trainings: [],
   };
 

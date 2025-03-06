@@ -35,7 +35,11 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
   const [group, setGroup] = useState<Group>(providedGroup);
-  const [cycle, setCycle] = useState<Cycle | undefined>(group.cycles[0]);
+  //find the cycle which is in the current date, else undefined:
+  const todaysCycle = group.cycles.find((c) =>
+    dateService.isBetween(dayjs(), c.from, c.to)
+  );
+  const [cycle, setCycle] = useState<Cycle | undefined>(todaysCycle);
   const [dateFrom, setDateFrom] = useState(dayjs().startOf('day'));
   const [dateTo, setDateTo] = useState(dayjs().endOf('day'));
   const [detectedChanges, setDetectedChanges] = useState(false);
