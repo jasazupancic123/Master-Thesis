@@ -45,12 +45,17 @@ export default function Subgroups(props: SubgroupProps) {
     setDetectedChanges,
   } = useGroup();
 
-  const { component, setComponent, training, setTraining } =
-    useTrainerDayViewContext();
+  const {
+    component,
+    setComponent,
+    training,
+    setTraining,
+    availableMembers,
+    setAvailableMembers,
+    changedSubgroupIds,
+    setChangedSubgroupIds,
+  } = useTrainerDayViewContext();
 
-  const [availableMembers, setAvailableMembers] = useState<User[]>([]);
-
-  const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
 
   const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
