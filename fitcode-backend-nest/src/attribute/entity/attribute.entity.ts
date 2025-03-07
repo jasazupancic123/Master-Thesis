@@ -2,11 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { AttributeType } from 'src/common/enum/attribute-type.enum';
 
 export class Attribute {
   @IsString()
@@ -21,6 +23,13 @@ export class Attribute {
   @Expose()
   name: string;
 
+  @IsEnum(AttributeType)
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  type?: AttributeType; // defaults to "string"
+
   @IsBoolean()
   @IsOptional()
   @ApiPropertyOptional()
@@ -33,10 +42,17 @@ export class Attribute {
   @Expose()
   unit?: string; // kg, lbs, ...
 
+  @IsString()
+  @ApiPropertyOptional()
+  @IsNotEmpty()
+  @IsOptional()
+  @Expose()
+  defaultValue?: string;
+
   @ValidateNested({ each: true })
   @Type(() => Attribute)
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  values?: Attribute[]; // possible values for select type
+  options?: Attribute[]; // possible values for select type
 }

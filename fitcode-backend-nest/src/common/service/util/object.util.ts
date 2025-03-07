@@ -1,5 +1,4 @@
-import { Attribute } from 'src/component/entity/attribute.entity';
-import { AttributeValue } from 'src/training/entity/attribute-value.entity';
+import { Attribute } from '../../../attribute/entity/attribute.entity';
 
 export class ObjectUtil {
   /**
@@ -58,60 +57,19 @@ export class ObjectUtil {
       case 'date':
         return value instanceof Date && !isNaN(value.getTime());
       case 'select':
-        if (!attribute.values) return false;
+        if (!attribute.options) return false;
 
         // single-level select
-        if (!attribute.values[0]?.values) {
-          return attribute.values.map((v) => v.field).includes(value);
+        if (!attribute.options[0]?.options) {
+          return attribute.options.map((v) => v.field).includes(value);
         }
 
         // multi-level select
-        const values = attribute.values;
+        const values = attribute.options;
         return this.validateNestedSelect(values, value[attribute.field]);
       default:
         return true; // if type not defined, allow any value
     }
-  }
-
-  /**
-   * Removes key prefix from each object key. For example:
-   *
-   * ```ts
-   * const obj = { 'john.first': 'John', 'john.last': 'Doe', 'john.age': 40 }
-   * const newObj = removeKeyPrefix(obj, 'john')
-   * // => { first: 'John', last: 'Doe', age: 40 }
-   * ```
-   */
-  removeKeyPrefix<T>(
-    obj: { [key: string]: T },
-    prefix: string,
-  ): { [key: string]: T } {
-    const prefixRegex = new RegExp(`^${prefix}\\.`);
-
-    return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [
-        key.replace(prefixRegex, ''),
-        value,
-      ]),
-    );
-  }
-
-  /**
-   * Adds key prefix for each object key. For example:
-   *
-   * ```ts
-   * const obj = { first: 'John', last: 'Doe', age: 40 }
-   * const newObj = addKeyPrefix(obj, 'john')
-   * // => { 'john.first': 'John', 'john.last': 'Doe', 'john.age': 40 }
-   * ```
-   */
-  addKeyPrefix<T>(
-    obj: { [key: string]: T },
-    prefix: string,
-  ): { [key: string]: T } {
-    return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [`${prefix}.${key}`, value]),
-    );
   }
 
   private validateNestedSelect(
@@ -126,16 +84,16 @@ export class ObjectUtil {
 
       const selectedValue = value[key];
       if (typeof selectedValue === 'object') {
-        if (!selectedOption.values || !Array.isArray(selectedOption.values))
+        if (!selectedOption.options || !Array.isArray(selectedOption.options))
           return false;
 
-        return this.validateNestedSelect(selectedOption.values, selectedValue);
+        return this.validateNestedSelect(selectedOption.options, selectedValue);
       }
 
       // leaf, validate against available values
       if (
-        !selectedOption.values ||
-        !selectedOption.values.map((v) => v.field).includes(selectedValue)
+        !selectedOption.options ||
+        !selectedOption.options.map((v) => v.field).includes(selectedValue)
       )
         return false;
     }

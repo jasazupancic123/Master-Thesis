@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { CommonService } from 'src/common/service/common.service';
+import { CommonService } from '../../common/service/common.service';
 import {
   ExerciseAttributeValueRef,
   ExerciseRef,
   FirestoreCollectionRepository,
-} from 'src/common/type/firestore.type';
-import { ExerciseAttributeValue } from 'src/exercise/entity/exercise-attribute-value.entity';
+} from '../../common/type/firestore.type';
+import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
 import { ExerciseRepository } from './exercise.repository';
 import { Query } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
-import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { FirebaseService } from '../../firebase/firebase.service';
 
 @Injectable()
 export class ExerciseAttributeValueRepository
@@ -42,6 +42,18 @@ export class ExerciseAttributeValueRepository
     return this.firebaseService.serialize(
       snapshot.data() as FirestoreEntity<ExerciseAttributeValue>,
     );
+  }
+
+  async getAllByExercise(ref: ExerciseRef) {
+    return this.collection(ref)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<ExerciseAttributeValue>,
+          ),
+        ),
+      );
   }
 
   async addDoc(

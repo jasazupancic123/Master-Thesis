@@ -1,0 +1,83 @@
+[
+    {
+      "name": "Squats",
+      "componentId": "concentric",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main",
+        "equipment": {
+          "strength": "barbells"
+        }
+      }
+    },
+    {
+      "name": "Deadlifts",
+      "componentId": "concentric",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main",
+        "equipment": {
+          "strength": "barbells"
+        }
+      }
+    },
+    {
+      "name": "Bench Press",
+      "componentId": "concentric",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main",
+        "equipment": {
+          "strength": "barbells"
+        }
+      }
+    },
+    {
+      "name": "High Plank Reach",
+      "componentId": "shoulder",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main"
+      }
+    },
+    {
+      "name": "Power Clean",
+      "componentId": "olympic-lifts",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main"
+      }
+    },
+    {
+      "name": "Sprint",
+      "componentId": "peak-speed",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main"
+      }
+    },
+    {
+      "name": "Sleed Acceleration",
+      "componentId": "generic",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main"
+      }
+    },
+    {
+      "name": "Jogging",
+      "componentId": "aerobic-capacity",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main"
+      }
+    },
+    {
+      "name": "Bicep Stretching",
+      "componentId": "passive-stretching",
+      "bodyRegion": "Core",
+      "attributeValues": {
+        "priority": "main"
+      }
+    }
+]

@@ -4,7 +4,7 @@ import {
   DocumentReference,
   Query,
 } from 'firebase-admin/lib/firestore';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';

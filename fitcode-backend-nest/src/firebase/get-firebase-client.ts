@@ -35,6 +35,6 @@ export function getFirebaseClient(
   const firestore = getFirestore(app);
   const storage = getStorage(app);
 
-  firestore.settings({ ignoreUndefinedProperties: true });
+  if (!apps.length) firestore.settings({ ignoreUndefinedProperties: true });
   return { app, auth, firestore, storage };
 }

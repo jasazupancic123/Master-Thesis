@@ -2,7 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { CacheManagerService } from './cache-manager.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ComponentModule } from '../component/component.module';
-import { ExerciseModule } from 'src/exercise/exercise.module';
+import { ExerciseModule } from '../exercise/exercise.module';
 
 @Global()
 @Module({

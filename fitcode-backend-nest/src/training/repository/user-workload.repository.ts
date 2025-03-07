@@ -4,9 +4,9 @@ import {
   DocumentReference,
 } from 'firebase-admin/firestore';
 import { Query } from 'firebase-admin/lib/firestore';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
-import { Wrapper } from 'src/common/type/wrapper.type';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
+import { Wrapper } from '../../common/type/wrapper.type';
+import { FirebaseService } from '../../firebase/firebase.service';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import {
   FirestoreCollectionRepository,

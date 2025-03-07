@@ -1,0 +1,526 @@
+[
+    {
+        "field": "coordination",
+        "name": "Coordination",
+        "type": "boolean"
+    },
+    {
+        "field": "equipment",
+        "name": "Equipment",
+        "type": "select",
+        "options": [
+            {
+                "field": "cardio",
+                "name": "Cardio Equipment",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "cardio-treadmill",
+                        "name": "Treadmill"
+                    },
+                    {
+                        "field": "cardio-elliptical-trainer",
+                        "name": "Elliptical Trainer"
+                    },
+                    {
+                        "field": "cardio-stationary-bike",
+                        "name": "Stationary Bike (Upright / Recumbent)"
+                    },
+                    {
+                        "field": "cardio-rowing-machine",
+                        "name": "Rowing Machine"
+                    },
+                    {
+                        "field": "cardio-stair-climber-stepper",
+                        "name": "Stair Climber/Stepper"
+                    },
+                    {
+                        "field": "cardio-spin-bike",
+                        "name": "Spin Bike"
+                    },
+                    {
+                        "field": "cardio-air-bike",
+                        "name": "Air Bike"
+                    },
+                    {
+                        "field": "cardio-arc-trainer",
+                        "name": "Arc Trainer"
+                    }
+                ]
+            },
+            {
+                "field": "strength-training",
+                "name": "Strength Training Equipment",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "barbells",
+                        "name": "Barbells",
+                        "type": "multiselect",
+                        "options": [
+                            {
+                                "field": "olympic-barbell",
+                                "name": "Olympic Barbell"
+                            },
+                            {
+                                "field": "ez-curl-bar",
+                                "name": "EZ Curl Bar"
+                            }
+                        ]
+                    },
+                    {
+                        "field": "dumbbells",
+                        "name": "Dumbbells",
+                        "type": "multiselect",
+                        "options": [
+                            {
+                                "field": "adjustable-dumbbells",
+                                "name": "Adjustable Dumbbells"
+                            },
+                            {
+                                "field": "fixed-dumbbells",
+                                "name": "Fixed Dumbbells"
+                            }
+                        ]
+                    },
+                    {
+                        "field": "kettlebells",
+                        "name": "Kettlebells"
+                    },
+                    {
+                        "field": "weight-plates",
+                        "name": "Weight Plates",
+                        "type": "multiselect",
+                        "options": [
+                            {
+                                "field": "standard-weight-plates",
+                                "name": "Standard"
+                            },
+                            {
+                                "field": "bumper-plates",
+                                "name": "Bumper Plates"
+                            }
+                        ]
+                    },
+                    {
+                        "field": "bench",
+                        "name": "Bench",
+                        "type": "multiselect",
+                        "options": [
+                            {
+                                "field": "flat-bench",
+                                "name": "Flat Bench"
+                            },
+                            {
+                                "field": "adjustable-incline-bench",
+                                "name": "Adjustable/Incline Bench"
+                            },
+                            {
+                                "field": "decline-bench",
+                                "name": "Decline Bench"
+                            }
+                        ]
+                    },
+                    {
+                        "field": "power-rack-squat-rack",
+                        "name": "Power Rack/Squat Rack"
+                    },
+                    {
+                        "field": "smith-machine",
+                        "name": "Smith Machine"
+                    },
+                    {
+                        "field": "cable-machine",
+                        "name": "Cable Machine"
+                    },
+                    {
+                        "field": "functional-trainer",
+                        "name": "Functional Trainer"
+                    },
+                    {
+                        "field": "lat-pulldown-machine",
+                        "name": "Lat Pulldown Machine"
+                    },
+                    {
+                        "field": "cable-crossover-machine",
+                        "name": "Cable Crossover Machine"
+                    },
+                    {
+                        "field": "leg-press-machine",
+                        "name": "Leg Press Machine"
+                    },
+                    {
+                        "field": "hack-squat-machine",
+                        "name": "Hack Squat Machine"
+                    },
+                    {
+                        "field": "leg-extension-leg-curl-machine",
+                        "name": "Leg Extension/Leg Curl Machine"
+                    },
+                    {
+                        "field": "preacher-curl-bench",
+                        "name": "Preacher Curl Bench"
+                    },
+                    {
+                        "field": "chest-press-machine",
+                        "name": "Chest Press Machine"
+                    },
+                    {
+                        "field": "shoulder-press-machine",
+                        "name": "Shoulder Press Machine"
+                    },
+                    {
+                        "field": "pec-deck-machine",
+                        "name": "Pec Deck Machine"
+                    },
+                    {
+                        "field": "seated-row-machine",
+                        "name": "Seated Row Machine"
+                    },
+                    {
+                        "field": "abdominal-crunch-machine",
+                        "name": "Abdominal Crunch Machine"
+                    },
+                    {
+                        "field": "back-extension-bench",
+                        "name": "Back Extension Bench"
+                    }
+                ]
+            },
+            {
+                "field": "free-weight-accessories",
+                "name": "Free Weight Accessories",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "weightlifting-belt",
+                        "name": "Weightlifting Belt"
+                    },
+                    {
+                        "field": "lifting-straps",
+                        "name": "Lifting Straps"
+                    },
+                    {
+                        "field": "weightlifting-gloves",
+                        "name": "Weightlifting Gloves"
+                    },
+                    {
+                        "field": "foam-roller",
+                        "name": "Foam Roller"
+                    },
+                    {
+                        "field": "resistance-bands",
+                        "name": "Resistance Bands"
+                    },
+                    {
+                        "field": "medicine-ball",
+                        "name": "Medicine Ball"
+                    },
+                    {
+                        "field": "slam-ball",
+                        "name": "Slam Ball"
+                    },
+                    {
+                        "field": "battle-ropes",
+                        "name": "Battle Ropes"
+                    },
+                    {
+                        "field": "sandbags",
+                        "name": "Sandbags"
+                    }
+                ]
+            },
+            {
+                "field": "bodyweight",
+                "name": "Bodyweight Equipment",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "pull-up-bar",
+                        "name": "Pull-Up Bar"
+                    },
+                    {
+                        "field": "dip-station",
+                        "name": "Dip Station"
+                    },
+                    {
+                        "field": "gymnastic-rings",
+                        "name": "Gymnastic Rings"
+                    },
+                    {
+                        "field": "parallettes",
+                        "name": "Parallettes"
+                    },
+                    {
+                        "field": "push-up-bars",
+                        "name": "Push-Up Bars"
+                    },
+                    {
+                        "field": "ab-wheel",
+                        "name": "Ab Wheel"
+                    }
+                ]
+            },
+            {
+                "field": "functional",
+                "name": "Functional Training Equipment",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "trx-suspension-trainer",
+                        "name": "TRX Suspension Trainer"
+                    },
+                    {
+                        "field": "plyo-box",
+                        "name": "Plyo Box (Plyometric Box)"
+                    },
+                    {
+                        "field": "jump-rope",
+                        "name": "Jump Rope"
+                    },
+                    {
+                        "field": "agility-ladder",
+                        "name": "Agility Ladder"
+                    },
+                    {
+                        "field": "bosu-ball",
+                        "name": "BOSU Ball"
+                    },
+                    {
+                        "field": "stability-ball",
+                        "name": "Stability Ball"
+                    },
+                    {
+                        "field": "balance-board",
+                        "name": "Balance Board"
+                    }
+                ]
+            },
+            {
+                "field": "specialty",
+                "name": "Specialty Machines",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "smith-machine",
+                        "name": "Smith Machine"
+                    },
+                    {
+                        "field": "glute-ham-developer",
+                        "name": "Glute Ham Developer (GHD)"
+                    },
+                    {
+                        "field": "t-bar-row-machine",
+                        "name": "T-Bar Row Machine"
+                    },
+                    {
+                        "field": "chest-fly-machine",
+                        "name": "Chest Fly Machine"
+                    },
+                    {
+                        "field": "seated-calf-raise-machine",
+                        "name": "Seated Calf Raise Machine"
+                    },
+                    {
+                        "field": "vertical-knee-raise-dip-station",
+                        "name": "Vertical Knee Raise/Dip Station"
+                    }
+                ]
+            },
+            {
+                "field": "miscellaneous",
+                "name": "Miscellaneous Equipment",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "gym-timer-clock",
+                        "name": "Gym Timer/Clock"
+                    },
+                    {
+                        "field": "sound-system",
+                        "name": "Sound System"
+                    },
+                    {
+                        "field": "flooring-mats",
+                        "name": "Flooring Mats"
+                    },
+                    {
+                        "field": "water-fountain-cooler",
+                        "name": "Water Fountain/Cooler"
+                    },
+                    {
+                        "field": "towel-rack",
+                        "name": "Towel Rack"
+                    },
+                    {
+                        "field": "mirrors",
+                        "name": "Mirrors"
+                    }
+                ]
+            },
+            {
+                "field": "football",
+                "name": "Football Equipment",
+                "type": "multiselect",
+                "options": [
+                    {
+                        "field": "balls",
+                        "name": "Balls"
+                    },
+                    {
+                        "field": "marks",
+                        "name": "Marks"
+                    },
+                    {
+                        "field": "bibs",
+                        "name": "Bibs"
+                    },
+                    {
+                        "field": "sticks",
+                        "name": "Sticks"
+                    },
+                    {
+                        "field": "mannequins",
+                        "name": "Mannequins"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "field": "pattern",
+        "name": "Pattern",
+        "type": "multiselect",
+        "options": [
+          { "field": "pattA", "name": "Pattern A" },
+          { "field": "pattB", "name": "Pattern B" },
+          { "field": "pattC", "name": "Pattern C" }
+        ]
+    },
+    {
+        "field": "loadingSide",
+        "name": "Loading Side",
+        "type": "select",
+        "options": [
+          { "field": "unilat", "name": "Unilateral" },
+          { "field": "bilat", "name": "Bilateral" },
+          { "field": "quad", "name": "Quadruped" },
+          { "field": "mono", "name": "Monopedal" },
+          { "field": "bipedal", "name": "Bipedal" }
+        ]
+    },
+    {
+        "field": "movDir",
+        "name": "Movement Direction",
+        "type": "select",
+        "options": [
+          { "field": "lin", "name": "Linear" },
+          { "field": "lat", "name": "Lateral" }
+        ]
+    },
+    {
+        "field": "coeff",
+        "name": "Coefficient",
+        "type": "number"
+    },
+    {
+        "field": "method",
+        "name": "Method",
+        "type": "multiselect",
+        "options": [
+            { "field": "methodA", "name": "Method A" },
+            { "field": "methodB", "name": "Method B" },
+            { "field": "methodC", "name": "Method C" }
+        ]
+    },
+    {
+        "field": "prescr",
+        "name": "Prescription",
+        "type": "select",
+        "options": [
+            { "field": "elbil", "name": "EL BIL" },
+            { "field": "eluni", "name": "EL UNI" },
+            { "field": "inebil", "name": "INE BIL" },
+            { "field": "ineuni", "name": "INE UNI" }
+        ]
+    },
+    { 
+        "field": "priority",
+        "name": "Exercise Priority",
+        "type": "select",
+        "options": [
+            { "field": "main", "name": "Main Lift" },
+            { "field": "sup", "name": "Supplemental Lift" },
+            { "field": "as", "name": "Assistance Lift" }
+        ]
+    },
+    {
+        "field": "sportTask",
+        "name": "Sport Task",
+        "type": "string"
+    },
+    {
+        "field": "instr",
+        "name": "Instruction",
+        "type": "string"
+    },
+    { 
+        "field": "diagnosis",
+        "name": "Diagnosis",
+        "type": "multiselect",
+        "options": [
+            { "field": "main", "name": "Main Lift" },
+            { "field": "sup", "name": "Supplemental Lift" },
+            { "field": "as", "name": "Assistance Lift" }
+        ]
+    },
+    {
+        "field": "muscle",
+        "name": "Muscle",
+        "type:": "multiselect",
+        "options": [
+          { "field": "frontalis", "name": "Frontalis" },
+          { "field": "orbicularis_oculi", "name": "Orbicularis Oculi" },
+          { "field": "orbicularis_oris", "name": "Orbicularis Oris" },
+          { "field": "masseter", "name": "Masseter" },
+          { "field": "temporalis", "name": "Temporalis" },
+          { "field": "sternocleidomastoid", "name": "Sternocleidomastoid" },
+          { "field": "platysma", "name": "Platysma" },
+          { "field": "pectoralis_major", "name": "Pectoralis Major" },
+          { "field": "pectoralis_minor", "name": "Pectoralis Minor" },
+          { "field": "serratus_anterior", "name": "Serratus Anterior" },
+          { "field": "trapezius", "name": "Trapezius" },
+          { "field": "rhomboid_major", "name": "Rhomboid Major" },
+          { "field": "rhomboid_minor", "name": "Rhomboid Minor" },
+          { "field": "deltoid", "name": "Deltoid" },
+          { "field": "biceps_brachii", "name": "Biceps Brachii" },
+          { "field": "brachialis", "name": "Brachialis" },
+          { "field": "triceps_brachii", "name": "Triceps Brachii" },
+          { "field": "brachioradialis", "name": "Brachioradialis" },
+          { "field": "flexor_carpi_radialis", "name": "Flexor Carpi Radialis" },
+          { "field": "extensor_carpi_radialis", "name": "Extensor Carpi Radialis" },
+          { "field": "flexor_carpi_ulnaris", "name": "Flexor Carpi Ulnaris" },
+          { "field": "extensor_carpi_ulnaris", "name": "Extensor Carpi Ulnaris" },
+          { "field": "rectus_abdominis", "name": "Rectus Abdominis" },
+          { "field": "external_oblique", "name": "External Oblique" },
+          { "field": "internal_oblique", "name": "Internal Oblique" },
+          { "field": "transversus_abdominis", "name": "Transversus Abdominis" },
+          { "field": "latissimus_dorsi", "name": "Latissimus Dorsi" },
+          { "field": "erector_spinae", "name": "Erector Spinae" },
+          { "field": "gluteus_maximus", "name": "Gluteus Maximus" },
+          { "field": "gluteus_medius", "name": "Gluteus Medius" },
+          { "field": "gluteus_minimus", "name": "Gluteus Minimus" },
+          { "field": "tensor_fasciae_latae", "name": "Tensor Fasciae Latae" },
+          { "field": "quadriceps", "name": "Quadriceps" },
+          { "field": "hamstrings", "name": "Hamstrings" },
+          { "field": "adductor_group", "name": "Adductor Group" },
+          { "field": "sartorius", "name": "Sartorius" },
+          { "field": "gastrocnemius", "name": "Gastrocnemius" },
+          { "field": "soleus", "name": "Soleus" },
+          { "field": "tibialis_anterior", "name": "Tibialis Anterior" },
+          { "field": "peroneus_longus", "name": "Peroneus Longus" },
+          { "field": "extensor_digitorum_longus", "name": "Extensor Digitorum Longus" },
+          { "field": "flexor_digitorum_longus", "name": "Flexor Digitorum Longus" }
+        ]
+    }
+]

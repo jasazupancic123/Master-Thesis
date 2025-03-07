@@ -7,9 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { IdEntity } from '../../common/entity/id.entity';
-import { Attribute } from './attribute.entity';
-
-type AttributeType = 'string' | 'boolean' | 'number' | 'select' | 'multiselect';
+import { Attribute } from '../../attribute/entity/attribute.entity';
 
 export class Component extends IdEntity {
   @IsString()
@@ -33,17 +31,14 @@ export class Component extends IdEntity {
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  setTypeParams?: Attribute[];
+  attributes: Attribute[];
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  workloadTypeParams?: Attribute[];
-
-  attributes?: (Attribute & AttributeType)[];
-  params?: (Attribute & AttributeType)[];
+  params: Attribute[];
 
   // virtual fields
   children?: string[];

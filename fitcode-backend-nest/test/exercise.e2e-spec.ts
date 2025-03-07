@@ -2,15 +2,31 @@ import * as request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { ConfigService } from '@nestjs/config';
-import { CommonService } from '../src/common/service/common.service';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { FirebaseService } from '../src/firebase/firebase.service';
+import { ExerciseService } from '../src/exercise/service/exercise.service';
+import {
+  createGroupWithCyclesAndTrainings,
+  importExercises,
+} from './utils/data.util';
+import { FirestoreCollection } from '../src/common/enum/firestore-collection.enum';
+import { Exercise } from '../src/exercise/entity/exercise.entity';
+import { Group } from '../src/group/entity/group.entity';
+import { GroupService } from '../src/group/group.service';
+import { TrainingService } from '../src/training/service/training.service';
+import { Cycle } from '../src/group/entity/cycle.entity';
+import { Training } from '../src/training/entity/training.entity';
 
 describe('ExerciseController (e2e)', () => {
   let app: INestApplication;
   let firebaseService: FirebaseService;
-  let configService: ConfigService;
-  let commonService: CommonService;
+  let exerciseService: ExerciseService;
+  let groupService: GroupService;
+  let trainingService: TrainingService;
+
+  let globalExercises: Exercise[];
+  let group: Group;
+  let cycles: Cycle[];
+  let trainings: Training[];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -20,66 +36,39 @@ describe('ExerciseController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Get services
     firebaseService = moduleFixture.get(FirebaseService);
-    configService = moduleFixture.get(ConfigService);
-    commonService = moduleFixture.get(CommonService);
+    exerciseService = moduleFixture.get(ExerciseService);
+    groupService = moduleFixture.get(GroupService);
+    trainingService = moduleFixture.get(TrainingService);
+
+    globalExercises = await importExercises(exerciseService, global.admin);
+    const [_group, _cycles, _trainings] =
+      await createGroupWithCyclesAndTrainings(
+        groupService,
+        trainingService,
+        global.trainer,
+      );
+
+    group = _group;
+    cycles = _cycles;
+    trainings = _trainings;
   });
 
-  afterAll(async () => await app.close());
+  afterAll(async () => {
+    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
+    await app.close();
+  });
 
-  it('should return all exercises for a user', async () => {
-    // Create a test user in the Firebase Auth Emulator
-    const testUser = await firebaseService.auth.createUser({
-      email: 'test@example.com',
-      password: 'password',
-    });
-
-    // Generate a custom token for the test user
-    const customToken = await firebaseService.auth.createCustomToken(
-      testUser.uid,
-    );
-
-    // Exchange the custom token for an ID token
-    const idToken = await fetch(
-      'http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=fake-api-key',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: customToken,
-          returnSecureToken: true,
-        }),
-      },
-    )
-      .then((res) => res.json())
-      .then((data) => data.idToken);
-
-    // Create some test exercises for the user
-    await request(app.getHttpServer())
-      .post('/exercise/many')
-      .set('Authorization', `Bearer ${idToken}`)
-      .send({
-        exercises: [
-          { name: 'Bench Press', muscleGroup: 'chest' },
-          { name: 'Deadlift', muscleGroup: 'back' },
-        ],
-      });
-
-    // Test the GET /exercise endpoint
+  it('should return all global exercises for a user without trainers with populated attribute values', async () => {
     const response = await request(app.getHttpServer())
       .get('/exercise')
-      .set('Authorization', `Bearer ${idToken}`);
+      .set('Authorization', `Bearer ${athlete.token}`);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Bench Press', muscleGroup: 'chest' }),
-        expect.objectContaining({ name: 'Deadlift', muscleGroup: 'back' }),
-      ]),
-    );
+    expect(response.body).toHaveLength(globalExercises.length);
 
-    // Clean up the test user
-    await firebaseService.auth.deleteUser(testUser.uid);
+    // each exercise should have atleast one attribute (because of exercises.json file)
+    for (const exercise of response.body as Exercise[])
+      expect(exercise.values.length).toBeGreaterThanOrEqual(1);
   });
 });

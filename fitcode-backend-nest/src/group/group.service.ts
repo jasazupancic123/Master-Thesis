@@ -7,9 +7,9 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { NUM_MAX_GROUPS } from 'src/common/constant/limit.constant';
-import { Create, Update } from 'src/common/type/entity.type';
-import { Training } from 'src/training/entity/training.entity';
+import { NUM_MAX_GROUPS } from '../common/constant/limit.constant';
+import { Create, Update } from '../common/type/entity.type';
+import { Training } from '../training/entity/training.entity';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { GroupRef } from '../common/type/firestore.type';
@@ -21,7 +21,7 @@ import { UserService } from '../user/user.service';
 import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
 import { GroupRepository } from './repository/group.repository';
-import { UserEntity } from 'src/user/entity/user.entity';
+import { UserEntity } from '../user/entity/user.entity';
 
 @Injectable()
 export class GroupService {

@@ -8,7 +8,6 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { ExerciseAttributeValue } from 'src/exercise/entity/exercise-attribute-value.entity';
 import { AttributeValue } from './attribute-value.entity';
 
 // NOTE - any values that are represented in % are NOT normalized between 0 and 1 (BW, INT, RM, ...)

@@ -16,25 +16,25 @@ import {
   startOfHour,
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
-import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
-import { DateFilterDto } from 'src/common/dto/date-filter.dto';
-import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
-import { CommonService } from 'src/common/service/common.service';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
-import { User } from 'src/common/type/firebase-auth.type';
+import { CacheManagerService } from '../../cache-manager/cache-manager.service';
+import { DateFilterDto } from '../../common/dto/date-filter.dto';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { CommonService } from '../../common/service/common.service';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
+import { User } from '../../common/type/firebase-auth.type';
 import {
   TrainingComponentRef,
   TrainingRef,
   TrainingStatusRef,
-} from 'src/common/type/firestore.type';
-import { Filter } from 'src/common/type/orm.type';
-import { Wrapper } from 'src/common/type/wrapper.type';
-import { Component } from 'src/component/entity/component.entity';
-import { FirebaseService } from 'src/firebase/firebase.service';
-import { Cycle } from 'src/group/entity/cycle.entity';
-import { Group } from 'src/group/entity/group.entity';
-import { GroupService } from 'src/group/group.service';
-import { UserService } from 'src/user/user.service';
+} from '../../common/type/firestore.type';
+import { Filter } from '../../common/type/orm.type';
+import { Wrapper } from '../../common/type/wrapper.type';
+import { Component } from '../../component/entity/component.entity';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { Cycle } from '../../group/entity/cycle.entity';
+import { Group } from '../../group/entity/group.entity';
+import { GroupService } from '../../group/group.service';
+import { UserService } from '../../user/user.service';
 import { Subgroup } from '../entity/subgroup.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingStatus } from '../entity/training-status.entity';
@@ -261,9 +261,7 @@ export class TrainingService {
       to: { value: endOfDay(input.from) },
     });
 
-    console.log('found trainings:', trainings);
-
-    await this.validateOverlap(input.from, input.to, trainings);
+    this.validateOverlap(input.from, input.to, trainings);
 
     if (trainings.length >= 2)
       throw new BadRequestException(

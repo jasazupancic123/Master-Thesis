@@ -10,8 +10,8 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { IsStringOrNumber } from 'src/common/decorator/is-string-or-number.decorator';
-import { TimestampEntity } from 'src/common/entity/timestamp.entity';
+import { IsStringOrNumber } from '../../common/decorator/is-string-or-number.decorator';
+import { TimestampEntity } from '../../common/entity/timestamp.entity';
 import { SetStatus } from '../enum/set-status.enum';
 
 export class UserWorkload extends TimestampEntity {

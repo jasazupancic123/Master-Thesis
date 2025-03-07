@@ -6,6 +6,10 @@ export enum FirestoreCollection {
   USER = 'users',
   COMPONENT = 'components',
 
+  // attributes
+  ATTRIBUTE = 'attributes',
+  PARAM = 'params',
+
   // exercise hierarchy
   EXERCISE = 'exercises',
   EXERCISE_ATTRIBUTE_VALUES = 'exerciseAttributeValues',

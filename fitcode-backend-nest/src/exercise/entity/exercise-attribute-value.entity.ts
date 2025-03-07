@@ -24,5 +24,5 @@ export class ExerciseAttributeValue {
   @IsString()
   @ApiProperty()
   @Expose()
-  value: string;
+  value: string | string[];
 }

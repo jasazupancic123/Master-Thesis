@@ -7,7 +7,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { UserMeta } from 'src/user/entity/user-meta.entity';
+import { UserMeta } from '../../user/entity/user-meta.entity';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { TrainingComponent } from './training-component.entity';
 
