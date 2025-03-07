@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TrainingModule } from 'src/training/training.module';
+import { TrainingModule } from '../training/training.module';
 import { UserMetaRepository } from './repository/user-meta.repository';
 import { UserRepository } from './repository/user.repository';
 import { UserController } from './user.controller';

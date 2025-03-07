@@ -72,11 +72,11 @@ describe('ObjectUtil::Unit', () => {
         name: 'Color',
         field: 'color',
         type: 'select' as 'select',
-        values: [
+        options: [
           {
             name: 'Red',
             field: 'red',
-            values: [
+            options: [
               { field: 'dark', name: 'Dark' },
               { field: 'light', name: 'Light' },
             ],
@@ -84,7 +84,7 @@ describe('ObjectUtil::Unit', () => {
           {
             name: 'Blue',
             field: 'blue',
-            values: [
+            options: [
               { field: 'ocean', name: 'Ocean' },
               { field: 'navy', name: 'Navy' },
             ],
@@ -92,11 +92,11 @@ describe('ObjectUtil::Unit', () => {
           {
             name: 'Nested',
             field: 'nested',
-            values: [
+            options: [
               {
                 name: 'A',
                 field: 'nestedA',
-                values: [
+                options: [
                   { field: 'a1', name: 'A1' },
                   { field: 'a2', name: 'A2' },
                 ],
@@ -104,7 +104,7 @@ describe('ObjectUtil::Unit', () => {
               {
                 name: 'B',
                 field: 'nestedB',
-                values: [
+                options: [
                   { field: 'b1', name: 'B1' },
                   { field: 'b2', name: 'B2' },
                 ],

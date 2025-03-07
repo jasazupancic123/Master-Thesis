@@ -6,7 +6,7 @@ import {
   Query,
   QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -25,13 +25,17 @@ export class ExerciseRepository
       .where('deletedAt', '==', null)
       .get();
 
-    return snapshot.docs.map((doc) => this.serialize(doc));
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(doc.data() as FirestoreEntity<Exercise>),
+    );
   }
 
   async getDoc(exerciseId: string): Promise<Exercise> {
     const snapshot = await this.doc(exerciseId).get();
     if (!snapshot.exists) return null;
-    return this.serialize(snapshot);
+    return this.firebaseService.serialize(
+      snapshot.data() as FirestoreEntity<Exercise>,
+    );
   }
 
   async addDoc(input: Create<Exercise>) {
@@ -76,24 +80,5 @@ export class ExerciseRepository
     return this.firebaseService.firestore.collection(
       FirestoreCollection.EXERCISE,
     );
-  }
-
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Exercise {
-    const serialized = this.firebaseService.serialize(
-      snapshot.data() as FirestoreEntity<Exercise>,
-    );
-
-    serialized.attributeValues = this.attributesToObject(serialized);
-    return serialized;
-  }
-
-  /**
-   * Convert exercise's attribute values to nested object for frontend.
-   */
-  private attributesToObject(exercise: Exercise): Record<string, any> {
-    const nested: Record<string, any> = {};
-    for (const { field, value } of exercise.values) nested[field] = value;
-
-    return nested;
   }
 }

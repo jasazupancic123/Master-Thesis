@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { addMinutes } from 'date-fns';
-import { Update } from 'src/common/type/entity.type';
-import { TrainingComponentRef } from 'src/common/type/firestore.type';
+import { Update } from '../../common/type/entity.type';
+import { TrainingComponentRef } from '../../common/type/firestore.type';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { Training } from '../entity/training.entity';
 

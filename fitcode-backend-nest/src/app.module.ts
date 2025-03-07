@@ -12,6 +12,7 @@ import { GroupModule } from './group/group.module';
 import { TrainingModule } from './training/training.module';
 import { CommonModule } from './common/common.module';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
+import { AttributeModule } from './attribute/attribute.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CacheManagerModule } from './cache-manager/cache-manager.module';
     ConfigModule.forRoot({ isGlobal: true, validationSchema }),
     FirebaseModule.forRoot(),
     CacheManagerModule,
+    AttributeModule,
     UserModule,
     ComponentModule,
     ExerciseModule,

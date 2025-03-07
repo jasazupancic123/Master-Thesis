@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Transaction, WriteBatch } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity } from 'src/common/type/entity.type';
+import { Create, FirestoreEntity } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import {

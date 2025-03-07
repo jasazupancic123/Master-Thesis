@@ -1,16 +1,7 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
-import { FieldPath, Query } from 'firebase-admin/firestore';
-import { Create, Update } from 'src/common/type/entity.type';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Create, Update } from '../common/type/entity.type';
 import { CommonService } from '../common/service/common.service';
 import { Filter } from '../common/type/orm.type';
-import { Wrapper } from '../common/type/wrapper.type';
-import { ExerciseService } from '../exercise/service/exercise.service';
 import { Component } from './entity/component.entity';
 import { ComponentRepository } from './repository/component.repository';
 
@@ -21,8 +12,6 @@ export class ComponentService {
   constructor(
     private readonly commonService: CommonService,
     private readonly componentRepository: ComponentRepository,
-    @Inject(forwardRef(() => ExerciseService))
-    private readonly exerciseService: Wrapper<ExerciseService>,
   ) {}
 
   async create(data: Create<Component>): Promise<Component> {
@@ -79,11 +68,6 @@ export class ComponentService {
   }
 
   leafsFromFlat(components: Component[]): Component[] {
-    if (components.every((component) => !component.children.length))
-      throw new Error(
-        'To get leafs from flat components array, populate `children` first',
-      );
-
     return components.filter((c) => !c.children.length);
   }
 
