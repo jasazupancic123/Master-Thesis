@@ -6,12 +6,37 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
-import { Avatar, Box, Grid2, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Card,
+  Grid2,
+  IconButton,
+  Menu,
+  MenuItem,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { DEFAULT_SUBGROUP } from './constant';
-import { handleAddSubgroup } from './state';
+import {
+  handleAddSubgroup,
+  handleDeleteSubgroup,
+  handleRightClickSubgroup,
+  onDragEndSubgroup,
+} from './state';
 import SelectedMemberReport from './selected-member-report';
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult,
+} from 'react-beautiful-dnd';
+import { Add, MoreVert } from '@mui/icons-material';
+import MyModal from '../modal';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -27,6 +52,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     filteredTrainings,
     setFilteredTrainings,
     setDetectedChanges,
+    setTrainings,
   } = useGroup();
 
   const {
@@ -36,12 +62,30 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     training,
     setTraining,
     setSelectedSubgroup,
+    selectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
   } = useTrainerDayViewContext();
 
+  const [availableMembers, setAvailableMembers] = useState<User[]>([]);
+  const [changedSubgroupIds, setChangedSubgroupIds] = useState<string[]>([]);
+
   const members = users.filter((user) => group.membersIds.includes(user.uid));
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [modal, setModal] = useState({ editSubgroup: false });
+  const [editSubgroupName, setEditSubgroupName] = useState<string>('');
+  const [editedSubgroup, setEditedSubgroup] = useState<Subgroup | null>(null);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation(); // Prevents click event propagation
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   // Sort members:
   // 1. Members without a subgroup come first
@@ -84,7 +128,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setSubgroups([DEFAULT_SUBGROUP(availableMembers), ...subgroups]);
   }, [training, component]);
 
-  async function handleRightClickAvatar(member: User) {
+  async function handleAddMembersSubgroup(member: User) {
     if (!training || !component) return;
 
     const createSubgroup = {
@@ -104,7 +148,16 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         membersIds: [...sameSubgroup.membersIds, member.uid],
       };
 
-      const newSubgroups = component.subgroups.map((subgroup) =>
+      let newSubgroups = [...component.subgroups].map((subgroup) =>
+        subgroup.membersIds.includes(member.uid)
+          ? {
+              ...subgroup,
+              membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
+            }
+          : subgroup
+      );
+
+      newSubgroups = [...newSubgroups].map((subgroup) =>
         subgroup.id === newSubgroup.id ? newSubgroup : subgroup
       );
 
@@ -127,15 +180,13 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     );
 
     if (memberSubgroup) {
-      const newSubgroup = {
-        ...memberSubgroup,
-        membersIds: [...memberSubgroup.membersIds].filter(
-          (id) => id !== member.uid
-        ),
-      };
-
       const newSubgroups = [...component.subgroups].map((subgroup) =>
-        subgroup.id === newSubgroup.id ? newSubgroup : subgroup
+        subgroup.membersIds.includes(member.uid)
+          ? {
+              ...subgroup,
+              membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
+            }
+          : subgroup
       );
 
       const supersets = [...component.supersets].map((s) => ({
@@ -180,6 +231,26 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     });
   }
 
+  const handleOnDragEnd = async (result: DropResult) => {
+    const { draggableId, destination } = result;
+    if (!destination) {
+      const user = members.find((m) => m.uid === draggableId);
+      if (!user) return;
+      await handleAddMembersSubgroup(user);
+    } else {
+      onDragEndSubgroup(result, {
+        subgroups,
+        setSubgroups,
+        changedSubgroupIds,
+        setChangedSubgroupIds,
+        availableMembers,
+        setAvailableMembers,
+        users,
+        setTraining,
+      });
+    }
+  };
+
   return selectedAthlete ? (
     <SelectedMemberReport groupMembers={groupMembers} />
   ) : (
@@ -221,217 +292,383 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                 : undefined,
           backgroundColor: !component ? '#283444' : 'background.paper',
           zIndex: isSticky ? 10 : undefined,
-          position: isSticky ? 'fixed' : undefined,
+          position: isSticky ? 'fixed' : 'relative',
           top: isSticky ? '70px' : undefined,
           px: !component ? 1 : 0,
           boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
           border: isSticky ? '1px solid grey' : 'none',
-
-          transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
-          transform: isSticky ? 'translateY(0)' : 'translateY(0)',
         }}
       >
-        {/* No members to display*/}
-        {!training && sortedMembers.length === 0 && (
-          <Typography variant="caption" color="textSecondary">
-            No available members
-          </Typography>
-        )}
+        <DragDropContext onDragEnd={(result) => handleOnDragEnd(result)}>
+          {/* No members to display*/}
+          {!training && sortedMembers.length === 0 && (
+            <Typography variant="caption" color="textSecondary">
+              No available members
+            </Typography>
+          )}
 
-        {/* Training/component is not selected yet, display the members normally */}
-        {!component &&
-          sortedMembers.length > 0 &&
-          sortedMembers.map((member) => {
-            return (
-              <Tooltip
-                key={member.uid}
-                title={member.email}
-                sx={{ mx: 1, p: 0 }}
-              >
-                <Box
-                  sx={{ p: 0, m: 0, cursor: 'pointer' }}
-                  onClick={() => setSelectedAthlete(member)}
-                >
-                  <Avatar
-                    className="avatar-border"
-                    src={
-                      groupMembers.find((m) => m.id === member.uid)
-                        ?.profileImageUrl || '/user_avatar.png'
-                    }
-                    sx={{
-                      width: screenSize.isMobile ? 40 : 50,
-                      height: screenSize.isMobile ? 40 : 50,
-                      mx: 0,
-                      my: 1,
-                    }}
-                  >
-                    {/* {member.email[0].toUpperCase()} */}
-                  </Avatar>
-                </Box>
-              </Tooltip>
-            );
-          })}
-
-        {training &&
-          subgroups.map((subgroup, subgroupIndex) => {
-            if (subgroup.membersIds.length === 0) return null;
-            // Assign border color based on the subgroup index
-            const borderColor = subgroup.color
-              ? subgroup.color
-              : COLORS[(subgroupIndex % COLORS.length) - 1];
-
-            return (
-              <div
-                key={subgroup.id}
-                onClick={(event) => {
-                  if (subgroupIndex > 0)
-                    setSelectedSubgroup({
-                      subgroup: subgroup || null,
-                      index: subgroupIndex - 1,
-                    });
-                  else if (subgroupIndex === 0) setSelectedSubgroup(null);
-                }}
-                style={{
-                  display: 'inline-block',
-                  border: `2px solid ${borderColor}`,
-                  borderTopLeftRadius: 7,
-                  borderTopRightRadius: 7,
-                  backgroundColor: '#283444',
-                  cursor: 'pointer',
-                  margin: '5px',
-                }}
-              >
-                <Box
-                  display="flex"
-                  flexDirection="row"
-                  sx={{ backgroundColor: '#283444', borderRadius: 10 }}
+          {/* Training/component is not selected yet, display the members normally */}
+          {!component &&
+            sortedMembers.length > 0 &&
+            sortedMembers.map((member) => {
+              return (
+                <Tooltip
+                  key={member.uid}
+                  title={member.email}
+                  sx={{ mx: 1, p: 0 }}
                 >
                   <Box
-                    display="flex"
-                    flexDirection="column"
-                    sx={{
-                      pr: 1.5,
-                      backgroundColor: '#283444',
-                      borderTopLeftRadius: 10,
-                    }}
-                    height={screenSize.isMobile ? 50 : 60}
+                    sx={{ p: 0, m: 0, cursor: 'pointer' }}
+                    onClick={() => setSelectedAthlete(member)}
                   >
-                    {/* First Typography (Green Box) */}
-                    <Box
-                      height={20}
+                    <Avatar
+                      className="avatar-border"
+                      src={
+                        groupMembers.find((m) => m.id === member.uid)
+                          ?.profileImageUrl || '/user_avatar.png'
+                      }
                       sx={{
-                        backgroundColor: '#1EB980',
-                        textAlign: 'center',
-                        display: 'flex', // Center content inside
-                        flex: 1, // Fill remaining space
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderTopLeftRadius: 5,
-                      }}
-                      width={20}
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{ textAlign: 'center', color: 'white' }}
-                      >
-                        {`G${subgroupIndex + 1}`}
-                      </Typography>
-                    </Box>
-
-                    {/* Second Typography (Member Count) */}
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center', // Centers text
-                        flex: 1, // Fill remaining space
-                        justifyContent: 'center',
+                        width: screenSize.isMobile ? 40 : 50,
+                        height: screenSize.isMobile ? 40 : 50,
+                        mx: 0,
+                        my: 1,
                       }}
                     >
-                      <Typography
-                        variant="caption"
-                        color="textSecondary"
-                        sx={{ textAlign: 'center' }}
-                      >
-                        {subgroup.membersIds.length}
-                      </Typography>
-                    </Box>
+                      {/* {member.email[0].toUpperCase()} */}
+                    </Avatar>
                   </Box>
-                  <Box
-                    key={subgroup.id}
-                    sx={{
-                      pr: 0.5,
-                      py: 0,
-                      pl: 0,
-                      borderRadius: 2,
-                      backgroundColor: '#283444',
-                    }}
-                    display="flex"
-                    flexWrap="wrap"
-                    justifyContent="center"
-                    alignItems="center" // Ensure children stretch to full height
-                    height="100%" // Make this box take full height
-                  >
-                    {subgroup.membersIds.map((memberId) => {
-                      const member = members.find(
-                        (user) => user.uid === memberId
-                      );
+                </Tooltip>
+              );
+            })}
 
-                      if (!member) return null;
+          {training &&
+            subgroups.map((subgroup, subgroupIndex) => {
+              // Assign border color based on the subgroup index
+              const borderColor = subgroup.color
+                ? subgroup.color
+                : COLORS[(subgroupIndex % COLORS.length) - 1];
 
-                      return (
-                        <Tooltip
-                          key={member.uid}
-                          title={member.email}
-                          sx={{ mx: 1, p: 0 }}
-                        >
-                          <Box
-                            onContextMenu={(event) => {
-                              event.preventDefault();
-                              handleRightClickAvatar(member);
-                            }}
-                            sx={{ p: 0, m: 0 }}
-                            onClick={() => {
-                              if (selectedAthlete === member) {
-                                setSelectedAthlete(undefined);
-                                return;
-                              }
-
-                              setSelectedAthlete(member);
-                            }}
-                            borderRadius={
-                              selectedAthlete === member ? '50%' : 0
-                            }
-                            border={
-                              selectedAthlete === member
-                                ? '2px solid #1EB980'
-                                : 'none'
-                            }
-                            zIndex={1000}
-                          >
-                            <Avatar
-                              className="avatar-border"
-                              src={
-                                groupMembers.find((m) => m.id === member.uid)
-                                  ?.profileImageUrl || '/user_avatar.png'
-                              }
-                              sx={{
-                                width: screenSize.isMobile ? 40 : 50,
-                                height: screenSize.isMobile ? 40 : 50,
-                                m: selectedAthlete === member ? 0.25 : 0.5,
+              return (
+                <Droppable
+                  key={`${subgroup.id}-droppable`}
+                  droppableId={subgroup.id}
+                  direction="horizontal"
+                >
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      key={subgroup.id}
+                      onClick={(event) => {
+                        if (subgroupIndex > 0)
+                          setSelectedSubgroup({
+                            subgroup: subgroup || null,
+                            index: subgroupIndex - 1,
+                          });
+                        else if (subgroupIndex === 0) setSelectedSubgroup(null);
+                      }}
+                      style={{
+                        minWidth: 95,
+                        display: 'inline-block',
+                        border:
+                          (selectedSubgroup &&
+                            subgroup.id === selectedSubgroup.subgroup?.id) ||
+                          (!selectedSubgroup?.subgroup &&
+                            subgroups.length > 1 &&
+                            subgroup.id === 'default')
+                            ? `3.5px solid ${borderColor}`
+                            : `2px solid ${borderColor}`,
+                        borderTopLeftRadius: 7,
+                        borderTopRightRadius: 7,
+                        backgroundColor: '#283444',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        margin: '5px',
+                      }}
+                    >
+                      {subgroup.id !== 'default' &&
+                        selectedSubgroup?.subgroup &&
+                        subgroup.id === selectedSubgroup?.subgroup.id && (
+                          <Box position="absolute" right={0} top={0}>
+                            <IconButton
+                              sx={{ p: 0, m: 0, zIndex: 1000 }}
+                              onClick={(event) => {
+                                event.stopPropagation(); // Prevents clicking affecting parent elements
+                                setAnchorEl(event.currentTarget);
                               }}
                             >
-                              {/* {member.email[0].toUpperCase()} */}
-                            </Avatar>
+                              <MoreVert sx={{ fontSize: 20 }} />
+                            </IconButton>
+
+                            {/* Context Menu */}
+                            <Menu
+                              anchorEl={anchorEl}
+                              open={Boolean(anchorEl)}
+                              onClose={handleMenuClose}
+                            >
+                              {/* Edit Name Option */}
+                              <MenuItem
+                                onClick={() => {
+                                  if (!selectedSubgroup?.subgroup) return;
+                                  setModal({ editSubgroup: true });
+                                  setEditSubgroupName(
+                                    selectedSubgroup.subgroup.name
+                                  );
+                                  setEditedSubgroup(subgroup);
+                                  handleMenuClose();
+                                }}
+                              >
+                                Edit Name
+                              </MenuItem>
+
+                              {/* Delete Option */}
+                              <MenuItem
+                                onClick={() => {
+                                  if (!component || !selectedSubgroup?.subgroup)
+                                    return;
+                                  handleDeleteSubgroup(
+                                    {
+                                      subgroupId: selectedSubgroup?.subgroup.id,
+                                    },
+                                    {
+                                      training,
+                                      setTraining,
+                                      component,
+                                      setComponent,
+                                      filteredTrainings,
+                                      setFilteredTrainings,
+                                      setDetectedChanges,
+                                    }
+                                  );
+                                  handleMenuClose();
+                                }}
+                                sx={{ color: 'red' }}
+                              >
+                                Delete
+                              </MenuItem>
+                            </Menu>
                           </Box>
-                        </Tooltip>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              </div>
-            );
-          })}
+                        )}
+
+                      <Box
+                        display="flex"
+                        flexDirection="row"
+                        sx={{
+                          backgroundColor: '#283444',
+                          borderRadius: 10,
+                          marginRight:
+                            subgroup.id !== 'default' &&
+                            selectedSubgroup?.subgroup &&
+                            selectedSubgroup.subgroup.id === subgroup.id
+                              ? '20px'
+                              : undefined,
+                        }}
+                      >
+                        <Box
+                          display="flex"
+                          flexDirection="column"
+                          sx={{
+                            pr: 1.5,
+                            backgroundColor: '#283444',
+                            borderTopLeftRadius: 10,
+                          }}
+                          height={screenSize.isMobile ? 50 : 60}
+                        >
+                          {/* First Typography (Green Box) */}
+                          <Box
+                            height={20}
+                            sx={{
+                              backgroundColor: '#1EB980',
+                              textAlign: 'center',
+                              display: 'flex', // Center content inside
+                              flex: 1, // Fill remaining space
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderTopLeftRadius: 5,
+                            }}
+                            width={20}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{ textAlign: 'center', color: 'white' }}
+                            >
+                              {`G${subgroupIndex + 1}`}
+                            </Typography>
+                          </Box>
+
+                          {/* Second Typography (Member Count) */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center', // Centers text
+                              flex: 1, // Fill remaining space
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="textSecondary"
+                              sx={{ textAlign: 'center' }}
+                            >
+                              {subgroup.membersIds.length}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Card
+                          key={subgroup.id}
+                          sx={{
+                            pr: 0.5,
+                            py: 0,
+                            pl: 0,
+                            borderRadius: 2,
+                            backgroundColor: '#283444',
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: '100%',
+                          }}
+                        >
+                          {subgroup.membersIds.map((memberId, index) => {
+                            const member = members.find(
+                              (user) => user.uid === memberId
+                            );
+
+                            if (!member) return null;
+
+                            return (
+                              <Draggable
+                                key={member.uid}
+                                draggableId={member.uid}
+                                index={index}
+                              >
+                                {(provided, snapshot) => (
+                                  <Tooltip
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    key={member.uid}
+                                    title={member.email}
+                                    sx={{ mx: 1, p: 0 }}
+                                  >
+                                    <Box
+                                      sx={{ p: 0, m: 0 }}
+                                      onClick={() => {
+                                        if (selectedAthlete === member) {
+                                          setSelectedAthlete(undefined);
+                                          return;
+                                        }
+
+                                        setSelectedAthlete(member);
+                                      }}
+                                      borderRadius={
+                                        selectedAthlete === member ? '50%' : 0
+                                      }
+                                      border={
+                                        selectedAthlete === member
+                                          ? '2px solid #1EB980'
+                                          : 'none'
+                                      }
+                                      zIndex={1000}
+                                    >
+                                      <Avatar
+                                        className="avatar-border"
+                                        src={
+                                          groupMembers.find(
+                                            (m) => m.id === member.uid
+                                          )?.profileImageUrl ||
+                                          '/user_avatar.png'
+                                        }
+                                        sx={{
+                                          width: screenSize.isMobile ? 40 : 50,
+                                          height: screenSize.isMobile ? 40 : 50,
+                                          m:
+                                            selectedAthlete === member
+                                              ? 0.25
+                                              : 0.5,
+                                        }}
+                                      >
+                                        {/* {member.email[0].toUpperCase()} */}
+                                      </Avatar>
+                                    </Box>
+                                  </Tooltip>
+                                )}
+                              </Draggable>
+                            );
+                          })}
+                        </Card>
+                      </Box>
+                    </div>
+                  )}
+                </Droppable>
+              );
+            })}
+        </DragDropContext>
       </Stack>
+      <MyModal
+        isOpen={modal.editSubgroup}
+        setIsOpen={(editSubgroup) =>
+          setModal((prev) => ({ ...prev, editSubgroup }))
+        }
+        title="Edit Subgroup"
+        onCancel={() => {
+          setEditedSubgroup(null);
+          setModal((prev) => ({ ...prev, editSubgroup: false }));
+          setEditSubgroupName('');
+        }}
+        onConfirm={() => {
+          if (!editSubgroupName.length)
+            return toast.error('Name cannot be empty');
+          if (!editedSubgroup || !component || !training) return;
+
+          const updatedSubgroup = {
+            ...editedSubgroup,
+            name: editSubgroupName,
+          };
+
+          console.log('updatedSubgroup', updatedSubgroup);
+
+          const updatedSubgroups = [...component.subgroups].map((subgroup) =>
+            subgroup.id === updatedSubgroup.id ? updatedSubgroup : subgroup
+          );
+
+          const newComponent = { ...component!, subgroups: updatedSubgroups };
+          const newTraining = {
+            ...training,
+            components: training.components.map((c) =>
+              c.id === newComponent.id ? newComponent : c
+            ),
+          };
+
+          if (
+            selectedSubgroup?.subgroup &&
+            updatedSubgroup.id === selectedSubgroup?.subgroup.id
+          )
+            setSelectedSubgroup((prev: any) => ({
+              ...prev,
+              subgroup: updatedSubgroup,
+            }));
+          setSubgroups(updatedSubgroups);
+          setComponent(newComponent);
+          setTraining(newTraining);
+
+          setModal((prev) => ({ ...prev, editSubgroup: false }));
+          setEditSubgroupName('');
+          setDetectedChanges(true);
+        }}
+      >
+        <Stack spacing={4} p={1}>
+          {/* Name */}
+          <TextField
+            label="Name"
+            fullWidth
+            value={editSubgroupName}
+            variant="outlined"
+            size="small"
+            onChange={(e) => setEditSubgroupName(e.target.value)}
+          />
+        </Stack>
+      </MyModal>
     </Stack>
   );
 }
