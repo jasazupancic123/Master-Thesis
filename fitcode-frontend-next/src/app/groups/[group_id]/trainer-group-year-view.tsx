@@ -9,13 +9,18 @@ import CycleComponents from '@/components/training-year-view/cycle-components';
 import { useGroup } from '@/context/group-provider';
 import { GroupController } from '@/controller/group/group.controller';
 import { Cycle } from '@/controller/group/type/cycle.type';
+import { ScreenSearchDesktop } from '@mui/icons-material';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { Fab, IconButton } from '@mui/material';
+import Save from '@mui/icons-material/Save';
 
 export default function TrainerYearView() {
+  const screenSize = useScreenSize();
   const router = useRouter();
   const { token, group, setGroup, cycle, setCycle, setDetectedChanges } =
     useGroup();
@@ -70,7 +75,25 @@ export default function TrainerYearView() {
 
   return (
     <>
-      <FloatingButton label="Save group" onClick={handleSaveGroup} />
+      {screenSize.isSmallerThanLaptop ? (
+        <IconButton
+          onClick={handleSaveGroup}
+          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
+        >
+          <Save
+            sx={{
+              mr: 0,
+              cursor: 'pointer',
+              backgroundColor: '#1EB980',
+              borderRadius: '50%',
+              p: 1,
+              fontSize: 40,
+            }}
+          />
+        </IconButton>
+      ) : (
+        <FloatingButton label="Save group" onClick={handleSaveGroup} />
+      )}
 
       <Box
         display="flex"
