@@ -252,13 +252,13 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       >
         <IconButton
           sx={{
-            mb: 3,
+            mb: screenSize.isMobile ? 5.5 : 3.5,
             backgroundColor: 'primary.light',
             color: 'white',
             borderRadius: '50%',
-            width: screenSize.isReallySmall ? 20 : 30,
-            height: screenSize.isReallySmall ? 20 : 30,
-            p: screenSize.isReallySmall ? 1 : 0,
+            width: screenSize.isMobile ? 20 : 30,
+            height: screenSize.isMobile ? 20 : 30,
+            p: screenSize.isMobile ? 1 : 0,
             mr: 1,
             '&:hover': { backgroundColor: 'primary.dark' },
           }}
@@ -376,7 +376,14 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
                           key={cycle.id}
                           style={{
                             position: 'absolute',
-                            top: '-30px',
+                            top:
+                              cycles.indexOf(
+                                cycles.find((c) => c.id === cycle.id)!
+                              ) %
+                                2 ===
+                              0
+                                ? '-25px'
+                                : '15px',
                             left: centerPosition,
                             transform: 'translateX(-50%)',
                             whiteSpace: 'nowrap',
@@ -403,13 +410,16 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
                             }}
                             sx={{
                               '& .MuiInput-underline:before': {
-                                borderBottom: 'none',
+                                borderBottom: 'none !important',
                               },
                               '& .MuiInput-underline:hover:before': {
-                                borderBottom: 'none',
+                                borderBottom: 'none !important',
                               },
                               '& .MuiInput-underline:after': {
-                                borderBottom: 'none',
+                                borderBottom: 'none !important',
+                              },
+                              '& .MuiInputBase-input': {
+                                borderBottom: 'none !important',
                               },
                             }}
                           />
@@ -548,13 +558,13 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
             direction="row"
             justifyContent="space-between"
             width="100%"
-            mt={1}
+            mt={2.5}
           >
             {Array.from({ length: 13 }).map((_, monthIndex) => (
               <Typography
                 key={monthIndex}
                 variant="caption"
-                sx={{ fontSize: screenSize.isReallySmall ? 9 : undefined }}
+                sx={{ fontSize: screenSize.isMobile ? 9 : undefined }}
               >
                 {dayjs().month(monthIndex).format('MMM')}
               </Typography>
