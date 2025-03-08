@@ -165,19 +165,9 @@ export default function TrainerDayView() {
     setLoading(false);
   }, [todaysTrainings]);
 
-  // if (!cycle)
-  //   return (
-  //     <Box
-  //       bgcolor={'background.paper'}
-  //       width="100%"
-  //       p={2}
-  //       justifyContent="center"
-  //     >
-  //       <Typography variant="h6" textAlign="center">
-  //         Select a cycle
-  //       </Typography>
-  //     </Box>
-  //   );
+  useEffect(() => {
+    console.log('updated');
+  }, [selectedSubgroup]);
 
   return (
     <>
@@ -220,6 +210,7 @@ export default function TrainerDayView() {
             flex={1}
           >
             <Box
+              width="45%"
               bgcolor="#283444"
               p={!screenSize.isDesktop ? 0 : 1}
               px={!screenSize.isDesktop ? 1 : 3}
@@ -231,6 +222,7 @@ export default function TrainerDayView() {
               alignItems="center"
             >
               <Typography
+                width="100%"
                 variant="body1"
                 textAlign="center"
                 sx={{
@@ -474,22 +466,8 @@ export default function TrainerDayView() {
           sx={{ p: isSticky ? 0 : undefined, pt: 0, pb: component ? 0 : 2 }}
         >
           <TrainingMembers isSticky={isSticky} />
-
-          {!isSticky && component && !selectedAthlete && (
-            <Tooltip title="Show subgroups">
-              <IconButton
-                onClick={() =>
-                  training ? setShowSubgroups(!showSubgroups) : null
-                }
-                sx={{ p: 0, height: 30, width: 30, mb: 0 }}
-              >
-                <GroupIcon sx={{ fontSize: 30 }} />
-              </IconButton>
-            </Tooltip>
-          )}
         </Box>
-
-        <Subgroups showSubgroups={showSubgroups} />
+        {/* <Subgroups showSubgroups={showSubgroups} /> */}
       </Box>
 
       {!cycle ? (

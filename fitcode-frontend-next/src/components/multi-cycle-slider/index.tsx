@@ -7,17 +7,12 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { Cycle, Week } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, TextField, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useEffect, useRef, useState } from 'react';
 import { Range } from 'react-range';
-import {
-  changeYear,
-  handleAddCycle,
-  handleDrag,
-  handleDragChange,
-} from './state';
+import { changeYear, handleAddCycle, handleDrag } from './state';
 
 dayjs.extend(dayOfYear);
 
@@ -128,6 +123,39 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     setDraggingIndex(index);
   };
 
+  useEffect(() => {
+    if (!sliderRef.current) return;
+
+    const sliderBounds = sliderRef.current.getBoundingClientRect();
+    console.log('Slider dimensions:', sliderBounds);
+  }, [sliderRef.current]); // Runs when the sliderRef is set
+
+  const handleChange = (newValues: number[]) => {
+    if (draggingIndex !== null) {
+      if (newValues[draggingIndex + 1] === 1 && sliderRef.current) {
+        //Get the slider position & size
+        const sliderBounds = sliderRef.current.getBoundingClientRect();
+        if (!mouseX) return;
+        const relativeX = mouseX - sliderBounds.left; // X position inside the slider
+        const sliderWidth = sliderBounds.width;
+
+        let adjustedValue = Math.round((relativeX / sliderWidth) * 365);
+        adjustedValue = Math.max(2, Math.min(365, adjustedValue));
+
+        setValuesReal((prev) => {
+          const updatedValues = [...prev];
+          updatedValues[draggingIndex] = adjustedValue;
+          return updatedValues;
+        });
+
+        return;
+      }
+    }
+
+    setDetectedChanges(true);
+    setValuesReal([...newValues]);
+  };
+
   const handleDragEnd = () => {
     if (!selectedGroup) return;
 
@@ -142,12 +170,23 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     if (isStartDot && dayjs(cycle.from).year() < selectedYear) return; // Prevent the start dot from moving back into previous years
     if (!isStartDot && dayjs(cycle.to).year() > selectedYear) return; // Prevent the end dot from moving back into previous years
 
-    const from = dayjs()
-      .dayOfYear(valuesReal[cycleIndex * 2])
-      .toDate();
-    const to = dayjs()
-      .dayOfYear(valuesReal[cycleIndex * 2 + 1])
-      .toDate();
+    let from = cycle.from;
+    let to = cycle.to;
+
+    if (isStartDot) {
+      from = dayjs()
+        .year(selectedYear) // Set the desired year first
+        .dayOfYear(valuesReal[cycleIndex * 2])
+        .startOf('week') // Moves to the start of the week (usually Sunday)
+        .add(1, 'day') // Adjusts to Monday
+        .toDate();
+    } else {
+      to = dayjs()
+        .year(selectedYear) // Set the desired year first
+        .dayOfYear(valuesReal[cycleIndex * 2 + 1])
+        .startOf('week') // Moves to the start of the week (usually Sunday)
+        .toDate();
+    }
 
     const weeks: Week[][] = Array.from(
       { length: dayjs(to).diff(from, 'week') + 2 },
@@ -185,9 +224,11 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       flexDirection="column"
       alignItems="center"
       p={screenSize.isMobile ? 1 : 3}
-      pt={1}
-      pb={0}
       width="100%"
+      height="100%"
+      sx={{
+        margin: 'auto 0',
+      }}
     >
       {/* Year Navigation */}
       <Stack direction="row" alignItems="center" spacing={2} mb={2}>
@@ -233,13 +274,13 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
 
             const from =
               selectedGroup.cycles.length === 0 || !lastCycle
-                ? dayjs().startOf('w')
-                : dayjs(lastCycle.to).add(1, 'w').startOf('w');
+                ? dayjs().startOf('w').add(1, 'day')
+                : dayjs(lastCycle.to).add(1, 'd').startOf('w').add(1, 'day');
 
             const to =
               selectedGroup.cycles.length === 0 || !lastCycle
-                ? dayjs().add(1, 'w').endOf('w')
-                : dayjs(lastCycle.to).add(2, 'w').endOf('w');
+                ? dayjs().add(1, 'w').endOf('w').add(1, 'day')
+                : dayjs(lastCycle.to).add(1, 'w').endOf('w').add(1, 'day');
 
             handleAddCycle(
               {
@@ -263,24 +304,48 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
             style={{ position: 'relative', width: '100%', height: 30 }}
           >
             <Range
-              step={1}
+              step={7}
               min={yearStart}
               max={yearEnd}
               values={valuesReal}
-              onChange={(newValues: number[]) =>
-                handleDragChange(
-                  sliderRef,
-                  { newValues, draggingIndex, mouseX },
-                  { setValuesReal, setDetectedChanges }
-                )
-              }
+              onChange={(newValues: number[]) => {
+                handleChange(newValues);
+              }}
               onFinalChange={handleDragEnd}
               renderTrack={({ props, children }) => {
-                // avoid error when spreading key
                 const { ['key']: _, ...otherProps } = props as Record<
                   string,
                   any
                 >;
+
+                const handleNameChange = (index: number, newName: string) => {
+                  const newCycle = sortedCycles[index];
+                  console.log(
+                    'newCycle:',
+                    '\n',
+                    newCycle.from,
+                    '\n',
+                    newCycle.to
+                  );
+                  if (!newCycle) return;
+                  const updatedCycles = [...cycles].map((cycle, i) =>
+                    cycle.id === newCycle.id
+                      ? { ...cycle, name: newName }
+                      : cycle
+                  );
+                  setCycles(updatedCycles);
+                  setGroup({ ...group, cycles: updatedCycles });
+
+                  setSortedCycles((prevCycles) => {
+                    const updatedCycles = prevCycles.map((cycle, i) =>
+                      cycle.id === newCycle.id
+                        ? { ...cycle, name: newName }
+                        : cycle
+                    );
+                    return updatedCycles;
+                  });
+                  setDetectedChanges(true);
+                };
 
                 return (
                   <div
@@ -295,7 +360,64 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
                       transform: 'translateY(-50%)',
                     }}
                   >
-                    {/* Render colored cycle segments */}
+                    {/* Editable Cycle Names */}
+                    {sortedCycles.map((cycle, index) => {
+                      const start = valuesReal[index * 2];
+                      const end = valuesReal[index * 2 + 1];
+
+                      const centerPosition = `${
+                        (((start + end) / 2 - yearStart) /
+                          (yearEnd - yearStart)) *
+                        100
+                      }%`;
+
+                      return (
+                        <div
+                          key={cycle.id}
+                          style={{
+                            position: 'absolute',
+                            top: '-30px',
+                            left: centerPosition,
+                            transform: 'translateX(-50%)',
+                            whiteSpace: 'nowrap',
+                            zIndex: 0, // Ensure it's above slider
+                            pointerEvents: 'auto',
+                          }}
+                        >
+                          <TextField
+                            variant="standard"
+                            value={cycle.name}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()} // Stops blocking mouse events
+                            onFocus={(e) => e.stopPropagation()} // Ensures it can be focused
+                            onChange={(e) =>
+                              handleNameChange(index, e.target.value)
+                            }
+                            inputProps={{
+                              style: {
+                                textAlign: 'center',
+                                fontSize: 12,
+                                fontWeight: 'bold',
+                                color: COLORS[index % COLORS.length],
+                              },
+                            }}
+                            sx={{
+                              '& .MuiInput-underline:before': {
+                                borderBottom: 'none',
+                              },
+                              '& .MuiInput-underline:hover:before': {
+                                borderBottom: 'none',
+                              },
+                              '& .MuiInput-underline:after': {
+                                borderBottom: 'none',
+                              },
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+
+                    {/* Render Colored Cycle Segments */}
                     {sortedCycles.map((cycle, index) => {
                       const start = valuesReal[index * 2];
                       const end = valuesReal[index * 2 + 1];
@@ -440,50 +562,6 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           </Stack>
         </Box>
       </Box>
-
-      {/* Cycle Legends */}
-      <Stack
-        direction="row"
-        p={3}
-        spacing={2}
-        flexWrap="wrap"
-        justifyContent="center"
-      >
-        {sortedCycles.map((cycle, index) => (
-          <Stack
-            direction="row"
-            key={cycle.id}
-            spacing={0.5}
-            alignItems="center"
-            maxWidth="100%"
-            flexWrap="wrap" // ✅ Allow content to wrap
-          >
-            <Box display="flex" alignItems="center">
-              <div
-                style={{
-                  flexShrink: 0,
-                  width: 12,
-                  height: 12,
-                  backgroundColor: COLORS[index % COLORS.length],
-                  borderRadius: '50%',
-                  marginRight: 4,
-                }}
-              />
-              <Typography
-                component="span" // ✅ Ensures it's inline and avoids <p> issues
-                sx={{
-                  color: COLORS[index % COLORS.length],
-                  whiteSpace: 'normal', // ✅ Allow text to wrap
-                  wordBreak: 'break-word', // ✅ Break long words if necessary
-                  maxWidth: '100%', // ✅ Prevents overflow
-                }}
-              >
-                {cycle.name}
-              </Typography>
-            </Box>
-          </Stack>
-        ))}
-      </Stack>
     </Box>
   );
 }

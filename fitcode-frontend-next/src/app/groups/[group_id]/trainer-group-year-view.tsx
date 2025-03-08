@@ -39,6 +39,12 @@ export default function TrainerYearView() {
   }
 
   async function handleSaveGroup() {
+    for (const cycle of selectedGroup.cycles) {
+      if (cycle.from >= cycle.to) {
+        toast.error('Start date must be before end date.');
+        return;
+      }
+    }
     handleApiRequest(
       router,
       () =>
