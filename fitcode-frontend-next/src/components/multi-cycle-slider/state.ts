@@ -60,47 +60,6 @@ export function changeYear(
   setSelectedYear((prev) => (direction === 'prev' ? prev - 1 : prev + 1));
 }
 
-export function handleDragChange(
-  sliderRef: RefObject<HTMLDivElement | null>,
-  input: {
-    newValues: number[];
-    draggingIndex: number | null;
-    mouseX: number | null;
-  },
-  state: {
-    setValuesReal: SetState<number[]>;
-    setDetectedChanges: SetState<boolean>;
-  }
-) {
-  const { newValues, draggingIndex, mouseX } = input;
-  const { setValuesReal, setDetectedChanges } = state;
-
-  setDetectedChanges(true);
-
-  if (draggingIndex !== null) {
-    if (newValues[draggingIndex + 1] === 1 && sliderRef?.current) {
-      const sliderBounds = sliderRef.current?.getBoundingClientRect();
-      if (!mouseX || !sliderBounds) return;
-
-      const relativeX = mouseX - sliderBounds.left; // X position inside the slider
-      const sliderWidth = sliderBounds.width;
-
-      let adjustedValue = Math.round((relativeX / sliderWidth) * 365);
-      adjustedValue = Math.max(2, Math.min(365, adjustedValue));
-
-      setValuesReal((prev) => {
-        const updatedValues = [...prev];
-        updatedValues[draggingIndex] = adjustedValue;
-        return updatedValues;
-      });
-
-      return;
-    }
-  }
-
-  setValuesReal([...newValues]);
-}
-
 export function handleDrag(
   input: {
     index: number;
