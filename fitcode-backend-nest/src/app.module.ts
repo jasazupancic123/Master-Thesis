@@ -16,9 +16,9 @@ import { AttributeModule } from './attribute/attribute.module';
 
 @Module({
   imports: [
-    CommonModule,
     ConfigModule.forRoot({ isGlobal: true, validationSchema }),
     FirebaseModule.forRoot(),
+    CommonModule,
     CacheManagerModule,
     AttributeModule,
     UserModule,

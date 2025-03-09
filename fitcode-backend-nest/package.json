@@ -9,6 +9,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "firebase:dev": "cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 dotenv -e .env -- firebase emulators:start",
+    "firebase:test": "cross-env FUNCTIONS_DISCOVERY_TIMEOUT=60 dotenv -e .env -- firebase emulators:start --only firestore,auth,storage",
     "start:dev": "nest start -b swc --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -88,6 +89,7 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testTimeout": 30000
   }
 }

@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 
-export class ExerciseAttributeValue {
+export class ExerciseAttributeValue extends AttributeValue {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -13,16 +14,5 @@ export class ExerciseAttributeValue {
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
-  ownerId: string | null; // if null, exercise is global
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  field: string;
-
-  @IsString()
-  @ApiProperty()
-  @Expose()
-  value: string | string[];
+  ownerId: string;
 }

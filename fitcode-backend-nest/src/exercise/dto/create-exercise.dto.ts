@@ -1,7 +1,4 @@
 import { PickType } from '@nestjs/mapped-types';
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { IsObject } from 'class-validator';
 import { Exercise } from '../entity/exercise.entity';
 
 export class CreateExerciseDto extends PickType(Exercise, [
@@ -9,10 +6,10 @@ export class CreateExerciseDto extends PickType(Exercise, [
   'componentId',
   'imageUrl',
   'videoUrl',
-  'bodyRegion',
-] as const) {
-  @IsObject()
-  @ApiProperty()
-  @Expose()
-  attributeValues: Record<string, any>;
-}
+  'region',
+  'attributeValues',
+  'coordination',
+  'equipment',
+  'instruction',
+  'tags',
+] as const) {}

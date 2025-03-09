@@ -138,6 +138,18 @@ export class UserService {
     await this.userRepository.updateDoc(ref.uid, input);
   }
 
+  async addTrainer(ref: UserRef, trainerId: string) {
+    await this.userRepository.doc(ref.uid).update({
+      trainersIds: FieldValue.arrayUnion(trainerId),
+    });
+  }
+
+  async removeTrainer(ref: UserRef, trainerId: string) {
+    await this.userRepository.doc(ref.uid).update({
+      trainersIds: FieldValue.arrayRemove(trainerId),
+    });
+  }
+
   async addAthlete(user: User, input: Omit<CreateUser, 'customClaims'>) {
     const { email, displayName, password } = input;
 
