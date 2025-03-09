@@ -8,7 +8,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { AttributeType } from 'src/common/enum/attribute-type.enum';
+import { AttributeType } from '../../common/enum/attribute-type.enum';
 
 export class Attribute {
   @IsString()
@@ -25,10 +25,9 @@ export class Attribute {
 
   @IsEnum(AttributeType)
   @IsString()
-  @IsOptional()
-  @ApiPropertyOptional()
+  @ApiProperty()
   @Expose()
-  type?: AttributeType; // defaults to "string"
+  type: AttributeType; // defaults to "string"
 
   @IsBoolean()
   @IsOptional()

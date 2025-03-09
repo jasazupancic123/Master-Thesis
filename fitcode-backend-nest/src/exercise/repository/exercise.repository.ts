@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   CollectionReference,
   DocumentReference,
-  DocumentSnapshot,
   Query,
-  QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
@@ -38,7 +36,7 @@ export class ExerciseRepository
     );
   }
 
-  async addDoc(input: Create<Exercise>) {
+  async addDoc(input: Create<Omit<Exercise, 'attributeValues'>>) {
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Exercise>(
       {
@@ -48,8 +46,12 @@ export class ExerciseRepository
         componentId: input.componentId,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
-        values: !input.values?.length ? [] : input.values,
-        bodyRegion: input.bodyRegion,
+        region: input.region,
+        coordination: input.coordination || false,
+        equipment: input.equipment || [],
+        instruction: input.instruction || '',
+        tags: input.tags || [],
+        attributeValues: undefined,
       },
       { timestamps: true },
     );

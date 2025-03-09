@@ -54,8 +54,6 @@ export class ObjectUtil {
         return typeof value === 'number' && !isNaN(value);
       case 'boolean':
         return Boolean(value);
-      case 'date':
-        return value instanceof Date && !isNaN(value.getTime());
       case 'select':
         if (!attribute.options) return false;
 

@@ -350,7 +350,7 @@ export class TrainingService {
     // if no components, delete training
     if (input.components.length === 0) {
       await this.trainingRepository.deleteDoc(ref.trainingId);
-      return { ...training, ...input };
+      return { ...training, ...input } as Training;
     }
 
     // validate that data is valid
@@ -389,7 +389,7 @@ export class TrainingService {
     );
 
     const batch = this.firebaseService.firestore.batch();
-    const updated: Training = { ...training, ...input };
+    const updated = { ...training, ...input } as Training;
     this.userWorkloadService.createForTraining(batch, updated, workloads);
     await batch.commit();
     /* } else {
@@ -397,7 +397,10 @@ export class TrainingService {
       await this.trainingRepository.updateDoc(ref.trainingId, input);
     } */
 
-    return { ...training, ...this.commonService.object.clean(input) };
+    return {
+      ...training,
+      ...this.commonService.object.clean(input),
+    } as Training;
   }
 
   async remove(user: User, ref: TrainingRef): Promise<void> {

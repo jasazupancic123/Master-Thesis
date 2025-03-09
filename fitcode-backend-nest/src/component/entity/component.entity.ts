@@ -1,13 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { Expose } from 'class-transformer';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { IdEntity } from '../../common/entity/id.entity';
-import { Attribute } from '../../attribute/entity/attribute.entity';
+import { ComponentParam } from './component-param.entity';
 
 export class Component extends IdEntity {
   @IsString()
@@ -26,19 +21,17 @@ export class Component extends IdEntity {
   @Expose()
   parentId: string | null; // parent component slug
 
-  @ValidateNested({ each: true })
-  @Type(() => Attribute)
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  attributes: Attribute[];
+  attributes?: string[];
 
-  @ValidateNested({ each: true })
-  @Type(() => Attribute)
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  params: Attribute[];
+  params?: { [condition: string]: ComponentParam[] }[]; // only root components have params
 
   // virtual fields
   children?: string[];

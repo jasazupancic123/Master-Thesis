@@ -1,11 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { BodyRegion } from '../enum/body-region';
@@ -22,25 +23,19 @@ export class Exercise extends BaseEntity {
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
-  rootComponentId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  @ApiProperty()
-  leafComponentIds: string[]; // multiselect
-
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  @ApiProperty()
-  ownerId: string | null; // if null, exercise is global
+  componentId: string;
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
-  @ApiProperty()
   @Expose()
-  attributes: string[]; // all possible "prescribed" attributes
+  @ApiProperty()
+  tags: string[]; // string tags, component tags, ...
+
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
+  @ApiProperty()
+  ownerId: string; // special 'global' string value for global exercises
 
   @IsString()
   @IsOptional()
@@ -76,11 +71,13 @@ export class Exercise extends BaseEntity {
   instruction: string;
 
   @IsBoolean()
-  @IsOptional()
-  @ApiPropertyOptional()
+  @ApiProperty()
   @Expose()
-  coordination?: boolean; // whether exercise can be filtered in "coordination" component
+  coordination: boolean; // whether exercise can be filtered in "coordination" component
 
-  values?: ExerciseAttributeValue[]; // sub collection for filtering
-  attributeValues?: Record<string, any>; // for nested object display for frontend
+  @ValidateNested({ each: true })
+  @Type(() => ExerciseAttributeValue)
+  @ApiProperty()
+  @Expose()
+  attributeValues: ExerciseAttributeValue[]; // sub collection for filtering
 }

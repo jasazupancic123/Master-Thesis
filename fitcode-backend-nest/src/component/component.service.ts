@@ -4,6 +4,7 @@ import { CommonService } from '../common/service/common.service';
 import { Filter } from '../common/type/orm.type';
 import { Component } from './entity/component.entity';
 import { ComponentRepository } from './repository/component.repository';
+import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
 
 @Injectable()
 export class ComponentService {
@@ -24,10 +25,14 @@ export class ComponentService {
   }
 
   async createFromTree(
-    data: Omit<Component, 'children'> & { children: Component[] },
+    data: Omit<Component, 'parentId' | 'children' | 'parents'> & {
+      children: Component[];
+    },
   ): Promise<Component> {
     const { children, ...rest } = data;
-    const component = await this.create(rest);
+    const component = await this.create({ ...rest, parentId: null });
+
+    console.log('children:', children);
 
     for (const child of children) {
       const childData = {

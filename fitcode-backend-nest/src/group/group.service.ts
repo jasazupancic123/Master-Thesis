@@ -147,7 +147,8 @@ export class GroupService {
 
     // validate
     this.validateOwner(user.uid, group);
-    if (input.membersIds) await this.validateMembers(input.membersIds);
+    if (input.membersIds)
+      await this.validateMembers(input.membersIds as string[]);
     if (input.cycles) this.checkCycleOverlap(input.cycles);
 
     if (input.membersIds) {
@@ -164,7 +165,7 @@ export class GroupService {
           });
 
           // update all members by adding group id to their groupsIds field if it doesn't exist yet
-          input.membersIds.forEach((userId) =>
+          (input.membersIds as string[]).forEach((userId) =>
             this.userService.addGroup(transaction, userId, group.id),
           );
 
@@ -200,7 +201,7 @@ export class GroupService {
       }))
       .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds());
 
-    return updatedGroup;
+    return updatedGroup as Group;
   }
 
   async delete(user: User, ref: GroupRef): Promise<void> {

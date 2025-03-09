@@ -1,10 +1,5 @@
 [
     {
-        "field": "coordination",
-        "name": "Coordination",
-        "type": "boolean"
-    },
-    {
         "field": "equipment",
         "name": "Equipment",
         "type": "select",
@@ -521,6 +516,16 @@
           { "field": "peroneus_longus", "name": "Peroneus Longus" },
           { "field": "extensor_digitorum_longus", "name": "Extensor Digitorum Longus" },
           { "field": "flexor_digitorum_longus", "name": "Flexor Digitorum Longus" }
+        ]
+    },
+    { 
+        "field": "end-opts",
+        "name": "Endurance options",
+        "type": "select",
+        "options": [
+            { "field": "end-opt-2", "name": "Option 2" },
+            { "field": "end-opt-3", "name": "Option 3" },
+            { "field": "end-opt-4", "name": "Option 4" }
         ]
     }
 ]

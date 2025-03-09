@@ -3,10 +3,6 @@ import {
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
-import { Component } from '../../component/entity/component.entity';
-import { Exercise } from '../../exercise/entity/exercise.entity';
-import { UserEntity } from '../../user/entity/user.entity';
-import { FirestoreCollection } from '../enum/firestore-collection.enum';
 
 export interface FirestoreCollectionRepository<
   Model = any,
@@ -71,10 +67,3 @@ export type UserWorkloadRef = TrainingComponentRef & {
 } & ExerciseRef;
 export type UserWorkloadExerciseRef = UserWorkloadRef & ExerciseRef;
 export type TrainingStatusRef = TrainingComponentRef & { userId: string };
-
-// root collections
-export type DatabaseSchema = {
-  [FirestoreCollection.USER]: UserEntity[];
-  [FirestoreCollection.COMPONENT]: Component[];
-  [FirestoreCollection.EXERCISE]: Exercise[];
-};

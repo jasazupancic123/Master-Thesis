@@ -45,9 +45,7 @@ export class ComponentRepository
       slug,
       parentId: input.parentId || null,
       name: input.name,
-      setTypeParams: input.setTypeParams || null,
-      workloadTypeParams: input.workloadTypeParams || null,
-      attributes: input.attributes || null,
+      attributes: input.attributes,
       params: input.params || null,
     });
 
