@@ -4,7 +4,7 @@ import { Cycle } from '../../src/group/entity/cycle.entity';
 import { TrainingService } from '../../src/training/service/training.service';
 import { CreateTrainingDto } from '../../src/training/dto/create-training.dto';
 import { v4 } from 'uuid';
-import { generateRandomName, getComponents } from './random.util';
+import { generateRandomName } from './random.util';
 import {
   addDays,
   addHours,
@@ -15,11 +15,13 @@ import {
 } from 'date-fns';
 import { Group } from '../../src/group/entity/group.entity';
 import { Training } from '../../src/training/entity/training.entity';
+import { Component } from '../../src/component/entity/component.entity';
 
 export async function createGroupWithCyclesAndTrainings(
   groupService: GroupService,
   trainingService: TrainingService,
   owner: User,
+  components: Component[],
   input: {
     name?: string;
     membersIds: string[];
@@ -100,7 +102,7 @@ export async function createGroupWithCyclesAndTrainings(
               cycleId: cycle.id,
               from,
               to: addHours(from, 2),
-              componentsIds: getComponents().map((c) => c.id),
+              componentsIds: components.map((c) => c.id),
               copiedFromId: null,
             }),
           );

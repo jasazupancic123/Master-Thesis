@@ -11,6 +11,7 @@ import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Training } from '../entity/training.entity';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class TrainingRepository
@@ -63,8 +64,8 @@ export class TrainingRepository
           color: c.color || null,
           from: c.from ? c.from : startOfHour(addHours(new Date(), i)),
           to: c.to ? c.to : endOfHour(addHours(new Date(), i)),
-          subgroups: [],
           supersets: [{ color: null, exercises: [] }],
+          subgroups: [],
         })),
       },
       { timestamps: true },

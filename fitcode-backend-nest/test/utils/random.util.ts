@@ -2,10 +2,8 @@ export function generateRandomEmail(): string {
   return `${Math.random().toString(36).substring(2, 10)}@mail.com`;
 }
 
-export function generateRandomString(minLength = 0, maxLength = 10): string {
+export function generateRandomString(length = 10): string {
   const characters = 'abcdefghijklmnopqrstuvwxyz';
-  const length =
-    Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
 
   let result = '';
   for (let i = 0; i < length; i++)
@@ -16,14 +14,5 @@ export function generateRandomString(minLength = 0, maxLength = 10): string {
 }
 
 export function generateRandomName(): string {
-  return `${generateRandomString(5, 8)} ${generateRandomString(5, 8)}`;
-}
-
-export function getComponents() {
-  // returns components strength, speed and endurance
-  return [
-    global.components.find((c) => c.id === 'strength')!,
-    global.components.find((c) => c.id === 'speed')!,
-    global.components.find((c) => c.id === 'endurance')!,
-  ];
+  return `${generateRandomString(8)} ${generateRandomString(8)}`;
 }

@@ -35,114 +35,118 @@ export class AttributeService {
     const vals: AttributeValue[] = [];
 
     for (const attribute of attributes) {
-      const v = values.find((v) => v.field === attribute.field);
+      const attributeValues = values.filter(
+        (val) => val.field === attribute.field,
+      );
 
       if (
-        (attribute.required && !v?.value) ||
-        (attribute.required && v?.selected?.length === 0)
+        attribute.required &&
+        (attributeValues[0]?.value === null ||
+          attributeValues[0]?.value === undefined)
       )
         throw new BadRequestException(
           `Attribute "${attribute.name}" is required`,
         );
 
-      if (!v?.value) continue;
+      if (
+        attribute.type !== AttributeType.Multiselect &&
+        attributeValues.length > 1
+      )
+        throw new BadRequestException(
+          `Attribute "${attribute.name} cannot have multiple values`,
+        );
 
-      switch (attribute.type) {
-        case AttributeType.String:
-          if (typeof v.value !== 'string')
-            throw new BadRequestException(
-              `Value for attribute "${attribute.name}" must be a string`,
-            );
-
-          break;
-        case AttributeType.Number:
-          if (isNaN(+v.value))
-            throw new BadRequestException(
-              `Value for attribute "${attribute.name}" must be a number`,
-            );
-
-          break;
-        case AttributeType.Boolean:
-          if (v.value !== 'true' && v.value !== 'false')
-            throw new BadRequestException(
-              `Value for attribute "${attribute.name}" must be a boolean`,
-            );
-
-          break;
-        case AttributeType.Select:
-          const validSelected = this.validateSelectOptions(
-            v.selected,
-            attribute.options,
+      for (const v of attributeValues) {
+        if (attribute.required && (v.value === null || v.value === undefined))
+          throw new BadRequestException(
+            `Attribute "${attribute.name}" is required`,
           );
 
-          if (!validSelected) {
-            throw new BadRequestException(
-              `Value "${v.value}" for attribute "${attribute.name}" is not a valid option`,
-            );
-          }
-
-          v.selected = validSelected;
-          break;
-        case AttributeType.Multiselect:
-          // For multiselect, validate each selected value recursively
-          for (const selectedValue of v.selected) {
-            const splitValues = selectedValue.split('.');
-            const isValid = this.checkNestedSelectOption(
-              splitValues,
-              attribute.options,
-            );
-
-            if (!isValid)
+        switch (attribute.type) {
+          case AttributeType.String:
+            if (typeof v.value !== 'string')
               throw new BadRequestException(
-                `One or more selected values for attribute "${attribute.name}" are not valid options`,
+                `Value for attribute "${attribute.name}" must be a string`,
               );
-          }
 
-          break;
+            break;
+          case AttributeType.Number:
+            if (isNaN(+v.value))
+              throw new BadRequestException(
+                `Value for attribute "${attribute.name}" must be a number`,
+              );
+
+            break;
+          case AttributeType.Boolean:
+            if (v.value !== 'true' && v.value !== 'false')
+              throw new BadRequestException(
+                `Value for attribute "${attribute.name}" must be a boolean`,
+              );
+
+            break;
+          case AttributeType.Select:
+          case AttributeType.Multiselect:
+            if (!attribute.options || attribute.options.length === 0)
+              throw new BadRequestException(
+                `Attribute "${attribute.name}" has no valid options`,
+              );
+
+            const matchedAttribute = this.validateSelection(
+              v.selected,
+              attribute.options,
+            ); // returns leaf attribute of options, so its not select or multiselect type anymore and we can recurse this validate function to check it again
+
+            if (!matchedAttribute)
+              throw new BadRequestException(
+                `Value "${v.selected}" for attribute "${attribute.name}" is not a valid option`,
+              );
+
+            // validate leafs for custom types
+            switch (matchedAttribute.type) {
+              case AttributeType.Number:
+                if (isNaN(+v.value))
+                  throw new BadRequestException(
+                    `Value for attribute "${attribute.name}" must be a number`,
+                  );
+
+                break;
+              case AttributeType.Boolean:
+                if (v.value !== 'true' && v.value !== 'false')
+                  throw new BadRequestException(
+                    `Value for attribute "${attribute.name}" must be a boolean`,
+                  );
+
+                break;
+            }
+
+            break;
+          default:
+            break;
+        }
+
+        vals.push(v);
       }
-
-      vals.push(v);
     }
 
     return vals;
   }
 
-  private validateSelectOptions(
-    selected: string[],
-    options: Attribute[] = [],
-    isMultiselect: boolean = false,
-  ): string[] | null {
-    const validSelections: string[] = [];
-
-    for (const selectedValue of selected) {
-      const splitValues = selectedValue.split('.');
-      const isValid = this.checkNestedSelectOption(splitValues, options);
-
-      if (isValid) validSelections.push(selectedValue);
-      else return null;
-    }
-
-    if (isMultiselect && validSelections.length === 0) return null;
-    return validSelections.length > 0 ? validSelections : null;
-  }
-
-  // Helper function to recursively check nested select options
-  private checkNestedSelectOption(
-    splitValues: string[],
+  private validateSelection(
+    selectedPath: string,
     options: Attribute[],
-  ): boolean {
+  ): Attribute | null {
+    const pathParts = selectedPath.split('.');
     let currentOptions = options;
 
-    for (const value of splitValues) {
-      const option = currentOptions.find(
-        (opt) => opt.field === value && opt.type === AttributeType.Value,
-      );
+    let found: Attribute;
+    for (const part of pathParts) {
+      found = currentOptions.find((opt) => opt.field === part);
 
-      if (option) {
-        if (option.options) currentOptions = option.options;
-      } else return false;
+      if (!found) return null;
+      if (found.options) currentOptions = found.options || [];
+      else break;
     }
 
-    return true;
+    return found;
   }
 }

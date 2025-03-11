@@ -144,7 +144,7 @@ export class ExerciseService {
       (field) => allAttributes.find((a) => a.field === field)!,
     );
 
-    const values = this.attributeService.validate(
+    const attributeValues = this.attributeService.validate(
       data.attributeValues,
       attributes || [],
     );
@@ -154,44 +154,45 @@ export class ExerciseService {
       ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
       : user.uid;
 
-    const exerciseId = await this.exerciseRepository.addDoc({
-      id: null,
-      ownerId,
-      name: data.name,
-      componentId: data.componentId,
-      videoUrl: data.videoUrl,
-      imageUrl: data.imageUrl,
-      region: data.region,
-      coordination: data.coordination || false,
-      equipment: data.equipment || [],
-      instruction: data.instruction || '',
-      tags: data.tags || [],
-    });
+    const batch = this.firebaseService.firestore.batch();
+    const docRef = this.exerciseRepository.collection().doc();
+    const exerciseId = docRef.id;
+    const createExerciseQuery = this.firebaseService.buildCreateQuery<Exercise>(
+      {
+        id: exerciseId,
+        ownerId,
+        name: data.name,
+        componentId: data.componentId,
+        videoUrl: data.videoUrl,
+        imageUrl: data.imageUrl,
+        region: data.region,
+        coordination: data.coordination || false,
+        equipment: data.equipment || [],
+        instruction: data.instruction || '',
+        tags: data.tags || [],
+        attributeValues: undefined,
+      },
+    );
+
+    batch.set(docRef, createExerciseQuery);
 
     // create attributes
-    const batch = this.firebaseService.firestore.batch();
-    const exerciseAttributeValues: ExerciseAttributeValue[] = [];
-    values.forEach((val) => {
+    attributeValues.forEach((v) => {
       const docRef = this.exerciseAttributeValueRepository.doc({
         exerciseId,
-        field: val.field,
+        field: v.field,
       });
 
-      const exerciseAttributeValue: ExerciseAttributeValue = {
-        exerciseId,
-        ownerId,
-        field: val.field,
-        value: val.value,
-        selected: val.selected,
-      };
-
       const query =
-        this.firebaseService.buildCreateQuery<ExerciseAttributeValue>(
-          exerciseAttributeValue,
-        );
+        this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
+          exerciseId,
+          ownerId,
+          field: v.field,
+          value: v.value,
+          selected: v.selected,
+        });
 
       batch.set(docRef, query);
-      exerciseAttributeValues.push(exerciseAttributeValue);
     });
 
     await batch.commit();
@@ -200,7 +201,11 @@ export class ExerciseService {
       ...data,
       id: exerciseId,
       ownerId,
-      attributeValues: exerciseAttributeValues,
+      attributeValues: attributeValues.map((v) => ({
+        ...v,
+        exerciseId,
+        ownerId,
+      })),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -215,23 +220,25 @@ export class ExerciseService {
     );
 
     // validate
-    const dbUser = await this.userService.findOneOrFail(user.uid);
     const userExercises = await this.exerciseRepository.getDocs((q) =>
       q.where('ownerId', '==', user.uid),
     );
 
-    if (!this.firebaseService.isAdmin(user)) {
-      this.checkLimit(dbUser, [...(exercises as Exercise[]), ...userExercises]);
-    }
-
     const components = await this.cacheManagerService.getComponents();
+    const ownerId = this.firebaseService.isAdmin(user)
+      ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
+      : user.uid;
+
+    const exercisesToCreate: Create<
+      Omit<Exercise, 'id' | 'ownerId' | 'attributes'>
+    >[] = [];
 
     let i = 0;
     for (const e of exercises) {
       // check limit
       if (
         !this.firebaseService.isAdmin(user) &&
-        userExercises.length + i + 1 > NUM_MAX_EXERCISES
+        userExercises.length + i++ + 1 > NUM_MAX_EXERCISES
       )
         break;
 
@@ -263,13 +270,17 @@ export class ExerciseService {
         (field) => allAttributes.find((a) => a.field === field)!,
       );
 
-      this.attributeService.validate(e.attributeValues, attributes || []);
+      e.attributeValues = this.attributeService
+        .validate(e.attributeValues, attributes || [])
+        .map((v) => ({ ...v, exerciseId: undefined, ownerId }));
+
+      exercisesToCreate.push(e);
     }
 
-    const batch = this.firebaseService.firestore.batch();
     const result: Exercise[] = [];
+    const batch = this.firebaseService.firestore.batch();
 
-    exercises.forEach((e) => {
+    exercisesToCreate.forEach((e) => {
       const docRef = this.exerciseRepository.collection().doc();
       const exerciseId = docRef.id;
 
@@ -290,23 +301,30 @@ export class ExerciseService {
         attributeValues: undefined,
       };
 
-      e.attributeValues.forEach((val) => {
-        const docRef = this.exerciseAttributeValueRepository.doc({
-          exerciseId,
-          field: val.field,
-        });
-
-        const query =
-          this.firebaseService.buildCreateQuery<ExerciseAttributeValue>(val);
-
-        batch.set(docRef, query);
-      });
-
       const query = this.firebaseService.buildCreateQuery<Exercise>(item, {
         timestamps: true,
       });
 
       batch.set(docRef, query);
+
+      e.attributeValues.forEach((v) => {
+        const docRef = this.exerciseAttributeValueRepository.doc({
+          exerciseId,
+          field: v.field,
+        });
+
+        const query =
+          this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
+            exerciseId,
+            ownerId,
+            field: v.field,
+            value: v.value,
+            selected: v.selected,
+          });
+
+        batch.set(docRef, query);
+      });
+
       result.push({
         ...e,
         ...item,
@@ -327,19 +345,15 @@ export class ExerciseService {
     const exercise = await this.findByIdOrFail(user, ref);
     this.validateOwner(user, exercise);
 
+    if (input.componentId)
+      throw new BadRequestException(
+        'You cannot update component of the exercise',
+      );
+
     // check that all components exist and are leafs
     // leaf's root must be the same as previous exercise root
     const components = await this.cacheManagerService.getComponents();
-    const leafs = this.componentService.leafsFromFlat(components);
-    const component = this.componentService.getLeafBySlug(
-      input.componentId,
-      leafs,
-    );
-
-    if (!component)
-      throw new BadRequestException(
-        `Component ${component.name} does not exist`,
-      );
+    const component = components.find((c) => c.id === exercise.componentId)!;
 
     // validate attributes
     const parents = component.parents!.map(
@@ -356,13 +370,43 @@ export class ExerciseService {
       (field) => allAttributes.find((a) => a.field === field)!,
     );
 
-    this.attributeService.validate(input.attributeValues, attributes || []);
+    const attributeValues = this.attributeService.validate(
+      input.attributeValues,
+      attributes || [],
+    );
 
-    await this.exerciseRepository.updateDoc(ref.exerciseId, input);
+    const batch = this.firebaseService.firestore.batch();
+    const docRef = this.exerciseRepository.doc(exercise.id);
+    batch.update(docRef, input);
+
+    attributeValues.forEach((v) => {
+      const docRef = this.exerciseAttributeValueRepository.doc({
+        exerciseId: ref.exerciseId,
+        field: v.field,
+      });
+
+      const query =
+        this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
+          exerciseId: ref.exerciseId,
+          ownerId: user.uid,
+          field: v.field,
+          value: v.value,
+          selected: v.selected,
+        });
+
+      batch.set(docRef, query);
+    });
+
+    await batch.commit();
 
     return {
       ...exercise,
       ...this.commonService.object.clean(input),
+      attributeValues: attributeValues.map((v) => ({
+        ...v,
+        exerciseId: ref.exerciseId,
+        ownerId: user.uid,
+      })),
     };
   }
 
@@ -461,15 +505,5 @@ export class ExerciseService {
   private validateOwner(user: User, exercise: Exercise) {
     if (user.uid !== exercise.ownerId)
       throw new UnauthorizedException("You don't have access to this exercise");
-  }
-
-  private validateAttributes(
-    values: Record<string, any>,
-    attributes: Attribute[],
-  ) {
-    const fields = attributes.map((attribute) => attribute.field);
-    for (const field of Object.keys(values))
-      if (!fields.includes(field))
-        throw new BadRequestException(`Attribute ${field} does not exist`);
   }
 }

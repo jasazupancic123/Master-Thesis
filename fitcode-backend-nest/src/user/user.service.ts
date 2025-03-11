@@ -109,6 +109,12 @@ export class UserService {
       if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
     }
 
+    await this.userRepository.addDoc({
+      id: user.uid,
+      groupsIds: [],
+      trainersIds: [],
+    });
+
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 

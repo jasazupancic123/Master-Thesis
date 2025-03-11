@@ -12,10 +12,10 @@ export class AttributeValue {
   @IsString()
   @ApiProperty()
   @Expose()
-  value: string; // for number, string and single-select types
+  value: string;
 
   @IsString()
   @ApiProperty()
   @Expose()
-  selected?: string[]; // for single and multi select types
+  selected: string; // if type is select, this denotes the selected value, but its type can be number, which is saved in value above
 }

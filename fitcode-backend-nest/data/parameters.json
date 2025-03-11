@@ -65,8 +65,7 @@
             "field": "bw",
             "name": "BW",
             "unit": "%",
-            "type": "number",
-            "defaultValue": "100" 
+            "type": "number"
           },
           { 
             "field": "rm", 

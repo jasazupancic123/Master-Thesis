@@ -449,7 +449,7 @@ export class TrainingService {
   async addComponents(
     user: User,
     ref: TrainingRef,
-    input: string[],
+    input: TrainingComponent[],
   ): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is adding component to training ${ref.trainingId}: ${JSON.stringify(input)}`,
@@ -462,15 +462,17 @@ export class TrainingService {
 
     // validate input
     const allComponents = await this.cacheManagerService.getComponents();
-    this.checkValidComponents(input, allComponents);
-    this.checkDuplicateComponents(training.components, input, allComponents);
+    const componentIds = input.map((c) => c.id);
+    this.checkValidComponents(componentIds, allComponents);
+    this.checkDuplicateComponents(
+      training.components,
+      componentIds,
+      allComponents,
+    );
 
     // get query for training
     const [query, updatedTraining] =
-      this.trainingPlanService.getAddComponentsQuery(
-        training,
-        input.map((id) => ({ id })),
-      );
+      this.trainingPlanService.getAddComponentsQuery(training, input);
 
     // add components
     await this.trainingRepository.updateDoc(training.id, query);

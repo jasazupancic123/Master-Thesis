@@ -2,12 +2,14 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import { IsDate, IsOptional, IsString } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
+import { IntersectionType } from '@nestjs/mapped-types';
+import { ColorEntity } from '../../common/entity/color.entity';
 
 export interface Week {
   date: Date;
 }
 
-export class Cycle extends BaseEntity {
+export class Cycle extends IntersectionType(BaseEntity, ColorEntity) {
   @IsString()
   @ApiProperty()
   @Expose()
