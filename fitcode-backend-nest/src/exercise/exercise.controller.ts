@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
@@ -14,6 +15,8 @@ import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { CreateExercisesDto } from './dto/create-exercises.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { ExerciseService } from './service/exercise.service';
+import { ExerciseFilterDto } from './dto/exercise-filter.dto';
+import { FilterDto } from '../common/dto/filter.dto';
 
 @Controller('exercise')
 export class ExerciseController {
@@ -21,9 +24,11 @@ export class ExerciseController {
 
   @Get()
   @Auth()
-  async findAll(@RequestUser() user: User) {
-    // NOTE - filtering is done on frontend
-    return this.exerciseService.findAll(user);
+  async findAll(
+    @RequestUser() user: User,
+    @FilterDto(ExerciseFilterDto) filter?: ExerciseFilterDto,
+  ) {
+    return this.exerciseService.findAll(user, filter);
   }
 
   @Get(':exerciseId')

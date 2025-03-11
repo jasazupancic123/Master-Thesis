@@ -22,11 +22,9 @@ import { Filter } from '../../common/type/orm.type';
 import { Validate } from '../../common/type/validate.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ComponentService } from '../../component/component.service';
-import { Component } from '../../component/entity/component.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Exercise } from '../entity/exercise.entity';
 import { ExerciseRepository } from '../repository/exercise.repository';
-import { Attribute } from '../../attribute/entity/attribute.entity';
 import { ExerciseAttributeValueRepository } from '../repository/exercise-attribute-value.repository';
 import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
@@ -54,9 +52,46 @@ export class ExerciseService {
     const dbUser = await this.userService.findOneByIdOrFail(user.uid);
     const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
 
-    const exercises = await this.exerciseRepository.getDocs((q) =>
-      q.where('ownerId', 'in', userIds),
-    );
+    const components = await this.cacheManagerService.getComponents();
+    const exercises = await this.exerciseRepository.getDocs((q) => {
+      q = q.where('ownerId', 'in', userIds);
+
+      if (filter) {
+        if (filter.coordination)
+          q = q.where('coordination', '==', filter.coordination);
+
+        if (filter.componentId) {
+          // for each component id, find all children and filter by them
+          const componentsIds: string[] = [];
+          const componentId = filter.componentId;
+          const component = components.find((c) => c.id === componentId);
+          if (!component) return;
+
+          // filter by root node
+          componentsIds.push(component.id);
+
+          // filter by all its children
+          const tree = this.commonService.tree.fromArray(components, {
+            rootId: component.id,
+            idPropertyName: 'id',
+            parentIdPropertyName: 'parentId',
+            childrenPropertyName: 'children',
+          });
+
+          this.commonService.tree.forEach(tree, 'children', (item) => {
+            componentsIds.push(item.id);
+            return null;
+          });
+
+          if (componentsIds.length)
+            q = q.where('componentId', 'in', componentsIds);
+        }
+
+        if (filter.region) q = q.where('region', '==', filter.region);
+      }
+
+      return q;
+    });
 
     // map attributes
     return await Promise.all(
@@ -167,7 +202,6 @@ export class ExerciseService {
         imageUrl: data.imageUrl,
         region: data.region,
         coordination: data.coordination || false,
-        equipment: data.equipment || [],
         instruction: data.instruction || '',
         tags: data.tags || [],
         attributeValues: undefined,
@@ -295,7 +329,6 @@ export class ExerciseService {
         imageUrl: e.imageUrl,
         region: e.region,
         coordination: e.coordination || false,
-        equipment: e.equipment || [],
         instruction: e.instruction || '',
         tags: e.tags || [],
         attributeValues: undefined,
@@ -452,48 +485,6 @@ export class ExerciseService {
       }
 
     return { error: false };
-  }
-
-  private filter(
-    query: Query,
-    filter: Filter<Exercise>,
-    components: Component[], // flat components
-  ): Query {
-    if (filter.ids?.length)
-      query = query.where(FieldPath.documentId(), 'in', filter.ids);
-
-    if (filter.componentId) {
-      // for each component id, find all children and filter by them
-      const componentsIds: string[] = [];
-      const componentId = filter.componentId.value as string;
-      const component = components.find((c) => c.id === componentId);
-      if (!component) return;
-
-      // filter by root node
-      componentsIds.push(component.id);
-
-      // filter by all its children
-      const tree = this.commonService.tree.fromArray(components, {
-        rootId: component.id,
-        idPropertyName: 'id',
-        parentIdPropertyName: 'parentId',
-        childrenPropertyName: 'children',
-      });
-
-      this.commonService.tree.forEach(tree, 'children', (item) => {
-        componentsIds.push(item.id);
-        return null;
-      });
-
-      if (componentsIds.length)
-        query = query.where(
-          'componentIds',
-          'array-contains-any',
-          componentsIds,
-        );
-    }
-
-    return query;
   }
 
   private checkLimit(user: UserEntity, exercises: Exercise[]) {

@@ -103,8 +103,8 @@ export class TrainingService {
   async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
     const dbUser = await this.userService.findOne(user.uid);
 
-    const from = filter?.from?.value ? filter.from.value : undefined;
-    const to = filter?.to?.value ? filter.to.value : undefined;
+    const from = filter?.from ? filter.from : undefined;
+    const to = filter?.to ? filter.to : undefined;
 
     let trainings = await this.trainingRepository.getDocs((q) => {
       // filter by date
@@ -126,11 +126,8 @@ export class TrainingService {
       }
 
       // filter by other params
-      if (filter?.groupId?.value)
-        q = q.where('groupId', '==', filter.groupId.value);
-
-      if (filter?.cycleId?.value)
-        q = q.where('cycleId', '==', filter.cycleId.value);
+      if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
+      if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
 
       q = q.orderBy('from', 'asc');
       return q;
@@ -257,8 +254,8 @@ export class TrainingService {
 
     // check overlap between all other trainings
     const trainings = await this.findAll(user, {
-      from: { value: startOfDay(input.from) },
-      to: { value: endOfDay(input.from) },
+      from: startOfDay(input.from),
+      to: endOfDay(input.from),
     });
 
     this.validateOverlap(input.from, input.to, trainings);

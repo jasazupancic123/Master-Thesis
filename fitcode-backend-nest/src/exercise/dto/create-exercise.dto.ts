@@ -9,7 +9,6 @@ export class CreateExerciseDto extends PickType(Exercise, [
   'region',
   'attributeValues',
   'coordination',
-  'equipment',
   'instruction',
   'tags',
 ] as const) {}
