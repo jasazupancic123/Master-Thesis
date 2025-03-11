@@ -14,7 +14,6 @@ export function generateExerciseStub(data?: Partial<Exercise>): Exercise {
     imageUrl: data?.imageUrl || undefined,
     videoUrl: data?.videoUrl || undefined,
     region: data?.region || BodyRegion.Core,
-    equipment: data?.equipment || [],
     instruction: data?.instruction || '',
     coordination: data?.coordination || false,
     attributeValues: data?.attributeValues || [],

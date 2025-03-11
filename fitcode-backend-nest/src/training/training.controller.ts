@@ -36,10 +36,10 @@ export class TrainingController {
     filter = this.commonService.object.clean(filter);
 
     return this.trainingService.findAll(user, {
-      groupId: { value: filter.groupId },
-      cycleId: { value: filter.cycleId },
-      ...(filter.from && { from: { value: filter.from } }),
-      ...(filter.to && { to: { value: filter.to } }),
+      groupId: filter.groupId,
+      cycleId: filter.cycleId,
+      ...(filter.from && { from: filter.from }),
+      ...(filter.to && { to: filter.to }),
     });
   }
 

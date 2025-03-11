@@ -84,10 +84,5 @@ type FilterableFields<T> = {
  * Filters any object by its fields and also by ids
  */
 export type Filter<T = {}> = { ids?: string[] } & {
-  [K in FilterableFields<T>]?: T[K] extends boolean
-    ? boolean // if field is boolean, don't allow any operator
-    : {
-        value: any;
-        op?: WhereFilterOp;
-      };
+  [K in FilterableFields<T>]?: T[K];
 };

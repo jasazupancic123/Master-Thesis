@@ -1,6 +1,9 @@
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { CACHE_KEY_FLAT_COMPONENTS } from '../common/constant/cache.constant';
+import {
+  CACHE_KEY_ATTRIBUTES,
+  CACHE_KEY_FLAT_COMPONENTS,
+} from '../common/constant/cache.constant';
 import { Wrapper } from '../common/type/wrapper.type';
 import { ComponentService } from '../component/component.service';
 import { Component } from '../component/entity/component.entity';

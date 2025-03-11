@@ -58,12 +58,6 @@ export class Exercise extends BaseEntity {
   @Expose()
   region: BodyRegion;
 
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  equipment: string[]; // selected leaf equipment items
-
   @IsString()
   @IsNotEmpty()
   @Expose()

@@ -48,7 +48,6 @@ export class ExerciseRepository
         videoUrl: input.videoUrl,
         region: input.region,
         coordination: input.coordination || false,
-        equipment: input.equipment || [],
         instruction: input.instruction || '',
         tags: input.tags || [],
         attributeValues: undefined,
