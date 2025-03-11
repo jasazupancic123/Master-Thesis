@@ -121,12 +121,12 @@ export class TrainingController {
   async addComponents(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() { componentsIds }: AddTrainingComponentsDto,
+    @Body() { components }: AddTrainingComponentsDto,
   ) {
     return await this.trainingService.addComponents(
       user,
       { trainingId },
-      componentsIds,
+      components,
     );
   }
 

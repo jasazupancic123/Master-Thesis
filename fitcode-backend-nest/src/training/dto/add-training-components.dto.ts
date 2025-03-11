@@ -1,6 +1,6 @@
 import { PickType } from '@nestjs/mapped-types';
-import { CreateTrainingDto } from './create-training.dto';
+import { Training } from '../entity/training.entity';
 
-export class AddTrainingComponentsDto extends PickType(CreateTrainingDto, [
-  'componentsIds',
+export class AddTrainingComponentsDto extends PickType(Training, [
+  'components',
 ] as const) {}
