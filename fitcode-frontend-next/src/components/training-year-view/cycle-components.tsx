@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import SelectInput from '../select-input';
 import CycleComponentsSelect from './cycle-components-select';
+import { useTheme } from '@mui/material';
 
 interface CycleComponentsProps {
   selectedGroup: Group;
@@ -19,6 +20,7 @@ interface CycleComponentsProps {
 
 export default function CycleComponents(props: CycleComponentsProps) {
   const { selectedGroup, setSelectedGroup, setEditCycle, setEditModal } = props;
+  const theme = useTheme();
   const { components, setDetectedChanges } = useGroup();
 
   const [cycles, setCycles] = useState(
@@ -72,7 +74,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
               flexDirection="column"
               justifyContent="center"
               alignItems="center"
-              bgcolor="#1EB980"
+              bgcolor={theme.palette.primary.main}
               sx={{
                 borderTopLeftRadius: 10,
                 borderTopRightRadius: 10,

@@ -84,7 +84,7 @@ export default function TrainerYearView() {
             sx={{
               mr: 0,
               cursor: 'pointer',
-              backgroundColor: '#1EB980',
+              backgroundColor: theme.palette.primary.main,
               borderRadius: '50%',
               p: 1,
               fontSize: 40,

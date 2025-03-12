@@ -29,12 +29,14 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTheme } from '@mui/material';
 
 dayjs.extend(weekOfYear);
 
 const commonService = CommonService.instance;
 
 export default function TrainerDayView() {
+  const theme = useTheme();
   const screenSize = useScreenSize();
   const {
     token,
@@ -165,9 +167,7 @@ export default function TrainerDayView() {
     setLoading(false);
   }, [todaysTrainings]);
 
-  useEffect(() => {
-    console.log('updated');
-  }, [selectedSubgroup]);
+  useEffect(() => {}, [selectedSubgroup]);
 
   return (
     <>
@@ -211,7 +211,7 @@ export default function TrainerDayView() {
           >
             <Box
               width="45%"
-              bgcolor="#283444"
+              bgcolor={theme.palette.background.light}
               p={!screenSize.isDesktop ? 0 : 1}
               px={!screenSize.isDesktop ? 1 : 3}
               sx={{
@@ -237,7 +237,7 @@ export default function TrainerDayView() {
               </Typography>
             </Box>
             <Box
-              bgcolor="#283444"
+              bgcolor={theme.palette.background.light}
               p={1}
               px={3}
               ml={0.5}
@@ -276,7 +276,7 @@ export default function TrainerDayView() {
               flex={1}
             >
               <Box
-                bgcolor="#283444"
+                bgcolor={theme.palette.background.light}
                 p={!screenSize.isDesktop ? 0 : 1}
                 px={!screenSize.isDesktop ? 1 : 3}
                 sx={{
@@ -301,7 +301,7 @@ export default function TrainerDayView() {
                 </Typography>
               </Box>
               <Box
-                bgcolor="#283444"
+                bgcolor={theme.palette.background.light}
                 p={1}
                 px={3}
                 ml={0.5}
@@ -353,7 +353,7 @@ export default function TrainerDayView() {
               }}
               getBackgroundColor={(value, itemValue) =>
                 commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
-                  ? '#1EB980'
+                  ? theme.palette.primary.main
                   : 'rgba(255, 255, 255, 0.1)'
               }
               sx={{
@@ -393,7 +393,7 @@ export default function TrainerDayView() {
             flex={1}
           >
             <Box
-              bgcolor="#283444"
+              bgcolor={theme.palette.background.light}
               p={!screenSize.isDesktop ? 0 : 1}
               px={!screenSize.isDesktop ? 1 : 3}
               sx={{
@@ -415,7 +415,7 @@ export default function TrainerDayView() {
               </Typography>
             </Box>
             <Box
-              bgcolor="#283444"
+              bgcolor={theme.palette.background.light}
               p={1}
               px={3}
               ml={0.5}
@@ -539,7 +539,7 @@ export default function TrainerDayView() {
             sx={{
               mr: 0,
               cursor: 'pointer',
-              backgroundColor: '#1EB980',
+              backgroundColor: theme.palette.primary.main,
               borderRadius: '50%',
               p: 1,
               fontSize: 40,

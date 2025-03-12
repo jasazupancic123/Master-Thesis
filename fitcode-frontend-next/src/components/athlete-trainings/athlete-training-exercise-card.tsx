@@ -25,10 +25,12 @@ import BorderColor from '../border-color';
 import MyModal from '../modal';
 import { SetExerciseAttribute } from '../trainer-day-view/exercise-card-set-attribute';
 import { AthleteTrainingExerciseCardProps } from './props';
+import { useTheme } from '@mui/material';
 
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
 ) {
+  const theme = useTheme();
   const { components, setView, training, profile, statuses } = props;
   const screenSize = useScreenSize();
 
@@ -106,7 +108,7 @@ export default function AthleteTrainingExerciseCard(
                     p: 0,
                     pt: 0.5,
                     m: 0,
-                    border: '1px solid #1EB980',
+                    border: `1px solid ${theme.palette.primary.main}`,
                     backgroundColor: 'background.paper',
                   }}
                 >
@@ -126,7 +128,7 @@ export default function AthleteTrainingExerciseCard(
                         variant="h6"
                         sx={{
                           textTransform: 'uppercase',
-                          color: '#1EB980',
+                          color: theme.palette.primary.main,
                           textAlign: 'center !important',
                           cursor: 'pointer',
                           overflow: 'hidden',

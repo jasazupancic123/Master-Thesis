@@ -59,5 +59,4 @@ export interface SetExerciseAttributeProps {
   onChange: (data: SetExerciseState) => void;
   options: SetExerciseOption[];
   disabled?: boolean;
-  canEdit?: boolean;
 }
