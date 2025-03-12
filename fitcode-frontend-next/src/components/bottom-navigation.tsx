@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
+import { useTheme } from '@mui/material';
 
 interface BottomNavigationProps {
   index: number;
@@ -21,6 +22,7 @@ export default function BottomNavigation({
   setIndex,
   mapper,
 }: BottomNavigationProps) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
   const { logout } = useAuth();
@@ -37,7 +39,9 @@ export default function BottomNavigation({
         backgroundColor: 'rgb(25, 39, 58)',
         height: screenSize.isLandscapeMobile ? '45px' : '50px',
         width: '100%',
-        '& .Mui-selected': { color: '#1EB980 !important' },
+        '& .Mui-selected': {
+          color: `${theme.palette.primary.main} !important`,
+        },
       }}
     >
       {Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map((link, i) => (
@@ -51,7 +55,7 @@ export default function BottomNavigation({
               : link.icon
           }
           sx={{
-            color: index === i ? '#1EB980' : '#fff',
+            color: index === i ? theme.palette.primary.main : '#fff',
             minWidth: '48px', // Reduce the minimum width
             padding: '4px', // Reduce padding
             '& .MuiBottomNavigationAction-root': {

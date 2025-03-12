@@ -1,11 +1,11 @@
 import { SxProps, Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 import React from 'react';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useTheme } from '@mui/material';
 
 interface Props {
   items: { label: string; value: string; sublabel?: string }[];
@@ -18,6 +18,7 @@ interface Props {
 }
 
 export default function Circles(props: Props) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
   return (
     <Box
@@ -35,7 +36,7 @@ export default function Circles(props: Props) {
           alignItems: 'center',
           gap: screenSize.isMobile ? 0 : 2,
           width: screenSize.isMobile ? '100%' : undefined,
-          backgroundColor: '#1A2B3C',
+          backgroundColor: theme.palette.background.paper,
           padding: screenSize.isMobile ? 0 : '8px 16px',
           borderBottomRightRadius: '20px',
           borderBottomLeftRadius: '20px',
@@ -88,7 +89,7 @@ export default function Circles(props: Props) {
                     backgroundColor: props.getBackgroundColor
                       ? props.getBackgroundColor(props.value, item.value)
                       : props.value === item.value
-                        ? '#1EB980'
+                        ? theme.palette.primary.main
                         : 'rgba(255, 255, 255, 0.1)',
                     '&:hover': {
                       backgroundColor: 'rgba(255, 255, 255, 0.2)',

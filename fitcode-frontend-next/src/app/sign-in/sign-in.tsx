@@ -23,6 +23,7 @@ import React, { FormEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useLocalStorage } from 'usehooks-ts';
 import { signInUpTheme } from '../style';
+import { useTheme } from '@mui/material';
 
 const mapper = {
   [UserRole.ATHLETE]: LINK_TRAININGS,
@@ -34,6 +35,7 @@ const mapper = {
 const commonService = CommonService.instance;
 
 export default function SignIn() {
+  const theme = useTheme();
   const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -81,7 +83,7 @@ export default function SignIn() {
               borderRadius: 3,
             }}
           >
-            <Avatar sx={{ m: 1, bgcolor: '#1EB980' }}>
+            <Avatar sx={{ m: 1, bgcolor: theme.palette.primary.main }}>
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
@@ -124,7 +126,14 @@ export default function SignIn() {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2, px: 2, py: 2, backgroundColor: '#1EB980' }}
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  px: 2,
+                  py: 2,
+                  backgroundColor: theme.palette.primary.main,
+                  color: 'white',
+                }}
               >
                 {LINKS_AUTH.login.label}
               </Button>
@@ -133,7 +142,10 @@ export default function SignIn() {
                 <Grid2>
                   <Link
                     href={LINKS_AUTH.register.href}
-                    style={{ textDecoration: 'none', color: '#1EB980' }}
+                    style={{
+                      textDecoration: 'none',
+                      color: theme.palette.primary.main,
+                    }}
                   >
                     Sign Up
                   </Link>

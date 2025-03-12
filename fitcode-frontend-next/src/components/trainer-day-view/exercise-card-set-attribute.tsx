@@ -5,7 +5,7 @@ import { useScreenSize } from '@/context/screen-size-provider';
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const screenSize = useScreenSize();
-  const { options, state, onChange, disabled = false, canEdit } = props;
+  const { options, state, onChange, disabled = false } = props;
 
   return (
     <Stack direction="column" justifyContent="center" alignItems="center">

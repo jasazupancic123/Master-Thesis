@@ -252,7 +252,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
       >
         <IconButton
           sx={{
-            mb: screenSize.isMobile ? 5.5 : 3.5,
+            mb: screenSize.isMobile ? 4.4 : 5.1,
             backgroundColor: 'primary.light',
             color: 'white',
             borderRadius: '50%',
