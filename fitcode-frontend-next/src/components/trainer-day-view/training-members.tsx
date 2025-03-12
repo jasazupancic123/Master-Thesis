@@ -354,7 +354,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
               return (
                 <Droppable
-                  key={`${subgroup.id}-droppable`}
+                  key={`droppable-${subgroup.id}`}
                   droppableId={subgroup.id}
                   direction="horizontal"
                 >
@@ -362,7 +362,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      key={subgroup.id}
                       onClick={(event) => {
                         if (subgroupIndex > 0)
                           setSelectedSubgroup({
@@ -519,7 +518,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           </Box>
                         </Box>
                         <Card
-                          key={subgroup.id + 'card'}
+                          key={`card-${subgroup.id}`}
                           sx={{
                             pr: 0.5,
                             py: 0,
@@ -542,8 +541,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
                             return (
                               <Draggable
-                                key={member.uid}
-                                draggableId={member.uid}
+                                key={`${member.uid}-${index}`}
+                                draggableId={`${member.uid}`}
                                 index={index}
                               >
                                 {(provided, snapshot) => (
@@ -551,7 +550,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    key={member.uid + 'tooltip2'}
+                                    key={`${subgroup.id}-${member.uid}-tooltip`}
                                     title={member.email}
                                     sx={{ mx: 1, p: 0 }}
                                   >
