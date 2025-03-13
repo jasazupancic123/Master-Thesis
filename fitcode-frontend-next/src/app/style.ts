@@ -1,15 +1,25 @@
 import { createTheme } from '@mui/material';
-import { Roboto_Condensed } from 'next/font/google';
+
+declare module '@mui/material/styles' {
+  interface TypeBackground {
+    default: string;
+    paper: string;
+    light: string;
+    dark: string;
+  }
+}
 
 export const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#0f9d58',
+      main: '#1EB980',
     },
     background: {
+      light: '#283444',
       default: '#263646',
       paper: '#1A2B3C',
+      dark: '#6d7b87',
     },
   },
   typography: {

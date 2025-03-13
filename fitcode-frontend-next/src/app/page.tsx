@@ -27,10 +27,12 @@ import Avatar from '@mui/material/Avatar';
 import Link from '@mui/material/Link';
 import { LINKS_NAVBAR } from '@/common/constant/navigation.constant';
 import HeroNavbar from '@/components/hero-navbar';
-import { buttonStyle, titleStyle } from '@/app/style';
+import { buttonStyle, theme, titleStyle } from '@/app/style';
 import { AppPageProps } from './type';
+import { useTheme } from '@mui/material';
 
 function Section(props: AppPageProps) {
+  const theme = useTheme();
   const { title, description, id, children } = props;
 
   return (
@@ -305,7 +307,7 @@ export default function Home() {
                   '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
                   backgroundColor:
                     selectedItemIndex === index ? 'action.selected' : undefined,
-                  borderColor: 'primary.main',
+                  borderColor: theme.palette.primary.main,
                 }}
               >
                 <Box
@@ -317,7 +319,7 @@ export default function Home() {
                     textAlign: 'center',
                   }}
                 >
-                  <Box sx={{ color: 'primary.main' }}>{icon}</Box>
+                  <Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
                   <Typography
                     color="text.primary"
                     variant="body2"

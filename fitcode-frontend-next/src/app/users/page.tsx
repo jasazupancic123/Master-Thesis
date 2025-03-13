@@ -18,9 +18,11 @@ import {
 } from '@mui/x-data-grid';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTheme } from '@mui/material';
 
 export default function Page() {
   // const users = useFetch<User[]>('user');
+  const theme = useTheme();
   const users: User[] = [];
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
 
@@ -84,7 +86,7 @@ export default function Page() {
               key={0}
               icon={<SaveIcon />}
               label="Save"
-              sx={{ color: 'primary.main' }}
+              sx={{ color: theme.palette.primary.main }}
               onClick={() => {
                 setRowModesModel({
                   ...rowModesModel,

@@ -16,6 +16,8 @@ import {
   Box,
   Grid2,
   IconButton,
+  Menu,
+  MenuItem,
   Stack,
   Tooltip,
   Typography,
@@ -29,9 +31,18 @@ import { NUM_MAX_EXERCISES_PER_SUPERSET, NUM_MAX_SUPERSETS } from './constant';
 import { SupersetsProps } from './props';
 import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCardContainer from './training-exercise-card-container';
+import { useTheme } from '@mui/material';
+import {
+  ArrowDownward,
+  ArrowDropDown,
+  ArrowDropUp,
+  MoreVert,
+  Timeline,
+} from '@mui/icons-material';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
+  const theme = useTheme();
   const screenSize = useScreenSize();
 
   const {
@@ -64,6 +75,33 @@ export default function Supersets(props: SupersetsProps) {
     useState<TrainingExercise | null>(null);
 
   const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [openPeriodize, setOpenPeriodize] = useState(false);
+  const open = Boolean(anchorEl);
+
+  const handleMenuClick = (event: any) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setOpenPeriodize(false);
+  };
+
+  const handeleTogglePeriodize = () => {
+    setOpenPeriodize(!openPeriodize);
+  };
+
+  const handlePeriodizeSelect = (
+    exercise: TrainingExercise,
+    periodizeType: 'linear' | 'undulating' | 'block'
+  ) => {
+    console.log(exercise);
+
+    handleMenuClose();
+  };
 
   useEffect(() => {
     setSelectedExercisesIds(
@@ -72,8 +110,6 @@ export default function Supersets(props: SupersetsProps) {
         : []
     );
   }, [supersets, supersets.length]);
-
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (supersetsWithAdd.length > 0) {
@@ -251,7 +287,9 @@ export default function Supersets(props: SupersetsProps) {
                                       : undefined
                                   }
                                   borderRadius={1}
-                                  boxShadow={snapshot.isDragging ? 2 : 0}
+                                  boxShadow={
+                                    snapshot.isDragging && !open ? 2 : 0
+                                  }
                                   bgcolor={
                                     snapshot.isDragging
                                       ? '#f0f0f0'
@@ -275,7 +313,7 @@ export default function Supersets(props: SupersetsProps) {
                                   >
                                     <Typography
                                       variant="caption"
-                                      color="#6d7b87"
+                                      color={theme.palette.background.dark}
                                       sx={{ zIndex: 1 }}
                                     >
                                       {`${i + 1}${String.fromCharCode(65 + k)}`}
@@ -297,13 +335,39 @@ export default function Supersets(props: SupersetsProps) {
                                     flexDirection="column"
                                     zIndex={1}
                                   >
-                                    <Tooltip
-                                      title="Delete exercise"
-                                      placement="left"
+                                    <IconButton
+                                      size="small"
+                                      onClick={handleMenuClick}
                                     >
-                                      <IconButton
-                                        size="small"
-                                        onClick={() =>
+                                      <MoreVert
+                                        sx={{
+                                          width: 16,
+                                          height: 16,
+                                          transform: 'rotate(90deg)',
+                                        }}
+                                      />
+                                    </IconButton>
+                                    <Menu
+                                      anchorEl={anchorEl}
+                                      open={open}
+                                      onClose={handleMenuClose}
+                                      anchorOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                      }}
+                                      sx={{
+                                        '& .MuiPaper-root': {
+                                          boxShadow:
+                                            '10px 10px 10px rgba(0, 0, 0, 0.1)', // Disables shadow for the Menu's Paper component
+                                        },
+                                      }}
+                                      transformOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                      }}
+                                    >
+                                      <MenuItem
+                                        onClick={() => {
                                           handleDeleteExercise(
                                             { exerciseId: exercise.id },
                                             {
@@ -319,14 +383,107 @@ export default function Supersets(props: SupersetsProps) {
                                               setFilteredTrainings,
                                               setDetectedChanges,
                                             }
-                                          )
-                                        }
+                                          );
+                                          handleMenuClose();
+                                        }}
+                                        sx={{
+                                          textAlign: 'center !important',
+                                        }}
                                       >
-                                        <DeleteIcon
-                                          sx={{ width: 16, height: 16 }}
-                                        />
-                                      </IconButton>
-                                    </Tooltip>
+                                        <Typography
+                                          width="100%"
+                                          display="flex"
+                                          alignItems="center"
+                                          justifyContent="center"
+                                        >
+                                          <DeleteIcon sx={{ mr: 0.5 }} />
+                                          Delete
+                                        </Typography>
+                                      </MenuItem>
+                                      <MenuItem
+                                        onClick={handeleTogglePeriodize}
+                                        sx={{
+                                          width: '100%',
+                                          position: 'relative',
+                                          textAlign: 'center !important',
+                                        }}
+                                      >
+                                        <Typography
+                                          width="100%"
+                                          display="flex"
+                                          alignItems="center"
+                                          justifyContent="center"
+                                          sx={{ pr: 1 }}
+                                        >
+                                          <Timeline sx={{ marginRight: 1 }} />{' '}
+                                          Periodize
+                                        </Typography>
+                                        {openPeriodize ? (
+                                          <ArrowDropUp
+                                            sx={{
+                                              position: 'absolute',
+                                              right: 0,
+                                            }}
+                                          />
+                                        ) : (
+                                          <ArrowDropDown
+                                            sx={{
+                                              position: 'absolute',
+                                              right: 0,
+                                            }}
+                                          />
+                                        )}
+                                      </MenuItem>
+                                      {openPeriodize && (
+                                        <>
+                                          <MenuItem
+                                            onClick={() => {
+                                              handlePeriodizeSelect(
+                                                exercise,
+                                                'linear'
+                                              );
+                                            }}
+                                            sx={{
+                                              textAlign: 'center !important',
+                                            }}
+                                          >
+                                            <Typography width="100%">
+                                              Linear
+                                            </Typography>
+                                          </MenuItem>
+                                          <MenuItem
+                                            onClick={() => {
+                                              handlePeriodizeSelect(
+                                                exercise,
+                                                'undulating'
+                                              );
+                                            }}
+                                            sx={{
+                                              textAlign: 'center !important',
+                                            }}
+                                          >
+                                            <Typography width="100%">
+                                              Undulating
+                                            </Typography>
+                                          </MenuItem>
+                                          <MenuItem
+                                            onClick={() => {
+                                              handlePeriodizeSelect(
+                                                exercise,
+                                                'block'
+                                              );
+                                            }}
+                                            sx={{
+                                              textAlign: 'center !important',
+                                            }}
+                                          >
+                                            <Typography width="100%">
+                                              Block
+                                            </Typography>
+                                          </MenuItem>
+                                        </>
+                                      )}
+                                    </Menu>
                                   </Box>
 
                                   <TrainingExerciseCardContainer
