@@ -8,6 +8,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
+import { useTheme } from '@mui/material';
 
 interface Props {
   initialData: UserMeta | null;
@@ -16,7 +17,8 @@ interface Props {
   setDisabled: SetState<boolean>;
 }
 
-export default function UserWellnessForm(props: Props) {
+export default function UserWellnessFrm(props: Props) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
   const [state, setState] = useState<UserMeta>(() => {
     if (props.initialData) return props.initialData;
@@ -48,7 +50,7 @@ export default function UserWellnessForm(props: Props) {
         sx={{
           fontSize: 18,
           fontWeight: 'bold',
-          color: '#1EB980', // Match theme
+          color: theme.palette.primary.main, // Match theme
           backgroundColor: 'background.default', // Subtle dark background
           borderRadius: '8px',
           padding: 2,
@@ -160,7 +162,7 @@ export default function UserWellnessForm(props: Props) {
         }}
         sx={{
           mt: screenSize.isLandscapeMobile ? 2 : 4,
-          backgroundColor: '#1EB980',
+          backgroundColor: theme.palette.primary.main,
           color: '#ffffff',
         }}
         disabled={props.disabled}
@@ -177,6 +179,7 @@ function UserWellnessSlider(props: {
   setValue: SetState<number>;
   disabled: boolean;
 }) {
+  const theme = useTheme();
   return (
     <Stack spacing={1} alignItems="center">
       <Slider
@@ -194,7 +197,9 @@ function UserWellnessSlider(props: {
           '& .MuiSlider-thumb': {
             width: 26,
             height: 26,
-            backgroundColor: props.disabled ? 'gray' : '#1EB980',
+            backgroundColor: props.disabled
+              ? 'gray'
+              : theme.palette.primary.main,
           },
           '& .MuiSlider-rail': {
             backgroundColor: '#ffffff',
@@ -206,7 +211,7 @@ function UserWellnessSlider(props: {
       <Typography
         variant="body1"
         sx={{
-          color: '#1EB980',
+          color: theme.palette.primary.main,
           textTransform: 'uppercase',
           fontFamily: 'Roboto Condensed',
           fontWeight: 'bold',

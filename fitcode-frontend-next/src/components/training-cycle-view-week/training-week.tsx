@@ -13,10 +13,11 @@ import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { TrainingCycleViewWeekProps } from './type';
 import MyModal from '../modal';
 import { Training } from '@/controller/training/type/training.type';
+import { useTheme } from '@mui/material';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { index, week, selected } = props;
-
+  const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
   const {
@@ -97,8 +98,8 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         >
           {/* Extra column to display the week number */}
           <Typography
-            color="#1A2B3C"
-            bgcolor="#1EB980"
+            color={theme.palette.background.paper}
+            bgcolor={theme.palette.primary.main}
             p={screenSize.isMobile ? 0.1 : 2}
             sx={{
               writingMode: 'vertical-rl',

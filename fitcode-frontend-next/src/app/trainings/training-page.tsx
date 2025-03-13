@@ -5,27 +5,24 @@ import { handleApiRequest } from '@/common/type/state.type';
 import Animation from '@/components/animation';
 import AthleteTrainingExerciseCard from '@/components/athlete-trainings/athlete-training-exercise-card';
 import TrainingInProgress from '@/components/athlete-trainings/training-in-progress';
-import Logo from '@/components/logo';
 import { useAthlete } from '@/context/athlete-provider';
 import { useAuth } from '@/context/auth-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTraining } from '@/context/training-provider';
 import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
-import {
-  Training,
-  TrainingStatus,
-} from '@/controller/training/type/training.type';
-import { Box, LinearProgress, Stack, Typography } from '@mui/material';
+import { TrainingStatus } from '@/controller/training/type/training.type';
+import { Box, Stack, Typography } from '@mui/material';
 import { endOfDay, startOfDay } from 'date-fns';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { TrainingPageProps } from './type';
+import { useTheme } from '@mui/material';
 
 const commonService = CommonService.instance;
 
 export default function TrainingPage(props: TrainingPageProps) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
 
@@ -119,7 +116,7 @@ export default function TrainingPage(props: TrainingPageProps) {
               sx={{
                 borderTopLeftRadius: 10,
                 borderTopRightRadius: 10,
-                backgroundColor: '#1EB980',
+                backgroundColor: theme.palette.primary.main,
               }}
               py={0.5}
               px={2}

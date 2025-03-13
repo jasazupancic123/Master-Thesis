@@ -14,8 +14,10 @@ import { useRouter } from 'next/navigation';
 import React, { FormEvent, useState } from 'react';
 import toast from 'react-hot-toast';
 import { signInUpTheme } from '../style';
+import { useTheme } from '@mui/material';
 
 export default function Page() {
+  const theme = useTheme();
   const router = useRouter();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -57,7 +59,7 @@ export default function Page() {
             borderRadius: 3,
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: '#1EB980' }}>
+          <Avatar sx={{ m: 1, bgcolor: theme.palette.primary.main }}>
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
@@ -130,7 +132,14 @@ export default function Page() {
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2, px: 2, py: 2, backgroundColor: '#1EB980' }}
+              sx={{
+                mt: 3,
+                mb: 2,
+                px: 2,
+                py: 2,
+                backgroundColor: theme.palette.primary.main,
+                color: 'white',
+              }}
             >
               {LINKS_AUTH.register.label}
             </Button>
@@ -139,7 +148,10 @@ export default function Page() {
               <Grid item>
                 <Link
                   href={LINKS_AUTH.login.href}
-                  style={{ textDecoration: 'none', color: '#1EB980' }}
+                  style={{
+                    textDecoration: 'none',
+                    color: theme.palette.primary.main,
+                  }}
                 >
                   Sign in
                 </Link>

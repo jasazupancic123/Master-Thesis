@@ -14,10 +14,12 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTheme } from '@mui/material';
 
 const commonService = CommonService.instance;
 
 export default function TrainerWeekView() {
+  const theme = useTheme();
   const {
     token,
     components,
@@ -56,7 +58,7 @@ export default function TrainerWeekView() {
     <Box
       minHeight={195}
       sx={{
-        backgroundColor: '#1A2B3C',
+        backgroundColor: theme.palette.background.paper,
         padding: '12px',
         pb: '20px',
         borderRadius: '8px',

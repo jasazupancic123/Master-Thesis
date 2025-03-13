@@ -39,6 +39,7 @@ import Animation from '../animation';
 import MyModal from '../modal';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import dayjs from 'dayjs';
+import { useTheme } from '@mui/material';
 
 interface TrainingInProgressProps {
   selectedTraining: Training;
@@ -63,6 +64,7 @@ export type TrainingResult = {
 };
 
 export default function TrainingInProgress(props: TrainingInProgressProps) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
 
@@ -296,7 +298,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           Superset {supersets.indexOf(selectedSuperset) + 1}
         </Typography>
         <Typography
-          color="#1EB980"
+          color={theme.palette.primary.main}
           variant="h6"
           sx={{
             textAlign: 'center',
@@ -661,7 +663,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
 
       <Fab
         sx={{
-          backgroundColor: '#1EB980',
+          backgroundColor: theme.palette.primary.main,
           position: 'absolute',
           bottom: 60,
           left: 16,

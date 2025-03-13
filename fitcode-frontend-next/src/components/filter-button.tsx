@@ -1,6 +1,7 @@
 import { GroupDateFilter } from '@/common/type/filter.type';
 import { ToggleButton } from '@mui/material';
 import React from 'react';
+import { useTheme } from '@mui/material';
 
 interface Props {
   value: GroupDateFilter;
@@ -9,6 +10,7 @@ interface Props {
 
 export default function FilterButton(props: Props) {
   const { value, disabled = false } = props;
+  const theme = useTheme();
 
   return (
     <ToggleButton
@@ -21,7 +23,7 @@ export default function FilterButton(props: Props) {
         color: '#fff',
         backgroundColor: 'background.default',
         '&.Mui-selected': {
-          backgroundColor: '#1EB980',
+          backgroundColor: theme.palette.primary.main,
           color: '#fff',
           borderBottomLeftRadius: '80px',
           borderBottomRightRadius: '80px',

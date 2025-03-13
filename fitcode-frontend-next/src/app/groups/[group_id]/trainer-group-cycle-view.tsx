@@ -118,7 +118,7 @@ export default function TrainerCycleView() {
       <Box mb={2} />
 
       {cycle && (
-        <Box borderRadius={2} borderColor="primary.main">
+        <Box borderRadius={2} borderColor={theme.palette.primary.main}>
           {/* Training weeks */}
           <Stack spacing={1} mt={2}>
             {cycle.weeks.map((week, i) => (

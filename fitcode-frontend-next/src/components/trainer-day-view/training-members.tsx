@@ -37,14 +37,16 @@ import {
 } from 'react-beautiful-dnd';
 import { Add, MoreVert } from '@mui/icons-material';
 import MyModal from '../modal';
+import { useTheme } from '@mui/material';
 
 interface TrainingMembersProps {
   isSticky: boolean;
 }
 
 export default function TrainingMembers(props: TrainingMembersProps) {
-  const screenSize = useScreenSize();
   const { isSticky } = props;
+  const theme = useTheme();
+  const screenSize = useScreenSize();
 
   const {
     group,
@@ -290,7 +292,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   component
                 ? 60
                 : undefined,
-          backgroundColor: !component ? '#283444' : 'background.paper',
+          backgroundColor: !component
+            ? theme.palette.background.light
+            : 'background.paper',
           zIndex: isSticky ? 10 : undefined,
           position: isSticky ? 'fixed' : 'relative',
           top: isSticky ? '70px' : undefined,
@@ -313,7 +317,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             sortedMembers.map((member) => {
               return (
                 <Tooltip
-                  key={member.uid}
+                  key={member.uid + 'tooltip1'}
                   title={member.email}
                   sx={{ mx: 1, p: 0 }}
                 >
@@ -350,7 +354,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
               return (
                 <Droppable
-                  key={`${subgroup.id}-droppable`}
+                  key={`droppable-${subgroup.id}`}
                   droppableId={subgroup.id}
                   direction="horizontal"
                 >
@@ -358,7 +362,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      key={subgroup.id}
                       onClick={(event) => {
                         if (subgroupIndex > 0)
                           setSelectedSubgroup({
@@ -380,7 +383,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                             : `2px solid ${borderColor}`,
                         borderTopLeftRadius: 7,
                         borderTopRightRadius: 7,
-                        backgroundColor: '#283444',
+                        backgroundColor: theme.palette.background.light,
                         cursor: 'pointer',
                         position: 'relative',
                         margin: '5px',
@@ -454,7 +457,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         display="flex"
                         flexDirection="row"
                         sx={{
-                          backgroundColor: '#283444',
+                          backgroundColor: theme.palette.background.light,
                           borderRadius: 10,
                           marginRight:
                             subgroup.id !== 'default' &&
@@ -469,7 +472,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           flexDirection="column"
                           sx={{
                             pr: 1.5,
-                            backgroundColor: '#283444',
+                            backgroundColor: theme.palette.background.light,
                             borderTopLeftRadius: 10,
                           }}
                           height={screenSize.isMobile ? 50 : 60}
@@ -478,7 +481,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           <Box
                             height={20}
                             sx={{
-                              backgroundColor: '#1EB980',
+                              backgroundColor: theme.palette.primary.main,
                               textAlign: 'center',
                               display: 'flex', // Center content inside
                               flex: 1, // Fill remaining space
@@ -515,13 +518,13 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           </Box>
                         </Box>
                         <Card
-                          key={subgroup.id}
+                          key={`card-${subgroup.id}`}
                           sx={{
                             pr: 0.5,
                             py: 0,
                             pl: 0,
                             borderRadius: 2,
-                            backgroundColor: '#283444',
+                            backgroundColor: theme.palette.background.light,
                             display: 'flex',
                             flexWrap: 'wrap',
                             justifyContent: 'center',
@@ -538,8 +541,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
                             return (
                               <Draggable
-                                key={member.uid}
-                                draggableId={member.uid}
+                                key={`${member.uid}-${index}`}
+                                draggableId={`${member.uid}`}
                                 index={index}
                               >
                                 {(provided, snapshot) => (
@@ -547,7 +550,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    key={member.uid}
+                                    key={`${subgroup.id}-${member.uid}-tooltip`}
                                     title={member.email}
                                     sx={{ mx: 1, p: 0 }}
                                   >
@@ -566,7 +569,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                                       }
                                       border={
                                         selectedAthlete === member
-                                          ? '2px solid #1EB980'
+                                          ? `2px solid ${theme.palette.primary.main}`
                                           : 'none'
                                       }
                                       zIndex={1000}
