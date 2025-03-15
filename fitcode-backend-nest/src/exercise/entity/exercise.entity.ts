@@ -1,15 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
-  IsBoolean,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
-import { BodyRegion } from '../enum/body-region';
 import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
 
 export class Exercise extends BaseEntity {
@@ -23,13 +20,7 @@ export class Exercise extends BaseEntity {
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
-  componentId: string;
-
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @Expose()
-  @ApiProperty()
-  tags: string[]; // string tags, component tags, ...
+  componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
 
   @IsString()
   @IsNotEmpty()
@@ -51,23 +42,11 @@ export class Exercise extends BaseEntity {
   @ApiPropertyOptional()
   videoUrl?: string;
 
-  // global attributes
-  @IsEnum(BodyRegion)
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  region: BodyRegion;
-
   @IsString()
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
   instruction: string;
-
-  @IsBoolean()
-  @ApiProperty()
-  @Expose()
-  coordination: boolean; // whether exercise can be filtered in "coordination" component
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseAttributeValue)

@@ -5,15 +5,15 @@ import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { generateExerciseStub } from '../mock/exercise.stub';
+import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { Component } from '../../src/component/entity/component.entity';
 import { ComponentService } from '../../src/component/component.service';
-import { generateComponentStub } from '../mock/component.stub';
+import { generateComponentStub } from '../../src/component/mock/component.stub';
 import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { createTrainerUserAndToken } from '../utils/auth.util';
-import { generateAttributeStub } from '../mock/attribute.stub';
+import { generateAttributeStub } from '../../src/attribute/mock/attribute.stub';
 import { Attribute } from '../../src/attribute/entity/attribute.entity';
 
 describe('Update Exercise (e2e)', () => {
@@ -49,7 +49,7 @@ describe('Update Exercise (e2e)', () => {
 
     exercise = await exerciseService.create(
       trainer,
-      generateExerciseStub({ componentId: component.id }),
+      generateExerciseStub({ componentIds: [component.id] }),
     );
   });
 
@@ -83,7 +83,7 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should not allow updating componentId', async () => {
-      const updateData = { componentId: 'new-component-id' };
+      const updateData = { componentIds: ['new-component-id'] };
 
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
@@ -92,7 +92,7 @@ describe('Update Exercise (e2e)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        'You cannot update component of the exercise',
+        'You cannot update the main component of an exercise',
       );
     });
 
@@ -136,7 +136,7 @@ describe('Update Exercise (e2e)', () => {
     afterEach(async () => {
       exercise = await exerciseService.create(
         trainer,
-        generateExerciseStub({ componentId: component.id }),
+        generateExerciseStub({ componentIds: [component.id] }),
       );
     });
 

@@ -15,7 +15,6 @@ import { User } from '../type/firebase-auth.type';
 import { BaseSetup } from './base.setup';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
-import { ParamService } from '../../attribute/service/param.service';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
@@ -51,7 +50,6 @@ export class DataSetup extends BaseSetup {
     try {
       await this.importUsers('data/users.json');
       await this.importAttributes('data/attributes.json');
-      await this.importParams('data/parameters.json');
       await this.importComponents('data/components.json');
       await this.importExercises('data/exercises.json');
 
@@ -72,15 +70,6 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
     await this.firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
     await this.firebaseService.deleteCollection(FirestoreCollection.USER);
-  }
-
-  private async importParams(filename: string) {
-    const paramService = this.app.get(ParamService);
-
-    const file = await readFile(filename, 'utf-8');
-    const data: Attribute[] = JSON.parse(file);
-
-    for (const item of data) await paramService.create(item);
   }
 
   private async importAttributes(filename: string) {

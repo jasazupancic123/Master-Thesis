@@ -8,20 +8,25 @@ import { FirestoreCollection } from '../../src/common/enum/firestore-collection.
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { TestUser } from '../type/auth.type';
 import { createTrainerUserAndToken } from '../utils/auth.util';
-import { generateExerciseStub } from '../mock/exercise.stub';
+import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { UserService } from '../../src/user/user.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { ComponentService } from '../../src/component/component.service';
-import { generateComponentStub } from '../mock/component.stub';
-import { BodyRegion } from '../../src/exercise/enum/body-region';
-import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
+import { generateComponentStub } from '../../src/component/mock/component.stub';
+import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
+import { AttributeService } from '../../src/attribute/service/attribute.service';
+import {
+  generateAttributeStub,
+  generateMultiselectAttribute,
+} from '../../src/attribute/mock/attribute.stub';
+import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 
 describe('Get Exercises (e2e)', () => {
   let app: INestApplication;
   let firebaseService: FirebaseService;
   let exerciseService: ExerciseService;
   let componentService: ComponentService;
-  let cacheManagerService: CacheManagerService;
+  let attributeService: AttributeService;
   let userService: UserService;
 
   let component: Component;
@@ -42,25 +47,25 @@ describe('Get Exercises (e2e)', () => {
     firebaseService = moduleFixture.get(FirebaseService);
     exerciseService = moduleFixture.get(ExerciseService);
     componentService = moduleFixture.get(ComponentService);
-    cacheManagerService = moduleFixture.get(CacheManagerService);
+    attributeService = moduleFixture.get(AttributeService);
     userService = moduleFixture.get(UserService);
 
     component = await componentService.create(generateComponentStub());
     globalExercises = await exerciseService.createMany(global.admin, [
-      generateExerciseStub({ componentId: component.id }),
-      generateExerciseStub({ componentId: component.id }),
-      generateExerciseStub({ componentId: component.id }),
+      generateExerciseStub({ componentIds: [component.id] }),
+      generateExerciseStub({ componentIds: [component.id] }),
+      generateExerciseStub({ componentIds: [component.id] }),
     ]);
 
     trainer1 = await createTrainerUserAndToken(firebaseService);
     trainer1Exercises = await exerciseService.createMany(trainer1, [
-      generateExerciseStub({ componentId: component.id }),
+      generateExerciseStub({ componentIds: [component.id] }),
     ]);
 
     trainer2 = await createTrainerUserAndToken(firebaseService);
     trainer2Exercises = await exerciseService.createMany(trainer2, [
-      generateExerciseStub({ componentId: component.id }),
-      generateExerciseStub({ componentId: component.id }),
+      generateExerciseStub({ componentIds: [component.id] }),
+      generateExerciseStub({ componentIds: [component.id] }),
     ]);
   });
 
@@ -222,83 +227,280 @@ describe('Get Exercises (e2e)', () => {
   });
 
   describe('Filtering Exercises', () => {
-    it('should filter exercises by coordination', async () => {
+    it('should filter exercises by component', async () => {
+      const comp1 = await componentService.create(generateComponentStub());
+      const comp2 = await componentService.create(generateComponentStub());
+
       const exercises = [
-        generateExerciseStub({ componentId: component.id, coordination: true }),
-        generateExerciseStub({ componentId: component.id, coordination: true }),
-        generateExerciseStub({ componentId: component.id, coordination: true }),
-        generateExerciseStub({ componentId: component.id }),
-        generateExerciseStub({ componentId: component.id }),
+        generateExerciseStub({ componentIds: [comp1.id] }),
+        generateExerciseStub({ componentIds: [comp1.id] }),
+        generateExerciseStub({ componentIds: [comp1.id] }),
+        generateExerciseStub({ componentIds: [comp2.id] }),
+        generateExerciseStub({ componentIds: [comp2.id] }),
       ];
 
       await exerciseService.createMany(trainer, exercises);
 
-      const response = await request(app.getHttpServer())
-        .get('/exercise?coordination=true')
-        .set('Authorization', `Bearer ${trainer.token}`);
+      const filters: [string, number][] = [
+        // array of <filter string, expected returned array length>
+        [comp1.id, 3],
+        [comp2.id, 2],
+        [[comp1.id, comp2.id].join(','), 5],
+      ];
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(3);
-    });
-
-    it('should filter exercises by componentId', async () => {
-      const otherComponent = await componentService.create(
-        generateComponentStub(),
+      const responses = await Promise.all(
+        filters.map((f) =>
+          request(app.getHttpServer())
+            .get(`/exercise?componentIds=${f[0]}`)
+            .set('Authorization', `Bearer ${trainer.token}`),
+        ),
       );
 
-      await cacheManagerService.clearComponents();
+      for (let i = 0; i < responses.length; i++) {
+        const response = responses[i];
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(filters[i][1]);
+      }
+    });
+
+    it('should filter exercises by multiselect attribute', async () => {
+      await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
+
+      const attribute = await attributeService.create(
+        generateMultiselectAttribute(),
+      );
+
+      const component = await componentService.create(
+        generateComponentStub({ attributes: [attribute.field] }),
+      );
+
       const exercises = [
-        generateExerciseStub({ componentId: otherComponent.id }),
-        generateExerciseStub({ componentId: otherComponent.id }),
-        generateExerciseStub({ componentId: otherComponent.id }),
-        generateExerciseStub({ componentId: component.id }),
-        generateExerciseStub({ componentId: component.id }),
+        generateExerciseStub({
+          componentIds: [component.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:a',
+              value: 'a',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:b',
+              value: 'b',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:c',
+              value: 'my custom string',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'second:a',
+              value: '123',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'second:b',
+              value: 'true',
+            }),
+          ],
+        }),
+        generateExerciseStub({
+          componentIds: [component.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:a',
+              value: 'a',
+            }),
+          ],
+        }),
+        generateExerciseStub({
+          componentIds: [component.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'second:a',
+              value: '125',
+            }),
+          ],
+        }),
+        generateExerciseStub({
+          componentIds: [component.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'second:b',
+              value: 'true',
+            }),
+          ],
+        }),
       ];
 
       await exerciseService.createMany(trainer, exercises);
+      const attributeValues = (await exerciseService.findAll(trainer)).flatMap(
+        (e) => e.attributeValues,
+      );
 
-      const response = await request(app.getHttpServer())
-        .get(`/exercise?componentId=${otherComponent.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`);
+      expect(attributeValues).toHaveLength(8);
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(3);
-      response.body.forEach((exercise: Exercise) => {
-        expect(exercise.componentId).toBe(otherComponent.id);
-      });
-    });
-
-    it('should filter exercises by region', async () => {
-      const exercises = [
-        generateExerciseStub({
-          componentId: component.id,
-          region: BodyRegion.UpperBody,
-        }),
-        generateExerciseStub({
-          componentId: component.id,
-          region: BodyRegion.UpperBody,
-        }),
-        generateExerciseStub({
-          componentId: component.id,
-          region: BodyRegion.UpperBody,
-        }),
-        generateExerciseStub({ componentId: component.id }),
-        generateExerciseStub({ componentId: component.id }),
+      const filters: [string, number][] = [
+        // array of <filter string, expected returned array length>
+        [`field=${attribute.field}&selected=first:a`, 2],
+        [`field=${attribute.field}&selected=first:b`, 1],
+        [`field=${attribute.field}&selected=second:a`, 2],
+        [`field=${attribute.field}&selected=second:a&value=125`, 1],
+        [`field=${attribute.field}&selected=second:b&value=true`, 2],
+        [`field=${attribute.field}&selected=second:b&value=false`, 0],
       ];
 
-      await exerciseService.createMany(trainer, exercises);
+      for (const [filter, expectedLength] of filters) {
+        const response = await request(app.getHttpServer())
+          .get(`/exercise?${filter}`)
+          .set('Authorization', `Bearer ${trainer.token}`);
 
-      const response = await request(app.getHttpServer())
-        .get(`/exercise?region=${BodyRegion.UpperBody}`)
-        .set('Authorization', `Bearer ${trainer.token}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(3);
-      response.body.forEach((exercise: Exercise) => {
-        expect(exercise.region).toBe(BodyRegion.UpperBody);
-      });
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(expectedLength);
+      }
     });
 
-    it('should filter by combined properties', async () => {});
+    it('should filter by combined properties', async () => {
+      await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
+
+      const attribute = await attributeService.create(
+        generateMultiselectAttribute(),
+      );
+
+      const boolAttr = await attributeService.create(
+        generateAttributeStub({ type: AttributeType.Boolean }),
+      );
+
+      const stringAttr = await attributeService.create(
+        generateAttributeStub({ type: AttributeType.String }),
+      );
+
+      const comp1 = await componentService.create(
+        generateComponentStub({
+          attributes: [attribute.field, boolAttr.field],
+        }),
+      );
+
+      const comp2 = await componentService.create(
+        generateComponentStub({
+          attributes: [attribute.field, stringAttr.field],
+        }),
+      );
+
+      const exercises = [
+        generateExerciseStub({
+          componentIds: [comp1.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: boolAttr.field,
+              value: 'true',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:a',
+              value: 'a',
+            }),
+          ],
+        }),
+        generateExerciseStub({
+          componentIds: [comp1.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: boolAttr.field,
+              value: 'false',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:a',
+              value: 'a',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:b',
+              value: 'b',
+            }),
+          ],
+        }),
+        generateExerciseStub({
+          componentIds: [comp2.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: stringAttr.field,
+              value: 'test 2',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:a',
+              value: 'a',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:c',
+              value: 'test',
+            }),
+          ],
+        }),
+        generateExerciseStub({
+          componentIds: [comp2.id],
+          attributeValues: [
+            generateExerciseAttributeValueStub({
+              field: stringAttr.field,
+              value: 'test 2',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:b',
+              value: 'b',
+            }),
+            generateExerciseAttributeValueStub({
+              field: attribute.field,
+              selected: 'first:c',
+              value: 'test 2',
+            }),
+          ],
+        }),
+      ];
+
+      await exerciseService.createMany(admin, exercises);
+
+      const attributeValues = (await exerciseService.findAll(trainer)).flatMap(
+        (e) => e.attributeValues,
+      );
+
+      expect(attributeValues).toHaveLength(11);
+
+      const filters: [string, number][] = [
+        // array of <filter string, expected returned array length>
+        [`value=test 2`, 2],
+        [`field=${boolAttr.field}&value=true`, 1],
+        [`field=${boolAttr.field}&value=false`, 1],
+        [`field=${attribute.field}&selected=first:a`, 3],
+        [
+          `componentIds=${comp1.id}&field=${attribute.field}&selected=first:a`,
+          2,
+        ],
+        [
+          `componentIds=${comp2.id}&field=${attribute.field}&selected=first:a`,
+          1,
+        ],
+        [
+          `componentIds=${comp1.id},${comp2.id}&field=${attribute.field}&selected=first:a`,
+          3,
+        ],
+      ];
+
+      for (const [filter, expectedLength] of filters) {
+        const response = await request(app.getHttpServer())
+          .get(`/exercise?${filter}`)
+          .set('Authorization', `Bearer ${trainer.token}`);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toHaveLength(expectedLength);
+      }
+    });
   });
 });

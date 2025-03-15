@@ -15,8 +15,6 @@ import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { CreateExercisesDto } from './dto/create-exercises.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { ExerciseService } from './service/exercise.service';
-import { ExerciseFilterDto } from './dto/exercise-filter.dto';
-import { FilterDto } from '../common/dto/filter.dto';
 
 @Controller('exercise')
 export class ExerciseController {
@@ -26,9 +24,9 @@ export class ExerciseController {
   @Auth()
   async findAll(
     @RequestUser() user: User,
-    @FilterDto(ExerciseFilterDto) filter?: ExerciseFilterDto,
+    @Query() query?: Record<string, string>,
   ) {
-    return this.exerciseService.findAll(user, filter);
+    return this.exerciseService.findAll(user, query);
   }
 
   @Get(':exerciseId')

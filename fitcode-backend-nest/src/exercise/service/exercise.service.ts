@@ -9,16 +9,14 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { FieldPath, Query } from 'firebase-admin/firestore';
 import { NUM_MAX_EXERCISES } from '../../common/constant/limit.constant';
-import { Create, Update } from '../../common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { UserEntity } from '../../user/entity/user.entity';
 import { UserService } from '../../user/user.service';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
 import { User } from '../../common/type/firebase-auth.type';
 import { ExerciseRef } from '../../common/type/firestore.type';
-import { Filter } from '../../common/type/orm.type';
 import { Validate } from '../../common/type/validate.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ComponentService } from '../../component/component.service';
@@ -29,6 +27,8 @@ import { ExerciseAttributeValueRepository } from '../repository/exercise-attribu
 import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { AttributeService } from '../../attribute/service/attribute.service';
+import { Component } from 'src/component/entity/component.entity';
+import { FieldPath, FieldValue, Query } from 'firebase-admin/firestore';
 
 @Injectable()
 export class ExerciseService {
@@ -48,50 +48,70 @@ export class ExerciseService {
     private readonly userService: Wrapper<UserService>,
   ) {}
 
-  async findAll(user: User, filter?: Filter<Exercise>): Promise<Exercise[]> {
+  async findAll(
+    user: User,
+    filter?: Record<string, string>,
+  ): Promise<Exercise[]> {
     const dbUser = await this.userService.findOneByIdOrFail(user.uid);
-    const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
-
     const components = await this.cacheManagerService.getComponents();
-    const exercises = await this.exerciseRepository.getDocs((q) => {
-      q = q.where('ownerId', 'in', userIds);
+
+    const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
+    let exercises: Exercise[] = [];
+
+    if (
+      this.commonService.object.isEmpty(filter) ||
+      (Object.keys(filter).length === 1 && filter.componentIds)
+    ) {
+      // filtering only by components from exercise repository
+      let query = this.exerciseRepository
+        .collection()
+        .where('ownerId', 'in', userIds);
+
+      if (filter?.componentIds)
+        query = this.filterByComponents(
+          query,
+          filter.componentIds.split(','),
+          components,
+        );
+
+      exercises = await query
+        .get()
+        .then(({ docs }) =>
+          docs.map((doc) =>
+            this.firebaseService.serialize(
+              doc.data() as FirestoreEntity<Exercise>,
+            ),
+          ),
+        );
+    } else {
+      // filtering by attributes
+      let query = this.exerciseAttributeValueRepository
+        .collectionGroup()
+        .where('ownerId', 'in', userIds);
 
       if (filter) {
-        if (filter.coordination)
-          q = q.where('coordination', '==', filter.coordination);
+        if (filter.componentIds)
+          query = this.filterByComponents(
+            query,
+            filter.componentIds.split(','),
+            components,
+          );
 
-        if (filter.componentId) {
-          // for each component id, find all children and filter by them
-          const componentsIds: string[] = [];
-          const componentId = filter.componentId;
-          const component = components.find((c) => c.id === componentId);
-          if (!component) return;
-
-          // filter by root node
-          componentsIds.push(component.id);
-
-          // filter by all its children
-          const tree = this.commonService.tree.fromArray(components, {
-            rootId: component.id,
-            idPropertyName: 'id',
-            parentIdPropertyName: 'parentId',
-            childrenPropertyName: 'children',
-          });
-
-          this.commonService.tree.forEach(tree, 'children', (item) => {
-            componentsIds.push(item.id);
-            return null;
-          });
-
-          if (componentsIds.length)
-            q = q.where('componentId', 'in', componentsIds);
-        }
-
-        if (filter.region) q = q.where('region', '==', filter.region);
+        if (filter.field) query = query.where('field', '==', filter.field);
+        if (filter.value) query = query.where('value', '==', filter.value);
+        if (filter.selected)
+          query = query.where('selected', '==', filter.selected);
       }
 
-      return q;
-    });
+      const exerciseIds = await query
+        .get()
+        .then(({ docs }) => docs.map((doc) => doc.data().exerciseId));
+
+      if (exerciseIds.length > 0)
+        exercises = await this.exerciseRepository.getDocs((q) =>
+          q.where(FieldPath.documentId(), 'in', exerciseIds),
+        );
+    }
 
     // map attributes
     return await Promise.all(
@@ -140,6 +160,9 @@ export class ExerciseService {
       `User ${user.uid} is creating new exercise: ${JSON.stringify(data)}`,
     );
 
+    if (data.componentIds.length < 1)
+      throw new BadRequestException('Exercise must have atleast one component');
+
     // validate exercises
     const dbUser = await this.userService.findOneOrFail(user.uid);
     const exercises = await this.exerciseRepository.getDocs((q) =>
@@ -150,28 +173,33 @@ export class ExerciseService {
 
     // validate components
     const components = await this.cacheManagerService.getComponents();
-    const component = components.find((c) => c.id === data.componentId);
+    for (const componentId of data.componentIds) {
+      const component = components.find((c) => c.id === componentId);
 
-    // check that component exists
-    if (!component)
-      throw new NotFoundException(
-        `Component ${data.componentId} does not exist`,
-      );
+      // check that component exists
+      if (!component)
+        throw new NotFoundException(`Component ${componentId} does not exist`);
+    }
 
     // check that component is leaf
-    if (component.children?.length > 0)
+    const mainComponent = components.find(
+      (c) => c.id === data.componentIds[0],
+    )!;
+
+    if (mainComponent.children?.length > 0)
       throw new BadRequestException(
-        `Component ${component.name.toLowerCase()} is invalid for selection`,
+        `Main component ${mainComponent.name.toLowerCase()} is not valid for an exercise`,
       );
 
     // validate attributes
-    const parents = component.parents!.map(
+    // NOTE - exercise inherits attributes only from the first (main) component
+    const parents = mainComponent.parents!.map(
       (parentId) => components.find((c) => c.id === parentId)!,
     );
 
     const attributeFields = [
       ...parents.flatMap((p) => p.attributes || []),
-      ...(component.attributes || []),
+      ...(mainComponent.attributes || []),
     ];
 
     const allAttributes = await this.attributeService.findAll();
@@ -197,13 +225,10 @@ export class ExerciseService {
         id: exerciseId,
         ownerId,
         name: data.name,
-        componentId: data.componentId,
+        componentIds: data.componentIds,
         videoUrl: data.videoUrl,
         imageUrl: data.imageUrl,
-        region: data.region,
-        coordination: data.coordination || false,
         instruction: data.instruction || '',
-        tags: data.tags || [],
         attributeValues: undefined,
       },
     );
@@ -212,15 +237,16 @@ export class ExerciseService {
 
     // create attributes
     attributeValues.forEach((v) => {
-      const docRef = this.exerciseAttributeValueRepository.doc({
-        exerciseId,
-        field: v.field,
-      });
+      const docRef = this.exerciseAttributeValueRepository
+        .collection({ exerciseId })
+        .doc();
 
       const query =
         this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
+          id: docRef.id,
           exerciseId,
           ownerId,
+          componentIds: data.componentIds,
           field: v.field,
           value: v.value,
           selected: v.selected,
@@ -237,8 +263,10 @@ export class ExerciseService {
       ownerId,
       attributeValues: attributeValues.map((v) => ({
         ...v,
+        id: undefined,
         exerciseId,
         ownerId,
+        componentIds: data.componentIds,
       })),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -277,26 +305,35 @@ export class ExerciseService {
         break;
 
       // validate components
-      const component = components.find((c) => c.id === e.componentId);
-      if (!component)
-        throw new NotFoundException(
-          `Component ${e.componentId} does not exist`,
+      if (e.componentIds.length < 1)
+        throw new BadRequestException(
+          'Exercise must have atleast one component',
         );
 
+      for (const componentId of e.componentIds) {
+        const component = components.find((c) => c.id === componentId);
+        if (!component)
+          throw new NotFoundException(
+            `Component ${componentId} does not exist`,
+          );
+      }
+
       // check that component is leaf
-      if (component.children?.length > 0)
+      const mainComponent = components.find((c) => c.id === e.componentIds[0])!;
+      if (mainComponent.children?.length > 0)
         throw new BadRequestException(
-          `Component ${component.name.toLowerCase()} is invalid for selection`,
+          `Main component ${mainComponent.name.toLowerCase()} is not valid for an exercise`,
         );
 
       // validate attributes
-      const parents = component.parents!.map(
+      // NOTE - exercise inherits attributes only from the first (main) component
+      const parents = mainComponent.parents!.map(
         (parentId) => components.find((c) => c.id === parentId)!,
       );
 
       const attributeFields = [
         ...parents.flatMap((p) => p.attributes || []),
-        ...(component.attributes || []),
+        ...(mainComponent.attributes || []),
       ];
 
       const allAttributes = await this.attributeService.findAll();
@@ -304,9 +341,18 @@ export class ExerciseService {
         (field) => allAttributes.find((a) => a.field === field)!,
       );
 
-      e.attributeValues = this.attributeService
-        .validate(e.attributeValues, attributes || [])
-        .map((v) => ({ ...v, exerciseId: undefined, ownerId }));
+      const attributeValues = this.attributeService.validate(
+        e.attributeValues,
+        attributes || [],
+      );
+
+      e.attributeValues = attributeValues.map((v) => ({
+        ...v,
+        id: undefined,
+        exerciseId: undefined,
+        ownerId,
+        componentIds: e.componentIds,
+      }));
 
       exercisesToCreate.push(e);
     }
@@ -324,13 +370,10 @@ export class ExerciseService {
           ? GLOBAL_EXERCISE_OWNER
           : user.uid,
         name: e.name,
-        componentId: e.componentId,
+        componentIds: e.componentIds,
         videoUrl: e.videoUrl,
         imageUrl: e.imageUrl,
-        region: e.region,
-        coordination: e.coordination || false,
         instruction: e.instruction || '',
-        tags: e.tags || [],
         attributeValues: undefined,
       };
 
@@ -341,15 +384,16 @@ export class ExerciseService {
       batch.set(docRef, query);
 
       e.attributeValues.forEach((v) => {
-        const docRef = this.exerciseAttributeValueRepository.doc({
-          exerciseId,
-          field: v.field,
-        });
+        const docRef = this.exerciseAttributeValueRepository
+          .collection({ exerciseId })
+          .doc();
 
         const query =
           this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
+            id: docRef.id,
             exerciseId,
             ownerId,
+            componentIds: e.componentIds,
             field: v.field,
             value: v.value,
             selected: v.selected,
@@ -378,24 +422,31 @@ export class ExerciseService {
     const exercise = await this.findByIdOrFail(user, ref);
     this.validateOwner(user, exercise);
 
-    if (input.componentId)
-      throw new BadRequestException(
-        'You cannot update component of the exercise',
-      );
-
-    // check that all components exist and are leafs
-    // leaf's root must be the same as previous exercise root
-    const components = await this.cacheManagerService.getComponents();
-    const component = components.find((c) => c.id === exercise.componentId)!;
+    if (input.componentIds?.length > 0) {
+      if (input.componentIds[0] !== exercise.componentIds[0])
+        throw new BadRequestException(
+          'You cannot update the main component of an exercise',
+        );
+    }
 
     // validate attributes
-    const parents = component.parents!.map(
+    // delete old attribute values
+    await this.exerciseAttributeValueRepository.deleteAllByExercise({
+      exerciseId: exercise.id,
+    });
+
+    const components = await this.cacheManagerService.getComponents();
+    const mainComponent = components.find(
+      (c) => c.id === exercise.componentIds[0],
+    )!;
+
+    const parents = mainComponent.parents!.map(
       (parentId) => components.find((c) => c.id === parentId)!,
     );
 
     const attributeFields = [
       ...parents.flatMap((p) => p.attributes || []),
-      ...(component.attributes || []),
+      ...(mainComponent.attributes || []),
     ];
 
     const allAttributes = await this.attributeService.findAll();
@@ -404,7 +455,7 @@ export class ExerciseService {
     );
 
     const attributeValues = this.attributeService.validate(
-      input.attributeValues,
+      input.attributeValues || [],
       attributes || [],
     );
 
@@ -413,15 +464,16 @@ export class ExerciseService {
     batch.update(docRef, input);
 
     attributeValues.forEach((v) => {
-      const docRef = this.exerciseAttributeValueRepository.doc({
-        exerciseId: ref.exerciseId,
-        field: v.field,
-      });
+      const docRef = this.exerciseAttributeValueRepository
+        .collection({ exerciseId: exercise.id })
+        .doc();
 
       const query =
         this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
+          id: docRef.id,
           exerciseId: ref.exerciseId,
           ownerId: user.uid,
+          componentIds: input.componentIds || exercise.componentIds,
           field: v.field,
           value: v.value,
           selected: v.selected,
@@ -469,14 +521,14 @@ export class ExerciseService {
 
     // check that parents of leaf are in training's root component ids
     for (const exercise of exercises)
-      for (const component of exercise.componentId) {
-        const leaf = leafs.find((leaf) => leaf.id === component);
+      for (const componentId of exercise.componentIds) {
+        const leaf = leafs.find((leaf) => leaf.id === componentId);
 
         if (
           !leaf ||
           !leaf.parents.some((parent) => rootComponentId === parent)
         ) {
-          const found = components.find((c) => c.id === component);
+          const found = components.find((c) => c.id === componentId);
           return {
             error: true,
             message: `Exercise ${exercise.name} has component ${found?.name} which is not valid for training`,
@@ -496,5 +548,49 @@ export class ExerciseService {
   private validateOwner(user: User, exercise: Exercise) {
     if (user.uid !== exercise.ownerId)
       throw new UnauthorizedException("You don't have access to this exercise");
+  }
+
+  private getLeafComponentIdsByRoots(
+    rootComponentIds: string[],
+    components: Component[],
+  ): string[] {
+    const leafComponentIds: string[] = [];
+
+    for (const rootComponentId of rootComponentIds) {
+      const component = components.find((c) => c.id === rootComponentId);
+      if (!component) return;
+
+      const tree = this.commonService.tree.fromArray(components, {
+        rootId: component.id,
+        idPropertyName: 'id',
+        parentIdPropertyName: 'parentId',
+        childrenPropertyName: 'children',
+      });
+
+      this.commonService.tree.forEach(tree, 'children', (item) => {
+        if (item.children?.length === 0) leafComponentIds.push(item.id);
+        return null;
+      });
+    }
+
+    return leafComponentIds;
+  }
+
+  private filterByComponents(
+    query: Query,
+    filterComponentIds: string[],
+    allComponents: Component[],
+  ): Query {
+    const leafs = this.getLeafComponentIdsByRoots(
+      filterComponentIds,
+      allComponents,
+    );
+
+    query = query.where('componentIds', 'array-contains-any', [
+      ...filterComponentIds,
+      leafs,
+    ]);
+
+    return query;
   }
 }

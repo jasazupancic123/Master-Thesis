@@ -52,7 +52,10 @@ export interface RootFirestoreCollectionRepository<Model = any> {
 
 export type ComponentRef = { componentId: string };
 export type ExerciseRef = { exerciseId: string };
-export type ExerciseAttributeValueRef = ExerciseRef & { field: string };
+export type ExerciseAttributeValueRef = ExerciseRef & {
+  exerciseAttributeValueId: string;
+};
+
 export type UserRef = { uid: string }; // auth user uid
 export type UserMetaRef = UserRef & { date: Date };
 export type GroupRef = { groupId: string };

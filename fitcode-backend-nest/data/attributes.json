@@ -1,8 +1,38 @@
 [
     {
+      "field":"coordination",
+      "name":"Coordination",
+      "type":"boolean",
+      "required": "true"
+    },
+    {
+      "field":"region",
+      "name":"Body Region",
+      "type":"select",
+      "required": "true",
+      "options":[
+        {
+          "field":"core",
+          "name":"Core",
+          "type":"value"
+        },
+        {
+          "field":"upper",
+          "name":"Upper Body",
+          "type":"value"
+        },
+        {
+          "field":"lower",
+          "name":"Lower Body",
+          "type":"value"
+        }
+      ]
+    },
+    {
       "field":"equipment",
       "name":"Equipment",
       "type":"multiselect",
+      "required": "true",
       "options":[
         {
           "field":"cardio",
