@@ -1,5 +1,3 @@
-import { Attribute } from '../../../attribute/entity/attribute.entity';
-
 export class ObjectUtil {
   /**
    * Removes undefined and (optionally) null values from an object. It also
@@ -20,5 +18,14 @@ export class ObjectUtil {
 
       return acc;
     }, {} as Partial<T>);
+  }
+
+  /**
+   * Checks if an object is empty (has no own enumerable properties).
+   */
+  isEmpty(obj: object): boolean {
+    return obj === null || obj === undefined
+      ? true
+      : Object.keys(obj).length === 0;
   }
 }

@@ -3,12 +3,9 @@ import { Exercise } from '../entity/exercise.entity';
 
 export class CreateExerciseDto extends PickType(Exercise, [
   'name',
-  'componentId',
+  'componentIds',
   'imageUrl',
   'videoUrl',
-  'region',
   'attributeValues',
-  'coordination',
   'instruction',
-  'tags',
 ] as const) {}

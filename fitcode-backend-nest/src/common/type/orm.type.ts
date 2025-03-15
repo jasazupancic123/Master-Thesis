@@ -74,8 +74,8 @@ export interface Condition<T> {
  * Filterable fields of an object. It can be a string, number, date or boolean,
  * and cannot be an object or an array.
  */
-type FilterableFields<T> = {
-  [K in keyof T]: T[K] extends string | Array<string> | number | Date | boolean
+type FilterableFields<T, V> = {
+  [K in keyof T]: T[K] extends string | Array<V> | number | Date | boolean
     ? K
     : null;
 }[keyof T];
@@ -83,6 +83,6 @@ type FilterableFields<T> = {
 /**
  * Filters any object by its fields and also by ids
  */
-export type Filter<T = {}> = { ids?: string[] } & {
-  [K in FilterableFields<T>]?: T[K];
+export type Filter<T, V = unknown> = { ids?: string[] } & {
+  [K in FilterableFields<T, V>]?: T[K];
 };

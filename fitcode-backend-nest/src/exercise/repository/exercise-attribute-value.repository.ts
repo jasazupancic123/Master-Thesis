@@ -56,15 +56,30 @@ export class ExerciseAttributeValueRepository
       );
   }
 
+  async deleteAllByExercise(ref: ExerciseRef) {
+    const values = await this.getAllByExercise(ref);
+    await Promise.all(
+      values.map((v) =>
+        this.deleteDoc({
+          ...ref,
+          exerciseAttributeValueId: v.id,
+        }),
+      ),
+    );
+  }
+
   async addDoc(
     ref: ExerciseAttributeValueRef,
     input: Create<ExerciseAttributeValue>,
   ): Promise<string> {
     const query =
       this.firebaseService.buildCreateQuery<ExerciseAttributeValue>(input);
-    await this.doc(ref).set(query);
 
-    return ref.field;
+    const docRef = this.collection(ref).doc();
+    const exerciseAttributeValueId = docRef.id;
+    await this.doc({ ...ref, exerciseAttributeValueId }).set(query);
+
+    return exerciseAttributeValueId;
   }
 
   async updateDoc(
@@ -81,12 +96,18 @@ export class ExerciseAttributeValueRepository
   }
 
   doc(ref: ExerciseAttributeValueRef) {
-    return this.collection(ref).doc(ref.field);
+    return this.collection(ref).doc(ref.exerciseAttributeValueId);
   }
 
   collection(ref: ExerciseRef) {
     return this.exerciseRepository
       .doc(ref.exerciseId)
       .collection(FirestoreCollection.EXERCISE_ATTRIBUTE_VALUES);
+  }
+
+  collectionGroup() {
+    return this.firebaseService.firestore.collectionGroup(
+      FirestoreCollection.EXERCISE_ATTRIBUTE_VALUES,
+    );
   }
 }

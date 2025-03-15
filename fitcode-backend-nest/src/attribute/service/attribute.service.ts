@@ -135,7 +135,7 @@ export class AttributeService {
     selectedPath: string,
     options: Attribute[],
   ): Attribute | null {
-    const pathParts = selectedPath.split('.');
+    const pathParts = selectedPath.split(':');
     let currentOptions = options;
 
     let found: Attribute;

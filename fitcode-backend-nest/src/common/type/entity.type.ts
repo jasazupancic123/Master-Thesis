@@ -52,5 +52,5 @@ export type Update<
     'createdAt'
   >,
 > = {
-  [P in Extract<K, keyof T>]?: T[P] extends string[] ? T[P] | FieldValue : T[P];
+  [P in Extract<K, keyof T>]?: T[P];
 };

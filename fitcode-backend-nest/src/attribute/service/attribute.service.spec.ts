@@ -9,8 +9,6 @@ import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from '../../common/common.module';
 import { validationSchema } from '../../config/environment-validation-schema';
 import { AttributeRepository } from '../repository/attribute.repository';
-import { ParamRepository } from '../repository/param.repository';
-import { ParamService } from './param.service';
 
 describe('AttributeService (unit)', () => {
   let service: AttributeService;
@@ -22,13 +20,8 @@ describe('AttributeService (unit)', () => {
         FirebaseModule.forRoot(),
         CommonModule,
       ],
-      providers: [
-        AttributeRepository,
-        ParamRepository,
-        AttributeService,
-        ParamService,
-      ],
-      exports: [AttributeService, ParamService],
+      providers: [AttributeRepository, AttributeService],
+      exports: [AttributeService],
     }).compile();
 
     service = moduleRef.get(AttributeService);
@@ -204,14 +197,14 @@ describe('AttributeService (unit)', () => {
     ];
 
     const validValues: AttributeValue[] = [
-      { field: 'difficulty', value: 'expert', selected: 'hard.expert' },
+      { field: 'difficulty', value: 'expert', selected: 'hard:expert' },
     ];
 
     const invalidValues: AttributeValue[] = [
       {
         field: 'difficulty',
         value: 'nonexistent',
-        selected: 'hard.nonexistent',
+        selected: 'hard:nonexistent',
       },
     ];
 
@@ -224,7 +217,7 @@ describe('AttributeService (unit)', () => {
       BadRequestException,
     );
     expect(() => service.validate(invalidValues, attributes)).toThrow(
-      `Value "hard.nonexistent" for attribute "Difficulty" is not a valid option`,
+      `Value "hard:nonexistent" for attribute "Difficulty" is not a valid option`,
     );
     expect(service.validate(validSimpleValues, attributes)).toEqual(
       validSimpleValues,
@@ -321,12 +314,12 @@ describe('AttributeService (unit)', () => {
     const validValues: AttributeValue[][] = [
       [{ field: 'difficulty', value: 'true', selected: 'med' }],
       [{ field: 'difficulty', value: 'easy', selected: 'easy' }],
-      [{ field: 'difficulty', value: '12', selected: 'hard.extreme' }],
-      [{ field: 'difficulty', value: 'some string', selected: 'hard.expert' }],
+      [{ field: 'difficulty', value: '12', selected: 'hard:extreme' }],
+      [{ field: 'difficulty', value: 'some string', selected: 'hard:expert' }],
     ];
 
     const invalidValues: AttributeValue[] = [
-      { field: 'difficulty', value: 'not-number', selected: 'hard.extreme' },
+      { field: 'difficulty', value: 'not-number', selected: 'hard:extreme' },
     ];
 
     for (const validValue of validValues)
@@ -455,15 +448,15 @@ describe('AttributeService (unit)', () => {
     ];
 
     const validValues: AttributeValue[] = [
-      { field: 'preferences', value: 'vegan', selected: 'food.vegan' },
-      { field: 'preferences', value: 'football', selected: 'sports.football' },
+      { field: 'preferences', value: 'vegan', selected: 'food:vegan' },
+      { field: 'preferences', value: 'football', selected: 'sports:football' },
     ];
 
     const invalidValues: AttributeValue[] = [
       {
         field: 'preferences',
         value: 'basketball',
-        selected: 'sports.basketball',
+        selected: 'sports:basketball',
       },
     ];
 
@@ -472,7 +465,7 @@ describe('AttributeService (unit)', () => {
       BadRequestException,
     );
     expect(() => service.validate(invalidValues, attributes)).toThrow(
-      `Value "sports.basketball" for attribute "Preferences" is not a valid option`,
+      `Value "sports:basketball" for attribute "Preferences" is not a valid option`,
     );
   });
 });

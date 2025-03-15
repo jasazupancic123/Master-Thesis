@@ -1,16 +1,25 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Create, Update } from '../common/type/entity.type';
 import { CommonService } from '../common/service/common.service';
 import { Filter } from '../common/type/orm.type';
 import { Component } from './entity/component.entity';
 import { ComponentRepository } from './repository/component.repository';
-import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
+import { Wrapper } from '../../src/common/type/wrapper.type';
 
 @Injectable()
 export class ComponentService {
   private logger = new Logger(ComponentService.name);
 
   constructor(
+    @Inject(forwardRef(() => CacheManagerService))
+    private readonly cacheManagerService: Wrapper<CacheManagerService>,
     private readonly commonService: CommonService,
     private readonly componentRepository: ComponentRepository,
   ) {}
@@ -21,6 +30,7 @@ export class ComponentService {
 
     // TODO - if newly created component is leaf node, move all parent exercises to "Other" component
 
+    await this.cacheManagerService.clearComponents();
     return await this.componentRepository.getDoc(componentSlug);
   }
 
@@ -31,8 +41,7 @@ export class ComponentService {
   ): Promise<Component> {
     const { children, ...rest } = data;
     const component = await this.create({ ...rest, parentId: null });
-
-    console.log('children:', children);
+    await this.cacheManagerService.clearComponents();
 
     for (const child of children) {
       const childData = {
