@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TrainingModule } from '../training/training.module';
-import { UserMetaRepository } from './repository/user-meta.repository';
+import { WellnessRepository } from './repository/user-meta.repository';
 import { UserRepository } from './repository/user.repository';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -8,7 +8,7 @@ import { UserService } from './user.service';
 @Module({
   imports: [TrainingModule],
   controllers: [UserController],
-  providers: [UserMetaRepository, UserRepository, UserService],
+  providers: [WellnessRepository, UserRepository, UserService],
   exports: [UserService],
 })
 export class UserModule {}

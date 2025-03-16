@@ -16,6 +16,7 @@ import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadType } from '../enum/workload-type.enum';
 import { TrainingStatusRepository } from '../repository/training-status.repository';
 import { UserWorkloadRepository } from '../repository/user-workload.repository';
+import { SetType } from '../enum/set-type.enum';
 
 @Injectable()
 export class UserWorkloadService {
@@ -132,7 +133,8 @@ export class UserWorkloadService {
     for (const userId of training.membersIds)
       membersMap[userId] = {
         exercises: [],
-        bodyweight: training.meta.find((m) => m.userId === userId)?.weight ?? 0,
+        bodyweight:
+          training.wellness.find((m) => m.userId === userId)?.weight ?? 0,
         history: workloads.filter((w) => w.userId === userId),
       };
 
@@ -162,8 +164,14 @@ export class UserWorkloadService {
       const { exercises, bodyweight, history } = membersMap[userId];
 
       for (const exercise of exercises) {
-        const { workloadType, workloadValue, set, setType, setTypeValue } =
-          exercise.params;
+        /* const { workloadType, workloadValue, set, setType, setTypeValue } =
+          exercise.params; */
+
+        const workloadType = WorkloadType.BW;
+        const workloadValue = 0;
+        const set = 0;
+        const setType = SetType.REPS;
+        const setTypeValue = 0;
 
         const workloads = history // filter workload history for selected user and exercise
           .filter((e) => e.exerciseId === exercise.id);

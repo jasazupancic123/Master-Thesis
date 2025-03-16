@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { NUM_MAX_GROUPS } from '../common/constant/limit.constant';
@@ -73,7 +74,7 @@ export class GroupService {
 
   async findByIdOrFail(user: User, ref: GroupRef): Promise<Group> {
     const group = await this.findById(user, ref);
-    if (!group) throw new BadRequestException('Group not found');
+    if (!group) throw new NotFoundException('Group does not exist');
     return group;
   }
 
@@ -228,7 +229,7 @@ export class GroupService {
 
   findCycleOrFail(cycleId: string, group: Group) {
     const cycle = this.findCycle(cycleId, group);
-    if (!cycle) throw new BadRequestException('Cycle does not exist');
+    if (!cycle) throw new NotFoundException('Cycle does not exist');
     return cycle;
   }
 

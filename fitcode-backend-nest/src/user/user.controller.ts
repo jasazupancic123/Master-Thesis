@@ -12,7 +12,7 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import type { User } from '../common/type/firebase-auth.type';
 import { AddAthleteDto } from './dto/add-athlete.dto';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
-import { SaveUserMetaDto } from './dto/save-user-meta.dto';
+import { SaveUserWellnessDto } from './dto/save-user-wellness.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserRole } from './enum/user-role.enum';
@@ -77,9 +77,9 @@ export class UserController {
 
   @Post('me/meta')
   @Auth([UserRole.ATHLETE])
-  async saveMeta(@RequestUser() user: User, @Body() body: SaveUserMetaDto) {
+  async saveMeta(@RequestUser() user: User, @Body() body: SaveUserWellnessDto) {
     const ref = { uid: user.uid, date: new Date() };
-    return await this.userService.addOrUpdateMeta(ref, {
+    return await this.userService.addOrUpdateWellness(ref, {
       ...body,
       userId: user.uid,
       date: ref.date,

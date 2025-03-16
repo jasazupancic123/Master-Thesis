@@ -22,7 +22,6 @@ describe('Create Exercise (e2e)', () => {
   let firebaseService: FirebaseService;
   let attributeService: AttributeService;
   let componentService: ComponentService;
-  let cacheManagerService: CacheManagerService;
 
   let root: Component;
   let leaf: Component;
@@ -38,7 +37,6 @@ describe('Create Exercise (e2e)', () => {
     firebaseService = moduleFixture.get(FirebaseService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
-    cacheManagerService = moduleFixture.get(CacheManagerService);
 
     const attribute = await attributeService.create(generateAttributeStub());
     root = await componentService.create(
@@ -246,7 +244,6 @@ describe('Create Exercise (e2e)', () => {
       }),
     );
 
-    cacheManagerService.clearComponents();
     const exercise = generateExerciseStub({
       componentIds: [component.id],
       attributeValues: [
@@ -307,7 +304,6 @@ describe('Create Exercise (e2e)', () => {
       generateComponentStub({ attributes: [attribute.field] }),
     );
 
-    cacheManagerService.clearComponents();
     const exercise = generateExerciseStub({
       componentIds: [component.id],
       attributeValues: [], // No attributes provided
@@ -348,7 +344,6 @@ describe('Create Exercise (e2e)', () => {
     await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     const component = await componentService.create(generateComponentStub());
 
-    cacheManagerService.clearComponents();
     const exercises = Array.from({ length: NUM_MAX_EXERCISES + 10 }).map((_) =>
       generateExerciseStub({ componentIds: [component.id] }),
     );

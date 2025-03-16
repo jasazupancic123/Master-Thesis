@@ -8,7 +8,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 
-export class UserMeta {
+export class Wellness {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
