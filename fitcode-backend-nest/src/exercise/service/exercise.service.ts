@@ -125,6 +125,24 @@ export class ExerciseService {
     );
   }
 
+  async findAllByIds(user: User, ids: string[]) {
+    const dbUser = await this.userService.findOneByIdOrFail(user.uid);
+    const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
+
+    return await this.exerciseRepository
+      .collection()
+      .where('ownerId', 'in', userIds)
+      .where(FieldPath.documentId(), 'in', ids)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Exercise>,
+          ),
+        ),
+      );
+  }
+
   async findById(
     user: User,
     ref: Required<ExerciseRef>,
@@ -511,32 +529,26 @@ export class ExerciseService {
    * For example, if training has components `Strength` and `Speed` selected,
    * then exercise with component parents `Endurance` is not valid.
    */
-  async validateExercises(
+  validateExercises(
     rootComponentId: string,
     exercises: Exercise[],
-  ): Promise<Validate> {
+    components: Component[],
+  ) {
     // check that exercise's leaf component id belongs to training's root component id
-    const components = await this.cacheManagerService.getComponents();
     const leafs = this.componentService.leafsFromFlat(components);
 
     // check that parents of leaf are in training's root component ids
     for (const exercise of exercises)
       for (const componentId of exercise.componentIds) {
-        const leaf = leafs.find((leaf) => leaf.id === componentId);
+        const leaf = leafs.find((leaf) => leaf.id === componentId)!;
+        if (leaf?.id === rootComponentId) continue;
 
-        if (
-          !leaf ||
-          !leaf.parents.some((parent) => rootComponentId === parent)
-        ) {
-          const found = components.find((c) => c.id === componentId);
-          return {
-            error: true,
-            message: `Exercise ${exercise.name} has component ${found?.name} which is not valid for training`,
-          };
+        if (!leaf.parents.includes(rootComponentId)) {
+          throw new BadRequestException(
+            `Exercise ${exercise.name} cannot be part of selected component`,
+          );
         }
       }
-
-    return { error: false };
   }
 
   private checkLimit(user: UserEntity, exercises: Exercise[]) {

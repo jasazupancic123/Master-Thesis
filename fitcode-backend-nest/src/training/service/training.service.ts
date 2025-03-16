@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import {
@@ -35,7 +36,6 @@ import { Cycle } from '../../group/entity/cycle.entity';
 import { Group } from '../../group/entity/group.entity';
 import { GroupService } from '../../group/group.service';
 import { UserService } from '../../user/user.service';
-import { Subgroup } from '../entity/subgroup.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
@@ -43,6 +43,8 @@ import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
 import { UserWorkloadService } from './user-workload.service';
 import { UserWorkload } from '../entity/user-workload.entity';
+import { ExerciseService } from '../../exercise/service/exercise.service';
+import { Exercise } from 'src/exercise/entity/exercise.entity';
 
 @Injectable()
 export class TrainingService {
@@ -59,6 +61,8 @@ export class TrainingService {
     private readonly groupService: Wrapper<GroupService>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: Wrapper<UserService>,
+    @Inject(forwardRef(() => ExerciseService))
+    private readonly exerciseService: Wrapper<ExerciseService>,
   ) {}
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
@@ -143,9 +147,7 @@ export class TrainingService {
 
   async create(
     user: User,
-    input: Create<
-      Omit<Training, 'ownerId' | 'id' | 'membersIds' | 'components' | 'meta'>
-    > & { componentsIds: string[] },
+    input: Create<Omit<Training, 'id' | 'ownerId' | 'membersIds' | 'wellness'>>,
   ): Promise<Training> {
     const { groupId, cycleId } = input;
     this.logger.log(
@@ -155,14 +157,25 @@ export class TrainingService {
     // validate parent references
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     this.groupService.findCycleOrFail(cycleId, group);
-
-    // validate trainer and owner
-    this.validateTrainer(user);
     this.validateOwner(user.uid, group);
 
-    // validate new trainings time and components
+    // validate components & exercises
     const components = await this.cacheManagerService.getComponents();
-    this.validateComponents(input.componentsIds, components);
+    const trainingExercises = input.components.flatMap((c) => [
+      ...c.supersets.flatMap((s) => s.exercises),
+      ...c.subgroups.flatMap((s) => s.supersets.flatMap((s) => s.exercises)),
+    ]);
+
+    const ids = [...new Set(trainingExercises.map((e) => e.id))];
+    const exercises =
+      ids.length > 0 ? await this.exerciseService.findAllByIds(user, ids) : [];
+
+    this.validateComponents(
+      group.membersIds,
+      input.components,
+      components,
+      exercises,
+    );
 
     // check overlap between all other trainings
     const trainings = await this.trainingRepository.getDocs((q) =>
@@ -174,19 +187,9 @@ export class TrainingService {
     );
 
     this.validateOverlap(input.from, input.to, trainings);
-    this.checkLimits(
-      group.membersIds,
-      input.componentsIds.map((id) => ({
-        id,
-        subgroups: [],
-        supersets: [],
-        from: new Date(),
-        to: new Date(),
-      })),
-    );
 
     // create training
-    const meta = await this.userService.getLastMetas(group.membersIds);
+    const wellness = await this.userService.getRecentWellness(group.membersIds);
     const data: Create<Training> = {
       id: null,
       groupId: group.id,
@@ -194,20 +197,20 @@ export class TrainingService {
       ownerId: user.uid,
       copiedFromId: null,
       from: input.from,
-      to: addMinutes(startOfHour(input.from), input.componentsIds.length * 30),
+      to: addMinutes(startOfHour(input.from), input.components.length * 30),
       membersIds: group.membersIds,
-      meta,
-      components: input.componentsIds.map((id, i) => {
+      wellness,
+      components: input.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
 
         return {
-          id,
-          from,
-          to,
-          color: null,
-          subgroups: [],
-          supersets: [{ exercises: [] }],
+          id: c.id,
+          from: c.from ? c.from : from,
+          to: c.to ? c.to : to,
+          color: c.color,
+          subgroups: c.subgroups || [],
+          supersets: c.supersets || [],
         };
       }),
     };
@@ -268,7 +271,7 @@ export class TrainingService {
     const training = await this.findOneOrFail(user, ref);
 
     // create new training
-    const meta = await this.userService.getLastMetas(training.membersIds);
+    const meta = await this.userService.getRecentWellness(training.membersIds);
     const data: Create<Training> = {
       id: null,
       groupId: training.groupId,
@@ -278,7 +281,7 @@ export class TrainingService {
       from: input.from,
       to: addMinutes(startOfHour(input.from), training.components.length * 30),
       membersIds: training.membersIds,
-      meta,
+      wellness: meta,
       components: training.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
@@ -352,32 +355,27 @@ export class TrainingService {
 
     // validate that data is valid
     const allComponents = await this.cacheManagerService.getComponents();
-    this.validateComponents(
-      input.components.map((c) => c.id),
-      allComponents,
-    );
-
-    // validate all subgroups have unique members (one member cannot be in multiple subgroups)
-    this.checkUniqueSubgroupMembers(
+    /* this.validateComponents(
       training.membersIds,
-      input.components.flatMap((c) => c.subgroups),
-    );
+      input.components,
+      allComponents,
+    ); */
 
-    // validate limits
-    this.checkLimits(training.membersIds, input.components);
     this.validateTrainingComponentDates(input.components);
     this.checkTrainingIsInCycle(input.from, cycle);
 
     input.from = input.components[0].from;
-    input.to = input.components[training.components.length - 1].from;
+    input.to = input.components[input.components.length - 1].from;
 
     /* if (isAfter(new Date(), training.from)) { */
 
     // for future trainings, update latest meta and calculate workloads
-    const meta = await this.userService.getLastMetas(training.membersIds);
+    const wellness = await this.userService.getRecentWellness(
+      training.membersIds,
+    );
     await this.trainingRepository.updateDoc(ref.trainingId, {
       ...input,
-      meta,
+      wellness,
     });
 
     // create user workloads
@@ -488,7 +486,6 @@ export class TrainingService {
     const training = await this.findOneOrFail(user, ref);
     this.validateTrainer(user);
     this.validateOwner(user.uid, training);
-    this.validateComponent(training, ref);
 
     // get query for training
     const [query, updatedTraining] =
@@ -531,11 +528,83 @@ export class TrainingService {
       );
   }
 
-  private validateComponents(componentsIds: string[], components: Component[]) {
-    for (const componentId of componentsIds) {
-      const component = components.find((c) => c.id === componentId);
+  private validateComponents(
+    trainingMemberIds: string[],
+    trainingComponents: TrainingComponent[],
+    allComponents: Component[],
+    exercises: Exercise[],
+  ) {
+    if (trainingComponents.length > 5)
+      throw new ConflictException(
+        'You can only have up to 5 components per training',
+      );
+
+    for (const trainingComponent of trainingComponents) {
+      const component = allComponents.find(
+        (c) => c.id === trainingComponent.id,
+      );
+
+      if (!component) throw new NotFoundException('Component does not exist');
       if (component.parentId)
-        throw new BadRequestException(`Component ${component.id} is not root`);
+        throw new BadRequestException(
+          `Component ${component.id} cannot be selected for training`,
+        );
+
+      if (exercises.length > 0)
+        this.exerciseService.validateExercises(
+          component.id,
+          exercises,
+          allComponents,
+        );
+
+      this.validateSupersets(trainingComponent, exercises);
+      this.validateSubgroups(trainingMemberIds, trainingComponent, exercises);
+    }
+  }
+
+  private validateSupersets(
+    component: TrainingComponent,
+    exercises: Exercise[],
+  ) {
+    if (component.supersets.length > 8)
+      throw new ConflictException(
+        'You can only have up to 8 supersets per training component',
+      );
+
+    for (const superset of component.supersets) {
+      if (superset.exercises.length > 4)
+        throw new ConflictException(
+          'You can only have up to 4 exercises per superset',
+        );
+
+      for (const exercise of superset.exercises) {
+        const trainingExercise = exercises.find((e) => e.id === exercise.id);
+        if (!trainingExercise)
+          throw new NotFoundException('Training exercise not found');
+      }
+    }
+  }
+
+  private validateSubgroups(
+    trainingMemberIds: string[],
+    component: TrainingComponent,
+    exercises: Exercise[],
+  ) {
+    // validate all subgroups have unique members (one member cannot be in multiple subgroups)
+    const trainingMemberIdsSet = new Set(trainingMemberIds);
+    const membersIdsSet = new Set<string>();
+
+    for (const subgroup of component.subgroups) {
+      for (const userId of subgroup.membersIds) {
+        if (!trainingMemberIdsSet.has(userId) || membersIdsSet.has(userId))
+          throw new ConflictException(
+            `Member ${userId} cannot be in multiple subgroups in the same training component`,
+          );
+
+        membersIdsSet.add(userId);
+      }
+
+      this.validateSupersets(component, exercises);
     }
   }
 
@@ -577,75 +646,6 @@ export class TrainingService {
 
     if (duplicates.length)
       throw new BadRequestException(`Duplicate components`);
-  }
-
-  private checkUniqueSubgroupMembers(
-    membersIds: string[],
-    subgroups: Subgroup[],
-  ) {
-    // validate all subgroups have unique members (one member cannot be in multiple subgroups)
-    const trainingMemberIdsSet = new Set(membersIds);
-    const membersIdsSet = new Set<string>();
-
-    for (const subgroup of subgroups)
-      for (const userId of subgroup.membersIds) {
-        if (!trainingMemberIdsSet.has(userId) || membersIdsSet.has(userId))
-          return false;
-
-        membersIdsSet.add(userId);
-      }
-
-    return true;
-  }
-
-  private checkLimits(membersIds: string[], components: TrainingComponent[]) {
-    if (membersIds.length > 20)
-      throw new ConflictException('Training members limit reached');
-
-    // check training components limit
-    if (components.length > 5)
-      throw new ConflictException(
-        'You can only have up to 5 components per training',
-      );
-
-    // check subgroups length limit
-    const subgroups = components.flatMap((c) => c.subgroups);
-    if (subgroups.length > membersIds.length)
-      throw new ConflictException(
-        'Each member can be part of exactly one group',
-      );
-
-    // check supersets and exercises limits for each component
-    for (const c of components) {
-      if (c.supersets.length > 8)
-        throw new ConflictException(
-          'You can only have up to 8 supersets per training component',
-        );
-
-      for (const s of c.supersets)
-        if (s.exercises.length > 4)
-          throw new ConflictException(
-            'You can only have up to 4 exercises per superset',
-          );
-
-      for (const { supersets } of c.subgroups) {
-        if (supersets.length > 8)
-          throw new ConflictException(
-            'You can only have up to 8 supersets per training component',
-          );
-
-        for (const s of supersets)
-          if (s.exercises.length > 4)
-            throw new ConflictException(
-              'You can only have up to 4 exercises per superset',
-            );
-      }
-    }
-  }
-
-  private validateComponent(training: Training, ref: TrainingComponentRef) {
-    if (!training.components.find((c) => c.id === ref.componentId))
-      throw new BadRequestException('Training component not found');
   }
 
   private validateTrainingComponentDates(components: TrainingComponent[]) {

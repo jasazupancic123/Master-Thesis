@@ -1,7 +1,7 @@
 import { PickType } from '@nestjs/mapped-types';
-import { UserMeta } from '../entity/user-meta.entity';
+import { Wellness } from '../entity/wellness.entity';
 
-export class SaveUserMetaDto extends PickType(UserMeta, [
+export class SaveUserWellnessDto extends PickType(Wellness, [
   'date',
   'weight',
   'comment',

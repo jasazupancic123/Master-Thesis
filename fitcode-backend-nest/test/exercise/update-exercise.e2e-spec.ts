@@ -22,7 +22,6 @@ describe('Update Exercise (e2e)', () => {
   let attributeService: AttributeService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
-  let cacheManagerService: CacheManagerService;
 
   let attribute: Attribute;
   let exercise: Exercise;
@@ -40,7 +39,6 @@ describe('Update Exercise (e2e)', () => {
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
-    cacheManagerService = moduleFixture.get(CacheManagerService);
 
     attribute = await attributeService.create(generateAttributeStub());
     component = await componentService.create(

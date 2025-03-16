@@ -57,7 +57,7 @@ export type ExerciseAttributeValueRef = ExerciseRef & {
 };
 
 export type UserRef = { uid: string }; // auth user uid
-export type UserMetaRef = UserRef & { date: Date };
+export type WellnessRef = UserRef & { date: Date };
 export type GroupRef = { groupId: string };
 export type CycleRef = GroupRef & { cycleId: string };
 export type TrainingRef = { trainingId: string };

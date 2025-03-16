@@ -11,16 +11,16 @@ import { UserRecord } from 'firebase-admin/lib/auth';
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
 import { Update } from '../common/type/entity.type';
 import { CustomClaims, User } from '../common/type/firebase-auth.type';
-import { UserMetaRef, UserRef } from '../common/type/firestore.type';
+import { WellnessRef, UserRef } from '../common/type/firestore.type';
 import { Wrapper } from '../common/type/wrapper.type';
 import { Environment } from '../config/environment-validation-schema';
 import { FirebaseService } from '../firebase/firebase.service';
 import { TrainingService } from '../training/service/training.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
-import { UserMeta } from './entity/user-meta.entity';
+import { Wellness } from './entity/wellness.entity';
 import { UserEntity } from './entity/user.entity';
-import { UserMetaRepository } from './repository/user-meta.repository';
+import { WellnessRepository } from './repository/user-meta.repository';
 import { UserRepository } from './repository/user.repository';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
@@ -35,7 +35,7 @@ export class UserService {
     private readonly configService: ConfigService<Environment>,
     private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
-    private readonly userMetaRepository: UserMetaRepository,
+    private readonly userMetaRepository: WellnessRepository,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
   ) {}
@@ -180,11 +180,14 @@ export class UserService {
     transaction.update(docRef, { groupsIds: FieldValue.arrayRemove(groupId) });
   }
 
-  async getMeta(ref: UserMetaRef): Promise<UserMeta> {
+  async getMeta(ref: WellnessRef): Promise<Wellness> {
     return await this.userMetaRepository.getDoc(ref);
   }
 
-  async addOrUpdateMeta(ref: UserMetaRef, input: UserMeta): Promise<UserMeta> {
+  async addOrUpdateWellness(
+    ref: WellnessRef,
+    input: Wellness,
+  ): Promise<Wellness> {
     const meta = await this.userMetaRepository.getDoc(ref);
 
     if (!meta) await this.userMetaRepository.addDoc(ref, input);
@@ -193,11 +196,11 @@ export class UserService {
     return input;
   }
 
-  async updateMeta(ref: UserMetaRef, input: UserMeta): Promise<void> {
+  async updateWellness(ref: WellnessRef, input: Wellness): Promise<void> {
     return await this.userMetaRepository.updateDoc(ref, input);
   }
 
-  async getLastMeta(ref: UserRef): Promise<UserMeta> {
+  async getLastMeta(ref: UserRef): Promise<Wellness> {
     const snapshot = await this.userMetaRepository
       .collection(ref)
       .orderBy('date', 'desc')
@@ -208,7 +211,7 @@ export class UserService {
     return this.userMetaRepository.serialize(snapshot.docs[0]);
   }
 
-  async getLastMetas(userIds: string[]): Promise<UserMeta[]> {
+  async getRecentWellness(userIds: string[]): Promise<Wellness[]> {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.USER_META)
       .where('userId', 'in', userIds)

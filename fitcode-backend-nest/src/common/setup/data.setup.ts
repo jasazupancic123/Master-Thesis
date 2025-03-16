@@ -139,7 +139,7 @@ export class DataSetup extends BaseSetup {
           level: (u?.level as SportLevel) || SportLevel.BEGINNER,
         });
 
-        this.userService.addOrUpdateMeta(
+        this.userService.addOrUpdateWellness(
           { uid: user.uid, date: new Date() },
           {
             userId: user.uid,

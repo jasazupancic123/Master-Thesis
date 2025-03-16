@@ -58,7 +58,7 @@ export class TrainingRepository
         to: addMinutes(startOfHour(input.from), input.components.length * 30),
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
-        meta: input.meta || [],
+        wellness: input.wellness || [],
         components: input.components.map((c, i) => ({
           id: c.id,
           color: c.color || null,
