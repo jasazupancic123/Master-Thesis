@@ -6,6 +6,7 @@ import {
   LINK_TRAININGS,
   LINK_USERS,
   LINKS_AUTH,
+  LINK_DASHBOARD,
 } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
 import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
@@ -25,11 +26,18 @@ import { useLocalStorage } from 'usehooks-ts';
 import { signInUpTheme } from '../style';
 import { useTheme } from '@mui/material';
 
+// const mapper = {
+//   [UserRole.ATHLETE]: LINK_TRAININGS,
+//   [UserRole.TRAINER]: LINK_GROUPS,
+//   [UserRole.MANAGER]: LINK_GROUPS,
+//   [UserRole.ADMIN]: LINK_USERS,
+// };
+
 const mapper = {
   [UserRole.ATHLETE]: LINK_TRAININGS,
-  [UserRole.TRAINER]: LINK_GROUPS,
-  [UserRole.MANAGER]: LINK_GROUPS,
-  [UserRole.ADMIN]: LINK_USERS,
+  [UserRole.TRAINER]: LINK_DASHBOARD,
+  [UserRole.MANAGER]: LINK_DASHBOARD,
+  [UserRole.ADMIN]: LINK_DASHBOARD,
 };
 
 const commonService = CommonService.instance;
