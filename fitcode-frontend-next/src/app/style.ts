@@ -14,6 +14,7 @@ export const theme = createTheme({
     mode: 'dark',
     primary: {
       main: '#1EB980',
+      dark: '#005d57',
     },
     background: {
       light: '#283444',
@@ -21,22 +22,32 @@ export const theme = createTheme({
       paper: '#1A2B3C',
       dark: '#6d7b87',
     },
+    error: {
+      main: '#ff6859',
+    },
   },
   typography: {
     fontFamily: 'Roboto Condensed, sans-serif',
-    button: { textTransform: 'none' },
+    button: { textTransform: 'none', color: '#EAEBED' },
   },
   components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          color: '#EAEBED',
+        },
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: {
         a: {
-          textDecoration: 'none', // Removes underline
-          color: 'inherit', // Keeps text color unchanged
+          textDecoration: 'none',
+          color: 'inherit',
           '&:hover': {
-            textDecoration: 'none', // Prevents underline on hover
+            textDecoration: 'none',
           },
           '&:active': {
-            color: 'inherit', // Prevents color change on click
+            color: 'inherit',
           },
         },
       },

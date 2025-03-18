@@ -1,7 +1,9 @@
 'use client';
 
 import {
+  LINK_DASHBOARD,
   LINK_GROUPS,
+  LINK_TRAININGS,
   LINK_USERS,
   LINKS_AUTH,
   LINKS_NAVBAR,
@@ -32,11 +34,18 @@ export default function HeroNavbar({ showLogin = true }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  // const mainPageMapper = {
+  //   [UserRole.ATHLETE]: LINK_GROUPS,
+  //   [UserRole.TRAINER]: LINK_GROUPS,
+  //   [UserRole.MANAGER]: LINK_GROUPS,
+  //   [UserRole.ADMIN]: LINK_USERS,
+  // };
+
   const mainPageMapper = {
-    [UserRole.ATHLETE]: LINK_GROUPS,
-    [UserRole.TRAINER]: LINK_GROUPS,
-    [UserRole.MANAGER]: LINK_GROUPS,
-    [UserRole.ADMIN]: LINK_USERS,
+    [UserRole.ATHLETE]: LINK_TRAININGS,
+    [UserRole.TRAINER]: LINK_DASHBOARD,
+    [UserRole.MANAGER]: LINK_DASHBOARD,
+    [UserRole.ADMIN]: LINK_DASHBOARD,
   };
 
   const handleScrollOrRedirect = (id: string) => async () => {
