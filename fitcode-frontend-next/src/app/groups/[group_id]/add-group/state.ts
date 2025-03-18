@@ -4,6 +4,7 @@ import { User } from '@/controller/user/type/user.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { CreateGroupInput } from '../../input';
+import { Group } from '@/controller/group/type/group.type';
 
 export function handleFilterMembers(state: {
   members: User[];
@@ -61,3 +62,47 @@ export async function handleCreateGroup(
     'Failed to create group.'
   );
 }
+
+export async function handleCreateGroupWithReturn(
+  token: string,
+  input: CreateGroupInput,
+  state: {
+    router: AppRouterInstance;
+    setMembers: SetState<User[]>;
+  }
+): Promise<Group | undefined> {
+  const { name, membersIds } = input;
+  const { router, setMembers } = state;
+
+  if (!name || name.length === 0) {
+    toast.error('Please enter a group name.');
+    return;
+  }
+
+  if (!membersIds || membersIds.length === 0) {
+    toast.error('Please add at least one member to the group.');
+    return;
+  }
+
+  try {
+    const group = await handleApiRequest(
+      router,
+      () => GroupController.create(token, input),
+      (newGroup) => {
+        setMembers([]);
+        toast.success('Group created successfully.');
+        return newGroup;
+      },
+      undefined,
+      'Failed to create group.'
+    );
+
+    console.log('group:', group);
+
+    return group;
+  } catch (error) {
+    console.error('Error creating group:', error);
+    return undefined;
+  }
+}
+

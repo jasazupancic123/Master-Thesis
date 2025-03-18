@@ -13,6 +13,7 @@ import SpaIcon from '@mui/icons-material/Spa';
 import { ReactNode } from 'react';
 import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
+import { Dashboard, Groups } from '@mui/icons-material';
 
 export function link(
   label: string,
@@ -43,6 +44,7 @@ export const LINK_USERS = link('Users', '/users');
 export const LINK_COMPONENTS = link('Components', '/components');
 export const LINK_EXERCISES = link('Exercises', '/exercises');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
+export const LINK_DASHBOARD = link('Dashboard', '/dashboard', <HomeIcon />);
 export const LINK_TRAININGS = link(
   'Trainings',
   '/trainings',
@@ -73,6 +75,7 @@ export const LINK_GROUP_DATE_RANGE_VIEW = (
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
   home: link('Home', `/groups/${groupId}`, <HomeIcon />),
+  dashboard: link('Dashboard', `/dashboard`, <Dashboard />),
   exercises: link(
     'Exercises',
     `/groups/${groupId}/exercises`,
@@ -88,6 +91,15 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
 });
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
+  signout: link('Sign out', '#', <LogoutIcon />),
+};
+
+export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = () => ({
+  home: link('Home', 'mainView', <HomeIcon />),
+  athletes: link('Athletes', 'athletes', <Groups />),
+});
+
+export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
 
