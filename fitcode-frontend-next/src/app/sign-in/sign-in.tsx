@@ -37,7 +37,7 @@ const mapper = {
   [UserRole.ATHLETE]: LINK_TRAININGS,
   [UserRole.TRAINER]: LINK_DASHBOARD,
   [UserRole.MANAGER]: LINK_DASHBOARD,
-  [UserRole.ADMIN]: LINK_DASHBOARD,
+  [UserRole.ADMIN]: LINK_USERS,
 };
 
 const commonService = CommonService.instance;

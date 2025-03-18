@@ -1,0 +1,205 @@
+.live-data-container,
+.feedback-messages-container {
+    position: absolute;
+    padding: 10px;
+    color: white;
+    border-radius: 5px;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.5);
+    margin-top: 80px;
+    /* Ensures these containers are above video and canvas */
+}
+
+/* Positioning live data container at the bottom right with additional bottom margin */
+.live-data-container {
+    top: 50px;
+    /* Increase this value if you want more space from the bottom edge */
+    right: 10px;
+    font-size: 25px;
+}
+.live-data-container1 {
+    position: fixed; /* Use fixed to place it relative to the viewport */
+    top: 90%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust to exactly center the div */
+    text-align: center; /* Center the text inside the div */
+    font-size: 48px; /* Larger font size for visibility */
+    color: #fff; /* Change text color as needed */
+    background-color: rgba(0,0,0,0.0); /* Optional: Add background for better readability */
+    padding: 20px; /* Optional: Add some padding */
+    border-radius: 10px; /* Optional: Rounded corners */
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+/* Adjusting feedback messages container to be at the bottom center */
+.feedback-messages-container {
+    top: 50px;
+    /* 20px margin from the bottom */
+    left: 50%;
+    /* Align center horizontally */
+    transform: translateX(-50%);
+    /* Adjust horizontally to truly center */
+    padding: 20px;
+    /* Slightly translucent background */
+    color: white;
+    border-radius: 5px;
+    z-index: 10;
+    /* Ensures this container is above video and canvas */
+    font-size: 3em;
+    /* Adjust font size as needed for visibility */
+    text-align: center;
+    /* Center the text within the container */
+    max-width: 80%;
+    /* Limit the width to avoid extreme stretching */
+    word-wrap: break-word;
+    /* Ensure long messages are wrapped */
+}
+
+.user-height-input-container {
+    position: absolute;
+    top: 50px;
+    /* Adjusts the distance from the top */
+    left: 20px;
+    /* Adjusts the distance from the left */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Transparent black background */
+    padding: 10px;
+    border-radius: 8px;
+    /* Gives rounded corners for a modern look */
+    color: white;
+    /* Text color */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Adds some space between the label and the input */
+}
+
+.user-height-input-container label {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.user-height-input-container input {
+    background-color: transparent;
+    border: 1px solid #fff;
+    font-size: 40px;
+    /* White border for the input */
+    color: white;
+    /* Text color */
+    padding: 5px;
+    border-radius: 4px;
+    /* Rounded corners for the input */
+    width: 100px;
+    height: 40px;
+    /* Fixed width for the input */
+}
+
+.captured-image {
+    position: absolute;
+    bottom: 10px;
+    /* Distance from the bottom of the video container */
+    right: 10px;
+    /* Distance from the right of the video container */
+    width: 20%;
+    /* Smaller width; adjust as needed */
+    height: auto;
+    /* Maintain aspect ratio */
+}
+
+.frame-viewer-container,
+.jump-selection-container {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.frame-viewer-container {
+    /* Keeps original positioning at the bottom right */
+    bottom: 50px;
+    right: 20px;
+    width: 50%;
+}
+
+.jump-selection-container {
+    /* Adjusts to bottom left */
+    bottom: 50px;
+    right: 20px;
+    /* Changed from right to left */
+    left: auto;
+    /* Resets any specified right positioning */
+}
+
+
+.frame-viewer-container img,
+.jump-selection-container img {
+    width: 100%;
+    height: auto;
+}
+
+.frame-viewer-container .button-container,
+.jump-selection-container .button-container {
+    display: flex;
+    flex-direction: row;
+    /* Align buttons in a row */
+    justify-content: center;
+    /* Center buttons in the container */
+    gap: 10px;
+    /* Space between buttons */
+}
+
+.frame-viewer-container button,
+.jump-selection-container button {
+    margin-top: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Slightly transparent black */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    /* Rounded corners for a modern look */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* Smooth transition for hover effect */
+}
+
+.frame-viewer-container button:hover,
+.jump-selection-container button:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Slightly less transparent on hover */
+}
+.jump-height-display {
+    font-size: 240px; /* 2 times bigger */
+    font-weight: bold;
+    color: rgb(255, 255, 255); /* Example: Sets the text color to a white */
+    text-align: center; /* Center the text */
+    position: fixed; /* Position the element relative to the viewport */
+    bottom: 0; /* Align the element to the bottom of the viewport */
+    left: 50%; /* Move the element to the center horizontally */
+    transform: translateX(-50%); /* Adjust for center alignment */
+  }
+
+  .jump-result {
+    font-size: 150px; /* 2 times bigger */
+    font-weight: bold;
+    color: rgb(255, 255, 255); /* Example: Sets the text color to a white */
+    text-align: center; /* Center the text */
+    position: fixed; /* Position the element relative to the viewport */
+    bottom: 0; /* Align the element to the bottom of the viewport */
+    left: 50%; /* Move the element to the center horizontally */
+    transform: translateX(-50%); /* Adjust for center alignment */
+    margin-bottom: 40px;
+  }
+ 
+
+  .reset-controls-button {
+    font-size: 20px; /* Increase the font size */
+    padding: 10px 20px; /* Add padding to increase the button size */
+    margin-top: 20px;
+    margin-bottom: 10px;
+    align-items: center;
+    background-color: #ADD8E6;
+    border-radius: 20px;
+    border: none;
+}
