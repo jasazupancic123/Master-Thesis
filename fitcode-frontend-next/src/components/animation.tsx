@@ -1,7 +1,7 @@
 import { Box, LinearProgress } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Fullscreen } from '@mui/icons-material';
+import Image from 'next/image';
 
 interface AnimationProps {
   text: string;
@@ -41,7 +41,7 @@ export default function Animation(props: AnimationProps) {
         height: props.fullScreen ? '100vh' : undefined,
         backgroundColor: props.fullScreen ? 'background.default' : undefined,
         display: 'flex',
-        pt: !props.fullScreen ? 20 : undefined,
+        pt: !props.fullScreen ? (screenSize.isMobile ? 20 : 13) : undefined,
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
@@ -66,6 +66,13 @@ export default function Animation(props: AnimationProps) {
         </p>
         <LinearProgress variant="determinate" value={progress} />
       </div>
+      <Image
+        src="/powered_by_aspire.png"
+        alt="Powered by Aspire"
+        width={screenSize.isSmallerThanLaptop ? 320.5 : 427}
+        height={screenSize.isSmallerThanLaptop ? 30 : 40}
+        style={{ marginTop: 20, transform: 'translate(-8.5%, -10%)' }}
+      />
     </Box>
   );
 }

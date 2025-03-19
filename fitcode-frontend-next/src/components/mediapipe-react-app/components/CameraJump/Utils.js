@@ -1,0 +1,23 @@
+import { POSE_LANDMARKS } from '@mediapipe/pose';
+
+export const ESSENTIAL_JUMP_LANDMARKS = [
+    POSE_LANDMARKS.LEFT_HIP,
+    POSE_LANDMARKS.RIGHT_HIP,
+    POSE_LANDMARKS.LEFT_KNEE,
+    POSE_LANDMARKS.RIGHT_KNEE,
+    POSE_LANDMARKS.LEFT_ANKLE,
+    POSE_LANDMARKS.RIGHT_ANKLE,
+    POSE_LANDMARKS.LEFT_SHOULDER,
+    POSE_LANDMARKS.RIGHT_SHOULDER
+];
+
+export const JUMP_PHASE = {
+    CALIBRATION: 'calibration',
+    READY: 'ready',
+    SQUAT: 'squat',
+    IN_AIR: 'in air',
+    LANDING: 'landing'
+};
+
+
+
