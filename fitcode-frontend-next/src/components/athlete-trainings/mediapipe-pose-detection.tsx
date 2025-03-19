@@ -18,6 +18,20 @@ interface MediapipePoseDetectionProps {
 export default function MediapipePoseDetection(
   props: MediapipePoseDetectionProps
 ) {
+
+  return (
+    <Box display="flex" alignItems="center" justifyContent="center">
+      <iframe
+        src="https://squat-analysis.netlify.app/"
+        width={1000}
+        height={600}
+        style={{ border: 'none', margin: 'auto' }}
+        allowFullScreen
+        allow="camera; microphone"
+      />
+    </Box>
+  );
+
   const { setOpenCameraPoseDetection } = props;
 
   const screenSize = useScreenSize();
