@@ -1,0 +1,42 @@
+.squat-times-bar-container {
+    position: absolute;
+    bottom: 40%;
+    right: 10px;
+    width: 500px;
+    height: 105px;
+    border-radius: 5px;
+    color: white;
+    display: flex;
+    align-items: center;
+    z-index: 20;
+    overflow: hidden;
+    /* Ensures children's rounded corners are contained within the parent's border radius */
+}
+
+.squat-times-bar-container .down-time {
+    width: calc(var(--downTimeWidth) * 1%);
+    /* Placeholder, will be set dynamically */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* More opaque for down time */
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px 0 0 5px;
+    font-size: 22px;
+    /* Rounded left edge */
+}
+
+.squat-times-bar-container .up-time {
+    width: calc(var(--upTimeWidth) * 1%);
+    /* Placeholder, will be set dynamically */
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Less opaque for up time */
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0 5px 5px 0;
+    font-size: 22px;
+    /* Rounded right edge */
+}
