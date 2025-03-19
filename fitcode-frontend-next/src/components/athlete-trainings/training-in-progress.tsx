@@ -338,7 +338,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         }}
       >
         {selectedSuperset.exercises.map((exercise, i) => {
-          console.log('exercise', exercise);
           return (
             <Box
               key={exercise.id}
