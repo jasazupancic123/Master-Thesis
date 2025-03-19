@@ -42,7 +42,14 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import dayjs from 'dayjs';
 import { useTheme } from '@mui/material';
 import { CameraAlt } from '@mui/icons-material';
-import MediapipePoseDetection from './mediapipe-pose-detection';
+import dynamic from 'next/dynamic';
+
+const MediapipePoseDetection = dynamic(
+  () => import('@/components/athlete-trainings/mediapipe-pose-detection'),
+  {
+    ssr: false,
+  }
+);
 
 interface TrainingInProgressProps {
   selectedTraining: Training;
