@@ -5,6 +5,11 @@ import { Box, Button, IconButton } from '@mui/material';
 import CameraSquat from '@/components/mediapipe-react-app/components/CameraSquat/CameraSquat';
 import { Close } from '@mui/icons-material';
 import { useScreenSize } from '@/context/screen-size-provider';
+import '@mediapipe/pose';
+import type { Pose as PoseType, PoseConfig } from '@mediapipe/pose';
+import { PoseLandmarker } from '@mediapipe/tasks-vision';
+
+const Pose = window.Pose as { new (config?: PoseConfig): PoseType };
 
 interface MediapipePoseDetectionProps {
   setOpenCameraPoseDetection: (value: boolean) => void;
@@ -21,20 +26,57 @@ export default function MediapipePoseDetection(
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [poseResults, setPoseResults] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(false);
-  const [POSE_LANDMARKS, setPoseLandmarks] = useState(window.POSE_LANDMARKS);
+  //const [POSE_LANDMARKS, setPoseLandmarks] = useState(window.POSE_LANDMARKS);
+  const [POSE_LANDMARKS, setPoseLandmarks] = useState({
+    NOSE: 0,
+    LEFT_EYE_INNER: 1,
+    LEFT_EYE: 2,
+    LEFT_EYE_OUTER: 3,
+    RIGHT_EYE_INNER: 4,
+    RIGHT_EYE: 5,
+    RIGHT_EYE_OUTER: 6,
+    LEFT_EAR: 7,
+    RIGHT_EAR: 8,
+    LEFT_RIGHT: 9,
+    RIGHT_LEFT: 10,
+    LEFT_SHOULDER: 11,
+    RIGHT_SHOULDER: 12,
+    LEFT_ELBOW: 13,
+    RIGHT_ELBOW: 14,
+    LEFT_WRIST: 15,
+    RIGHT_WRIST: 16,
+    LEFT_PINKY: 17,
+    RIGHT_PINKY: 18,
+    LEFT_INDEX: 19,
+    RIGHT_INDEX: 20,
+    LEFT_THUMB: 21,
+    RIGHT_THUMB: 22,
+    LEFT_HIP: 23,
+    RIGHT_HIP: 24,
+    LEFT_KNEE: 25,
+    RIGHT_KNEE: 26,
+    LEFT_ANKLE: 27,
+    RIGHT_ANKLE: 28,
+    LEFT_HEEL: 29,
+    RIGHT_HEEL: 30,
+    LEFT_FOOT_INDEX: 31,
+    RIGHT_FOOT_INDEX: 32,
+  });
 
   useEffect(() => {
+    console.log('window.Pose:', window.Pose);
+    console.log('window.Camera:', window.Camera);
+    console.log('window');
+    console.log('window.POSE_LANDMARKS:', window.POSE_LANDMARKS);
     let camera: any;
     import('@mediapipe/pose').then((module) => {
-      const pose = new window.Pose({
-        locateFile: (file: any) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
-      });
-      setPoseLandmarks(window.POSE_LANDMARKS);
-      console.log('window.Pose', window.Pose);
-      console.log('window.POSE_LANDMARKS', window.POSE_LANDMARKS);
-      console.log('window.Camera', window.Camera);
+      //console.log('window.POSE_LANDMARKS', window.POSE_LANDMARKS);
+      //setPoseLandmarks(window.POSE_LANDMARKS);
       import('@mediapipe/camera_utils').then((module) => {
+        const pose = new window.Pose({
+          locateFile: (file: any) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
+        });
         console.log('window.Camera AFTER MODULE IMPORT', window.Camera);
         const Camera = window.Camera;
 
@@ -80,7 +122,7 @@ export default function MediapipePoseDetection(
         if (cameraActive && videoRef.current) {
           camera = new Camera(videoRef.current, {
             onFrame: async () => {
-              await pose.send({ image: videoRef.current });
+              await pose.send({ image: videoRef.current! });
             },
             width: 1280,
             height: 720,
@@ -97,7 +139,7 @@ export default function MediapipePoseDetection(
         };
       });
     });
-  }, [cameraActive]);
+  }, [cameraActive, window, window.Pose, window.Camera]);
 
   const toggleCamera = useCallback(() => {
     if (cameraActive) {
