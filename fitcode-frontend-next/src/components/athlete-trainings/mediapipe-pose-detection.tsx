@@ -63,11 +63,33 @@ export default function MediapipePoseDetection(
     RIGHT_FOOT_INDEX: 32,
   });
 
+  const [isMediaPipeLoaded, setIsMediaPipeLoaded] = useState(false);
+
   useEffect(() => {
-    console.log('window.Pose:', window.Pose);
-    console.log('window.Camera:', window.Camera);
-    console.log('window');
-    console.log('window.POSE_LANDMARKS:', window.POSE_LANDMARKS);
+    const checkMediaPipe = () => {
+      import('@mediapipe/pose').then((module) => {
+        import('@mediapipe/camera_utils').then((module) => {
+          if (window.Pose && window.Camera) {
+            console.log(
+              '✅ MediaPipe Loaded!',
+              window.Pose,
+              window.Camera,
+              window.POSE_LANDMARKS
+            );
+            setIsMediaPipeLoaded(true);
+            clearInterval(interval);
+          }
+        });
+      });
+    };
+
+    const interval = setInterval(checkMediaPipe, 100);
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
+
+  useEffect(() => {
+    if (!isMediaPipeLoaded) return;
     let camera: any;
     import('@mediapipe/pose').then((module) => {
       //console.log('window.POSE_LANDMARKS', window.POSE_LANDMARKS);
@@ -139,7 +161,7 @@ export default function MediapipePoseDetection(
         };
       });
     });
-  }, [cameraActive, window, window.Pose, window.Camera]);
+  }, [cameraActive, window, window.Pose, window.Camera, isMediaPipeLoaded]);
 
   const toggleCamera = useCallback(() => {
     if (cameraActive) {
