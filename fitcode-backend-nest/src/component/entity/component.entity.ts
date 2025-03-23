@@ -31,7 +31,7 @@ export class Component extends IdEntity {
   @ApiPropertyOptional()
   @IsOptional()
   @Expose()
-  params?: { [condition: string]: ComponentParam[] }[]; // only root components have params
+  params?: { [condition: string]: ComponentParam[] }; // only root components have params
 
   // virtual fields
   children?: string[];

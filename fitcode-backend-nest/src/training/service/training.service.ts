@@ -61,8 +61,6 @@ export class TrainingService {
     private readonly groupService: Wrapper<GroupService>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: Wrapper<UserService>,
-    @Inject(forwardRef(() => ExerciseService))
-    private readonly exerciseService: Wrapper<ExerciseService>,
   ) {}
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
@@ -156,40 +154,43 @@ export class TrainingService {
 
     // validate parent references
     const group = await this.groupService.findByIdOrFail(user, { groupId });
-    this.groupService.findCycleOrFail(cycleId, group);
+    const cycle = this.groupService.findCycleOrFail(cycleId, group);
     this.validateOwner(user.uid, group);
+    this.checkTrainingIsInCycle(input.from, cycle);
+    this.validateIsTrainingInFuture(input.from);
+
+    // check overlap between all other trainings
+    await this.validateOverlap(input.from, input.to, group.id, cycle.id);
 
     // validate components & exercises
+    const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
-    const trainingExercises = input.components.flatMap((c) => [
-      ...c.supersets.flatMap((s) => s.exercises),
-      ...c.subgroups.flatMap((s) => s.supersets.flatMap((s) => s.exercises)),
-    ]);
+    const exercises = await this.trainingPlanService.findAllTrainingExercises(
+      user,
+      input.components,
+    );
 
-    const ids = [...new Set(trainingExercises.map((e) => e.id))];
-    const exercises =
-      ids.length > 0 ? await this.exerciseService.findAllByIds(user, ids) : [];
-
-    this.validateComponents(
+    this.trainingPlanService.validateTrainingComponents(
+      exercises,
       group.membersIds,
       input.components,
       components,
+    );
+
+    // populate exercise params from components
+    this.trainingPlanService.populateExerciseParams(
+      input.components,
+      components,
       exercises,
+      attributes,
     );
-
-    // check overlap between all other trainings
-    const trainings = await this.trainingRepository.getDocs((q) =>
-      q
-        .where('groupId', '==', input.groupId)
-        .where('cycleId', '==', input.cycleId)
-        .where('from', '>=', Timestamp.fromDate(startOfDay(input.from)))
-        .where('from', '<', Timestamp.fromDate(endOfDay(input.from))),
-    );
-
-    this.validateOverlap(input.from, input.to, trainings);
 
     // create training
     const wellness = await this.userService.getRecentWellness(group.membersIds);
+    const workloads = await this.userWorkloadService.findAllByMembers(
+      group.membersIds,
+    );
+
     const data: Create<Training> = {
       id: null,
       groupId: group.id,
@@ -215,118 +216,34 @@ export class TrainingService {
       }),
     };
 
-    let trainingId: string;
-    await this.firebaseService.firestore.runTransaction(async (transaction) => {
-      // create training
-      const docRef = this.trainingRepository.collection().doc();
-      const query = this.firebaseService.buildCreateQuery<Training>(
-        { ...data, id: docRef.id },
-        { timestamps: true },
-      );
-
-      trainingId = docRef.id;
-      transaction.set(docRef, query);
-
-      // add trainer to users
-      for (const userId of group.membersIds) {
-        const docRef = this.userService.getDoc(userId);
-        transaction.update(docRef, {
-          trainersIds: FieldValue.arrayUnion(user.uid),
-        });
-      }
-    });
-
-    // NOTE - there are no exercises yet, so no calculation of user workloads
-
-    return {
+    const trainingDocRef = this.trainingRepository.collection().doc();
+    const training: Training = {
       ...data,
-      id: trainingId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-  }
-
-  async copy(
-    user: User,
-    ref: TrainingRef,
-    input: DateFilterDto,
-  ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
-    );
-
-    // check overlap between all other trainings
-    const trainings = await this.findAll(user, {
-      from: startOfDay(input.from),
-      to: endOfDay(input.from),
-    });
-
-    this.validateOverlap(input.from, input.to, trainings);
-
-    if (trainings.length >= 2)
-      throw new BadRequestException(
-        'Maximum number of trainings reached for selected day',
-      );
-
-    const training = await this.findOneOrFail(user, ref);
-
-    // create new training
-    const meta = await this.userService.getRecentWellness(training.membersIds);
-    const data: Create<Training> = {
-      id: null,
-      groupId: training.groupId,
-      cycleId: training.cycleId,
-      ownerId: user.uid,
-      copiedFromId: training.id,
-      from: input.from,
-      to: addMinutes(startOfHour(input.from), training.components.length * 30),
-      membersIds: training.membersIds,
-      wellness: meta,
-      components: training.components.map((c, i) => {
-        const from = addMinutes(startOfHour(input.from), i * 30);
-        const to = addMinutes(from, 30);
-        return { ...c, from, to };
-      }),
-    };
-
-    const workloads = await this.userWorkloadService.findAllByMembers(
-      training.membersIds,
-    );
-
-    let updatedTraining: Training = {
-      ...data,
+      id: trainingDocRef.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    await this.firebaseService.firestore.runTransaction(async (transaction) => {
-      // create training
-      const docRef = this.trainingRepository.collection().doc();
-      const query = this.firebaseService.buildCreateQuery<Training>(
-        { ...data, id: docRef.id },
-        { timestamps: true },
-      );
+    const createTrainingQuery = this.firebaseService.buildCreateQuery<Training>(
+      { ...data, id: training.id },
+      { timestamps: true },
+    );
 
-      updatedTraining.id = docRef.id;
-      transaction.set(docRef, query);
+    // create training, add trainer to users, create workloads
+    const batch = this.firebaseService.firestore.batch();
+    batch.set(trainingDocRef, createTrainingQuery);
 
-      // add trainer to users
-      for (const userId of training.membersIds) {
-        const docRef = this.userService.getDoc(userId);
-        transaction.update(docRef, {
-          trainersIds: FieldValue.arrayUnion(user.uid),
-        });
-      }
+    for (const userId of group.membersIds) {
+      const docRef = this.userService.getDoc(userId);
+      batch.update(docRef, {
+        trainersIds: FieldValue.arrayUnion(user.uid),
+      });
+    }
 
-      // create training worklaods for new copied training
-      this.userWorkloadService.createForTraining(
-        transaction,
-        updatedTraining,
-        workloads,
-      );
-    });
+    this.userWorkloadService.createForTraining(batch, training, workloads);
+    await batch.commit();
 
-    return updatedTraining;
+    return training;
   }
 
   async update(
@@ -338,75 +255,179 @@ export class TrainingService {
       `User ${user.uid} is updating training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
-    // validate ownership
+    // validate training
     const training = await this.findOneOrFail(user, ref);
-    const group = await this.groupService.findByIdOrFail(user, {
-      groupId: training.groupId,
-    });
-    const cycle = this.groupService.findCycleOrFail(training.cycleId, group);
-    this.validateTrainer(user);
+    const { groupId, cycleId } = training;
+    const group = await this.groupService.findByIdOrFail(user, { groupId });
+    const cycle = this.groupService.findCycleOrFail(cycleId, group);
+
     this.validateOwner(user.uid, training);
+    this.checkTrainingIsInCycle(input.from, cycle);
+    this.validateIsTrainingInFuture(input.from);
 
     // if no components, delete training
     if (input.components.length === 0) {
       await this.trainingRepository.deleteDoc(ref.trainingId);
-      return { ...training, ...input } as Training;
+      return {
+        ...training,
+        ...this.commonService.object.clean(input),
+      };
     }
 
-    // validate that data is valid
-    const allComponents = await this.cacheManagerService.getComponents();
-    /* this.validateComponents(
-      training.membersIds,
-      input.components,
-      allComponents,
-    ); */
-
-    this.validateTrainingComponentDates(input.components);
-    this.checkTrainingIsInCycle(input.from, cycle);
-
+    // check overlap between all other trainings
     input.from = input.components[0].from;
     input.to = input.components[input.components.length - 1].from;
+    await this.validateOverlap(input.from, input.to, groupId, cycleId);
 
-    /* if (isAfter(new Date(), training.from)) { */
+    // validate components & exercises
+    const components = await this.cacheManagerService.getComponents();
+    const membersIds = input.membersIds || training.membersIds;
+    await this.validateTrainingMembers(membersIds);
+
+    const exercises = await this.trainingPlanService.findAllTrainingExercises(
+      user,
+      input.components,
+    );
+
+    this.trainingPlanService.validateTrainingComponents(
+      exercises,
+      membersIds,
+      input.components,
+      components,
+    );
 
     // for future trainings, update latest meta and calculate workloads
-    const wellness = await this.userService.getRecentWellness(
-      training.membersIds,
-    );
-    await this.trainingRepository.updateDoc(ref.trainingId, {
-      ...input,
-      wellness,
-    });
+    const wellness = await this.userService.getRecentWellness(membersIds);
+    const workloads =
+      await this.userWorkloadService.findAllByMembers(membersIds);
 
-    // create user workloads
-    const workloads = await this.userWorkloadService.findAllByMembers(
-      training.membersIds,
+    const updated = {
+      ...training,
+      ...this.commonService.object.clean(input),
+    };
+
+    const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+    const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
+      { ...input, wellness },
     );
 
     const batch = this.firebaseService.firestore.batch();
-    const updated = { ...training, ...input } as Training;
+    batch.update(trainingDocRef, updateTrainingQuery);
     this.userWorkloadService.createForTraining(batch, updated, workloads);
     await batch.commit();
-    /* } else {
-      // for past trainings, don't update meta and workloads
-      await this.trainingRepository.updateDoc(ref.trainingId, input);
-    } */
 
-    return {
-      ...training,
-      ...this.commonService.object.clean(input),
-    } as Training;
+    return updated;
+  }
+
+  async copy(
+    user: User,
+    ref: TrainingRef,
+    input: Partial<
+      Pick<Training, 'groupId' | 'cycleId' | 'membersIds' | 'from'>
+    >,
+  ): Promise<Training> {
+    this.logger.log(
+      `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
+    );
+
+    const training = await this.findOneOrFail(user, ref);
+    const { groupId, cycleId } = training;
+    const group = await this.groupService.findByIdOrFail(user, { groupId });
+    const cycle = this.groupService.findCycleOrFail(cycleId, group);
+
+    this.checkTrainingIsInCycle(input.from, cycle);
+    this.validateIsTrainingInFuture(input.from);
+    await this.validateOverlap(
+      input.from,
+      training.components[training.components.length - 1].from,
+      groupId,
+      cycleId,
+    );
+
+    // validate components & exercises in case user cannot view exercises of another user
+    const components = await this.cacheManagerService.getComponents();
+    const membersIds = input.membersIds || training.membersIds;
+    await this.validateTrainingMembers(membersIds);
+
+    const exercises = await this.trainingPlanService.findAllTrainingExercises(
+      user,
+      training.components,
+    );
+
+    this.trainingPlanService.validateTrainingComponents(
+      exercises,
+      membersIds,
+      training.components,
+      components,
+    );
+
+    // for future trainings, update latest meta and calculate workloads
+    const wellness = await this.userService.getRecentWellness(membersIds);
+    const workloads =
+      await this.userWorkloadService.findAllByMembers(membersIds);
+
+    const data: Create<Training> = {
+      id: null,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+      ownerId: user.uid,
+      copiedFromId: training.id,
+      from: input.from,
+      to: addMinutes(startOfHour(input.from), training.components.length * 30),
+      membersIds: training.membersIds,
+      wellness,
+      components: training.components.map((c, i) => {
+        const from = addMinutes(startOfHour(input.from), i * 30);
+        const to = addMinutes(from, 30);
+
+        return {
+          id: c.id,
+          from: c.from ? c.from : from,
+          to: c.to ? c.to : to,
+          color: c.color,
+          subgroups: c.subgroups || [],
+          supersets: c.supersets || [],
+        };
+      }),
+    };
+
+    const trainingDocRef = this.trainingRepository.collection().doc();
+    const copiedTraining: Training = {
+      id: trainingDocRef.id,
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const copyTrainingQuery = this.firebaseService.buildCreateQuery<Training>(
+      { ...data, id: copiedTraining.id },
+      { timestamps: true },
+    );
+
+    // create training, add trainer to users, create workloads
+    const batch = this.firebaseService.firestore.batch();
+    batch.set(trainingDocRef, copyTrainingQuery);
+
+    for (const userId of group.membersIds) {
+      const docRef = this.userService.getDoc(userId);
+      batch.update(docRef, {
+        trainersIds: FieldValue.arrayUnion(user.uid),
+      });
+    }
+
+    this.userWorkloadService.createForTraining(batch, training, workloads);
+    await batch.commit();
+
+    return training;
   }
 
   async remove(user: User, ref: TrainingRef): Promise<void> {
     this.logger.log(`User ${user.uid} is removing training ${ref.trainingId}`);
 
-    // validate parent references and ownership
     const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
     this.validateOwner(user.uid, training);
+    this.validateIsTrainingInFuture(training.from);
 
-    // delete training
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
@@ -452,17 +473,22 @@ export class TrainingService {
 
     // validate ownership
     const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
     this.validateOwner(user.uid, training);
+    this.validateIsTrainingInFuture(training.from);
 
-    // validate input
-    const allComponents = await this.cacheManagerService.getComponents();
-    const componentIds = input.map((c) => c.id);
-    this.checkValidComponents(componentIds, allComponents);
-    this.checkDuplicateComponents(
-      training.components,
-      componentIds,
-      allComponents,
+    // validate components & exercises
+    const components = await this.cacheManagerService.getComponents();
+    const trainingComponents = [...training.components, ...input];
+    const exercises = await this.trainingPlanService.findAllTrainingExercises(
+      user,
+      trainingComponents,
+    );
+
+    this.trainingPlanService.validateTrainingComponents(
+      exercises,
+      training.membersIds,
+      trainingComponents,
+      components,
     );
 
     // get query for training
@@ -482,10 +508,10 @@ export class TrainingService {
       `User ${user.uid} is deleting component ${ref.componentId} from training ${ref.trainingId}`,
     );
 
-    // validate
+    // validate ownership
     const training = await this.findOneOrFail(user, ref);
-    this.validateTrainer(user);
     this.validateOwner(user.uid, training);
+    this.validateIsTrainingInFuture(training.from);
 
     // get query for training
     const [query, updatedTraining] =
@@ -501,6 +527,41 @@ export class TrainingService {
     return updatedTraining;
   }
 
+  private async validateOverlap(
+    from: Date,
+    to: Date,
+    groupId: string,
+    cycleId: string,
+  ) {
+    const trainings = await this.trainingRepository.getDocs((q) =>
+      q
+        .where('groupId', '==', groupId)
+        .where('cycleId', '==', cycleId)
+        .where('from', '>=', Timestamp.fromDate(startOfDay(from)))
+        .where('from', '<', Timestamp.fromDate(endOfDay(from))),
+    );
+
+    if (trainings.length >= 2)
+      throw new BadRequestException(
+        'Maximum number of trainings per day reached',
+      );
+
+    const isOverlap = trainings.some(
+      (training) =>
+        this.commonService.date.isBetween(from, training.from, training.to) ||
+        this.commonService.date.isBetween(to, training.from, training.to),
+    );
+
+    if (isOverlap)
+      throw new BadRequestException('Training overlaps with other training');
+  }
+
+  private async validateTrainingMembers(membersIds: string[]) {
+    const users = await this.firebaseService.authUsers({ ids: membersIds });
+    if (users.length !== membersIds.length)
+      throw new BadRequestException('Some members do not exist');
+  }
+
   private isAuthorized(user: User, training: Training): boolean {
     return (
       training.ownerId === user.uid || training.membersIds.includes(user.uid)
@@ -514,13 +575,6 @@ export class TrainingService {
       );
   }
 
-  private validateTrainer(user: User) {
-    if (!this.firebaseService.isTrainer(user))
-      throw new UnauthorizedException(
-        'You are not authorized to perform this action',
-      );
-  }
-
   private validateOwner(userId: string, groupOrTraining: Group | Training) {
     if (!this.groupService.isOwner(userId, groupOrTraining))
       throw new UnauthorizedException(
@@ -528,133 +582,14 @@ export class TrainingService {
       );
   }
 
-  private validateComponents(
-    trainingMemberIds: string[],
-    trainingComponents: TrainingComponent[],
-    allComponents: Component[],
-    exercises: Exercise[],
-  ) {
-    if (trainingComponents.length > 5)
-      throw new ConflictException(
-        'You can only have up to 5 components per training',
+  private isInPast(date: Date, relativeDate = new Date()) {
+    return isBefore(date, relativeDate);
+  }
+
+  private validateIsTrainingInFuture(from: Date, relativeDate = new Date()) {
+    if (this.isInPast(from, relativeDate))
+      throw new BadRequestException(
+        'You cannot add or update trainings in the past',
       );
-
-    for (const trainingComponent of trainingComponents) {
-      const component = allComponents.find(
-        (c) => c.id === trainingComponent.id,
-      );
-
-      if (!component) throw new NotFoundException('Component does not exist');
-      if (component.parentId)
-        throw new BadRequestException(
-          `Component ${component.id} cannot be selected for training`,
-        );
-
-      if (exercises.length > 0)
-        this.exerciseService.validateExercises(
-          component.id,
-          exercises,
-          allComponents,
-        );
-
-      this.validateSupersets(trainingComponent, exercises);
-      this.validateSubgroups(trainingMemberIds, trainingComponent, exercises);
-    }
-  }
-
-  private validateSupersets(
-    component: TrainingComponent,
-    exercises: Exercise[],
-  ) {
-    if (component.supersets.length > 8)
-      throw new ConflictException(
-        'You can only have up to 8 supersets per training component',
-      );
-
-    for (const superset of component.supersets) {
-      if (superset.exercises.length > 4)
-        throw new ConflictException(
-          'You can only have up to 4 exercises per superset',
-        );
-
-      for (const exercise of superset.exercises) {
-        const trainingExercise = exercises.find((e) => e.id === exercise.id);
-        if (!trainingExercise)
-          throw new NotFoundException('Training exercise not found');
-      }
-    }
-  }
-
-  private validateSubgroups(
-    trainingMemberIds: string[],
-    component: TrainingComponent,
-    exercises: Exercise[],
-  ) {
-    // validate all subgroups have unique members (one member cannot be in multiple subgroups)
-    const trainingMemberIdsSet = new Set(trainingMemberIds);
-    const membersIdsSet = new Set<string>();
-
-    for (const subgroup of component.subgroups) {
-      for (const userId of subgroup.membersIds) {
-        if (!trainingMemberIdsSet.has(userId) || membersIdsSet.has(userId))
-          throw new ConflictException(
-            `Member ${userId} cannot be in multiple subgroups in the same training component`,
-          );
-
-        membersIdsSet.add(userId);
-      }
-
-      this.validateSupersets(component, exercises);
-    }
-  }
-
-  private validateOverlap(
-    from: Date,
-    to: Date,
-    trainings: Pick<Training, 'from' | 'to'>[],
-  ) {
-    const isOverlap = trainings.some(
-      (training) =>
-        (isBefore(from, training.from) && isAfter(to, training.to)) ||
-        (isAfter(from, training.from) && isBefore(to, training.to)) ||
-        (isBefore(from, training.to) && isAfter(to, training.from)) ||
-        (isAfter(from, training.from) && isBefore(to, training.to)),
-    );
-
-    if (isOverlap)
-      throw new BadRequestException('Training overlaps with other training');
-  }
-
-  private checkValidComponents(
-    componentIds: string[],
-    components: Component[],
-  ) {
-    if (!components.some((component) => componentIds.includes(component.id)))
-      throw new BadRequestException('Some components are invalid');
-  }
-
-  private checkDuplicateComponents(
-    existingComponents: TrainingComponent[],
-    inputComponentIds: string[],
-    allComponents: Component[],
-  ) {
-    // components must be unique
-    const duplicates: Component[] = [];
-    for (const id of inputComponentIds)
-      if (existingComponents.find((c) => c.id === id))
-        duplicates.push(allComponents.find((c) => c.id === id));
-
-    if (duplicates.length)
-      throw new BadRequestException(`Duplicate components`);
-  }
-
-  private validateTrainingComponentDates(components: TrainingComponent[]) {
-    for (let i = 0; i < components.length; i++) {
-      if (i < components.length - 1)
-        if (components[i].from >= components[i + 1].from)
-          throw new BadRequestException(
-            `Component ${components[i].id} has to start before ${components[i + 1].id}`,
-          );
-    }
   }
 }

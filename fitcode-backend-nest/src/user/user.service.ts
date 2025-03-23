@@ -36,8 +36,6 @@ export class UserService {
     private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
     private readonly userMetaRepository: WellnessRepository,
-    @Inject(forwardRef(() => TrainingService))
-    private readonly trainingService: Wrapper<TrainingService>,
   ) {}
 
   async findOne(id: string): Promise<UserEntity | null> {

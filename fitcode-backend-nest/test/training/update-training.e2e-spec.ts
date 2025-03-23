@@ -140,10 +140,4 @@ describe('Update Training (e2e)', () => {
       expect(true).toBeTruthy();
     });
   });
-
-  describe('User workloads', () => {
-    it('should successfully create user workloads for training', async () => {
-      expect(true).toBeTruthy();
-    });
-  });
 });
