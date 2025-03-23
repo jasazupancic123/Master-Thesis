@@ -7,6 +7,8 @@ import {
 import { Wrapper } from '../common/type/wrapper.type';
 import { ComponentService } from '../component/component.service';
 import { Component } from '../component/entity/component.entity';
+import { Attribute } from '../attribute/entity/attribute.entity';
+import { AttributeService } from '../attribute/service/attribute.service';
 
 @Injectable()
 export class CacheManagerService {
@@ -14,6 +16,8 @@ export class CacheManagerService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
+    @Inject(forwardRef(() => AttributeService))
+    private readonly attributeService: Wrapper<AttributeService>,
   ) {}
 
   async getComponents(): Promise<Component[]> {
@@ -34,5 +38,25 @@ export class CacheManagerService {
 
   async clearComponents(): Promise<void> {
     await this.cacheManager.del(CACHE_KEY_FLAT_COMPONENTS);
+  }
+
+  async getAttributes(): Promise<Attribute[]> {
+    const cached = await this.cacheManager.get(CACHE_KEY_ATTRIBUTES);
+    if (!cached) {
+      const attributes = await this.attributeService.findAll();
+      await this.cacheManager.set(
+        CACHE_KEY_ATTRIBUTES,
+        attributes,
+        24 * 3600 * 1000,
+      );
+
+      return attributes;
+    }
+
+    return await this.cacheManager.get(CACHE_KEY_ATTRIBUTES);
+  }
+
+  async clearAttributes(): Promise<void> {
+    await this.cacheManager.del(CACHE_KEY_ATTRIBUTES);
   }
 }

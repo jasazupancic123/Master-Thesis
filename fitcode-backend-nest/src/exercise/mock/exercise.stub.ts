@@ -5,7 +5,7 @@ import { v4 } from 'uuid';
 
 export function generateExerciseStub(data?: Partial<Exercise>): Exercise {
   return {
-    id: v4(),
+    id: data?.id || v4(),
     name: data?.name || generateRandomName(),
     componentIds: data?.componentIds || ['other'],
     ownerId: data?.ownerId || GLOBAL_EXERCISE_OWNER,
