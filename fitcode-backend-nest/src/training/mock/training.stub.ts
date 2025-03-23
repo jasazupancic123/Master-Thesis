@@ -66,5 +66,7 @@ export function generateTrainingExercise(
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     params: data?.params || PARAMS,
+    periodized: data?.periodized || false,
+    sets: data?.sets || [],
   };
 }
