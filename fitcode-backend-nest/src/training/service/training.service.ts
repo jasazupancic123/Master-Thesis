@@ -1,24 +1,20 @@
 import {
   BadRequestException,
-  ConflictException,
   forwardRef,
   Inject,
   Injectable,
   Logger,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import {
   addMinutes,
   endOfDay,
-  isAfter,
   isBefore,
   startOfDay,
   startOfHour,
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
-import { DateFilterDto } from '../../common/dto/date-filter.dto';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
@@ -30,7 +26,6 @@ import {
 } from '../../common/type/firestore.type';
 import { Filter } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { Component } from '../../component/entity/component.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Cycle } from '../../group/entity/cycle.entity';
 import { Group } from '../../group/entity/group.entity';
@@ -43,8 +38,6 @@ import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
 import { UserWorkloadService } from './user-workload.service';
 import { UserWorkload } from '../entity/user-workload.entity';
-import { ExerciseService } from '../../exercise/service/exercise.service';
-import { Exercise } from 'src/exercise/entity/exercise.entity';
 
 @Injectable()
 export class TrainingService {
@@ -178,7 +171,7 @@ export class TrainingService {
     );
 
     // populate exercise params from components
-    this.trainingPlanService.populateExerciseParams(
+    this.trainingPlanService.populateTrainingExerciseParams(
       input.components,
       components,
       exercises,

@@ -31,6 +31,9 @@ import {
   generateTrainingExercise,
 } from '../mock/training.stub';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
+import { Attribute } from 'src/attribute/entity/attribute.entity';
+import { ComponentParam } from 'src/component/entity/component-param.entity';
+import { AttributeValue } from 'src/attribute/entity/attribute-value.entity';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
@@ -68,13 +71,21 @@ describe('TrainingPlanService (unit)', () => {
     const component = generateComponentStub({
       params: {
         [DEFAULT_PARAMS_KEY]: [
-          { field: ParamType.VolWorkSets },
+          {
+            field: ParamType.VolWorkSets,
+            options: [{ field: VolWorkSetType.Set, defaultValue: '4' }],
+          },
           {
             field: ParamType.IntWork1,
             options: [
-              { field: IntType.Kg },
+              { field: IntType.Kg, defaultValue: '30' },
               { field: IntType.Eff, options: [{ field: 'easy' }] },
             ],
+          },
+          {
+            field: ParamType.IntWork2,
+            defaultValue: IntType.Eff,
+            options: [{ field: IntType.Eff, options: [{ field: 'easy' }] }],
           },
         ],
       },
@@ -90,7 +101,7 @@ describe('TrainingPlanService (unit)', () => {
     });
 
     componentService.getRoot = jest.fn().mockReturnValue(component);
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponent],
       [component],
       [exercise],
@@ -98,35 +109,175 @@ describe('TrainingPlanService (unit)', () => {
     );
 
     expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
-      PARAMS.find((p) => p.field === ParamType.VolWorkSets)!,
+      {
+        field: ParamType.VolWorkSets,
+        name: 'Set',
+        type: AttributeType.Select,
+        defaultValue: VolWorkSetType.Set,
+        options: [
+          {
+            field: VolWorkSetType.Set,
+            name: 'Set',
+            type: AttributeType.Number,
+            defaultValue: '4',
+            options: [],
+          },
+        ],
+      },
       {
         field: ParamType.IntWork1,
         name: 'INT',
         type: AttributeType.Select,
-        defaultValue: undefined,
+        defaultValue: IntType.Kg,
         options: [
           {
             field: IntType.Kg,
             name: 'KG',
             unit: 'kg',
             type: AttributeType.Number,
+            defaultValue: '30',
             options: [],
-            defaultValue: undefined,
           },
           {
             field: IntType.Eff,
             name: 'Eff',
             type: AttributeType.Select,
+            defaultValue: 'easy',
             options: [
               {
                 field: 'easy',
                 name: 'Easy',
                 type: AttributeType.Value,
                 options: [],
-                defaultValue: undefined,
+                defaultValue: 'easy',
               },
             ],
           },
+        ],
+      },
+      {
+        field: ParamType.IntWork2,
+        name: 'INT',
+        type: AttributeType.Select,
+        defaultValue: IntType.Eff,
+        options: [
+          {
+            field: IntType.Eff,
+            name: 'Eff',
+            type: AttributeType.Select,
+            defaultValue: 'easy',
+            options: [
+              {
+                field: 'easy',
+                name: 'Easy',
+                type: AttributeType.Value,
+                options: [],
+                defaultValue: 'easy',
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    expect(trainingComponent.supersets[0].exercises[0].sets).toEqual([
+      {
+        setNumber: 1,
+        paramValues: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:easy`,
+            value: 'easy',
+          },
+        ],
+      },
+      {
+        setNumber: 2,
+        paramValues: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:easy`,
+            value: 'easy',
+          },
+        ],
+      },
+      {
+        setNumber: 3,
+        paramValues: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:easy`,
+            value: 'easy',
+          },
+        ],
+      },
+      {
+        setNumber: 4,
+        paramValues: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:easy`,
+            value: 'easy',
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('should populate 1 set if no set type is provided', () => {
+    const component = generateComponentStub({
+      params: {
+        [DEFAULT_PARAMS_KEY]: [
+          { field: ParamType.IntWork1, options: [{ field: IntType.Kg }] },
+        ],
+      },
+    });
+
+    const exercise = generateExerciseStub({ id: 'e1' });
+    const trainingComponent = generateTrainingComponent({
+      supersets: [
+        generateSuperset({
+          exercises: [generateTrainingExercise({ id: 'e1' })],
+        }),
+      ],
+    });
+
+    componentService.getRoot = jest.fn().mockReturnValue(component);
+    service.populateTrainingExerciseParams(
+      [trainingComponent],
+      [component],
+      [exercise],
+      [],
+    );
+
+    expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
+      {
+        field: ParamType.IntWork1,
+        name: 'INT',
+        type: AttributeType.Select,
+        defaultValue: IntType.Kg,
+        options: [
+          {
+            field: IntType.Kg,
+            name: 'KG',
+            unit: 'kg',
+            type: AttributeType.Number,
+            defaultValue: '20',
+            options: [],
+          },
+        ],
+      },
+    ]);
+
+    expect(trainingComponent.supersets[0].exercises[0].sets).toEqual([
+      {
+        setNumber: 1,
+        paramValues: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
         ],
       },
     ]);
@@ -149,7 +300,7 @@ describe('TrainingPlanService (unit)', () => {
     });
 
     componentService.getRoot = jest.fn().mockReturnValue(component);
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponent],
       [component],
       [exercise],
@@ -195,7 +346,7 @@ describe('TrainingPlanService (unit)', () => {
     });
 
     componentService.getRoot = jest.fn().mockReturnValue(component);
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponent],
       [component],
       [exercise],
@@ -255,7 +406,7 @@ describe('TrainingPlanService (unit)', () => {
       });
 
       componentService.getRoot = jest.fn().mockReturnValue(component);
-      service.populateExerciseParams(
+      service.populateTrainingExerciseParams(
         [trainingComponentCustomParams],
         [component],
         [exerciseCustomParams],
@@ -281,7 +432,7 @@ describe('TrainingPlanService (unit)', () => {
       });
 
       componentService.getRoot = jest.fn().mockReturnValue(component);
-      service.populateExerciseParams(
+      service.populateTrainingExerciseParams(
         [trainingComponentDefaultParams],
         [component],
         [exerciseDefaultParams],
@@ -333,7 +484,7 @@ describe('TrainingPlanService (unit)', () => {
       });
 
       componentService.getRoot = jest.fn().mockReturnValue(component);
-      service.populateExerciseParams(
+      service.populateTrainingExerciseParams(
         [trainingComponentCustomParams],
         [component],
         [exerciseCustomParams],
@@ -359,7 +510,7 @@ describe('TrainingPlanService (unit)', () => {
       });
 
       componentService.getRoot = jest.fn().mockReturnValue(component);
-      service.populateExerciseParams(
+      service.populateTrainingExerciseParams(
         [trainingComponentDefaultParams],
         [component],
         [exerciseDefaultParams],
@@ -436,7 +587,7 @@ describe('TrainingPlanService (unit)', () => {
     componentService.getRoot = jest.fn().mockReturnValue(component);
 
     // Test Case 1: Boolean false
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponentFalseBoolean],
       [component],
       [exerciseFalseBoolean],
@@ -444,7 +595,7 @@ describe('TrainingPlanService (unit)', () => {
     );
 
     // Test Case 2: Empty value
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponentNonExistingValue],
       [component],
       [exerciseNonExistingValue],
@@ -452,7 +603,7 @@ describe('TrainingPlanService (unit)', () => {
     );
 
     // Test Case 3: Default case (true boolean)
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponentDefault],
       [component],
       [exerciseDefault],
@@ -524,7 +675,7 @@ describe('TrainingPlanService (unit)', () => {
     componentService.getRoot = jest.fn().mockReturnValue(component);
 
     // Test Case 1: Boolean true
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponentTrueBoolean],
       [component],
       [exerciseTrueBoolean],
@@ -532,7 +683,7 @@ describe('TrainingPlanService (unit)', () => {
     );
 
     // Test Case 2: Boolean false
-    service.populateExerciseParams(
+    service.populateTrainingExerciseParams(
       [trainingComponentFalseBoolean],
       [component],
       [exerciseFalseBoolean],
@@ -546,5 +697,206 @@ describe('TrainingPlanService (unit)', () => {
     expect(
       trainingComponentFalseBoolean.supersets[0].exercises[0].params,
     ).toEqual([PARAMS.find((p) => p.field === ParamType.VolWork1)]);
+  });
+
+  describe('getSetData', () => {
+    it('should create correct number of sets based on VolWorkSets parameter', () => {
+      const componentParams: ComponentParam[] = [
+        {
+          field: ParamType.VolWorkSets,
+          options: [
+            {
+              field: VolWorkSetType.Set,
+              defaultValue: '3',
+            },
+          ],
+        },
+        {
+          field: ParamType.IntWork1,
+          options: [
+            {
+              field: IntType.Kg,
+              defaultValue: '20',
+            },
+          ],
+        },
+      ];
+
+      const params = service.getParamAttributes(componentParams);
+      const result = service.getSetData(params);
+
+      expect(result.length).toBe(3);
+      expect(result[0].setNumber).toBe(1);
+      expect(result[1].setNumber).toBe(2);
+      expect(result[2].setNumber).toBe(3);
+
+      // Each set should have the correct param values
+      result.forEach((set) => {
+        expect(set.paramValues).toEqual([
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+        ]);
+      });
+    });
+
+    it('should create 1 set by default when VolWorkSets parameter is not provided', () => {
+      const componentParams: ComponentParam[] = [
+        {
+          field: ParamType.IntWork1,
+          options: [
+            {
+              field: IntType.Kg,
+              defaultValue: '20',
+            },
+          ],
+        },
+      ];
+
+      const params = service.getParamAttributes(componentParams);
+      const result = service.getSetData(params);
+
+      expect(result.length).toBe(1);
+      expect(result[0].setNumber).toBe(1);
+      expect(result[0].paramValues).toEqual([
+        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+      ]);
+    });
+
+    it('should create sets with provided paramValues when available', () => {
+      const componentParams: ComponentParam[] = [
+        {
+          field: ParamType.VolWorkSets,
+          options: [
+            {
+              field: VolWorkSetType.Set,
+              defaultValue: '2',
+            },
+          ],
+        },
+        {
+          field: ParamType.IntWork1,
+          options: [
+            {
+              field: IntType.Kg,
+              defaultValue: '20',
+            },
+          ],
+        },
+      ];
+
+      const paramValues: AttributeValue[] = [
+        {
+          field: ParamType.IntWork1,
+          selected: IntType.Kg,
+          value: '25',
+        },
+      ];
+
+      const params = service.getParamAttributes(componentParams);
+      const result = service.getSetData(params, paramValues);
+
+      expect(result.length).toBe(2);
+      result.forEach((set) => {
+        expect(set.paramValues).toEqual([
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '25' },
+        ]);
+      });
+    });
+
+    it('should handle nested parameter options correctly', () => {
+      const componentParams: ComponentParam[] = [
+        {
+          field: ParamType.VolWorkSets,
+          options: [
+            {
+              field: VolWorkSetType.Set,
+              defaultValue: '1',
+            },
+          ],
+        },
+        {
+          field: ParamType.IntWork1,
+          options: [
+            {
+              field: IntType.Eff,
+              options: [
+                {
+                  field: 'hard',
+                  defaultValue: 'hard',
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      const params = service.getParamAttributes(componentParams);
+      const result = service.getSetData(params);
+
+      expect(result.length).toBe(1);
+      expect(result[0].paramValues).toEqual([
+        {
+          field: ParamType.IntWork1,
+          selected: `${IntType.Eff}:hard`,
+          value: 'hard',
+        },
+      ]);
+    });
+
+    it('should filter out VolWorkSets from the param values', () => {
+      const componentParams: ComponentParam[] = [
+        {
+          field: ParamType.VolWorkSets,
+          options: [
+            {
+              field: VolWorkSetType.Set,
+              defaultValue: '1',
+            },
+          ],
+        },
+        {
+          field: ParamType.IntWork1,
+          options: [
+            {
+              field: IntType.Kg,
+              defaultValue: '20',
+            },
+          ],
+        },
+      ];
+
+      const params = service.getParamAttributes(componentParams);
+      const result = service.getSetData(params);
+
+      expect(result[0].paramValues).not.toContainEqual(
+        expect.objectContaining({ field: ParamType.VolWorkSets }),
+      );
+
+      expect(result[0].paramValues).toEqual([
+        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+      ]);
+    });
+
+    it('should handle empty params array', () => {
+      const result = service.getSetData([]);
+      expect(result.length).toBe(1); // Default 1 set
+      expect(result[0].paramValues).toEqual([]); // No params to include
+    });
+
+    it('should handle params without options', () => {
+      const componentParams: ComponentParam[] = [
+        {
+          field: ParamType.IntWork1,
+          defaultValue: '30',
+        },
+      ];
+
+      const params = service.getParamAttributes(componentParams);
+      const result = service.getSetData(params);
+
+      expect(result.length).toBe(1);
+      expect(result[0].paramValues).toEqual([
+        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+      ]);
+    });
   });
 });

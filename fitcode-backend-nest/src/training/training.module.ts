@@ -10,9 +10,11 @@ import { TrainingPlanService } from './service/training-plan.service';
 import { TrainingService } from './service/training.service';
 import { UserWorkloadService } from './service/user-workload.service';
 import { TrainingController } from './training.controller';
+import { AttributeModule } from '../attribute/attribute.module';
 
 @Module({
   imports: [
+    AttributeModule,
     ComponentModule,
     ExerciseModule,
     forwardRef(() => UserModule),
