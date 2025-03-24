@@ -5,11 +5,12 @@ export interface SetExerciseOption {
   format: (value: string) => string;
 }
 
-function getValues(length: number, hop: number = 1) {
+function getValues(length: number, hop: number = 1, allowZero = false) {
   const values = new Array(length)
     .fill(0)
     .map((_, i) => ((i + 1) * hop).toString());
-  return [''].concat(values);
+
+  return allowZero ? ['0', ...values] : ['', ...values];
 }
 
 export const SET_OPTIONS: SetExerciseOption = {
@@ -69,7 +70,7 @@ export const INT_OPTIONS: SetExerciseOption = {
 export const KG_OPTIONS: SetExerciseOption = {
   type: 'number',
   label: 'kg',
-  values: getValues(300),
+  values: getValues(300, 1, true),
   format: (value) => value,
 };
 

@@ -13,10 +13,11 @@ import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { TrainingCycleViewWeekProps } from './type';
 import MyModal from '../modal';
 import { Training } from '@/controller/training/type/training.type';
+import { useTheme } from '@mui/material';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { index, week, selected } = props;
-
+  const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
   const {
@@ -88,7 +89,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
             textAlign: 'center',
             border: '1px solid',
             borderColor: 'background.default',
-            backgroundColor: '#1A2B3C',
+            backgroundColor: 'background.paper',
             height: '100%',
             cursor: components.length ? 'pointer' : 'default',
             borderTopLeftRadius: 8,
@@ -97,11 +98,10 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         >
           {/* Extra column to display the week number */}
           <Typography
-            color="#1A2B3C"
-            bgcolor="#1EB980"
+            color={theme.palette.background.paper}
+            bgcolor={theme.palette.primary.main}
             p={screenSize.isMobile ? 0.1 : 2}
             sx={{
-              backgroundColor: '#1EB980',
               writingMode: 'vertical-rl',
               transform: 'rotate(180deg)',
               borderBottomRightRadius: 8,
@@ -118,8 +118,16 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
               sx={{
                 border: '1px solid',
                 borderColor: 'background.default',
-                backgroundColor: '#1A2B3C',
-                cursor: components.length ? 'pointer' : 'default',
+                cursor:
+                  components.length &&
+                  cycle &&
+                  CommonService.instance.date.isBetween(
+                    date,
+                    cycle.from,
+                    cycle.to
+                  )
+                    ? 'pointer'
+                    : 'default',
                 minHeight: screenSize.isMobile ? 160 : 140,
               }}
             >
@@ -150,10 +158,28 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                     sx={{
                       position: 'relative',
                       height: screenSize.isMobile ? '37.5%' : '44%',
+                      backgroundColor: !cycle
+                        ? 'background.paper'
+                        : CommonService.instance.date.isBetween(
+                              date,
+                              cycle.from,
+                              cycle.to
+                            )
+                          ? 'background.paper'
+                          : 'background.default',
                     }}
-                    onClick={() =>
-                      handleAddTraining(date, period as 'AM' | 'PM')
-                    }
+                    onClick={() => {
+                      if (
+                        !cycle ||
+                        !CommonService.instance.date.isBetween(
+                          date,
+                          cycle.from,
+                          cycle.to
+                        )
+                      )
+                        return;
+                      handleAddTraining(date, period as 'AM' | 'PM');
+                    }}
                   >
                     {/* Period Label */}
                     <Typography
@@ -176,6 +202,15 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                         borderRadius={2}
                         sx={{ cursor: 'pointer', p: 0, m: 0, height: '100%' }}
                         onClick={(e) => {
+                          if (
+                            !cycle ||
+                            !CommonService.instance.date.isBetween(
+                              date,
+                              cycle.from,
+                              cycle.to
+                            )
+                          )
+                            return;
                           if (!props.selected || props.selected?.length === 0) {
                             setOpenAreYouSureModal(true);
                             setSelectedTraining(training);

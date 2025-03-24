@@ -39,3 +39,11 @@ export const DEFAULT_SUBGROUP = (availableMembers: User[]): Subgroup => ({
   membersIds: availableMembers.map((user) => user.uid),
   supersets: [],
 });
+
+export const ABSENT_SUBGRUP = (): Subgroup => ({
+  id: 'absent',
+  name: 'Absent',
+  color: '#454545',
+  membersIds: [],
+  supersets: [],
+});

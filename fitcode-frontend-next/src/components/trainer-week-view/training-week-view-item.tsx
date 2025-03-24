@@ -6,9 +6,11 @@ import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { TrainingWeekViewItemProps } from './type';
+import { useTheme } from '@mui/material';
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
   const { training, updateTraining } = props;
+  const theme = useTheme();
   const { setFilteredTrainings } = useGroup();
 
   const [isChanged, setIsChanged] = useState(false);
@@ -73,7 +75,7 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
                 }}
                 style={{
                   color: '#fff',
-                  backgroundColor: '#263646',
+                  backgroundColor: theme.palette.background.default,
                   border: 'none',
                   padding: '4px',
                   borderRadius: '4px',

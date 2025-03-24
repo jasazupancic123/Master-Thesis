@@ -157,8 +157,7 @@ export default function TrainingCard(props: TrainingCardProps) {
           borderRadius: 2,
           borderTopLeftRadius: 0,
           backgroundColor: 'background.paper',
-          p: 1,
-          py: 0,
+          px: 1,
           mt: -1,
         }}
       >

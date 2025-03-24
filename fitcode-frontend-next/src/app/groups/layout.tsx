@@ -18,7 +18,7 @@ export default async function Layout({ children }: ChildrenProps) {
 
   const role = profile.customClaims.role[0];
   const isAthlete = role === UserRole.ATHLETE;
-  const isTrainer = role === UserRole.TRAINER;
+  const isTrainer = role === UserRole.TRAINER || UserRole.MANAGER;
 
   const styles = {
     bgcolor: isTrainer ? 'background.default' : 'background.paper',
