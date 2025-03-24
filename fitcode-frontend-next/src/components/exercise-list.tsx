@@ -2,6 +2,7 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Card, CardContent, CardMedia } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material';
 
 interface Props {
   exercises: Exercise[];
@@ -11,6 +12,7 @@ interface Props {
 
 export default function ExerciseList(props: Props) {
   const { exercises, selectedExercises, setSelectedExercises } = props;
+  const theme = useTheme();
 
   return (
     <Stack direction="row" spacing={1} mt={5}>
@@ -47,8 +49,8 @@ export default function ExerciseList(props: Props) {
               backgroundColor: selectedExercises.find(
                 (e) => e.id === exercise.id
               )
-                ? 'primary.main'
-                : '#1A2B3C',
+                ? theme.palette.primary.main
+                : theme.palette.background.paper,
             }}
           >
             <Typography gutterBottom variant="caption" component="div">

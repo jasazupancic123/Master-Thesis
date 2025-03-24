@@ -11,13 +11,14 @@ import {
   Superset,
 } from '@/controller/training/type/training-plan.type';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { Box, Grid2, Tooltip } from '@mui/material';
+import { Box, Grid2, IconButton, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { SetExerciseAttribute } from './exercise-card-set-attribute';
 import { TrainingExerciseCardProps } from './props';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { Circle, StarTwoTone } from '@mui/icons-material';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -40,6 +41,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setSelectedSubgroup,
     selectedAthlete,
   } = useTrainerDayViewContext();
+
+  const [expandedSetsView, setExpandedSetsView] = useState(false);
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =
@@ -66,16 +69,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           for (const exercise of superset.exercises)
             if (exercise.meta[field] !== undefined)
               (exercise.meta[field] as any) = value;
-      // Čori to more bit tu tak - spomni se šolanja ;)
-    } else if (superior?.column && j !== undefined && j !== null) {
-      const columnIndex = j;
-      for (const { field, value } of pairs) {
-        const superset = supersets[columnIndex];
-        if (!superset) continue;
-        for (const exercise of superset.exercises)
-          if (exercise.meta[field] !== undefined)
-            (exercise.meta[field] as any) = value;
-      }
       // Čori to more bit tu tak - spomni se šolanja ;)
     } else if (superior?.row && k !== undefined && k !== null) {
       const rowIndex = k;
@@ -204,165 +197,393 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           </Typography>
         </Tooltip>
       </Stack>
+      {!expandedSetsView ? (
+        <Grid2 container spacing={1} columns={11}>
+          <Grid2 size={0.5}>
+            <IconButton
+              disableRipple
+              sx={{
+                p: 0,
+                m: 0,
+                mt: screenSize.isTablet ? 1.1 : 1,
+                height: '100%',
+              }}
+              onClick={() => {
+                setExpandedSetsView(!expandedSetsView);
+              }}
+            >
+              <Circle
+                sx={{
+                  color: 'white !important',
+                  fontSize: screenSize.isTablet ? 14 : 16,
+                  ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
+                }}
+              />
+            </IconButton>
+          </Grid2>
+          {/* Sets */}
+          <Grid2 size={2}>
+            <SetExerciseAttribute
+              options={SET}
+              state={(() => {
+                const option = SET.find((option) => option.label === 'set')!;
 
-      <Grid2 container spacing={1} columns={10}>
-        {/* Sets */}
-        <Grid2 size={2}>
-          <SetExerciseAttribute
-            options={SET}
-            state={(() => {
-              const option = SET.find((option) => option.label === 'set')!;
+                return {
+                  type: option.type,
+                  label: option.label,
+                  values: option.values,
+                  option: option.label as keyof ExerciseMeta,
+                  format: option.format,
+                  value: state.set.toString() ?? option.values![1].toString(),
+                };
+              })()}
+              onChange={(state) => {
+                const sets = parseInt(state.value);
+                updateSelectedTraining([{ field: 'set', value: sets }]);
+              }}
+            />
+          </Grid2>
 
-              return {
-                type: option.type,
-                label: option.label,
-                values: option.values,
-                option: option.label as keyof ExerciseMeta,
-                format: option.format,
-                value: state.set.toString() ?? option.values![1].toString(),
-              };
-            })()}
-            onChange={(state) => {
-              const sets = parseInt(state.value);
-              updateSelectedTraining([{ field: 'set', value: sets }]);
-            }}
-          />
+          {/* Set Type */}
+          <Grid2 size={2}>
+            <SetExerciseAttribute
+              options={SET_TYPE}
+              state={(() => {
+                const option = SET_TYPE.find(
+                  (option) => option.label === state.setType
+                )!;
+
+                return {
+                  type: option.type,
+                  label: option.label,
+                  values: option.values,
+                  option: option.label as keyof ExerciseMeta,
+                  format: option.format,
+                  value:
+                    state.setTypeValue.toString() ??
+                    option.values![1].toString(),
+                };
+              })()}
+              onChange={(state) => {
+                const setType = state.option as ExerciseMeta['setType'];
+                const setTypeValue = parseInt(state.value);
+
+                updateSelectedTraining([
+                  { field: 'setType', value: setType },
+                  {
+                    field: 'setTypeValue',
+                    value: isNaN(setTypeValue) ? 5 : setTypeValue,
+                  }, // 5 because all set type options include 5
+                ]);
+              }}
+            />
+          </Grid2>
+
+          {/* Workload */}
+          <Grid2 size={2}>
+            <SetExerciseAttribute
+              options={WORKLOAD}
+              state={(() => {
+                const option = WORKLOAD.find(
+                  (option) => option.label === state.workloadType
+                )!;
+
+                return {
+                  type: option.type,
+                  label: option.label,
+                  values: option.values,
+                  option: option.label as keyof ExerciseMeta,
+                  format: option.format,
+                  value: (state.workloadValue !== undefined &&
+                  state.workloadValue !== null
+                    ? state.workloadValue
+                    : 10
+                  ).toString(),
+                };
+              })()}
+              onChange={(state) => {
+                const workloadType =
+                  state.option as ExerciseMeta['workloadType'];
+
+                // if workload value not in values array, select first value in array
+                let workloadValue = parseInt(state.value);
+                if (
+                  state.type === 'select' &&
+                  !state.values!.includes(workloadValue.toString())
+                ) {
+                  workloadValue = parseInt(state.values![1]);
+                }
+
+                updateSelectedTraining([
+                  { field: 'workloadType', value: workloadType },
+                  { field: 'workloadValue', value: workloadValue },
+                ]);
+              }}
+            />
+          </Grid2>
+
+          {/* Tempo */}
+          <Grid2 size={2}>
+            <SetExerciseAttribute
+              options={TEMPO}
+              state={(() => {
+                const option = TEMPO.find(
+                  (option) => option.label === tempoOrEffort
+                )!;
+
+                return {
+                  type: option.type,
+                  label: option.label,
+                  values: option.values,
+                  option: option.label as keyof ExerciseMeta,
+                  format: option.format,
+                  value:
+                    (tempoOrEffort === 'temp' ? state.tempo : state.effort) ??
+                    option.values![1].toString(),
+                };
+              })()}
+              onChange={(state) => {
+                if (state.label === 'eff' && tempoOrEffort === 'temp') {
+                  setTempoOrEffort('eff');
+                  return;
+                }
+
+                if (state.label === 'temp' && tempoOrEffort === 'eff') {
+                  setTempoOrEffort('temp');
+                  return;
+                }
+
+                updateSelectedTraining([
+                  {
+                    field: tempoOrEffort === 'temp' ? 'tempo' : 'effort',
+                    value: state.value,
+                  },
+                ]);
+              }}
+            />
+          </Grid2>
+
+          {/* Recovery */}
+          <Grid2 size={2}>
+            <SetExerciseAttribute
+              options={RECOVERY}
+              state={(() => {
+                const option = RECOVERY.find(
+                  (option) => option.label === 'rec'
+                )!;
+                return {
+                  type: option.type,
+                  label: option.label,
+                  values: option.values,
+                  option: option.label as keyof ExerciseMeta,
+                  format: option.format,
+                  value: state.rec ? state.rec.toString() : '',
+                };
+              })()}
+              onChange={(state) => {
+                const rec = parseInt(state.value);
+                updateSelectedTraining([{ field: 'rec', value: rec }]);
+              }}
+            />
+          </Grid2>
         </Grid2>
+      ) : (
+        <Box display="flex" flexDirection="column" width="100%">
+          {Array.from({ length: exercise.meta.set }, (_, i) => (
+            <Grid2 container spacing={1} columns={11}>
+              <Grid2 size={0.5}>
+                <IconButton
+                  disableRipple
+                  sx={{
+                    p: 0,
+                    m: 0,
+                    mt: screenSize.isTablet ? 1.1 : 1,
+                    height: '100%',
+                    display: i === 0 ? undefined : 'none',
+                  }}
+                  onClick={() => {
+                    setExpandedSetsView(!expandedSetsView);
+                  }}
+                >
+                  <Circle
+                    sx={{
+                      color: 'white !important',
+                      fontSize: screenSize.isTablet ? 14 : 16,
+                      ml: screenSize.isUltraSmall
+                        ? 0
+                        : screenSize.isMobile
+                          ? 1
+                          : 0,
+                    }}
+                  />
+                </IconButton>
+              </Grid2>
+              {/* Sets */}
+              <Grid2 size={2}>
+                <SetExerciseAttribute
+                  options={SET}
+                  state={(() => {
+                    return {
+                      type: 'number',
+                      label: 'set',
+                      values: SET[0].values,
+                      option: 'set',
+                      format: SET[0].format,
+                      value: (i + 1).toString(),
+                    };
+                  })()}
+                  onChange={(state) => {}}
+                  disabled
+                />
+              </Grid2>
 
-        {/* Set Type */}
-        <Grid2 size={2}>
-          <SetExerciseAttribute
-            options={SET_TYPE}
-            state={(() => {
-              const option = SET_TYPE.find(
-                (option) => option.label === state.setType
-              )!;
+              {/* Set Type */}
+              <Grid2 size={2}>
+                <SetExerciseAttribute
+                  options={SET_TYPE}
+                  state={(() => {
+                    const option = SET_TYPE.find(
+                      (option) => option.label === state.setType
+                    )!;
 
-              return {
-                type: option.type,
-                label: option.label,
-                values: option.values,
-                option: option.label as keyof ExerciseMeta,
-                format: option.format,
-                value:
-                  state.setTypeValue.toString() ?? option.values![1].toString(),
-              };
-            })()}
-            onChange={(state) => {
-              const setType = state.option as ExerciseMeta['setType'];
-              const setTypeValue = parseInt(state.value);
+                    return {
+                      type: option.type,
+                      label: option.label,
+                      values: option.values,
+                      option: option.label as keyof ExerciseMeta,
+                      format: option.format,
+                      value:
+                        state.setTypeValue.toString() ??
+                        option.values![1].toString(),
+                    };
+                  })()}
+                  onChange={(state) => {
+                    const setType = state.option as ExerciseMeta['setType'];
+                    const setTypeValue = parseInt(state.value);
 
-              updateSelectedTraining([
-                { field: 'setType', value: setType },
-                {
-                  field: 'setTypeValue',
-                  value: isNaN(setTypeValue) ? 5 : setTypeValue,
-                }, // 5 because all set type options include 5
-              ]);
-            }}
-          />
-        </Grid2>
+                    updateSelectedTraining([
+                      { field: 'setType', value: setType },
+                      {
+                        field: 'setTypeValue',
+                        value: isNaN(setTypeValue) ? 5 : setTypeValue,
+                      }, // 5 because all set type options include 5
+                    ]);
+                  }}
+                />
+              </Grid2>
 
-        {/* Workload */}
-        <Grid2 size={2}>
-          <SetExerciseAttribute
-            options={WORKLOAD}
-            state={(() => {
-              const option = WORKLOAD.find(
-                (option) => option.label === state.workloadType
-              )!;
+              {/* Workload */}
+              <Grid2 size={2}>
+                <SetExerciseAttribute
+                  options={WORKLOAD}
+                  state={(() => {
+                    const option = WORKLOAD.find(
+                      (option) => option.label === state.workloadType
+                    )!;
 
-              return {
-                type: option.type,
-                label: option.label,
-                values: option.values,
-                option: option.label as keyof ExerciseMeta,
-                format: option.format,
-                value: (state.workloadValue || 10).toString(),
-              };
-            })()}
-            onChange={(state) => {
-              const workloadType = state.option as ExerciseMeta['workloadType'];
+                    return {
+                      type: option.type,
+                      label: option.label,
+                      values: option.values,
+                      option: option.label as keyof ExerciseMeta,
+                      format: option.format,
+                      value: (state.workloadValue !== undefined &&
+                      state.workloadValue !== null
+                        ? state.workloadValue
+                        : 10
+                      ).toString(),
+                    };
+                  })()}
+                  onChange={(state) => {
+                    const workloadType =
+                      state.option as ExerciseMeta['workloadType'];
 
-              // if workload value not in values array, select first value in array
-              let workloadValue = parseInt(state.value);
-              if (
-                state.type === 'select' &&
-                !state.values!.includes(workloadValue.toString())
-              )
-                workloadValue = parseInt(state.values![1]);
+                    // if workload value not in values array, select first value in array
+                    let workloadValue = parseInt(state.value);
+                    if (
+                      state.type === 'select' &&
+                      !state.values!.includes(workloadValue.toString())
+                    ) {
+                      workloadValue = parseInt(state.values![1]);
+                    }
 
-              updateSelectedTraining([
-                { field: 'workloadType', value: workloadType },
-                { field: 'workloadValue', value: workloadValue },
-              ]);
-            }}
-          />
-        </Grid2>
+                    updateSelectedTraining([
+                      { field: 'workloadType', value: workloadType },
+                      { field: 'workloadValue', value: workloadValue },
+                    ]);
+                  }}
+                />
+              </Grid2>
 
-        {/* Tempo */}
-        <Grid2 size={2}>
-          <SetExerciseAttribute
-            options={TEMPO}
-            state={(() => {
-              const option = TEMPO.find(
-                (option) => option.label === tempoOrEffort
-              )!;
+              {/* Tempo */}
+              <Grid2 size={2}>
+                <SetExerciseAttribute
+                  options={TEMPO}
+                  state={(() => {
+                    const option = TEMPO.find(
+                      (option) => option.label === tempoOrEffort
+                    )!;
 
-              return {
-                type: option.type,
-                label: option.label,
-                values: option.values,
-                option: option.label as keyof ExerciseMeta,
-                format: option.format,
-                value:
-                  (tempoOrEffort === 'temp' ? state.tempo : state.effort) ??
-                  option.values![1].toString(),
-              };
-            })()}
-            onChange={(state) => {
-              if (state.label === 'eff' && tempoOrEffort === 'temp') {
-                setTempoOrEffort('eff');
-                return;
-              }
+                    return {
+                      type: option.type,
+                      label: option.label,
+                      values: option.values,
+                      option: option.label as keyof ExerciseMeta,
+                      format: option.format,
+                      value:
+                        (tempoOrEffort === 'temp'
+                          ? state.tempo
+                          : state.effort) ?? option.values![1].toString(),
+                    };
+                  })()}
+                  onChange={(state) => {
+                    if (state.label === 'eff' && tempoOrEffort === 'temp') {
+                      setTempoOrEffort('eff');
+                      return;
+                    }
 
-              if (state.label === 'temp' && tempoOrEffort === 'eff') {
-                setTempoOrEffort('temp');
-                return;
-              }
+                    if (state.label === 'temp' && tempoOrEffort === 'eff') {
+                      setTempoOrEffort('temp');
+                      return;
+                    }
 
-              updateSelectedTraining([
-                {
-                  field: tempoOrEffort === 'temp' ? 'tempo' : 'effort',
-                  value: state.value,
-                },
-              ]);
-            }}
-          />
-        </Grid2>
+                    updateSelectedTraining([
+                      {
+                        field: tempoOrEffort === 'temp' ? 'tempo' : 'effort',
+                        value: state.value,
+                      },
+                    ]);
+                  }}
+                />
+              </Grid2>
 
-        {/* Recovery */}
-        <Grid2 size={2}>
-          <SetExerciseAttribute
-            options={RECOVERY}
-            state={(() => {
-              const option = RECOVERY.find((option) => option.label === 'rec')!;
-              return {
-                type: option.type,
-                label: option.label,
-                values: option.values,
-                option: option.label as keyof ExerciseMeta,
-                format: option.format,
-                value: state.rec ? state.rec.toString() : '',
-              };
-            })()}
-            onChange={(state) => {
-              const rec = parseInt(state.value);
-              updateSelectedTraining([{ field: 'rec', value: rec }]);
-            }}
-          />
-        </Grid2>
-      </Grid2>
+              {/* Recovery */}
+              <Grid2 size={2}>
+                <SetExerciseAttribute
+                  options={RECOVERY}
+                  state={(() => {
+                    const option = RECOVERY.find(
+                      (option) => option.label === 'rec'
+                    )!;
+                    return {
+                      type: option.type,
+                      label: option.label,
+                      values: option.values,
+                      option: option.label as keyof ExerciseMeta,
+                      format: option.format,
+                      value: state.rec ? state.rec.toString() : '',
+                    };
+                  })()}
+                  onChange={(state) => {
+                    const rec = parseInt(state.value);
+                    updateSelectedTraining([{ field: 'rec', value: rec }]);
+                  }}
+                />
+              </Grid2>
+            </Grid2>
+          ))}
+        </Box>
+      )}
     </Stack>
   );
 }

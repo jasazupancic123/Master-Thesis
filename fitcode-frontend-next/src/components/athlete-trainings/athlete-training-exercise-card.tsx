@@ -25,10 +25,12 @@ import BorderColor from '../border-color';
 import MyModal from '../modal';
 import { SetExerciseAttribute } from '../trainer-day-view/exercise-card-set-attribute';
 import { AthleteTrainingExerciseCardProps } from './props';
+import { useTheme } from '@mui/material';
 
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
 ) {
+  const theme = useTheme();
   const { components, setView, training, profile, statuses } = props;
   const screenSize = useScreenSize();
 
@@ -49,6 +51,8 @@ export default function AthleteTrainingExerciseCard(
   const [states, setStates] = useState<ExerciseMeta[]>([]);
   const [tempoOrEfforts, setTempoOrEfforts] = useState<('temp' | 'eff')[]>([]);
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
+  const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
 
   useEffect(() => {
     if (!selectedComponent) return;
@@ -104,7 +108,7 @@ export default function AthleteTrainingExerciseCard(
                     p: 0,
                     pt: 0.5,
                     m: 0,
-                    border: '1px solid #1EB980',
+                    border: `1px solid ${theme.palette.primary.main}`,
                     backgroundColor: 'background.paper',
                   }}
                 >
@@ -124,7 +128,7 @@ export default function AthleteTrainingExerciseCard(
                         variant="h6"
                         sx={{
                           textTransform: 'uppercase',
-                          color: '#1EB980',
+                          color: theme.palette.primary.main,
                           textAlign: 'center !important',
                           cursor: 'pointer',
                           overflow: 'hidden',
@@ -181,6 +185,37 @@ export default function AthleteTrainingExerciseCard(
                               key={`exercise-container-${exercise.id}`}
                               display="flex"
                               flexDirection="column" // Ensures vertical stacking
+                              sx={{
+                                position: 'relative',
+                                backgroundColor:
+                                  selectedSuperset === superset
+                                    ? exercise.exercise?.imageUrl
+                                      ? 'rgba(0, 0, 0, 0.6)'
+                                      : 'background.default'
+                                    : 'background.default', // Darker background to improve contrast
+                                backgroundImage:
+                                  selectedSuperset === superset
+                                    ? exercise.exercise?.imageUrl
+                                      ? `url(${exercise.exercise?.imageUrl})`
+                                      : undefined
+                                    : undefined,
+                                backgroundPosition:
+                                  selectedSuperset === superset
+                                    ? 'center'
+                                    : undefined,
+                                backgroundSize:
+                                  selectedSuperset === superset
+                                    ? '100% auto'
+                                    : undefined, // Ensures full width, height adjusts
+                                backgroundRepeat:
+                                  selectedSuperset === superset
+                                    ? 'no-repeat'
+                                    : undefined,
+                                overflow:
+                                  selectedSuperset === superset
+                                    ? 'hidden'
+                                    : undefined,
+                              }}
                             >
                               <Box
                                 key={exercise.id}
@@ -188,7 +223,11 @@ export default function AthleteTrainingExerciseCard(
                                 width="100%"
                                 justifyContent="center"
                                 alignItems="center"
-                                sx={{ backgroundColor: '#273747' }}
+                                sx={{
+                                  backgroundColor: exercise.exercise?.imageUrl
+                                    ? 'transparent'
+                                    : '#273747',
+                                }}
                                 py={0.5}
                               >
                                 <Tooltip
@@ -204,6 +243,19 @@ export default function AthleteTrainingExerciseCard(
                                       whiteSpace: 'nowrap',
                                       textOverflow: 'ellipsis',
                                       maxWidth: '80%', // Adjust width as needed
+                                      zIndex: 10,
+                                      cursor:
+                                        superset === selectedSuperset
+                                          ? 'pointer'
+                                          : undefined,
+                                    }}
+                                    onClick={() => {
+                                      if (superset === selectedSuperset) {
+                                        setOpenVideoPlayerModal(true);
+                                        setVideoUrl(
+                                          exercise.exercise?.videoUrl || ''
+                                        );
+                                      }
                                     }}
                                   >
                                     {exercise.exercise?.name ||
@@ -228,6 +280,7 @@ export default function AthleteTrainingExerciseCard(
                                       m: 0,
                                       position: 'absolute',
                                       right: screenSize.isMobile ? 14 : 20,
+                                      zIndex: 11,
                                     }}
                                   >
                                     {selectedSuperset === superset &&
@@ -240,6 +293,21 @@ export default function AthleteTrainingExerciseCard(
                                   </IconButton>
                                 )}
                               </Box>
+                              {selectedSuperset === superset && (
+                                <Box
+                                  sx={{
+                                    width: '100% !important',
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    backgroundColor: 'rgba(38, 54, 70, 0.825)', // Darker overlay for better text contrast
+                                    zIndex: 0,
+                                    opacity: 100,
+                                  }}
+                                />
+                              )}
                               {selectedExercises.includes(exercise) &&
                                 states.length > 0 &&
                                 tempoOrEfforts.length > 0 && (
@@ -250,7 +318,10 @@ export default function AthleteTrainingExerciseCard(
                                       m: 0,
                                       pb: 2,
                                       position: 'relative',
-                                      backgroundColor: '#273747',
+                                      backgroundColor: exercise.exercise
+                                        ?.imageUrl
+                                        ? 'transparent'
+                                        : '#273747',
                                     }}
                                   >
                                     <Box
@@ -521,6 +592,34 @@ export default function AthleteTrainingExerciseCard(
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
           You've smashed the training button. Ready to kick things off?
         </Typography>
+      </MyModal>
+      <MyModal
+        isOpen={openVideoPlayerModal}
+        setIsOpen={(open) => setOpenVideoPlayerModal(open)}
+        cancelText="Close"
+        onCancel={() => {
+          setVideoUrl('');
+          setOpenVideoPlayerModal(false);
+        }}
+        sx={{ p: videoUrl.length > 0 ? 0 : undefined }}
+        dialogueContentSx={{ p: videoUrl.length > 0 ? 0 : undefined }}
+      >
+        {videoUrl.length > 0 ? (
+          <Box
+            component="video"
+            src={videoUrl}
+            controls
+            autoPlay
+            muted
+            loop
+            sx={{
+              width: '100%', // Make it responsive
+              maxWidth: screenSize.isLandscapeMobile ? 400 : 600, // Limit max width
+            }}
+          />
+        ) : (
+          <Typography variant="body2">No video available</Typography>
+        )}
       </MyModal>
     </Box>
   );

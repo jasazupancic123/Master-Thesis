@@ -11,9 +11,13 @@ import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
 import { SearchBar } from '../search-bar';
 import { AddMembersModalProps } from './type';
+import { useScreenSize } from '@/context/screen-size-provider';
 
 export function AddMembersModal(props: AddMembersModalProps) {
-  const { users, members, setMembers } = props;
+  const { users, members, setMembers, title, placeholder, dissableMaxWidth } =
+    props;
+
+  const screenSize = useScreenSize();
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);
@@ -48,15 +52,17 @@ export function AddMembersModal(props: AddMembersModalProps) {
   return (
     <>
       <Box display="flex" justifyContent="center" alignItems="center" p={1}>
-        <Typography variant="h6" mb={2}>
-          Add Members
-        </Typography>
+        <Typography variant="h6">{title || 'Add Members'}</Typography>
       </Box>
 
-      <Box display="flex" flexDirection="column" minWidth={300}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        minWidth={dissableMaxWidth ? undefined : 300}
+      >
         <Box display="flex" justifyContent="center" alignItems="center" p={1}>
           <SearchBar
-            placeholder="Search Users"
+            placeholder={placeholder || 'Search Users'}
             value={searchQueryAddPlayer}
             handleSearchChange={(e) => setSearchQueryAddPlayer(e.target.value)}
             maxWidth={'85%'}

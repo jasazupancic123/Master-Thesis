@@ -1,37 +1,64 @@
 import { createTheme } from '@mui/material';
 
+declare module '@mui/material/styles' {
+  interface TypeBackground {
+    default: string;
+    paper: string;
+    light: string;
+    dark: string;
+  }
+}
+
 export const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#0f9d58',
+      main: '#1EB980',
+      dark: '#005d57',
     },
     background: {
+      light: '#283444',
       default: '#263646',
       paper: '#1A2B3C',
+      dark: '#6d7b87',
+    },
+    error: {
+      main: '#ff6859',
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    button: { textTransform: 'none' },
+    fontFamily: 'Roboto Condensed, sans-serif',
+    button: { textTransform: 'none', color: '#EAEBED' },
   },
   components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          color: '#EAEBED',
+        },
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: {
         a: {
-          textDecoration: 'none', // Removes underline
-          color: 'inherit', // Keeps text color unchanged
+          textDecoration: 'none',
+          color: 'inherit',
           '&:hover': {
-            textDecoration: 'none', // Prevents underline on hover
+            textDecoration: 'none',
           },
           '&:active': {
-            color: 'inherit', // Prevents color change on click
+            color: 'inherit',
           },
         },
       },
     },
   },
 });
+
+const robotoCondensed = {
+  fontFamily: 'Roboto Condensed',
+  fontWeight: 400,
+};
 
 export const signInUpTheme = createTheme({
   ...theme,

@@ -5,7 +5,7 @@ import { useScreenSize } from '@/context/screen-size-provider';
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const screenSize = useScreenSize();
-  const { options, state, onChange, disabled = false, canEdit } = props;
+  const { options, state, onChange, disabled = false } = props;
 
   return (
     <Stack direction="column" justifyContent="center" alignItems="center">
@@ -48,6 +48,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           onChange={(e) => {
             const value = e.target.value as string;
             const option = options.find((option) => option.label === value);
+
             if (!option) return;
 
             const values = option.values
