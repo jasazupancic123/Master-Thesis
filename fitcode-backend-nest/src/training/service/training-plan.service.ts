@@ -20,15 +20,25 @@ import { ComponentService } from '../../component/component.service';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
+  VOL_WORK_SET_OPTIONS,
 } from '../../component/constant/param.constant';
 import { ComponentParam } from '../../component/entity/component-param.entity';
 import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import {
+  IntType,
+  ParamType,
+  VolWorkSetType,
+} from '../../component/enum/param.enum';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { AttributeService } from '../../attribute/service/attribute.service';
 
 @Injectable()
 export class TrainingPlanService {
   constructor(
+    private readonly attributeService: AttributeService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
     @Inject(forwardRef(() => ExerciseService))
@@ -143,7 +153,7 @@ export class TrainingPlanService {
       );
   }
 
-  populateExerciseParams(
+  populateTrainingExerciseParams(
     trainingComponents: TrainingComponent[],
     components: Component[],
     exercises: Exercise[], // populate exercise attributes
@@ -159,11 +169,14 @@ export class TrainingPlanService {
           const exercise = exercises.find((e) => e.id === tExercise.id)!;
           if (!exercise) continue;
 
-          tExercise.params = this.getComponentParamAttributes(
+          const params = this.getComponentParamAttributes(
             componentParams,
             exercise.attributeValues,
             attributes,
           );
+
+          tExercise.params = this.getParamAttributes(params);
+          tExercise.sets = this.getSetData(tExercise.params);
         }
 
       for (const subgroup of tComponent.subgroups)
@@ -172,11 +185,14 @@ export class TrainingPlanService {
             const exercise = exercises.find((e) => e.id === tExercise.id)!;
             if (!exercise) continue;
 
-            tExercise.params = this.getComponentParamAttributes(
+            const params = this.getComponentParamAttributes(
               componentParams,
               exercise.attributeValues,
               attributes,
             );
+
+            tExercise.params = this.getParamAttributes(params);
+            tExercise.sets = this.getSetData(tExercise.params);
           }
     }
   }
@@ -224,11 +240,55 @@ export class TrainingPlanService {
     }
   }
 
+  getSetData(
+    params: Attribute[],
+    paramValues?: AttributeValue[],
+  ): ExerciseSet[] {
+    const sets = +(
+      params
+        .find((p) => p.field === ParamType.VolWorkSets)
+        ?.options?.find((o) => o.field === VolWorkSetType.Set)?.defaultValue ??
+      1
+    );
+
+    params = params.filter((p) => p.field !== ParamType.VolWorkSets);
+
+    return Array.from({ length: sets }).map((_, i) => ({
+      setNumber: i + 1,
+      paramValues: this.getTrainingExerciseParamValues(params, paramValues),
+    }));
+  }
+
+  getParamAttributes(componentParams: ComponentParam[]) {
+    const selectedAttributes: Attribute[] = [];
+    for (const param of componentParams) {
+      const attribute = PARAMS.find((a) => a.field === param.field);
+      if (!attribute) continue;
+
+      const options: Attribute[] = [];
+      if (attribute.options) {
+        // if hardcoded param has options, but component param does not, select all options by default
+        const paramOptions = !param.options ? attribute.options : param.options;
+        options.push(
+          ...this.mapOptionsRecursively(paramOptions, attribute.options),
+        );
+      }
+
+      selectedAttributes.push({
+        ...attribute,
+        options,
+        defaultValue: param.defaultValue || attribute.defaultValue,
+      });
+    }
+
+    return selectedAttributes;
+  }
+
   getComponentParamAttributes(
     params: { [condition: string]: ComponentParam[] },
     attributeValues: ExerciseAttributeValue[],
     attributes: Attribute[],
-  ): Attribute[] {
+  ): ComponentParam[] {
     let componentParams: ComponentParam[] = params[DEFAULT_PARAMS_KEY] || [];
 
     for (const condition of Object.keys(params)) {
@@ -333,30 +393,93 @@ export class TrainingPlanService {
       }
     }
 
-    const selectedAttributes: Attribute[] = [];
-    for (const param of componentParams) {
-      const attribute = PARAMS.find((a) => a.field === param.field);
-      if (!attribute) continue;
-
-      const options: Attribute[] = [];
-      if (attribute.options) {
-        // if hardcoded param has options, but component param does not, select all options by default
-        const paramOptions = !param.options ? attribute.options : param.options;
-        options.push(
-          ...this.mapOptionsRecursively(paramOptions, attribute.options),
-        );
-      }
-
-      selectedAttributes.push({
-        ...attribute,
-        options,
-        defaultValue: param.defaultValue,
-      });
-    }
-
-    return selectedAttributes;
+    return componentParams;
   }
 
+  /**
+   * Populates param values data for training exercise. If no param values are provided, it
+   * takes default values from params.
+   *
+   * @example
+   * ```ts
+   * const params = [
+   *  {
+   *     field: 'field',
+   *     type: 'select',
+   *     defaultValue: 'opt-2',
+   *     options: [
+   *       {
+   *         field: 'opt-1',
+   *         type: 'value',
+   *         defaultValue: 'opt-1',
+   *       },
+   *       {
+   *         field: 'opt-2',
+   *         type: 'value',
+   *         defaultValue: 'opt-2',
+   *       },
+   *     ]
+   *   },
+   *   {
+   *     field: 'str',
+   *     type: 'string',
+   *     defaultValue: 'example',
+   *   }
+   * ]
+   *
+   * const paramValues = [
+   *   {
+   *     field: 'str',
+   *     selected: 'str',
+   *     value: 'test'
+   *   }
+   * ]
+   *
+   * const values = getTrainingExerciseParamValues(params, paramValues)
+   * => [
+   *   {
+   *     field: 'field',
+   *     selected: 'opt-2',
+   *     value: 'opt-2'
+   *   },
+   *   {
+   *     field: 'str',
+   *     selected: 'str',
+   *     value: 'test'
+   *   },
+   * ]
+   * ```
+   */
+  private getTrainingExerciseParamValues(
+    params: Attribute[],
+    paramValues?: AttributeValue[],
+  ) {
+    const values: AttributeValue[] = [];
+
+    for (const param of params) {
+      const { selected, value } = this.populateDefaultSelectedValue(param);
+      const providedParamValue = paramValues?.find(
+        (v) => v.field === param.field,
+      );
+
+      values.push(
+        providedParamValue
+          ? providedParamValue
+          : { field: param.field, selected, value },
+      );
+    }
+
+    return this.attributeService.validate(values, params);
+  }
+
+  /**
+   * `ComponentParam` is a partial attribute, which enables
+   * selecting different sub-parameters for different exercises
+   * from hardcoded parameters. For example, hardcoded volumen
+   * options are rep, time and distance, and by using `ComponentParam`,
+   * we can choose only a subset of those options, and this applies
+   * for nested options also.
+   */
   private mapOptionsRecursively(
     paramOptions: ComponentParam[],
     attributeOptions: Attribute[],
@@ -384,10 +507,115 @@ export class TrainingPlanService {
       mappedOptions.push({
         ...attributeOption,
         options: nestedOptions,
-        defaultValue: paramOption.defaultValue,
+        defaultValue: paramOption.defaultValue || attributeOption.defaultValue,
       });
     }
 
     return mappedOptions;
+  }
+
+  /**
+   * Populates default selected value and attribute value based on whether defaultValue
+   * is provided, else it selects the first possible option in options array.
+   *
+   * @example
+   * ```ts
+   * const param = {
+   *   field: 'field',
+   *   type: 'select',
+   *   defaultValue: 'opt-2',
+   *   options: [
+   *     {
+   *       field: 'opt-1',
+   *       type: 'value',
+   *       defaultValue: 'opt-1',
+   *     },
+   *     {
+   *       field: 'opt-2',
+   *       type: 'value',
+   *       defaultValue: 'opt-2',
+   *     },
+   *   ]
+   * }
+   *
+   * const result = populateDefaultSelectedAndValue(param)
+   * => {
+   *   field: 'field',
+   *   selected: 'opt-2',
+   *   value: 'opt-2'
+   * }
+   * ```
+   *
+   * @example
+   * ```ts
+   * const param = {
+   *   field: 'field',
+   *   type: 'select',
+   *   options: [
+   *     {
+   *       field: 'opt-1',
+   *       type: 'value',
+   *     },
+   *     {
+   *       field: 'opt-2',
+   *       type: 'value',
+   *     },
+   *   ]
+   * }
+   *
+   * const result = populateDefaultSelectedAndValue(param)
+   * => {
+   *   field: 'field',
+   *   selected: 'opt-1',
+   *   value: 'opt-1'
+   * }
+   * ```
+   */
+  private populateDefaultSelectedValue(param: Attribute): {
+    selected: string;
+    value: string;
+  } {
+    if (
+      param.type !== AttributeType.Select &&
+      param.type !== AttributeType.Multiselect
+    ) {
+      return {
+        selected: '',
+        value: param.defaultValue || '',
+      };
+    }
+
+    let selectedPath = '';
+    let currentOptions = param.options || [];
+    let currentAttribute = param;
+    let value = '';
+
+    while (currentOptions && currentOptions.length > 0) {
+      let selectedOption: Attribute;
+
+      if (currentAttribute.defaultValue) {
+        selectedOption =
+          currentOptions.find(
+            (opt) => opt.field === currentAttribute.defaultValue,
+          ) || currentOptions[0];
+      } else selectedOption = currentOptions[0];
+
+      selectedPath = selectedPath
+        ? `${selectedPath}:${selectedOption.field}`
+        : selectedOption.field;
+
+      if (!selectedOption.options || selectedOption.options.length === 0) {
+        value = selectedOption.defaultValue || '';
+        break;
+      }
+
+      currentAttribute = selectedOption;
+      currentOptions = selectedOption.options;
+    }
+
+    return {
+      selected: selectedPath,
+      value: value,
+    };
   }
 }

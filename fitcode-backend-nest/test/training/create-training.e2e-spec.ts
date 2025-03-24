@@ -64,6 +64,7 @@ describe('Create Training (e2e)', () => {
   });
 
   afterAll(async () => {
+    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     await firebaseService.deleteCollection(FirestoreCollection.GROUP);
     await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     await app.close();
