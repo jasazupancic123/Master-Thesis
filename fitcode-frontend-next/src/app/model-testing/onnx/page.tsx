@@ -11,7 +11,6 @@ import {
   InputLabel,
   Button,
 } from '@mui/material';
-import { backend } from '@tensorflow/tfjs';
 import toast from 'react-hot-toast';
 
 const MODEL_WIDTH = 192;
@@ -24,10 +23,7 @@ export default function RTMPoseFinal() {
   const [session, setSession] = useState<any>(null);
   const [selectedModel, setSelectedModel] = useState<
     'rtmpose-t' | 'mobilenetv2'
-  >(
-    (localStorage.getItem('selectedModel') as 'rtmpose-t' | 'mobilenetv2') ||
-      'rtmpose-t'
-  );
+  >('rtmpose-t');
   const [modelPath, setModelPath] = useState<string | null>(null);
   const [keypointsNum, setKeypointsNum] = useState<number>();
   const [confThreshold, setConfThreshold] = useState(0.5);
@@ -51,6 +47,11 @@ export default function RTMPoseFinal() {
       setKeypointsNum(17);
     }
   }, [selectedModel]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('selectedModel');
+    if (stored) setSelectedModel(stored as 'rtmpose-t' | 'mobilenetv2');
+  }, []);
 
   useEffect(() => {
     confThresholdRef.current = confThreshold;
