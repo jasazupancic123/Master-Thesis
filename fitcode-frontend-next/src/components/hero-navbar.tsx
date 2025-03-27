@@ -18,6 +18,7 @@ import {
   Divider,
   Drawer,
   MenuItem,
+  Select,
   Toolbar,
 } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
@@ -108,6 +109,32 @@ export default function HeroNavbar({ showLogin = true }) {
                     </Typography>
                   </MenuItem>
                 ))}
+                <MenuItem>
+                  <Select
+                    variant="standard"
+                    displayEmpty
+                    value=""
+                    onChange={(e) => {
+                      router.push(`/model-testing/${e.target.value}`);
+                    }}
+                    sx={{
+                      maxHeight: 40,
+                      '&::before': {
+                        border: 'none',
+                      },
+                      '& .MuiSelect-nativeInput': {
+                        border: 'none',
+                        padding: 0,
+                      },
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Test models
+                    </MenuItem>
+                    <MenuItem value="onnx">onnx</MenuItem>
+                    <MenuItem value="tfjs">tfjs</MenuItem>
+                  </Select>
+                </MenuItem>
               </Box>
             </Box>
 
@@ -169,6 +196,32 @@ export default function HeroNavbar({ showLogin = true }) {
                       </Typography>
                     </MenuItem>
                   ))}
+                  <MenuItem>
+                    <Select
+                      variant="standard"
+                      displayEmpty
+                      value=""
+                      onChange={(e) => {
+                        router.push(`/model-testing/${e.target.value}`);
+                      }}
+                      sx={{
+                        maxHeight: 40,
+                        '&::before': {
+                          border: 'none',
+                        },
+                        '& .MuiSelect-nativeInput': {
+                          border: 'none',
+                          padding: 0,
+                        },
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Test models
+                      </MenuItem>
+                      <MenuItem value="onnx">onnx</MenuItem>
+                      <MenuItem value="tfjs">tfjs</MenuItem>
+                    </Select>
+                  </MenuItem>
 
                   <Divider />
 
