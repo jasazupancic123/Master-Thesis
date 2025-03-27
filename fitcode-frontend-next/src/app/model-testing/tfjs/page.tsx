@@ -41,15 +41,17 @@ export default function RTMPoseTFJS() {
   const [keypointsNum, setKeypointsNum] = useState<number>();
   const [selectedModel, setSelectedModel] = useState<
     'rtmpose-t' | 'mobilenetv2'
-  >(
-    (localStorage.getItem('selectedModel') as 'rtmpose-t' | 'mobilenetv2') ||
-      'rtmpose-t'
-  );
+  >('rtmpose-t');
 
   // FPS tracking
   const frameCount = useRef(0);
   const startTime = useRef(performance.now());
   const avgFpsRef = useRef(0);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('selectedModel');
+    if (stored) setSelectedModel(stored as 'rtmpose-t' | 'mobilenetv2');
+  }, []);
 
   useEffect(() => {
     if (selectedModel === 'rtmpose-t') {
