@@ -1,28 +1,30 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import * as ort from 'onnxruntime-web';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-webgl';
 
 const MODEL_WIDTH = 192;
 const MODEL_HEIGHT = 256;
 const CONF_THRESHOLD = 0.5;
-const EDGE_THRESHOLD = 10; //to remove points on edges, sometimes they get approximated to the edges, which is innacurate
-const modelPath = '/models/rtmpose/rtmpose-t_body8-halpe26_700e-256x192.onnx';
+const EDGE_THRESHOLD = 10;
+const modelPath = '/models/rtmpose/rtmpose_tfjs/model.json';
 
-export default function RTMPoseFinal() {
+export default function RTMPoseTFJS() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [session, setSession] = useState<any>(null);
+  const [model, setModel] = useState<any>(null);
 
-  // FPS tracking
   const frameCount = useRef(0);
   const startTime = useRef(performance.now());
   const avgFpsRef = useRef(0);
 
   useEffect(() => {
     const init = async () => {
-      const sess = await ort.InferenceSession.create(modelPath);
-      setSession(sess);
+      await tf.setBackend('webgl');
+      await tf.ready();
+      const loadedModel = await tf.loadGraphModel(modelPath);
+      setModel(loadedModel);
 
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
@@ -47,17 +49,20 @@ export default function RTMPoseFinal() {
         const g = data[idx + 1];
         const b = data[idx + 2];
 
-        input[0 * MODEL_HEIGHT * MODEL_WIDTH + y * MODEL_WIDTH + x] = (r - mean[0]) / std[0];
-        input[1 * MODEL_HEIGHT * MODEL_WIDTH + y * MODEL_WIDTH + x] = (g - mean[1]) / std[1];
-        input[2 * MODEL_HEIGHT * MODEL_WIDTH + y * MODEL_WIDTH + x] = (b - mean[2]) / std[2];
+        input[0 * MODEL_HEIGHT * MODEL_WIDTH + y * MODEL_WIDTH + x] =
+          (r - mean[0]) / std[0];
+        input[1 * MODEL_HEIGHT * MODEL_WIDTH + y * MODEL_WIDTH + x] =
+          (g - mean[1]) / std[1];
+        input[2 * MODEL_HEIGHT * MODEL_WIDTH + y * MODEL_WIDTH + x] =
+          (b - mean[2]) / std[2];
       }
     }
 
-    return new ort.Tensor('float32', input, [1, 3, MODEL_HEIGHT, MODEL_WIDTH]);
+    return tf.tensor(input, [1, 3, MODEL_HEIGHT, MODEL_WIDTH]);
   };
 
   const runInference = async () => {
-    if (!session || !videoRef.current || !canvasRef.current) return;
+    if (!model || !videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -77,25 +82,24 @@ export default function RTMPoseFinal() {
 
     octx.drawImage(video, 0, 0, MODEL_WIDTH, MODEL_HEIGHT);
     const imageData = octx.getImageData(0, 0, MODEL_WIDTH, MODEL_HEIGHT);
-    const tensor = preprocess(imageData);
+    const inputTensor = preprocess(imageData);
 
-    const output = await session.run({ input: tensor });
-    const [xName, yName] = session.outputNames;
-    const xSimCC = output[xName].data as Float32Array;
-    const ySimCC = output[yName].data as Float32Array;
+    const output = await model.executeAsync({ input: inputTensor });
+    const [ySimCC, xSimCC] = output;
+    const xData = xSimCC.dataSync();
+    const yData = ySimCC.dataSync();
 
-    const keypoints: { x: number; y: number; conf: number }[] = [];
-
+    const keypoints = [];
     for (let i = 0; i < 26; i++) {
-      const xStart = i * 384;
-      const xSlice = xSimCC.slice(xStart, xStart + 384);
-      const xIdx = xSlice.indexOf(Math.max(...xSlice));
-      const x = (xIdx / 384) * MODEL_WIDTH;
-
       const yStart = i * 512;
-      const ySlice = ySimCC.slice(yStart, yStart + 512);
+      const ySlice = yData.slice(yStart, yStart + 512);
       const yIdx = ySlice.indexOf(Math.max(...ySlice));
       const y = (yIdx / 512) * MODEL_HEIGHT;
+
+      const xStart = i * 384;
+      const xSlice = xData.slice(xStart, xStart + 384);
+      const xIdx = xSlice.indexOf(Math.max(...xSlice));
+      const x = (xIdx / 384) * MODEL_WIDTH;
 
       const conf = Math.max(xSlice[xIdx], ySlice[yIdx]);
 
@@ -104,35 +108,60 @@ export default function RTMPoseFinal() {
 
       if (
         conf > CONF_THRESHOLD &&
-        scaledX > EDGE_THRESHOLD && scaledX < vw - EDGE_THRESHOLD &&
-        scaledY > EDGE_THRESHOLD && scaledY < vh - EDGE_THRESHOLD
+        scaledX > EDGE_THRESHOLD &&
+        scaledX < vw - EDGE_THRESHOLD &&
+        scaledY > EDGE_THRESHOLD &&
+        scaledY < vh - EDGE_THRESHOLD
       ) {
         keypoints.push({ x: scaledX, y: scaledY, conf });
       }
     }
 
-    // FPS calculation
+    // const [xSimCC, ySimCC] = output;
+    // const xData = xSimCC.dataSync();
+    // const yData = ySimCC.dataSync();
+
+    // const keypoints = [];
+    // for (let i = 0; i < 26; i++) {
+    //   const xStart = i * 384;
+    //   const xSlice = xData.slice(xStart, xStart + 384);
+    //   const xIdx = xSlice.indexOf(Math.max(...xSlice));
+    //   const x = (xIdx / 384) * MODEL_WIDTH;
+
+    //   const yStart = i * 512;
+    //   const ySlice = yData.slice(yStart, yStart + 512);
+    //   const yIdx = ySlice.indexOf(Math.max(...ySlice));
+    //   const y = (yIdx / 512) * MODEL_HEIGHT;
+
+    //   const conf = Math.max(xSlice[xIdx], ySlice[yIdx]);
+    //   const scaledX = (x / MODEL_WIDTH) * vw;
+    //   const scaledY = (y / MODEL_HEIGHT) * vh;
+
+    //   if (
+    //     conf > CONF_THRESHOLD &&
+    //     scaledX > EDGE_THRESHOLD && scaledX < vw - EDGE_THRESHOLD &&
+    //     scaledY > EDGE_THRESHOLD && scaledY < vh - EDGE_THRESHOLD
+    //   ) {
+    //     keypoints.push({ x: scaledX, y: scaledY, conf });
+    //   }
+    // }
+
     frameCount.current += 1;
-    const elapsed = (performance.now() - startTime.current) / 1000; // in seconds
+    const elapsed = (performance.now() - startTime.current) / 1000;
     const currentFps = frameCount.current / elapsed;
+    avgFpsRef.current =
+      (avgFpsRef.current * (frameCount.current - 1) + currentFps) /
+      frameCount.current;
 
-    // Update running average manually
-    avgFpsRef.current = (avgFpsRef.current * (frameCount.current - 1) + currentFps) / frameCount.current;
-
-    // Draw keypoints and FPS
     ctx.clearRect(0, 0, vw, vh);
     ctx.drawImage(video, 0, 0, vw, vh);
     ctx.fillStyle = 'lime';
-
     for (const kp of keypoints) {
-      if (kp.conf > CONF_THRESHOLD) {
-        ctx.beginPath();
-        ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI);
-        ctx.fill();
-      }
+      ctx.beginPath();
+      ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI);
+      ctx.fill();
     }
 
-    // Draw FPS text
     ctx.fillStyle = 'white';
     ctx.font = '16px Arial';
     ctx.shadowColor = 'black';
@@ -149,9 +178,8 @@ export default function RTMPoseFinal() {
       animationFrameId = requestAnimationFrame(loop);
     };
     loop();
-
     return () => cancelAnimationFrame(animationFrameId);
-  }, [session]);
+  }, [model]);
 
   return (
     <div className="flex flex-col items-center">
