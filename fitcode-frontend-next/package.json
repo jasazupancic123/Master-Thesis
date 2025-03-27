@@ -25,6 +25,8 @@
     "@mui/x-date-pickers": "^7.26.0",
     "@mui/x-tree-view": "^7.26.0",
     "@tailwindcss/postcss": "^4.0.6",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "firebase": "^11.3.0",
