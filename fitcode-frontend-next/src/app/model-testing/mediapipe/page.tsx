@@ -49,12 +49,13 @@ export default function Mediapipe() {
       let modelPath;
       if (selectedModel === 'lite') {
         modelPath = '/models/pose_landmarker/pose_landmarker_lite.task';
-      }
-      if (selectedModel === 'full') {
+      } else if (selectedModel === 'full') {
         modelPath = '/models/pose_landmarker/pose_landmarker_full.task';
-      }
-      if (selectedModel === 'heavy') {
+      } else if (selectedModel === 'heavy') {
         modelPath = '/models/pose_landmarker/pose_landmarker_heavy.task';
+      } else {
+        alert('Invalid model selected: ' + selectedModel);
+        return;
       }
       const vision = await FilesetResolver.forVisionTasks('/wasm');
       const landmarker = await PoseLandmarker.createFromOptions(vision, {
