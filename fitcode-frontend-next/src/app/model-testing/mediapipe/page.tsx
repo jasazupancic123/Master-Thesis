@@ -38,6 +38,9 @@ export default function Mediapipe() {
   const [selectedModel, setSelectedModel] = useState('');
 
   useEffect(() => {
+    if (canvasRef.current) {
+      canvasCtxRef.current = canvasRef.current.getContext('2d');
+    }
     setSelectedModel(localStorage.getItem('selectedModelMediapipe') || 'lite');
   }, []);
 
@@ -67,13 +70,7 @@ export default function Mediapipe() {
     };
 
     loadModel();
-  }, []);
-
-  useEffect(() => {
-    if (canvasRef.current) {
-      canvasCtxRef.current = canvasRef.current.getContext('2d');
-    }
-  }, []);
+  }, [selectedModel]);
 
   const enableCam = async () => {
     if (!poseLandmarker) {
