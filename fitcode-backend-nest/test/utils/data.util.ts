@@ -1,15 +1,9 @@
 import { generateGroupStub } from '../../src/group/mock/group.stub';
 import { GroupService } from '../../src/group/group.service';
-import {
-  subWeeks,
-  startOfWeek,
-  endOfWeek,
-  addWeeks,
-  addDays,
-  subDays,
-} from 'date-fns';
+import { addWeeks, addDays, subDays, setMinutes, setHours } from 'date-fns';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { TestUser } from '../type/auth.type';
+import dayjs from 'dayjs';
 
 /**
  * Creates a group and 3 cycles, one for the past week, one for the current week
@@ -47,4 +41,8 @@ export async function createGroupWithCycles(
 
   group = await groupService.update(trainer, { groupId: group.id }, { cycles });
   return group;
+}
+
+export function getTime(date: Date, hours: number, minutes = 0) {
+  return setMinutes(setHours(date, hours), minutes);
 }

@@ -64,9 +64,9 @@ export type TrainingRef = { trainingId: string };
 export type SubgroupRef = TrainingRef & { subgroupId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
 export type TrainingSupersetRef = TrainingComponentRef & { superset: number };
-export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
-export type UserWorkloadRef = TrainingComponentRef & {
-  userId: string;
-} & ExerciseRef;
-export type UserWorkloadExerciseRef = UserWorkloadRef & ExerciseRef;
+export type TrainingExerciseRef = Omit<
+  TrainingSupersetRef & ExerciseRef,
+  'superset'
+>;
+export type WorkloadRef = TrainingExerciseRef & { userId: string };
 export type TrainingStatusRef = TrainingComponentRef & { userId: string };

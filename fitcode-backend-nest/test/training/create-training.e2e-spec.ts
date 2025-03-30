@@ -21,13 +21,15 @@ import {
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { UserService } from '../../src/user/user.service';
-import { createGroupWithCycles } from '../utils/data.util';
+import { createGroupWithCycles, getTime } from '../utils/data.util';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
+  VOL_OPTIONS,
 } from '../../src/component/constant/param.constant';
-import { ParamType } from '../../src/component/enum/param.enum';
+import { ParamType, VolType } from '../../src/component/enum/param.enum';
 import { TrainingComponent } from '../../src/training/entity/training-component.entity';
+import { UserWorkloadService } from '../../src/training/service/user-workload.service';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
@@ -37,6 +39,7 @@ describe('Create Training (e2e)', () => {
   let trainingService: TrainingService;
   let groupService: GroupService;
   let userService: UserService;
+  let workloadService: UserWorkloadService;
 
   let group: Group;
   let component: Component;
@@ -55,12 +58,19 @@ describe('Create Training (e2e)', () => {
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     userService = moduleFixture.get(UserService);
+    workloadService = moduleFixture.get(UserWorkloadService);
 
     component = await componentService.create(generateComponentStub());
     group = await createGroupWithCycles(groupService, {
       owner: trainer,
       membersIds: [athlete.uid],
     });
+  });
+
+  beforeEach(async () => {
+    await firebaseService.deleteCollection(
+      FirestoreCollection.TRAINING_WORKLOAD,
+    );
   });
 
   afterAll(async () => {
@@ -97,10 +107,28 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(`Cycle does not exist`);
     });
 
+    it('should fail to create new training if training does not have atleast one component', async () => {
+      const training = generateTrainingStub({
+        groupId: group.id,
+        cycleId: group.cycles[0].id,
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/training')
+        .set('Authorization', `Bearer ${athlete.token}`)
+        .send(training);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'Training must have atleast one component',
+      );
+    });
+
     it('should fail to create new training if user is not owner of the group', async () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[0].id,
+        components: [generateTrainingComponent()],
       });
 
       const response = await request(app.getHttpServer())
@@ -118,8 +146,12 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[0].id,
-        from: addDays(new Date(), 100),
-        to: addDays(new Date(), 101),
+        components: [
+          generateTrainingComponent({
+            from: addDays(new Date(), 100),
+            to: addDays(new Date(), 101),
+          }),
+        ],
       });
 
       const response = await request(app.getHttpServer())
@@ -137,8 +169,12 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[0].id,
-        from: subDays(new Date(), 2),
-        to: subDays(new Date(), 2),
+        components: [
+          generateTrainingComponent({
+            from: subDays(new Date(), 2),
+            to: subDays(new Date(), 2),
+          }),
+        ],
       });
 
       const response = await request(app.getHttpServer())
@@ -153,20 +189,24 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to create new training if it exceeds daily training limit', async () => {
-      const from = addDays(new Date(), 2);
+      const from = getTime(addDays(new Date(), 2), 8, 0);
       const trainings = [
         generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
-          components: [generateTrainingComponent({ id: component.id })],
-          from: addHours(from, 1),
-          to: addHours(from, 1),
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              from: addHours(from, 0),
+              to: addHours(from, 1),
+            }),
+          ],
         }),
         generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [generateTrainingComponent({ id: component.id })],
-          from: addHours(from, 2),
+          from: addHours(from, 1),
           to: addHours(from, 2),
         }),
       ];
@@ -178,9 +218,13 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
-        components: [generateTrainingComponent({ id: component.id })],
-        from: addHours(from, 3),
-        to: addHours(from, 3),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            from: addHours(from, 2),
+            to: addHours(from, 3),
+          }),
+        ],
       });
 
       const response = await request(app.getHttpServer())
@@ -197,14 +241,18 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to create new training there is an overlap with other trainings', async () => {
-      const from = addDays(new Date(), 2);
+      const from = getTime(addDays(new Date(), 2), 8, 0);
       const trainings = [
         generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
-          components: [generateTrainingComponent({ id: component.id })],
-          from,
-          to: from,
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              from,
+              to: addHours(from, 1),
+            }),
+          ],
         }),
       ];
 
@@ -234,12 +282,21 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to create new training if training has invalid training component', async () => {
+      const from = getTime(addDays(new Date(), 2), 8, 0);
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
-          generateTrainingComponent({ id: 'invalid-component-id' }),
-          generateTrainingComponent({ id: component.id }),
+          generateTrainingComponent({
+            id: 'invalid-component-id',
+            from,
+            to: addHours(from, 1),
+          }),
+          generateTrainingComponent({
+            id: component.id,
+            from: addHours(from, 1),
+            to: addHours(from, 2),
+          }),
         ],
       });
 
@@ -267,27 +324,33 @@ describe('Create Training (e2e)', () => {
         components: [
           generateTrainingComponent({
             id: component.id,
-            from: addHours(new Date(), 1),
+            from: getTime(addDays(new Date(), 2), 8, 0),
+            to: getTime(addDays(new Date(), 2), 8, 30),
           }),
           generateTrainingComponent({
             id: components[0].id,
-            from: addHours(new Date(), 2),
+            from: getTime(addDays(new Date(), 2), 8, 30),
+            to: getTime(addDays(new Date(), 2), 9, 0),
           }),
           generateTrainingComponent({
             id: components[1].id,
-            from: addHours(new Date(), 3),
+            from: getTime(addDays(new Date(), 2), 9, 0),
+            to: getTime(addDays(new Date(), 2), 9, 30),
           }),
           generateTrainingComponent({
             id: components[2].id,
-            from: addHours(new Date(), 4),
+            from: getTime(addDays(new Date(), 2), 9, 30),
+            to: getTime(addDays(new Date(), 2), 10, 0),
           }),
           generateTrainingComponent({
             id: components[3].id,
-            from: addHours(new Date(), 5),
+            from: getTime(addDays(new Date(), 2), 10, 0),
+            to: getTime(addDays(new Date(), 2), 10, 30),
           }),
           generateTrainingComponent({
             id: components[4].id,
-            from: addHours(new Date(), 6),
+            from: getTime(addDays(new Date(), 2), 10, 30),
+            to: getTime(addDays(new Date(), 2), 11, 0),
           }),
         ],
       });
@@ -334,11 +397,13 @@ describe('Create Training (e2e)', () => {
         components: [
           generateTrainingComponent({
             id: component.id,
-            from: addHours(new Date(), 1),
+            from: getTime(addDays(new Date(), 2), 8, 0),
+            to: getTime(addDays(new Date(), 2), 8, 30),
           }),
           generateTrainingComponent({
             id: component.id,
-            from: addHours(new Date(), 2),
+            from: getTime(addDays(new Date(), 2), 9, 0),
+            to: getTime(addDays(new Date(), 2), 9, 30),
           }),
         ],
       });
@@ -367,14 +432,8 @@ describe('Create Training (e2e)', () => {
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
-          generateTrainingComponent({
-            id: components[0].id,
-            from: addHours(new Date(), 1),
-          }),
-          generateTrainingComponent({
-            id: components[1].id,
-            from: addHours(new Date(), 1),
-          }),
+          generateTrainingComponent({ id: components[0].id }),
+          generateTrainingComponent({ id: components[1].id }),
         ],
       });
 
@@ -539,7 +598,13 @@ describe('Create Training (e2e)', () => {
       const component = await componentService.create(
         generateComponentStub({
           params: {
-            [DEFAULT_PARAMS_KEY]: [{ field: ParamType.VolWorkSets }],
+            [DEFAULT_PARAMS_KEY]: [
+              { field: ParamType.VolWorkSets },
+              {
+                field: ParamType.VolWork1,
+                options: [{ field: VolType.Rep }, { field: VolType.Dist }],
+              },
+            ],
           },
         }),
       );
@@ -574,7 +639,10 @@ describe('Create Training (e2e)', () => {
             id: component.id,
             supersets: [
               generateSuperset({
-                exercises: [generateTrainingExercise({ id: exercises[0].id })],
+                exercises: [
+                  generateTrainingExercise({ id: exercises[0].id }),
+                  generateTrainingExercise({ id: exercises[1].id }),
+                ],
               }),
             ],
           }),
@@ -592,6 +660,10 @@ describe('Create Training (e2e)', () => {
       expect(response.body.ownerId).toBe(trainer.uid);
       expect(response.body.membersIds).toEqual([athlete.uid]);
       expect(response.body.components).toHaveLength(1);
+      expect(response.body.components[0].supersets).toHaveLength(1);
+      expect(response.body.components[0].supersets[0].exercises).toHaveLength(
+        2,
+      );
 
       // all training exercises should have correct component params
       const trainingExercises = (
@@ -601,6 +673,34 @@ describe('Create Training (e2e)', () => {
       for (const e of trainingExercises) {
         expect(e.params).toEqual([
           PARAMS.find((p) => p.field === ParamType.VolWorkSets),
+          {
+            ...PARAMS.find((p) => p.field === ParamType.VolWork1),
+            options: [
+              VOL_OPTIONS.find((o) => o.field === VolType.Rep),
+              VOL_OPTIONS.find((o) => o.field === VolType.Dist),
+            ],
+          },
+        ]);
+
+        expect(e.sets).toEqual([
+          {
+            setNumber: 1,
+            paramValues: [
+              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+            ],
+          },
+          {
+            setNumber: 2,
+            paramValues: [
+              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+            ],
+          },
+          {
+            setNumber: 3,
+            paramValues: [
+              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+            ],
+          },
         ]);
       }
 
@@ -609,6 +709,115 @@ describe('Create Training (e2e)', () => {
       expect(dbMember.trainersIds).toEqual([trainer.uid]);
 
       // it should create user workloads
+      const workloads = (
+        await workloadService.findAllByTraining(response.body.id)
+      ).sort((a, b) => {
+        const aIndex = exercises.findIndex((ex) => ex.id === a.exerciseId);
+        const bIndex = exercises.findIndex((ex) => ex.id === b.exerciseId);
+        if (aIndex !== bIndex) return aIndex - bIndex;
+        return a.setNumber - b.setNumber;
+      });
+
+      // 1 group member x 2 exercises x 3 sets each (default) = 6 workloads
+      expect(workloads).toHaveLength(6);
+      expect(workloads).toEqual([
+        {
+          userId: athlete.uid,
+          trainingId: response.body.id,
+          componentId: component.id,
+          exerciseId: exercises[0].id,
+          setNumber: 1,
+          notes: null,
+          volWork1Type: VolType.Rep,
+          prescribedVolWork1Value: 12,
+          volWork1Value: null,
+          volWork2Value: null,
+          intRecValue: null,
+          volRecValue: null,
+          intWork1Value: null,
+          intWork2Value: null,
+        },
+        {
+          userId: athlete.uid,
+          trainingId: response.body.id,
+          componentId: component.id,
+          exerciseId: exercises[0].id,
+          setNumber: 2,
+          notes: null,
+          volWork1Type: VolType.Rep,
+          prescribedVolWork1Value: 12,
+          volWork1Value: null,
+          volWork2Value: null,
+          intRecValue: null,
+          volRecValue: null,
+          intWork1Value: null,
+          intWork2Value: null,
+        },
+        {
+          userId: athlete.uid,
+          trainingId: response.body.id,
+          componentId: component.id,
+          exerciseId: exercises[0].id,
+          setNumber: 3,
+          notes: null,
+          volWork1Type: VolType.Rep,
+          prescribedVolWork1Value: 12,
+          volWork1Value: null,
+          volWork2Value: null,
+          intRecValue: null,
+          volRecValue: null,
+          intWork1Value: null,
+          intWork2Value: null,
+        },
+        {
+          userId: athlete.uid,
+          trainingId: response.body.id,
+          componentId: component.id,
+          exerciseId: exercises[1].id,
+          setNumber: 1,
+          notes: null,
+          volWork1Type: VolType.Rep,
+          prescribedVolWork1Value: 12,
+          volWork1Value: null,
+          volWork2Value: null,
+          intRecValue: null,
+          volRecValue: null,
+          intWork1Value: null,
+          intWork2Value: null,
+        },
+        {
+          userId: athlete.uid,
+          trainingId: response.body.id,
+          componentId: component.id,
+          exerciseId: exercises[1].id,
+          setNumber: 2,
+          notes: null,
+          volWork1Type: VolType.Rep,
+          prescribedVolWork1Value: 12,
+          volWork1Value: null,
+          volWork2Value: null,
+          intRecValue: null,
+          volRecValue: null,
+          intWork1Value: null,
+          intWork2Value: null,
+        },
+        {
+          userId: athlete.uid,
+          trainingId: response.body.id,
+          componentId: component.id,
+          exerciseId: exercises[1].id,
+          setNumber: 3,
+          notes: null,
+          volWork1Type: VolType.Rep,
+          prescribedVolWork1Value: 12,
+          volWork1Value: null,
+          volWork2Value: null,
+          intRecValue: null,
+          volRecValue: null,
+          intWork1Value: null,
+          intWork2Value: null,
+        },
+      ]);
     });
   });
 

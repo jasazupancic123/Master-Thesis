@@ -23,6 +23,15 @@ export class DateUtil {
     return isEqual(date, compare);
   }
 
+  doRangesOverlap(
+    range1Start: Date,
+    range1End: Date,
+    range2Start: Date,
+    range2End: Date,
+  ): boolean {
+    return isBefore(range1Start, range2End) && isAfter(range1End, range2Start);
+  }
+
   /**
    * Returns an array of weeks between the start and end date. Each week
    * contains an array of days (7 days in a week), from Monday to Sunday.
