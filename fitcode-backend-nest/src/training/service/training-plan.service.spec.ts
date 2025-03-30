@@ -31,7 +31,6 @@ import {
   generateTrainingExercise,
 } from '../mock/training.stub';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
-import { Attribute } from 'src/attribute/entity/attribute.entity';
 import { ComponentParam } from 'src/component/entity/component-param.entity';
 import { AttributeValue } from 'src/attribute/entity/attribute-value.entity';
 

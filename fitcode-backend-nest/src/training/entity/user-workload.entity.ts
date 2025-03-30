@@ -7,19 +7,17 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  Max,
   Min,
 } from 'class-validator';
-import { IsStringOrNumber } from '../../common/decorator/is-string-or-number.decorator';
 import { TimestampEntity } from '../../common/entity/timestamp.entity';
-import { SetStatus } from '../enum/set-status.enum';
+import { IntType, VolType } from '../../component/enum/param.enum';
 
 export class UserWorkload extends TimestampEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  userId: string; // also document id
+  userId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -41,62 +39,139 @@ export class UserWorkload extends TimestampEntity {
 
   @IsInt()
   @Min(1)
-  @Max(10)
   @ApiProperty()
   @Expose()
-  sets: number;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  setType: string;
-
-  @IsInt()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  prescribedSetTypeValue: number;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  workloadType: string;
-
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  @Expose()
-  prescribedWorkloadValue: number; // calculated value prescribed by trainer
-
-  @IsEnum(SetStatus)
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  status: SetStatus;
-
-  @IsInt()
-  @Min(1)
-  @Max(10)
-  @ApiProperty()
-  @Expose()
-  set: number; // current set number
-
-  @IsInt()
-  @Min(1)
-  @Expose()
-  setTypeValue: number; // actual user reps / distance / time / ... completed
-
-  @IsStringOrNumber()
-  @IsNotEmpty()
-  @Expose()
-  @Min(0)
-  workloadValue: string | number; // actual user kg completed
+  setNumber: number;
 
   @IsString()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
   notes?: string;
+
+  /* --------------- Vol Work 1 --------------- */
+  @IsEnum(VolType)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork1Type?: VolType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  prescribedVolWork1Value?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork1Value?: number;
+
+  /* --------------- Vol Work 2 --------------- */
+  @IsEnum(VolType)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork2Type?: VolType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  prescribedVolWork2Value?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork2Value?: number;
+
+  /* --------------- Vol Rec --------------- */
+  @IsEnum(VolType)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volRecType?: VolType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  prescribedVolRecValue?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volRecValue?: number;
+
+  /* --------------- Int Work 1 --------------- */
+  @IsEnum(IntType)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork1Type?: IntType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  prescribedIntWork1Value?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork1Value?: number;
+
+  /* --------------- Int Work 2 --------------- */
+  @IsEnum(IntType)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork2Type?: IntType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  prescribedIntWork2Value?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork2Value?: number;
+
+  /* --------------- Int Rec --------------- */
+  @IsEnum(IntType)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intRecType?: IntType;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  prescribedIntRecValue?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intRecValue?: number;
 }

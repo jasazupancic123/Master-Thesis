@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { Transaction, WriteBatch } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity } from '../../common/type/entity.type';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { WriteBatch } from 'firebase-admin/firestore';
+import { FirestoreEntity } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import {
@@ -13,10 +13,9 @@ import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
 import { UserWorkload } from '../entity/user-workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
-import { WorkloadType } from '../enum/workload-type.enum';
 import { TrainingStatusRepository } from '../repository/training-status.repository';
 import { UserWorkloadRepository } from '../repository/user-workload.repository';
-import { SetType } from '../enum/set-type.enum';
+import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
 
 @Injectable()
 export class UserWorkloadService {
@@ -50,7 +49,6 @@ export class UserWorkloadService {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('trainingId', '==', trainingId)
-      .where('status', '!=', SetStatus.NOT_STARTED)
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -65,7 +63,6 @@ export class UserWorkloadService {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)
-      .where('status', '!=', SetStatus.NOT_STARTED)
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -85,7 +82,7 @@ export class UserWorkloadService {
   ) {
     const batch = this.firebaseService.firestore.batch();
 
-    input.map(({ exerciseId }) => {
+    /* input.map(({ exerciseId }) => {
       // add user workload
       const docRef = this.userWorkloadRepository.doc({ ...ref, exerciseId });
       const query = this.firebaseService.buildUpdateQuery<UserWorkload>({
@@ -93,7 +90,7 @@ export class UserWorkloadService {
       });
 
       batch.update(docRef, query);
-    });
+    }); */
 
     // add training status doc
     const query = this.firebaseService.buildCreateQuery<TrainingStatus>(
@@ -118,7 +115,7 @@ export class UserWorkloadService {
    * correct training component exercise user data document.
    */
   createForTraining(
-    batch: WriteBatch | Transaction,
+    batch: WriteBatch,
     training: Training,
     workloads: UserWorkload[], // to calculate RMs
   ) {
@@ -164,94 +161,111 @@ export class UserWorkloadService {
       const { exercises, bodyweight, history } = membersMap[userId];
 
       for (const exercise of exercises) {
-        /* const { workloadType, workloadValue, set, setType, setTypeValue } =
-          exercise.params; */
-
-        const workloadType = WorkloadType.BW;
-        const workloadValue = 0;
-        const set = 0;
-        const setType = SetType.REPS;
-        const setTypeValue = 0;
-
         const workloads = history // filter workload history for selected user and exercise
           .filter((e) => e.exerciseId === exercise.id);
 
-        const calculatedWorkloadValue = this.calculateWorkloadValue(
-          workloadType,
-          workloadValue,
-          bodyweight,
-          workloads,
-        );
+        for (const { setNumber, paramValues } of exercise.sets) {
+          const docRef = this.userWorkloadRepository
+            .collection({ trainingId: training.id })
+            .doc();
 
-        const data: Create<UserWorkload>[] = Array.from({ length: set }).map(
-          (_, setNumber) => ({
+          const volWork1 = paramValues.find(
+            (p) => p.field === ParamType.VolWork1,
+          );
+          const volWork2 = paramValues.find(
+            (p) => p.field === ParamType.VolWork2,
+          );
+          const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
+          const intWork1 = paramValues.find(
+            (p) => p.field === ParamType.IntWork1,
+          );
+          const intWork2 = paramValues.find(
+            (p) => p.field === ParamType.IntWork2,
+          );
+          const intRec = paramValues.find((p) => p.field === ParamType.IntRec1);
+
+          const query = this.firebaseService.buildCreateQuery<UserWorkload>({
             userId,
             trainingId: training.id,
             componentId: exercise.componentId,
             exerciseId: exercise.id,
-            sets: set,
-            setType,
-            prescribedSetTypeValue: setTypeValue,
-            workloadType,
-            prescribedWorkloadValue: calculatedWorkloadValue,
-            status: SetStatus.NOT_STARTED,
-            set: setNumber + 1,
-            setTypeValue: 0,
-            workloadValue: 0,
+            setNumber,
             notes: null,
-          }),
-        );
+            volWork1Type: (volWork1?.selected as VolType) || undefined,
+            prescribedVolWork1Value: +volWork1?.value || undefined,
+            volWork1Value: null,
+            volWork2Type: (volWork2?.selected as VolType) || undefined,
+            prescribedVolWork2Value: +volWork2?.value || undefined,
+            volWork2Value: null,
+            volRecType: (volRec?.selected as VolType) || undefined,
+            prescribedVolRecValue: +volRec?.value || undefined,
+            volRecValue: null,
+            intWork1Type: (intWork1?.selected as IntType) || undefined,
+            prescribedIntWork1Value:
+              intWork1?.selected === IntType.Rm
+                ? this.calculateRM(+intWork1.value, workloads)
+                : intWork1?.selected === IntType.Bw
+                  ? bodyweight *
+                    this.commonService.number.percent(+intWork1.value)
+                  : [IntType.Mas, IntType.Hrmax].includes(
+                        intWork1?.selected as IntType,
+                      )
+                    ? this.commonService.number.percent(+intWork1.value)
+                    : isNaN(+intWork1?.value)
+                      ? undefined
+                      : +intWork1.value,
+            intWork1Value: null,
+            intWork2Type: (intWork2?.selected as IntType) || undefined,
+            prescribedIntWork2Value:
+              intWork2?.selected === IntType.Rm
+                ? this.calculateRM(+intWork2.value, workloads)
+                : intWork2?.selected === IntType.Bw
+                  ? bodyweight *
+                    this.commonService.number.percent(+intWork2.value)
+                  : [IntType.Mas, IntType.Hrmax].includes(
+                        intWork2?.selected as IntType,
+                      )
+                    ? this.commonService.number.percent(+intWork2.value)
+                    : isNaN(+intWork2?.value)
+                      ? undefined
+                      : +intWork2.value,
+            intWork2Value: null,
+            intRecType: (intRec?.selected as IntType) || undefined,
+            prescribedIntRecValue: +intRec?.value || undefined,
+            intRecValue: null,
+          });
 
-        const docRef = this.userWorkloadRepository.doc({
-          trainingId: training.id,
-          componentId: exercise.componentId,
-          exerciseId: exercise.id,
-          userId,
-        });
-
-        const query = this.firebaseService.buildCreateQuery(data);
-
-        if (batch instanceof Transaction) batch.set(docRef, query);
-        else batch.set(docRef, query);
+          batch.set(docRef, query);
+        }
       }
     }
   }
 
-  private calculateWorkloadValue(
-    workloadType: string,
-    workloadValue: number,
-    bodyweight: number, // for bodyweight %
-    data: UserWorkload[], // history data for RM
-  ) {
-    switch (workloadType) {
-      case WorkloadType.RM:
-        // fetch 1RM from last month of user exercises, use formula and save value as KG
-        const values = data
-          .filter((set) => !!set)
-          .map(({ setTypeValue, workloadValue }) => ({
-            reps: setTypeValue,
-            weight: +workloadValue,
-          }));
+  private calculateRM(n: number, data: UserWorkload[]) {
+    // fetch 1RM from last month of user exercises, use formula and save value as KG
+    const values = data
+      .filter(
+        (w) =>
+          (w.volWork1Type === VolType.Rep && w.volWork1Value) ||
+          (w.volWork2Type === VolType.Rep && w.volWork2Value),
+      )
+      .flatMap((w) => {
+        const reps: { reps: number; weight: number }[] = [];
+        if (w.volWork1Value && w.intWork1Value)
+          reps.push({ reps: w.volWork1Value, weight: w.intWork1Value });
 
-        // find max weight lifted
-        const { reps, weight } = values.sort(
-          (a, b) => b.weight - a.weight,
-        )[0] || {
-          reps: 1,
-          weight: 0,
-        };
+        if (w.volWork2Value && w.intWork2Value)
+          reps.push({ reps: w.volWork2Value, weight: w.intWork2Value });
 
-        return this.commonService.number.rm(
-          weight,
-          reps <= 0 ? 1 : reps,
-        )(workloadValue);
-      case WorkloadType.BW:
-        // % of bodyweight
-        return (
-          (bodyweight || 0) * this.commonService.number.percent(workloadValue)
-        );
-      default:
-        return workloadValue;
-    }
+        return reps;
+      });
+
+    // find max weight lifted
+    const { reps, weight } = values.sort((a, b) => b.weight - a.weight)[0] || {
+      reps: 1,
+      weight: 0,
+    };
+
+    return this.commonService.number.rm(weight, reps <= 0 ? 1 : reps)(n);
   }
 }

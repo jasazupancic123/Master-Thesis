@@ -10,10 +10,11 @@ import { Superset } from '../entity/superset.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { PARAMS } from '../../component/constant/param.constant';
 import { Subgroup } from '../entity/subgroup.entity';
+import { getTime } from '../../../test/utils/data.util';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
   return {
-    id: v4(),
+    id: data?.id || v4(),
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
@@ -35,8 +36,8 @@ export function generateTrainingComponent(
   return {
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
-    from: data?.from || startOfDay(new Date()),
-    to: data?.to || addHours(startOfDay(new Date()), 0.5),
+    from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
+    to: data?.to || getTime(addDays(new Date(), 2), 8, 30),
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
   };

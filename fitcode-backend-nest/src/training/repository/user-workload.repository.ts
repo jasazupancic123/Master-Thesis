@@ -11,10 +11,9 @@ import { FirestoreCollection } from '../../common/enum/firestore-collection.enum
 import {
   FirestoreCollectionRepository,
   TrainingRef,
-  UserWorkloadRef,
+  WorkloadRef,
 } from '../../common/type/firestore.type';
 import { UserWorkload } from '../entity/user-workload.entity';
-import { SetStatus } from '../enum/set-status.enum';
 import { TrainingRepository } from './training.repository';
 
 @Injectable()
@@ -26,10 +25,6 @@ export class UserWorkloadRepository
     @Inject(forwardRef(() => TrainingRepository))
     private readonly trainingRepository: Wrapper<TrainingRepository>,
   ) {}
-
-  getKey(ref: UserWorkloadRef): string {
-    return `${ref.userId}-${ref.exerciseId}`;
-  }
 
   async getDocs(
     ref: TrainingRef,
@@ -44,7 +39,7 @@ export class UserWorkloadRepository
     );
   }
 
-  async getDoc(ref: UserWorkloadRef): Promise<UserWorkload | null> {
+  async getDoc(ref: WorkloadRef): Promise<UserWorkload | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
 
@@ -53,41 +48,25 @@ export class UserWorkloadRepository
     );
   }
 
-  async addDoc(ref: UserWorkloadRef, data: Create<UserWorkload>) {
-    const query = this.firebaseService.buildCreateQuery<UserWorkload>(
-      {
-        userId: ref.userId,
-        trainingId: data.trainingId,
-        componentId: ref.componentId,
-        exerciseId: data.exerciseId,
-        sets: data.sets,
-        setType: data.setType,
-        prescribedSetTypeValue: data.prescribedSetTypeValue,
-        workloadType: data.workloadType,
-        prescribedWorkloadValue: data.prescribedWorkloadValue,
-        status: SetStatus.NOT_STARTED,
-        set: data.set,
-        setTypeValue: data.setTypeValue,
-        workloadValue: data.workloadValue,
-        notes: data.notes,
-      },
-      { timestamps: true },
-    );
+  async addDoc(ref: WorkloadRef, data: Create<UserWorkload>) {
+    const query = this.firebaseService.buildCreateQuery<UserWorkload>(data, {
+      timestamps: true,
+    });
 
-    await this.doc(ref).set(query);
-    return ref.userId;
+    this.doc(ref).set(query);
+    return this.getKey(ref);
   }
 
-  async updateDoc(ref: UserWorkloadRef, data: Update<UserWorkload>) {
+  async updateDoc(ref: WorkloadRef, data: Update<UserWorkload>) {
     const query = this.firebaseService.buildUpdateQuery(data);
     await this.doc(ref).update(query);
   }
 
-  async deleteDoc(ref: UserWorkloadRef) {
+  async deleteDoc(ref: WorkloadRef) {
     await this.doc(ref).delete();
   }
 
-  doc(ref: UserWorkloadRef): DocumentReference {
+  doc(ref: WorkloadRef): DocumentReference {
     return this.collection(ref).doc(this.getKey(ref));
   }
 
@@ -95,5 +74,9 @@ export class UserWorkloadRepository
     return this.trainingRepository
       .doc(ref.trainingId)
       .collection(FirestoreCollection.TRAINING_WORKLOAD);
+  }
+
+  private getKey(ref: WorkloadRef) {
+    return `${ref.trainingId}-${ref.userId}-${ref.componentId}-${ref.exerciseId}`;
   }
 }

@@ -136,9 +136,37 @@ export class TrainingService {
     return trainings;
   }
 
+  private getFromAndToDates(components: TrainingComponent[]): {
+    from: Date;
+    to: Date;
+  } {
+    let from: Date;
+    let to: Date;
+
+    if (components.length === 0)
+      throw new BadRequestException('Training must have atleast one component');
+
+    if (components.length === 1) {
+      from = components[0].from;
+      to = components[0].to;
+    }
+
+    if (components.length > 1) {
+      from = components[0].from;
+      to = components[components.length - 1].to;
+    }
+
+    return { from, to };
+  }
+
   async create(
     user: User,
-    input: Create<Omit<Training, 'id' | 'ownerId' | 'membersIds' | 'wellness'>>,
+    input: Create<
+      Omit<
+        Training,
+        'id' | 'ownerId' | 'membersIds' | 'wellness' | 'from' | 'to'
+      >
+    >,
   ): Promise<Training> {
     const { groupId, cycleId } = input;
     this.logger.log(
@@ -148,12 +176,12 @@ export class TrainingService {
     // validate parent references
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    this.validateOwner(user.uid, group);
-    this.checkTrainingIsInCycle(input.from, cycle);
-    this.validateIsTrainingInFuture(input.from);
+    const { from, to } = this.getFromAndToDates(input.components);
 
-    // check overlap between all other trainings
-    await this.validateOverlap(input.from, input.to, group.id, cycle.id);
+    this.validateOwner(user.uid, group);
+    this.checkTrainingIsInCycle(from, cycle);
+    this.validateIsTrainingInFuture(from);
+    await this.validateOverlap(from, to, group.id, cycle.id);
 
     // validate components & exercises
     const attributes = await this.cacheManagerService.getAttributes();
@@ -190,23 +218,18 @@ export class TrainingService {
       cycleId: input.cycleId,
       ownerId: user.uid,
       copiedFromId: null,
-      from: input.from,
-      to: addMinutes(startOfHour(input.from), input.components.length * 30),
+      from,
+      to,
       membersIds: group.membersIds,
       wellness,
-      components: input.components.map((c, i) => {
-        const from = addMinutes(startOfHour(input.from), i * 30);
-        const to = addMinutes(from, 30);
-
-        return {
-          id: c.id,
-          from: c.from ? c.from : from,
-          to: c.to ? c.to : to,
-          color: c.color,
-          subgroups: c.subgroups || [],
-          supersets: c.supersets || [],
-        };
-      }),
+      components: input.components.map((c) => ({
+        id: c.id,
+        from: c.from,
+        to: c.to,
+        color: c.color,
+        subgroups: c.subgroups || [],
+        supersets: c.supersets || [],
+      })),
     };
 
     const trainingDocRef = this.trainingRepository.collection().doc();
@@ -251,12 +274,10 @@ export class TrainingService {
     // validate training
     const training = await this.findOneOrFail(user, ref);
     const { groupId, cycleId } = training;
+
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-
     this.validateOwner(user.uid, training);
-    this.checkTrainingIsInCycle(input.from, cycle);
-    this.validateIsTrainingInFuture(input.from);
 
     // if no components, delete training
     if (input.components.length === 0) {
@@ -267,10 +288,10 @@ export class TrainingService {
       };
     }
 
-    // check overlap between all other trainings
-    input.from = input.components[0].from;
-    input.to = input.components[input.components.length - 1].from;
-    await this.validateOverlap(input.from, input.to, groupId, cycleId);
+    const { from, to } = this.getFromAndToDates(input.components);
+    this.checkTrainingIsInCycle(from, cycle);
+    this.validateIsTrainingInFuture(from);
+    await this.validateOverlap(from, to, groupId, cycleId, training.id);
 
     // validate components & exercises
     const components = await this.cacheManagerService.getComponents();
@@ -356,9 +377,6 @@ export class TrainingService {
 
     // for future trainings, update latest meta and calculate workloads
     const wellness = await this.userService.getRecentWellness(membersIds);
-    const workloads =
-      await this.userWorkloadService.findAllByMembers(membersIds);
-
     const data: Create<Training> = {
       id: null,
       groupId: training.groupId,
@@ -396,6 +414,9 @@ export class TrainingService {
       { ...data, id: copiedTraining.id },
       { timestamps: true },
     );
+
+    const workloads =
+      await this.userWorkloadService.findAllByMembers(membersIds);
 
     // create training, add trainer to users, create workloads
     const batch = this.firebaseService.firestore.batch();
@@ -525,24 +546,30 @@ export class TrainingService {
     to: Date,
     groupId: string,
     cycleId: string,
+    trainingId?: string,
   ) {
-    const trainings = await this.trainingRepository.getDocs((q) =>
-      q
-        .where('groupId', '==', groupId)
-        .where('cycleId', '==', cycleId)
-        .where('from', '>=', Timestamp.fromDate(startOfDay(from)))
-        .where('from', '<', Timestamp.fromDate(endOfDay(from))),
-    );
+    const trainings = (
+      await this.trainingRepository.getDocs((q) =>
+        q
+          .where('groupId', '==', groupId)
+          .where('cycleId', '==', cycleId)
+          .where('from', '>=', Timestamp.fromDate(startOfDay(from)))
+          .where('from', '<', Timestamp.fromDate(endOfDay(from))),
+      )
+    ).filter((t) => t.id !== trainingId);
 
-    if (trainings.length >= 2)
+    if (trainings.length > 1)
       throw new BadRequestException(
         'Maximum number of trainings per day reached',
       );
 
-    const isOverlap = trainings.some(
-      (training) =>
-        this.commonService.date.isBetween(from, training.from, training.to) ||
-        this.commonService.date.isBetween(to, training.from, training.to),
+    const isOverlap = trainings.some((training) =>
+      this.commonService.date.doRangesOverlap(
+        from,
+        to,
+        training.from,
+        training.to,
+      ),
     );
 
     if (isOverlap)
