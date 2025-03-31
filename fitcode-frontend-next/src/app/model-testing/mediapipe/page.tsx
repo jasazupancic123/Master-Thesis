@@ -54,7 +54,6 @@ export default function Mediapipe() {
       } else if (selectedModel === 'heavy') {
         modelPath = '/models/pose_landmarker/pose_landmarker_heavy.task';
       } else {
-        alert('Invalid model selected: ' + selectedModel);
         return;
       }
       const vision = await FilesetResolver.forVisionTasks('/wasm');
