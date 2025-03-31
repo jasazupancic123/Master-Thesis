@@ -133,6 +133,8 @@ export default function HeroNavbar({ showLogin = true }) {
                     </MenuItem>
                     <MenuItem value="onnx">onnx</MenuItem>
                     <MenuItem value="tfjs">tfjs</MenuItem>
+                    <MenuItem value="mediapipe">mediapipe</MenuItem>
+                    <MenuItem value="movenet">movenet</MenuItem>
                   </Select>
                 </MenuItem>
               </Box>
@@ -220,6 +222,8 @@ export default function HeroNavbar({ showLogin = true }) {
                       </MenuItem>
                       <MenuItem value="onnx">onnx</MenuItem>
                       <MenuItem value="tfjs">tfjs</MenuItem>
+                      <MenuItem value="mediapipe">mediapipe</MenuItem>
+                      <MenuItem value="movenet">movenet</MenuItem>
                     </Select>
                   </MenuItem>
 
