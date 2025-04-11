@@ -16,7 +16,8 @@ export async function createGroupWithCycles(
     membersIds?: string[];
   },
 ) {
-  const { owner = trainer, membersIds = [athlete.uid] } = input || {};
+  const { owner = global.trainer, membersIds = [global.athlete.uid] } =
+    input || {};
 
   let group = await groupService.create(
     owner,
@@ -39,7 +40,11 @@ export async function createGroupWithCycles(
     }),
   ];
 
-  group = await groupService.update(trainer, { groupId: group.id }, { cycles });
+  group = await groupService.update(
+    global.trainer,
+    { groupId: group.id },
+    { cycles },
+  );
   return group;
 }
 

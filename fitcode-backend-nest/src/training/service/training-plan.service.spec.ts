@@ -78,13 +78,13 @@ describe('TrainingPlanService (unit)', () => {
             field: ParamType.IntWork1,
             options: [
               { field: IntType.Kg, defaultValue: '30' },
-              { field: IntType.Eff, options: [{ field: 'easy' }] },
+              { field: IntType.Eff, options: [{ field: '0' }] },
             ],
           },
           {
             field: ParamType.IntWork2,
             defaultValue: IntType.Eff,
-            options: [{ field: IntType.Eff, options: [{ field: 'easy' }] }],
+            options: [{ field: IntType.Eff, options: [{ field: '0' }] }],
           },
         ],
       },
@@ -141,14 +141,14 @@ describe('TrainingPlanService (unit)', () => {
             field: IntType.Eff,
             name: 'Eff',
             type: AttributeType.Select,
-            defaultValue: 'easy',
+            defaultValue: '0',
             options: [
               {
-                field: 'easy',
+                field: '0',
                 name: 'Easy',
                 type: AttributeType.Value,
                 options: [],
-                defaultValue: 'easy',
+                defaultValue: '0',
               },
             ],
           },
@@ -164,14 +164,14 @@ describe('TrainingPlanService (unit)', () => {
             field: IntType.Eff,
             name: 'Eff',
             type: AttributeType.Select,
-            defaultValue: 'easy',
+            defaultValue: '0',
             options: [
               {
-                field: 'easy',
+                field: '0',
                 name: 'Easy',
                 type: AttributeType.Value,
                 options: [],
-                defaultValue: 'easy',
+                defaultValue: '0',
               },
             ],
           },
@@ -186,8 +186,8 @@ describe('TrainingPlanService (unit)', () => {
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
-            selected: `${IntType.Eff}:easy`,
-            value: 'easy',
+            selected: `${IntType.Eff}:0`,
+            value: '0',
           },
         ],
       },
@@ -197,8 +197,8 @@ describe('TrainingPlanService (unit)', () => {
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
-            selected: `${IntType.Eff}:easy`,
-            value: 'easy',
+            selected: `${IntType.Eff}:0`,
+            value: '0',
           },
         ],
       },
@@ -208,8 +208,8 @@ describe('TrainingPlanService (unit)', () => {
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
-            selected: `${IntType.Eff}:easy`,
-            value: 'easy',
+            selected: `${IntType.Eff}:0`,
+            value: '0',
           },
         ],
       },
@@ -219,8 +219,8 @@ describe('TrainingPlanService (unit)', () => {
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
-            selected: `${IntType.Eff}:easy`,
-            value: 'easy',
+            selected: `${IntType.Eff}:0`,
+            value: '0',
           },
         ],
       },
@@ -817,12 +817,7 @@ describe('TrainingPlanService (unit)', () => {
           options: [
             {
               field: IntType.Eff,
-              options: [
-                {
-                  field: 'hard',
-                  defaultValue: 'hard',
-                },
-              ],
+              options: [{ field: '2', defaultValue: '2' }],
             },
           ],
         },
@@ -835,8 +830,8 @@ describe('TrainingPlanService (unit)', () => {
       expect(result[0].paramValues).toEqual([
         {
           field: ParamType.IntWork1,
-          selected: `${IntType.Eff}:hard`,
-          value: 'hard',
+          selected: `${IntType.Eff}:2`,
+          value: '2',
         },
       ]);
     });

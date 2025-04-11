@@ -229,10 +229,4 @@ describe('Update Training (e2e)', () => {
       expect(response.body.message).toBe(`Group does not exist`);
     });
   });
-
-  describe('Training components', () => {
-    it('should successfully update training components', async () => {
-      expect(true).toBeTruthy();
-    });
-  });
 });

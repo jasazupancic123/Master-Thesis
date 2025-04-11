@@ -11,8 +11,9 @@ import {
 } from 'class-validator';
 import { TimestampEntity } from '../../common/entity/timestamp.entity';
 import { IntType, VolType } from '../../component/enum/param.enum';
+import { SetStatus } from '../enum/set-status.enum';
 
-export class UserWorkload extends TimestampEntity {
+export class Workload extends TimestampEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -42,6 +43,11 @@ export class UserWorkload extends TimestampEntity {
   @ApiProperty()
   @Expose()
   setNumber: number;
+
+  @IsEnum(SetStatus)
+  @ApiProperty()
+  @Expose()
+  status: SetStatus;
 
   @IsString()
   @IsOptional()
