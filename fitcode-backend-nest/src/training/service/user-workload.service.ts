@@ -1,29 +1,28 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { WriteBatch } from 'firebase-admin/firestore';
 import { FirestoreEntity } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import {
   ExerciseRef,
-  TrainingStatusRef,
+  TrainingComponentRef,
+  WorkloadRef,
 } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
-import { UserWorkload } from '../entity/user-workload.entity';
+import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
-import { TrainingStatusRepository } from '../repository/training-status.repository';
-import { UserWorkloadRepository } from '../repository/user-workload.repository';
+import { WorkloadRepository } from '../repository/workload.repository';
 import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 
 @Injectable()
 export class UserWorkloadService {
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly userWorkloadRepository: UserWorkloadRepository,
-    private readonly trainingStatusRepository: TrainingStatusRepository,
+    private readonly workloadRepository: WorkloadRepository,
   ) {}
 
   /**
@@ -39,7 +38,7 @@ export class UserWorkloadService {
       .then(({ docs }) =>
         docs.map((doc) =>
           this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<UserWorkload>,
+            doc.data() as FirestoreEntity<Workload>,
           ),
         ),
       );
@@ -53,13 +52,13 @@ export class UserWorkloadService {
       .then(({ docs }) =>
         docs.map((doc) =>
           this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<UserWorkload>,
+            doc.data() as FirestoreEntity<Workload>,
           ),
         ),
       );
   }
 
-  async findAllByMembers(membersIds: string[]): Promise<UserWorkload[]> {
+  async findAllByMembers(membersIds: string[]): Promise<Workload[]> {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)
@@ -67,46 +66,20 @@ export class UserWorkloadService {
       .then(({ docs }) =>
         docs.map((doc) =>
           this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<UserWorkload>,
+            doc.data() as FirestoreEntity<Workload>,
           ),
         ),
       );
   }
 
-  /**
-   * Update athlete's set data for all exercises in the provided training's component.
-   */
-  async updateExercisesWorkloadsByComponent(
-    ref: TrainingStatusRef,
-    input: UserWorkload[],
-  ) {
-    const batch = this.firebaseService.firestore.batch();
+  getTrainingStatus(ref: TrainingComponentRef, workloads: Workload[]) {
+    const users: Record<string, any> = {};
 
-    /* input.map(({ exerciseId }) => {
-      // add user workload
-      const docRef = this.userWorkloadRepository.doc({ ...ref, exerciseId });
-      const query = this.firebaseService.buildUpdateQuery<UserWorkload>({
-        status: SetStatus.DONE,
-      });
-
-      batch.update(docRef, query);
-    }); */
-
-    // add training status doc
-    const query = this.firebaseService.buildCreateQuery<TrainingStatus>(
-      {
-        userId: ref.userId,
-        trainingId: ref.trainingId,
-        componentId: ref.componentId,
-        status: SetStatus.DONE,
-      },
-      { timestamps: true },
-    );
-
-    const docRef = this.trainingStatusRepository.doc(ref);
-    batch.set(docRef, query);
-
-    await batch.commit();
+    for (const workload of workloads) {
+      if (workload.status === SetStatus.NOT_STARTED) {
+        users[workload.userId];
+      }
+    }
   }
 
   /**
@@ -117,13 +90,13 @@ export class UserWorkloadService {
   createForTraining(
     batch: WriteBatch,
     training: Training,
-    workloads: UserWorkload[], // to calculate RMs
+    workloads: Workload[], // to calculate RMs
   ) {
     const membersMap: {
       [userId: string]: {
         exercises: (TrainingExercise & { componentId: string })[];
         bodyweight: number;
-        history: UserWorkload[];
+        history: Workload[];
       };
     } = {};
 
@@ -165,74 +138,28 @@ export class UserWorkloadService {
           .filter((e) => e.exerciseId === exercise.id);
 
         for (const { setNumber, paramValues } of exercise.sets) {
-          const docRef = this.userWorkloadRepository
+          const docRef = this.workloadRepository
             .collection({ trainingId: training.id })
-            .doc();
+            .doc(
+              this.workloadRepository.getKey({
+                trainingId: training.id,
+                componentId: exercise.componentId,
+                exerciseId: exercise.id,
+                setNumber,
+                userId,
+              }),
+            );
 
-          const volWork1 = paramValues.find(
-            (p) => p.field === ParamType.VolWork1,
-          );
-          const volWork2 = paramValues.find(
-            (p) => p.field === ParamType.VolWork2,
-          );
-          const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
-          const intWork1 = paramValues.find(
-            (p) => p.field === ParamType.IntWork1,
-          );
-          const intWork2 = paramValues.find(
-            (p) => p.field === ParamType.IntWork2,
-          );
-          const intRec = paramValues.find((p) => p.field === ParamType.IntRec1);
-
-          const query = this.firebaseService.buildCreateQuery<UserWorkload>({
+          const query = this.firebaseService.buildCreateQuery<Workload>({
             userId,
             trainingId: training.id,
             componentId: exercise.componentId,
             exerciseId: exercise.id,
             setNumber,
+            status: SetStatus.NOT_STARTED,
             notes: null,
-            volWork1Type: (volWork1?.selected as VolType) || undefined,
-            prescribedVolWork1Value: +volWork1?.value || undefined,
-            volWork1Value: null,
-            volWork2Type: (volWork2?.selected as VolType) || undefined,
-            prescribedVolWork2Value: +volWork2?.value || undefined,
-            volWork2Value: null,
-            volRecType: (volRec?.selected as VolType) || undefined,
-            prescribedVolRecValue: +volRec?.value || undefined,
-            volRecValue: null,
-            intWork1Type: (intWork1?.selected as IntType) || undefined,
-            prescribedIntWork1Value:
-              intWork1?.selected === IntType.Rm
-                ? this.calculateRM(+intWork1.value, workloads)
-                : intWork1?.selected === IntType.Bw
-                  ? bodyweight *
-                    this.commonService.number.percent(+intWork1.value)
-                  : [IntType.Mas, IntType.Hrmax].includes(
-                        intWork1?.selected as IntType,
-                      )
-                    ? this.commonService.number.percent(+intWork1.value)
-                    : isNaN(+intWork1?.value)
-                      ? undefined
-                      : +intWork1.value,
-            intWork1Value: null,
-            intWork2Type: (intWork2?.selected as IntType) || undefined,
-            prescribedIntWork2Value:
-              intWork2?.selected === IntType.Rm
-                ? this.calculateRM(+intWork2.value, workloads)
-                : intWork2?.selected === IntType.Bw
-                  ? bodyweight *
-                    this.commonService.number.percent(+intWork2.value)
-                  : [IntType.Mas, IntType.Hrmax].includes(
-                        intWork2?.selected as IntType,
-                      )
-                    ? this.commonService.number.percent(+intWork2.value)
-                    : isNaN(+intWork2?.value)
-                      ? undefined
-                      : +intWork2.value,
-            intWork2Value: null,
-            intRecType: (intRec?.selected as IntType) || undefined,
-            prescribedIntRecValue: +intRec?.value || undefined,
-            intRecValue: null,
+            ...this.parseParamValues(paramValues),
+            ...this.calculateIntValues(paramValues, bodyweight, workloads),
           });
 
           batch.set(docRef, query);
@@ -241,7 +168,126 @@ export class UserWorkloadService {
     }
   }
 
-  private calculateRM(n: number, data: UserWorkload[]) {
+  async updateByTrainingComponent(
+    batch: WriteBatch,
+    ref: Omit<WorkloadRef, 'exerciseId' | 'setNumber'>,
+    workloads: Workload[],
+  ) {
+    for (const workload of workloads) {
+      const docRef = this.workloadRepository
+        .collection({ trainingId: ref.trainingId })
+        .doc(
+          this.workloadRepository.getKey({
+            trainingId: ref.trainingId,
+            componentId: ref.componentId,
+            exerciseId: workload.exerciseId,
+            setNumber: workload.setNumber,
+            userId: ref.userId,
+          }),
+        );
+
+      const query = this.firebaseService.buildUpdateQuery<Workload>({
+        status: this.getStatus(workload),
+        notes: workload.notes || null,
+        volWork1Value: workload.volWork1Value || null,
+        volWork2Value: workload.volWork2Value || null,
+        volRecValue: workload.volRecValue || null,
+        intWork1Value: workload.intWork1Value || null,
+        intWork2Value: workload.intWork2Value || null,
+        intRecValue: workload.intRecValue || null,
+      });
+
+      batch.set(docRef, query);
+    }
+  }
+
+  getStatus(workload: Workload): SetStatus {
+    const volWork1Status = this.getStatusByField(
+      workload.prescribedVolWork1Value,
+      workload.volWork1Value,
+    );
+
+    const volWork2Status = this.getStatusByField(
+      workload.prescribedVolWork2Value,
+      workload.volWork2Value,
+    );
+
+    const volRecStatus = this.getStatusByField(
+      workload.prescribedVolRecValue,
+      workload.volRecValue,
+    );
+
+    const intWork1Status = this.getStatusByField(
+      workload.prescribedIntWork1Value,
+      workload.intWork1Value,
+    );
+
+    const intWork2Status = this.getStatusByField(
+      workload.prescribedIntWork2Value,
+      workload.intWork2Value,
+    );
+
+    const intRecStatus = this.getStatusByField(
+      workload.prescribedIntRecValue,
+      workload.intRecValue,
+    );
+
+    const fieldStatus = [
+      volWork1Status,
+      volWork2Status,
+      volRecStatus,
+      intWork1Status,
+      intWork2Status,
+      intRecStatus,
+    ];
+
+    // edge case - every performed value is ignored
+    if (fieldStatus.every((status) => status === SetStatus.IGNORED))
+      return SetStatus.COMPLETED;
+
+    // not started if every performed value is not started or ignored
+    if (
+      fieldStatus.every((status) =>
+        [SetStatus.NOT_STARTED, SetStatus.IGNORED].includes(status),
+      )
+    )
+      return SetStatus.NOT_STARTED;
+
+    // completed if every performed value is completed or ignored
+    if (
+      fieldStatus.every((status) =>
+        [SetStatus.COMPLETED, SetStatus.IGNORED].includes(status),
+      )
+    )
+      return SetStatus.COMPLETED;
+
+    // over-performed if every performed value is over-performed or ignored
+    if (
+      fieldStatus.every((status) =>
+        [SetStatus.OVER, SetStatus.IGNORED].includes(status),
+      )
+    )
+      return SetStatus.OVER;
+
+    // else, it's partial set
+    return SetStatus.PARTIAL;
+  }
+
+  private getStatusByField(
+    prescribedValue?: number,
+    performedValue?: number,
+  ): SetStatus {
+    if (prescribedValue === undefined || prescribedValue === null)
+      return SetStatus.IGNORED; // field not prescribed, ignore
+    if (performedValue === undefined || performedValue === null)
+      return SetStatus.NOT_STARTED; // field prescribed, but not performed
+
+    if (performedValue < prescribedValue) return SetStatus.PARTIAL; // partial set
+    if (performedValue === prescribedValue) return SetStatus.COMPLETED; // completed set
+    if (performedValue > prescribedValue) return SetStatus.OVER; // over-completed set
+  }
+
+  private calculateRM(n: number, data: Workload[]) {
     // fetch 1RM from last month of user exercises, use formula and save value as KG
     const values = data
       .filter(
@@ -267,5 +313,85 @@ export class UserWorkloadService {
     };
 
     return this.commonService.number.rm(weight, reps <= 0 ? 1 : reps)(n);
+  }
+
+  private parseParamValues(paramValues: AttributeValue[]) {
+    const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
+    const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
+    const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
+    const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
+    const intWork2 = paramValues.find((p) => p.field === ParamType.IntWork2);
+    const intRec = paramValues.find((p) => p.field === ParamType.IntRec1);
+
+    return {
+      volWork1Type: this.parseSelected<VolType>(volWork1),
+      prescribedVolWork1Value: this.parseValue(volWork1) as number,
+      volWork1Value: null,
+      volWork2Type: this.parseSelected<VolType>(volWork2),
+      prescribedVolWork2Value: this.parseValue(volWork2) as number,
+      volWork2Value: null,
+      volRecType: this.parseSelected<VolType>(volRec),
+      prescribedVolRecValue: this.parseValue(volRec) as number,
+      volRecValue: null,
+      intWork1Type: this.parseSelected<IntType>(intWork1),
+      intWork1Value: null,
+      intWork2Type: this.parseSelected<IntType>(intWork2),
+      intWork2Value: null,
+      intRecType: this.parseSelected<IntType>(intRec),
+      prescribedIntRecValue: this.parseValue(intRec),
+      intRecValue: null,
+    };
+  }
+
+  private calculateIntValues(
+    paramValues: AttributeValue[],
+    bodyweight: number,
+    workloads: Workload[],
+  ) {
+    const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
+    const intWork1Field = this.parseSelected<IntType>(intWork1);
+    const intWork1Value = this.parseValue(intWork1);
+
+    const intWork2 = paramValues.find((p) => p.field === ParamType.IntWork2);
+    const intWork2Field = this.parseSelected<IntType>(intWork2);
+    const intWork2Value = this.parseValue(intWork2);
+
+    return {
+      prescribedIntWork1Value: isNaN(intWork1Value)
+        ? undefined
+        : intWork1Field === IntType.Rm && !isNaN(intWork1Value)
+          ? this.calculateRM(intWork1Value, workloads)
+          : intWork1Field === IntType.Bw && !isNaN(intWork1Value)
+            ? bodyweight * this.commonService.number.percent(intWork1Value)
+            : [IntType.Mas, IntType.Hrmax].includes(intWork1Field) &&
+                !isNaN(intWork1Value)
+              ? this.commonService.number.percent(intWork1Value)
+              : intWork1Value,
+      prescribedIntWork2Value: isNaN(intWork1Value)
+        ? undefined
+        : intWork2Field === IntType.Rm && !isNaN(intWork2Value)
+          ? this.calculateRM(intWork2Value, workloads)
+          : intWork2Field === IntType.Bw && !isNaN(intWork2Value)
+            ? bodyweight * this.commonService.number.percent(intWork2Value)
+            : [IntType.Mas, IntType.Hrmax].includes(intWork2Field) &&
+                !isNaN(intWork1Value)
+              ? this.commonService.number.percent(intWork2Value)
+              : intWork2Value,
+    };
+  }
+
+  private parseSelected<T = string>(
+    attributeValue: AttributeValue,
+  ): T | undefined {
+    if (!attributeValue?.selected) return undefined;
+    return attributeValue.selected.split(':')[0] as T;
+  }
+
+  private parseValue(attributeValue: AttributeValue): number | undefined {
+    if (!attributeValue?.value) return undefined;
+    if (attributeValue?.value)
+      if (!isNaN(+attributeValue.value)) return +attributeValue.value;
+
+    return NaN;
   }
 }

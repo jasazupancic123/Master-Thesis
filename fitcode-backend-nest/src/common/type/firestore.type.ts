@@ -68,5 +68,8 @@ export type TrainingExerciseRef = Omit<
   TrainingSupersetRef & ExerciseRef,
   'superset'
 >;
-export type WorkloadRef = TrainingExerciseRef & { userId: string };
+export type WorkloadRef = TrainingExerciseRef & {
+  userId: string;
+  setNumber: number;
+};
 export type TrainingStatusRef = TrainingComponentRef & { userId: string };

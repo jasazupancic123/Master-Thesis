@@ -23,6 +23,7 @@ import {
   TrainingComponentRef,
   TrainingRef,
   TrainingStatusRef,
+  WorkloadRef,
 } from '../../common/type/firestore.type';
 import { Filter } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
@@ -37,7 +38,8 @@ import { Training } from '../entity/training.entity';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
 import { UserWorkloadService } from './user-workload.service';
-import { UserWorkload } from '../entity/user-workload.entity';
+import { Workload } from '../entity/workload.entity';
+import { CreateWorkload } from '../dto/create-workload.dto';
 
 @Injectable()
 export class TrainingService {
@@ -49,7 +51,7 @@ export class TrainingService {
     private readonly commonService: CommonService,
     private readonly trainingRepository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
-    private readonly userWorkloadService: UserWorkloadService,
+    private readonly workloadService: UserWorkloadService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
     @Inject(forwardRef(() => UserService))
@@ -208,7 +210,7 @@ export class TrainingService {
 
     // create training
     const wellness = await this.userService.getRecentWellness(group.membersIds);
-    const workloads = await this.userWorkloadService.findAllByMembers(
+    const workloads = await this.workloadService.findAllByMembers(
       group.membersIds,
     );
 
@@ -256,7 +258,7 @@ export class TrainingService {
       });
     }
 
-    this.userWorkloadService.createForTraining(batch, training, workloads);
+    this.workloadService.createForTraining(batch, training, workloads);
     await batch.commit();
 
     return training;
@@ -312,8 +314,7 @@ export class TrainingService {
 
     // for future trainings, update latest meta and calculate workloads
     const wellness = await this.userService.getRecentWellness(membersIds);
-    const workloads =
-      await this.userWorkloadService.findAllByMembers(membersIds);
+    const workloads = await this.workloadService.findAllByMembers(membersIds);
 
     const updated = {
       ...training,
@@ -327,7 +328,7 @@ export class TrainingService {
 
     const batch = this.firebaseService.firestore.batch();
     batch.update(trainingDocRef, updateTrainingQuery);
-    this.userWorkloadService.createForTraining(batch, updated, workloads);
+    this.workloadService.createForTraining(batch, updated, workloads);
     await batch.commit();
 
     return updated;
@@ -415,8 +416,7 @@ export class TrainingService {
       { timestamps: true },
     );
 
-    const workloads =
-      await this.userWorkloadService.findAllByMembers(membersIds);
+    const workloads = await this.workloadService.findAllByMembers(membersIds);
 
     // create training, add trainer to users, create workloads
     const batch = this.firebaseService.firestore.batch();
@@ -429,7 +429,7 @@ export class TrainingService {
       });
     }
 
-    this.userWorkloadService.createForTraining(batch, training, workloads);
+    this.workloadService.createForTraining(batch, training, workloads);
     await batch.commit();
 
     return training;
@@ -445,35 +445,37 @@ export class TrainingService {
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  async createUserWorkloadsForComponent(
+  async updateWorkloads(
     user: User,
-    ref: TrainingStatusRef,
-    input: UserWorkload[],
+    ref: Omit<WorkloadRef, 'exerciseId' | 'setNumber'>,
+    input: CreateWorkload[],
   ) {
     this.logger.log(
       `User ${user.uid} is creating workloads for component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
     if (user.uid !== ref.userId) throw new UnauthorizedException();
-    await this.userWorkloadService.updateExercisesWorkloadsByComponent(
-      ref,
-      input,
-    );
-  }
+    // TODO - trainer can also create workloads for his athletes
 
-  async findAllStatusesByTraining(user: User, ref: TrainingRef) {
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_STATUS)
-      .where('trainingId', '==', ref.trainingId)
-      .where('userId', '==', user.uid)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<TrainingStatus>,
-          ),
-        ),
-      );
+    const workloads: Workload[] = (
+      await this.workloadService.findAllByTraining(ref.trainingId)
+    )
+      .filter((w) => w.userId === ref.userId)
+      .map((w) => {
+        const provided = input.find(
+          (workload) =>
+            workload.exerciseId === w.exerciseId &&
+            workload.setNumber === w.setNumber,
+        );
+
+        if (!provided) return null;
+        return { ...w, ...provided };
+      })
+      .filter((w) => w);
+
+    const batch = this.firebaseService.firestore.batch();
+    await this.workloadService.updateByTrainingComponent(batch, ref, workloads);
+    await batch.commit();
   }
 
   async addComponents(

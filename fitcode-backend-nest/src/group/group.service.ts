@@ -256,11 +256,9 @@ export class GroupService {
   }
 
   private async validateMembers(membersIds: string[]) {
+    if (membersIds.length === 0) return [];
+
     const members = await this.userService.findAllOrFail({ ids: membersIds });
-
-    if (members.length < 1)
-      throw new BadRequestException('Group must have at least one member');
-
     if (members.length !== membersIds.length)
       throw new BadRequestException('Invalid members provided');
 

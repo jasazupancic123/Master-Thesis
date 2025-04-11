@@ -30,6 +30,7 @@ import {
 import { ParamType, VolType } from '../../src/component/enum/param.enum';
 import { TrainingComponent } from '../../src/training/entity/training-component.entity';
 import { UserWorkloadService } from '../../src/training/service/user-workload.service';
+import { SetStatus } from '../../src/training/enum/set-status.enum';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
@@ -68,6 +69,7 @@ describe('Create Training (e2e)', () => {
   });
 
   beforeEach(async () => {
+    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     await firebaseService.deleteCollection(
       FirestoreCollection.TRAINING_WORKLOAD,
     );
@@ -432,8 +434,14 @@ describe('Create Training (e2e)', () => {
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
-          generateTrainingComponent({ id: components[0].id }),
-          generateTrainingComponent({ id: components[1].id }),
+          generateTrainingComponent({
+            id: components[0].id,
+            from: getTime(addDays(new Date(), 7), 8, 0),
+          }),
+          generateTrainingComponent({
+            id: components[1].id,
+            from: getTime(addDays(new Date(), 7), 7, 0),
+          }),
         ],
       });
 
@@ -736,6 +744,7 @@ describe('Create Training (e2e)', () => {
           volRecValue: null,
           intWork1Value: null,
           intWork2Value: null,
+          status: SetStatus.NOT_STARTED,
         },
         {
           userId: athlete.uid,
@@ -752,6 +761,7 @@ describe('Create Training (e2e)', () => {
           volRecValue: null,
           intWork1Value: null,
           intWork2Value: null,
+          status: SetStatus.NOT_STARTED,
         },
         {
           userId: athlete.uid,
@@ -768,6 +778,7 @@ describe('Create Training (e2e)', () => {
           volRecValue: null,
           intWork1Value: null,
           intWork2Value: null,
+          status: SetStatus.NOT_STARTED,
         },
         {
           userId: athlete.uid,
@@ -784,6 +795,7 @@ describe('Create Training (e2e)', () => {
           volRecValue: null,
           intWork1Value: null,
           intWork2Value: null,
+          status: SetStatus.NOT_STARTED,
         },
         {
           userId: athlete.uid,
@@ -800,6 +812,7 @@ describe('Create Training (e2e)', () => {
           volRecValue: null,
           intWork1Value: null,
           intWork2Value: null,
+          status: SetStatus.NOT_STARTED,
         },
         {
           userId: athlete.uid,
@@ -816,14 +829,169 @@ describe('Create Training (e2e)', () => {
           volRecValue: null,
           intWork1Value: null,
           intWork2Value: null,
+          status: SetStatus.NOT_STARTED,
         },
       ]);
     });
   });
 
   describe('Training components', () => {
-    it('should successfully add components to training', async () => {
-      expect(true).toBeTruthy();
+    it('should fail to add components if training does not exist', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/training/invalid-training-id/component')
+        .set('Authorization', `Bearer ${trainer.token}`)
+        .send({ components: [generateTrainingComponent()] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('Training not found');
     });
+
+    it('should fail to add components if user is not owner of the training', async () => {
+      const training = await trainingService.create(
+        trainer,
+        generateTrainingStub({
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              supersets: [generateSuperset({})],
+            }),
+          ],
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .post(`/training/${training.id}/component`)
+        .set('Authorization', `Bearer ${athlete.token}`)
+        .send({
+          components: [generateTrainingComponent({})],
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe(
+        'You are not authorized to perform this action',
+      );
+    });
+
+    it('should fail to add components if training is in the past', async () => {
+      const training = await firebaseService.firestore
+        .collection(FirestoreCollection.TRAINING)
+        .add(
+          firebaseService.buildCreateQuery(
+            generateTrainingStub({
+              groupId: group.id,
+              cycleId: group.cycles[0].id,
+              from: subDays(new Date(), 2),
+              to: subDays(new Date(), 2),
+              components: [
+                generateTrainingComponent({
+                  from: subDays(new Date(), 2),
+                  to: subDays(new Date(), 2),
+                }),
+              ],
+            }),
+            { timestamps: true },
+          ),
+        );
+
+      const response = await request(app.getHttpServer())
+        .post(`/training/${training.id}/component`)
+        .set('Authorization', `Bearer ${trainer.token}`)
+        .send({ components: [generateTrainingComponent()] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'You cannot add or update trainings in the past',
+      );
+    });
+  });
+
+  it('should successfully add training components', async () => {
+    const newComponent = await componentService.create(generateComponentStub());
+    const training = await trainingService.create(
+      trainer,
+      generateTrainingStub({
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            supersets: [generateSuperset()],
+          }),
+        ],
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .post(`/training/${training.id}/component`)
+      .set('Authorization', `Bearer ${trainer.token}`)
+      .send({
+        components: [generateTrainingComponent({ id: newComponent.id })],
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.id).toBe(training.id);
+    expect(response.body.components).toHaveLength(2);
+  });
+
+  it('should successfully delete training component', async () => {
+    const newComponent = await componentService.create(generateComponentStub());
+    const training = await trainingService.create(
+      trainer,
+      generateTrainingStub({
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            supersets: [generateSuperset()],
+            from: getTime(addDays(new Date(), 2), 8, 0),
+            to: getTime(addDays(new Date(), 2), 9, 0),
+          }),
+          generateTrainingComponent({
+            id: newComponent.id,
+            supersets: [generateSuperset()],
+            from: getTime(addDays(new Date(), 2), 9, 0),
+            to: getTime(addDays(new Date(), 2), 10, 0),
+          }),
+        ],
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .delete(`/training/${training.id}/component/${newComponent.id}`)
+      .set('Authorization', `Bearer ${trainer.token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBe(training.id);
+    expect(response.body.components).toHaveLength(1);
+  });
+
+  it('should delete training when training has no more components', async () => {
+    const training = await trainingService.create(
+      trainer,
+      generateTrainingStub({
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            supersets: [generateSuperset()],
+          }),
+        ],
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .delete(`/training/${training.id}/component/${component.id}`)
+      .set('Authorization', `Bearer ${trainer.token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBe(training.id);
+    expect(response.body.components).toHaveLength(0);
+
+    const trainings = await trainingService.findAll(trainer);
+    expect(trainings).toHaveLength(0);
   });
 });
