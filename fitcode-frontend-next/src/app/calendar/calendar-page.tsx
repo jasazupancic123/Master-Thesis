@@ -44,8 +44,9 @@ export function CalendarPage(props: CalendarPageProps) {
         const componentsIcons = [];
         for (const component of Object.values(training.components)) {
           const IconComponent = commonService.navigation.getComponentIcon(
-            (component as any).id
+            component.id
           );
+
           componentsIcons.push(IconComponent);
         }
 

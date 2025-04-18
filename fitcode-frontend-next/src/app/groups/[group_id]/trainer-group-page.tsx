@@ -34,12 +34,7 @@ export default function TrainerGroupPage() {
     year: <TrainerYearView />,
   };
 
-  return hasJustLoggedIn ? (
-    <Animation
-      text="PREPARING TRAINING PLAN"
-      onEnd={() => setHasJustLoggedIn(false)}
-    />
-  ) : (
+  return (
     <Box
       mt="5px"
       sx={{
@@ -64,5 +59,10 @@ export default function TrainerGroupPage() {
 
       <Box>{mapper[filter]}</Box>
     </Box>
-  );
+  ); /* hasJustLoggedIn ? (
+    <Animation
+      text="PREPARING TRAINING PLAN"
+      onEnd={() => setHasJustLoggedIn(false)}
+    />
+  ) : */
 }

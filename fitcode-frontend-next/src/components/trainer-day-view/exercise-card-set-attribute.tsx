@@ -5,7 +5,7 @@ import { useScreenSize } from '@/context/screen-size-provider';
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const screenSize = useScreenSize();
-  const { options, state, onChange, disabled = false } = props;
+  const { options, state, onChange } = props;
 
   return (
     <Stack direction="column" justifyContent="center" alignItems="center">
@@ -43,14 +43,12 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             },
           }}
           disableUnderline={true}
-          value={state.option}
-          disabled={disabled}
+          value={state.label}
           onChange={(e) => {
             const value = e.target.value as string;
             const option = options.find((option) => option.label === value);
 
             if (!option) return;
-
             const values = option.values
               ? [...option.values.filter((v) => v.length > 0)]
               : undefined;
@@ -64,33 +62,47 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             } as SetExerciseState);
           }}
         >
-          {options.map((option) => (
-            <MenuItem
-              key={option.label}
-              value={option.label}
-              sx={{
-                textAlign: 'center',
-                p: 2,
-                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-              }}
-            >
-              {option.label[0].toUpperCase() + option.label.slice(1)}
-            </MenuItem>
-          ))}
+          <MenuItem
+            disabled
+            key={state.label}
+            value={state.label}
+            sx={{
+              textAlign: 'center',
+              p: 2,
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+            }}
+          >
+            {state.label[0].toUpperCase() + state.label.slice(1)}
+          </MenuItem>
+
+          {options.map((option) => {
+            return (
+              <MenuItem
+                key={option.label}
+                value={option.label}
+                sx={{
+                  textAlign: 'center',
+                  p: 2,
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                {option.label[0].toUpperCase() + option.label.slice(1)}
+              </MenuItem>
+            );
+          })}
         </Select>
       </FormControl>
 
       {/* On value change */}
-      {state.type === 'select' || state.type === 'number' ? (
+      {state.type === 'select' ? (
         <FormControl
           variant="filled"
           size="small"
           sx={exerciseCardSetAttributeSx}
-          disabled={disabled}
         >
           <Select
             variant="filled"
-            sx={{
+            /*  sx={{
               ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
               textAlign: 'center',
               color: 'white',
@@ -121,10 +133,8 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
                 color: 'white',
                 WebkitTextFillColor: 'white',
               },
-            }}
-            disableUnderline={disabled}
+            }} */
             value={state.value}
-            disabled={disabled}
             onChange={(e) => {
               const value = e.target.value as string;
               onChange({ ...state, value });
@@ -136,7 +146,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
                 value={value}
                 sx={{
                   textAlign: 'center',
-                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+                  textShadow: '1px 1px 2px rgba(23, 16, 16, 0.5)',
                 }}
               >
                 {state.format(value)}
@@ -159,7 +169,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               const value = e.target.value;
               onChange({ ...state, value });
             }}
-            sx={{
+            /* sx={{
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
               mt: 0,
               width: '100%',
@@ -184,19 +194,16 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
                 backgroundColor: 'transparent',
                 color: 'white',
                 WebkitTextFillColor: 'white',
-                // 🔽 REMOVE ARROWS IN CHROME, SAFARI, EDGE 🔽
                 '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-                  '-webkit-appearance': disabled ? 'none' : undefined,
                   margin: 0,
                 },
-                // 🔽 REMOVE ARROWS IN FIREFOX 🔽
-                MozAppearance: disabled ? 'textfield' : '',
+                MozAppearance: '',
               },
               '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after':
                 {
                   borderBottom: 'none !important',
                 },
-            }}
+            }} */
           />
         </FormControl>
       )}

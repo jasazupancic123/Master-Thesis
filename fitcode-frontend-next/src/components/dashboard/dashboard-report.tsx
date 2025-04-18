@@ -1,9 +1,6 @@
 import { Box, Grid2, Tooltip, Typography } from '@mui/material';
 import { DashboardReportType } from '@/common/enum/dashboard-report-type.enum';
-import { COLOR } from '@/common/constant/browser.constant';
 import BorderColor from '../border-color';
-import { User } from '@/controller/user/type/user.type';
-import { Organization } from '@/controller/organization/type/organization.type';
 import { ArrowDownward, ArrowUpward } from '@mui/icons-material';
 import { useTheme } from '@mui/material';
 import { useScreenSize } from '@/context/screen-size-provider';

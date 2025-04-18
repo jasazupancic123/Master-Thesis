@@ -48,7 +48,13 @@ export async function handleCopyTraining(
     exercises,
   } = state;
 
-  if (!CommonService.instance.date.isBetween(newDate, dayjs(cycle.from), dayjs(cycle.to)))
+  if (
+    !CommonService.instance.date.isBetween(
+      newDate,
+      dayjs(cycle.from),
+      dayjs(cycle.to)
+    )
+  )
     return toast.error('Selected date is not within the cycle');
 
   const amPair = { start: 8, end: 10 };
@@ -278,7 +284,6 @@ export async function handleAddSubgroup(state: {
       ...superset,
       exercises: [...superset.exercises].map((exercise) => ({
         ...exercise,
-        meta: { ...exercise.meta },
       })),
     })),
     membersIds: createSubgroup.membersIds || [],

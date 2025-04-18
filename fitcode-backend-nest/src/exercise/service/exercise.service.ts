@@ -532,23 +532,20 @@ export class ExerciseService {
   validateExercises(
     rootComponentId: string,
     exercises: Exercise[],
-    components: Component[],
+    leafs: Component[],
   ) {
-    // check that exercise's leaf component id belongs to training's root component id
-    const leafs = this.componentService.leafsFromFlat(components);
-
     // check that parents of leaf are in training's root component ids
-    for (const exercise of exercises)
+    for (const exercise of exercises) {
       for (const componentId of exercise.componentIds) {
         const leaf = leafs.find((leaf) => leaf.id === componentId)!;
         if (leaf?.id === rootComponentId) continue;
-
         if (!leaf.parents.includes(rootComponentId)) {
           throw new BadRequestException(
             `Exercise ${exercise.name} cannot be part of selected component`,
           );
         }
       }
+    }
   }
 
   private checkLimit(user: UserEntity, exercises: Exercise[]) {

@@ -14,6 +14,7 @@ import { TrainingCycleViewWeekProps } from './type';
 import MyModal from '../modal';
 import { Training } from '@/controller/training/type/training.type';
 import { useTheme } from '@mui/material';
+import { addMinutes, getDate, getTime, setHours, setMinutes } from 'date-fns';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const { index, week, selected } = props;
@@ -57,6 +58,8 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   }
 
   async function handleAddTraining(date: Dayjs, period: 'AM' | 'PM') {
+    let from = setMinutes(setHours(date.toDate(), period === 'AM' ? 8 : 14), 0);
+
     handleCreateTraining(
       token,
       {
@@ -64,7 +67,13 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         cycle: cycle!,
         date,
         period,
-        selectedComponents: selected!,
+        selectedComponents: selected!.map((c, i) => ({
+          id: c.id,
+          subgroups: [],
+          supersets: [],
+          from: addMinutes(from, i * 30),
+          to: addMinutes(addMinutes(from, i * 30), 30),
+        })),
       },
       {
         router,
@@ -178,6 +187,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                         )
                       )
                         return;
+
                       handleAddTraining(date, period as 'AM' | 'PM');
                     }}
                   >
@@ -211,14 +221,29 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                             )
                           )
                             return;
+
                           if (!props.selected || props.selected?.length === 0) {
                             setOpenAreYouSureModal(true);
                             setSelectedTraining(training);
                             return;
                           }
+
                           e.stopPropagation();
+
+                          const lastTo = new Date(
+                            training.components[
+                              training.components.length - 1
+                            ].to
+                          );
+
                           props.addTrainingComponent(training.id, {
-                            componentsIds: props.selected?.map((c) => c.id),
+                            components: props.selected?.map((c, i) => ({
+                              id: c.id,
+                              subgroups: [],
+                              supersets: [],
+                              from: addMinutes(lastTo, i * 30),
+                              to: addMinutes(addMinutes(lastTo, i * 30), 30),
+                            })),
                           });
                         }}
                       >
@@ -252,7 +277,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         onConfirm={() => {
           if (!selectedTraining) return;
           props.addTrainingComponent(selectedTraining.id, {
-            componentsIds: [],
+            components: [],
           });
           setSelectedTraining(null);
           setOpenAreYouSureModal(false);

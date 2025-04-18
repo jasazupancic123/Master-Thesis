@@ -35,12 +35,12 @@ export class ComponentService {
   }
 
   async createFromTree(
-    data: Omit<Component, 'parentId' | 'children' | 'parents'> & {
+    data: Omit<Component, 'children' | 'parents'> & {
       children: Component[];
     },
   ): Promise<Component> {
     const { children, ...rest } = data;
-    const component = await this.create({ ...rest, parentId: null });
+    const component = await this.create({ ...rest, parentId: data.parentId });
     await this.cacheManagerService.clearComponents();
 
     for (const child of children) {

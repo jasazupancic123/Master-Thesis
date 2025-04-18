@@ -20,7 +20,6 @@ import { ComponentService } from '../../component/component.service';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
-  VOL_WORK_SET_OPTIONS,
 } from '../../component/constant/param.constant';
 import { ComponentParam } from '../../component/entity/component-param.entity';
 import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
@@ -34,6 +33,7 @@ import {
 } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
+import { ExerciseAttributeValueRepository } from 'src/exercise/repository/exercise-attribute-value.repository';
 
 @Injectable()
 export class TrainingPlanService {
@@ -43,6 +43,8 @@ export class TrainingPlanService {
     private readonly componentService: Wrapper<ComponentService>,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
+    @Inject(forwardRef(() => ExerciseAttributeValueRepository))
+    private readonly exerciseAttributeValueRepository: Wrapper<ExerciseAttributeValueRepository>,
   ) {}
 
   getAddComponentsQuery(
@@ -95,9 +97,18 @@ export class TrainingPlanService {
     ]);
 
     const ids = [...new Set(trainingExercises.map((e) => e.id))];
-    return ids.length > 0
-      ? await this.exerciseService.findAllByIds(user, ids)
-      : [];
+    const exercises =
+      ids.length > 0 ? await this.exerciseService.findAllByIds(user, ids) : [];
+
+    return await Promise.all(
+      exercises.map(async (e) => ({
+        ...e,
+        attributeValues:
+          await this.exerciseAttributeValueRepository.getAllByExercise({
+            exerciseId: e.id,
+          }),
+      })),
+    );
   }
 
   validateTrainingComponents(
@@ -139,12 +150,17 @@ export class TrainingPlanService {
       this.validateSubgroups(trainingMemberIds, curr, exercises);
 
       // validate exercises
-      if (exercises.length > 0)
-        this.exerciseService.validateExercises(
-          component.id,
-          exercises,
-          allComponents,
-        );
+      const leafs = this.componentService.leafsFromFlat(allComponents);
+
+      if (
+        exercises.length > 0 &&
+        exercises.every((e) =>
+          e.componentIds.every(() =>
+            leafs.every((leaf) => leaf.parents?.includes(component.id)),
+          ),
+        )
+      )
+        this.exerciseService.validateExercises(component.id, exercises, leafs);
     }
 
     if (trainingComponents.length > 5)

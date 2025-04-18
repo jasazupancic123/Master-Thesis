@@ -31,7 +31,6 @@ import Supersets from './supersets';
 import { useTheme } from '@mui/material';
 import {
   CalendarIcon,
-  DatePicker,
   DesktopDatePicker,
   LocalizationProvider,
   PickersDay,
@@ -39,34 +38,20 @@ import {
 } from '@mui/x-date-pickers';
 import MyModal from '../modal';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import router from 'next/router';
-import { handleCopyTraining } from './state';
 import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
-import { handleAddTrainingComponents } from '../trainer-cycle-view/state';
-import toast from 'react-hot-toast';
 import MuscleHeatmapView from './muscle-heatmap-view';
 import { DoNotDisturb } from '@mui/icons-material';
-import { setHeapSnapshotNearHeapLimit } from 'v8';
 
 const commonService = CommonService.instance;
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const router = useRouter();
   const { training, trainingComponent } = props;
-  const {
-    filter,
-    setDetectedChanges,
-    setTrainings,
-    setFilteredTrainings,
-    token,
-    trainings,
-    cycle,
-    exercises,
-    components,
-  } = useGroup();
+  const { filter, setDetectedChanges, setFilteredTrainings, trainings, cycle } =
+    useGroup();
+
   const {
     training: selectedTraining,
     setTraining,

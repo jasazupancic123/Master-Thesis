@@ -5,8 +5,6 @@ import BorderColor from '@/components/border-color';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { SetType } from '@/controller/training/enum/set-type.enum';
-import { WorkloadType } from '@/controller/training/enum/workload-type.enum';
 import {
   Superset,
   TrainingExercise,
@@ -19,7 +17,6 @@ import {
   Menu,
   MenuItem,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -33,7 +30,6 @@ import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCardContainer from './training-exercise-card-container';
 import { useTheme } from '@mui/material';
 import {
-  ArrowDownward,
   ArrowDropDown,
   ArrowDropUp,
   MoreVert,
@@ -616,14 +612,17 @@ export default function Supersets(props: SupersetsProps) {
             (id) => ({
               id,
               exercise: allExercises.find((e) => e.id === id),
-              meta: {
+              periodized: false,
+              params: [],
+              sets: [],
+              /* meta: {
                 set: 3,
                 setType: SetType.REPS,
                 setTypeValue: 12,
                 workloadType: WorkloadType.KG,
                 workloadValue: 60,
                 rec: 30,
-              },
+              }, */
             })
           );
 

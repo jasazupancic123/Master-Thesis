@@ -1,8 +1,8 @@
 import { GroupDateFilter } from '@/common/type/filter.type';
 import { Pagination } from '@/common/type/paginate.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { Component } from '@/controller/component/type/component.type';
-import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
@@ -20,7 +20,7 @@ export interface GroupIdPageProps {
   group: Group;
   users: User[];
   components: Component[];
-  attributes: ExerciseAttribute[];
+  attributes: Attribute[];
   exercises: Exercise[];
   groups: Group[];
   trainings: Training[];

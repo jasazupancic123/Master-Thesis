@@ -1,6 +1,6 @@
 import { SetState } from '@/common/type/state.type';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { UserMeta } from '@/controller/user/type/user-meta.type';
+import { Wellness } from '@/controller/user/type/wellness.type';
 import { Chip, Slider } from '@mui/material';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -11,8 +11,8 @@ import { useState } from 'react';
 import { useTheme } from '@mui/material';
 
 interface Props {
-  initialData: UserMeta | null;
-  onSubmit: (data: Partial<UserMeta>) => void | Promise<void>;
+  initialData: Wellness | null;
+  onSubmit: (data: Partial<Wellness>) => void | Promise<void>;
   disabled: boolean;
   setDisabled: SetState<boolean>;
 }
@@ -20,7 +20,7 @@ interface Props {
 export default function UserWellnessFrm(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const [state, setState] = useState<UserMeta>(() => {
+  const [state, setState] = useState<Wellness>(() => {
     if (props.initialData) return props.initialData;
 
     return {
@@ -29,7 +29,7 @@ export default function UserWellnessFrm(props: Props) {
       soreness: 5,
       comment: '',
       weight: 0,
-    } as UserMeta;
+    } as Wellness;
   });
 
   const today = dayjs().format('dddd, MMMM D, YYYY');
@@ -81,7 +81,7 @@ export default function UserWellnessFrm(props: Props) {
           label="Sleep"
           value={state.sleep as number}
           setValue={(value) =>
-            setState((prev: UserMeta) => ({ ...prev, sleep: value as number }))
+            setState((prev: Wellness) => ({ ...prev, sleep: value as number }))
           }
           disabled={props.disabled}
         />

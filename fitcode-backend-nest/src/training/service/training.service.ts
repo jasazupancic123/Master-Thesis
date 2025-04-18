@@ -296,6 +296,7 @@ export class TrainingService {
     await this.validateOverlap(from, to, groupId, cycleId, training.id);
 
     // validate components & exercises
+    const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
     const membersIds = input.membersIds || training.membersIds;
     await this.validateTrainingMembers(membersIds);
@@ -310,6 +311,14 @@ export class TrainingService {
       membersIds,
       input.components,
       components,
+    );
+
+    // populate exercise params from components
+    this.trainingPlanService.populateTrainingExerciseParams(
+      input.components,
+      components,
+      exercises,
+      attributes,
     );
 
     // for future trainings, update latest meta and calculate workloads

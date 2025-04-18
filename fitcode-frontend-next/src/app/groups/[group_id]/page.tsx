@@ -9,9 +9,10 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { ReactNode, Suspense } from 'react';
+import { ReactNode } from 'react';
 import { GroupIdPageParams, GroupIdPageProps } from './props';
 import TrainerGroupPage from './trainer-group-page';
+import { AttributeController } from '@/controller/attribute/attribute.controller';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -37,7 +38,7 @@ export default async function Page(props: GroupIdPageParams) {
       UserController.findAll(token),
       GroupController.findAll(token),
       ExerciseController.findAll(token),
-      ExerciseController.findAttributes(),
+      AttributeController.findAll(),
       ComponentController.findAll(),
       TrainingController.findAll(token, { groupId }),
     ]);

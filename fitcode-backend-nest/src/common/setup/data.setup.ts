@@ -34,7 +34,6 @@ export class DataSetup extends BaseSetup {
    */
   async setup() {
     const time = performance.now();
-
     if (await this.isInit()) return;
 
     // create / update admin user
@@ -85,7 +84,7 @@ export class DataSetup extends BaseSetup {
     const componentService = this.app.get(ComponentService);
 
     const file = await readFile(filename, 'utf-8');
-    const data: (Omit<Component, 'parentId' | 'children' | 'parents'> & {
+    const data: (Omit<Component, 'children' | 'parents'> & {
       children: Component[];
     })[] = JSON.parse(file);
 

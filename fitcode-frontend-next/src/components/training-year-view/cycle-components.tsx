@@ -38,7 +38,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
   }, [selectedGroup]);
 
   const parentComponents = components.filter(
-    (component) => component.parent === null
+    (component) => component.parentId === null
   );
 
   return (
@@ -131,7 +131,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 );
 
                 const leafComponents = components.filter(
-                  (c) => c.parent === componentId
+                  (c) => c.parentId === componentId
                 );
 
                 const selectedLeafComponent = leafComponents.find(
@@ -185,7 +185,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         return toast.error('Component already added');
 
                       const isNewComponentAParent = components.some(
-                        (c) => c.parent === newComponent.id
+                        (c) => c.parentId === newComponent.id
                       );
                       let newCycle = { ...cycle };
 
@@ -195,7 +195,9 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                         // If the new root has no children, ensure `leafComponentsIds` gets `""`
                         if (
-                          !components.some((c) => c.parent === newComponent.id)
+                          !components.some(
+                            (c) => c.parentId === newComponent.id
+                          )
                         ) {
                           newCycle.leafComponentsIds[i] = '';
                         }

@@ -1,5 +1,4 @@
 import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { useAthlete } from '@/context/athlete-provider';
 import { useAuth } from '@/context/auth-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTraining } from '@/context/training-provider';
@@ -13,10 +12,6 @@ import {
   Training,
   TrainingStatus,
 } from '@/controller/training/type/training.type';
-import {
-  ExerciseMetaQuery,
-  WorkloadData,
-} from '@/controller/training/type/user-workload';
 import { User } from '@/controller/user/type/user.type';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloseIcon from '@mui/icons-material/Close';
@@ -197,7 +192,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     handleApiRequest(
       router,
       () =>
-        TrainingController.createUserWorkloadsForComponent(
+        TrainingController.updateWorkloads(
           token,
           selectedTraining.id,
           selectedComponent.id,

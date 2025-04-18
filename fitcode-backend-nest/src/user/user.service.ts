@@ -186,8 +186,11 @@ export class UserService {
     ref: WellnessRef,
     input: Wellness,
   ): Promise<Wellness> {
-    const meta = await this.userMetaRepository.getDoc(ref);
+    this.logger.log(
+      `User ${ref.uid} is adding / updating wellness: ${JSON.stringify(input)}`,
+    );
 
+    const meta = await this.userMetaRepository.getDoc(ref);
     if (!meta) await this.userMetaRepository.addDoc(ref, input);
     else await this.userMetaRepository.updateDoc(ref, input);
 

@@ -10,7 +10,6 @@ import {
   Avatar,
   Box,
   Card,
-  Grid2,
   IconButton,
   Menu,
   MenuItem,
@@ -25,7 +24,6 @@ import { DEFAULT_SUBGROUP } from './constant';
 import {
   handleAddSubgroup,
   handleDeleteSubgroup,
-  handleRightClickSubgroup,
   onDragEndSubgroup,
 } from './state';
 import SelectedMemberReport from './selected-member-report';
@@ -35,7 +33,7 @@ import {
   Droppable,
   DropResult,
 } from 'react-beautiful-dnd';
-import { Add, MoreVert } from '@mui/icons-material';
+import { MoreVert } from '@mui/icons-material';
 import MyModal from '../modal';
 import { useTheme } from '@mui/material';
 
@@ -193,10 +191,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
       const supersets = [...component.supersets].map((s) => ({
         ...s,
-        exercises: [...s.exercises].map((e) => ({
-          ...e,
-          meta: { ...e.meta },
-        })),
+        exercises: [...s.exercises].map((e) => ({ ...e })),
       }));
 
       const newComponent = {

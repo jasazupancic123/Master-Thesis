@@ -36,7 +36,7 @@ export default function ChartPage(props: ChartProps) {
     setRange(newValue as number[]);
   };
   const [parentComponents, setParentComponents] = useState(
-    components.filter((component) => component.parent === null)
+    components.filter((component) => component.parentId === null)
   );
 
   const [parentComponent, setParentComponent] = useState<Component | null>(
@@ -90,11 +90,11 @@ export default function ChartPage(props: ChartProps) {
             setParentComponent(component);
             //check if this component has got any children
             const childComponents = components.filter(
-              (c) => c.parent === component.id
+              (c) => c.parentId === component.id
             );
             //check if any of the childComponents has got any children
             const hasChildren = components.some(
-              (cc) => cc.parent === component.id
+              (cc) => cc.parentId === component.id
             );
             if (hasChildren) {
               setParentComponents(childComponents);
@@ -102,7 +102,7 @@ export default function ChartPage(props: ChartProps) {
             } else {
               setFilteredExercises(
                 exercises.filter((exercise) =>
-                  exercise.componentsIds.includes(component.id)
+                  exercise.componentIds.includes(component.id)
                 )
               );
               setIsOnParent(false);
@@ -131,7 +131,7 @@ export default function ChartPage(props: ChartProps) {
                 setFilteredExercises([]);
                 setParentComponent(null);
                 setParentComponents(
-                  components.filter((component) => component.parent === null)
+                  components.filter((component) => component.parentId === null)
                 );
                 setIsOnParent(true);
                 return;

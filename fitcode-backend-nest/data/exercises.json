@@ -109,7 +109,7 @@
     },
     {
       "name": "Sleed Acceleration",
-      "componentIds": ["generic"],
+      "componentIds": ["resisted"],
       "instruction": "",
       "attributeValues": [
         { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },

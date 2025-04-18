@@ -20,9 +20,8 @@ export default function Animation(props: AnimationProps) {
         prevProgress >= 100 ? 10 : prevProgress + 1
       );
     }, 50);
-    return () => {
-      clearInterval(timer);
-    };
+
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {

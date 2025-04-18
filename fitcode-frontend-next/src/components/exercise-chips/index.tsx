@@ -11,14 +11,11 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
   const screenSize = useScreenSize();
   const {
     selected,
-    noSelectionLabel,
     components,
     setSelected,
-    small = false,
     direction = 'row',
     bgColor,
     primaryColor,
-    type,
   } = props;
 
   return (
