@@ -19,6 +19,6 @@ import { AttributeModule } from '../attribute/attribute.module';
     ExerciseRepository,
     ExerciseService,
   ],
-  exports: [ExerciseService],
+  exports: [ExerciseService, ExerciseAttributeValueRepository],
 })
 export class ExerciseModule {}

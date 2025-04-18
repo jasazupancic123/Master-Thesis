@@ -125,9 +125,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
 
   useEffect(() => {
     if (!sliderRef.current) return;
-
     const sliderBounds = sliderRef.current.getBoundingClientRect();
-    console.log('Slider dimensions:', sliderBounds);
   }, [sliderRef.current]); // Runs when the sliderRef is set
 
   const handleChange = (newValues: number[]) => {
@@ -320,22 +318,17 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
 
                 const handleNameChange = (index: number, newName: string) => {
                   const newCycle = sortedCycles[index];
-                  console.log(
-                    'newCycle:',
-                    '\n',
-                    newCycle.from,
-                    '\n',
-                    newCycle.to
-                  );
                   if (!newCycle) return;
+
                   const updatedCycles = [...cycles].map((cycle, i) =>
                     cycle.id === newCycle.id
                       ? { ...cycle, name: newName }
                       : cycle
                   );
+
+                  setDetectedChanges(true);
                   setCycles(updatedCycles);
                   setGroup({ ...group, cycles: updatedCycles });
-
                   setSortedCycles((prevCycles) => {
                     const updatedCycles = prevCycles.map((cycle, i) =>
                       cycle.id === newCycle.id
@@ -344,7 +337,6 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
                     );
                     return updatedCycles;
                   });
-                  setDetectedChanges(true);
                 };
 
                 return (

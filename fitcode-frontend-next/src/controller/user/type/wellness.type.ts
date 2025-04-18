@@ -1,4 +1,4 @@
-export interface UserMeta {
+export interface Wellness {
   userId: string;
   date: Date;
   weight?: number;

@@ -6,6 +6,7 @@ import { CustomClaims } from './custom-claims.type';
 // Firestore Database User
 export type UserEntity = BaseEntity & {
   groupsIds: string[];
+  trainersIds: string[];
   sport?: string;
   level?: SportLevel;
   gender?: Gender;

@@ -11,13 +11,10 @@ import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
 import { SearchBar } from '../search-bar';
 import { AddMembersModalProps } from './type';
-import { useScreenSize } from '@/context/screen-size-provider';
 
 export function AddMembersModal(props: AddMembersModalProps) {
   const { users, members, setMembers, title, placeholder, dissableMaxWidth } =
     props;
-
-  const screenSize = useScreenSize();
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);

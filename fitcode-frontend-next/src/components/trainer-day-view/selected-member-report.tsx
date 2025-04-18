@@ -9,7 +9,6 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Cell,
-  Legend,
   CartesianGrid,
 } from 'recharts';
 import { useState } from 'react';
@@ -30,18 +29,9 @@ const data = [
 ];
 
 const wellnessData = [
-  {
-    name: 'SORENESS',
-    main: 6,
-  },
-  {
-    name: 'FATIGUE',
-    main: 8,
-  },
-  {
-    name: 'SLEEP',
-    main: 10,
-  },
+  { name: 'SORENESS', main: 6 },
+  { name: 'FATIGUE', main: 8 },
+  { name: 'SLEEP', main: 10 },
 ];
 
 const COLORS: Record<string, string> = {

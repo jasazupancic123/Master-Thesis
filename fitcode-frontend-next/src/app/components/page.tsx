@@ -20,7 +20,7 @@ const DEFAULT_COMPONENT: Component = {
   id: '',
   slug: '',
   name: '',
-  parent: null,
+  parentId: null,
   children: [],
   parents: [],
 };
@@ -29,7 +29,7 @@ export default function Page() {
   const components: Component[] = [];
   const componentsTree = CommonService.instance.tree.fromArray(components, {
     idPropertyName: 'id',
-    parentIdPropertyName: 'parent',
+    parentIdPropertyName: 'parentId',
     childrenPropertyName: 'children',
   }) as unknown as TreeComponent[];
 
@@ -56,7 +56,7 @@ export default function Page() {
       width: 150,
       valueGetter: (_, row: Component) => {
         const found = components.find(
-          (component) => component.id === row.parent
+          (component) => component.id === row.parentId
         );
         return (found || DEFAULT_COMPONENT).name;
       },

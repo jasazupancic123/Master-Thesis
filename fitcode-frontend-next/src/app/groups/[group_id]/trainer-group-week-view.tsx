@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
+import { addMinutes } from 'date-fns';
 
 const commonService = CommonService.instance;
 
@@ -140,11 +141,13 @@ export default function TrainerWeekView() {
                           await handleApiRequest(
                             router,
                             () =>
-                              TrainingController.update(
-                                token,
-                                training.id,
-                                input
-                              ),
+                              TrainingController.update(token, training.id, {
+                                components: input.components?.map((c) => ({
+                                  ...c,
+                                  from: new Date(c.from),
+                                  to: addMinutes(new Date(c.from), 30),
+                                })),
+                              }),
                             (training) => {
                               const mapped = TrainingService.mapComponents(
                                 training,

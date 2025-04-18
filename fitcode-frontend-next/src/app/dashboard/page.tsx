@@ -16,25 +16,26 @@ export default async function Page() {
   if (!profile) return <div>Unauthorized</div>;
 
   const role = profile.customClaims.role[0];
-  const [groups] = await Promise.all([GroupController.findAll(token)]);
-
-  const users = await UserController.findAll(token);
+  const [users, groups] = await Promise.all([
+    UserController.findAll(token),
+    GroupController.findAll(token),
+  ]);
 
   const organizations: Organization[] = [
     {
       id: '1',
       name: 'NK Maribor',
       manager: { ...profile },
-      //trainers: Array.from({ length: 12 }, () => ({ ...profile })),
+      // trainers: Array.from({ length: 12 }, () => ({ ...profile })),
       trainers: [{ ...profile }],
       groups: groups,
-      //groups: Array.from({ length: 24 }, () => ({ ...groups[0] })),
+      // groups: Array.from({ length: 24 }, () => ({ ...groups[0] })),
       createdAt: new Date(),
       updatedAt: new Date(),
     },
   ];
-  const organization: Organization = { ...organizations[0] };
 
+  const organization: Organization = { ...organizations[0] };
   return (
     <Dashboard
       organization={organization}

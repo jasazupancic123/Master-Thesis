@@ -2,7 +2,6 @@ import { SetExerciseOption } from '@/common/constant/training-exercise.constant'
 import { Day } from '@/common/service/util/date.util';
 import { SetState } from '@/common/type/state.type';
 import {
-  ExerciseMeta,
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
@@ -46,7 +45,7 @@ export interface SupersetsProps {
 }
 
 export interface SetExerciseState {
-  option: keyof ExerciseMeta;
+  option: string;
   label: string;
   value: string;
   type: SetExerciseOption['type'];
@@ -58,5 +57,4 @@ export interface SetExerciseAttributeProps {
   state: SetExerciseState;
   onChange: (data: SetExerciseState) => void;
   options: SetExerciseOption[];
-  disabled?: boolean;
 }

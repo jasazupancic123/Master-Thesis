@@ -39,7 +39,7 @@ export class ExerciseService {
         const tree = commonService.tree.fromArray(components, {
           rootId: component.id,
           idPropertyName: 'id',
-          parentIdPropertyName: 'parent',
+          parentIdPropertyName: 'parentId',
           childrenPropertyName: 'children',
         });
 
@@ -51,7 +51,7 @@ export class ExerciseService {
 
       if (allComponentsIds.length)
         filtered = filtered.filter((exercise) =>
-          allComponentsIds.some((id) => exercise.componentsIds.includes(id))
+          allComponentsIds.some((id) => exercise.componentIds.includes(id))
         );
     }
 
@@ -116,16 +116,14 @@ export class ExerciseService {
   }
 
   static mapAttributes(item: Exercise): Exercise {
-    item.attributeValues = commonService.object.flattenObject(
-      item.attributeValues
-    );
+    // item.valuesObject = commonService.object.flattenObject(item.valuesObject);
 
     return item;
   }
 
   static mapComponents(item: Exercise, components: Component[]): Exercise {
     item.components = components.filter(({ id }) =>
-      item.componentsIds.includes(id)
+      item.componentIds.includes(id)
     );
 
     item.rootComponents = components.map((component) =>
