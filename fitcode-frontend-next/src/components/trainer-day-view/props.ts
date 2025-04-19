@@ -2,6 +2,7 @@ import { SetExerciseOption } from '@/common/constant/training-exercise.constant'
 import { Day } from '@/common/service/util/date.util';
 import { SetState } from '@/common/type/state.type';
 import {
+  Superset,
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
@@ -33,6 +34,8 @@ export interface TrainingExerciseCardProps {
   chartView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
+  supersets: Superset[],
+  setSupersetsWithAdd: Dispatch<SetStateAction<Superset[]>>;
 }
 
 export interface SubgroupProps {

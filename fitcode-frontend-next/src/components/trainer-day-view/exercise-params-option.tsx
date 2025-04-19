@@ -70,7 +70,6 @@ export function ExerciseParamOptions(props: Props) {
           >
             {param.field[0].toUpperCase() + param.field.slice(1)}
           </MenuItem>
-
           {param.options?.map((p) => {
             return (
               <MenuItem
