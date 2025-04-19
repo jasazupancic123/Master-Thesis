@@ -487,6 +487,8 @@ export default function Supersets(props: SupersetsProps) {
                                     exercise={exercise}
                                     selectedExercise={selectedExercise}
                                     setSelectedExercise={setSelectedExercise}
+                                    supersets={supersetsWithAdd}
+                                    setSupersetsWithAdd={setSupersetsWithAdd}
                                     superior={{
                                       row: i === 0,
                                       column: k === 0,

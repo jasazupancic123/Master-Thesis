@@ -102,6 +102,12 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         >
           <Select
             variant="filled"
+            sx={{
+              textAlign: 'center',
+              '& .MuiInputBase-input': {
+                textAlign: 'center',
+              },
+            }}
             /*  sx={{
               ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
               textAlign: 'center',
@@ -168,6 +174,18 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             onChange={(e) => {
               const value = e.target.value;
               onChange({ ...state, value });
+            }}
+            sx={{
+              textAlign: 'center',
+              color: '#989fa5',
+              '& .MuiInputBase-input': {
+                p: 0.5,
+                textAlign: 'center',
+                pl: 2.33,
+              },
+              '&.Mui-disabled': {
+                backgroundColor: 'transparent',
+              },
             }}
             /* sx={{
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
