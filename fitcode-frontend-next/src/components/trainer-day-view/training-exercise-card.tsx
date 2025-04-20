@@ -20,6 +20,9 @@ import { IsNan } from '@tensorflow/tfjs';
 import { ExerciseParamOptions } from './exercise-params-option';
 import { ComponentParam } from '@/controller/component/type/component.type';
 import { preconnect } from 'react-dom';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import toast from 'react-hot-toast';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 // naredi posebej komponent za option (v02, int, rec)
 // naredi posebej komponent za vsak set data (enojni select, number, string)
@@ -41,10 +44,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const [exercise, setExercise] = useState(exerciseProp);
 
   useEffect(() => {
-    console.log('updated exercise:', exercise);
+    //console.log('updated exercise:', exercise);
   }, [exercise]);
-
-  console.log('exercise:', exercise);
 
   const { setDetectedChanges, filteredTrainings, setFilteredTrainings } =
     useGroup();
@@ -76,7 +77,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       ?.map((pv) => exercise?.params?.find((p) => p.field === pv.field)!)
       ?.filter((p) => p) || [];
 
-  console.log('params:', params);
+  //console.log('params:', params);
 
   const [selectedParams, setSelectedParams] = useState(() => {
     const selected: { field: string; label: string; selected: string }[] = [];
@@ -104,31 +105,34 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     supersets: Superset[],
     pairs: { field: string; value: string | number }[]
   ): Superset[] {
-    if (superior?.all) {
-      for (const { field, value } of pairs)
-        for (const superset of supersets)
-          for (const exercise of superset.exercises)
-            if (exercise.meta?.[field] !== undefined) {
-              // (exercise.meta[field] as any) = value;
-            }
-    } else if (superior?.row && k !== undefined && k !== null) {
-      const rowIndex = k;
-      for (const { field, value } of pairs) {
-        for (const superset of supersets) {
-          const exercise = superset.exercises[rowIndex];
-          if (!exercise) continue;
-          if (exercise.meta?.[field] !== undefined) {
-          }
-          // (exercise.meta[field] as any) = value;
-        }
-      }
-    }
-
-    for (const { field, value } of pairs) {
-    }
-    // (supersets[j!].exercises[k!].meta[field] as any) = value;
-
+    //TODO()
     return supersets;
+
+    // if (superior?.all) {
+    //   for (const { field, value } of pairs)
+    //     for (const superset of supersets)
+    //       for (const exercise of superset.exercises)
+    //         if (exercise.meta?.[field] !== undefined) {
+    //           // (exercise.meta[field] as any) = value;
+    //         }
+    // } else if (superior?.row && k !== undefined && k !== null) {
+    //   const rowIndex = k;
+    //   for (const { field, value } of pairs) {
+    //     for (const superset of supersets) {
+    //       const exercise = superset.exercises[rowIndex];
+    //       if (!exercise) continue;
+    //       if (exercise.meta?.[field] !== undefined) {
+    //       }
+    //       // (exercise.meta[field] as any) = value;
+    //     }
+    //   }
+    // }
+
+    // for (const { field, value } of pairs) {
+    // }
+    // // (supersets[j!].exercises[k!].meta[field] as any) = value;
+
+    // return supersets;
   }
 
   function updateSelectedTraining(
@@ -169,7 +173,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setDetectedChanges(true);
   }
 
-  function updateParamStatate(param: ComponentParam, state: any, i: number) {
+  function updateParamState(param: ComponentParam, state: any, i: number) {
     if (!training || !component) return;
     const newExercise = { ...exercise };
     newExercise.sets[i].paramValues[
@@ -188,6 +192,136 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         (p) => p.field === param.field
       )
     ].value = state.value;
+
+    updateGlobalState(newSuperset);
+  }
+
+  function updateNumberOfSets(state: any) {
+    try {
+      const value = parseInt(state.value);
+      if (value < 1) return;
+      const newExercise = { ...exercise };
+      if (exercise.sets.length < value) {
+        const newSets = [...newExercise.sets];
+        const lastSet = { ...newSets[newSets.length - 1] };
+        const paramValues = lastSet.paramValues.map((pv) => {
+          const paramValue = { ...pv };
+          return paramValue;
+        });
+
+        for (let i = newSets.length; i < value; i++) {
+          newSets.push({
+            setNumber: i + 1,
+            paramValues: paramValues,
+          });
+        }
+        newExercise.sets = newSets;
+        setExercise(newExercise);
+      } else if (exercise.sets.length > value) {
+        const newSets = [] as any[];
+        for (let i = 0; i < value; i++) {
+          newSets.push({
+            setNumber: i + 1,
+            paramValues: exercise.sets[i].paramValues.map((pv: any) => {
+              const paramValue = { ...pv };
+              return paramValue;
+            }),
+          });
+        }
+        newExercise.sets = newSets;
+        setExercise(newExercise);
+      }
+
+      const newSuperset = { ...supersets[j] };
+      const exerciseIndex = newSuperset.exercises.findIndex(
+        (e) => e.id === exercise.id
+      );
+      if (exerciseIndex === -1) return;
+      newSuperset.exercises[exerciseIndex] = { ...newExercise };
+      updateGlobalState(newSuperset);
+    } catch (e) {
+      toast.error('An error occurred while updating the number of sets.');
+    }
+  }
+
+  function getOptionAndSetTypeIndex(param: ComponentParam, firstSet: any) {
+    let option, setTypeIndex;
+    const paramValue = firstSet.paramValues.find(
+      (p: any) => p.field === param.field
+    );
+    if (!paramValue && param.field !== 'volWorkSets') {
+      console.log(
+        'No paramValue found for field:',
+        param.field,
+        'in',
+        firstSet
+      );
+      return { option: undefined, setTypeIndex: undefined };
+    }
+
+    if (param.field === 'volWorkSets') {
+      option = SET;
+      setTypeIndex = 0; //for SET_OPTIONS
+    } else if (paramValue.selected === 'rep') {
+      option = SET_TYPE;
+      setTypeIndex = 0; //for REP_OPTIONS
+    } else if (paramValue.selected === 'eff') {
+      option = TEMPO;
+      setTypeIndex = 1; //for EFF_OPTIONS
+    } else if (paramValue.selected === 'time') {
+      option = SET_TYPE;
+      setTypeIndex = 2; //for TIME_OPTIONS
+    } else if (paramValue.selected === 'tempo') {
+      option = TEMPO;
+      setTypeIndex = 0; //for TEMPO_OPTIONS
+    } else if (paramValue.selected === 'dist') {
+      option = SET_TYPE;
+      setTypeIndex = 1; //for DISTANCE_OPTIONS
+    } else {
+      //If you come here, then handle the selected param in a new else if
+      console.log(`Unhandled param selected value "${paramValue.selected}"`);
+      throw new Error(
+        `Unhandled param selected value "${paramValue.selected}"`
+      );
+    }
+    return { option, setTypeIndex };
+  }
+
+  function updateAttributeType(param: Attribute, state: any) {
+    if (!param.options) return;
+    console.log('param options:', param.options);
+    console.log('state:', state);
+
+    const validOption = param.options.find(
+      (o) =>
+        o.field.toLowerCase().includes(state.label.toLowerCase()) &&
+        o.type === state.type
+    );
+    console.log('validOption:', validOption);
+    if (!validOption) return;
+    const newSets = [...exercise.sets];
+    for (const set of newSets) {
+      const paramValue = set.paramValues.find((p) => p.field === param.field);
+      if (!paramValue) return;
+      paramValue.selected = validOption.field;
+    }
+    const newExercise = { ...exercise, sets: newSets };
+    setExercise(newExercise);
+
+    const newSuperset = { ...supersets[j] };
+    const exerciseIndex = newSuperset.exercises.findIndex(
+      (e) => e.id === exercise.id
+    );
+    if (exerciseIndex === -1) return;
+    newSuperset.exercises[exerciseIndex] = {
+      ...newExercise,
+    };
+
+    updateGlobalState(newSuperset);
+  }
+
+  function updateGlobalState(newSuperset: Superset) {
+    if (!training || !component) return;
 
     const newSupersets = [...supersets];
     const supersetIndex = newSupersets.findIndex(
@@ -256,6 +390,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
       setFilteredTrainings(updatedTrainings);
     }
+
+    setDetectedChanges(true);
   }
 
   if (!training || !component || !params) return null;
@@ -329,15 +465,22 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       </Stack>
 
       {!expandedSetsView ? (
-        <Grid2 container spacing={1} columns={11}>
-          <Grid2 size={0.5}>
+        <Grid2
+          container
+          spacing={1}
+          columns={11}
+          key={i}
+          px={screenSize.isSmallerThanLaptop ? 1 : 0}
+        >
+          <Grid2 size={1}>
             <IconButton
               disableRipple
               sx={{
                 p: 0,
                 m: 0,
-                mt: screenSize.isTablet ? 1.1 : 1,
+                mt: 1.66,
                 height: '100%',
+                display: i === 0 ? undefined : 'none',
               }}
               onClick={() => {
                 setExpandedSetsView(!expandedSetsView);
@@ -352,29 +495,109 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               />
             </IconButton>
           </Grid2>
+          <Grid2 size={10}>
+            <Box
+              display="flex"
+              width="100%"
+              justifyContent="center"
+              alignItems="center"
+              gap={1}
+            >
+              {exercise.params.map((param) => {
+                const { option, setTypeIndex } = getOptionAndSetTypeIndex(
+                  param,
+                  exercise.sets[0]
+                );
 
-          {/* Params */}
-          {params.map((p) => (
-            <Grid2 size={2} key={p.field}>
-              <ExerciseParamOptions
-                param={p}
-                state={selectedParams}
-                setState={setSelectedParams}
-              />
-            </Grid2>
-          ))}
+                if (
+                  !option ||
+                  setTypeIndex === undefined ||
+                  setTypeIndex === null
+                )
+                  return null;
+
+                if (option === SET) {
+                  return (
+                    <Box
+                      key={param.field}
+                      flexBasis={
+                        (100 / exercise.params.length).toString() + '%'
+                      }
+                    >
+                      <SetExerciseAttribute
+                        options={option} //needs to be replaced with param.options, when param will have values array
+                        state={(() => {
+                          return {
+                            type: 'number',
+                            label: 'Sets',
+                            values: option[setTypeIndex].values,
+                            format: option[setTypeIndex].format,
+                            value: exercise.sets.length.toString(),
+                          };
+                        })()}
+                        onChange={(state) => {
+                          updateNumberOfSets(state);
+                        }}
+                      />
+                    </Box>
+                  );
+                }
+
+                //display values from the first set only
+                const set = exercise.sets[0];
+                const paramValueIndex = set.paramValues.findIndex(
+                  (p) => p.field === param.field
+                );
+                const paramValue = set.paramValues[paramValueIndex];
+                let isNumeric =
+                  paramValue.value.match(/^\d+(\.\d+)?$/) !== null;
+
+                return (
+                  <Box
+                    key={paramValue.field}
+                    flexBasis={(100 / exercise.params.length).toString() + '%'}
+                  >
+                    <SetExerciseAttribute
+                      options={option} //needs to be replaced with param.options, when param will have values array
+                      state={(() => {
+                        return {
+                          type: isNumeric ? 'number' : 'select',
+                          label:
+                            paramValue.selected[0].toUpperCase() +
+                            paramValue.selected.slice(1),
+                          values: option[setTypeIndex].values,
+                          format: option[setTypeIndex].format,
+                          value: paramValue.value.toString(),
+                        };
+                      })()}
+                      onChange={(state) => {
+                        if (!state.typeChange || !param.options) return;
+                        updateAttributeType(param, state);
+                      }}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          </Grid2>
         </Grid2>
       ) : (
         <Box display="flex" flexDirection="column" width="100%">
           {exercise.sets.map((set, i) => (
-            <Grid2 container spacing={1} columns={11} key={i}>
+            <Grid2
+              container
+              spacing={1}
+              columns={11}
+              key={i}
+              px={screenSize.isSmallerThanLaptop ? 1 : 0}
+            >
               <Grid2 size={1}>
                 <IconButton
                   disableRipple
                   sx={{
                     p: 0,
                     m: 0,
-                    mt: screenSize.isTablet ? 1.1 : 1,
+                    mt: 1.66,
                     height: '100%',
                     display: i === 0 ? undefined : 'none',
                   }}
@@ -404,49 +627,38 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                   gap={1}
                 >
                   {exercise.params.map((param) => {
-                    let option, setTypeIndex;
-                    if (param.defaultValue === 'set') {
-                      option = SET;
-                      setTypeIndex = 0; //for SET_OPTIONS
-                    } else if (param.defaultValue === 'rep') {
-                      option = SET_TYPE;
-                      setTypeIndex = 0; //for REP_OPTIONS
-                    } else if (param.defaultValue === 'eff') {
-                      option = TEMPO;
-                      setTypeIndex = 1; //for TEMPO_OPTIONS
-                    } else if (param.defaultValue === 'time') {
-                      option = SET_TYPE;
-                      setTypeIndex = 2; //for TIME_OPTIONS
-                    } else {
-                      //If you come here, then handle the selected param in a new else if
-                      throw new Error(
-                        `Unhandled param selected value "${param.defaultValue}"`
-                      );
-                    }
+                    const { option, setTypeIndex } = getOptionAndSetTypeIndex(
+                      param,
+                      exercise.sets[0]
+                    );
+
+                    if (
+                      !option ||
+                      setTypeIndex === undefined ||
+                      setTypeIndex === null
+                    )
+                      return null;
 
                     if (option === SET) {
                       return (
                         <Box
                           key={param.field}
                           flexBasis={
-                            (100 / exercise.sets.length).toString() + '%'
+                            (100 / exercise.params.length).toString() + '%'
                           }
                         >
                           <SetExerciseAttribute
-                            options={option}
+                            options={option} //needs to be replaced with param.options, when param will have values array
                             state={(() => {
                               return {
                                 type: 'number',
                                 label: 'set',
                                 values: option[setTypeIndex].values,
-                                option: 'set', //idk what this is??
                                 format: option[setTypeIndex].format,
                                 value: (i + 1).toString(),
                               };
                             })()}
-                            onChange={(state) => {
-                              updateParamStatate(param, state, i);
-                            }}
+                            onChange={(state) => {}}
                           />
                         </Box>
                       );
@@ -463,11 +675,11 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                       <Box
                         key={paramValue.field}
                         flexBasis={
-                          (100 / exercise.sets.length).toString() + '%'
+                          (100 / exercise.params.length).toString() + '%'
                         }
                       >
                         <SetExerciseAttribute
-                          options={option}
+                          options={option} //needs to be replaced with param.options, when param will have values array
                           state={(() => {
                             return {
                               type: isNumeric ? 'number' : 'select',
@@ -475,13 +687,13 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                                 paramValue.selected[0].toUpperCase() +
                                 paramValue.selected.slice(1),
                               values: option[setTypeIndex].values,
-                              option: 'set', //idk what this is??
                               format: option[setTypeIndex].format,
                               value: paramValue.value.toString(),
                             };
                           })()}
                           onChange={(state) => {
-                            updateParamStatate(paramValue, state, i);
+                            if (state.typeChange) return; //type can only be changed on collapsed view
+                            updateParamState(paramValue, state, i);
                           }}
                         />
                       </Box>

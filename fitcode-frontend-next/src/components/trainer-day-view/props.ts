@@ -48,12 +48,12 @@ export interface SupersetsProps {
 }
 
 export interface SetExerciseState {
-  option: string;
   label: string;
   value: string;
   type: SetExerciseOption['type'];
   values?: SetExerciseOption['values'];
   format: SetExerciseOption['format'];
+  typeChange?: boolean;
 }
 
 export interface SetExerciseAttributeProps {
