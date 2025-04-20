@@ -11,7 +11,7 @@ export const exerciseCardSetAttributeSx = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 20,
+    height: 27,
     fontSize: '0.7rem',
     color: 'white',
     backgroundColor: 'transparent',

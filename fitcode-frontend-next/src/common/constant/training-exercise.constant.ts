@@ -21,21 +21,21 @@ export const SET_OPTIONS: SetExerciseOption = {
 };
 
 export const REP_OPTIONS: SetExerciseOption = {
-  type: 'select',
+  type: 'number',
   label: 'rep',
   values: getValues(20),
   format: (value) => value,
 };
 
 export const DISTANCE_OPTIONS: SetExerciseOption = {
-  type: 'select',
+  type: 'number',
   label: 'dist',
   values: getValues(36, 5),
   format: (value) => `${value} m`,
 };
 
 export const TIME_OPTIONS: SetExerciseOption = {
-  type: 'select',
+  type: 'number',
   label: 'time',
   values: getValues(36, 5),
   format: (value) => `${value} s`,

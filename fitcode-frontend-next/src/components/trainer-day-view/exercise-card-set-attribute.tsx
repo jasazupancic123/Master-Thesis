@@ -59,6 +59,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               type: option.type,
               values: option.values ?? [],
               value: values ? values.toString() : '10',
+              typeChange: true,
             } as SetExerciseState);
           }}
         >
@@ -98,48 +99,26 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
         <FormControl
           variant="filled"
           size="small"
-          sx={exerciseCardSetAttributeSx}
+          sx={{
+            ...exerciseCardSetAttributeSx,
+            width: '100%',
+            textAlign: 'center',
+          }}
         >
           <Select
             variant="filled"
             sx={{
               textAlign: 'center',
+              '& .MuiSelect-select': {
+                textAlign: 'center', // 👈 This is the magic line
+              },
               '& .MuiInputBase-input': {
+                width: '100% !important',
+                fontSize: 14,
                 textAlign: 'center',
+                px: '0px !important', // Override MUI padding
               },
             }}
-            /*  sx={{
-              ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
-              textAlign: 'center',
-              color: 'white',
-              pr: '0px !important', // Override MUI's default right padding
-              pl: '0px !important', // Consistent left padding
-              WebkitTextFillColor: 'white',
-              '& .MuiSelect-select': {
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pr: '0px !important', // Override MUI's default right padding
-                pl: '0px !important', // Consistent left padding
-                color: 'white',
-                WebkitTextFillColor: 'white',
-                fontSize: screenSize.isBetween(600, 750) ? 11 : 15,
-              },
-              '& .MuiInputBase-input': {
-                textAlign: 'center',
-                paddingRight: '0px !important', // Override MUI padding
-                paddingLeft: '0px !important',
-                color: 'white',
-                WebkitTextFillColor: 'white',
-                fontSize: screenSize.isBetween(600, 750) ? 11 : 15,
-              },
-              '&.Mui-disabled': {
-                backgroundColor: 'transparent',
-                color: 'white',
-                WebkitTextFillColor: 'white',
-              },
-            }} */
             value={state.value}
             onChange={(e) => {
               const value = e.target.value as string;
@@ -180,8 +159,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               color: '#989fa5',
               '& .MuiInputBase-input': {
                 p: 0.5,
-                textAlign: 'center',
-                pl: 2.33,
+                textAlign: 'center !important',
               },
               '&.Mui-disabled': {
                 backgroundColor: 'transparent',
