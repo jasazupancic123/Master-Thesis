@@ -1,6 +1,7 @@
-import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
 import { Day } from '@/common/service/util/date.util';
 import { SetState } from '@/common/type/state.type';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 import {
   Superset,
   TrainingComponent,
@@ -48,16 +49,17 @@ export interface SupersetsProps {
 }
 
 export interface SetExerciseState {
+  field: string;
   label: string;
   value: string;
-  type: SetExerciseOption['type'];
-  values?: SetExerciseOption['values'];
-  format: SetExerciseOption['format'];
+  type: string;
+  name: string;
   typeChange?: boolean;
 }
 
 export interface SetExerciseAttributeProps {
   state: SetExerciseState;
-  onChange: (data: SetExerciseState) => void;
-  options: SetExerciseOption[];
+  onChange: (data: AttributeValue) => void;
+  options: Attribute[];
+  expandedView: boolean;
 }
