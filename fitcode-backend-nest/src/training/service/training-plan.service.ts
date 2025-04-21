@@ -33,7 +33,7 @@ import {
 } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
-import { ExerciseAttributeValueRepository } from 'src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
 
 @Injectable()
 export class TrainingPlanService {

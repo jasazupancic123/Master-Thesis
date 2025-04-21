@@ -1,6 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { SetState } from '@/common/type/state.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import FileUpload from '@/components/file-upload';
 import MyModal from '@/components/modal';
 import { useScreenSize } from '@/context/screen-size-provider';
@@ -9,7 +9,13 @@ import {
   TreeComponent,
 } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
+import {
+  Button,
+  Checkbox,
+  Divider,
+  FormControlLabel,
+  InputLabel,
+} from '@mui/material';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
@@ -19,6 +25,12 @@ import React, { useEffect, useState } from 'react';
 import SelectAttribute from './select-attribute';
 import SelectComponent from './select-component';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
+import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
+import { v4 } from 'uuid';
+import toast from 'react-hot-toast';
+import { ExerciseController } from '@/controller/exercise/exercise.controller';
+import { useGroup } from '@/context/group-provider';
+import { useRouter } from 'next/navigation';
 
 interface Props {
   data: Partial<Exercise>;
@@ -35,6 +47,7 @@ interface Props {
 
 export default function ExerciseModal(props: Props) {
   const screenSize = useScreenSize();
+  const router = useRouter();
   const {
     data,
     setData,
@@ -48,9 +61,14 @@ export default function ExerciseModal(props: Props) {
     onConfirm,
   } = props;
 
+  const { token } = useGroup();
+
   const [selectedComponents, setSelectedComponents] = useState<{
     [key: number]: string;
   }>({});
+  const [hasSelectedLeafComponent, setHasSelectedLeafComponent] =
+    useState(false);
+  const [filteredAttributes, setFilteredAttributes] = useState<Attribute[]>([]);
 
   useEffect(() => {
     // set the selected components to the data's components
@@ -100,6 +118,52 @@ export default function ExerciseModal(props: Props) {
       ], // only the leaf component (last one) is selected
     }));
   }, [selectedComponents]);
+
+  useEffect(() => {
+    const componentId = data.componentIds?.[0];
+    if (!componentId) return;
+    const foundComponent = components.find((c) => c.id === componentId);
+    if (!foundComponent) return;
+    const hasSelectedLeafComponent = foundComponent.children.length === 0;
+    if (hasSelectedLeafComponent) {
+      const parents = foundComponent.parents.map((parent) => {
+        const foundParent = components.find((c) => c.id === parent);
+        if (!foundParent) return null;
+        return foundParent;
+      });
+      const attributesIds = foundComponent.attributes || [];
+      for (const parent of parents) {
+        if (!parent || !parent?.attributes) continue;
+        for (const attribute of parent.attributes) {
+          if (!attributesIds.find((a) => a === attribute))
+            attributesIds.push(attribute);
+        }
+      }
+      const filteredAttributes: Attribute[] = attributesIds
+        .map((attribute) => {
+          const foundAttribute = attributes.find((a) => a.field === attribute);
+          if (!foundAttribute) return null;
+          if (foundAttribute.type === 'select') {
+            const foundSelectAttribute = attributes.find(
+              (a) => a.field === foundAttribute.field
+            );
+            if (!foundSelectAttribute) return null;
+            foundAttribute.options = foundSelectAttribute.options;
+          }
+          return foundAttribute;
+        })
+        .filter((a): a is Attribute => Boolean(a));
+
+      setFilteredAttributes(filteredAttributes);
+    } else {
+      setFilteredAttributes([]);
+    }
+    setHasSelectedLeafComponent(hasSelectedLeafComponent);
+  }, [data.componentIds]);
+
+  useEffect(() => {
+    console.log('updated data', data);
+  }, [data]);
 
   useEffect(() => {
     if (!isOpen) setSelectedComponents({});
@@ -185,49 +249,99 @@ export default function ExerciseModal(props: Props) {
             <Divider>Other</Divider>
           </Grid>
 
-          {attributes.map((attribute) => {
-            const type = attribute.type === 'number' ? 'number' : 'text';
+          {!hasSelectedLeafComponent ? (
+            <Box width="100%" display="flex" justifyContent="center">
+              Select a leaf component to add attributes
+            </Box>
+          ) : filteredAttributes.length === 0 ? (
+            <Box width="100%" display="flex" justifyContent="center">
+              No attributes to set
+            </Box>
+          ) : (
+            filteredAttributes.map((attribute) => {
+              const type = attribute.type === 'number' ? 'number' : 'text';
 
-            return (
-              <Grid size={{ xs: 6 }} key={attribute.field}>
-                {attribute.type === 'select' ? (
-                  <SelectAttribute
-                    attribute={attribute}
-                    onChange={handleSelectChange}
-                    initialValue={data.valuesObject}
-                    label
-                  />
-                ) : attribute.type === 'boolean' ? (
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={data.valuesObject?.[attribute.field] || false}
-                        onChange={(e) =>
-                          handleSelectChange(
-                            attribute.field,
-                            e.target.checked as any
-                          )
-                        }
-                      />
-                    }
-                    label={attribute.name}
-                  />
-                ) : (
-                  <TextField
-                    fullWidth
-                    label={attribute.name}
-                    type={type}
-                    variant="outlined"
-                    value={data.valuesObject?.[attribute.field] || ''}
-                    onChange={(e) =>
-                      handleSelectChange(attribute.field, e.target.value)
-                    }
-                  />
-                )}
-              </Grid>
-            );
-          })}
+              return (
+                <Grid size={{ xs: 6 }} key={attribute.field}>
+                  {attribute.type === 'select' ? (
+                    <SelectAttribute
+                      attribute={attribute}
+                      onChange={handleSelectChange}
+                      initialValue={data.valuesObject}
+                    />
+                  ) : attribute.type === 'boolean' ? (
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={
+                            data.valuesObject?.[attribute.field] || false
+                          }
+                          onChange={(e) =>
+                            handleSelectChange(
+                              attribute.field,
+                              e.target.checked as any
+                            )
+                          }
+                        />
+                      }
+                      label={attribute.name}
+                    />
+                  ) : (
+                    <TextField
+                      fullWidth
+                      label={attribute.name}
+                      type={type}
+                      variant="outlined"
+                      value={data.valuesObject?.[attribute.field] || ''}
+                      onChange={(e) =>
+                        handleSelectChange(attribute.field, e.target.value)
+                      }
+                    />
+                  )}
+                </Grid>
+              );
+            })
+          )}
         </Grid>
+        {hasSelectedLeafComponent && (
+          <Box width="100%" display="flex" justifyContent="center" mt={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                //post
+                const attributeValues = [] as ExerciseAttributeValue[];
+                for (const key in data.valuesObject) {
+                  const attributeValue: Partial<ExerciseAttributeValue> = {
+                    field: key,
+                    selected: data.valuesObject[key],
+                    value: data.valuesObject[key],
+                    componentIds: data.componentIds || [],
+                  };
+                  attributeValues.push(
+                    attributeValue as ExerciseAttributeValue
+                  );
+                }
+                data.attributeValues = attributeValues;
+                delete data.valuesObject;
+
+                console.log('final data', data);
+
+                handleApiRequest(
+                  router,
+                  () => ExerciseController.create(token, data as Exercise),
+                  (exercise) => {
+                    console.log('exercise created', exercise);
+                  },
+                  undefined,
+                  'Failed to create exercise'
+                );
+              }}
+            >
+              Add exercise
+            </Button>
+          </Box>
+        )}
       </Box>
     </MyModal>
   );

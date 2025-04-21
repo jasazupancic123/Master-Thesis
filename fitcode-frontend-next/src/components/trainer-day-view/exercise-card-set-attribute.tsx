@@ -52,8 +52,10 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           onChange={(e) => {
             const value = e.target.value as string;
             const option = options.find((option) => option.name === value);
+            console.log('option', option);
 
             if (!option) return;
+
 
             onChange({
               field: option.field,

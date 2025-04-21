@@ -240,8 +240,12 @@ export function ExercisesPage() {
             components={components}
             isOpen={modal.edit}
             setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
-            title={exercise.global ? 'Exercise Details' : 'Update Exercise'}
-            {...(!exercise.global && {
+            title={
+              exercise.ownerId === 'global'
+                ? 'Exercise Details'
+                : 'Update Exercise'
+            }
+            {...(exercise.ownerId !== 'global' && {
               onConfirm: async () => {
                 handleUpdateExercise(token, exercise!.id!, exercise, {
                   router,

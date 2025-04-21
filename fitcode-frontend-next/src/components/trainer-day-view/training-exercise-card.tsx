@@ -508,7 +508,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                           value: paramValue.value.toString(),
                         };
                       })()}
-                      onChange={(state: AttributeValue) => {}}
+                      onChange={(state: AttributeValue) => {
+                        updateAttributeType(param, state);
+                      }}
                       expandedView={expandedSetsView}
                     />
                   </Box>
