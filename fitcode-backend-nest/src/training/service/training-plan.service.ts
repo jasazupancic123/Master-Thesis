@@ -33,7 +33,7 @@ import {
 } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
-import { ExerciseAttributeValueRepository } from 'src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
 
 @Injectable()
 export class TrainingPlanService {
@@ -155,8 +155,8 @@ export class TrainingPlanService {
       if (
         exercises.length > 0 &&
         exercises.every((e) =>
-          e.componentIds.every(() =>
-            leafs.every((leaf) => leaf.parents?.includes(component.id)),
+          e.componentIds.some(() =>
+            leafs.some((leaf) => leaf.parents?.includes(component.id)),
           ),
         )
       )
@@ -182,6 +182,9 @@ export class TrainingPlanService {
 
       for (const s of tComponent.supersets)
         for (const tExercise of s.exercises) {
+          if (tExercise.params.length > 0 || tExercise.sets.length > 0)
+            continue; // already populated
+
           const exercise = exercises.find((e) => e.id === tExercise.id)!;
           if (!exercise) continue;
 
@@ -198,6 +201,9 @@ export class TrainingPlanService {
       for (const subgroup of tComponent.subgroups)
         for (const s of subgroup.supersets)
           for (const tExercise of s.exercises) {
+            if (tExercise.params.length > 0 || tExercise.sets.length > 0)
+              continue; // already populated
+
             const exercise = exercises.find((e) => e.id === tExercise.id)!;
             if (!exercise) continue;
 
@@ -282,9 +288,9 @@ export class TrainingPlanService {
       if (!attribute) continue;
 
       const options: Attribute[] = [];
-      if (attribute.options) {
+      if (attribute.options?.length > 0) {
         // if hardcoded param has options, but component param does not, select all options by default
-        const paramOptions = !param.options ? attribute.options : param.options;
+        const paramOptions = param.options ? param.options : attribute.options;
         options.push(
           ...this.mapOptionsRecursively(paramOptions, attribute.options),
         );
@@ -500,6 +506,7 @@ export class TrainingPlanService {
     paramOptions: ComponentParam[],
     attributeOptions: Attribute[],
   ): Attribute[] {
+    if (!paramOptions) return [];
     const mappedOptions: Attribute[] = [];
 
     for (const paramOption of paramOptions) {
@@ -511,10 +518,10 @@ export class TrainingPlanService {
 
       // recursively map nested options
       const nestedOptions: Attribute[] = [];
-      if (paramOption.options && attributeOption.options) {
+      if (attributeOption.options?.length > 0) {
         nestedOptions.push(
           ...this.mapOptionsRecursively(
-            paramOption.options,
+            paramOption.options || attributeOption.options,
             attributeOption.options,
           ),
         );

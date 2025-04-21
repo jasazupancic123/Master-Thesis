@@ -17,3 +17,12 @@ export const exerciseCardSetAttributeSx = {
     backgroundColor: 'transparent',
   },
 };
+
+export const disableBorder = {
+  backgroundColor: 'transparent',
+  border: '0 !important',
+  outline: 'none !important',
+  '&:before': { borderBottom: '0 !important' },
+  '&:after': { borderBottom: '0 !important' },
+  '&:hover:not(.Mui-disabled):before': { borderBottom: '0 !important' },
+};
