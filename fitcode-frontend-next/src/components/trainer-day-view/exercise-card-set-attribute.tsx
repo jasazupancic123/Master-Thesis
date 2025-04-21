@@ -1,11 +1,15 @@
 import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
-import { SetExerciseAttributeProps, SetExerciseState } from './props';
+import { SetExerciseAttributeProps } from './props';
 import { exerciseCardSetAttributeSx } from './style';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const screenSize = useScreenSize();
-  const { options, state, onChange } = props;
+  const { options, state, onChange, expandedView } = props;
+
+  console.log('options', options);
+  console.log('state', state);
 
   return (
     <Stack direction="column" justifyContent="center" alignItems="center">
@@ -17,6 +21,7 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
       >
         <Select
           variant="filled"
+          disabled={expandedView}
           sx={{
             ...exerciseCardSetAttributeSx['& .MuiSelect-select'],
             textAlign: 'center',
@@ -46,21 +51,15 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           value={state.label}
           onChange={(e) => {
             const value = e.target.value as string;
-            const option = options.find((option) => option.label === value);
+            const option = options.find((option) => option.name === value);
 
             if (!option) return;
-            const values = option.values
-              ? [...option.values.filter((v) => v.length > 0)]
-              : undefined;
 
             onChange({
-              ...option,
-              option: value,
-              type: option.type,
-              values: option.values ?? [],
-              value: values ? values.toString() : '10',
-              typeChange: true,
-            } as SetExerciseState);
+              field: option.field,
+              selected: option.defaultValue,
+              value: '10',
+            } as AttributeValue);
           }}
         >
           <MenuItem
@@ -73,21 +72,21 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {state.label[0].toUpperCase() + state.label.slice(1)}
+            {state.name[0].toUpperCase() + state.name.slice(1)}
           </MenuItem>
 
           {options.map((option) => {
             return (
               <MenuItem
-                key={option.label}
-                value={option.label}
+                key={option.name}
+                value={option.name}
                 sx={{
                   textAlign: 'center',
                   p: 2,
                   textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
                 }}
               >
-                {option.label[0].toUpperCase() + option.label.slice(1)}
+                {option.name[0].toUpperCase() + option.name.slice(1)}
               </MenuItem>
             );
           })}
@@ -122,19 +121,25 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             value={state.value}
             onChange={(e) => {
               const value = e.target.value as string;
-              onChange({ ...state, value });
+              onChange({
+                field: options.find((option) => option.name === state.label)
+                  ?.field,
+                selected: options.find((option) => option.name === state.label)
+                  ?.defaultValue,
+                value: value,
+              } as AttributeValue);
             }}
           >
-            {(state.values || []).map((value) => (
+            {options.map((value) => (
               <MenuItem
-                key={value}
-                value={value}
+                key={value.name}
+                value={value.name}
                 sx={{
                   textAlign: 'center',
                   textShadow: '1px 1px 2px rgba(23, 16, 16, 0.5)',
                 }}
               >
-                {state.format(value)}
+                {value.name[0].toUpperCase() + value.name.slice(1)}
               </MenuItem>
             ))}
           </Select>
@@ -152,7 +157,13 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
             size="small"
             onChange={(e) => {
               const value = e.target.value;
-              onChange({ ...state, value });
+              onChange({
+                field: options.find((option) => option.name === state.label)
+                  ?.field,
+                selected: options.find((option) => option.name === state.label)
+                  ?.defaultValue,
+                value: value,
+              } as AttributeValue);
             }}
             sx={{
               textAlign: 'center',
@@ -165,41 +176,6 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
                 backgroundColor: 'transparent',
               },
             }}
-            /* sx={{
-              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
-              mt: 0,
-              width: '100%',
-              bgcolor: 'transparent',
-              color: 'white',
-              WebkitTextFillColor: 'white',
-              textAlign: 'center !important',
-              '& .MuiInputBase-root': {
-                padding: '0px !important', // Remove all padding
-                backgroundColor: 'transparent',
-                color: 'white',
-                WebkitTextFillColor: 'white',
-                textAlign: 'center !important',
-              },
-              '& .MuiInputBase-input': {
-                textAlign: 'center !important',
-                padding: '0px !important', // Remove any padding issues
-                margin: '0 auto', // Ensure text stays centered
-                fontSize: '0.7rem',
-                height:
-                  exerciseCardSetAttributeSx['& .MuiSelect-select'].height,
-                backgroundColor: 'transparent',
-                color: 'white',
-                WebkitTextFillColor: 'white',
-                '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-                  margin: 0,
-                },
-                MozAppearance: '',
-              },
-              '& .MuiFilledInput-underline:before, & .MuiFilledInput-underline:after':
-                {
-                  borderBottom: 'none !important',
-                },
-            }} */
           />
         </FormControl>
       )}

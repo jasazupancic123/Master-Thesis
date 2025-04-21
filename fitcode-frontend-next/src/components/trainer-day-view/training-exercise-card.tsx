@@ -1,10 +1,3 @@
-import {
-  RECOVERY,
-  SET,
-  SET_TYPE,
-  TEMPO,
-  WORKLOAD,
-} from '@/common/constant/training-exercise.constant';
 import { useGroup } from '@/context/group-provider';
 import { Superset } from '@/controller/training/type/training-plan.type';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
@@ -23,6 +16,7 @@ import { preconnect } from 'react-dom';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import toast from 'react-hot-toast';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 // naredi posebej komponent za option (v02, int, rec)
 // naredi posebej komponent za vsak set data (enojni select, number, string)
@@ -42,6 +36,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   } = props;
 
   const [exercise, setExercise] = useState(exerciseProp);
+  console.log('exercise:', exercise);
 
   useEffect(() => {
     //console.log('updated exercise:', exercise);
@@ -58,6 +53,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     selectedSubgroup,
     setSelectedSubgroup,
   } = useTrainerDayViewContext();
+
+  console.log('training:', training);
 
   const [expandedSetsView, setExpandedSetsView] = useState(false);
 
@@ -244,60 +241,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     }
   }
 
-  function getOptionAndSetTypeIndex(param: ComponentParam, firstSet: any) {
-    let option, setTypeIndex;
-    const paramValue = firstSet.paramValues.find(
-      (p: any) => p.field === param.field
-    );
-    if (!paramValue && param.field !== 'volWorkSets') {
-      console.log(
-        'No paramValue found for field:',
-        param.field,
-        'in',
-        firstSet
-      );
-      return { option: undefined, setTypeIndex: undefined };
-    }
-
-    if (param.field === 'volWorkSets') {
-      option = SET;
-      setTypeIndex = 0; //for SET_OPTIONS
-    } else if (paramValue.selected === 'rep') {
-      option = SET_TYPE;
-      setTypeIndex = 0; //for REP_OPTIONS
-    } else if (paramValue.selected === 'eff') {
-      option = TEMPO;
-      setTypeIndex = 1; //for EFF_OPTIONS
-    } else if (paramValue.selected === 'time') {
-      option = SET_TYPE;
-      setTypeIndex = 2; //for TIME_OPTIONS
-    } else if (paramValue.selected === 'tempo') {
-      option = TEMPO;
-      setTypeIndex = 0; //for TEMPO_OPTIONS
-    } else if (paramValue.selected === 'dist') {
-      option = SET_TYPE;
-      setTypeIndex = 1; //for DISTANCE_OPTIONS
-    } else {
-      //If you come here, then handle the selected param in a new else if
-      console.log(`Unhandled param selected value "${paramValue.selected}"`);
-      throw new Error(
-        `Unhandled param selected value "${paramValue.selected}"`
-      );
-    }
-    return { option, setTypeIndex };
-  }
-
-  function updateAttributeType(param: Attribute, state: any) {
+  function updateAttributeType(param: Attribute, state: AttributeValue) {
     if (!param.options) return;
-    console.log('param options:', param.options);
-    console.log('state:', state);
 
-    const validOption = param.options.find(
-      (o) =>
-        o.field.toLowerCase().includes(state.label.toLowerCase()) &&
-        o.type === state.type
+    const validOption = param.options.find((o) =>
+      o.field.toLowerCase().includes(state.field.toLowerCase())
     );
-    console.log('validOption:', validOption);
     if (!validOption) return;
     const newSets = [...exercise.sets];
     for (const set of newSets) {
@@ -504,51 +453,40 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               gap={1}
             >
               {exercise.params.map((param) => {
-                const { option, setTypeIndex } = getOptionAndSetTypeIndex(
-                  param,
-                  exercise.sets[0]
-                );
-
-                if (
-                  !option ||
-                  setTypeIndex === undefined ||
-                  setTypeIndex === null
-                )
-                  return null;
-
-                if (option === SET) {
-                  return (
-                    <Box
-                      key={param.field}
-                      flexBasis={
-                        (100 / exercise.params.length).toString() + '%'
-                      }
-                    >
-                      <SetExerciseAttribute
-                        options={option} //needs to be replaced with param.options, when param will have values array
-                        state={(() => {
-                          return {
-                            type: 'number',
-                            label: 'Sets',
-                            values: option[setTypeIndex].values,
-                            format: option[setTypeIndex].format,
-                            value: exercise.sets.length.toString(),
-                          };
-                        })()}
-                        onChange={(state) => {
-                          updateNumberOfSets(state);
-                        }}
-                      />
-                    </Box>
-                  );
-                }
-
                 //display values from the first set only
                 const set = exercise.sets[0];
                 const paramValueIndex = set.paramValues.findIndex(
                   (p) => p.field === param.field
                 );
                 const paramValue = set.paramValues[paramValueIndex];
+                if (!paramValue && param.field === 'volWorkSets') {
+                  return (
+                    <Box
+                      key={'Sets'}
+                      flexBasis={
+                        (100 / exercise.params.length).toString() + '%'
+                      }
+                    >
+                      <SetExerciseAttribute
+                        options={[]}
+                        state={(() => {
+                          return {
+                            field: param.field,
+                            type: 'number',
+                            label: 'Sets',
+                            name: 'Sets',
+                            value: exercise.sets.length.toString(),
+                          };
+                        })()}
+                        onChange={(state: AttributeValue) => {
+                          updateNumberOfSets(state);
+                        }}
+                        expandedView={expandedSetsView}
+                      />
+                    </Box>
+                  );
+                } else if (!paramValue) return null;
+
                 let isNumeric =
                   paramValue.value.match(/^\d+(\.\d+)?$/) !== null;
 
@@ -558,22 +496,20 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                     flexBasis={(100 / exercise.params.length).toString() + '%'}
                   >
                     <SetExerciseAttribute
-                      options={option} //needs to be replaced with param.options, when param will have values array
+                      options={param.options || []} //needs to be replaced with param.options, when param will have values array
                       state={(() => {
                         return {
+                          field: paramValue.field,
                           type: isNumeric ? 'number' : 'select',
                           label:
                             paramValue.selected[0].toUpperCase() +
                             paramValue.selected.slice(1),
-                          values: option[setTypeIndex].values,
-                          format: option[setTypeIndex].format,
+                          name: param.name,
                           value: paramValue.value.toString(),
                         };
                       })()}
-                      onChange={(state) => {
-                        if (!state.typeChange || !param.options) return;
-                        updateAttributeType(param, state);
-                      }}
+                      onChange={(state: AttributeValue) => {}}
+                      expandedView={expandedSetsView}
                     />
                   </Box>
                 );
@@ -627,47 +563,36 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                   gap={1}
                 >
                   {exercise.params.map((param) => {
-                    const { option, setTypeIndex } = getOptionAndSetTypeIndex(
-                      param,
-                      exercise.sets[0]
+                    const paramValueIndex = set.paramValues.findIndex(
+                      (p) => p.field === param.field
                     );
+                    const paramValue = set.paramValues[paramValueIndex];
 
-                    if (
-                      !option ||
-                      setTypeIndex === undefined ||
-                      setTypeIndex === null
-                    )
-                      return null;
-
-                    if (option === SET) {
+                    if (!paramValue && param.field === 'volWorkSets') {
                       return (
                         <Box
-                          key={param.field}
+                          key={'Sets'}
                           flexBasis={
                             (100 / exercise.params.length).toString() + '%'
                           }
                         >
                           <SetExerciseAttribute
-                            options={option} //needs to be replaced with param.options, when param will have values array
+                            options={param.options || []} //needs to be replaced with param.options, when param will have values array
                             state={(() => {
                               return {
+                                field: param.field,
                                 type: 'number',
-                                label: 'set',
-                                values: option[setTypeIndex].values,
-                                format: option[setTypeIndex].format,
+                                label: 'Set',
+                                name: param.name,
                                 value: (i + 1).toString(),
                               };
                             })()}
-                            onChange={(state) => {}}
+                            onChange={(state: AttributeValue) => {}}
+                            expandedView={expandedSetsView}
                           />
                         </Box>
                       );
-                    }
-
-                    const paramValueIndex = set.paramValues.findIndex(
-                      (p) => p.field === param.field
-                    );
-                    const paramValue = set.paramValues[paramValueIndex];
+                    } else if (!paramValue) return null;
                     let isNumeric =
                       paramValue.value.match(/^\d+(\.\d+)?$/) !== null;
 
@@ -679,22 +604,23 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                         }
                       >
                         <SetExerciseAttribute
-                          options={option} //needs to be replaced with param.options, when param will have values array
+                          options={param.options || []} //needs to be replaced with param.options, when param will have values array
                           state={(() => {
                             return {
+                              field: paramValue.field,
                               type: isNumeric ? 'number' : 'select',
                               label:
                                 paramValue.selected[0].toUpperCase() +
                                 paramValue.selected.slice(1),
-                              values: option[setTypeIndex].values,
-                              format: option[setTypeIndex].format,
+                              name: param.name,
                               value: paramValue.value.toString(),
                             };
                           })()}
                           onChange={(state) => {
-                            if (state.typeChange) return; //type can only be changed on collapsed view
+                            //if (state.typeChange) return; //type can only be changed on collapsed view
                             updateParamState(paramValue, state, i);
                           }}
+                          expandedView={expandedSetsView}
                         />
                       </Box>
                     );
