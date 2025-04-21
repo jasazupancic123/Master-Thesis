@@ -9,6 +9,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { GroupIdPageParams, GroupIdPageProps } from '../props';
 import { ExercisesPage } from './exercises-page';
+import { AttributeController } from '@/controller/attribute/attribute.controller';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -33,7 +34,7 @@ export default async function Page(props: GroupIdPageParams) {
     UserController.findAll(token),
     GroupController.findAll(token),
     ExerciseController.findAll(token),
-    ExerciseController.findAttributes(),
+    AttributeController.findAll(),
     ComponentController.findAll(),
   ]);
 
