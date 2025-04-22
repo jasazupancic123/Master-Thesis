@@ -25,7 +25,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setSupersetsWithAdd,
   } = props;
 
-  const [exercise, setExercise] = useState(props.exercise);
+  const [exercise, setExercise] = useState({ ...props.exercise });
   const [expandedSetsView, setExpandedSetsView] = useState(false);
   const {
     training,
@@ -65,6 +65,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   useEffect(() => updateTraining(), [exercise]);
 
   function updateTraining() {
+    if (!training || !component) return;
+
     const newSuperset = { ...supersets[supersetIndex] };
     const exerciseIndex = newSuperset.exercises.findIndex(
       (e) => e.id === exercise.id
@@ -76,49 +78,68 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     const newSupersets = [...supersets];
     if (supersetIndex !== -1) newSupersets[supersetIndex] = newSuperset;
 
-    let updatedComponent = {
-      ...component,
-      supersets: newSupersets,
-    };
-
-    if (selectedSubgroup?.subgroup) {
-      const updatedSubgroup = {
-        ...selectedSubgroup.subgroup,
-        supersets: newSupersets,
-      };
-
-      updatedComponent = {
-        ...component,
-        subgroups: component.subgroups.map((s, i) =>
-          i === selectedSubgroup.index ? updatedSubgroup : s
-        ),
-      };
-    }
-
-    const updatedComponents = [...training.components].map((c) =>
-      c.id === component.id ? updatedComponent : c
-    );
-
-    const newTraining = { ...training, components: updatedComponents };
-
     ReactDOM.unstable_batchedUpdates(() => {
       setSupersetsWithAdd(newSupersets);
-      if (selectedSubgroup?.subgroup)
+
+      if (selectedSubgroup?.subgroup) {
+        const updatedSubgroup = {
+          ...selectedSubgroup.subgroup,
+          supersets: newSupersets,
+        };
+        const updatedComponent = {
+          ...component,
+          subgroups: component.subgroups.map((s, i) =>
+            i === selectedSubgroup.index ? updatedSubgroup : s
+          ),
+        };
         setSelectedSubgroup({
+          subgroup: updatedSubgroup,
           index: selectedSubgroup.index,
-          subgroup: {
-            ...selectedSubgroup.subgroup,
-            supersets: newSupersets,
-          },
         });
 
-      setComponent(updatedComponent);
-      setTraining(newTraining);
-      setFilteredTrainings(
-        [...filteredTrainings].map((filtered) =>
-          filtered.id === training.id ? newTraining : filtered
-        )
-      );
+        setComponent(updatedComponent);
+        const updatedComponents = [...training.components].map((c) =>
+          c.id === component.id ? updatedComponent : c
+        );
+
+        const newTraining = { ...training, components: updatedComponents };
+        setTraining(newTraining);
+
+        const updatedTrainings = [...filteredTrainings].map(
+          (filteredTraining) => {
+            if (filteredTraining.id === training.id) {
+              return newTraining;
+            }
+            return filteredTraining;
+          }
+        );
+
+        setFilteredTrainings(updatedTrainings);
+      } else {
+        const updatedComponent = {
+          ...component,
+          supersets: newSupersets,
+        };
+
+        setDetectedChanges(true);
+
+        setComponent(updatedComponent);
+        const updatedComponents = [...training.components].map((c) =>
+          c.id === component.id ? updatedComponent : c
+        );
+
+        const newTraining = { ...training, components: updatedComponents };
+        setTraining(newTraining);
+
+        const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+          if (filteredTraining.id === training.id) {
+            return newTraining;
+          }
+          return filteredTraining;
+        });
+
+        setFilteredTrainings(updatedTrainings);
+      }
 
       setDetectedChanges(true);
     });
@@ -325,7 +346,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           </Grid2>
         </Grid2>
       ) : (
-        <Box display="flex" flexDirection="column" width="100%">
+        <Box display="flex" flexDirection="column" width="100%" gap={1}>
           {exercise.sets.map((set, i) => {
             return (
               <Grid2
@@ -371,13 +392,13 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                     alignItems="center"
                     gap={1}
                   >
-                    {exercise.params.map((param, i) => {
+                    {exercise.params.map((param, j) => {
                       const value = set.paramValues.find(
                         (pv) => pv.field === param.field
                       ) || {
                         field: param.field,
                         selected: 'set',
-                        value: noOfSets.toString(),
+                        value: (i + 1).toString(),
                       };
 
                       return (
@@ -404,7 +425,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                                   paramValues[paramIndex].selected =
                                     newValue as string;
                               });
-
                               setExercise(newExercise);
                             }}
                             onSubOptionChange={(newValue) => {

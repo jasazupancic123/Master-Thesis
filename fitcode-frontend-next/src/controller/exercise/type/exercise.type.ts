@@ -1,6 +1,7 @@
 import { BaseEntity } from '@/common/type/entity.type';
 import { ExerciseAttributeValue } from './exercise-attribute-value.type';
 import { Component } from '@/controller/component/type/component.type';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 export type Exercise = BaseEntity & {
   name: string;
@@ -15,4 +16,5 @@ export type Exercise = BaseEntity & {
   valuesObject: Record<string, any>;
   components?: Component[];
   rootComponents?: Component[];
+  defaultParams?: Attribute[];
 };

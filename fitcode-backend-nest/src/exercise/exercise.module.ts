@@ -6,6 +6,7 @@ import { ExerciseRepository } from './repository/exercise.repository';
 import { UserModule } from '../user/user.module';
 import { ExerciseAttributeValueRepository } from './repository/exercise-attribute-value.repository';
 import { AttributeModule } from '../attribute/attribute.module';
+import { TrainingPlanService } from 'src/training/service/training-plan.service';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AttributeModule } from '../attribute/attribute.module';
     ExerciseAttributeValueRepository,
     ExerciseRepository,
     ExerciseService,
+    TrainingPlanService,
   ],
   exports: [ExerciseService, ExerciseAttributeValueRepository],
 })
