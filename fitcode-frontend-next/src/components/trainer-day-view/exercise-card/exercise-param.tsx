@@ -177,6 +177,9 @@ export function ExerciseParam(props: Props) {
                 p: 0.5,
                 textAlign: 'center !important',
               },
+              '& .Mui-disabled': {
+                color: 'rgba(255, 255, 255, 0) !important',
+              },
             }}
           />
         </FormControl>
