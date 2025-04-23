@@ -1,5 +1,6 @@
 import { SetState, handleApiRequest } from '@/common/type/state.type';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
+import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
@@ -15,19 +16,20 @@ export async function handleCsvFileUpload(
 
   const importedExercises: Exercise[] = rows.map((row, i) => {
     const [name, componentSlug, videoUrl, imageUrl] = row.split(',');
-    return {
-      name,
-      componentsIds: [componentSlug],
-      videoUrl,
-      imageUrl,
+    const exercise = {
       id: i.toString(),
-      userId: '',
-      global: false,
-      values: [],
-      attributeValues: {},
+      name,
+      componentIds: [componentSlug],
+      ownerId: 'global',
+      imageUrl,
+      videoUrl,
+      instruction: undefined,
+      attributeValues: [] as ExerciseAttributeValue[],
+      valuesObject: {} as Record<string, any>,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as Exercise;
+    return exercise;
   });
 
   setImportedExercises(importedExercises);
