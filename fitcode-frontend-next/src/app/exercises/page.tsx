@@ -5,6 +5,7 @@ import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import ExercisesPage from './exercises-page';
+import { AttributeController } from '@/controller/attribute/attribute.controller';
 
 export default async function Page() {
   // fetch data
@@ -17,7 +18,7 @@ export default async function Page() {
 
   const [exercises, attributes, components] = await Promise.all([
     ExerciseController.findAll(token),
-    ExerciseController.findAttributes(),
+    AttributeController.findAll(),
     ComponentController.findAll(),
   ]);
 

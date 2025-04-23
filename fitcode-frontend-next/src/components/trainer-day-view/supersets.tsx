@@ -79,6 +79,9 @@ export default function Supersets(props: SupersetsProps) {
   const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
+  const [menuExercise, setMenuExercise] = useState<TrainingExercise | null>(
+    null
+  );
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openPeriodize, setOpenPeriodize] = useState(false);
   const open = Boolean(anchorEl);
@@ -90,6 +93,7 @@ export default function Supersets(props: SupersetsProps) {
   const handleMenuClose = () => {
     setAnchorEl(null);
     setOpenPeriodize(false);
+    setMenuExercise(null);
   };
 
   const handeleTogglePeriodize = () => {
@@ -337,7 +341,10 @@ export default function Supersets(props: SupersetsProps) {
                                   >
                                     <IconButton
                                       size="small"
-                                      onClick={handleMenuClick}
+                                      onClick={(e) => {
+                                        handleMenuClick(e);
+                                        setMenuExercise(exercise); // Save the correct exercise here
+                                      }}
                                     >
                                       <MoreVert
                                         sx={{
@@ -368,8 +375,9 @@ export default function Supersets(props: SupersetsProps) {
                                     >
                                       <MenuItem
                                         onClick={() => {
+                                          if (!menuExercise) return;
                                           handleDeleteExercise(
-                                            { exerciseId: exercise.id },
+                                            { exerciseId: menuExercise.id },
                                             {
                                               training,
                                               setTraining,
