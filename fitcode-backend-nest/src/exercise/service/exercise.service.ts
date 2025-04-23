@@ -29,6 +29,8 @@ import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constan
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { Component } from 'src/component/entity/component.entity';
 import { FieldPath, FieldValue, Query } from 'firebase-admin/firestore';
+import { TrainingPlanService } from '../../training/service/training-plan.service';
+import { DEFAULT_PARAMS_KEY } from 'src/component/constant/param.constant';
 
 @Injectable()
 export class ExerciseService {
@@ -46,6 +48,7 @@ export class ExerciseService {
     private readonly componentService: Wrapper<ComponentService>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: Wrapper<UserService>,
+    private readonly trainingPlanService: TrainingPlanService,
   ) {}
 
   async findAll(
@@ -114,7 +117,7 @@ export class ExerciseService {
     }
 
     // map attributes
-    return await Promise.all(
+    exercises = await Promise.all(
       exercises.map(async (e) => ({
         ...e,
         attributeValues:
@@ -123,6 +126,28 @@ export class ExerciseService {
           }),
       })),
     );
+
+    const attributes = await this.cacheManagerService.getAttributes();
+
+    // map params
+    const finalExercises = exercises.map((exercise) => {
+      const component = components.find(
+        (c) => c.id === exercise.componentIds[0],
+      )!;
+      const root = this.componentService.getRoot(component, components);
+      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
+
+      const params = this.trainingPlanService.getComponentParamAttributes(
+        componentParams,
+        exercise.attributeValues,
+        attributes,
+      );
+
+      exercise.defaultParams = this.trainingPlanService.getParamAttributes(params);
+      return exercise;
+    });
+
+    return finalExercises;
   }
 
   async findAllByIds(user: User, ids: string[]) {
