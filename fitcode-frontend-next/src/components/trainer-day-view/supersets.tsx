@@ -625,7 +625,7 @@ export default function Supersets(props: SupersetsProps) {
                 params: exercise?.defaultParams || [],
                 sets: exercise?.defaultParams
                   ? Array.from({ length: 3 }, (_, i) => ({
-                      setNumber: 1,
+                      setNumber: i + 1,
                       paramValues:
                         (exercise?.defaultParams &&
                           (exercise?.defaultParams
