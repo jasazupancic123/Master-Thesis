@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
+import { Attribute } from 'src/attribute/entity/attribute.entity';
 
 export class Exercise extends BaseEntity {
   @IsString()
@@ -54,4 +55,8 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   @Expose()
   attributeValues: ExerciseAttributeValue[]; // sub collection for filtering
+
+  @Type(() => Attribute)
+  @IsOptional()
+  defaultParams?: Attribute[];
 }
