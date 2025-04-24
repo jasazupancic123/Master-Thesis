@@ -161,9 +161,7 @@ export default function ExerciseModal(props: Props) {
     setHasSelectedLeafComponent(hasSelectedLeafComponent);
   }, [data.componentIds]);
 
-  useEffect(() => {
-    console.log('updated data', data);
-  }, [data]);
+  useEffect(() => {}, [data]);
 
   useEffect(() => {
     if (!isOpen) setSelectedComponents({});
@@ -303,45 +301,6 @@ export default function ExerciseModal(props: Props) {
             })
           )}
         </Grid>
-        {hasSelectedLeafComponent && (
-          <Box width="100%" display="flex" justifyContent="center" mt={2}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                //post
-                const attributeValues = [] as ExerciseAttributeValue[];
-                for (const key in data.valuesObject) {
-                  const attributeValue: Partial<ExerciseAttributeValue> = {
-                    field: key,
-                    selected: data.valuesObject[key],
-                    value: data.valuesObject[key],
-                    componentIds: data.componentIds || [],
-                  };
-                  attributeValues.push(
-                    attributeValue as ExerciseAttributeValue
-                  );
-                }
-                data.attributeValues = attributeValues;
-                delete data.valuesObject;
-
-                console.log('final data', data);
-
-                handleApiRequest(
-                  router,
-                  () => ExerciseController.create(token, data as Exercise),
-                  (exercise) => {
-                    console.log('exercise created', exercise);
-                  },
-                  undefined,
-                  'Failed to create exercise'
-                );
-              }}
-            >
-              Add exercise
-            </Button>
-          </Box>
-        )}
       </Box>
     </MyModal>
   );

@@ -96,6 +96,49 @@ export default function TrainerDayView() {
       'Error when updating training'
     );
   }
+  async function handleUpdateMultipleTrainings() {
+    if (!filteredTrainings || !filteredTrainings.length) return;
+
+    await handleApiRequest(
+      router,
+      () =>
+        TrainingController.updateMultiple(
+          token,
+          filteredTrainings[0].id,
+          filteredTrainings
+        ),
+      (newTrainings) => {
+        const mappedTrainings = newTrainings.map((newTraining) => {
+          let mapped = TrainingService.mapComponents(newTraining, components);
+          mapped = TrainingService.mapExercises(newTraining, exercises);
+          return mapped;
+        });
+        const currentTraining = mappedTrainings.find(
+          (t) => t.id === training?.id
+        );
+        if (currentTraining) setTraining(currentTraining);
+
+        setTrainings((prev) =>
+          prev.map((t) => {
+            const newTraining = mappedTrainings.find((nt) => nt.id === t.id);
+            return newTraining ? newTraining : t;
+          })
+        );
+
+        setFilteredTrainings((prev) =>
+          prev.map((t) => {
+            const newTraining = mappedTrainings.find((nt) => nt.id === t.id);
+            return newTraining ? newTraining : t;
+          })
+        );
+
+        setDetectedChanges(false);
+        toast.success('Trainings updated successfully');
+      },
+      undefined,
+      'Error when updating training'
+    );
+  }
 
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
@@ -165,8 +208,9 @@ export default function TrainerDayView() {
       {!screenSize.isSmallerThanLaptop && (
         <Box position="absolute" top="50%" right={0}>
           <FloatingButton
-            label="Save training"
-            onClick={handleUpdateTraining}
+            label="Save trainings"
+            //onClick={handleUpdateTraining}
+            onClick={handleUpdateMultipleTrainings}
           />
         </Box>
       )}

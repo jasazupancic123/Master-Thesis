@@ -16,7 +16,7 @@ import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import { UpdateTrainingDto } from './dto/update-training.dto';
+import { UpdateTrainingDto, UpdateTrainingDtoWithId } from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
 
@@ -58,6 +58,16 @@ export class TrainingController {
   ) {
     const ref = { trainingId };
     return await this.trainingService.update(user, ref, body);
+  }
+
+  @Patch(':trainingId/multiple')
+  @Auth()
+  async updateMultiple(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() body: UpdateTrainingDtoWithId[],
+  ) {
+    return await this.trainingService.updateMultiple(user, body);
   }
 
   @Post(':trainingId/copy')

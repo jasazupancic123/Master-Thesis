@@ -4,11 +4,11 @@ import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { Component } from '@/controller/component/type/component.type';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { DEFAULT_EXERCISE } from './exercises-page';
+import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
 
 const commonService = CommonService.instance;
 
@@ -60,7 +60,6 @@ export async function handleAddExercise(
   state: {
     router: AppRouterInstance;
     components: Component[];
-    attributes: ExerciseAttribute[];
     component?: Component;
     filteredExercises: Exercise[];
     setFilteredExercises: SetState<Exercise[]>;
@@ -77,7 +76,6 @@ export async function handleAddExercise(
   const {
     router,
     components,
-    attributes,
     component,
     filteredExercises,
     setFilteredExercises,
@@ -90,36 +88,18 @@ export async function handleAddExercise(
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
 
-  // find all nested select attributes and convert them to a multi-level object
-  const attributeValues: Record<string, any> = {};
-  const nestedSelectAttributes = attributes
-    .filter(
-      (attribute) =>
-        attribute.type === 'select' && typeof attribute.values?.[0] === 'object'
-    )
-    .map((attribute) => attribute.field);
-
-  for (const key of nestedSelectAttributes) {
-    const nested = commonService.object.nestObject(
-      input.valuesObject || {},
-      key
-    );
-
-    if (nested) attributeValues[key] = nested;
+  const attributeValues = [] as ExerciseAttributeValue[];
+  for (const key in input.valuesObject) {
+    const attributeValue: Partial<ExerciseAttributeValue> = {
+      field: key,
+      selected: input.valuesObject[key],
+      value: input.valuesObject[key],
+      componentIds: input.componentIds || [],
+    };
+    attributeValues.push(attributeValue as ExerciseAttributeValue);
   }
-
-  // add all other attributes
-  const otherAttributes = attributes.filter(
-    (attribute) => !nestedSelectAttributes.includes(attribute.field)
-  );
-
-  for (const attribute of otherAttributes)
-    attributeValues[attribute.field] = input.valuesObject?.[attribute.field];
-
-  // delete all keys with undefined values
-  Object.keys(attributeValues).forEach(
-    (key) => attributeValues[key] === undefined && delete attributeValues[key]
-  );
+  input.attributeValues = attributeValues;
+  delete input.valuesObject;
 
   handleApiRequest(
     router,
@@ -129,11 +109,12 @@ export async function handleAddExercise(
         componentIds: input.componentIds!,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
-        attributeValues,
+        instruction: input.instruction,
+        attributeValues: input.attributeValues as Record<string, any>,
       }),
     (exercise) => {
       const id = exercise.id;
-      const rootComponents = input.componentIds!.map((cId) => {
+      const rootComponents = exercise.componentIds!.map((cId) => {
         const component = components.find((c) => c.id === cId)!;
         return commonService.tree.getRoot(component, components);
       });
@@ -144,14 +125,16 @@ export async function handleAddExercise(
       )
         setFilteredExercises([
           ...filteredExercises,
-          { ...input, id } as Exercise,
+          { ...exercise, id } as Exercise,
         ]);
 
-      setExercises((prev) => [...prev!, { ...input, id } as Exercise]);
+      setExercises((prev) => [...prev!, { ...exercise, id } as Exercise]);
       toast.success('Successfully added exercise');
       setExercise(DEFAULT_EXERCISE);
       setModal((prev) => ({ ...prev, add: false }));
-    }
+    },
+    undefined,
+    'Failed to create exercise'
   );
 }
 
@@ -162,7 +145,6 @@ export async function handleUpdateExercise(
   state: {
     router: AppRouterInstance;
     components: Component[];
-    attributes: ExerciseAttribute[];
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
@@ -177,7 +159,6 @@ export async function handleUpdateExercise(
   const {
     router,
     components,
-    attributes,
     setFilteredExercises,
     setExercises,
     setExercise,
@@ -186,42 +167,22 @@ export async function handleUpdateExercise(
 
   if (!input.name) return toast.error('Name is required');
 
-  if (
-    !input.componentIds?.length ||
-    (input.componentIds[0] === '' && input.componentIds.length === 1)
-  )
+  if (!input.name) return toast.error('Name is required');
+  if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
 
-  // find all nested select attributes and convert them to a multi-level object
-  const attributeValues: Record<string, any> = {};
-  const nestedSelectAttributes = attributes
-    .filter(
-      (attribute) =>
-        attribute.type === 'select' && typeof attribute.values?.[0] === 'object'
-    )
-    .map((attribute) => attribute.field);
-
-  for (const key of nestedSelectAttributes) {
-    const nested = commonService.object.nestObject(
-      input.valuesObject || {},
-      key
-    );
-
-    if (nested) attributeValues[key] = nested;
+  const attributeValues = [] as ExerciseAttributeValue[];
+  for (const key in input.valuesObject) {
+    const attributeValue: Partial<ExerciseAttributeValue> = {
+      field: key,
+      selected: input.valuesObject[key],
+      value: input.valuesObject[key],
+      componentIds: input.componentIds || [],
+    };
+    attributeValues.push(attributeValue as ExerciseAttributeValue);
   }
-
-  // add all other attributes
-  const otherAttributes = attributes.filter(
-    (attribute) => !nestedSelectAttributes.includes(attribute.field)
-  );
-
-  for (const attribute of otherAttributes)
-    attributeValues[attribute.field] = input.valuesObject?.[attribute.field];
-
-  // delete all keys with undefined values
-  Object.keys(attributeValues).forEach(
-    (key) => attributeValues[key] === undefined && delete attributeValues[key]
-  );
+  input.attributeValues = attributeValues;
+  delete input.valuesObject;
 
   handleApiRequest(
     router,

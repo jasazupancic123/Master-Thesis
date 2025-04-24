@@ -43,7 +43,7 @@ const COLORS: Record<string, string> = {
 export default function SelectedMemberReport(props: SelectedMemberReportProps) {
   const { groupMembers } = props;
   const screenSize = useScreenSize();
-  const { selectedAthlete, setSelectedAthlete } = useTrainerDayViewContext();
+  const { selectedAthlete, setShowAthleteReport } = useTrainerDayViewContext();
 
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
 
@@ -222,7 +222,7 @@ export default function SelectedMemberReport(props: SelectedMemberReportProps) {
         position="absolute"
         top={screenSize.isSmallerThanLaptop ? 0 : 10}
         right={screenSize.isSmallerThanLaptop ? 20 : 100}
-        onClick={() => setSelectedAthlete(undefined)}
+        onClick={() => setShowAthleteReport(false)}
         sx={{ cursor: 'pointer' }}
       >
         <CloseIcon />

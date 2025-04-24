@@ -65,6 +65,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     selectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
+    showAthleteReport,
+    setShowAthleteReport,
   } = useTrainerDayViewContext();
 
   const [availableMembers, setAvailableMembers] = useState<User[]>([]);
@@ -127,6 +129,10 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
     setSubgroups([DEFAULT_SUBGROUP(availableMembers), ...subgroups]);
   }, [training, component]);
+
+  useEffect(() => {
+    if (!selectedAthlete) setShowAthleteReport(false);
+  }, [selectedAthlete]);
 
   async function handleAddMembersSubgroup(member: User) {
     if (!training || !component) return;
@@ -248,7 +254,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     }
   };
 
-  return selectedAthlete ? (
+  return selectedAthlete && showAthleteReport ? (
     <SelectedMemberReport groupMembers={groupMembers} />
   ) : (
     <Stack
@@ -269,7 +275,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           maxWidth: 1500,
           borderRadius: 2,
           rowGap: 1,
-          py: isSticky ? 0 : !component ? 0 : 2,
+          py: isSticky ? 1 : !component ? 1 : 2,
           display: 'flex',
           flexWrap: 'wrap',
           margin: 'auto',
@@ -314,11 +320,22 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                 <Tooltip
                   key={member.uid + 'tooltip1'}
                   title={member.email}
-                  sx={{ mx: 1, p: 0 }}
+                  sx={{ mx: 1, py: 0 }}
                 >
                   <Box
-                    sx={{ p: 0, m: 0, cursor: 'pointer' }}
+                    sx={{ p: 0, my: 1, cursor: 'pointer' }}
                     onClick={() => setSelectedAthlete(member)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setSelectedAthlete(member);
+                      setShowAthleteReport(true);
+                    }}
+                    borderRadius={selectedAthlete === member ? '50%' : 0}
+                    border={
+                      selectedAthlete === member
+                        ? `2px solid ${theme.palette.primary.main}`
+                        : 'none'
+                    }
                   >
                     <Avatar
                       className="avatar-border"
@@ -330,7 +347,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                         width: screenSize.isMobile ? 40 : 50,
                         height: screenSize.isMobile ? 40 : 50,
                         mx: 0,
-                        my: 1,
+                        py: 0,
                       }}
                     >
                       {/* {member.email[0].toUpperCase()} */}
@@ -558,6 +575,11 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                                         }
 
                                         setSelectedAthlete(member);
+                                      }}
+                                      onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        setSelectedAthlete(member);
+                                        setShowAthleteReport(true);
                                       }}
                                       borderRadius={
                                         selectedAthlete === member ? '50%' : 0
