@@ -1,7 +1,4 @@
-import {
-  ExerciseAttribute,
-  ExerciseAttributeSelectOption,
-} from '@/controller/exercise/type/exercise-attribute.type';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { FormControl, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
@@ -10,16 +7,12 @@ import React, { useEffect, useState } from 'react';
 
 // recursive components to show select for sub attributes
 export default function SelectAttribute(props: {
-  attribute: ExerciseAttribute | ExerciseAttributeSelectOption;
+  attribute: Attribute;
   onChange: (field: string, value: string) => void;
   initialValue?: string | Record<string, any>;
-  label?: boolean;
 }) {
-  const { attribute, onChange, initialValue, label } = props;
+  const { attribute, onChange, initialValue } = props;
 
-  const [subOptions, setSubOptions] = useState<
-    ExerciseAttributeSelectOption | undefined
-  >(undefined);
   const [selectedValue, setSelectedValue] = useState<string | undefined>(() => {
     if (typeof initialValue === 'object')
       return initialValue[attribute.field] as string;
@@ -33,38 +26,22 @@ export default function SelectAttribute(props: {
   useEffect(() => {
     if (typeof initialValue === 'object' && initialValue[attribute.field]) {
       setSelectedValue(initialValue[attribute.field] as string);
-
-      const selectedOption = attribute.values?.find(
-        (option) =>
-          typeof option === 'object' &&
-          option.field === initialValue[attribute.field]
-      ) as ExerciseAttributeSelectOption;
-
-      setSubOptions(selectedOption);
     }
-  }, [attribute.field, attribute.values, initialValue]);
+  }, [attribute.field, attribute.options, initialValue]);
 
   function handleSelectChange(e: SelectChangeEvent) {
     const value = e.target.value as string;
     setSelectedValue(value);
-
-    const selectedOption = attribute.values?.find(
-      (option) => typeof option === 'object' && option.field === value
-    ) as ExerciseAttributeSelectOption;
-
-    setSubOptions(selectedOption);
     onChange(attribute.field, value);
   }
 
   return (
     <Box>
       <FormControl fullWidth>
-        {label && (
-          <InputLabel id={attribute.field}>{attribute.name}</InputLabel>
-        )}
+        <InputLabel id={attribute.field}>{attribute.name}</InputLabel>
         <Select
           labelId={attribute.field}
-          label={label ? attribute.name : undefined}
+          label={attribute.name}
           variant="outlined"
           fullWidth
           value={selectedValue || ''}
@@ -72,7 +49,7 @@ export default function SelectAttribute(props: {
         >
           <MenuItem value="">None</MenuItem>
 
-          {attribute.values?.map((option) => {
+          {attribute.options?.map((option) => {
             if (typeof option === 'string')
               return (
                 <MenuItem key={option} value={option}>
@@ -89,14 +66,6 @@ export default function SelectAttribute(props: {
           })}
         </Select>
       </FormControl>
-
-      {subOptions && (
-        <SelectAttribute
-          attribute={subOptions}
-          onChange={onChange}
-          initialValue={initialValue}
-        />
-      )}
     </Box>
   );
 }
