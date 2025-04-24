@@ -343,6 +343,89 @@ export class TrainingService {
     return updated;
   }
 
+  async updateMultiple(
+    user: User,
+    input: Update<Training>[],
+  ): Promise<Training[]> {
+    this.logger.log(
+      `User ${user.uid} is updating multiple trainings: ${JSON.stringify(input)}`,
+    );
+
+    const updated = [];
+    for (const trainingInput of input) {
+      const ref = { trainingId: trainingInput.id };
+      // validate training
+      const training = await this.findOneOrFail(user, ref);
+      const { groupId, cycleId } = training;
+
+      const group = await this.groupService.findByIdOrFail(user, { groupId });
+      const cycle = this.groupService.findCycleOrFail(cycleId, group);
+      this.validateOwner(user.uid, training);
+
+      // if no components, delete training
+      if (training.components.length === 0) {
+        await this.trainingRepository.deleteDoc(ref.trainingId);
+        updated.push({
+          ...training,
+          ...this.commonService.object.clean(trainingInput),
+        });
+      }
+
+      const { from, to } = this.getFromAndToDates(trainingInput.components);
+      this.checkTrainingIsInCycle(from, cycle);
+      this.validateIsTrainingInFuture(from);
+      await this.validateOverlap(from, to, groupId, cycleId, training.id);
+
+      // validate components & exercises
+      const attributes = await this.cacheManagerService.getAttributes();
+      const components = await this.cacheManagerService.getComponents();
+      const membersIds = trainingInput.membersIds || training.membersIds;
+      await this.validateTrainingMembers(membersIds);
+
+      const exercises = await this.trainingPlanService.findAllTrainingExercises(
+        user,
+        trainingInput.components,
+      );
+
+      this.trainingPlanService.validateTrainingComponents(
+        exercises,
+        membersIds,
+        trainingInput.components,
+        components,
+      );
+
+      // populate exercise params from components
+      this.trainingPlanService.populateTrainingExerciseParams(
+        trainingInput.components,
+        components,
+        exercises,
+        attributes,
+      );
+
+      // for future trainings, update latest meta and calculate workloads
+      const wellness = await this.userService.getRecentWellness(membersIds);
+      const workloads = await this.workloadService.findAllByMembers(membersIds);
+
+      const updatedTrainig = {
+        ...training,
+        ...this.commonService.object.clean(trainingInput),
+      };
+
+      updated.push(updatedTrainig);
+
+      const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+      const updateTrainingQuery =
+        this.firebaseService.buildUpdateQuery<Training>({ ...trainingInput, wellness });
+
+      const batch = this.firebaseService.firestore.batch();
+      batch.update(trainingDocRef, updateTrainingQuery);
+      this.workloadService.createForTraining(batch, updatedTrainig, workloads);
+      await batch.commit();
+    }
+
+    return updated;
+  }
+
   async copy(
     user: User,
     ref: TrainingRef,

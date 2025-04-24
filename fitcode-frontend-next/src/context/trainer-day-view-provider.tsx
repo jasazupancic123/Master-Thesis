@@ -54,6 +54,7 @@ export function TrainerDayViewProvider(
     subgroup: Subgroup | null;
     index: number;
   } | null>(null);
+  const [showAthleteReport, setShowAthleteReport] = useState(false);
 
   /**
    * Group members
@@ -103,7 +104,9 @@ export function TrainerDayViewProvider(
   }, [component, pagination.page]);
 
   const value: TrainerDayViewContextProps = {
-    exercises,
+    exercises: exercises.map((e) => {
+      return ExerciseService.mapComponents(e, components);
+    }),
     members,
     component,
     setComponent,
@@ -119,6 +122,8 @@ export function TrainerDayViewProvider(
     setPagination,
     search,
     setSearch,
+    showAthleteReport,
+    setShowAthleteReport,
   };
 
   return (

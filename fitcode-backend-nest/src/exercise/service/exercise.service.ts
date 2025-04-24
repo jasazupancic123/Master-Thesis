@@ -143,7 +143,8 @@ export class ExerciseService {
         attributes,
       );
 
-      exercise.defaultParams = this.trainingPlanService.getParamAttributes(params);
+      exercise.defaultParams =
+        this.trainingPlanService.getParamAttributes(params);
       return exercise;
     });
 
@@ -504,7 +505,10 @@ export class ExerciseService {
 
     const batch = this.firebaseService.firestore.batch();
     const docRef = this.exerciseRepository.doc(exercise.id);
-    batch.update(docRef, input);
+    const updateExerciseQuery = this.firebaseService.buildUpdateQuery<Exercise>(
+      { ...input, updatedAt: new Date() },
+    );
+    batch.update(docRef, updateExerciseQuery);
 
     attributeValues.forEach((v) => {
       const docRef = this.exerciseAttributeValueRepository
