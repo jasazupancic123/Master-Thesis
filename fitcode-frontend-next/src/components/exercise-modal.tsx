@@ -8,7 +8,6 @@ import {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -16,14 +15,15 @@ import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SelectAttribute from './select-attribute';
 import SelectComponent from './select-component';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 interface Props {
   data: Partial<Exercise>;
   setData: SetState<Partial<Exercise>>;
-  attributes: ExerciseAttribute[];
+  attributes: Attribute[];
   components: Component[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -54,25 +54,25 @@ export default function ExerciseModal(props: Props) {
 
   useEffect(() => {
     // set the selected components to the data's components
-    if (data.componentsIds?.length === 0) {
+    if (data.componentIds?.length === 0) {
       setSelectedComponents({});
       return;
     }
 
     // for now, only one selected component is supported
-    const component = components.find((c) => c.id === data.componentsIds![0]);
+    const component = components.find((c) => c.id === data.componentIds![0]);
     if (!component) return;
 
     const selected: { [key: number]: string } = {};
     let level = component.parents.length;
 
-    let parentId = component.parent;
+    let parentId = component.parentId;
     while (parentId) {
       const parent = components.find((c) => c.id === parentId);
       if (!parent) break;
 
       selected[--level] = parent.id;
-      parentId = parent.parent;
+      parentId = parent.parentId;
     }
 
     selected[component.parents.length] = component.id;
@@ -82,8 +82,8 @@ export default function ExerciseModal(props: Props) {
   function handleSelectChange(field: string, value: string) {
     setData((prev) => ({
       ...prev,
-      attributeValues: {
-        ...prev.attributeValues,
+      valuesObject: {
+        ...prev.valuesObject,
         [field]: value,
       },
     }));
@@ -95,7 +95,7 @@ export default function ExerciseModal(props: Props) {
 
     setData((prev) => ({
       ...prev,
-      componentsIds: [
+      componentIds: [
         componentsIds[componentsIds.length - 1] || componentsIds[0],
       ], // only the leaf component (last one) is selected
     }));
@@ -143,7 +143,7 @@ export default function ExerciseModal(props: Props) {
               components={
                 CommonService.instance.tree.fromArray(components, {
                   idPropertyName: 'id',
-                  parentIdPropertyName: 'parent',
+                  parentIdPropertyName: 'parentId',
                   childrenPropertyName: 'children',
                 }) as unknown as TreeComponent[]
               }
@@ -186,12 +186,7 @@ export default function ExerciseModal(props: Props) {
           </Grid>
 
           {attributes.map((attribute) => {
-            const type =
-              attribute.type === 'number'
-                ? 'number'
-                : attribute.type === 'date'
-                  ? 'date'
-                  : 'text';
+            const type = attribute.type === 'number' ? 'number' : 'text';
 
             return (
               <Grid size={{ xs: 6 }} key={attribute.field}>
@@ -199,16 +194,14 @@ export default function ExerciseModal(props: Props) {
                   <SelectAttribute
                     attribute={attribute}
                     onChange={handleSelectChange}
-                    initialValue={data.attributeValues}
+                    initialValue={data.valuesObject}
                     label
                   />
                 ) : attribute.type === 'boolean' ? (
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={
-                          data.attributeValues?.[attribute.field] || false
-                        }
+                        checked={data.valuesObject?.[attribute.field] || false}
                         onChange={(e) =>
                           handleSelectChange(
                             attribute.field,
@@ -225,7 +218,7 @@ export default function ExerciseModal(props: Props) {
                     label={attribute.name}
                     type={type}
                     variant="outlined"
-                    value={data.attributeValues?.[attribute.field] || ''}
+                    value={data.valuesObject?.[attribute.field] || ''}
                     onChange={(e) =>
                       handleSelectChange(attribute.field, e.target.value)
                     }

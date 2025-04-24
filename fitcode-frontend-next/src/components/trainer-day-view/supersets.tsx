@@ -5,9 +5,8 @@ import BorderColor from '@/components/border-color';
 import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { SetType } from '@/controller/training/enum/set-type.enum';
-import { WorkloadType } from '@/controller/training/enum/workload-type.enum';
 import {
+  ExerciseSet,
   Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
@@ -19,7 +18,6 @@ import {
   Menu,
   MenuItem,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -33,12 +31,16 @@ import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCardContainer from './training-exercise-card-container';
 import { useTheme } from '@mui/material';
 import {
-  ArrowDownward,
   ArrowDropDown,
   ArrowDropUp,
   MoreVert,
   Timeline,
 } from '@mui/icons-material';
+import { Attribute } from '@tensorflow/tfjs';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { ComponentParam } from '@/controller/component/type/component.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { idID } from '@mui/material/locale';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
@@ -98,8 +100,6 @@ export default function Supersets(props: SupersetsProps) {
     exercise: TrainingExercise,
     periodizeType: 'linear' | 'undulating' | 'block'
   ) => {
-    console.log(exercise);
-
     handleMenuClose();
   };
 
@@ -491,6 +491,8 @@ export default function Supersets(props: SupersetsProps) {
                                     exercise={exercise}
                                     selectedExercise={selectedExercise}
                                     setSelectedExercise={setSelectedExercise}
+                                    supersets={supersetsWithAdd}
+                                    setSupersetsWithAdd={setSupersetsWithAdd}
                                     superior={{
                                       row: i === 0,
                                       column: k === 0,
@@ -613,18 +615,42 @@ export default function Supersets(props: SupersetsProps) {
               : selectedExercisesIds;
 
           const exercisesToAdd: TrainingExercise[] = exercisesIdsToAdd.map(
-            (id) => ({
-              id,
-              exercise: allExercises.find((e) => e.id === id),
-              meta: {
-                set: 3,
-                setType: SetType.REPS,
-                setTypeValue: 12,
-                workloadType: WorkloadType.KG,
-                workloadValue: 60,
-                rec: 30,
-              },
-            })
+            (id) => {
+              const exercise = allExercises.find((e) => e.id === id);
+
+              return {
+                id,
+                exercise: exercise,
+                periodized: false,
+                params: exercise?.defaultParams || [],
+                sets: exercise?.defaultParams
+                  ? Array.from({ length: 3 }, (_, i) => ({
+                      setNumber: i + 1,
+                      paramValues:
+                        (exercise?.defaultParams &&
+                          (exercise?.defaultParams
+                            .map((p) => {
+                              if (p.field === 'volWorkSets') return undefined;
+                              return {
+                                field: p.field,
+                                selected: p.defaultValue,
+                                value: p.options?.find(
+                                  (o) => o.field === p.defaultValue
+                                )?.options?.length
+                                  ? '0' //picks the first element in the options array
+                                  : p.options?.find(
+                                      (o) => o.field === p.defaultValue
+                                    )?.defaultValue,
+                              } as AttributeValue;
+                            })
+                            .filter(
+                              (p) => p !== undefined
+                            ) as AttributeValue[])) ||
+                        [],
+                    }))
+                  : [],
+              };
+            }
           );
 
           // get training component index

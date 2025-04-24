@@ -5,7 +5,7 @@ export class ComponentService {
   static toTree(components: Component[]): TreeComponent[] {
     return CommonService.instance.tree.fromArray(components, {
       idPropertyName: 'id',
-      parentIdPropertyName: 'parent',
+      parentIdPropertyName: 'parentId',
       childrenPropertyName: 'children',
     }) as unknown as TreeComponent[];
   }

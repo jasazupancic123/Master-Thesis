@@ -14,6 +14,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { AddTrainingComponents } from './type';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 
 export async function handleCreateTraining(
   token: string,
@@ -22,7 +23,7 @@ export async function handleCreateTraining(
     cycle: Cycle;
     date: Dayjs;
     period: 'AM' | 'PM';
-    selectedComponents: Component[];
+    selectedComponents: TrainingComponent[];
   },
   state: {
     router: AppRouterInstance;
@@ -44,7 +45,13 @@ export async function handleCreateTraining(
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 
-  if (!CommonService.instance.date.isBetween(date, dayjs(cycle.from), dayjs(cycle.to)))
+  if (
+    !CommonService.instance.date.isBetween(
+      date,
+      dayjs(cycle.from),
+      dayjs(cycle.to)
+    )
+  )
     return toast.error('Selected date is not within the cycle');
 
   // get number of trainings in the selected period
@@ -67,36 +74,13 @@ export async function handleCreateTraining(
   if (periodTrainings.length >= 1)
     return toast.error('You can only create 1 trainings per period');
 
-  const amPair = { start: 8, end: 10 };
-  const pmPair = { start: 14, end: 16 };
-  const pair = period === 'AM' ? amPair : pmPair;
-
-  // set start time and end time to date
-  const from = date
-    .set('year', date.year())
-    .set('month', date.month())
-    .set('date', date.date())
-    .set('hour', pair.start)
-    .set('minute', 0)
-    .set('second', 0);
-
-  const to = date
-    .set('year', date.year())
-    .set('month', date.month())
-    .set('date', date.date())
-    .set('hour', pair.end)
-    .set('minute', 0)
-    .set('second', 0);
-
   handleApiRequest(
     router,
     () =>
       TrainingController.create(token, {
         groupId: group.id,
         cycleId: cycle.id,
-        from: from.toDate(),
-        to: to.toDate(),
-        componentsIds: selectedComponents.map(({ id }) => id),
+        components: selectedComponents,
       }),
     (training) => {
       const mapped = TrainingService.mapComponents(training, components);
@@ -125,7 +109,7 @@ export async function handleAddTrainingComponents(
   handleApiRequest(
     router,
     () =>
-      !restInput.componentsIds.length
+      !restInput.components.length
         ? // if outside box was clicked, delete the whole training
           TrainingController.delete(token, trainingId)
         : // else, add components

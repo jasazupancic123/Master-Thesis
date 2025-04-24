@@ -1,8 +1,6 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { GroupController } from '@/controller/group/group.controller';
-import { Gender } from '@/controller/user/enum/gender.enum';
-import { SportLevel } from '@/controller/user/enum/sport-level.enum';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';

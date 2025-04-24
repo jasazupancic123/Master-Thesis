@@ -1,19 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Menu, MenuItem, Button, Popover, TextField, Box } from '@mui/material';
+import { Menu, MenuItem, Popover, TextField, Box } from '@mui/material';
 import { Component } from '@/controller/component/type/component.type';
-import toast from 'react-hot-toast';
-
-interface ComponentType {
-  id: string;
-  name: string;
-  parent: string | null;
-}
-
-interface Props {
-  components: Component[];
-  selectedComponent: Component | null;
-  setSelectedComponent: (value: Component | undefined) => void;
-}
 
 export default function CycleComponentsSelect({
   label,
@@ -35,7 +22,7 @@ export default function CycleComponentsSelect({
   const [children, setChildren] = useState<Component[]>([]);
 
   useEffect(() => {
-    setChildren(components.filter((c) => c.parent === parentId));
+    setChildren(components.filter((c) => c.parentId === parentId));
   }, [components, parentId, subMenuItems]);
 
   const handleOpen = (event: any) => {
@@ -54,7 +41,9 @@ export default function CycleComponentsSelect({
     if (children.length > 0) {
       const rect = event.currentTarget.getBoundingClientRect();
       setMenuPosition(window.innerWidth - rect.right > 200 ? 'right' : 'left');
-      const subMenuComponents = components.filter((c) => c.parent === parentId);
+      const subMenuComponents = components.filter(
+        (c) => c.parentId === parentId
+      );
       setSubMenuItems(subMenuComponents);
       setSubMenuAnchor(event.currentTarget);
     }
@@ -68,17 +57,17 @@ export default function CycleComponentsSelect({
 
       {/* Main Menu */}
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-        {!components.filter((c) => c.parent === parentId).length ? (
+        {!components.filter((c) => c.parentId === parentId).length ? (
           <MenuItem>No child components</MenuItem>
         ) : (
           components
-            .filter((c) => c.parent === parentId)
+            .filter((c) => c.parentId === parentId)
             .map((component) => (
               <MenuItem
                 key={component.id}
                 onClick={(e) => {
                   const filtered = components.filter(
-                    (c) => c.parent === component.id
+                    (c) => c.parentId === component.id
                   );
                   if (filtered.length > 0) {
                     handleSubMenuOpen(e, component.id);
@@ -89,7 +78,7 @@ export default function CycleComponentsSelect({
                 }}
                 onMouseEnter={(e) => {
                   const filtered = components.filter(
-                    (c) => c.parent === component.id
+                    (c) => c.parentId === component.id
                   );
                   if (filtered.length > 0) {
                     handleSubMenuOpen(e, component.id);
@@ -97,7 +86,7 @@ export default function CycleComponentsSelect({
                 }}
               >
                 {component.name}{' '}
-                {components.filter((c) => c.parent === component.id).length
+                {components.filter((c) => c.parentId === component.id).length
                   ? '▶'
                   : ''}
               </MenuItem>

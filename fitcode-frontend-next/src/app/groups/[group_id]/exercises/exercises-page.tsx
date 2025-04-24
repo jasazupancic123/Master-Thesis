@@ -31,8 +31,8 @@ import MyModal from '@/components/modal';
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
-  componentsIds: [],
-  attributeValues: {},
+  componentIds: [],
+  valuesObject: {},
 };
 
 export function ExercisesPage() {

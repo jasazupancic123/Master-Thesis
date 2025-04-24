@@ -66,7 +66,12 @@ export async function handleAddExercise(
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
-    setModal: SetState<{ add: boolean; edit: boolean; import: boolean; confirmDelete: boolean }>;
+    setModal: SetState<{
+      add: boolean;
+      edit: boolean;
+      import: boolean;
+      confirmDelete: boolean;
+    }>;
   }
 ) {
   const {
@@ -82,7 +87,7 @@ export async function handleAddExercise(
   } = state;
 
   if (!input.name) return toast.error('Name is required');
-  if (!input.componentsIds?.length)
+  if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
 
   // find all nested select attributes and convert them to a multi-level object
@@ -96,7 +101,7 @@ export async function handleAddExercise(
 
   for (const key of nestedSelectAttributes) {
     const nested = commonService.object.nestObject(
-      input.attributeValues || {},
+      input.valuesObject || {},
       key
     );
 
@@ -109,7 +114,7 @@ export async function handleAddExercise(
   );
 
   for (const attribute of otherAttributes)
-    attributeValues[attribute.field] = input.attributeValues?.[attribute.field];
+    attributeValues[attribute.field] = input.valuesObject?.[attribute.field];
 
   // delete all keys with undefined values
   Object.keys(attributeValues).forEach(
@@ -121,14 +126,14 @@ export async function handleAddExercise(
     () =>
       ExerciseController.create(token, {
         name: input.name!,
-        componentsIds: input.componentsIds!,
+        componentIds: input.componentIds!,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         attributeValues,
       }),
     (exercise) => {
       const id = exercise.id;
-      const rootComponents = input.componentsIds!.map((cId) => {
+      const rootComponents = input.componentIds!.map((cId) => {
         const component = components.find((c) => c.id === cId)!;
         return commonService.tree.getRoot(component, components);
       });
@@ -144,7 +149,7 @@ export async function handleAddExercise(
 
       setExercises((prev) => [...prev!, { ...input, id } as Exercise]);
       toast.success('Successfully added exercise');
-      setExercise(DEFAULT_EXERCISE)
+      setExercise(DEFAULT_EXERCISE);
       setModal((prev) => ({ ...prev, add: false }));
     }
   );
@@ -161,7 +166,12 @@ export async function handleUpdateExercise(
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
-    setModal: SetState<{ add: boolean; edit: boolean; import: boolean; confirmDelete: boolean }>;
+    setModal: SetState<{
+      add: boolean;
+      edit: boolean;
+      import: boolean;
+      confirmDelete: boolean;
+    }>;
   }
 ) {
   const {
@@ -176,7 +186,10 @@ export async function handleUpdateExercise(
 
   if (!input.name) return toast.error('Name is required');
 
-  if (!input.componentsIds?.length || (input.componentsIds[0] === '' && input.componentsIds.length === 1))
+  if (
+    !input.componentIds?.length ||
+    (input.componentIds[0] === '' && input.componentIds.length === 1)
+  )
     return toast.error('Select at least one component to add');
 
   // find all nested select attributes and convert them to a multi-level object
@@ -190,7 +203,7 @@ export async function handleUpdateExercise(
 
   for (const key of nestedSelectAttributes) {
     const nested = commonService.object.nestObject(
-      input.attributeValues || {},
+      input.valuesObject || {},
       key
     );
 
@@ -203,7 +216,7 @@ export async function handleUpdateExercise(
   );
 
   for (const attribute of otherAttributes)
-    attributeValues[attribute.field] = input.attributeValues?.[attribute.field];
+    attributeValues[attribute.field] = input.valuesObject?.[attribute.field];
 
   // delete all keys with undefined values
   Object.keys(attributeValues).forEach(
@@ -215,7 +228,7 @@ export async function handleUpdateExercise(
     () =>
       ExerciseController.update(token, exerciseId, {
         name: input.name!,
-        componentsIds: input.componentsIds!,
+        componentIds: input.componentIds!,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         attributeValues,

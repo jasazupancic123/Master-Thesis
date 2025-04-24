@@ -1,14 +1,14 @@
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { ExerciseAttribute } from 'src/exercise/entity/exercise-attribute.entity';
-import { ExerciseAttributeService } from 'src/exercise/service/exercise-attribute.service';
 import {
-  CACHE_KEY_EXERCISE_ATTRIBUTES,
+  CACHE_KEY_ATTRIBUTES,
   CACHE_KEY_FLAT_COMPONENTS,
 } from '../common/constant/cache.constant';
 import { Wrapper } from '../common/type/wrapper.type';
 import { ComponentService } from '../component/component.service';
 import { Component } from '../component/entity/component.entity';
+import { Attribute } from '../attribute/entity/attribute.entity';
+import { AttributeService } from '../attribute/service/attribute.service';
 
 @Injectable()
 export class CacheManagerService {
@@ -16,8 +16,8 @@ export class CacheManagerService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
-    @Inject(forwardRef(() => ExerciseAttributeService))
-    private readonly exerciseAttributeService: Wrapper<ExerciseAttributeService>,
+    @Inject(forwardRef(() => AttributeService))
+    private readonly attributeService: Wrapper<AttributeService>,
   ) {}
 
   async getComponents(): Promise<Component[]> {
@@ -40,13 +40,12 @@ export class CacheManagerService {
     await this.cacheManager.del(CACHE_KEY_FLAT_COMPONENTS);
   }
 
-  async getAttributes(): Promise<ExerciseAttribute[]> {
-    const cached = await this.cacheManager.get(CACHE_KEY_EXERCISE_ATTRIBUTES);
+  async getAttributes(): Promise<Attribute[]> {
+    const cached = await this.cacheManager.get(CACHE_KEY_ATTRIBUTES);
     if (!cached) {
-      const attributes = await this.exerciseAttributeService.findAll();
-
+      const attributes = await this.attributeService.findAll();
       await this.cacheManager.set(
-        CACHE_KEY_EXERCISE_ATTRIBUTES,
+        CACHE_KEY_ATTRIBUTES,
         attributes,
         24 * 3600 * 1000,
       );
@@ -54,10 +53,10 @@ export class CacheManagerService {
       return attributes;
     }
 
-    return await this.cacheManager.get(CACHE_KEY_EXERCISE_ATTRIBUTES);
+    return await this.cacheManager.get(CACHE_KEY_ATTRIBUTES);
   }
 
   async clearAttributes(): Promise<void> {
-    await this.cacheManager.del(CACHE_KEY_EXERCISE_ATTRIBUTES);
+    await this.cacheManager.del(CACHE_KEY_ATTRIBUTES);
   }
 }

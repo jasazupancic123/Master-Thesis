@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { IdEntity } from '../entity/id.entity';
 import { TimestampEntity } from '../entity/timestamp.entity';
 
@@ -51,4 +51,6 @@ export type Update<
     T,
     'createdAt'
   >,
-> = Pick<Partial<OmitIfExtends<T, 'createdAt'>>, K>;
+> = {
+  [P in Extract<K, keyof T>]?: T[P];
+};

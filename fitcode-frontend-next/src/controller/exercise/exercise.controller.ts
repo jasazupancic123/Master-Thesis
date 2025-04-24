@@ -1,16 +1,11 @@
 import { CommonService } from '@/common/service/common.service';
-import { ExerciseAttribute } from './type/exercise-attribute.type';
 import { Exercise } from './type/exercise.type';
 
 const api = CommonService.instance.api;
 
 export class ExerciseController {
-  static async findAttributes() {
-    return api.get<ExerciseAttribute[]>('/exercise/attribute');
-  }
-
-  static async findAll(token: string) {
-    return api.get<Exercise[]>('/exercise', { token });
+  static async findAll(token: string, query?: Record<string, string>) {
+    return api.get<Exercise[]>('/exercise', { token, query });
   }
 
   static async findById(token: string, exerciseId: string) {
@@ -21,9 +16,10 @@ export class ExerciseController {
     token: string,
     body: {
       name: string;
-      componentsIds: string[];
+      componentIds: string[];
       imageUrl?: string;
       videoUrl?: string;
+      instruction?: string;
       attributeValues: Record<string, any>;
     }
   ) {
@@ -38,6 +34,7 @@ export class ExerciseController {
         componentsIds: string[];
         imageUrl?: string;
         videoUrl?: string;
+        instruction?: string;
         attributeValues: Record<string, any>;
       }[];
     }
@@ -50,9 +47,10 @@ export class ExerciseController {
     exerciseId: string,
     body: {
       name: string;
-      componentsIds: string[];
+      componentIds: string[];
       imageUrl?: string;
       videoUrl?: string;
+      instruction?: string;
       attributeValues: Record<string, any>;
     }
   ) {

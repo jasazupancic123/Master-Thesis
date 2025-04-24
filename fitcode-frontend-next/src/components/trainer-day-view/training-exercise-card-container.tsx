@@ -2,7 +2,10 @@
 
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import {
+  Superset,
+  TrainingExercise,
+} from '@/controller/training/type/training-plan.type';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
 import { Dispatch, SetStateAction, useState } from 'react';
@@ -30,6 +33,8 @@ interface TrainingExerciseCardContainerProps {
   onAthleteView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
+  supersets: Superset[];
+  setSupersetsWithAdd: Dispatch<SetStateAction<Superset[]>>;
 }
 
 export default function TrainingExerciseCardContainer(
@@ -43,6 +48,8 @@ export default function TrainingExerciseCardContainer(
     setSelectedExercise,
     superior,
     setOpenVideoPlayerModal,
+    supersets,
+    setSupersetsWithAdd,
   } = props;
 
   const { selectedAthlete } = useTrainerDayViewContext();
@@ -74,6 +81,8 @@ export default function TrainingExerciseCardContainer(
           setSelectedExercise={setSelectedExercise}
           chartView={true}
           superior={superior}
+          supersets={supersets}
+          setSupersetsWithAdd={setSupersetsWithAdd}
           setOpenVideoPlayerModal={setOpenVideoPlayerModal}
         />
       </Grid2>
@@ -248,6 +257,8 @@ export default function TrainingExerciseCardContainer(
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
       superior={superior}
+      supersets={supersets}
+      setSupersetsWithAdd={setSupersetsWithAdd}
       setOpenVideoPlayerModal={setOpenVideoPlayerModal}
     />
   );

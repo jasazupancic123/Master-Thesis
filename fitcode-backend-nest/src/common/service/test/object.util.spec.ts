@@ -1,3 +1,5 @@
+import { AttributeType } from '../../../common/enum/attribute-type.enum';
+import { Attribute } from '../../../attribute/entity/attribute.entity';
 import { ObjectUtil } from '../util';
 
 describe('ObjectUtil::Unit', () => {
@@ -63,77 +65,6 @@ describe('ObjectUtil::Unit', () => {
           },
         },
       });
-    });
-  });
-
-  describe('Valid option', () => {
-    it('should return true if the value object corresponds to the options', () => {
-      const attribute = {
-        name: 'Color',
-        field: 'color',
-        type: 'select' as 'select',
-        values: [
-          { name: 'Red', field: 'red', values: ['dark', 'light'] },
-          { name: 'Blue', field: 'blue', values: ['ocean', 'navy'] },
-          {
-            name: 'Nested',
-            field: 'nested',
-            values: [
-              {
-                name: 'A',
-                field: 'nestedA',
-                values: ['A1', 'A2'],
-              },
-              {
-                name: 'B',
-                field: 'nestedB',
-                values: ['B1', 'B2'],
-              },
-            ],
-          },
-        ],
-      };
-
-      expect(
-        objectUtil.isValidValue(attribute, { color: { red: 'dark' } }),
-      ).toBe(true);
-      expect(
-        objectUtil.isValidValue(attribute, { color: { red: 'light' } }),
-      ).toBe(true);
-      expect(
-        objectUtil.isValidValue(attribute, { color: { blue: 'ocean' } }),
-      ).toBe(true);
-      expect(
-        objectUtil.isValidValue(attribute, { color: { blue: 'navy' } }),
-      ).toBe(true);
-      expect(
-        objectUtil.isValidValue(attribute, { color: { red: 'ocean' } }),
-      ).toBe(false);
-      expect(
-        objectUtil.isValidValue(attribute, { color: { blue: 'dark' } }),
-      ).toBe(false);
-
-      // deep nested select
-      expect(
-        objectUtil.isValidValue(attribute, {
-          color: { nested: { nestedA: 'A1' } },
-        }),
-      ).toBe(true);
-      expect(
-        objectUtil.isValidValue(attribute, {
-          color: { nested: { nestedB: 'B2' } },
-        }),
-      ).toBe(true);
-      expect(
-        objectUtil.isValidValue(attribute, {
-          color: { nested: 'A1' },
-        }),
-      ).toBe(false);
-      expect(
-        objectUtil.isValidValue(attribute, {
-          color: { nested: { someGibberish: 'lol' } },
-        }),
-      ).toBe(false);
     });
   });
 });

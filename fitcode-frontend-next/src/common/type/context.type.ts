@@ -1,8 +1,8 @@
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 import {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserEntity } from '@/controller/user/type/user.type';
@@ -10,7 +10,7 @@ import { User } from 'firebase/auth';
 
 export type AppContextType = {
   token: string;
-  attributes: ExerciseAttribute[];
+  attributes: Attribute[];
   components: {
     tree: TreeComponent[];
     flat: Component[];

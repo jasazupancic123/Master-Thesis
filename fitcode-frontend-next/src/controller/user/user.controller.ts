@@ -1,6 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
 import { UserRole } from './enum/user-role.enum';
-import { UserMeta } from './type/user-meta.type';
+import { Wellness } from './type/wellness.type';
 import { User, UserEntity } from './type/user.type';
 
 const api = CommonService.instance.api;
@@ -41,11 +41,11 @@ export class UserController {
   }
 
   static async getMyMeta(token: string) {
-    return api.get<UserMeta>('/user/me/meta', { token });
+    return api.get<Wellness>('/user/me/meta', { token });
   }
 
-  static async saveMeta(token: string, body: Omit<UserMeta, 'userId'>) {
-    return api.post<UserMeta>('/user/me/meta', body, { token });
+  static async saveMeta(token: string, body: Omit<Wellness, 'userId'>) {
+    return api.post<Wellness>('/user/me/meta', body, { token });
   }
 
   static async addAthlete(

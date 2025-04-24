@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs, { Dayjs } from 'dayjs';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { ChildrenProps } from '@/common/type/props.type';
 
 interface AthleteContextProps {

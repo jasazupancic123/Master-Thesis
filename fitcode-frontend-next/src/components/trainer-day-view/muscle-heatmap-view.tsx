@@ -9,7 +9,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
   Scatter,
 } from 'recharts';
 import Image from 'next/image';
@@ -76,7 +75,7 @@ export default function MuscleHeatmapView(props: MuscleHeatmapViewProps) {
         }}
       >
         <IconButton
-          sx={{ p: 0, m: 0, position: 'absolute', right: 0, }}
+          sx={{ p: 0, m: 0, position: 'absolute', right: 0 }}
           onClick={() => props.setHeatmapView(false)}
         >
           <Close />

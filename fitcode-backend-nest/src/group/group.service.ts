@@ -5,11 +5,12 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { NUM_MAX_GROUPS } from 'src/common/constant/limit.constant';
-import { Create, Update } from 'src/common/type/entity.type';
-import { Training } from 'src/training/entity/training.entity';
+import { NUM_MAX_GROUPS } from '../common/constant/limit.constant';
+import { Create, Update } from '../common/type/entity.type';
+import { Training } from '../training/entity/training.entity';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { GroupRef } from '../common/type/firestore.type';
@@ -21,7 +22,7 @@ import { UserService } from '../user/user.service';
 import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
 import { GroupRepository } from './repository/group.repository';
-import { UserEntity } from 'src/user/entity/user.entity';
+import { UserEntity } from '../user/entity/user.entity';
 
 @Injectable()
 export class GroupService {
@@ -73,7 +74,7 @@ export class GroupService {
 
   async findByIdOrFail(user: User, ref: GroupRef): Promise<Group> {
     const group = await this.findById(user, ref);
-    if (!group) throw new BadRequestException('Group not found');
+    if (!group) throw new NotFoundException('Group does not exist');
     return group;
   }
 
@@ -147,7 +148,8 @@ export class GroupService {
 
     // validate
     this.validateOwner(user.uid, group);
-    if (input.membersIds) await this.validateMembers(input.membersIds);
+    if (input.membersIds)
+      await this.validateMembers(input.membersIds as string[]);
     if (input.cycles) this.checkCycleOverlap(input.cycles);
 
     if (input.membersIds) {
@@ -164,7 +166,7 @@ export class GroupService {
           });
 
           // update all members by adding group id to their groupsIds field if it doesn't exist yet
-          input.membersIds.forEach((userId) =>
+          (input.membersIds as string[]).forEach((userId) =>
             this.userService.addGroup(transaction, userId, group.id),
           );
 
@@ -200,7 +202,7 @@ export class GroupService {
       }))
       .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds());
 
-    return updatedGroup;
+    return updatedGroup as Group;
   }
 
   async delete(user: User, ref: GroupRef): Promise<void> {
@@ -227,7 +229,7 @@ export class GroupService {
 
   findCycleOrFail(cycleId: string, group: Group) {
     const cycle = this.findCycle(cycleId, group);
-    if (!cycle) throw new BadRequestException('Cycle does not exist');
+    if (!cycle) throw new NotFoundException('Cycle does not exist');
     return cycle;
   }
 
@@ -254,11 +256,9 @@ export class GroupService {
   }
 
   private async validateMembers(membersIds: string[]) {
+    if (membersIds.length === 0) return [];
+
     const members = await this.userService.findAllOrFail({ ids: membersIds });
-
-    if (members.length < 1)
-      throw new BadRequestException('Group must have at least one member');
-
     if (members.length !== membersIds.length)
       throw new BadRequestException('Invalid members provided');
 

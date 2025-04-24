@@ -5,10 +5,14 @@ export enum FirestoreCollection {
   // root hierarchy
   USER = 'users',
   COMPONENT = 'components',
-  EXERCISE_ATTRIBUTE = 'attributes',
+
+  // attributes
+  ATTRIBUTE = 'attributes',
+  PARAM = 'params',
 
   // exercise hierarchy
   EXERCISE = 'exercises',
+  EXERCISE_ATTRIBUTE_VALUES = 'exerciseAttributeValues',
 
   // user hierarchy
   USER_META = 'user-meta',

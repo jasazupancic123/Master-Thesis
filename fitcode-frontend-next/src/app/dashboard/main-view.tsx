@@ -49,31 +49,25 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
   const theme = useTheme();
   const router = useRouter();
 
+  const [modal, setModal] = useState({ add_trainer: false, add_group: false });
+  const [groupName, setGroupName] = useState('');
+
   const [selectedOrganization, setSelectedOrganization] =
     useState<Organization | null>(organization);
+
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(
     organization.groups[0] || null
   );
+
   const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     selectedGroup?.cycles[0] || null
   );
-  const [modal, setModal] = useState({ add_trainer: false, add_group: false });
-  const [groupName, setGroupName] = useState('');
-  const [selectedView, setSelectedView] = useState({
-    main: true,
-    athletes: false,
-  });
 
   const setTrainers = (trainers: User[]) => {
     setSelectedOrganization({
       ...selectedOrganization!,
       trainers,
     });
-  };
-
-  const redirectToGroupId = () => {
-    if (!selectedGroup) return;
-    redirect(LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id).home.href);
   };
 
   return (
@@ -91,16 +85,19 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
           <Fab
             color="primary"
             aria-label="go"
-            onClick={redirectToGroupId}
-            sx={{
-              position: 'fixed',
-              bottom: 20,
-              right: 20,
+            onClick={() => {
+              if (selectedGroup)
+                redirect(
+                  LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id).home
+                    .href
+                );
             }}
+            sx={{ position: 'fixed', bottom: 20, right: 20 }}
           >
             <ArrowForward />
           </Fab>
         </Tooltip>
+
         <Grid2
           container
           size={12}
@@ -131,6 +128,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
               </IconButton>
             </Tooltip>
             {/* ))} */}
+
             <Grid2
               container
               size={12}
@@ -160,9 +158,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                     borderBottomLeftRadius: '80px',
                     borderBottomRightRadius: '80px',
                     border: 'none',
-                    '&:disabled': {
-                      color: '#fff',
-                    },
+                    '&:disabled': { color: '#fff' },
                     textTransform: 'none',
                   }}
                 >

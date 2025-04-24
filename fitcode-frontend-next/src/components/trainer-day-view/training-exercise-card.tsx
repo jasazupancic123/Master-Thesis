@@ -1,132 +1,149 @@
-import {
-  RECOVERY,
-  SET,
-  SET_TYPE,
-  TEMPO,
-  WORKLOAD,
-} from '@/common/constant/training-exercise.constant';
-import { useGroup } from '@/context/group-provider';
-import {
-  ExerciseMeta,
-  Superset,
-} from '@/controller/training/type/training-plan.type';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { Box, Grid2, IconButton, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useState } from 'react';
-import { SetExerciseAttribute } from './exercise-card-set-attribute';
+import { useEffect, useState } from 'react';
 import { TrainingExerciseCardProps } from './props';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Circle, StarTwoTone } from '@mui/icons-material';
+import { Circle } from '@mui/icons-material';
+import { ExerciseParam } from './exercise-card/exercise-param';
+import {
+  ExerciseSet,
+  TrainingExercise,
+} from '@/controller/training/type/training-plan.type';
+import { useGroup } from '@/context/group-provider';
+import ReactDOM from 'react-dom';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
   const {
-    exercise,
-    supersetIndex: j,
-    selectedExercise,
+    supersetIndex,
     setSelectedExercise,
     chartView,
-    superior,
     setOpenVideoPlayerModal,
+    supersets,
+    setSupersetsWithAdd,
+    exercise: propsExercise,
   } = props;
 
-  const { setDetectedChanges } = useGroup();
+  const [exercise, setExercise] = useState(propsExercise);
+  const [expandedSetsView, setExpandedSetsView] = useState(false);
   const {
     training,
-    setTraining,
     component,
     selectedSubgroup,
     setSelectedSubgroup,
-    selectedAthlete,
+    setComponent,
+    setTraining,
   } = useTrainerDayViewContext();
 
-  const [expandedSetsView, setExpandedSetsView] = useState(false);
+  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
+    useGroup();
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =
     selectedSubgroup?.subgroup || training?.components?.[i!];
+  const k = selectedTrainingOrSubgroup?.supersets?.[
+    supersetIndex!
+  ]?.exercises?.findIndex((e) => e.id === exercise.id);
 
-  const k = selectedTrainingOrSubgroup?.supersets?.[j!]?.exercises?.findIndex(
-    (e) => e.id === exercise.id
-  );
+  const currentExercise =
+    selectedTrainingOrSubgroup?.supersets?.[supersetIndex!]?.exercises?.[k!];
 
-  const state =
-    selectedTrainingOrSubgroup?.supersets?.[j!]?.exercises?.[k!]?.meta;
+  const params =
+    currentExercise?.sets?.[0]?.paramValues
+      ?.map((pv) => exercise?.params?.find((p) => p.field === pv.field)!)
+      ?.filter((p) => p) || [];
 
-  const [tempoOrEffort, setTempoOrEffort] = useState<'temp' | 'eff'>(
-    !state || state?.tempo ? 'temp' : 'eff'
-  );
+  if (!training || !component || !params) return null;
 
-  function handleSuperiorExerciseUpdating(
-    supersets: Superset[],
-    pairs: { field: keyof ExerciseMeta; value: string | number }[]
-  ): Superset[] {
-    if (superior?.all) {
-      for (const { field, value } of pairs)
-        for (const superset of supersets)
-          for (const exercise of superset.exercises)
-            if (exercise.meta[field] !== undefined)
-              (exercise.meta[field] as any) = value;
-      // Čori to more bit tu tak - spomni se šolanja ;)
-    } else if (superior?.row && k !== undefined && k !== null) {
-      const rowIndex = k;
-      for (const { field, value } of pairs) {
-        for (const superset of supersets) {
-          const exercise = superset.exercises[rowIndex];
-          if (!exercise) continue;
-          if (exercise.meta[field] !== undefined)
-            (exercise.meta[field] as any) = value;
-        }
-      }
+  useEffect(() => {
+    if (propsExercise !== exercise) {
+      setExercise(propsExercise);
     }
+  }, [propsExercise]);
 
-    for (const { field, value } of pairs)
-      (supersets[j!].exercises[k!].meta[field] as any) = value;
+  function updateTraining(exercise: TrainingExercise) {
+    if (!training || !component) return;
 
-    return supersets;
-  }
+    const newSuperset = { ...supersets[supersetIndex] };
+    const exerciseIndex = newSuperset.exercises.findIndex(
+      (e) => e.id === exercise.id
+    );
 
-  function updateSelectedTraining(
-    pairs: { field: keyof ExerciseMeta; value: string | number }[]
-  ) {
-    if (!selectedSubgroup?.subgroup) {
-      setTraining((training) => {
-        if (!training) return undefined;
+    if (exerciseIndex === -1 || !training || !component) return;
 
-        const updatedTraining = { ...training };
-        const updatedSupersets = handleSuperiorExerciseUpdating(
-          updatedTraining.components[i!].supersets,
-          pairs
+    newSuperset.exercises[exerciseIndex] = { ...exercise };
+    const newSupersets = [...supersets];
+    if (supersetIndex !== -1) newSupersets[supersetIndex] = newSuperset;
+
+    ReactDOM.unstable_batchedUpdates(() => {
+      setSupersetsWithAdd(newSupersets);
+
+      if (selectedSubgroup?.subgroup) {
+        const updatedSubgroup = {
+          ...selectedSubgroup.subgroup,
+          supersets: newSupersets,
+        };
+        const updatedComponent = {
+          ...component,
+          subgroups: component.subgroups.map((s, i) =>
+            i === selectedSubgroup.index ? updatedSubgroup : s
+          ),
+        };
+        setSelectedSubgroup({
+          subgroup: updatedSubgroup,
+          index: selectedSubgroup.index,
+        });
+
+        setComponent(updatedComponent);
+        const updatedComponents = [...training.components].map((c) =>
+          c.id === component.id ? updatedComponent : c
         );
-        updatedTraining.components[i!] = {
-          ...updatedTraining.components[i!],
-          supersets: updatedSupersets,
+
+        const newTraining = { ...training, components: updatedComponents };
+        setTraining(newTraining);
+
+        const updatedTrainings = [...filteredTrainings].map(
+          (filteredTraining) => {
+            if (filteredTraining.id === training.id) {
+              return newTraining;
+            }
+            return filteredTraining;
+          }
+        );
+
+        setFilteredTrainings(updatedTrainings);
+      } else {
+        const updatedComponent = {
+          ...component,
+          supersets: newSupersets,
         };
 
-        return updatedTraining;
-      });
-    } else {
-      const updatedSubgroup = { ...selectedSubgroup.subgroup };
-      const updatedSupersets = handleSuperiorExerciseUpdating(
-        updatedSubgroup.supersets,
-        pairs
-      );
+        setDetectedChanges(true);
 
-      setSelectedSubgroup({
-        subgroup: {
-          ...updatedSubgroup,
-          supersets: updatedSupersets,
-        },
-        index: selectedSubgroup.index,
-      });
-    }
+        setComponent(updatedComponent);
+        const updatedComponents = [...training.components].map((c) =>
+          c.id === component.id ? updatedComponent : c
+        );
 
-    setDetectedChanges(true);
+        const newTraining = { ...training, components: updatedComponents };
+        setTraining(newTraining);
+
+        const updatedTrainings = filteredTrainings.map((filteredTraining) => {
+          if (filteredTraining.id === training.id) {
+            return newTraining;
+          }
+          return filteredTraining;
+        });
+
+        setFilteredTrainings(updatedTrainings);
+      }
+
+      setDetectedChanges(true);
+    });
   }
-
-  if (!training || !component || !state) return null;
 
   return (
     <Stack
@@ -142,12 +159,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           ? 'transparent'
           : exercise.exercise?.imageUrl
             ? 'rgba(0, 0, 0, 0.6)'
-            : 'rgba(255, 255, 255, 0.05)', // Darker background to improve contrast
+            : 'rgba(255, 255, 255, 0.05)',
         backgroundImage: exercise.exercise?.imageUrl
           ? `url(${exercise.exercise?.imageUrl})`
           : undefined,
         backgroundPosition: 'center',
-        backgroundSize: '100% auto', // Ensures full width, height adjusts
+        backgroundSize: '100% auto',
         backgroundRepeat: 'no-repeat',
         overflow: 'hidden',
       }}
@@ -161,7 +178,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(38, 54, 70, 0.825)', // Darker overlay for better text contrast
+          backgroundColor: 'rgba(38, 54, 70, 0.825)',
           zIndex: 0,
           opacity: 100,
         }}
@@ -169,9 +186,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       <Stack
         direction="row"
         justifyContent="center"
-        sx={{
-          cursor: 'pointer',
-        }}
+        sx={{ cursor: 'pointer' }}
         onClick={() => {
           setSelectedExercise(exercise);
           setOpenVideoPlayerModal(true);
@@ -188,8 +203,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               overflow: 'hidden',
               whiteSpace: 'nowrap',
               textOverflow: 'ellipsis',
-              maxWidth: '75%', // Adjust width as needed
-              zIndex: 1, // Ensures it's above overlay
+              maxWidth: '75%',
+              zIndex: 1,
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
             }}
           >
@@ -197,20 +212,26 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           </Typography>
         </Tooltip>
       </Stack>
+
       {!expandedSetsView ? (
-        <Grid2 container spacing={1} columns={11}>
-          <Grid2 size={0.5}>
+        <Grid2
+          container
+          spacing={1}
+          columns={11}
+          key={i}
+          px={screenSize.isSmallerThanLaptop ? 1 : 0}
+        >
+          <Grid2 size={1}>
             <IconButton
               disableRipple
               sx={{
                 p: 0,
                 m: 0,
-                mt: screenSize.isTablet ? 1.1 : 1,
+                mt: 1.66,
                 height: '100%',
+                display: i === 0 ? undefined : 'none',
               }}
-              onClick={() => {
-                setExpandedSetsView(!expandedSetsView);
-              }}
+              onClick={() => setExpandedSetsView(!expandedSetsView)}
             >
               <Circle
                 sx={{
@@ -221,367 +242,251 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               />
             </IconButton>
           </Grid2>
-          {/* Sets */}
-          <Grid2 size={2}>
-            <SetExerciseAttribute
-              options={SET}
-              state={(() => {
-                const option = SET.find((option) => option.label === 'set')!;
 
-                return {
-                  type: option.type,
-                  label: option.label,
-                  values: option.values,
-                  option: option.label as keyof ExerciseMeta,
-                  format: option.format,
-                  value: state.set.toString() ?? option.values![1].toString(),
+          <Grid2 size={10}>
+            <Box
+              display="flex"
+              width="100%"
+              justifyContent="center"
+              alignItems="center"
+              gap={1}
+            >
+              {exercise.params.map((param) => {
+                const value = exercise.sets[0].paramValues.find(
+                  (pv) => pv.field === param.field
+                ) || {
+                  field: param.field,
+                  selected: 'set',
+                  value: exercise.sets.length.toString(),
                 };
-              })()}
-              onChange={(state) => {
-                const sets = parseInt(state.value);
-                updateSelectedTraining([{ field: 'set', value: sets }]);
-              }}
-            />
-          </Grid2>
 
-          {/* Set Type */}
-          <Grid2 size={2}>
-            <SetExerciseAttribute
-              options={SET_TYPE}
-              state={(() => {
-                const option = SET_TYPE.find(
-                  (option) => option.label === state.setType
-                )!;
+                return (
+                  <Box
+                    key={param.field}
+                    flexBasis={(100 / exercise.params.length).toString() + '%'}
+                  >
+                    <ExerciseParam
+                      param={param}
+                      value={value}
+                      onOptionChange={(newValue) => {
+                        const paramIndex =
+                          exercise.sets[0].paramValues.findIndex(
+                            (pv) => pv.field === param.field
+                          );
 
-                return {
-                  type: option.type,
-                  label: option.label,
-                  values: option.values,
-                  option: option.label as keyof ExerciseMeta,
-                  format: option.format,
-                  value:
-                    state.setTypeValue.toString() ??
-                    option.values![1].toString(),
-                };
-              })()}
-              onChange={(state) => {
-                const setType = state.option as ExerciseMeta['setType'];
-                const setTypeValue = parseInt(state.value);
+                        const newExercise = { ...exercise };
+                        newExercise.sets.forEach(({ paramValues }) => {
+                          if (paramValues[paramIndex])
+                            paramValues[paramIndex].selected =
+                              newValue as string;
+                        });
 
-                updateSelectedTraining([
-                  { field: 'setType', value: setType },
-                  {
-                    field: 'setTypeValue',
-                    value: isNaN(setTypeValue) ? 5 : setTypeValue,
-                  }, // 5 because all set type options include 5
-                ]);
-              }}
-            />
-          </Grid2>
+                        setExercise(newExercise);
+                      }}
+                      onSubOptionChange={(newValue) => {
+                        if (+newValue < 0) return;
 
-          {/* Workload */}
-          <Grid2 size={2}>
-            <SetExerciseAttribute
-              options={WORKLOAD}
-              state={(() => {
-                const option = WORKLOAD.find(
-                  (option) => option.label === state.workloadType
-                )!;
+                        if (param.field === 'volWorkSets') {
+                          const newSets = +newValue;
+                          if (newSets > 16) return;
 
-                return {
-                  type: option.type,
-                  label: option.label,
-                  values: option.values,
-                  option: option.label as keyof ExerciseMeta,
-                  format: option.format,
-                  value: (state.workloadValue !== undefined &&
-                  state.workloadValue !== null
-                    ? state.workloadValue
-                    : 10
-                  ).toString(),
-                };
-              })()}
-              onChange={(state) => {
-                const workloadType =
-                  state.option as ExerciseMeta['workloadType'];
+                          const prevSets = exercise.sets.length;
 
-                // if workload value not in values array, select first value in array
-                let workloadValue = parseInt(state.value);
-                if (
-                  state.type === 'select' &&
-                  !state.values!.includes(workloadValue.toString())
-                ) {
-                  workloadValue = parseInt(state.values![1]);
-                }
+                          let newExercise;
 
-                updateSelectedTraining([
-                  { field: 'workloadType', value: workloadType },
-                  { field: 'workloadValue', value: workloadValue },
-                ]);
-              }}
-            />
-          </Grid2>
+                          if (prevSets > newSets) {
+                            // remove sets
+                            newExercise = {
+                              ...exercise,
+                              sets: [...exercise.sets].slice(0, newSets),
+                              params: [...exercise.params],
+                            };
+                          } else {
+                            // add sets to the end
+                            newExercise = {
+                              ...exercise,
+                              sets: [
+                                ...exercise.sets,
+                                ...Array.from(
+                                  { length: newSets - prevSets },
+                                  (_, i) => ({
+                                    setNumber: prevSets + i + 1,
+                                    paramValues: exercise.sets[
+                                      exercise.sets.length - 1
+                                    ].paramValues.map((pv) => ({ ...pv })),
+                                  })
+                                ),
+                              ],
+                            };
+                          }
 
-          {/* Tempo */}
-          <Grid2 size={2}>
-            <SetExerciseAttribute
-              options={TEMPO}
-              state={(() => {
-                const option = TEMPO.find(
-                  (option) => option.label === tempoOrEffort
-                )!;
+                          updateTraining(newExercise);
+                          return;
+                        }
 
-                return {
-                  type: option.type,
-                  label: option.label,
-                  values: option.values,
-                  option: option.label as keyof ExerciseMeta,
-                  format: option.format,
-                  value:
-                    (tempoOrEffort === 'temp' ? state.tempo : state.effort) ??
-                    option.values![1].toString(),
-                };
-              })()}
-              onChange={(state) => {
-                if (state.label === 'eff' && tempoOrEffort === 'temp') {
-                  setTempoOrEffort('eff');
-                  return;
-                }
+                        const paramIndex =
+                          exercise.sets[0].paramValues.findIndex(
+                            (pv) => pv.field === param.field
+                          );
 
-                if (state.label === 'temp' && tempoOrEffort === 'eff') {
-                  setTempoOrEffort('temp');
-                  return;
-                }
+                        const newExercise = { ...exercise };
 
-                updateSelectedTraining([
-                  {
-                    field: tempoOrEffort === 'temp' ? 'tempo' : 'effort',
-                    value: state.value,
-                  },
-                ]);
-              }}
-            />
-          </Grid2>
+                        const updatedSets: ExerciseSet[] = newExercise.sets.map(
+                          (set) => {
+                            return {
+                              setNumber: set.setNumber,
+                              paramValues: [...set.paramValues].map(
+                                (param, index) => {
+                                  if (index === paramIndex) {
+                                    return {
+                                      field: param.field,
+                                      selected: param.selected,
+                                      value: newValue as string,
+                                    } as AttributeValue;
+                                  }
+                                  return {
+                                    field: param.field,
+                                    selected: param.selected,
+                                    value: param.value,
+                                  } as AttributeValue;
+                                }
+                              ),
+                            };
+                          }
+                        );
 
-          {/* Recovery */}
-          <Grid2 size={2}>
-            <SetExerciseAttribute
-              options={RECOVERY}
-              state={(() => {
-                const option = RECOVERY.find(
-                  (option) => option.label === 'rec'
-                )!;
-                return {
-                  type: option.type,
-                  label: option.label,
-                  values: option.values,
-                  option: option.label as keyof ExerciseMeta,
-                  format: option.format,
-                  value: state.rec ? state.rec.toString() : '',
-                };
-              })()}
-              onChange={(state) => {
-                const rec = parseInt(state.value);
-                updateSelectedTraining([{ field: 'rec', value: rec }]);
-              }}
-            />
+                        newExercise.sets = [...updatedSets];
+                        updateTraining(newExercise);
+                      }}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
           </Grid2>
         </Grid2>
       ) : (
-        <Box display="flex" flexDirection="column" width="100%">
-          {Array.from({ length: exercise.meta.set }, (_, i) => (
-            <Grid2 container spacing={1} columns={11}>
-              <Grid2 size={0.5}>
-                <IconButton
-                  disableRipple
-                  sx={{
-                    p: 0,
-                    m: 0,
-                    mt: screenSize.isTablet ? 1.1 : 1,
-                    height: '100%',
-                    display: i === 0 ? undefined : 'none',
-                  }}
-                  onClick={() => {
-                    setExpandedSetsView(!expandedSetsView);
-                  }}
-                >
-                  <Circle
+        <Box display="flex" flexDirection="column" width="100%" gap={1}>
+          {exercise.sets.map((set, i) => {
+            return (
+              <Grid2
+                container
+                spacing={1}
+                columns={11}
+                key={i}
+                px={screenSize.isSmallerThanLaptop ? 1 : 0}
+              >
+                <Grid2 size={1}>
+                  <IconButton
+                    disableRipple
                     sx={{
-                      color: 'white !important',
-                      fontSize: screenSize.isTablet ? 14 : 16,
-                      ml: screenSize.isUltraSmall
-                        ? 0
-                        : screenSize.isMobile
-                          ? 1
-                          : 0,
+                      p: 0,
+                      m: 0,
+                      mt: 1.66,
+                      height: '100%',
+                      display: i === 0 ? undefined : 'none',
                     }}
-                  />
-                </IconButton>
+                    onClick={() => {
+                      setExpandedSetsView(!expandedSetsView);
+                    }}
+                  >
+                    <Circle
+                      sx={{
+                        color: 'white !important',
+                        fontSize: screenSize.isTablet ? 14 : 16,
+                        ml: screenSize.isUltraSmall
+                          ? 0
+                          : screenSize.isMobile
+                            ? 1
+                            : 0,
+                      }}
+                    />
+                  </IconButton>
+                </Grid2>
+
+                <Grid2 size={10}>
+                  <Box
+                    display="flex"
+                    width="100%"
+                    justifyContent="center"
+                    alignItems="center"
+                    gap={1}
+                  >
+                    {exercise.params.map((param, j) => {
+                      const value = set.paramValues.find(
+                        (pv) => pv.field === param.field
+                      ) || {
+                        field: param.field,
+                        selected: 'set',
+                        value: (i + 1).toString(),
+                      };
+
+                      return (
+                        <Box
+                          key={param.field}
+                          flexBasis={
+                            (100 / exercise.params.length).toString() + '%'
+                          }
+                        >
+                          <ExerciseParam
+                            showOptions={set.setNumber === 1}
+                            disableOptions
+                            disableSets
+                            param={param}
+                            value={value}
+                            onOptionChange={(newValue) => {}}
+                            onSubOptionChange={(newValue) => {
+                              if (+newValue < 0) return;
+
+                              const paramIndex =
+                                exercise.sets[0].paramValues.findIndex(
+                                  (pv) => pv.field === param.field
+                                );
+
+                              const newExercise = { ...exercise };
+
+                              const setIndex = newExercise.sets.findIndex(
+                                (s) => s.setNumber === set.setNumber
+                              );
+
+                              const updatedSets: ExerciseSet[] =
+                                newExercise.sets.map((set, i) => {
+                                  return {
+                                    setNumber: set.setNumber,
+                                    paramValues: [...set.paramValues].map(
+                                      (param, index) => {
+                                        if (
+                                          index === paramIndex &&
+                                          setIndex === i
+                                        ) {
+                                          return {
+                                            field: param.field,
+                                            selected: param.selected,
+                                            value: newValue as string,
+                                          } as AttributeValue;
+                                        }
+                                        return {
+                                          field: param.field,
+                                          selected: param.selected,
+                                          value: param.value,
+                                        } as AttributeValue;
+                                      }
+                                    ),
+                                  };
+                                });
+
+                              newExercise.sets = [...updatedSets];
+                              updateTraining(newExercise);
+                            }}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Grid2>
               </Grid2>
-              {/* Sets */}
-              <Grid2 size={2}>
-                <SetExerciseAttribute
-                  options={SET}
-                  state={(() => {
-                    return {
-                      type: 'number',
-                      label: 'set',
-                      values: SET[0].values,
-                      option: 'set',
-                      format: SET[0].format,
-                      value: (i + 1).toString(),
-                    };
-                  })()}
-                  onChange={(state) => {}}
-                  disabled
-                />
-              </Grid2>
-
-              {/* Set Type */}
-              <Grid2 size={2}>
-                <SetExerciseAttribute
-                  options={SET_TYPE}
-                  state={(() => {
-                    const option = SET_TYPE.find(
-                      (option) => option.label === state.setType
-                    )!;
-
-                    return {
-                      type: option.type,
-                      label: option.label,
-                      values: option.values,
-                      option: option.label as keyof ExerciseMeta,
-                      format: option.format,
-                      value:
-                        state.setTypeValue.toString() ??
-                        option.values![1].toString(),
-                    };
-                  })()}
-                  onChange={(state) => {
-                    const setType = state.option as ExerciseMeta['setType'];
-                    const setTypeValue = parseInt(state.value);
-
-                    updateSelectedTraining([
-                      { field: 'setType', value: setType },
-                      {
-                        field: 'setTypeValue',
-                        value: isNaN(setTypeValue) ? 5 : setTypeValue,
-                      }, // 5 because all set type options include 5
-                    ]);
-                  }}
-                />
-              </Grid2>
-
-              {/* Workload */}
-              <Grid2 size={2}>
-                <SetExerciseAttribute
-                  options={WORKLOAD}
-                  state={(() => {
-                    const option = WORKLOAD.find(
-                      (option) => option.label === state.workloadType
-                    )!;
-
-                    return {
-                      type: option.type,
-                      label: option.label,
-                      values: option.values,
-                      option: option.label as keyof ExerciseMeta,
-                      format: option.format,
-                      value: (state.workloadValue !== undefined &&
-                      state.workloadValue !== null
-                        ? state.workloadValue
-                        : 10
-                      ).toString(),
-                    };
-                  })()}
-                  onChange={(state) => {
-                    const workloadType =
-                      state.option as ExerciseMeta['workloadType'];
-
-                    // if workload value not in values array, select first value in array
-                    let workloadValue = parseInt(state.value);
-                    if (
-                      state.type === 'select' &&
-                      !state.values!.includes(workloadValue.toString())
-                    ) {
-                      workloadValue = parseInt(state.values![1]);
-                    }
-
-                    updateSelectedTraining([
-                      { field: 'workloadType', value: workloadType },
-                      { field: 'workloadValue', value: workloadValue },
-                    ]);
-                  }}
-                />
-              </Grid2>
-
-              {/* Tempo */}
-              <Grid2 size={2}>
-                <SetExerciseAttribute
-                  options={TEMPO}
-                  state={(() => {
-                    const option = TEMPO.find(
-                      (option) => option.label === tempoOrEffort
-                    )!;
-
-                    return {
-                      type: option.type,
-                      label: option.label,
-                      values: option.values,
-                      option: option.label as keyof ExerciseMeta,
-                      format: option.format,
-                      value:
-                        (tempoOrEffort === 'temp'
-                          ? state.tempo
-                          : state.effort) ?? option.values![1].toString(),
-                    };
-                  })()}
-                  onChange={(state) => {
-                    if (state.label === 'eff' && tempoOrEffort === 'temp') {
-                      setTempoOrEffort('eff');
-                      return;
-                    }
-
-                    if (state.label === 'temp' && tempoOrEffort === 'eff') {
-                      setTempoOrEffort('temp');
-                      return;
-                    }
-
-                    updateSelectedTraining([
-                      {
-                        field: tempoOrEffort === 'temp' ? 'tempo' : 'effort',
-                        value: state.value,
-                      },
-                    ]);
-                  }}
-                />
-              </Grid2>
-
-              {/* Recovery */}
-              <Grid2 size={2}>
-                <SetExerciseAttribute
-                  options={RECOVERY}
-                  state={(() => {
-                    const option = RECOVERY.find(
-                      (option) => option.label === 'rec'
-                    )!;
-                    return {
-                      type: option.type,
-                      label: option.label,
-                      values: option.values,
-                      option: option.label as keyof ExerciseMeta,
-                      format: option.format,
-                      value: state.rec ? state.rec.toString() : '',
-                    };
-                  })()}
-                  onChange={(state) => {
-                    const rec = parseInt(state.value);
-                    updateSelectedTraining([{ field: 'rec', value: rec }]);
-                  }}
-                />
-              </Grid2>
-            </Grid2>
-          ))}
+            );
+          })}
         </Box>
       )}
     </Stack>

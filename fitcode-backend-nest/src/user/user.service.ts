@@ -8,19 +8,19 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { FieldValue, Query, Transaction } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
-import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
-import { Update } from 'src/common/type/entity.type';
-import { CustomClaims, User } from 'src/common/type/firebase-auth.type';
-import { UserMetaRef, UserRef } from 'src/common/type/firestore.type';
-import { Wrapper } from 'src/common/type/wrapper.type';
-import { Environment } from 'src/config/environment-validation-schema';
-import { FirebaseService } from 'src/firebase/firebase.service';
-import { TrainingService } from 'src/training/service/training.service';
+import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
+import { Update } from '../common/type/entity.type';
+import { CustomClaims, User } from '../common/type/firebase-auth.type';
+import { WellnessRef, UserRef } from '../common/type/firestore.type';
+import { Wrapper } from '../common/type/wrapper.type';
+import { Environment } from '../config/environment-validation-schema';
+import { FirebaseService } from '../firebase/firebase.service';
+import { TrainingService } from '../training/service/training.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
-import { UserMeta } from './entity/user-meta.entity';
+import { Wellness } from './entity/wellness.entity';
 import { UserEntity } from './entity/user.entity';
-import { UserMetaRepository } from './repository/user-meta.repository';
+import { WellnessRepository } from './repository/user-meta.repository';
 import { UserRepository } from './repository/user.repository';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
@@ -35,9 +35,7 @@ export class UserService {
     private readonly configService: ConfigService<Environment>,
     private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
-    private readonly userMetaRepository: UserMetaRepository,
-    @Inject(forwardRef(() => TrainingService))
-    private readonly trainingService: Wrapper<TrainingService>,
+    private readonly userMetaRepository: WellnessRepository,
   ) {}
 
   async findOne(id: string): Promise<UserEntity | null> {
@@ -109,6 +107,12 @@ export class UserService {
       if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
     }
 
+    await this.userRepository.addDoc({
+      id: user.uid,
+      groupsIds: [],
+      trainersIds: [],
+    });
+
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
@@ -138,6 +142,18 @@ export class UserService {
     await this.userRepository.updateDoc(ref.uid, input);
   }
 
+  async addTrainer(ref: UserRef, trainerId: string) {
+    await this.userRepository.doc(ref.uid).update({
+      trainersIds: FieldValue.arrayUnion(trainerId),
+    });
+  }
+
+  async removeTrainer(ref: UserRef, trainerId: string) {
+    await this.userRepository.doc(ref.uid).update({
+      trainersIds: FieldValue.arrayRemove(trainerId),
+    });
+  }
+
   async addAthlete(user: User, input: Omit<CreateUser, 'customClaims'>) {
     const { email, displayName, password } = input;
 
@@ -162,24 +178,30 @@ export class UserService {
     transaction.update(docRef, { groupsIds: FieldValue.arrayRemove(groupId) });
   }
 
-  async getMeta(ref: UserMetaRef): Promise<UserMeta> {
+  async getMeta(ref: WellnessRef): Promise<Wellness> {
     return await this.userMetaRepository.getDoc(ref);
   }
 
-  async addOrUpdateMeta(ref: UserMetaRef, input: UserMeta): Promise<UserMeta> {
-    const meta = await this.userMetaRepository.getDoc(ref);
+  async addOrUpdateWellness(
+    ref: WellnessRef,
+    input: Wellness,
+  ): Promise<Wellness> {
+    this.logger.log(
+      `User ${ref.uid} is adding / updating wellness: ${JSON.stringify(input)}`,
+    );
 
+    const meta = await this.userMetaRepository.getDoc(ref);
     if (!meta) await this.userMetaRepository.addDoc(ref, input);
     else await this.userMetaRepository.updateDoc(ref, input);
 
     return input;
   }
 
-  async updateMeta(ref: UserMetaRef, input: UserMeta): Promise<void> {
+  async updateWellness(ref: WellnessRef, input: Wellness): Promise<void> {
     return await this.userMetaRepository.updateDoc(ref, input);
   }
 
-  async getLastMeta(ref: UserRef): Promise<UserMeta> {
+  async getLastMeta(ref: UserRef): Promise<Wellness> {
     const snapshot = await this.userMetaRepository
       .collection(ref)
       .orderBy('date', 'desc')
@@ -190,7 +212,7 @@ export class UserService {
     return this.userMetaRepository.serialize(snapshot.docs[0]);
   }
 
-  async getLastMetas(userIds: string[]): Promise<UserMeta[]> {
+  async getRecentWellness(userIds: string[]): Promise<Wellness[]> {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.USER_META)
       .where('userId', 'in', userIds)

@@ -1,0 +1,79 @@
+[
+  {
+    "email": "admin@mail.com",
+    "role": "admin",
+    "level": "beginner",
+    "displayName": "FitCode Admin",
+    "weight": 102.3,
+    "groups": []
+  },
+  {
+    "email": "manager@mail.com",
+    "role": "manager",
+    "level": "beginner",
+    "displayName": "Manager",
+    "weight": 80.5,
+    "groups": []
+  },
+  {
+    "email": "trainer@mail.com",
+    "role": "trainer",
+    "level": "beginner",
+    "displayName": "Trainer",
+    "weight": 90.5,
+    "groups": [
+      {
+        "name": "Football U19 Men",
+        "membersIds": [
+          "john.doe@mail.com",
+          "mike.tyson@mail.com",
+          "bruce.lee@mail.com"
+        ]
+      },
+      {
+        "name": "Volleyball U23 Women",
+        "membersIds": ["janja.garnbret@mail.com", "the.rock@mail.com"]
+      }
+    ]
+  },
+  {
+    "email": "john.doe@mail.com",
+    "role": "athlete",
+    "level": "beginner",
+    "displayName": "John Doe",
+    "weight": 70.5,
+    "groups": []
+  },
+  {
+    "email": "mike.tyson@mail.com",
+    "role": "athlete",
+    "level": "beginner",
+    "displayName": "Mike Tyson",
+    "weight": 93.5,
+    "groups": []
+  },
+  {
+    "email": "bruce.lee@mail.com",
+    "role": "athlete",
+    "level": "beginner",
+    "displayName": "Bruce Lee",
+    "weight": 80,
+    "groups": []
+  },
+  {
+    "email": "janja.garnbret@mail.com",
+    "role": "athlete",
+    "level": "beginner",
+    "displayName": "Janja Garnbret",
+    "weight": 60,
+    "groups": []
+  },
+  {
+    "email": "the.rock@mail.com",
+    "role": "athlete",
+    "level": "beginner",
+    "displayName": "Dwayne Johnson",
+    "weight": 120,
+    "groups": []
+  }
+]

@@ -4,7 +4,7 @@ import {
   DocumentReference,
   Query,
 } from 'firebase-admin/lib/firestore';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
@@ -37,14 +37,16 @@ export class ComponentRepository
     return this.firebaseService.serialize(data);
   }
 
-  async addDoc(input: Create<Component, 'name' | 'parent'>) {
+  async addDoc(input: Create<Component>) {
     const slug = await this.slug(input.name);
 
     const query = this.firebaseService.buildCreateQuery<Component>({
       id: slug,
       slug,
-      parent: input.parent || null,
+      parentId: input.parentId || null,
       name: input.name,
+      attributes: input.attributes,
+      params: input.params || null,
     });
 
     await this.doc(slug).set(query);
@@ -53,7 +55,7 @@ export class ComponentRepository
 
   async updateDoc(
     slug: string,
-    input: Update<Component, 'name' | 'parent' | 'slug'>,
+    input: Update<Component, 'name' | 'parentId' | 'slug'>,
   ) {
     const query = this.firebaseService.buildUpdateQuery<Component>(input);
     await this.doc(slug).update(query);
