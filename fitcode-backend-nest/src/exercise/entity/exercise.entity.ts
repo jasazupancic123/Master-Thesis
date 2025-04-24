@@ -48,7 +48,7 @@ export class Exercise extends BaseEntity {
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
-  instruction: string;
+  instruction?: string;
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseAttributeValue)

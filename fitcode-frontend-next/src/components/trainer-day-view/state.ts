@@ -738,6 +738,13 @@ export function handleDeleteExercise(
 
   if (!component || !training) return;
 
+  console.log('supersetsWithAdd', supersetsWithAdd);
+  const exerciseToDelete = supersetsWithAdd.find((superset) =>
+    superset.exercises.find((e) => e.id === exerciseId)
+  );
+  console.log('exerciseToDelete', exerciseToDelete);
+  console.log('exerciseId', exerciseId);
+
   setDetectedChanges(true);
 
   let updatedSupersets = supersetsWithAdd.map((superset) => ({

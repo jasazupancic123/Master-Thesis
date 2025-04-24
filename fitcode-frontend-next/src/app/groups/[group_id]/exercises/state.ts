@@ -4,7 +4,6 @@ import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { Component } from '@/controller/component/type/component.type';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { ExerciseAttribute } from '@/controller/exercise/type/exercise-attribute.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';

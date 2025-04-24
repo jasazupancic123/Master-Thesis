@@ -52,7 +52,16 @@ export default function ExercisesPage() {
         onConfirm={() => {
           handleCreateManyExercises(
             token,
-            { exercises: importedExercises },
+            {
+              exercises: importedExercises.map((exercise) => ({
+                name: exercise.name,
+                componentIds: exercise.componentIds,
+                imageUrl: exercise.imageUrl,
+                videoUrl: exercise.videoUrl,
+                instruction: exercise.instruction,
+                attributeValues: exercise.attributeValues,
+              })),
+            },
             { router, setExercises }
           );
 

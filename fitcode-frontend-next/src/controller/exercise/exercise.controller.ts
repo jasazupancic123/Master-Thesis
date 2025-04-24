@@ -31,7 +31,7 @@ export class ExerciseController {
     body: {
       exercises: {
         name: string;
-        componentsIds: string[];
+        componentIds: string[];
         imageUrl?: string;
         videoUrl?: string;
         instruction?: string;
