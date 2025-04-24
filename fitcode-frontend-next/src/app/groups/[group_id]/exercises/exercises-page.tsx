@@ -28,6 +28,13 @@ import {
   handleUpdateExercise,
 } from './state';
 import MyModal from '@/components/modal';
+import { ExerciseController } from '@/controller/exercise/exercise.controller';
+import { handleApiRequest } from '@/common/type/state.type';
+import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
+import toast from 'react-hot-toast';
+import { CommonService } from '@/common/service/common.service';
+
+const commonService = CommonService.instance;
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -53,7 +60,11 @@ export function ExercisesPage() {
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
     null
   );
-  const [exercises, setExercises] = useState([...allExercises]);
+
+  const [exercises, setExercises] = useState([
+    ...allExercises.filter((e) => !e.deletedAt),
+  ]);
+
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<PaginationType>({
@@ -95,6 +106,7 @@ export function ExercisesPage() {
     token,
     components,
     search,
+    exercises.length,
     selectedComponent,
     pagination.page,
     pagination.pageSize,
@@ -219,7 +231,6 @@ export function ExercisesPage() {
               handleAddExercise(token, exercise, {
                 router,
                 components,
-                attributes,
                 component: selectedComponent!,
                 filteredExercises,
                 setFilteredExercises,
@@ -250,7 +261,6 @@ export function ExercisesPage() {
                 handleUpdateExercise(token, exercise!.id!, exercise, {
                   router,
                   components,
-                  attributes,
                   setFilteredExercises,
                   setExercises,
                   setExercise,
