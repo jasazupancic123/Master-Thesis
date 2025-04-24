@@ -17,7 +17,7 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   name: string;
 
-  @IsString()
+  @IsString({each: true})
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
@@ -44,6 +44,7 @@ export class Exercise extends BaseEntity {
   videoUrl?: string;
 
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
