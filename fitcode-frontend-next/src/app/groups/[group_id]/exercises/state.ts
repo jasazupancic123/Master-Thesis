@@ -84,6 +84,7 @@ export async function handleAddExercise(
     setModal,
   } = state;
 
+  //name
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
