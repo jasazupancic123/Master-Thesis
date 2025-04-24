@@ -1,6 +1,5 @@
 'use client';
 
-import { TrainingResult } from '@/components/athlete-trainings/training-in-progress';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import {
@@ -14,8 +13,6 @@ import { useAuth } from './auth-provider';
 import { Dayjs } from 'dayjs';
 
 interface TrainingContextType {
-  trainingResult: TrainingResult | null;
-  setTrainingResult: (state: TrainingResult) => void;
   clearTrainingState: () => void;
   selectedTraining: Training | null;
   setSelectedTraining: (training: Training | null) => void;
@@ -35,9 +32,6 @@ const TrainingContext = createContext<TrainingContextType | undefined>(
 );
 
 export const TrainingProvider = ({ children }: { children: ReactNode }) => {
-  const [trainingResult, setTrainingResult] = useState<TrainingResult | null>(
-    null
-  );
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(
     null
   );
@@ -52,13 +46,11 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
 
   // Load local storage data **AFTER** component mounts
   useEffect(() => {
-    const storedTraining = localStorage.getItem('trainingState');
     const storedSelectedTraining = localStorage.getItem('selectedTraining');
     const storedSelectedComponent = localStorage.getItem('selectedComponent');
     const storedSupersetIndex = localStorage.getItem('supersetIndex');
     const storedStartOfTraining = localStorage.getItem('startOfTraining');
 
-    if (storedTraining) setTrainingResult(JSON.parse(storedTraining));
     if (storedSelectedTraining)
       setSelectedTraining(JSON.parse(storedSelectedTraining));
     if (storedSelectedComponent)
@@ -72,15 +64,10 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (isLoaded) {
-      if (
-        trainingResult?.userId &&
-        user?.uid &&
-        trainingResult.userId !== user?.uid
-      ) {
+      if (!selectedTraining) {
         clearTrainingState();
         return;
       }
-      localStorage.setItem('trainingState', JSON.stringify(trainingResult));
       localStorage.setItem(
         'selectedTraining',
         JSON.stringify(selectedTraining)
@@ -92,10 +79,9 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('supersetIndex', JSON.stringify(supersetIndex));
       localStorage.setItem('startOfTraining', JSON.stringify(startOfTraining));
     }
-  }, [trainingResult, supersetIndex, startOfTraining, isLoaded]);
+  }, [selectedTraining, supersetIndex, startOfTraining, isLoaded]);
 
   const clearTrainingState = () => {
-    setTrainingResult(null);
     setSelectedTraining(null);
     setSelectedComponent(null);
     setSupersetIndex(null);
@@ -110,8 +96,6 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
   return (
     <TrainingContext.Provider
       value={{
-        trainingResult,
-        setTrainingResult,
         clearTrainingState,
         selectedTraining,
         setSelectedTraining,
