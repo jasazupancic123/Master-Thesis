@@ -36,6 +36,14 @@ export class TrainingController {
     return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }
 
+  static async updateMultiple(
+    token: string,
+    trainingId: string,
+    body: Partial<DateRange & { id: string, components: TrainingComponent[] }>[]
+  ) {
+    return api.patch<Training[]>(`/training/${trainingId}/multiple`, body, { token });
+  }
+
   static async copy(
     token: string,
     trainingId: string,

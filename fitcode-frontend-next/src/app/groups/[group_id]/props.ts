@@ -71,4 +71,6 @@ export type TrainerDayViewContextProps = {
   setPagination: SetState<Pagination>;
   search: string;
   setSearch: SetState<string>;
+  showAthleteReport: boolean;
+  setShowAthleteReport: SetState<boolean>;
 };

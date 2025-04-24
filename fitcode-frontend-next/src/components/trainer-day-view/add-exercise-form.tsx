@@ -67,11 +67,10 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         placeholder="Search Exercises"
         value={search}
         handleSearchChange={(e) => {
-          setFilteredExercises(
-            componentExercises.filter((exercise) =>
-              exercise.name.toLowerCase().includes(e.target.value.toLowerCase())
-            )
+          const filteredExercises = componentExercises.filter((exercise) =>
+            exercise.name.toLowerCase().includes(e.target.value.toLowerCase())
           );
+          setFilteredExercises(filteredExercises);
           setSearch(e.target.value);
         }}
         maxWidth="85%"
@@ -86,9 +85,15 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         justifyContent="center"
         width="100%"
         flexWrap="nowrap"
+        px={search === '' ? 0 : 3}
       >
         <IconButton
-          sx={{ width: 40, height: 40, p: 1 }}
+          sx={{
+            width: 40,
+            height: 40,
+            p: 1,
+            display: search === '' ? undefined : 'none',
+          }}
           onClick={() => {
             setPagination((prev) => ({
               ...prev,
@@ -194,7 +199,12 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
         </Box>
 
         <IconButton
-          sx={{ width: 40, height: 40, p: 1 }}
+          sx={{
+            width: 40,
+            height: 40,
+            p: 1,
+            display: search === '' ? undefined : 'none',
+          }}
           onClick={() => {
             setPagination((prev) => ({
               ...prev,
