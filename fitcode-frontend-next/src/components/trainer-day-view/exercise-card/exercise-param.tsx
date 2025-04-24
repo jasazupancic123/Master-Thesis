@@ -11,6 +11,7 @@ import { SetState } from '@/common/type/state.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { useState } from 'react';
+import { Redo } from '@mui/icons-material';
 
 interface Props {
   param: Attribute;
@@ -20,6 +21,7 @@ interface Props {
   showOptions?: boolean;
   disableOptions?: boolean;
   disableSets?: boolean;
+  readOnly?: boolean;
 }
 
 export function ExerciseParam(props: Props) {
@@ -31,6 +33,7 @@ export function ExerciseParam(props: Props) {
     showOptions = true,
     disableOptions = false,
     disableSets = false,
+    readOnly = false,
   } = props;
 
   const nestedOption = param.options?.find((o) =>
@@ -123,6 +126,7 @@ export function ExerciseParam(props: Props) {
           }}
         >
           <Select
+            disabled={readOnly}
             variant="filled"
             sx={{
               textAlign: 'center',
@@ -132,6 +136,16 @@ export function ExerciseParam(props: Props) {
                 fontSize: 14,
                 textAlign: 'center',
                 px: '0px !important',
+              },
+              '::before': {
+                border: 'none !important',
+              },
+              '& .MuiInputBase-input.Mui-disabled': {
+                color: readOnly ? 'white !important' : undefined,
+                WebkitTextFillColor: readOnly ? 'white !important' : undefined,
+              },
+              '& .Mui-disabled': {
+                color: 'rgba(255, 255, 255, 0) !important',
               },
             }}
             value={value.value}
@@ -168,14 +182,30 @@ export function ExerciseParam(props: Props) {
             type={nestedOption?.type === 'number' ? 'number' : 'string'}
             size="small"
             onChange={(e) => {
+              if (readOnly) return;
               onSubOptionChange(e.target.value as string);
             }}
-            disabled={nestedOption?.field === 'set' && disableSets}
+            disabled={
+              readOnly || (nestedOption?.field === 'set' && disableSets)
+            }
+            inputProps={{
+              style: {
+                textAlign: 'center',
+                paddingRight: '0px !important',
+                paddingLeft: '0px !important',
+                color: 'white !important',
+              },
+            }}
             sx={{
               textAlign: 'center',
               '& .MuiInputBase-input': {
                 p: 0.5,
-                textAlign: 'center !important',
+                textAlign: 'center',
+                color: 'white',
+              },
+              '& .MuiInputBase-input.Mui-disabled': {
+                color: readOnly ? 'white !important' : undefined,
+                WebkitTextFillColor: readOnly ? 'white !important' : undefined,
               },
               '& .Mui-disabled': {
                 color: 'rgba(255, 255, 255, 0) !important',
