@@ -40,7 +40,6 @@ export default function TrainingPage(props: TrainingPageProps) {
   const [statuses, setStatuses] = useState<TrainingStatus[]>([]);
 
   const {
-    trainingResult,
     selectedTraining,
     selectedComponent,
     setSelectedComponent,
@@ -50,7 +49,7 @@ export default function TrainingPage(props: TrainingPageProps) {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (trainingResult && selectedTraining && selectedComponent) {
+    if (selectedTraining && selectedComponent) {
       setView('training');
     } else {
       clearTrainingState();
