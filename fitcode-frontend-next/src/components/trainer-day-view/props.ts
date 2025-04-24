@@ -1,8 +1,9 @@
-import { SetExerciseOption } from '@/common/constant/training-exercise.constant';
 import { Day } from '@/common/service/util/date.util';
 import { SetState } from '@/common/type/state.type';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 import {
-  ExerciseMeta,
+  Superset,
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
@@ -34,6 +35,8 @@ export interface TrainingExerciseCardProps {
   chartView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
+  supersets: Superset[],
+  setSupersetsWithAdd: Dispatch<SetStateAction<Superset[]>>;
 }
 
 export interface SubgroupProps {
@@ -46,17 +49,17 @@ export interface SupersetsProps {
 }
 
 export interface SetExerciseState {
-  option: keyof ExerciseMeta;
+  field: string;
   label: string;
   value: string;
-  type: SetExerciseOption['type'];
-  values?: SetExerciseOption['values'];
-  format: SetExerciseOption['format'];
+  type: string;
+  name: string;
+  typeChange?: boolean;
 }
 
 export interface SetExerciseAttributeProps {
   state: SetExerciseState;
-  onChange: (data: SetExerciseState) => void;
-  options: SetExerciseOption[];
-  disabled?: boolean;
+  onChange: (data: AttributeValue) => void;
+  options: Attribute[];
+  expandedView: boolean;
 }

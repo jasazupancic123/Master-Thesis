@@ -8,7 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CommonService } from 'src/common/service/common.service';
+import { CommonService } from '../common/service/common.service';
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
@@ -16,9 +16,9 @@ import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import { CreateUserWorkloadsForComponentDto } from './dto/update-athlete-set-data.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
+import { CreateWorkloadsDto } from './dto/create-workload.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -36,10 +36,10 @@ export class TrainingController {
     filter = this.commonService.object.clean(filter);
 
     return this.trainingService.findAll(user, {
-      groupId: { value: filter.groupId },
-      cycleId: { value: filter.cycleId },
-      ...(filter.from && { from: { value: filter.from } }),
-      ...(filter.to && { to: { value: filter.to } }),
+      groupId: filter.groupId,
+      cycleId: filter.cycleId,
+      ...(filter.from && { from: filter.from }),
+      ...(filter.to && { to: filter.to }),
     });
   }
 
@@ -84,28 +84,18 @@ export class TrainingController {
 
   @Patch(':trainingId/component/:componentId')
   @Auth()
-  async createUserWorkloadsForComponentDto(
+  async updateWorkloads(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Body() { workloads }: CreateUserWorkloadsForComponentDto,
+    @Body() { workloads }: CreateWorkloadsDto,
   ) {
-    const ref = {
-      trainingId,
-      componentId,
-      userId: user.uid,
-    };
-
-    await this.trainingService.createUserWorkloadsForComponent(
-      user,
-      ref,
-      workloads,
-    );
-
+    const ref = { trainingId, componentId, userId: user.uid };
+    await this.trainingService.updateWorkloads(user, ref, workloads);
     return {};
   }
 
-  @Get(':trainingId/status')
+  /* @Get(':trainingId/status')
   @Auth()
   async getTrainingStatus(
     @RequestUser() user: User,
@@ -114,19 +104,19 @@ export class TrainingController {
     return await this.trainingService.findAllStatusesByTraining(user, {
       trainingId,
     });
-  }
+  } */
 
   @Post(':trainingId/component')
   @Auth()
   async addComponents(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() { componentsIds }: AddTrainingComponentsDto,
+    @Body() { components }: AddTrainingComponentsDto,
   ) {
     return await this.trainingService.addComponents(
       user,
       { trainingId },
-      componentsIds,
+      components,
     );
   }
 

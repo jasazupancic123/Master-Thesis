@@ -1,3 +1,3 @@
-import { DateFilterDto } from 'src/common/dto/date-filter.dto';
+import { DateFilterDto } from '../../common/dto/date-filter.dto';
 
 export class CopyTrainingDto extends DateFilterDto {}

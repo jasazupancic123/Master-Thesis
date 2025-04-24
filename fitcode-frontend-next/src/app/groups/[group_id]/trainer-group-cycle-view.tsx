@@ -81,7 +81,7 @@ export default function TrainerCycleView() {
           }}
         />
 
-        {/* Exercise Chips (Sticky Behavior) */}
+        {/* Component Chips (Sticky Behavior) */}
         <Box
           display="flex"
           flexDirection="column"
@@ -105,11 +105,11 @@ export default function TrainerCycleView() {
           <ExerciseChips
             components={ComponentService.toTree(components)}
             selected={selectedComponents}
+            bgColor={theme.palette.background.default}
+            primaryColor={theme.palette.primary.main}
             setSelected={(component) =>
               setSelectedComponents(component as Component[])
             }
-            bgColor={theme.palette.background.default}
-            primaryColor={theme.palette.primary.main}
           />
         </Box>
       </Box>

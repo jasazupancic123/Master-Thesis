@@ -1,0 +1,849 @@
+[
+    {
+      "name": "Strength",
+      "slug": "strength",
+      "params": {
+        "default": [
+          {
+            "field": "volWorkSets",
+            "defaultValue": "set",
+            "options": [
+              { "field": "set", "defaultValue": 3 }
+            ]
+          },
+          {
+            "field": "vol1",
+            "defaultValue": "rep",
+            "options": [
+              { "field": "rep", "defaultValue": "12" },
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "int1",
+            "defaultValue": "kg",
+            "options": [
+              { "field": "kg", "defaultValue": "20" },
+              { "field": "bw", "defaultValue": "100" },
+              { "field": "rm", "defaultValue": "10" }
+            ]
+          },
+          {
+            "field": "int2",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "tempo", "defaultValue": "a" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          },
+          {
+            "field": "volRec",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" }
+            ]
+          }
+        ],
+        "equipment:!": [
+          {
+            "field": "volWorkSets",
+            "defaultValue": "set",
+            "options": [
+              { "field": "set", "defaultValue": 3 }
+            ]
+          },
+          { 
+            "field": "vol1",
+            "defaultValue": "rep",
+            "options": [
+              { "field": "rep", "defaultValue": "12" },
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "int1",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "tempo", "defaultValue": "a" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          },
+          {
+            "field": "volRec",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" }
+            ]
+          }
+        ]
+      },
+      "children": [
+        {
+          "name": "Power",
+          "slug": "power",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "priority",
+            "sportTask"
+          ],
+          "children": [
+            {
+              "name": "Olympic Lifts",
+              "slug": "olympic-lifts",
+              "children": []
+            },
+            {
+              "name": "Fast General",
+              "slug": "fast-general",
+              "children": []
+            },
+            {
+              "name": "Jumping",
+              "slug": "jumping",
+              "children": []
+            },
+            {
+              "name": "Throwing",
+              "slug": "throwing",
+              "children": []
+            },
+            {
+              "name": "Running Based",
+              "slug": "running-based",
+              "children": []
+            },
+            {
+              "name": "Reactive",
+              "slug": "reactive",
+              "children": []
+            },
+            {
+              "name": "Explosive",
+              "slug": "explosive",
+              "children": []
+            },
+            {
+              "name": "Braking",
+              "slug": "braking",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Other",
+          "slug": "other-1",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "priority",
+            "sportTask"
+          ],
+          "children": []
+        },
+        {
+          "name": "General",
+          "slug": "general-strength",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "priority",
+            "sportTask"
+          ],
+          "children": [
+            {
+              "name": "Concentric",
+              "slug": "concentric",
+              "children": []
+            },
+            {
+              "name": "Eccentric",
+              "slug": "eccentric",
+              "children": []
+            },
+            {
+              "name": "Isometric",
+              "slug": "isometric",
+              "children": []
+            },
+            {
+              "name": "Con-Ecc",
+              "slug": "con-ecc",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Corrective",
+          "slug": "corrective",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "coeff",
+            "method",
+            "prescr",
+            "priority",
+            "diagnosis",
+            "muscle"
+          ],
+          "children": [
+            {
+              "name": "Spine",
+              "slug": "spine",
+              "children": []
+            },
+            {
+              "name": "Hip",
+              "slug": "hip",
+              "children": []
+            },
+            {
+              "name": "Shoulder",
+              "slug": "shoulder",
+              "children": []
+            },
+            {
+              "name": "Ankle",
+              "slug": "ankle",
+              "children": []
+            },
+            {
+              "name": "Knee",
+              "slug": "knee",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Speed",
+      "slug": "speed",
+      "params": {
+        "default": [
+          {
+            "field": "volWorkSets",
+            "defaultValue": "set",
+            "options": [
+              { "field": "set", "defaultValue": 3 }
+            ]
+          },
+          { 
+            "field": "vol1",
+            "defaultValue": "dist",
+            "options": [
+              { "field": "dist", "defaultValue": "50" },
+              { "field": "time", "defaultValue": "60" },
+              { "field": "rep", "defaultValue": "12" }
+            ]
+          },
+          {
+            "field": "int1",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          },
+          {
+            "field": "volRec",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" }
+            ]
+          }
+        ]
+      },
+      "children": [
+        {
+          "name": "Acceleration",
+          "slug": "acceleration",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "sportTask"
+          ],
+          "children": [
+            {
+              "name": "Generic",
+              "slug": "generic",
+              "children": [
+                {
+                  "name": "Resisted",
+                  "slug": "resisted",
+                  "children": []
+                },
+                {
+                  "name": "Assisted",
+                  "slug": "assisted",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Game Specific",
+              "slug": "game-specific",
+              "children": []
+            },
+            {
+              "name": "Hybrid",
+              "slug": "hybrid",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Deceleration",
+          "slug": "deceleration",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "sportTask"
+          ],
+          "children": [
+            {
+              "name": "Generic",
+              "slug": "generic",
+              "children": [
+                {
+                  "name": "Resisted",
+                  "slug": "resisted",
+                  "children": []
+                },
+                {
+                  "name": "Assisted",
+                  "slug": "assisted",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Game Specific",
+              "slug": "game-specific",
+              "children": []
+            },
+            {
+              "name": "Hybrid",
+              "slug": "hybrid",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Peak Speed",
+          "slug": "peak-speed",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "sportTask"
+          ],
+          "children": [
+            {
+              "name": "Generic",
+              "slug": "generic",
+              "children": [
+                {
+                  "name": "Resisted",
+                  "slug": "resisted",
+                  "children": []
+                },
+                {
+                  "name": "Assisted",
+                  "slug": "assisted",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Game Specific",
+              "slug": "game-specific",
+              "children": []
+            },
+            {
+              "name": "Hybrid",
+              "slug": "hybrid",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "COD",
+          "slug": "cod",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "sportTask"
+          ],
+          "children": [
+            {
+              "name": "Generic",
+              "slug": "generic",
+              "children": [
+                {
+                  "name": "Resisted",
+                  "slug": "resisted",
+                  "children": []
+                },
+                {
+                  "name": "Assisted",
+                  "slug": "assisted",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Game Specific",
+              "slug": "game-specific",
+              "children": []
+            },
+            {
+              "name": "Hybrid",
+              "slug": "hybrid",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Agility",
+          "slug": "agility",
+          "attributes": [
+            "pattern",
+            "loadingSide",
+            "movDir",
+            "coeff",
+            "method",
+            "prescr",
+            "sportTask"
+          ],
+          "children": [
+            {
+              "name": "Generic",
+              "slug": "generic",
+              "children": [
+                {
+                  "name": "Resisted",
+                  "slug": "resisted",
+                  "children": []
+                },
+                {
+                  "name": "Assisted",
+                  "slug": "assisted",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Game Specific",
+              "slug": "game-specific",
+              "children": []
+            },
+            {
+              "name": "Hybrid",
+              "slug": "hybrid",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Endurance",
+      "slug": "endurance",
+      "params": {
+        "default": [
+          { 
+            "field": "vol1",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "int1",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          }
+        ],
+        "end-opt-2": [
+          {
+            "field": "volWorkSets",
+            "defaultValue": "set",
+            "options": [
+              { "field": "set", "defaultValue": 3 }
+            ]
+          },
+          { 
+            "field": "vol1",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "int1",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          },
+          {
+            "field": "volRec",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "intRec",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          }
+        ],
+        "end-opt-3": [
+          {
+            "field": "volWorkSets",
+            "defaultValue": "set",
+            "options": [
+              { "field": "set", "defaultValue": 3 }
+            ]
+          },
+          { 
+            "field": "vol1",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          { 
+            "field": "vol2",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "int1",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          },
+          {
+            "field": "int2",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          },
+          {
+            "field": "volRec",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "intRec",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          }
+        ],
+        "end-opt-4": [
+          {
+            "field": "volWorkSets",
+            "defaultValue": "set",
+            "options": [
+              { "field": "set", "defaultValue": 3 }
+            ]
+          },
+          { 
+            "field": "vol1",
+            "defaultValue": "rep",
+            "options": [
+              { "field": "rep", "defaultValue": "12" }
+            ]
+          },
+          { 
+            "field": "vol2",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "int2",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          },
+          {
+            "field": "volRec",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" },
+              { "field": "dist", "defaultValue": "50" }
+            ]
+          },
+          {
+            "field": "intRec",
+            "defaultValue": "eff",
+            "options": [
+              { "field": "mas", "defaultValue": "100" },
+              { "field": "hrmax", "defaultValue": "100" },
+              { "field": "eff", "defaultValue": "mod" }
+            ]
+          }
+        ]
+      },
+      "children": [
+        {
+          "name": "Aerobic Capacity",
+          "slug": "aerobic-capacity",
+          "attributes": [
+            "pattern",
+            "coeff",
+            "method",
+            "sportTask"
+          ],
+          "children": []
+        },
+        {
+          "name": "Aerobic Power",
+          "slug": "aerobic-power",
+          "attributes": [
+            "pattern",
+            "coeff",
+            "method",
+            "sportTask"
+          ],
+          "children": []
+        },
+        {
+          "name": "Anaerobic Capacity",
+          "slug": "anaerobic-capacity",
+          "attributes": [
+            "pattern",
+            "coeff",
+            "method",
+            "sportTask"
+          ],
+          "children": []
+        },
+        {
+          "name": "Anaerobic Power",
+          "slug": "anaerobic-power",
+          "attributes": [
+            "pattern",
+            "coeff",
+            "method",
+            "sportTask"
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "Coordination",
+      "slug": "coordination",
+      "attributes": [],
+      "params": [],
+      "children": [
+        {
+          "name": "Technical Work",
+          "slug": "technical-work",
+          "children": []
+        },
+        {
+          "name": "Running Mechanics",
+          "slug": "running-mechanics",
+          "children": []
+        },
+        {
+          "name": "Jumping / Landing",
+          "slug": "jumping-landing",
+          "children": []
+        },
+        {
+          "name": "Orientation",
+          "slug": "orientation",
+          "children": []
+        },
+        {
+          "name": "Dissociation",
+          "slug": "dissociation",
+          "children": []
+        },
+        {
+          "name": "Balance",
+          "slug": "balance",
+          "children": []
+        },
+        {
+          "name": "Foot Alignment",
+          "slug": "foot-alignment",
+          "children": []
+        },
+        {
+          "name": "Reaction",
+          "slug": "reaction",
+          "children": []
+        },
+        {
+          "name": "Breathing",
+          "slug": "breathing",
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "ROM",
+      "slug": "rom",
+      "params": {
+        "default": [
+          { 
+            "field": "vol",
+            "defaultValue": "rep",
+            "options": [
+              { "field": "rep", "defaultValue": "12" },
+              { "field": "time", "defaultValue": "60" }
+            ]
+          },
+          {
+            "field": "volRec",
+            "defaultValue": "time",
+            "options": [
+              { "field": "time", "defaultValue": "60" }
+            ]
+          }
+        ]
+      },
+      "children": [
+        {
+          "name": "Flexibility",
+          "slug": "flexibility",
+          "attributes": ["diagnosis", "muscle"],
+          "children": [
+            {
+              "name": "Ballistic Stretching",
+              "slug": "ballistic-stretching",
+              "children": []
+            },
+            {
+              "name": "Dynamic Stretching",
+              "slug": "dynamic-stretching",
+              "children": []
+            },
+            {
+              "name": "Active Stretching",
+              "slug": "active-stretching",
+              "children": []
+            },
+            {
+              "name": "Passive Stretching",
+              "slug": "passive-stretching",
+              "children": []
+            },
+            {
+              "name": "Static Stretching",
+              "slug": "static-stretching",
+              "children": []
+            },
+            {
+              "name": "Isometric Stretching",
+              "slug": "isometric-stretching",
+              "children": []
+            },
+            {
+              "name": "PNF Stretching",
+              "slug": "pnf-stretching",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Mobility",
+          "slug": "mobility",
+          "attributes": ["diagnosis", "muscle"],
+          "children": [
+            {
+              "name": "Dynamic WU",
+              "slug": "dynamic-wu",
+              "children": []
+            },
+            {
+              "name": "WOD",
+              "slug": "wod",
+              "children": []
+            },
+            {
+              "name": "Use Of Load",
+              "slug": "use-of-load",
+              "children": []
+            },
+            {
+              "name": "Exercise ROM",
+              "slug": "exercise-rom",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]

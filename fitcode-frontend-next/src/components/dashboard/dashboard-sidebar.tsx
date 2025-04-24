@@ -6,16 +6,8 @@ import {
 } from '@/common/constant/navigation.constant';
 import { useAuth } from '@/context/auth-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import GroupsIcon from '@mui/icons-material/Groups';
-import MenuIcon from '@mui/icons-material/Menu';
-import {
-  BottomNavigation,
-  BottomNavigationAction,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
@@ -25,12 +17,9 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { useTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
-import Link from 'next/link';
-import { useState } from 'react';
 import Logo from '../logo';
 import SelectInputHorizontal from '../select-input-horizontal';
-import { handleLinkClick } from '../dashboard-sidebar/state';
-import { AppBar, Drawer, DrawerHeader } from '../group-sidebar/style';
+import { AppBar, Drawer } from '../group-sidebar/style';
 import { Organization } from '@/controller/organization/type/organization.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { LogoutRounded } from '@mui/icons-material';

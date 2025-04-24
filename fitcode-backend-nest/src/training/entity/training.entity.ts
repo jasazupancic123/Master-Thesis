@@ -7,9 +7,9 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { UserMeta } from 'src/user/entity/user-meta.entity';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { TrainingComponent } from './training-component.entity';
+import { Wellness } from '../../user/entity/wellness.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -62,8 +62,8 @@ export class Training extends BaseEntity {
   components: TrainingComponent[];
 
   @ValidateNested({ each: true })
-  @Type(() => UserMeta)
+  @Type(() => Wellness)
   @ApiProperty()
   @Expose()
-  meta: UserMeta[]; // members' meta used to calculate workloads
+  wellness: Wellness[]; // members' wellness info used to calculate workloads
 }

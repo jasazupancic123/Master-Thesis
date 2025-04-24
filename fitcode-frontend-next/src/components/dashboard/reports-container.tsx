@@ -1,4 +1,4 @@
-import { Box} from '@mui/material';
+import { Box } from '@mui/material';
 import { DashboardReportType } from '@/common/enum/dashboard-report-type.enum';
 import { COLOR } from '@/common/constant/browser.constant';
 import { User } from '@/controller/user/type/user.type';
@@ -15,7 +15,7 @@ interface ReportsContainerProps {
 export default function ReportsContainer(props: ReportsContainerProps) {
   const { index, reportTypes, users, selectedOrganization } = props;
 
-  const colors = COLOR.filter((color, i) => i % 3 === index);
+  const colors = COLOR.filter((_, i) => i % 3 === index);
   return (
     <Box
       display="flex"

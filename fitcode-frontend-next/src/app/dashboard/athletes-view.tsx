@@ -6,7 +6,6 @@ import GroupAthletesCard from '@/components/dashboard/group-athletes-card';
 import { COLOR } from '@/common/constant/browser.constant';
 import BorderColor from '@/components/border-color';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { SignalCellularConnectedNoInternet0BarSharp } from '@mui/icons-material';
 
 interface AthletesViewProps {
   groups: Group[];
@@ -16,10 +15,8 @@ interface AthletesViewProps {
 }
 
 export default function AthletesView(props: AthletesViewProps) {
-  const { groups, users, selectedGroup, setSelectedGroup } = props;
-
   const screenSize = useScreenSize();
-
+  const { groups, users, selectedGroup, setSelectedGroup } = props;
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -106,7 +103,7 @@ export default function AthletesView(props: AthletesViewProps) {
             display="flex"
             flexDirection="column"
             gap={2}
-            width={screenSize.isTablet ? "75%" : "33%"}
+            width={screenSize.isTablet ? '75%' : '33%'}
             margin="auto"
             justifyContent="center"
             alignItems="center"

@@ -1,14 +1,14 @@
 // NOTE - this has to be default import: https://github.com/firebase/firebase-admin-node/issues/593#issuecomment-620711067
 import admin from 'firebase-admin';
-import { applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { auth } from 'firebase-functions/v1';
 
 const isDev = process.env.NODE_ENV === 'dev';
-admin.initializeApp({ credential: applicationDefault() });
+admin.initializeApp({ credential: admin.credential.applicationDefault() });
 
-/* Create custom user claims per registration and new user entry in the database */
+/* Create custom user claims per registration and new user entry in
+the database */
 export const createUserRole = auth.user().onCreate(async (user) => {
   const role =
     isDev && user.email === 'admin@mail.com'

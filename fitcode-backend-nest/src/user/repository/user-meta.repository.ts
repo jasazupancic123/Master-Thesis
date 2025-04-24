@@ -10,42 +10,42 @@ import { FirestoreCollection } from '../../common/enum/firestore-collection.enum
 import { CommonService } from '../../common/service/common.service';
 import {
   FirestoreCollectionRepository,
-  UserMetaRef,
+  WellnessRef,
   UserRef,
 } from '../../common/type/firestore.type';
-import { UserMeta } from '../entity/user-meta.entity';
+import { Wellness } from '../entity/wellness.entity';
 import { UserRepository } from './user.repository';
 
 @Injectable()
-export class UserMetaRepository
-  implements FirestoreCollectionRepository<UserMeta, UserRef>
+export class WellnessRepository
+  implements FirestoreCollectionRepository<Wellness, UserRef>
 {
   constructor(
     private readonly commonService: CommonService,
     private readonly userRepository: UserRepository,
   ) {}
 
-  getKey(ref: Required<UserMetaRef>): string {
+  getKey(ref: Required<WellnessRef>): string {
     return startOfDay(ref.date).toISOString().split('T')[0]; // "YYYY-MM-DD" -> today's date
   }
 
   async getDocs(
     ref: Required<UserRef>,
     query: (query: Query) => Query = (query) => query,
-  ): Promise<UserMeta[]> {
+  ): Promise<Wellness[]> {
     const snapshot = await query(this.collection(ref)).get();
     return snapshot.docs.map((doc) => this.serialize(doc));
   }
 
-  async getDoc(ref: Required<UserMetaRef>): Promise<UserMeta | null> {
+  async getDoc(ref: Required<WellnessRef>): Promise<Wellness | null> {
     const snapshot = await this.doc(ref).get();
     if (!snapshot.exists) return null;
     return this.serialize(snapshot);
   }
 
   async addDoc(
-    ref: Required<UserMetaRef>,
-    input: Omit<UserMeta, 'date'>,
+    ref: Required<WellnessRef>,
+    input: Omit<Wellness, 'date'>,
   ): Promise<string> {
     await this.doc(ref).set({
       userId: ref.uid,
@@ -60,18 +60,18 @@ export class UserMetaRepository
     return this.getKey(ref);
   }
 
-  async updateDoc(ref: Required<UserMetaRef>, input: UserMeta): Promise<void> {
+  async updateDoc(ref: Required<WellnessRef>, input: Wellness): Promise<void> {
     await this.doc(ref).update({
       ...this.commonService.object.clean(input),
       updatedAt: Timestamp.now(),
     });
   }
 
-  async deleteDoc(ref: Required<UserMetaRef>): Promise<void> {
+  async deleteDoc(ref: Required<WellnessRef>): Promise<void> {
     await this.doc(ref).delete();
   }
 
-  doc(ref: Required<UserMetaRef>) {
+  doc(ref: Required<WellnessRef>) {
     return this.collection(ref).doc(this.getKey(ref));
   }
 
@@ -81,7 +81,7 @@ export class UserMetaRepository
       .collection(FirestoreCollection.USER_META);
   }
 
-  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): UserMeta {
+  serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Wellness {
     const data = snapshot.data();
 
     return {

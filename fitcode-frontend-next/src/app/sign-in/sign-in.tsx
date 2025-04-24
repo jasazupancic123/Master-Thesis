@@ -65,7 +65,7 @@ export default function SignIn() {
       );
 
       toast.success('Logged in successfully');
-      router.push(mapper[role].href);
+      router.replace(mapper[role].href);
     } catch (e: any) {
       toast.error(e.message);
     }

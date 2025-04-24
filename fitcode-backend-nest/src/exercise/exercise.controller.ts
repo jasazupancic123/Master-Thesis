@@ -2,16 +2,12 @@ import {
   Body,
   Controller,
   Delete,
-  forwardRef,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
-import { Wrapper } from 'src/common/type/wrapper.type';
-import { UserRole } from 'src/user/enum/user-role.enum';
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
@@ -22,22 +18,15 @@ import { ExerciseService } from './service/exercise.service';
 
 @Controller('exercise')
 export class ExerciseController {
-  constructor(
-    @Inject(forwardRef(() => CacheManagerService))
-    private readonly cacheManagerService: Wrapper<CacheManagerService>,
-    private readonly exerciseService: ExerciseService,
-  ) {}
-
-  @Get('attribute')
-  async findAttributes() {
-    return await this.cacheManagerService.getAttributes();
-  }
+  constructor(private readonly exerciseService: ExerciseService) {}
 
   @Get()
   @Auth()
-  async findAll(@RequestUser() user: User) {
-    // NOTE - filtering is done on frontend
-    return this.exerciseService.findAll(user);
+  async findAll(
+    @RequestUser() user: User,
+    @Query() query?: Record<string, string>,
+  ) {
+    return this.exerciseService.findAll(user, query);
   }
 
   @Get(':exerciseId')
@@ -62,7 +51,10 @@ export class ExerciseController {
     @RequestUser() user: User,
     @Body() data: CreateExercisesDto,
   ) {
-    return this.exerciseService.createMany(user, data.exercises);
+    return this.exerciseService.createMany(
+      user,
+      data.exercises.map((e) => ({ ...e, ownerId: user.uid })),
+    );
   }
 
   @Patch(':exerciseId')

@@ -5,12 +5,13 @@ import {
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
-import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
-import { CommonService } from 'src/common/service/common.service';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { CommonService } from '../../common/service/common.service';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Training } from '../entity/training.entity';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class TrainingRepository
@@ -57,14 +58,14 @@ export class TrainingRepository
         to: addMinutes(startOfHour(input.from), input.components.length * 30),
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
-        meta: input.meta || [],
+        wellness: input.wellness || [],
         components: input.components.map((c, i) => ({
           id: c.id,
           color: c.color || null,
           from: c.from ? c.from : startOfHour(addHours(new Date(), i)),
           to: c.to ? c.to : endOfHour(addHours(new Date(), i)),
-          subgroups: [],
           supersets: [{ color: null, exercises: [] }],
+          subgroups: [],
         })),
       },
       { timestamps: true },
@@ -91,7 +92,9 @@ export class TrainingRepository
             exercises: s.exercises.map((e) => ({
               id: e.id,
               color: e.color,
-              meta: { ...e.meta },
+              params: { ...e.params },
+              sets: e.sets.map((s) => ({ ...s })),
+              periodized: e.periodized,
             })),
           })),
         })),
@@ -100,7 +103,9 @@ export class TrainingRepository
           exercises: s.exercises.map((e) => ({
             id: e.id,
             color: e.color,
-            meta: { ...e.meta },
+            params: { ...e.params },
+            sets: e.sets.map((s) => ({ ...s })),
+            periodized: e.periodized,
           })),
         })),
       })),

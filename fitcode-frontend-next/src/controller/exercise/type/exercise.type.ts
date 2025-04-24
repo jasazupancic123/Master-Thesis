@@ -1,18 +1,20 @@
 import { BaseEntity } from '@/common/type/entity.type';
 import { ExerciseAttributeValue } from './exercise-attribute-value.type';
 import { Component } from '@/controller/component/type/component.type';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 export type Exercise = BaseEntity & {
-  userId: string;
   name: string;
-  componentsIds: string[];
-  global: boolean;
+  componentIds: string[];
+  ownerId: string;
   imageUrl?: string;
   videoUrl?: string;
-  values: ExerciseAttributeValue[];
-  attributeValues: Record<string, any>;
+  instruction?: string;
+  attributeValues: ExerciseAttributeValue[];
 
   // mapped properties
+  valuesObject: Record<string, any>;
   components?: Component[];
   rootComponents?: Component[];
+  defaultParams?: Attribute[];
 };

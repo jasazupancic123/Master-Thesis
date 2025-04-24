@@ -5,24 +5,23 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { FieldPath, Query } from 'firebase-admin/firestore';
-import { Create, Update } from 'src/common/type/entity.type';
+import { Create, Update } from '../common/type/entity.type';
 import { CommonService } from '../common/service/common.service';
 import { Filter } from '../common/type/orm.type';
-import { Wrapper } from '../common/type/wrapper.type';
-import { ExerciseService } from '../exercise/service/exercise.service';
 import { Component } from './entity/component.entity';
 import { ComponentRepository } from './repository/component.repository';
+import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
+import { Wrapper } from '../../src/common/type/wrapper.type';
 
 @Injectable()
 export class ComponentService {
   private logger = new Logger(ComponentService.name);
 
   constructor(
+    @Inject(forwardRef(() => CacheManagerService))
+    private readonly cacheManagerService: Wrapper<CacheManagerService>,
     private readonly commonService: CommonService,
     private readonly componentRepository: ComponentRepository,
-    @Inject(forwardRef(() => ExerciseService))
-    private readonly exerciseService: Wrapper<ExerciseService>,
   ) {}
 
   async create(data: Create<Component>): Promise<Component> {
@@ -31,19 +30,23 @@ export class ComponentService {
 
     // TODO - if newly created component is leaf node, move all parent exercises to "Other" component
 
+    await this.cacheManagerService.clearComponents();
     return await this.componentRepository.getDoc(componentSlug);
   }
 
   async createFromTree(
-    data: Omit<Component, 'children'> & { children: Component[] },
+    data: Omit<Component, 'children' | 'parents'> & {
+      children: Component[];
+    },
   ): Promise<Component> {
     const { children, ...rest } = data;
-    const component = await this.create(rest);
+    const component = await this.create({ ...rest, parentId: data.parentId });
+    await this.cacheManagerService.clearComponents();
 
     for (const child of children) {
       const childData = {
         ...child,
-        parent: component.id,
+        parentId: component.id,
         children: child.children as unknown as Component[],
       };
 
@@ -73,17 +76,12 @@ export class ComponentService {
     const components = await this.findAllFlat();
     return this.commonService.tree.fromArray(components, {
       idPropertyName: 'id',
-      parentIdPropertyName: 'parent',
+      parentIdPropertyName: 'parentId',
       childrenPropertyName: 'children',
     });
   }
 
   leafsFromFlat(components: Component[]): Component[] {
-    if (components.every((component) => !component.children.length))
-      throw new Error(
-        'To get leafs from flat components array, populate `children` first',
-      );
-
     return components.filter((c) => !c.children.length);
   }
 
@@ -117,7 +115,7 @@ export class ComponentService {
    */
   async update(
     id: string,
-    data: Update<Component, 'name' | 'parent' | 'slug'>,
+    data: Update<Component, 'name' | 'parentId' | 'slug'>,
   ): Promise<Component> {
     this.logger.debug(
       `Updating component #${id} with data ${JSON.stringify(data)}`,
@@ -136,17 +134,17 @@ export class ComponentService {
   ) {
     // populate parents
     const parents: Component[] = [];
-    let parent = components.find((c) => c.id === component.parent);
+    let parent = components.find((c) => c.id === component.parentId);
     while (parent) {
       parents.push(parent);
-      parent = components.find((c) => c.id === parent.parent);
+      parent = components.find((c) => c.id === parent.parentId);
     }
 
     component.parents = parents.map((p) => p.id);
 
     // populate children
     component.children = components
-      .filter((c) => c.parent === component.id)
+      .filter((c) => c.parentId === component.id)
       .map((c) => c.id);
   }
 }

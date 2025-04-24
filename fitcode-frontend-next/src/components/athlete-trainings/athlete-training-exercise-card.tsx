@@ -9,7 +9,6 @@ import {
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTraining } from '@/context/training-provider';
 import {
-  ExerciseMeta,
   Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';

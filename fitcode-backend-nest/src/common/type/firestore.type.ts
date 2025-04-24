@@ -1,15 +1,8 @@
 import {
   CollectionReference,
   DocumentReference,
-  DocumentSnapshot,
   Query,
-  QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
-import { Component } from '../../component/entity/component.entity';
-import { ExerciseAttribute } from '../../exercise/entity/exercise-attribute.entity';
-import { Exercise } from '../../exercise/entity/exercise.entity';
-import { UserEntity } from '../../user/entity/user.entity';
-import { FirestoreCollection } from '../enum/firestore-collection.enum';
 
 export interface FirestoreCollectionRepository<
   Model = any,
@@ -59,27 +52,24 @@ export interface RootFirestoreCollectionRepository<Model = any> {
 
 export type ComponentRef = { componentId: string };
 export type ExerciseRef = { exerciseId: string };
-export type ExerciseAttributeRef = { attributeId: string };
-export type ExerciseAttributeValueRef = ExerciseRef & ExerciseAttributeRef;
+export type ExerciseAttributeValueRef = ExerciseRef & {
+  exerciseAttributeValueId: string;
+};
+
 export type UserRef = { uid: string }; // auth user uid
-export type UserMetaRef = UserRef & { date: Date };
+export type WellnessRef = UserRef & { date: Date };
 export type GroupRef = { groupId: string };
 export type CycleRef = GroupRef & { cycleId: string };
 export type TrainingRef = { trainingId: string };
 export type SubgroupRef = TrainingRef & { subgroupId?: string };
 export type TrainingComponentRef = TrainingRef & ComponentRef;
 export type TrainingSupersetRef = TrainingComponentRef & { superset: number };
-export type TrainingExerciseRef = TrainingSupersetRef & ExerciseRef;
-export type UserWorkloadRef = TrainingComponentRef & {
+export type TrainingExerciseRef = Omit<
+  TrainingSupersetRef & ExerciseRef,
+  'superset'
+>;
+export type WorkloadRef = TrainingExerciseRef & {
   userId: string;
-} & ExerciseRef;
-export type UserWorkloadExerciseRef = UserWorkloadRef & ExerciseRef;
-export type TrainingStatusRef = TrainingComponentRef & { userId: string };
-
-// root collections
-export type DatabaseSchema = {
-  [FirestoreCollection.USER]: UserEntity[];
-  [FirestoreCollection.COMPONENT]: Component[];
-  [FirestoreCollection.EXERCISE_ATTRIBUTE]: ExerciseAttribute[];
-  [FirestoreCollection.EXERCISE]: Exercise[];
+  setNumber: number;
 };
+export type TrainingStatusRef = TrainingComponentRef & { userId: string };

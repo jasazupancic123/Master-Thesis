@@ -3,7 +3,6 @@ import { Day } from '@/common/service/util/date.util';
 import { handleApiRequest } from '@/common/type/state.type';
 import Circles from '@/components/circles';
 import FloatingButton from '@/components/floating-button';
-import Subgroups from '@/components/trainer-day-view/subgroups';
 import TrainingCard from '@/components/trainer-day-view/training-card';
 import TrainingMembers from '@/components/trainer-day-view/training-members';
 import { useGroup } from '@/context/group-provider';
@@ -14,15 +13,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
 import { Save } from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import GroupIcon from '@mui/icons-material/Group';
-import {
-  IconButton,
-  MenuItem,
-  Select,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { IconButton, MenuItem, Select, Stack, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';

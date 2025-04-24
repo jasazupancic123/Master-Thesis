@@ -12,13 +12,15 @@ import { GroupModule } from './group/group.module';
 import { TrainingModule } from './training/training.module';
 import { CommonModule } from './common/common.module';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
+import { AttributeModule } from './attribute/attribute.module';
 
 @Module({
   imports: [
-    CommonModule,
     ConfigModule.forRoot({ isGlobal: true, validationSchema }),
     FirebaseModule.forRoot(),
+    CommonModule,
     CacheManagerModule,
+    AttributeModule,
     UserModule,
     ComponentModule,
     ExerciseModule,
@@ -32,7 +34,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(FirebaseMiddleware)
-      .exclude('/', '/component', '/exercise/attribute')
+      .exclude('/', '/component', '/attribute')
       .forRoutes('*');
   }
 }
