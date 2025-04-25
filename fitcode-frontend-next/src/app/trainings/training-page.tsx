@@ -37,7 +37,7 @@ export default function TrainingPage(props: TrainingPageProps) {
   );
 
   const { view, setView } = useTraining();
-  const [statuses, setStatuses] = useState<TrainingStatus[]>([]);
+  //const [statuses, setStatuses] = useState<TrainingStatus[]>([]);
 
   const {
     selectedTraining,
@@ -71,19 +71,18 @@ export default function TrainingPage(props: TrainingPageProps) {
   }, [selectedDate]);
 
   useEffect(() => {
-    async function getTrainingStatus() {
-      for (const t of trainings)
-        handleApiRequest(
-          router,
-          () => TrainingController.getTrainingStatus(token, t.id),
-          (response) => {
-            setStatuses((prev) => [...prev, ...response]);
-          },
-          undefined
-        );
-    }
-
-    getTrainingStatus().then();
+    // async function getTrainingStatus() {
+    //   for (const t of trainings)
+    //     handleApiRequest(
+    //       router,
+    //       () => TrainingController.getTrainingStatus(token, t.id),
+    //       (response) => {
+    //         setStatuses((prev) => [...prev, ...response]);
+    //       },
+    //       undefined
+    //     );
+    // }
+    // getTrainingStatus().then();
   }, [selectedTraining]);
 
   return view === 'exercises' ? (
@@ -156,7 +155,6 @@ export default function TrainingPage(props: TrainingPageProps) {
                   {/* Components */}
                   <Stack spacing={3}>
                     <AthleteTrainingExerciseCard
-                      statuses={statuses}
                       components={training.components}
                       setView={setView}
                       training={training}
@@ -178,8 +176,6 @@ export default function TrainingPage(props: TrainingPageProps) {
       token={token}
       setView={setView}
       setSelectedComponent={setSelectedComponent}
-      statuses={statuses}
-      setStatuses={setStatuses}
     />
   );
 }
