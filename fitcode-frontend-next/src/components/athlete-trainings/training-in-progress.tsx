@@ -47,8 +47,6 @@ interface TrainingInProgressProps {
   token: string;
   setView: (view: 'exercises' | 'training') => void;
   setSelectedComponent: (component: TrainingComponent | null) => void;
-  statuses: TrainingStatus[];
-  setStatuses: SetState<TrainingStatus[]>;
 }
 
 export default function TrainingInProgress(props: TrainingInProgressProps) {
@@ -71,8 +69,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     profile,
     token,
     setSelectedComponent,
-    statuses,
-    setStatuses,
   } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
@@ -112,7 +108,10 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   }, [selectedComponent]);
 
   useEffect(() => {
-    if (!startOfTraining) return; // Ensure startOfTraining is set
+    if (!startOfTraining) {
+      setStartOfTraining(dayjs()); // Set start time to now
+      return;
+    }
 
     const startTime = dayjs(startOfTraining).valueOf(); // Convert to timestamp
     const interval = setInterval(() => {
@@ -122,6 +121,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
 
     return () => clearInterval(interval);
   }, [startOfTraining]); // Re-run if startOfTraining changes
+
+  useEffect(() => {}, [elapsedTime]);
 
   const handleFinishTraining = async () => {
     clearTrainingState();
@@ -177,6 +178,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const handleCancelTraining = () => {
     clearTrainingState();
     setView('exercises');
+    setElapsedTime(0);
     setSelectedComponent(null);
     setSelectedSuperset(undefined);
   };
@@ -275,7 +277,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         {selectedSuperset.exercises.map((exercise, i) => {
           return (
             <Box
-              key={exercise.id}
+              key={`${exercise.id}${i}`}
               width="100%"
               display="flex"
               flexDirection="column"
@@ -369,6 +371,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                 </Grid2>
                 <Grid2 size={6} px={1}>
                   <Box
+                    key={exercise.id}
                     display="flex"
                     flexDirection="column"
                     width="100%"
@@ -377,6 +380,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                     {exercise.sets.map((set, i) => {
                       return (
                         <Box
+                          key={`${set.setNumber}${i}`}
                           display="flex"
                           width="100%"
                           justifyContent="center"
