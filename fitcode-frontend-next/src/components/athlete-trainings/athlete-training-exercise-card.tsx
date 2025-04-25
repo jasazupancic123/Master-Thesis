@@ -5,7 +5,7 @@ import {
   Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
-import { CheckCircle } from '@mui/icons-material';
+import { CheckCircle, ConstructionOutlined } from '@mui/icons-material';
 import SportsIcon from '@mui/icons-material/Sports';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -24,7 +24,7 @@ export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
 ) {
   const theme = useTheme();
-  const { components, setView, training, profile, statuses } = props;
+  const { components, setView, training, profile } = props;
   const screenSize = useScreenSize();
 
   const {
@@ -32,6 +32,7 @@ export default function AthleteTrainingExerciseCard(
     setSelectedTraining,
     selectedComponent,
     setSelectedComponent,
+    setUserId,
   } = useTraining();
 
   const [selectedSuperset, setSelectedSuperset] = useState<Superset | null>(
@@ -59,6 +60,8 @@ export default function AthleteTrainingExerciseCard(
     }
     setSupersets(usersSupersets);
   }, [selectedComponent]);
+
+  useEffect(() => {}, [supersets]);
 
   useEffect(() => {
     if (!selectedSuperset) return;
@@ -292,6 +295,7 @@ export default function AthleteTrainingExerciseCard(
                               )}
                               {selectedExercises.includes(exercise) && (
                                 <Box
+                                  key={exercise.id}
                                   display="flex"
                                   flexDirection="column"
                                   width="100%"
@@ -366,41 +370,6 @@ export default function AthleteTrainingExerciseCard(
                     </Box>
                   </CardContent>
                 </Box>
-              ) : statuses.find(
-                  (s) => s.componentId === c.id && s.trainingId === training.id
-                ) ? (
-                <Box
-                  key={`${c.id}`}
-                  width="100%"
-                  sx={{
-                    backgroundColor: 'rgb(56, 64, 70)',
-                    py: 1,
-                    borderTopRightRadius: i === 0 ? 5 : 0,
-                    borderBottomRightRadius: i === arr.length - 1 ? 5 : 0,
-                    borderBottomLeftRadius: i === arr.length - 1 ? 5 : 0,
-                    position: 'relative',
-                  }}
-                >
-                  <Box p={1} sx={{ position: 'absolute', right: 0, top: 5 }}>
-                    <CheckCircle color="success" />
-                  </Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      textTransform: 'uppercase',
-                      color: 'rgb(178, 180, 179)',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                      px: 4,
-                      maxWidth: '100%', // Adjust width as needed
-                    }}
-                  >
-                    {c.id}
-                  </Typography>
-                </Box>
               ) : (
                 <Box
                   key={`${c.id}`}
@@ -415,6 +384,7 @@ export default function AthleteTrainingExerciseCard(
                   onClick={() => {
                     setSelectedTraining(training);
                     setSelectedComponent(c);
+                    setUserId(profile.uid);
                   }}
                 >
                   <Typography

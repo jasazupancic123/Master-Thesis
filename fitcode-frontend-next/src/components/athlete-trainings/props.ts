@@ -10,5 +10,4 @@ export type AthleteTrainingExerciseCardProps = {
   setView: (view: 'exercises' | 'training') => void;
   training: Training;
   profile: User;
-  statuses: TrainingStatus[];
 };
