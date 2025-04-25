@@ -12,6 +12,9 @@ import { AttributeValue } from '@/controller/attribute/type/attribute-value.type
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { useState } from 'react';
 import { Redo } from '@mui/icons-material';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { set } from 'date-fns';
 
 interface Props {
   param: Attribute;
@@ -22,6 +25,9 @@ interface Props {
   disableOptions?: boolean;
   disableSets?: boolean;
   readOnly?: boolean;
+  exercise?: TrainingExercise;
+  setsNumber?: number;
+  setSetsNumber?: SetState<number>;
 }
 
 export function ExerciseParam(props: Props) {
@@ -34,6 +40,9 @@ export function ExerciseParam(props: Props) {
     disableOptions = false,
     disableSets = false,
     readOnly = false,
+    setsNumber,
+    setSetsNumber,
+    exercise: propsExercise,
   } = props;
 
   const nestedOption = param.options?.find((o) =>
@@ -184,6 +193,19 @@ export function ExerciseParam(props: Props) {
             onChange={(e) => {
               if (readOnly) return;
               onSubOptionChange(e.target.value as string);
+            }}
+            onBlur={(e) => {
+              if (
+                value.field === 'volWorkSets' &&
+                setsNumber !== undefined &&
+                setsNumber !== null &&
+                setSetsNumber &&
+                propsExercise
+              ) {
+                if (setsNumber !== propsExercise.sets.length) {
+                  setSetsNumber(propsExercise.sets.length);
+                }
+              }
             }}
             disabled={
               readOnly || (nestedOption?.field === 'set' && disableSets)
