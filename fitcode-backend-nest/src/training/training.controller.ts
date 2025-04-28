@@ -16,9 +16,13 @@ import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import { UpdateTrainingDto, UpdateTrainingDtoWithId } from './dto/update-training.dto';
+import {
+  UpdateTrainingDto,
+  UpdateTrainingDtoWithId,
+} from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
+import { TrainingComponent } from './entity/training-component.entity';
 
 @Controller('training')
 export class TrainingController {
@@ -49,6 +53,17 @@ export class TrainingController {
     return await this.trainingService.create(user, body);
   }
 
+  @Post(':trainingId/withComponent')
+  @Auth()
+  async createWithTrainingComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() body: { trainingComponent: TrainingComponent, date: {from: Date, to: Date} },
+  ) {
+    const ref = { trainingId };
+    return await this.trainingService.createWithTrainingComponent(user, ref, body);
+  }
+
   @Patch(':trainingId')
   @Auth()
   async update(
@@ -68,6 +83,22 @@ export class TrainingController {
     @Body() body: UpdateTrainingDtoWithId[],
   ) {
     return await this.trainingService.updateMultiple(user, body);
+  }
+
+  @Patch(':trainingId/component/copy')
+  @Auth()
+  async copyComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body()
+    body: {
+      trainingComponent: TrainingComponent;
+      copiedFromTrainingId: string;
+      overwrite?: boolean;
+    },
+  ) {
+    const ref = { trainingId };
+    return await this.trainingService.copyComponent(user, ref, body);
   }
 
   @Post(':trainingId/copy')

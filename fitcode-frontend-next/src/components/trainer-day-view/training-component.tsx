@@ -42,15 +42,41 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
 import MuscleHeatmapView from './muscle-heatmap-view';
 import { DoNotDisturb } from '@mui/icons-material';
+import toast from 'react-hot-toast';
+import { handleApiRequest } from '@/common/type/state.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { CopiedFrom } from '@/controller/component/type/copied-from.type';
+import { Component } from '@/controller/component/type/component.type';
+import { TrainingService } from '@/controller/training/training.service';
+import { ComponentService } from '@/controller/component/component.service';
+import { ExerciseService } from '@/controller/exercise/exercise.service';
+import { Training } from '@/controller/training/type/training.type';
+import { DateRange } from '@/common/type/date-range.type';
+import { COLORS } from '@/common/constant/color.constant';
+import TrainerCycleView from '@/app/groups/[group_id]/trainer-group-cycle-view';
+import TrainingComponentCalendar from './training-component-calendar';
 
 const commonService = CommonService.instance;
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const router = useRouter();
+
   const { training, trainingComponent } = props;
-  const { filter, setDetectedChanges, setFilteredTrainings, trainings, cycle } =
-    useGroup();
+  const {
+    token,
+    filter,
+    setDetectedChanges,
+    setTrainings,
+    filteredTrainings,
+    setFilteredTrainings,
+    trainings,
+    cycle,
+    components: allComponents,
+    exercises: allExercises,
+  } = useGroup();
 
   const {
     training: selectedTraining,
@@ -69,7 +95,18 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
   const [datePickerOpen, setDatePickerOpen] = useState(false); // Keep it open
   const [highlightedDays, setHighlightedDays] = useState<number[]>([]);
+  const [trainingDays, setTrainingDays] = useState<number[]>([]);
+  const [groupedTrainingsByRootIds, setGroupedTrainingsByRootIds] = useState<
+    {
+      id: string;
+      trainings: number[];
+      color: string;
+    }[]
+  >([]);
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
+  const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
+  const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
+    useState<Training | null>(null);
 
   useEffect(() => {
     if (!trainingComponent) return;
@@ -89,7 +126,65 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
       .filter((t) => t.components.find((c) => c.id === trainingComponent.id))
       .map((t) => dayjs(t.from).date());
 
+    let trainingDays = thisCycleTrainings
+      .filter(
+        (t) =>
+          (selectedPeriod === 'AM' && dayjs(t.from).hour() < 12) ||
+          (selectedPeriod === 'PM' && dayjs(t.from).hour() >= 12)
+      )
+      .filter((t) =>
+        selectedMonth
+          ? dayjs(t.from).isSame(selectedMonth, 'month') &&
+            dayjs(t.from).isSame(selectedMonth, 'year')
+          : true
+      )
+      .map((t) => dayjs(t.from).date());
+
     setHighlightedDays(highlightedDays);
+    setTrainingDays(trainingDays);
+
+    const trainingsCopiedFrom = [] as {
+      id: string;
+      trainings: number[];
+      color: string;
+    }[];
+    for (const training of thisCycleTrainings) {
+      training.components.forEach((c) => {
+        if (c.copiedFrom) {
+          const foundElement = trainingsCopiedFrom.find(
+            (t) => t.id === c.copiedFrom?.rootCopiedFromTrainingId
+          );
+          if (
+            foundElement &&
+            !foundElement.trainings.includes(dayjs(training.from).date())
+          ) {
+            foundElement.trainings.push(dayjs(training.from).date());
+          } else {
+            const trainingsForCopied = [dayjs(training.from).date()];
+
+            const rootTraining = trainings.find(
+              (t) => t.id === c.copiedFrom?.rootCopiedFromTrainingId
+            );
+
+            //check if its the same month
+            if (
+              rootTraining &&
+              selectedMonth &&
+              dayjs(selectedMonth).isSame(rootTraining.from, 'month')
+            ) {
+              trainingsForCopied.push(dayjs(rootTraining.from).date());
+            }
+            trainingsCopiedFrom.push({
+              id: c.copiedFrom.rootCopiedFromTrainingId,
+              trainings: trainingsForCopied,
+              color: COLORS[trainingsCopiedFrom.length % COLORS.length],
+            });
+          }
+        }
+      });
+    }
+
+    setGroupedTrainingsByRootIds(trainingsCopiedFrom);
   }, [selectedPeriod, selectedMonth, trainings]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -139,8 +234,10 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   };
 
   const handleCopyComponent = async (newDate: Dayjs) => {
-    console.log('component', component);
-    //check if there is a training in the period of the date:
+    if (!component) {
+      toast.error('No component selected');
+      return;
+    }
     const trainingInPeriod = trainings.find(
       (t) =>
         dayjs(t.from).isSame(newDate, 'day') &&
@@ -150,66 +247,104 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
     if (trainingInPeriod) {
       //a training already exists there, just add the same component to it
-      const newTraining = {
-        ...trainingInPeriod,
-        components: [...trainingInPeriod.components],
-      };
-      const latestComponentInTraining =
-        newTraining.components[newTraining.components.length - 1];
-      const updatedTrainingComponent = {
-        ...trainingComponent,
-        from: dayjs(latestComponentInTraining.to).toDate(),
-        to: dayjs(latestComponentInTraining.to).add(30, 'minute').toDate(),
-      };
-
-      // try {
-      //   await handleAddTrainingComponents(
-      //     token,
-      //     {
-      //       trainingId: trainingInPeriod.id,
-      //       componentsIds: [updatedTrainingComponent.id],
-      //     },
-      //     {
-      //       router,
-      //       components,
-      //       setTrainings,
-      //       setFilteredTrainings,
-      //     }
-      //   );
-      //   toast.success('Component added to training');
-      // } catch (e) {
-      //   console.error(e);
-      //   toast.error('Failed to add component to training');
-      // }
+      if (
+        trainingInPeriod.components.find((c) => c.id === trainingComponent.id)
+      ) {
+        //ask user if he wants to overwrite the component
+        setTrainingInPeriodForModal(trainingInPeriod);
+        setOpenOverwriteModal(true);
+      } else {
+        //add the component to the training
+        handleCopyComponentApiRequest(
+          trainingInPeriod,
+          trainingComponent,
+          false
+        );
+      }
     } else {
       if (!trainingComponent.component) return;
       //no training exsits on the date, create a new training only with the same component
-      const newTraining = { ...training, components: [trainingComponent] };
-      // handleCopyTraining(
-      //   token,
-      //   { newDate, period: selectedPeriod },
-      //   {
-      //     router,
-      //     training: newTraining,
-      //     cycle: cycle!,
-      //     setTrainings,
-      //     setFilteredTrainings,
-      //     components: [trainingComponent.component],
-      //     exercises: exercises,
-      //   }
-      // );
+      const from = dayjs(newDate)
+        .set('hour', selectedPeriod === 'AM' ? 8 : 14)
+        .set('minute', 0)
+        .toDate();
+      const to = dayjs(from).add(30, 'minute').toDate();
+
+      handleApiRequest(
+        router,
+        () =>
+          TrainingController.createWithTrainingComponent(token, training.id, {
+            trainingComponent: component,
+            date: { from, to } as DateRange,
+          }),
+        (training) => {
+          training = TrainingService.mapComponents(training, allComponents);
+          training = TrainingService.mapExercises(training, allExercises);
+
+          setTrainings((prev) => [...prev, training]);
+          if (filteredTrainings.length > 0) {
+            const selectedDay = dayjs(filteredTrainings[0].from).dayOfYear();
+            if (selectedDay === dayjs(training.from).dayOfYear()) {
+              setFilteredTrainings((prev) => [...prev, training]);
+            }
+          }
+          toast.success('Training with current component created successfully');
+        },
+        undefined,
+        'Failed to create training with current component'
+      );
     }
   };
 
+  const handleCopyComponentApiRequest = async (
+    trainingInPeriod: Training,
+    component: TrainingComponent,
+    overwrite: boolean = false
+  ) => {
+    handleApiRequest(
+      router,
+      () =>
+        TrainingController.copyComponent(token, trainingInPeriod.id, {
+          trainingComponent: component,
+          copiedFromTrainingId: training.id,
+          overwrite,
+        }),
+      (training) => {
+        training = TrainingService.mapComponents(training, allComponents);
+        training = TrainingService.mapExercises(training, allExercises);
+
+        setTrainings((prev) =>
+          prev.map((t) => (t.id === training.id ? training : t))
+        );
+        setFilteredTrainings((prev) =>
+          prev.map((t) => (t.id === training.id ? training : t))
+        );
+        toast.success('Component copied successfully');
+      },
+      undefined,
+      'Failed to copy component'
+    );
+  };
+
   const ServerDay = (
-    props: PickersDayProps<Dayjs> & { highlightedDays?: number[] }
+    props: PickersDayProps<Dayjs> & {
+      highlightedDays?: number[];
+      trainingDays?: number[];
+    }
   ) => {
     if (!trainingComponent || !trainingComponent.component) return null;
     const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
 
-    const isSelected =
+    const sameComponent =
       !props.outsideCurrentMonth &&
       highlightedDays.indexOf(props.day.date()) >= 0;
+
+    const hasTraining =
+      !props.outsideCurrentMonth && trainingDays.indexOf(props.day.date()) >= 0;
+
+    const isGrouped = groupedTrainingsByRootIds.find(
+      (g) => g.trainings.indexOf(props.day.date()) >= 0
+    );
 
     const IconComponent = commonService.navigation.getComponentIcon(
       trainingComponent.component.name
@@ -220,13 +355,27 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
         key={props.day.toString()}
         overlap="circular"
         badgeContent={
-          isSelected ? <IconComponent sx={{ fontSize: 12 }} /> : null
+          sameComponent ? (
+            <IconComponent
+              sx={{
+                fontSize: 14,
+                zIndex: 100,
+                color: isGrouped ? isGrouped.color : undefined,
+              }}
+            />
+          ) : null
         }
       >
         <PickersDay
           {...other}
           outsideCurrentMonth={outsideCurrentMonth}
           day={day}
+          sx={{
+            ...(hasTraining && {
+              border: '1px solid', // or '2px dashed', or whatever
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+            }),
+          }}
         />
       </Badge>
     );
@@ -715,9 +864,24 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           setDatePickerOpen(false);
           setHighlightedDays([]);
         }}
+        dialogueContentSx={{
+          minWidth: screenSize.isTablet
+            ? 500
+            : screenSize.isSmallerThanLaptop
+              ? 300
+              : 1000,
+        }}
+        componentCalendarView
       >
+        <TrainingComponentCalendar
+          trainingComponent={trainingComponent}
+          training={training}
+          setOpenOverwriteModal={setOpenOverwriteModal}
+          setTrainingInPeriodForModal={setTrainingInPeriodForModal}
+          handleCopyComponentApiRequest={handleCopyComponentApiRequest}
+        />
+        {/*
         <Box display="flex" flexDirection="column" gap={2}>
-          {/* Dropdown for AM/PM Selection */}
           <Typography variant="h6">Select Training Period</Typography>
           <Select
             value={selectedPeriod}
@@ -728,7 +892,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             <MenuItem value="PM">PM</MenuItem>
           </Select>
 
-          {/* Date Picker */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Typography variant="h6">Select Date</Typography>
             <DesktopDatePicker
@@ -742,7 +905,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 handleCopyComponent(newDate);
               }}
               onClose={() => {}}
-              shouldDisableDate={isDateUnavailable}
+              //shouldDisableDate={isDateUnavailable}
               slots={{
                 day: ServerDay,
               }}
@@ -773,11 +936,36 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 },
                 day: {
                   highlightedDays,
+                  trainingDays,
                 } as any,
               }}
             />
           </LocalizationProvider>
-        </Box>
+        </Box>*/}
+      </MyModal>
+      <MyModal
+        isOpen={openOverwriteModal}
+        setIsOpen={(open) => setOpenOverwriteModal(open)}
+        cancelText="Close"
+        onCancel={() => {
+          setTrainingInPeriodForModal(null);
+          setOpenOverwriteModal(false);
+        }}
+        onConfirm={async () => {
+          if (!trainingInPeriodForModal) {
+            toast.error('No training found for the selected date');
+            return;
+          }
+          handleCopyComponentApiRequest(
+            trainingInPeriodForModal,
+            trainingComponent,
+            true
+          );
+          setTrainingInPeriodForModal(null);
+          setOpenOverwriteModal(false);
+        }}
+      >
+        Overwrite existing component?
       </MyModal>
     </Box>
   );

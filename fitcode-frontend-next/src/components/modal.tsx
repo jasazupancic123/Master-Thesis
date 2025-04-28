@@ -21,6 +21,7 @@ export interface Props {
   width?: number | string;
   sx?: SxProps;
   dialogueContentSx?: SxProps;
+  componentCalendarView?: boolean;
 }
 
 export default function MyModal(props: Props) {
@@ -37,6 +38,7 @@ export default function MyModal(props: Props) {
     sx,
     cancelText = 'Cancel',
     dialogueContentSx,
+    componentCalendarView,
   } = props;
 
   function handleClose() {
@@ -52,7 +54,13 @@ export default function MyModal(props: Props) {
   return (
     <>
       {isOpen && (
-        <Dialog open={isOpen} onClose={handleClose} scroll="paper" sx={sx}>
+        <Dialog
+          open={isOpen}
+          onClose={handleClose}
+          scroll={componentCalendarView ? 'body' : 'paper'}
+          maxWidth={componentCalendarView ? false : undefined}
+          sx={sx}
+        >
           {title && <DialogTitle>{title}</DialogTitle>}
           <DialogContent
             dividers

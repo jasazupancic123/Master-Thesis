@@ -40,6 +40,7 @@ import { TrainingPlanService } from './training-plan.service';
 import { UserWorkloadService } from './user-workload.service';
 import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class TrainingService {
@@ -264,6 +265,121 @@ export class TrainingService {
     return training;
   }
 
+  async createWithTrainingComponent(
+    user: User,
+    ref: TrainingRef,
+    input: {
+      trainingComponent: TrainingComponent;
+      date: { from: Date; to: Date };
+    },
+  ): Promise<Training> {
+    const { trainingComponent, date } = input;
+    this.logger.log(
+      `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
+    );
+
+    const copyFromTraining = await this.findOneOrFail(user, ref);
+    const cycleId = copyFromTraining.cycleId;
+    const groupId = copyFromTraining.groupId;
+
+    // validate parent references
+    const group = await this.groupService.findByIdOrFail(user, { groupId });
+    const cycle = this.groupService.findCycleOrFail(cycleId, group);
+    const from = date.from;
+    const to = date.to;
+
+    this.validateOwner(user.uid, group);
+    this.checkTrainingIsInCycle(from, cycle);
+    this.validateIsTrainingInFuture(from);
+    await this.validateOverlap(from, to, group.id, cycle.id);
+
+    // validate components & exercises
+    const attributes = await this.cacheManagerService.getAttributes();
+    const components = await this.cacheManagerService.getComponents();
+    const exercises = await this.trainingPlanService.findAllTrainingExercises(
+      user,
+      [trainingComponent],
+    );
+
+    this.trainingPlanService.validateTrainingComponents(
+      exercises,
+      group.membersIds,
+      [trainingComponent],
+      components,
+    );
+
+    // populate exercise params from components
+    this.trainingPlanService.populateTrainingExerciseParams(
+      [trainingComponent],
+      components,
+      exercises,
+      attributes,
+    );
+
+    // create training
+    const wellness = await this.userService.getRecentWellness(group.membersIds);
+    const workloads = await this.workloadService.findAllByMembers(
+      group.membersIds,
+    );
+
+    const data: Create<Training> = {
+      id: null,
+      groupId: group.id,
+      cycleId: cycleId,
+      ownerId: user.uid,
+      copiedFromId: null,
+      from,
+      to,
+      membersIds: group.membersIds,
+      wellness,
+      components: [
+        {
+          id: trainingComponent.id,
+          from: from,
+          to: dayjs(from).add(30, 'minute').toDate(),
+          color: trainingComponent.color,
+          subgroups: trainingComponent.subgroups || [],
+          supersets: trainingComponent.supersets || [],
+          copiedFrom: {
+            lastCopiedFromTrainingId: ref.trainingId,
+            rootCopiedFromTrainingId: trainingComponent.copiedFrom
+              ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
+              : ref.trainingId,
+          },
+        },
+      ],
+    };
+
+    const trainingDocRef = this.trainingRepository.collection().doc();
+    const training: Training = {
+      ...data,
+      id: trainingDocRef.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const createTrainingQuery = this.firebaseService.buildCreateQuery<Training>(
+      { ...data, id: training.id },
+      { timestamps: true },
+    );
+
+    // create training, add trainer to users, create workloads
+    const batch = this.firebaseService.firestore.batch();
+    batch.set(trainingDocRef, createTrainingQuery);
+
+    for (const userId of group.membersIds) {
+      const docRef = this.userService.getDoc(userId);
+      batch.update(docRef, {
+        trainersIds: FieldValue.arrayUnion(user.uid),
+      });
+    }
+
+    this.workloadService.createForTraining(batch, training, workloads);
+    await batch.commit();
+
+    return training;
+  }
+
   async update(
     user: User,
     ref: TrainingRef,
@@ -415,7 +531,10 @@ export class TrainingService {
 
       const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
       const updateTrainingQuery =
-        this.firebaseService.buildUpdateQuery<Training>({ ...trainingInput, wellness });
+        this.firebaseService.buildUpdateQuery<Training>({
+          ...trainingInput,
+          wellness,
+        });
 
       const batch = this.firebaseService.firestore.batch();
       batch.update(trainingDocRef, updateTrainingQuery);
@@ -525,6 +644,94 @@ export class TrainingService {
     await batch.commit();
 
     return training;
+  }
+
+  async copyComponent(
+    user: User,
+    ref: TrainingRef,
+    input: {
+      trainingComponent: TrainingComponent;
+      copiedFromTrainingId: string;
+      overwrite?: boolean;
+    },
+  ): Promise<Training> {
+    const { trainingComponent, copiedFromTrainingId, overwrite } = input;
+    this.logger.log(
+      `User ${user.uid} is copying component ${trainingComponent.id} to ${ref.trainingId}`,
+    );
+
+    const training = await this.findOneOrFail(user, ref);
+    this.validateOwner(user.uid, training);
+
+    let from = training.from;
+    let to = training.to;
+    if (training.components.length) {
+      const lastTrainingComponentInTraining = training.components
+        .map((c) => c.to)
+        .sort((a: Date, b: Date) => {
+          return new Date(b).getTime() - new Date(a).getTime();
+        })[0];
+      from = lastTrainingComponentInTraining
+        ? addMinutes(lastTrainingComponentInTraining, 30)
+        : training.from;
+      to = lastTrainingComponentInTraining
+        ? addMinutes(lastTrainingComponentInTraining, 60)
+        : trainingComponent.to;
+    }
+
+    const newComponent = {
+      id: trainingComponent.id,
+      from: from,
+      to: to,
+      color: trainingComponent.color,
+      subgroups: trainingComponent.subgroups || [],
+      supersets: trainingComponent.supersets || [],
+      copiedFrom: {
+        lastCopiedFromTrainingId: copiedFromTrainingId,
+        rootCopiedFromTrainingId: trainingComponent.copiedFrom
+          ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
+          : copiedFromTrainingId,
+      },
+    } as TrainingComponent;
+
+    let newComponents: TrainingComponent[];
+    if (overwrite) {
+      newComponents = training.components.map((c) => {
+        if (c.id === trainingComponent.id) return newComponent;
+        return c;
+      });
+    } else {
+      newComponents = [...training.components, newComponent];
+    }
+
+    const components = await this.cacheManagerService.getComponents();
+    const exercises = await this.trainingPlanService.findAllTrainingExercises(
+      user,
+      newComponents,
+    );
+
+    this.trainingPlanService.validateTrainingComponents(
+      exercises,
+      [],
+      newComponents,
+      components,
+    );
+
+    const updated = {
+      ...training,
+      components: newComponents,
+    };
+
+    const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+    const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
+      { ...updated },
+    );
+
+    const batch = this.firebaseService.firestore.batch();
+    batch.update(trainingDocRef, updateTrainingQuery);
+    await batch.commit();
+
+    return updated;
   }
 
   async remove(user: User, ref: TrainingRef): Promise<void> {

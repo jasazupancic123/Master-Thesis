@@ -263,7 +263,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                 m: 0,
                 mt: 1.66,
                 height: '100%',
-                display: i === 0 ? undefined : 'none',
               }}
               onClick={() => setExpandedSetsView(!expandedSetsView)}
             >
