@@ -6,18 +6,31 @@ import GroupAthletesCard from '@/components/dashboard/group-athletes-card';
 import { COLOR } from '@/common/constant/browser.constant';
 import BorderColor from '@/components/border-color';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useDashboard } from '@/context/dashboard-provider';
+import { Organization } from '@/controller/organization/type/organization.type';
+import { SetState } from '@/common/type/state.type';
 
 interface AthletesViewProps {
   groups: Group[];
   users: User[];
   selectedGroup: Group | null;
   setSelectedGroup: (group: Group) => void;
+  selectedOrganization: Organization | null;
+  setSelectedOrganization: SetState<Organization | null>;
 }
 
 export default function AthletesView(props: AthletesViewProps) {
   const screenSize = useScreenSize();
-  const { groups, users, selectedGroup, setSelectedGroup } = props;
+  const {
+    groups,
+    users,
+    selectedGroup,
+    setSelectedGroup,
+    selectedOrganization,
+    setSelectedOrganization,
+  } = props;
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { detectedChanges, setDetectedChanges } = useDashboard();
 
   useEffect(() => {
     if (
@@ -51,6 +64,8 @@ export default function AthletesView(props: AthletesViewProps) {
                   setSelectedGroup={setSelectedGroup}
                   selectedUser={selectedUser}
                   setSelectedUser={setSelectedUser}
+                  selectedOrganization={selectedOrganization}
+                  setSelectedOrganization={setSelectedOrganization}
                 />
               )
           )}
@@ -69,6 +84,8 @@ export default function AthletesView(props: AthletesViewProps) {
                   setSelectedGroup={setSelectedGroup}
                   selectedUser={selectedUser}
                   setSelectedUser={setSelectedUser}
+                  selectedOrganization={selectedOrganization}
+                  setSelectedOrganization={setSelectedOrganization}
                 />
               )
           )}
