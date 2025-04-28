@@ -8,7 +8,7 @@ import {
 } from '@/controller/training/type/training-plan.type';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
 import TrainingExerciseCard from './training-exercise-card';
 

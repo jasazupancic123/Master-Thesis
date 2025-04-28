@@ -5,6 +5,7 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Subgroup } from './subgroup.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { CopiedFrom } from '@/controller/component/type/copied-from.type';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
@@ -14,6 +15,7 @@ export type TrainingComponent = IdEntity &
 
     // mapped properties
     component?: Component;
+    copiedFrom?: CopiedFrom; // used for copying components from other trainings
   };
 
 export type Superset = ColorEntity & {
