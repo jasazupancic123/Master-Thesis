@@ -52,6 +52,31 @@ export class TrainingController {
     return api.post<Training>(`/training/${trainingId}/copy`, body, { token });
   }
 
+  static async copyComponent(
+    token: string,
+    trainingId: string,
+    body: {trainingComponent: TrainingComponent, copiedFromTrainingId: string, overwrite?: boolean},
+  ) {
+    return api.patch<Training>(
+      `/training/${trainingId}/component/copy`,
+      body,
+      { token }
+    );
+  }
+
+  static async createWithTrainingComponent(
+    token: string,
+    trainingId: string,
+    body: { trainingComponent: TrainingComponent, date: DateRange }
+  ) {
+    return api.post<Training>(
+      `/training/${trainingId}/withComponent`,
+      body,
+      { token }
+    );
+  }
+
+
   static async delete(token: string, trainingId: string) {
     await api.delete<{}>(`/training/${trainingId}`, { token });
     return null;

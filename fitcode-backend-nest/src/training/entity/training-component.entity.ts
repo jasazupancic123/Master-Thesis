@@ -1,10 +1,13 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Expose, Transform, Type } from 'class-transformer';
 import { IsDate, ValidateNested } from 'class-validator';
 import { ColorEntity } from '../../common/entity/color.entity';
 import { IdEntity } from '../../common/entity/id.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
+import { CopiedFrom } from './copied-from.entity';
 
 export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsDate()
@@ -30,4 +33,11 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @ApiProperty()
   @Expose()
   subgroups: Subgroup[];
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiPropertyOptional()
+  @Expose()
+  copiedFrom?: CopiedFrom; // used for copying components from other trainings
 }
