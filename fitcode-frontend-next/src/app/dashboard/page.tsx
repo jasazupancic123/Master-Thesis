@@ -6,6 +6,7 @@ import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import Dashboard from './dashboard';
 import { Organization } from '@/controller/organization/type/organization.type';
+import { DashboardProvider } from '@/context/dashboard-provider';
 
 export default async function Page() {
   const cookieStore = await cookies();
@@ -37,13 +38,15 @@ export default async function Page() {
 
   const organization: Organization = { ...organizations[0] };
   return (
-    <Dashboard
-      organization={organization}
-      organizations={organizations}
-      role={role}
-      users={users}
-      token={token}
-      profile={profile}
-    />
+    <DashboardProvider>
+      <Dashboard
+        organization={organization}
+        organizations={organizations}
+        role={role}
+        users={users}
+        token={token}
+        profile={profile}
+      />
+    </DashboardProvider>
   );
 }

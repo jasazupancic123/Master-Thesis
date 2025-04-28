@@ -11,10 +11,23 @@ import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
 import { SearchBar } from '../search-bar';
 import { AddMembersModalProps } from './type';
+import { useDashboard } from '@/context/dashboard-provider';
+import { Group } from '@/controller/group/type/group.type';
 
 export function AddMembersModal(props: AddMembersModalProps) {
-  const { users, members, setMembers, title, placeholder, dissableMaxWidth } =
-    props;
+  const {
+    users,
+    members,
+    setMembers,
+    title,
+    placeholder,
+    dissableMaxWidth,
+    dashboardView,
+    group,
+    selectedOrganization,
+    setSelectedOrganization,
+  } = props;
+  const { setDetectedChanges } = useDashboard();
 
   const [searchQueryAddPlayer, setSearchQueryAddPlayer] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[] | null>(null);
@@ -26,7 +39,53 @@ export function AddMembersModal(props: AddMembersModalProps) {
       ? [...members, user]
       : [user, ...members];
 
+    if (dashboardView) {
+      setDetectedChanges(true);
+      if (setSelectedOrganization && group) {
+        const newGroup = selectedOrganization?.groups.find(
+          (g) => g.id === group.id
+        );
+        if (!newGroup) return;
+
+        setSelectedOrganization((prev) => {
+          if (!prev) return null;
+          const updatedGroups = prev.groups.map((g: Group) =>
+            g.id === newGroup.id
+              ? { ...g, membersIds: updatedMembers.map((m) => m.uid) }
+              : g
+          );
+          return { ...prev, groups: updatedGroups };
+        });
+      }
+    }
     setMembers(updatedMembers);
+  };
+
+  const handleRemoveMember = (user: User) => {
+    const updatedMembers = members.filter((m) => m.uid !== user.uid);
+    setMembers(updatedMembers);
+    if (dashboardView) {
+      setDetectedChanges(true);
+      if (setSelectedOrganization && group) {
+        const newGroup = selectedOrganization?.groups.find(
+          (g) => g.id === group.id
+        );
+        if (!newGroup) return;
+
+        setSelectedOrganization((prev) => {
+          if (!prev) return null;
+          const updatedGroups = prev.groups.map((g: Group) =>
+            g.id === newGroup.id
+              ? {
+                  ...g,
+                  membersIds: updatedMembers.map((m) => m.uid),
+                }
+              : g
+          );
+          return { ...prev, groups: updatedGroups };
+        });
+      }
+    }
   };
 
   useEffect(() => {
@@ -99,6 +158,9 @@ export function AddMembersModal(props: AddMembersModalProps) {
                               '&:hover': {
                                 backgroundColor: theme.palette.grey[700],
                               },
+                            }}
+                            onClick={() => {
+                              handleRemoveMember(user);
                             }}
                           >
                             <Typography variant="body2" color="white">

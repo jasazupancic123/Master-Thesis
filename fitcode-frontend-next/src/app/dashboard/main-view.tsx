@@ -8,7 +8,7 @@ import MyModal from '@/components/modal';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { User } from '@/controller/user/type/user.type';
-import { ArrowForward, Groups, PersonAddAlt } from '@mui/icons-material';
+import { ArrowForward, Groups, PersonAddAlt, Save } from '@mui/icons-material';
 import {
   Avatar,
   Fab,
@@ -31,6 +31,9 @@ import { Cycle } from '@/controller/group/type/cycle.type';
 import AthletesView from './athletes-view';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { redirect } from 'next/navigation';
+import { useDashboard } from '@/context/dashboard-provider';
+import { handleApiRequest } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
 
 const AVATAR_SIZE = 45;
 
@@ -44,6 +47,7 @@ interface MainDashboardViewProps {
 
 export default function MainDashboardView(props: MainDashboardViewProps) {
   const { organization, users, token, profile, view } = props;
+  const { detectedChanges, setDetectedChanges } = useDashboard();
 
   const screenSize = useScreenSize();
   const theme = useTheme();
@@ -81,22 +85,78 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
           mb: 5,
         }}
       >
-        <Tooltip title="Go to group" placement="top">
-          <Fab
-            color="primary"
-            aria-label="go"
-            onClick={() => {
-              if (selectedGroup)
-                redirect(
-                  LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id).home
-                    .href
-                );
-            }}
-            sx={{ position: 'fixed', bottom: 20, right: 20 }}
-          >
-            <ArrowForward />
-          </Fab>
-        </Tooltip>
+        <Box
+          display="flex"
+          justifyContent="flex-end"
+          alignItems="center"
+          width="100%"
+          sx={{
+            position: 'fixed',
+            bottom: screenSize.isMobile ? 70 : 20,
+            right: 20,
+            zIndex: 100,
+          }}
+          gap={1}
+        >
+          {detectedChanges && (
+            <Tooltip title="Save changes" placement="top">
+              <Fab
+                color="primary"
+                aria-label="save"
+                onClick={() => {
+                  //Save changes here
+                  const inputs: { id: string; membersIds: string[] }[] = [];
+                  for (const group of selectedOrganization!.groups) {
+                    inputs.push({
+                      id: group.id,
+                      membersIds: group.membersIds,
+                    });
+                  }
+
+                  handleApiRequest(
+                    router,
+                    () => GroupController.updateMultiple(token, inputs),
+                    (groups) => {
+                      console.log('groups', groups);
+                      const newGroup = groups.find(
+                        (g) => g.id === selectedGroup?.id
+                      );
+                      if (newGroup) {
+                        setSelectedGroup(newGroup);
+                      }
+                      setSelectedOrganization({
+                        ...selectedOrganization!,
+                        groups: groups,
+                      });
+                      setDetectedChanges(false);
+                      toast.success('Groups saved successfully');
+                    },
+                    undefined,
+                    'Failed to save groups'
+                  );
+                }}
+              >
+                <Save />
+              </Fab>
+            </Tooltip>
+          )}
+
+          <Tooltip title="Go to group" placement="top">
+            <Fab
+              color="primary"
+              aria-label="go"
+              onClick={() => {
+                if (selectedGroup)
+                  redirect(
+                    LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
+                      .home.href
+                  );
+              }}
+            >
+              <ArrowForward />
+            </Fab>
+          </Tooltip>
+        </Box>
 
         <Grid2
           container
@@ -530,6 +590,8 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
             users={users}
             selectedGroup={selectedGroup}
             setSelectedGroup={setSelectedGroup}
+            selectedOrganization={selectedOrganization}
+            setSelectedOrganization={setSelectedOrganization}
           />
         ) : (
           <></>
