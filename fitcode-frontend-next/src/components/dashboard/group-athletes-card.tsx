@@ -7,6 +7,9 @@ import { PersonAddAlt } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { useDashboard } from '@/context/dashboard-provider';
+import { Organization } from '@/controller/organization/type/organization.type';
+import { SetState } from '@/common/type/state.type';
 
 interface GroupAthletesCardProps {
   group: Group;
@@ -15,6 +18,8 @@ interface GroupAthletesCardProps {
   setSelectedGroup: (group: Group) => void;
   selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
+  selectedOrganization: Organization | null;
+  setSelectedOrganization: SetState<Organization | null>;
 }
 
 export default function GroupAthletesCard(props: GroupAthletesCardProps) {
@@ -25,9 +30,12 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
     setSelectedGroup,
     selectedUser,
     setSelectedUser,
+    selectedOrganization,
+    setSelectedOrganization,
   } = props;
 
   const screenSize = useScreenSize();
+  const { detectedChanges, setDetectedChanges } = useDashboard();
 
   const [groupMembers, setGroupMembers] = useState<User[]>(
     users.filter((user) => group.membersIds.includes(user.uid)).splice(0, 7) // only show first 7 users
@@ -138,6 +146,10 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
           members={groupMembers}
           setMembers={setGroupMembers}
           addUserToEnd={true}
+          dashboardView={true}
+          group={group}
+          selectedOrganization={selectedOrganization}
+          setSelectedOrganization={setSelectedOrganization}
         />
       </MyModal>
     </Box>

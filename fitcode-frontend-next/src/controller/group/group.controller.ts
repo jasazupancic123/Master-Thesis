@@ -33,6 +33,13 @@ export class GroupController {
     return api.patch<Group>(`/group/${groupId}`, body, { token });
   }
 
+  static async updateMultiple(
+    token: string,
+    body: { id: string, name?: string; membersIds?: string[]; cycles?: Cycle[]}[]
+  ) {
+    return api.patch<Group[]>(`/group/update/multiple`, body, { token });
+  }
+
   static async delete(token: string, groupId: string) {
     return api.delete<{}>(`/group/${groupId}`, { token });
   }

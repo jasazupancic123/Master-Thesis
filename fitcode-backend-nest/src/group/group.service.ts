@@ -205,6 +205,80 @@ export class GroupService {
     return updatedGroup as Group;
   }
 
+  async updateMultiple(
+    user: User,
+    input: Update<Group, 'id' | 'name' | 'membersIds' | 'cycles'>[],
+  ): Promise<Group[]> {
+    this.logger.log(
+      `User ${user.uid} is updating multiple groups: ${JSON.stringify(input)}`,
+    );
+
+    const updatedGroups: Group[] = [];
+    for (const i of input) {
+      const ref: GroupRef = { groupId: i.id };
+      const group = await this.findByIdOrFail(user, ref);
+
+      // validate
+      this.validateOwner(user.uid, group);
+      if (i.membersIds) await this.validateMembers(i.membersIds as string[]);
+      if (i.cycles) this.checkCycleOverlap(i.cycles);
+
+      if (i.membersIds) {
+        // update trainings and members' groups array in transaction
+        const trainingDocs = await this.trainingService.getDocs((query) =>
+          query.where('groupId', '==', ref.groupId),
+        );
+
+        await this.firebaseService.firestore.runTransaction(
+          async (transaction) => {
+            // update all trainings from the group by updating their members
+            trainingDocs.forEach((doc) => {
+              transaction.update(doc.ref, { membersIds: i.membersIds });
+            });
+
+            // update all members by adding group id to their groupsIds field if it doesn't exist yet
+            (i.membersIds as string[]).forEach((userId) => 
+              this.userService.addGroup(transaction, userId, group.id),
+            );
+
+            // TODO - add new user meta to all trainings in the future
+
+            // TODO - calculate new workloads for all trainings in the future
+
+            const docRef = this.groupRepository.doc(ref.groupId);
+            const query = this.firebaseService.buildUpdateQuery<Group>({
+              ...i,
+              cycles: i.cycles?.map((c) => {
+                const { weeks, ...cycle } = c;
+                return cycle as Cycle;
+              }),
+            });
+
+            transaction.update(docRef, query);
+          },
+        );
+      }
+      // update other fields in a single query
+      else await this.groupRepository.updateDoc(ref.groupId, i);
+
+      const updatedGroup = {
+        ...group,
+        ...this.commonService.object.clean(i),
+      };
+
+      updatedGroup.cycles = updatedGroup.cycles
+        .map((c) => ({
+          ...c,
+          weeks: this.commonService.date.weeks(c.from, c.to),
+        }))
+        .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds());
+
+      updatedGroups.push(updatedGroup as Group);
+    }
+
+    return updatedGroups;
+  }
+
   async delete(user: User, ref: GroupRef): Promise<void> {
     this.logger.log(`User ${user.uid} is removing group ${ref.groupId}`);
 
