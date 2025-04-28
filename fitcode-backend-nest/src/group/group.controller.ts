@@ -11,7 +11,7 @@ import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { UpdateGroupDto } from './dto/update-group.dto';
+import { UpdateGroupDto, UpdateGroupDtoWithId } from './dto/update-group.dto';
 import { GroupService } from './group.service';
 
 @Controller('group')
@@ -53,6 +53,15 @@ export class GroupController {
     @Body() body: UpdateGroupDto,
   ) {
     return await this.groupService.update(user, { groupId }, body);
+  }
+
+  @Patch('/update/multiple')
+  @Auth()
+  async updateMultiple(
+    @RequestUser() user: User,
+    @Body() body: UpdateGroupDtoWithId[],
+  ) {
+    return await this.groupService.updateMultiple(user, body);
   }
 
   @Delete(':groupId')
