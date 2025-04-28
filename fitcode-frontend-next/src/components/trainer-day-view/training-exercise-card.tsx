@@ -29,6 +29,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
   const [exercise, setExercise] = useState(propsExercise);
   const [expandedSetsView, setExpandedSetsView] = useState(false);
+  const [setsNumber, setSetsNumber] = useState(props.exercise.sets.length);
   const {
     training,
     component,
@@ -63,6 +64,39 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       setExercise(propsExercise);
     }
   }, [propsExercise]);
+
+  useEffect(() => {
+    const newSets = setsNumber;
+    if (newSets > 16 || newSets < 1) return;
+
+    const prevSets = exercise.sets.length;
+
+    let newExercise;
+    if (prevSets > newSets) {
+      // remove sets
+      newExercise = {
+        ...exercise,
+        sets: [...exercise.sets].slice(0, newSets),
+        params: [...exercise.params],
+      };
+    } else {
+      // add sets to the end
+      newExercise = {
+        ...exercise,
+        sets: [
+          ...exercise.sets,
+          ...Array.from({ length: newSets - prevSets }, (_, i) => ({
+            setNumber: prevSets + i + 1,
+            paramValues: exercise.sets[
+              exercise.sets.length - 1
+            ].paramValues.map((pv) => ({ ...pv })),
+          })),
+        ],
+      };
+    }
+
+    updateTraining(newExercise);
+  }, [setsNumber]);
 
   function updateTraining(exercise: TrainingExercise) {
     if (!training || !component) return;
@@ -267,7 +301,18 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                   >
                     <ExerciseParam
                       param={param}
-                      value={value}
+                      value={
+                        param.field === 'volWorkSets'
+                          ? ({
+                              field: value.field,
+                              selected: value.selected,
+                              value: setsNumber.toString(),
+                            } as AttributeValue)
+                          : value
+                      }
+                      exercise={exercise}
+                      setsNumber={setsNumber}
+                      setSetsNumber={setSetsNumber}
                       onOptionChange={(newValue) => {
                         const paramIndex =
                           exercise.sets[0].paramValues.findIndex(
@@ -287,13 +332,15 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                         if (+newValue < 0) return;
 
                         if (param.field === 'volWorkSets') {
+                          setSetsNumber(+newValue);
+                          return;
+                          /*
                           const newSets = +newValue;
-                          if (newSets > 16) return;
+                          if (newSets > 16 || newSets < 1) return;
 
                           const prevSets = exercise.sets.length;
 
                           let newExercise;
-
                           if (prevSets > newSets) {
                             // remove sets
                             newExercise = {
@@ -322,6 +369,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
                           updateTraining(newExercise);
                           return;
+                          */
                         }
 
                         const paramIndex =
