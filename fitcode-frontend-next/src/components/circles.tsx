@@ -6,6 +6,8 @@ import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
 import React from 'react';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTheme } from '@mui/material';
+import { useGroup } from '@/context/group-provider';
+import toast from 'react-hot-toast';
 
 interface Props {
   items: { label: string; value: string; sublabel?: string }[];
@@ -20,6 +22,8 @@ interface Props {
 export default function Circles(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const { detectedChanges, setDetectedChanges } = useGroup();
+
   return (
     <Box
       sx={{
@@ -51,7 +55,18 @@ export default function Circles(props: Props) {
             sx={{ p: screenSize.isMobile ? 0 : undefined }}
           >
             <IconButton
-              onClick={() => props.onArrowClick?.('left')}
+              onClick={() => {
+                if (detectedChanges) {
+                  toast.error('Unsaved changes will be lost', {
+                    icon: '⚠️',
+                    duration: 1000,
+                  });
+
+                  setDetectedChanges(false);
+                  return;
+                }
+                props.onArrowClick?.('left');
+              }}
               sx={{
                 p: screenSize.isMobile ? 0 : undefined,
                 width: !screenSize.isDesktop ? 30 : 40,
@@ -77,7 +92,18 @@ export default function Circles(props: Props) {
             <Box key={i}>
               <Tooltip title={item.label}>
                 <Box
-                  onClick={() => props.setValue(item.value)}
+                  onClick={() => {
+                    if (detectedChanges) {
+                      toast.error('Unsaved changes will be lost', {
+                        icon: '⚠️',
+                        duration: 1000,
+                      });
+
+                      setDetectedChanges(false);
+                      return;
+                    }
+                    props.setValue(item.value);
+                  }}
                   sx={{
                     width: !screenSize.isDesktop ? 35 : 40,
                     height: !screenSize.isDesktop ? 35 : 40,
@@ -114,7 +140,18 @@ export default function Circles(props: Props) {
         {props.arrows && (
           <Tooltip title="Next">
             <IconButton
-              onClick={() => props.onArrowClick?.('right')}
+              onClick={() => {
+                if (detectedChanges) {
+                  toast.error('Unsaved changes will be lost', {
+                    icon: '⚠️',
+                    duration: 1000,
+                  });
+
+                  setDetectedChanges(false);
+                  return;
+                }
+                props.onArrowClick?.('right');
+              }}
               sx={{
                 width: 40,
                 height: 40,
