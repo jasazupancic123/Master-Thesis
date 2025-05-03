@@ -3,6 +3,8 @@ import { Pagination } from '@/common/type/paginate.type';
 import { SetState } from '@/common/type/state.type';
 import { Component } from '../component/type/component.type';
 import { Exercise } from './type/exercise.type';
+import { ExerciseAttributeValue } from './type/exercise-attribute-value.type';
+import { AttributeType } from '../attribute/enum/attribute-value.enum';
 
 const commonService = CommonService.instance;
 
@@ -116,7 +118,9 @@ export class ExerciseService {
   }
 
   static mapAttributes(item: Exercise): Exercise {
-    // item.valuesObject = commonService.object.flattenObject(item.valuesObject);
+    item.valuesObject = commonService.object.flattenObject(
+      ExerciseService.attributeValuesToNestedObject(item.attributeValues || [])
+    );
 
     return item;
   }
@@ -131,5 +135,84 @@ export class ExerciseService {
     );
 
     return item;
+  }
+
+  /**
+   * Converts a nested object into a colon-separated string path starting from the root key.
+   *
+   * @example
+   * parseAttributeValue({ a: 'b', b: 'c', c: 1 }, 'a') // => { a: "b:c:1" }
+   * parseAttributeValue({ x: 'y', y: 'z', z: 100 }, 'x') // => { x: "y:z:100" }
+   */
+  static parseAttributeValue<T extends Record<string, any>>(
+    obj: T,
+    rootKey: keyof T
+  ): Record<string, string> {
+    const result: Record<string, string> = {};
+    const pathParts: string[] = [];
+
+    let currentKey: string | undefined = String(rootKey);
+    let currentValue: any = obj[currentKey];
+
+    while (
+      typeof currentValue === 'string' &&
+      obj[currentValue] !== undefined
+    ) {
+      pathParts.push(currentValue);
+      currentKey = currentValue;
+      currentValue = obj[currentKey];
+    }
+
+    if (currentValue !== undefined) pathParts.push(String(currentValue));
+    result[String(rootKey)] = pathParts.join(':');
+
+    return result;
+  }
+
+  /**
+   * Converts ExerciseAttributeValue array to a nested object structure
+   * where selected path creates nesting and value is placed at the end.
+   *
+   * @example
+   * unparseAttributeValues([
+   *   { field: "target", value: "chest", selected: "muscle" },
+   *   { field: "equipment", value: "bench", selected: "weight-training" }
+   * ])
+   *
+   * => {
+   *   target: { muscle: "chest" },
+   *   equipment: { "weight-training": "bench" }
+   * }
+   */
+  static attributeValuesToNestedObject(
+    attributeValues: ExerciseAttributeValue[]
+  ): Record<string, any> {
+    const result: Record<string, any> = {};
+
+    for (const attr of attributeValues) {
+      if (attr.selected === attr.value) {
+        result[attr.field] = attr.value;
+        continue;
+      }
+
+      if (!result[attr.field]) result[attr.field] = {};
+      const pathParts = attr.selected.split(':');
+      let currentLevel = result[attr.field];
+
+      // Build the nested structure
+      for (let i = 0; i < pathParts.length; i++) {
+        const part = pathParts[i];
+        if (i === pathParts.length - 1) {
+          // Last part - assign the value
+          currentLevel[part] = attr.value;
+        } else {
+          // Create nested level if it doesn't exist
+          currentLevel[part] = currentLevel[part] || {};
+          currentLevel = currentLevel[part];
+        }
+      }
+    }
+
+    return result;
   }
 }
