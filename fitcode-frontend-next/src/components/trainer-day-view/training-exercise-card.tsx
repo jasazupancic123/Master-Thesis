@@ -60,9 +60,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   if (!training || !component || !params) return null;
 
   useEffect(() => {
-    if (propsExercise !== exercise) {
-      setExercise(propsExercise);
-    }
+    if (propsExercise !== exercise) setExercise(propsExercise);
   }, [propsExercise]);
 
   useEffect(() => {

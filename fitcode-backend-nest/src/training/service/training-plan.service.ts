@@ -118,6 +118,7 @@ export class TrainingPlanService {
     allComponents: Component[],
   ) {
     const duplicates = new Set<string>();
+
     for (let i = 0; i < trainingComponents.length; i++) {
       const curr = trainingComponents[i];
       const component = allComponents.find((c) => c.id === curr.id);
@@ -151,16 +152,19 @@ export class TrainingPlanService {
 
       // validate exercises
       const leafs = this.componentService.leafsFromFlat(allComponents);
+      for (const exercise of exercises) {
+        for (const componentId of exercise.componentIds) {
+          const leaf = leafs.find((leaf) => leaf.id === componentId)!;
+          const root = this.componentService.getRoot(leaf, allComponents);
 
-      if (
-        exercises.length > 0 &&
-        exercises.every((e) =>
-          e.componentIds.some(() =>
-            leafs.some((leaf) => leaf.parents?.includes(component.id)),
-          ),
-        )
-      )
-        this.exerciseService.validateExercises(component.id, exercises, leafs);
+          if (root.id !== component.id) continue;
+          if (!leaf.parents.includes(component.id)) {
+            throw new BadRequestException(
+              `Exercise ${exercise.name} cannot be part of selected component`,
+            );
+          }
+        }
+      }
     }
 
     if (trainingComponents.length > 5)

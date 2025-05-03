@@ -18,6 +18,18 @@ export class Workload extends TimestampEntity {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
+  groupId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  cycleId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
   userId: string;
 
   @IsString()

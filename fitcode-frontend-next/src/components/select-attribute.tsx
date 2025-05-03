@@ -1,3 +1,4 @@
+import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { FormControl, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -10,8 +11,12 @@ export default function SelectAttribute(props: {
   attribute: Attribute;
   onChange: (field: string, value: string) => void;
   initialValue?: string | Record<string, any>;
+  label?: boolean;
 }) {
-  const { attribute, onChange, initialValue } = props;
+  const { attribute, onChange, initialValue, label } = props;
+  const [subOptions, setSubOptions] = useState<Attribute | undefined>(
+    undefined
+  );
 
   const [selectedValue, setSelectedValue] = useState<string | undefined>(() => {
     if (typeof initialValue === 'object')
@@ -26,22 +31,39 @@ export default function SelectAttribute(props: {
   useEffect(() => {
     if (typeof initialValue === 'object' && initialValue[attribute.field]) {
       setSelectedValue(initialValue[attribute.field] as string);
+
+      const selectedOption = attribute.options?.find(
+        (option) =>
+          typeof option === 'object' &&
+          option.field === initialValue[attribute.field]
+      );
+
+      setSubOptions(selectedOption);
     }
   }, [attribute.field, attribute.options, initialValue]);
 
   function handleSelectChange(e: SelectChangeEvent) {
     const value = e.target.value as string;
     setSelectedValue(value);
+
+    const selectedOption = attribute.options?.find(
+      (option) => typeof option === 'object' && option.field === value
+    );
+
+    setSubOptions(selectedOption);
     onChange(attribute.field, value);
   }
 
   return (
     <Box>
       <FormControl fullWidth>
-        <InputLabel id={attribute.field}>{attribute.name}</InputLabel>
+        {label && (
+          <InputLabel id={attribute.field}>{attribute.name}</InputLabel>
+        )}
+
         <Select
           labelId={attribute.field}
-          label={attribute.name}
+          label={label ? attribute.name : undefined}
           variant="outlined"
           fullWidth
           value={selectedValue || ''}
@@ -49,23 +71,21 @@ export default function SelectAttribute(props: {
         >
           <MenuItem value="">None</MenuItem>
 
-          {attribute.options?.map((option) => {
-            if (typeof option === 'string')
-              return (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              );
-
-            // nested select
-            return (
-              <MenuItem key={option.field} value={option.field}>
-                {option.name}
-              </MenuItem>
-            );
-          })}
+          {attribute.options?.map((option) => (
+            <MenuItem key={option.field} value={option.field}>
+              {option.name}
+            </MenuItem>
+          ))}
         </Select>
       </FormControl>
+
+      {subOptions?.options && (
+        <SelectAttribute
+          attribute={subOptions}
+          onChange={onChange}
+          initialValue={initialValue}
+        />
+      )}
     </Box>
   );
 }

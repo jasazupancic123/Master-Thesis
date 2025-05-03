@@ -11,10 +11,10 @@ export type Exercise = BaseEntity & {
   videoUrl?: string;
   instruction?: string;
   attributeValues: ExerciseAttributeValue[];
+  defaultParams?: Attribute[];
 
   // mapped properties
   valuesObject: Record<string, any>;
   components?: Component[];
   rootComponents?: Component[];
-  defaultParams?: Attribute[];
 };

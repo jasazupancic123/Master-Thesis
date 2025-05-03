@@ -667,7 +667,7 @@
     {
       "field":"muscle",
       "name":"Muscle",
-      "type:":"multiselect",
+      "type":"multiselect",
       "options":[
         {
           "field":"frontalis",
