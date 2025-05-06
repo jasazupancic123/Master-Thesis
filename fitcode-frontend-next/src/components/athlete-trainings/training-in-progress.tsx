@@ -47,6 +47,7 @@ interface TrainingInProgressProps {
   token: string;
   setView: (view: 'exercises' | 'training') => void;
   setSelectedComponent: (component: TrainingComponent | null) => void;
+  setTrainings: SetState<Training[]>;
 }
 
 export default function TrainingInProgress(props: TrainingInProgressProps) {
@@ -61,6 +62,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     startOfTraining,
     setStartOfTraining,
     setView,
+    setSelectedTraining,
   } = useTraining();
 
   const {
@@ -69,6 +71,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     profile,
     token,
     setSelectedComponent,
+    setTrainings,
   } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
@@ -130,49 +133,35 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setSelectedComponent(null);
     setSelectedSuperset(undefined);
 
-    // if (!selectedTraining) return toast.error('An error occurred');
-    // const queries = [] as ExerciseMetaQuery[];
-    // for (const superset of trainingResult.supersets)
-    //   for (const exercise of superset.exercises) {
-    //     const data = [] as WorkloadData[];
-    //     for (const set of exercise.meta) {
-    //       data.push({
-    //         setTypeValue: set.setTypeValue,
-    //         workloadValue: set.workloadValue,
-    //       });
-    //     }
-    //     queries.push({ exerciseId: exercise.id, data });
-    //   }
-    // handleApiRequest(
-    //   router,
-    //   () =>
-    //     TrainingController.updateWorkloads(
-    //       token,
-    //       selectedTraining.id,
-    //       selectedComponent.id,
-    //       { workloads: queries }
-    //     ),
-    //   () => {
-    //     toast.success('Training data updated successfully');
-    //     setStatuses((prev) => [
-    //       ...prev,
-    //       {
-    //         componentId: selectedComponent.id,
-    //         createdAt: new Date(),
-    //         updatedAt: new Date(),
-    //         status: SetStatus.COMPLETED,
-    //         trainingId: selectedTraining.id,
-    //         userId: profile.uid,
-    //       },
-    //     ]);
-    //     clearTrainingState();
-    //     setView('exercises');
-    //     setSelectedComponent(null);
-    //     setSelectedSuperset(undefined);
-    //   },
-    //   undefined,
-    //   'Failed to update training data'
-    // );
+    if (!selectedTraining || !user || !selectedComponent)
+      return toast.error('An error occurred');
+
+    handleApiRequest(
+      router,
+      () =>
+        TrainingController.finishComponent(
+          token,
+          selectedTraining.id,
+          user.uid,
+          selectedComponent.id
+        ),
+      (training) => {
+        console.log('training', training);
+        toast.success('Training data updated successfully');
+        clearTrainingState();
+        setView('exercises');
+        setSelectedComponent(null);
+        setSelectedSuperset(undefined);
+        setTrainings((prev) =>
+          prev.map((t) => {
+            if (t.id === training.id) return training;
+            return t;
+          })
+        );
+      },
+      undefined,
+      'Failed to update training data'
+    );
   };
 
   const handleCancelTraining = () => {
@@ -226,274 +215,363 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       }}
       fullScreen={true}
     />
-  ) : supersets && selectedSuperset ? (
-    <Box width="100%" display="flex" flexDirection="column" alignItems="center">
-      <Box
-        width="100%"
-        display="flex"
-        alignItems="center"
-        sx={{ backgroundColor: 'background.paper' }}
-        py={2}
-        px={1.5}
-      >
-        <Typography
-          variant="body1"
-          fontSize={screenSize.isUltraSmall ? 13 : undefined}
+  ) : (
+    <>
+      {supersets && selectedSuperset ? (
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
         >
-          Superset {supersets.indexOf(selectedSuperset) + 1}
-        </Typography>
-        <Typography
-          color={theme.palette.primary.main}
-          variant="h6"
-          sx={{
-            textAlign: 'center',
-            marginX: 'auto',
-            textTransform: 'uppercase',
-          }}
-        >
-          {selectedComponent.id}
-        </Typography>
-        <Typography
-          variant="body1"
-          fontSize={screenSize.isUltraSmall ? 13 : undefined}
-        >
-          {formatTime(elapsedTime)}
-        </Typography>
-      </Box>
-      <Box
-        ref={boxRef}
-        pt={1.5}
-        width="100%"
-        flexGrow={1} // Ensures it expands
-        display="flex"
-        flexDirection="column"
-        gap={3}
-        sx={{
-          overflowY: 'auto', // Allow full scroll
-          height: 'calc(100vh - 150px)', // Adjust as needed
-          minHeight: 0, // Ensures it doesn't restrict child elements
-        }}
-      >
-        {selectedSuperset.exercises.map((exercise, i) => {
-          return (
-            <Box
-              key={`${exercise.id}${i}`}
-              width="100%"
-              display="flex"
-              flexDirection="column"
-              sx={{ position: 'relative' }}
+          <Box
+            width="100%"
+            display="flex"
+            alignItems="center"
+            sx={{ backgroundColor: 'background.paper' }}
+            py={2}
+            px={1.5}
+          >
+            <Typography
+              variant="body1"
+              fontSize={screenSize.isUltraSmall ? 13 : undefined}
             >
-              <IconButton
-                sx={{
-                  p: 0,
-                  m: 0,
-                  position: 'absolute',
-                  top: 0,
-                  right: 5,
-                  display:
-                    exercise.exercise?.name.toLowerCase() !== 'deep back squat'
-                      ? 'none'
-                      : undefined,
-                }}
-              >
-                <CameraAlt />
-              </IconButton>
-              <Typography
-                variant="body1"
-                sx={{
-                  textAlign: 'center',
-                  textTransform: 'uppercase',
-                  fontWeight: 'bold',
-                }}
-              >
-                {exercise.exercise?.name || 'Un-named Exercise'}
-              </Typography>
-
-              <Box
-                position="absolute"
-                display="flex"
-                flexDirection="column"
-                top={0}
-                left={10}
-                zIndex={1000}
-                pb={
-                  screenSize.isMobile || screenSize.isLandscapeMobile
-                    ? 35
-                    : undefined
-                }
-              >
-                <Typography variant="body2" color="rgb(177, 183, 189)">
-                  {`${supersets.indexOf(selectedSuperset) + 1}${String.fromCharCode(65 + i)}`}
-                </Typography>
-              </Box>
-              <Grid2
-                container
-                size={12}
-                width="100%"
-                mt={1}
-                display="flex"
-                alignItems="center"
-              >
-                <Grid2
-                  size={6}
+              Superset {supersets.indexOf(selectedSuperset) + 1}
+            </Typography>
+            <Typography
+              color={theme.palette.primary.main}
+              variant="h6"
+              sx={{
+                textAlign: 'center',
+                marginX: 'auto',
+                textTransform: 'uppercase',
+              }}
+            >
+              {selectedComponent.id}
+            </Typography>
+            <Typography
+              variant="body1"
+              fontSize={screenSize.isUltraSmall ? 13 : undefined}
+            >
+              {formatTime(elapsedTime)}
+            </Typography>
+          </Box>
+          <Box
+            ref={boxRef}
+            pt={1.5}
+            width="100%"
+            flexGrow={1} // Ensures it expands
+            display="flex"
+            flexDirection="column"
+            gap={3}
+            sx={{
+              overflowY: 'auto', // Allow full scroll
+              height: 'calc(100vh - 150px)', // Adjust as needed
+              minHeight: 0, // Ensures it doesn't restrict child elements
+            }}
+          >
+            {selectedSuperset.exercises.map((exercise, i) => {
+              return (
+                <Box
+                  key={`${exercise.id}${i}`}
+                  width="100%"
                   display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{ mt: 1 }}
+                  flexDirection="column"
+                  sx={{ position: 'relative' }}
                 >
-                  <Image
-                    src={
-                      exercise.exercise?.imageUrl?.trim() ||
-                      '/fitcode_logo_transparent_square.png'
-                    }
-                    alt="Exercise Image"
-                    width={
-                      !screenSize.isMobile
-                        ? exercise.exercise?.imageUrl
-                          ? 200
-                          : 100
-                        : exercise.exercise?.imageUrl &&
-                            exercise.exercise?.imageUrl.length > 2
-                          ? 170
-                          : 100
-                    }
-                    height={0}
-                    style={{
-                      maxWidth: !screenSize.isMobile ? '200px' : '170px',
-                      height: 'auto', // Maintains aspect ratio dynamically
-                      borderRadius: 15,
+                  <IconButton
+                    sx={{
+                      p: 0,
+                      m: 0,
+                      position: 'absolute',
+                      top: 0,
+                      right: 5,
+                      display:
+                        exercise.exercise?.name.toLowerCase() !==
+                        'deep back squat'
+                          ? 'none'
+                          : undefined,
                     }}
-                    onClick={() => {
-                      setOpenVideoPlayerModal(true);
-                      setVideoUrl(exercise.exercise?.videoUrl || '');
+                  >
+                    <CameraAlt />
+                  </IconButton>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      textAlign: 'center',
+                      textTransform: 'uppercase',
+                      fontWeight: 'bold',
                     }}
-                  />
-                </Grid2>
-                <Grid2 size={6} px={1}>
+                  >
+                    {exercise.exercise?.name || 'Un-named Exercise'}
+                  </Typography>
+
                   <Box
-                    key={exercise.id}
+                    position="absolute"
                     display="flex"
                     flexDirection="column"
-                    width="100%"
-                    gap={1}
+                    top={0}
+                    left={10}
+                    zIndex={1000}
+                    pb={
+                      screenSize.isMobile || screenSize.isLandscapeMobile
+                        ? 35
+                        : undefined
+                    }
                   >
-                    {exercise.sets.map((set, i) => {
-                      return (
-                        <Box
-                          key={`${set.setNumber}${i}`}
-                          display="flex"
-                          width="100%"
-                          justifyContent="center"
-                          alignItems="center"
-                          gap={1}
-                        >
-                          {exercise.params.map((param, j) => {
-                            const value = set.paramValues.find(
-                              (pv) => pv.field === param.field
-                            ) || {
-                              field: param.field,
-                              selected: 'set',
-                              value: (i + 1).toString(),
-                            };
-
-                            return (
-                              <Box
-                                key={param.field}
-                                flexBasis={
-                                  (100 / exercise.params.length).toString() +
-                                  '%'
-                                }
-                              >
-                                <ExerciseParam
-                                  showOptions={set.setNumber === 1}
-                                  disableOptions
-                                  disableSets
-                                  param={param}
-                                  value={value}
-                                  onOptionChange={(newValue) => {}}
-                                  onSubOptionChange={(newValue) => {}}
-                                  readOnly={true}
-                                />
-                              </Box>
-                            );
-                          })}
-                        </Box>
-                      );
-                    })}
+                    <Typography variant="body2" color="rgb(177, 183, 189)">
+                      {`${supersets.indexOf(selectedSuperset) + 1}${String.fromCharCode(65 + i)}`}
+                    </Typography>
                   </Box>
-                </Grid2>
-              </Grid2>
-            </Box>
-          );
-        })}
-      </Box>
+                  <Grid2
+                    container
+                    size={12}
+                    width="100%"
+                    mt={1}
+                    display="flex"
+                    alignItems="center"
+                  >
+                    <Grid2
+                      size={6}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      sx={{ mt: 1 }}
+                    >
+                      <Image
+                        src={
+                          exercise.exercise?.imageUrl?.trim() ||
+                          '/fitcode_logo_transparent_square.png'
+                        }
+                        alt="Exercise Image"
+                        width={
+                          !screenSize.isMobile
+                            ? exercise.exercise?.imageUrl
+                              ? 200
+                              : 100
+                            : exercise.exercise?.imageUrl &&
+                                exercise.exercise?.imageUrl.length > 2
+                              ? 170
+                              : 100
+                        }
+                        height={0}
+                        style={{
+                          maxWidth: !screenSize.isMobile ? '200px' : '170px',
+                          height: 'auto', // Maintains aspect ratio dynamically
+                          borderRadius: 15,
+                        }}
+                        onClick={() => {
+                          setOpenVideoPlayerModal(true);
+                          setVideoUrl(exercise.exercise?.videoUrl || '');
+                        }}
+                      />
+                    </Grid2>
+                    <Grid2 size={6} px={1}>
+                      <Box
+                        key={exercise.id}
+                        display="flex"
+                        flexDirection="column"
+                        width="100%"
+                        gap={1}
+                      >
+                        {exercise.sets.map((set, i) => {
+                          return (
+                            <Box
+                              key={`${set.setNumber}${i}`}
+                              display="flex"
+                              width="100%"
+                              justifyContent="center"
+                              alignItems="center"
+                              gap={1}
+                            >
+                              {Array.isArray(exercise.params) &&
+                                exercise.params.map((param, j) => {
+                                  const value = set.paramValues.find(
+                                    (pv) => pv.field === param.field
+                                  ) || {
+                                    field: param.field,
+                                    selected: 'set',
+                                    value: (i + 1).toString(),
+                                  };
 
-      <Fab
-        sx={{
-          backgroundColor: theme.palette.primary.main,
-          position: 'absolute',
-          bottom: 60,
-          left: 16,
-        }}
-        onClick={handleOpenMenu}
-      >
-        <MoreVertIcon />
-      </Fab>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleCloseMenu}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        PaperProps={{
-          sx: { mb: 1 }, // Adds a small margin between the FAB and menu
-        }}
-      >
-        <MenuItem onClick={handleContinue}>
-          {supersets.indexOf(selectedSuperset) === supersets.length - 1 ? (
-            <>
+                                  return (
+                                    <Box
+                                      key={param.field}
+                                      flexBasis={
+                                        (
+                                          100 / exercise.params.length
+                                        ).toString() + '%'
+                                      }
+                                    >
+                                      <ExerciseParam
+                                        showOptions={set.setNumber === 1}
+                                        disableOptions
+                                        disableSets
+                                        param={param}
+                                        value={value}
+                                        onOptionChange={(newValue) => {}}
+                                        onSubOptionChange={(newValue) => {}}
+                                        readOnly={true}
+                                      />
+                                    </Box>
+                                  );
+                                })}
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    </Grid2>
+                  </Grid2>
+                </Box>
+              );
+            })}
+          </Box>
+
+          <Fab
+            sx={{
+              backgroundColor: theme.palette.primary.main,
+              position: 'absolute',
+              bottom: 60,
+              left: 16,
+            }}
+            onClick={handleOpenMenu}
+          >
+            <MoreVertIcon />
+          </Fab>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleCloseMenu}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+            transformOrigin={{
+              vertical: 'bottom',
+              horizontal: 'center',
+            }}
+            PaperProps={{
+              sx: { mb: 1 }, // Adds a small margin between the FAB and menu
+            }}
+          >
+            <MenuItem onClick={handleContinue}>
+              {supersets.indexOf(selectedSuperset) === supersets.length - 1 ? (
+                <>
+                  <DoneIcon sx={{ marginRight: 1 }} />
+                  Finish Training
+                </>
+              ) : (
+                <>
+                  <ArrowForwardIcon sx={{ marginRight: 1 }} />
+                  Next Superset
+                </>
+              )}
+            </MenuItem>
+            <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
+              <CloseIcon sx={{ marginRight: 1 }} />
+              Cancel Training
+            </MenuItem>
+          </Menu>
+          <MyModal
+            isOpen={openNextSupersetModal}
+            setIsOpen={(open) => setOpenNextSupersetModal(open)}
+            cancelText="Cancel"
+            onCancel={() => setOpenNextSupersetModal(false)}
+            onConfirm={() => {
+              setSelectedSuperset(
+                supersets[supersets.indexOf(selectedSuperset) + 1]
+              );
+              if (!supersetIndex) setSupersetIndex(1);
+              else setSupersetIndex(supersetIndex + 1);
+              setOpenNextSupersetModal(false);
+              if (boxRef.current) {
+                boxRef.current.scrollTop = 0; // Scroll to the top
+              }
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ width: '100%', textAlign: 'center' }}
+            >
+              Move to next superset?
+            </Typography>
+          </MyModal>
+          <MyModal
+            isOpen={openVideoPlayerModal}
+            setIsOpen={(open) => setOpenVideoPlayerModal(open)}
+            cancelText="Close"
+            onCancel={() => {
+              setVideoUrl('');
+              setOpenVideoPlayerModal(false);
+            }}
+            sx={{ p: videoUrl.length > 0 ? 0 : undefined }}
+            dialogueContentSx={{ p: videoUrl.length > 0 ? 0 : undefined }}
+          >
+            {videoUrl.length > 0 ? (
+              <Box
+                component="video"
+                src={videoUrl}
+                controls
+                autoPlay
+                muted
+                loop
+                sx={{
+                  width: '100%', // Make it responsive
+                  maxWidth: screenSize.isLandscapeMobile ? 400 : 600, // Limit max width
+                }}
+              />
+            ) : (
+              <Typography variant="body2">No video available</Typography>
+            )}
+          </MyModal>
+        </Box>
+      ) : (
+        <Box
+          display="flex"
+          width="100vw"
+          height="100vh"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <Typography variant="h6">No exercises</Typography>
+          <Fab
+            sx={{
+              backgroundColor: theme.palette.primary.main,
+              position: 'absolute',
+              bottom: 60,
+              left: 16,
+            }}
+            onClick={handleOpenMenu}
+          >
+            <MoreVertIcon />
+          </Fab>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleCloseMenu}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+            transformOrigin={{
+              vertical: 'bottom',
+              horizontal: 'center',
+            }}
+            PaperProps={{
+              sx: { mb: 1 }, // Adds a small margin between the FAB and menu
+            }}
+          >
+            <MenuItem onClick={handleFinishTraining}>
               <DoneIcon sx={{ marginRight: 1 }} />
               Finish Training
-            </>
-          ) : (
-            <>
-              <ArrowForwardIcon sx={{ marginRight: 1 }} />
-              Next Superset
-            </>
-          )}
-        </MenuItem>
-        <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
-          <CloseIcon sx={{ marginRight: 1 }} />
-          Cancel Training
-        </MenuItem>
-      </Menu>
-      <MyModal
-        isOpen={openNextSupersetModal}
-        setIsOpen={(open) => setOpenNextSupersetModal(open)}
-        cancelText="Cancel"
-        onCancel={() => setOpenNextSupersetModal(false)}
-        onConfirm={() => {
-          setSelectedSuperset(
-            supersets[supersets.indexOf(selectedSuperset) + 1]
-          );
-          if (!supersetIndex) setSupersetIndex(1);
-          else setSupersetIndex(supersetIndex + 1);
-          setOpenNextSupersetModal(false);
-          if (boxRef.current) {
-            boxRef.current.scrollTop = 0; // Scroll to the top
-          }
-        }}
-      >
-        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
-          Move to next superset?
-        </Typography>
-      </MyModal>
+            </MenuItem>
+            <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
+              <CloseIcon sx={{ marginRight: 1 }} />
+              Cancel Training
+            </MenuItem>
+          </Menu>
+        </Box>
+      )}
       <MyModal
         isOpen={openFinishTrainingModal}
         setIsOpen={(open) => setOpenFinishTrainingModal(open)}
@@ -522,36 +600,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           Cancel Training?
         </Typography>
       </MyModal>
-      <MyModal
-        isOpen={openVideoPlayerModal}
-        setIsOpen={(open) => setOpenVideoPlayerModal(open)}
-        cancelText="Close"
-        onCancel={() => {
-          setVideoUrl('');
-          setOpenVideoPlayerModal(false);
-        }}
-        sx={{ p: videoUrl.length > 0 ? 0 : undefined }}
-        dialogueContentSx={{ p: videoUrl.length > 0 ? 0 : undefined }}
-      >
-        {videoUrl.length > 0 ? (
-          <Box
-            component="video"
-            src={videoUrl}
-            controls
-            autoPlay
-            muted
-            loop
-            sx={{
-              width: '100%', // Make it responsive
-              maxWidth: screenSize.isLandscapeMobile ? 400 : 600, // Limit max width
-            }}
-          />
-        ) : (
-          <Typography variant="body2">No video available</Typography>
-        )}
-      </MyModal>
-    </Box>
-  ) : (
-    <Typography variant="h6">No training scheduled</Typography>
+    </>
   );
 }

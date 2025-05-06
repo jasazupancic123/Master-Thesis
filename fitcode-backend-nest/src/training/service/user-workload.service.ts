@@ -25,6 +25,10 @@ export class UserWorkloadService {
     private readonly workloadRepository: WorkloadRepository,
   ) {}
 
+  getDoc(id: WorkloadRef) {
+    return this.workloadRepository.doc(id);
+  }
+
   /**
    * Gets all training workload data for all trainings for a user by exercise id.
    */
@@ -48,6 +52,22 @@ export class UserWorkloadService {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('trainingId', '==', trainingId)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+  }
+
+  async findAllByTrainingAndUserAndComponent(trainingId: string, userId: string, componentId: string) {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('trainingId', '==', trainingId)
+      .where('userId', '==', userId)
+      .where('componentId', '==', componentId)
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>

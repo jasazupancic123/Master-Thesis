@@ -42,6 +42,7 @@ import { UserWorkloadService } from './user-workload.service';
 import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
 import dayjs from 'dayjs';
+import { SetStatus } from '../enum/set-status.enum';
 
 @Injectable()
 export class TrainingService {
@@ -137,7 +138,45 @@ export class TrainingService {
         this.commonService.date.isBetween(t.from, from, to),
       );
 
+    console.log('trainings', trainings);
+
     return trainings;
+  }
+
+  async getUserWorkloadsByGroupId(
+    user: User,
+    input: { groupId: string },
+  ): Promise<{ completedWorkloads: Workload[]; futureWorkloads: Workload[] }> {
+    const { groupId } = input;
+    this.logger.log(
+      `User ${user.uid} is getting workloads for group ${groupId}`,
+    );
+
+    if (
+      !this.firebaseService.isTrainer(user) &&
+      !this.firebaseService.isManager(user) &&
+      !this.firebaseService.isAdmin(user)
+    )
+      throw new UnauthorizedException(
+        'You are not authorized to view this data',
+      );
+
+    const groupRef = { groupId };
+
+    const group: Group = await this.groupService.findByIdOrFail(user, groupRef);
+    let workloads: Workload[] = await this.workloadService.findAllByMembers(
+      group.membersIds,
+    );
+    workloads = workloads.filter((w) => w.groupId === group.id);
+
+    const completedWorkloads = workloads.filter(
+      (w) => w.status !== SetStatus.NOT_STARTED,
+    );
+    const futureWorkloads = workloads.filter(
+      (w) => w.status === SetStatus.NOT_STARTED,
+    );
+
+    return { completedWorkloads, futureWorkloads };
   }
 
   private getFromAndToDates(components: TrainingComponent[]): {
@@ -226,6 +265,7 @@ export class TrainingService {
       to,
       membersIds: group.membersIds,
       wellness,
+      completedMembersIds: [],
       components: input.components.map((c) => ({
         id: c.id,
         from: c.from,
@@ -233,6 +273,7 @@ export class TrainingService {
         color: c.color,
         subgroups: c.subgroups || [],
         supersets: c.supersets || [],
+        completedMembersIds: [],
       })),
     };
 
@@ -333,6 +374,7 @@ export class TrainingService {
       to,
       membersIds: group.membersIds,
       wellness,
+      completedMembersIds: [],
       components: [
         {
           id: trainingComponent.id,
@@ -347,6 +389,7 @@ export class TrainingService {
               ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
               : ref.trainingId,
           },
+          completedMembersIds: [],
         },
       ],
     };
@@ -591,6 +634,7 @@ export class TrainingService {
       to: addMinutes(startOfHour(input.from), training.components.length * 30),
       membersIds: training.membersIds,
       wellness,
+      completedMembersIds: [],
       components: training.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
@@ -602,6 +646,7 @@ export class TrainingService {
           color: c.color,
           subgroups: c.subgroups || [],
           supersets: c.supersets || [],
+          completedMembersIds: [],
         };
       }),
     };
@@ -769,6 +814,61 @@ export class TrainingService {
     await batch.commit();
   }
 
+  async finishComponent(
+    user: User,
+    ref: TrainingRef,
+    input: { userId: string; componentId: string },
+  ): Promise<Training> {
+    const { userId, componentId } = input;
+    this.logger.log(
+      `User ${user.uid} is finishing component ${componentId} for user ${input.userId} for training ${ref.trainingId}`,
+    );
+
+    if (user.uid !== userId)
+      throw new UnauthorizedException('You can only finish your own workloads');
+
+    const workloads =
+      await this.workloadService.findAllByTrainingAndUserAndComponent(
+        ref.trainingId,
+        userId,
+        componentId,
+      );
+
+    const batch = this.firebaseService.firestore.batch();
+    for (const workload of workloads) {
+      const docRef = this.workloadService.getDoc(workload);
+      batch.update(docRef, {
+        status: SetStatus.COMPLETED,
+        finishedAt: new Date(),
+      });
+    }
+
+    const training = await this.findOneOrFail(user, ref);
+    const component = training.components.find((c) => c.id === componentId);
+    if (!component) throw new BadRequestException('Component not found');
+    component.completedMembersIds.push(userId);
+
+    const hasCompletedTraining = training.components.every((c) =>
+      c.completedMembersIds.includes(userId),
+    );
+    if (hasCompletedTraining) {
+      training.completedMembersIds.push(userId);
+    }
+
+    const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+    const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
+      {
+        components: training.components,
+        completedMembersIds: training.completedMembersIds,
+      },
+    );
+    batch.update(trainingDocRef, updateTrainingQuery);
+
+    await batch.commit();
+
+    return training;
+  }
+
   async addComponents(
     user: User,
     ref: TrainingRef,
@@ -782,6 +882,11 @@ export class TrainingService {
     const training = await this.findOneOrFail(user, ref);
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
+
+    input = input.map((c) => {
+      c.completedMembersIds = [];
+      return c;
+    });
 
     // validate components & exercises
     const components = await this.cacheManagerService.getComponents();
@@ -804,6 +909,7 @@ export class TrainingService {
 
     // add components
     await this.trainingRepository.updateDoc(training.id, query);
+
     return updatedTraining;
   }
 

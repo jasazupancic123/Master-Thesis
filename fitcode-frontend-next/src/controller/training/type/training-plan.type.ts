@@ -14,6 +14,7 @@ export type TrainingComponent = IdEntity &
     subgroups: Subgroup[];
 
     // mapped properties
+    completedMembersIds: string[]; // members who completed the component
     component?: Component;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
   };

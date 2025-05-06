@@ -81,6 +81,7 @@ export async function handleCreateTraining(
         groupId: group.id,
         cycleId: cycle.id,
         components: selectedComponents,
+        completedMembersIds: [],
       }),
     (training) => {
       const mapped = TrainingService.mapComponents(training, components);
@@ -104,6 +105,7 @@ export async function handleAddTrainingComponents(
   }
 ) {
   const { trainingId, ...restInput } = input;
+  console.log('restInput', restInput);
   const { router, setFilteredTrainings, setTrainings, components } = state;
 
   handleApiRequest(

@@ -6,9 +6,11 @@ import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
+import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
+import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
 
@@ -24,6 +26,7 @@ export interface GroupIdPageProps {
   exercises: Exercise[];
   groups: Group[];
   trainings: Training[];
+  workloads: CompletedFutureWorkloads;
 }
 
 export type GroupContextProps = GroupIdPageProps & {
@@ -32,6 +35,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setUsers: SetState<User[]>;
   group: Group;
   setGroup: SetState<Group>;
+  workloads: CompletedFutureWorkloads;
+  setWorkloads: SetState<CompletedFutureWorkloads>;
   cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
   dateFrom: Dayjs;

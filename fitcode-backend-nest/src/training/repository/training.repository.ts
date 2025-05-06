@@ -59,11 +59,13 @@ export class TrainingRepository
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
         wellness: input.wellness || [],
+        completedMembersIds: input.completedMembersIds || [],
         components: input.components.map((c, i) => ({
           id: c.id,
           color: c.color || null,
           from: c.from ? c.from : startOfHour(addHours(new Date(), i)),
           to: c.to ? c.to : endOfHour(addHours(new Date(), i)),
+          completedMembersIds: c.completedMembersIds || [],
           supersets: [{ color: null, exercises: [] }],
           subgroups: [],
         })),
@@ -83,6 +85,7 @@ export class TrainingRepository
         from: c.from,
         to: c.to,
         color: c.color,
+        completedMembersIds: c.completedMembersIds,
         subgroups: c.subgroups.map((s) => ({
           id: s.id,
           name: s.name,
