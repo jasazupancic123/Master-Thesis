@@ -13,6 +13,8 @@ import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
 import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
 import TimerIcon from '@mui/icons-material/Timer';
+import LocalFireDepartment from '@mui/icons-material/LocalFireDepartment';
+import AcUnit from '@mui/icons-material/AcUnit';
 import { redirect } from 'next/navigation';
 
 export class NavigationUtil {
@@ -26,6 +28,10 @@ export class NavigationUtil {
 
   getComponentIcon(componentName: string): SvgIconComponent {
     switch (componentName.toLowerCase()) {
+      case 'warmup':
+        return LocalFireDepartment;
+      case 'cooldown':
+        return AcUnit;
       case 'coordination':
         return SportsGymnasticsIcon;
       case 'endurance':

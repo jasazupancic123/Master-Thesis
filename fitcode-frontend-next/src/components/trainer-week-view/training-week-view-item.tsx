@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { TrainingWeekViewItemProps } from './type';
 import { useTheme } from '@mui/material';
+import TrainerWeekComponentItem from './training-week-component-item';
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
   const { training, updateTraining } = props;
@@ -42,71 +43,34 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
           flexDirection: 'column',
         }}
       >
+        <TrainerWeekComponentItem
+          key={'warmup'}
+          component={training.warmup}
+          training={training}
+          setIsChanged={setIsChanged}
+          updatedComponents={updatedComponents}
+          setUpdatedComponents={setUpdatedComponents}
+          warmupOrCooldown="warmup"
+        />
         {training.components.map((c) => (
-          <Stack key={c.id}>
-            <Typography
-              sx={{
-                color: '#fff',
-                textAlign: 'left',
-                flexBasis: '66.67%',
-              }}
-            >
-              {c.component?.name}
-            </Typography>
-
-            <Stack spacing={1} sx={{ mb: 1 }}>
-              <input
-                type="time"
-                value={dayjs(c.from).format('HH:mm')}
-                onChange={(e) => {
-                  setIsChanged(true);
-
-                  const [hours, minutes] = e.target.value.split(':');
-                  const from = dayjs(training.from)
-                    .set('hour', parseInt(hours))
-                    .set('minute', parseInt(minutes))
-                    .toDate();
-
-                  const components = [...updatedComponents];
-                  const i = updatedComponents.findIndex((tc) => tc.id === c.id);
-                  if (i === -1) return;
-                  components[i] = { ...components[i], from };
-                  setUpdatedComponents(components);
-                }}
-                style={{
-                  color: '#fff',
-                  backgroundColor: theme.palette.background.default,
-                  border: 'none',
-                  padding: '4px',
-                  borderRadius: '4px',
-                  textAlign: 'center',
-                  WebkitAppearance: 'none',
-                  MozAppearance: 'textfield',
-                }}
-              />
-              <style jsx>{`
-                input[type='time']::-webkit-calendar-picker-indicator {
-                  filter: invert(1);
-                  cursor: pointer;
-                }
-              `}</style>
-
-              {/* <input
-                type="time"
-                value={date.to}
-                onChange={(e) => onChange('to', e.target.value)}
-                style={{
-                  color: '#fff',
-                  backgroundColor: 'background.default',
-                  border: 'none',
-                  padding: '4px',
-                  borderRadius: '4px',
-                  textAlign: 'center',
-                }}
-              /> */}
-            </Stack>
-          </Stack>
+          <TrainerWeekComponentItem
+            key={c.id}
+            component={c}
+            training={training}
+            setIsChanged={setIsChanged}
+            updatedComponents={updatedComponents}
+            setUpdatedComponents={setUpdatedComponents}
+          />
         ))}
+        <TrainerWeekComponentItem
+          key={'cooldown'}
+          component={training.cooldown}
+          training={training}
+          setIsChanged={setIsChanged}
+          updatedComponents={updatedComponents}
+          setUpdatedComponents={setUpdatedComponents}
+          warmupOrCooldown="cooldown"
+        />
       </Box>
       {isChanged && (
         <IconButton

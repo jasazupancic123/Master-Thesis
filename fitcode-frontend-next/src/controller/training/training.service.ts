@@ -8,6 +8,9 @@ export class TrainingService {
     for (const tc of item.components)
       tc.component = components.find((c) => c.id === tc.id);
 
+    item.warmup.component = components.find((c) => c.id === item.warmup.id);
+    item.cooldown.component = components.find((c) => c.id === item.cooldown.id);
+
     return item;
   }
 

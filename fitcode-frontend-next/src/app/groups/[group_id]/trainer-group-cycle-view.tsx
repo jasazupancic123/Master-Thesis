@@ -103,7 +103,9 @@ export default function TrainerCycleView() {
           }}
         >
           <ExerciseChips
-            components={ComponentService.toTree(components)}
+            components={ComponentService.toTree(
+              components.filter((c) => c.id !== 'warmup' && c.id !== 'cooldown')
+            )}
             selected={selectedComponents}
             bgColor={theme.palette.background.default}
             primaryColor={theme.palette.primary.main}

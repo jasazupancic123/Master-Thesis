@@ -86,7 +86,11 @@ export class ExerciseService {
       setPagination,
     } = state;
 
-    let filtered = ExerciseService.filter(exercises, filter, components);
+    let filtered
+    if(filter.componentsIds.includes('warmup') || filter.componentsIds.includes('cooldown')) 
+      filtered = [...exercises] // all exercises for warmup and cooldown
+    else 
+      filtered = ExerciseService.filter(exercises, filter, components);
     const total = filtered.length;
 
     // paginate

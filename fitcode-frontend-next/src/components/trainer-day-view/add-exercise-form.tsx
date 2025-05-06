@@ -35,6 +35,11 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
   useEffect(() => {
     if (!component) return;
 
+    if (component.id === 'warmup' || component.id === 'cooldown') {
+      setComponentExercises(allExercises);
+      return;
+    }
+
     setComponentExercises(
       allExercises.filter((exercise) =>
         exercise.components?.some((c) => c.parents.includes(component.id))

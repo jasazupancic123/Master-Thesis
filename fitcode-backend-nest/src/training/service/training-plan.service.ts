@@ -169,6 +169,30 @@ export class TrainingPlanService {
       );
   }
 
+  validateWarmupAndCooldownTimes(
+    warmup: TrainingComponent,
+    cooldown: TrainingComponent,
+    trainingComponents: TrainingComponent[],
+    allComponents: Component[],
+  ) {
+    //check overlap between warmup, training components and cooldown
+    const combinedComponents = [warmup, ...trainingComponents, cooldown];
+    for (let i = 0; i < combinedComponents.length; i++) {
+      const curr = combinedComponents[i];
+      const component = allComponents.find((c) => c.id === curr.id);
+
+      const next = combinedComponents[i + 1];
+      if (next) {
+        const nextComponent = allComponents.find((c) => c.id === next.id);
+        if (i < combinedComponents.length - 1)
+          if (curr.from >= next.from)
+            throw new BadRequestException(
+              `Component ${component.name} has to start before ${nextComponent.name}`,
+            );
+      }
+    }
+  }
+
   populateTrainingExerciseParams(
     trainingComponents: TrainingComponent[],
     components: Component[],

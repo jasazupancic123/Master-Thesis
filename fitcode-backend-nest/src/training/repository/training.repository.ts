@@ -59,6 +59,8 @@ export class TrainingRepository
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
         wellness: input.wellness || [],
+        warmup: input.warmup,
+        cooldown: input.cooldown,
         components: input.components.map((c, i) => ({
           id: c.id,
           color: c.color || null,
