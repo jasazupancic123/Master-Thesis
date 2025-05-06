@@ -1,3 +1,4 @@
+import { SetState } from '@/common/type/state.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import {
   Training,

@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { TrainingPageProps } from './type';
 import { useTheme } from '@mui/material';
+import { CheckCircle } from '@mui/icons-material';
 
 const commonService = CommonService.instance;
 
@@ -71,19 +72,8 @@ export default function TrainingPage(props: TrainingPageProps) {
   }, [selectedDate]);
 
   useEffect(() => {
-    // async function getTrainingStatus() {
-    //   for (const t of trainings)
-    //     handleApiRequest(
-    //       router,
-    //       () => TrainingController.getTrainingStatus(token, t.id),
-    //       (response) => {
-    //         setStatuses((prev) => [...prev, ...response]);
-    //       },
-    //       undefined
-    //     );
-    // }
-    // getTrainingStatus().then();
-  }, [selectedTraining]);
+    console.log('trainings', trainings);
+  }, [trainings]);
 
   return view === 'exercises' ? (
     hasJustLoggedIn === true ? (
@@ -114,10 +104,16 @@ export default function TrainingPage(props: TrainingPageProps) {
               sx={{
                 borderTopLeftRadius: 10,
                 borderTopRightRadius: 10,
-                backgroundColor: theme.palette.primary.main,
+                backgroundColor: training.completedMembersIds.includes(
+                  profile.uid
+                )
+                  ? theme.palette.primary.dark
+                  : theme.palette.primary.main,
               }}
+              alignItems="center"
               py={0.5}
               px={2}
+              gap={1}
             >
               <Typography
                 variant="body2"
@@ -131,11 +127,18 @@ export default function TrainingPage(props: TrainingPageProps) {
                 variant="body2"
                 sx={{
                   color: '#fff',
-                  ml: 1,
                 }}
               >
                 {dayjs(training.from).format('HH:MM')}
               </Typography>
+
+              {training.completedMembersIds.includes(profile.uid) && (
+                <CheckCircle
+                  sx={{
+                    color: theme.palette.primary.light,
+                  }}
+                />
+              )}
             </Box>
             <Stack sx={{ borderRadius: 2, width: '100%' }}>
               <Box
@@ -176,6 +179,7 @@ export default function TrainingPage(props: TrainingPageProps) {
       token={token}
       setView={setView}
       setSelectedComponent={setSelectedComponent}
+      setTrainings={setTrainings}
     />
   );
 }

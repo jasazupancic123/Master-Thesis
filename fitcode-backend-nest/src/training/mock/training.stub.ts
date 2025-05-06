@@ -18,6 +18,7 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
+    completedMembersIds: data.completedMembersIds || [],
     groupId: data?.groupId,
     cycleId: data?.cycleId,
     ownerId: data?.ownerId || global.trainer.uid,
@@ -38,6 +39,7 @@ export function generateTrainingComponent(
     color: data?.color || generateRandomColor(),
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
     to: data?.to || getTime(addDays(new Date(), 2), 8, 30),
+    completedMembersIds: data?.completedMembersIds || [],
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
   };
