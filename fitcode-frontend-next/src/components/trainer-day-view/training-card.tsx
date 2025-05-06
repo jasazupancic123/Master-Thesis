@@ -163,6 +163,11 @@ export default function TrainingCard(props: TrainingCardProps) {
       >
         {training && (
           <>
+            <TrainingComponentCard
+              key={'warmup'}
+              training={training}
+              trainingComponent={training.warmup}
+            />
             {training.components.map((trainingComponent, i) => (
               <TrainingComponentCard
                 key={i}
@@ -170,6 +175,11 @@ export default function TrainingCard(props: TrainingCardProps) {
                 trainingComponent={trainingComponent}
               />
             ))}
+            <TrainingComponentCard
+              key={'cooldown'}
+              training={training}
+              trainingComponent={training.cooldown}
+            />
           </>
         )}
       </Box>

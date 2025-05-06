@@ -147,6 +147,8 @@ export default function TrainerWeekView() {
                                   from: new Date(c.from),
                                   to: addMinutes(new Date(c.from), 30),
                                 })),
+                                warmup: training.warmup,
+                                cooldown: training.cooldown,
                               }),
                             (training) => {
                               const mapped = TrainingService.mapComponents(
