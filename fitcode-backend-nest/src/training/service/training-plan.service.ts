@@ -34,6 +34,10 @@ import {
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '../constant/warmup-cooldown-ids.constant';
 
 @Injectable()
 export class TrainingPlanService {
@@ -116,10 +120,20 @@ export class TrainingPlanService {
     trainingMemberIds: string[],
     trainingComponents: TrainingComponent[],
     allComponents: Component[],
+    warmup: TrainingComponent,
+    cooldown: TrainingComponent,
   ) {
+    if (!warmup || !cooldown) {
+      throw new BadRequestException(
+        'Training must have warmup and cooldown components',
+      );
+    }
+    
+    const allTrainingComponents = [warmup, ...trainingComponents, cooldown];
+
     const duplicates = new Set<string>();
-    for (let i = 0; i < trainingComponents.length; i++) {
-      const curr = trainingComponents[i];
+    for (let i = 0; i < allTrainingComponents.length; i++) {
+      const curr = allTrainingComponents[i];
       const component = allComponents.find((c) => c.id === curr.id);
 
       // validate components are valid
@@ -128,17 +142,16 @@ export class TrainingPlanService {
         throw new BadRequestException(
           `Component ${component.name} cannot be selected for training`,
         );
-
       // check duplicates
       if (duplicates.has(curr.id))
         throw new BadRequestException(`Duplicate component ${component.name}`);
       duplicates.add(component.id);
 
       // validate training component times
-      const next = trainingComponents[i + 1];
+      const next = allTrainingComponents[i + 1];
       if (next) {
         const nextComponent = allComponents.find((c) => c.id === next.id);
-        if (i < trainingComponents.length - 1)
+        if (i < allTrainingComponents.length - 1)
           if (curr.from >= next.from)
             throw new BadRequestException(
               `Component ${component.name} has to start before ${nextComponent.name}`,
@@ -167,30 +180,6 @@ export class TrainingPlanService {
       throw new ConflictException(
         'You can only have up to 5 components per training',
       );
-  }
-
-  validateWarmupAndCooldownTimes(
-    warmup: TrainingComponent,
-    cooldown: TrainingComponent,
-    trainingComponents: TrainingComponent[],
-    allComponents: Component[],
-  ) {
-    //check overlap between warmup, training components and cooldown
-    const combinedComponents = [warmup, ...trainingComponents, cooldown];
-    for (let i = 0; i < combinedComponents.length; i++) {
-      const curr = combinedComponents[i];
-      const component = allComponents.find((c) => c.id === curr.id);
-
-      const next = combinedComponents[i + 1];
-      if (next) {
-        const nextComponent = allComponents.find((c) => c.id === next.id);
-        if (i < combinedComponents.length - 1)
-          if (curr.from >= next.from)
-            throw new BadRequestException(
-              `Component ${component.name} has to start before ${nextComponent.name}`,
-            );
-      }
-    }
   }
 
   populateTrainingExerciseParams(
@@ -255,10 +244,12 @@ export class TrainingPlanService {
           'You can only have up to 4 exercises per superset',
         );
 
-      for (const exercise of superset.exercises) {
-        const trainingExercise = exercises.find((e) => e.id === exercise.id);
-        if (!trainingExercise)
-          throw new NotFoundException('Training exercise not found');
+      if (component.id !== COOLDOWN_ID && component.id != WARMUP_ID) {
+        for (const exercise of superset.exercises) {
+          const trainingExercise = exercises.find((e) => e.id === exercise.id);
+          if (!trainingExercise)
+            throw new NotFoundException('Training exercise not found');
+        }
       }
     }
   }

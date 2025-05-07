@@ -1,3 +1,4 @@
+import { COOLDOWN_ID, WARMUP_ID } from '@/common/constant/warmup-cooldown-ids-constants';
 import { Component } from '../component/type/component.type';
 import { Exercise } from '../exercise/type/exercise.type';
 import { User } from '../user/type/user.type';
@@ -49,5 +50,13 @@ export class TrainingService {
 
     training.availableMembersIds = availableMembersIds;
     return training;
+  }
+
+  static excludeWarmupCooldown(
+    components: Component[],
+  ): Component[] {
+    return components.filter(
+      (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
+    );
   }
 }

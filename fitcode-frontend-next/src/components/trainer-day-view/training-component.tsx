@@ -56,6 +56,10 @@ import { DateRange } from '@/common/type/date-range.type';
 import { COLORS } from '@/common/constant/color.constant';
 import TrainerCycleView from '@/app/groups/[group_id]/trainer-group-cycle-view';
 import TrainingComponentCalendar from './training-component-calendar';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 const commonService = CommonService.instance;
 
@@ -212,7 +216,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   };
 
   const isWarmupOrCooldown = (component: TrainingComponent) => {
-    return component.id === 'warmup' || component.id === 'cooldown';
+    return component.id === WARMUP_ID || component.id === COOLDOWN_ID;
   };
 
   const handleCopyComponentApiRequest = async (

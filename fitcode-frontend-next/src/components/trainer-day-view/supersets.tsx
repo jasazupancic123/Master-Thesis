@@ -41,6 +41,10 @@ import { AttributeValue } from '@/controller/attribute/type/attribute-value.type
 import { ComponentParam } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { idID } from '@mui/material/locale';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
@@ -661,9 +665,9 @@ export default function Supersets(props: SupersetsProps) {
             }
           );
 
-          if (component.id === 'warmup' || component.id === 'cooldown') {
+          if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
             const wOrC =
-              component.id === 'warmup'
+              component.id === WARMUP_ID
                 ? { ...training.warmup }
                 : { ...training.cooldown };
             let supersets = !selectedSubgroup?.subgroup
@@ -693,7 +697,8 @@ export default function Supersets(props: SupersetsProps) {
               };
 
               let updatedTraining = { ...training };
-              if (component.id === 'warmup') {
+
+              if (component.id === WARMUP_ID) {
                 updatedTraining = {
                   ...updatedTraining,
                   warmup: updatedWOrC,
@@ -704,10 +709,11 @@ export default function Supersets(props: SupersetsProps) {
                   cooldown: updatedWOrC,
                 };
               }
-              setTraining(updatedTraining);
+
               const newFilteredTrainings = [...filteredTrainings].map((t) =>
                 t.id === updatedTraining.id ? updatedTraining : t
               );
+              setTraining(updatedTraining);
               setFilteredTrainings(newFilteredTrainings);
               setOpenAddExerciseModal(false);
               setDetectedChanges(true);
@@ -726,7 +732,7 @@ export default function Supersets(props: SupersetsProps) {
               };
 
               let updatedTraining = { ...training };
-              if (component.id === 'warmup') {
+              if (component.id === WARMUP_ID) {
                 updatedTraining = {
                   ...updatedTraining,
                   warmup: updatedWOrC,
