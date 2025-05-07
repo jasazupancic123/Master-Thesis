@@ -48,7 +48,6 @@ export default async function Page(props: GroupIdPageParams) {
     attributes,
     components,
     trainings: [],
-    workloads: { completedWorkloads: [], futureWorkloads: [] },
   };
 
   return (

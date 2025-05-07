@@ -39,9 +39,9 @@ import { useTheme } from '@mui/material';
 import { CameraAlt } from '@mui/icons-material';
 import dynamic from 'next/dynamic';
 import { ExerciseParam } from '../trainer-day-view/exercise-card/exercise-param';
+import { TrainingService } from '@/controller/training/training.service';
 
 interface TrainingInProgressProps {
-  selectedTraining: Training;
   selectedComponent: TrainingComponent;
   profile: User;
   token: string;
@@ -62,11 +62,11 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     startOfTraining,
     setStartOfTraining,
     setView,
+    selectedTraining,
     setSelectedTraining,
   } = useTraining();
 
   const {
-    selectedTraining,
     selectedComponent,
     profile,
     token,
@@ -146,15 +146,19 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           selectedComponent.id
         ),
       (training) => {
-        console.log('training', training);
         toast.success('Training data updated successfully');
         clearTrainingState();
         setView('exercises');
         setSelectedComponent(null);
         setSelectedSuperset(undefined);
+        if (selectedTraining.id === training.id) {
+          setSelectedTraining(training);
+        }
         setTrainings((prev) =>
           prev.map((t) => {
-            if (t.id === training.id) return training;
+            if (t.id === training.id) {
+              return training; // Update the training data
+            }
             return t;
           })
         );

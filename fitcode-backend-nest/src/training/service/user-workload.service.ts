@@ -62,7 +62,12 @@ export class UserWorkloadService {
       );
   }
 
-  async findAllByTrainingAndUserAndComponent(trainingId: string, userId: string, componentId: string) {
+  async findAllByTrainingAndUserAndComponent(ref: {
+    trainingId: string;
+    userId: string;
+    componentId: string;
+  }) {
+    const { trainingId, userId, componentId } = ref;
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('trainingId', '==', trainingId)

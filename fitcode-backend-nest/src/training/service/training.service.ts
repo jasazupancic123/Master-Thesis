@@ -138,8 +138,6 @@ export class TrainingService {
         this.commonService.date.isBetween(t.from, from, to),
       );
 
-    console.log('trainings', trainings);
-
     return trainings;
   }
 
@@ -152,19 +150,10 @@ export class TrainingService {
       `User ${user.uid} is getting workloads for group ${groupId}`,
     );
 
-    if (
-      !this.firebaseService.isTrainer(user) &&
-      !this.firebaseService.isManager(user) &&
-      !this.firebaseService.isAdmin(user)
-    )
-      throw new UnauthorizedException(
-        'You are not authorized to view this data',
-      );
-
     const groupRef = { groupId };
 
-    const group: Group = await this.groupService.findByIdOrFail(user, groupRef);
-    let workloads: Workload[] = await this.workloadService.findAllByMembers(
+    const group = await this.groupService.findByIdOrFail(user, groupRef);
+    let workloads = await this.workloadService.findAllByMembers(
       group.membersIds,
     );
     workloads = workloads.filter((w) => w.groupId === group.id);
@@ -825,14 +814,16 @@ export class TrainingService {
     );
 
     if (user.uid !== userId)
-      throw new UnauthorizedException('You can only finish your own workloads');
+      throw new UnauthorizedException(
+        'You are not allowed to perform this action',
+      );
 
     const workloads =
-      await this.workloadService.findAllByTrainingAndUserAndComponent(
-        ref.trainingId,
+      await this.workloadService.findAllByTrainingAndUserAndComponent({
+        trainingId: ref.trainingId,
         userId,
         componentId,
-      );
+      });
 
     const batch = this.firebaseService.firestore.batch();
     for (const workload of workloads) {
@@ -862,8 +853,8 @@ export class TrainingService {
         completedMembersIds: training.completedMembersIds,
       },
     );
-    batch.update(trainingDocRef, updateTrainingQuery);
 
+    batch.update(trainingDocRef, updateTrainingQuery);
     await batch.commit();
 
     return training;
@@ -882,11 +873,6 @@ export class TrainingService {
     const training = await this.findOneOrFail(user, ref);
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
-
-    input = input.map((c) => {
-      c.completedMembersIds = [];
-      return c;
-    });
 
     // validate components & exercises
     const components = await this.cacheManagerService.getComponents();
