@@ -9,6 +9,7 @@ import { useGroup } from '@/context/group-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
+import { TrainingService } from '@/controller/training/training.service';
 import { RotateRight } from '@mui/icons-material';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -104,7 +105,7 @@ export default function TrainerCycleView() {
         >
           <ExerciseChips
             components={ComponentService.toTree(
-              components.filter((c) => c.id !== 'warmup' && c.id !== 'cooldown')
+              TrainingService.excludeWarmupCooldown(components)
             )}
             selected={selectedComponents}
             bgColor={theme.palette.background.default}

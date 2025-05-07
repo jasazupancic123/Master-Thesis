@@ -26,6 +26,10 @@ import MyModal from '../modal';
 import { TrainingCardProps } from './props';
 import { handleCopyTraining } from './state';
 import TrainingComponentCard from './training-component';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 const commonService = CommonService.instance;
 
@@ -163,23 +167,15 @@ export default function TrainingCard(props: TrainingCardProps) {
       >
         {training && (
           <>
-            <TrainingComponentCard
-              key={'warmup'}
-              training={training}
-              trainingComponent={training.warmup}
-            />
-            {training.components.map((trainingComponent, i) => (
-              <TrainingComponentCard
-                key={i}
-                training={training}
-                trainingComponent={trainingComponent}
-              />
-            ))}
-            <TrainingComponentCard
-              key={'cooldown'}
-              training={training}
-              trainingComponent={training.cooldown}
-            />
+            {[training.warmup, ...training.components, training.cooldown].map(
+              (trainingComponent, i) => (
+                <TrainingComponentCard
+                  key={i}
+                  training={training}
+                  trainingComponent={trainingComponent}
+                />
+              )
+            )}
           </>
         )}
       </Box>

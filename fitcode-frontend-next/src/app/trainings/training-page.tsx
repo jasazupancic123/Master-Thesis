@@ -155,7 +155,11 @@ export default function TrainingPage(props: TrainingPageProps) {
                   {/* Components */}
                   <Stack spacing={3}>
                     <AthleteTrainingExerciseCard
-                      components={training.components}
+                      components={[
+                        training.warmup,
+                        ...training.components,
+                        training.cooldown,
+                      ]}
                       setView={setView}
                       training={training}
                       profile={profile}

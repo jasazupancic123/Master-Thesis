@@ -8,6 +8,10 @@ import { useEffect, useState } from 'react';
 import { TrainingWeekViewItemProps } from './type';
 import { useTheme } from '@mui/material';
 import TrainerWeekComponentItem from './training-week-component-item';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
   const { training, updateTraining } = props;
@@ -43,34 +47,25 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
           flexDirection: 'column',
         }}
       >
-        <TrainerWeekComponentItem
-          key={'warmup'}
-          component={training.warmup}
-          training={training}
-          setIsChanged={setIsChanged}
-          updatedComponents={updatedComponents}
-          setUpdatedComponents={setUpdatedComponents}
-          warmupOrCooldown="warmup"
-        />
-        {training.components.map((c) => (
-          <TrainerWeekComponentItem
-            key={c.id}
-            component={c}
-            training={training}
-            setIsChanged={setIsChanged}
-            updatedComponents={updatedComponents}
-            setUpdatedComponents={setUpdatedComponents}
-          />
-        ))}
-        <TrainerWeekComponentItem
-          key={'cooldown'}
-          component={training.cooldown}
-          training={training}
-          setIsChanged={setIsChanged}
-          updatedComponents={updatedComponents}
-          setUpdatedComponents={setUpdatedComponents}
-          warmupOrCooldown="cooldown"
-        />
+        {[training.warmup, ...training.components, training.cooldown].map(
+          (c) => (
+            <TrainerWeekComponentItem
+              key={c.id}
+              component={c}
+              training={training}
+              setIsChanged={setIsChanged}
+              updatedComponents={updatedComponents}
+              setUpdatedComponents={setUpdatedComponents}
+              warmupOrCooldown={
+                c.id === WARMUP_ID
+                  ? WARMUP_ID
+                  : c.id === COOLDOWN_ID
+                    ? COOLDOWN_ID
+                    : undefined
+              }
+            />
+          )
+        )}
       </Box>
       {isChanged && (
         <IconButton

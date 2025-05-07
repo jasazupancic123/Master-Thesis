@@ -20,6 +20,10 @@ import dayjs, { Dayjs } from 'dayjs';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { DEFAULT_SUBGROUP, NUM_MAX_SUPERSETS } from './constant';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export async function handleCopyTraining(
   token: string,
@@ -296,26 +300,15 @@ export async function handleAddSubgroup(state: {
 
   setComponent(newComponent);
 
-  if(component.id === 'warmup' || component.id === 'cooldown') {
-    updateWhenWarmupOrCooldown(
-      training,
-      component,
-      newComponent,
-      filteredTrainings,
-      setTraining,
-      setFilteredTrainings
-    );
-  }
-  else {
-    updateWhenComponent(
-      training,
-      component,
-      newComponent,
-      filteredTrainings,
-      setTraining,
-      setFilteredTrainings
-    );
-  }
+  updateGlobalStates(
+    training,
+    component,
+    newComponent,
+    filteredTrainings,
+    setTraining,
+    setFilteredTrainings,
+    component.id === WARMUP_ID || component.id === COOLDOWN_ID
+  );
 
   setCreateSubgroup?.({ name: '', membersIds: [] });
   setDetectedChanges(true);
@@ -458,25 +451,15 @@ export async function onDragEnd(
       });
       setComponent(updatedComponent);
 
-      if (component.id === 'warmup' || component.id === 'cooldown') {
-        updateWhenWarmupOrCooldown(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      } else {
-        updateWhenComponent(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      }
+      updateGlobalStates(
+        training,
+        component,
+        updatedComponent,
+        filteredTrainings,
+        setTraining,
+        setFilteredTrainings,
+        component.id === WARMUP_ID || component.id === COOLDOWN_ID
+      );
     } else {
       const updatedComponent = {
         ...component,
@@ -486,25 +469,16 @@ export async function onDragEnd(
       setDetectedChanges(true);
 
       setComponent(updatedComponent);
-      if (component.id === 'warmup' || component.id === 'cooldown') {
-        updateWhenWarmupOrCooldown(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      } else {
-        updateWhenComponent(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      }
+
+      updateGlobalStates(
+        training,
+        component,
+        updatedComponent,
+        filteredTrainings,
+        setTraining,
+        setFilteredTrainings,
+        component.id === WARMUP_ID || component.id === COOLDOWN_ID
+      );
     }
     return;
   }
@@ -558,25 +532,15 @@ export async function onDragEnd(
       });
       setComponent(updatedComponent);
 
-      if (component.id === 'warmup' || component.id === 'cooldown') {
-        updateWhenWarmupOrCooldown(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      } else {
-        updateWhenComponent(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      }
+      updateGlobalStates(
+        training,
+        component,
+        updatedComponent,
+        filteredTrainings,
+        setTraining,
+        setFilteredTrainings,
+        component.id === WARMUP_ID || component.id === COOLDOWN_ID
+      );
 
       setSupersetsWithAdd(
         supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
@@ -593,25 +557,15 @@ export async function onDragEnd(
 
       setComponent(updatedComponent);
 
-      if (component.id === 'warmup' || component.id === 'cooldown') {
-        updateWhenWarmupOrCooldown(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      } else {
-        updateWhenComponent(
-          training,
-          component,
-          updatedComponent,
-          filteredTrainings,
-          setTraining,
-          setFilteredTrainings
-        );
-      }
+      updateGlobalStates(
+        training,
+        component,
+        updatedComponent,
+        filteredTrainings,
+        setTraining,
+        setFilteredTrainings,
+        component.id === WARMUP_ID || component.id === COOLDOWN_ID
+      );
 
       setSupersetsWithAdd(
         supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
@@ -680,25 +634,15 @@ export async function onDragEnd(
 
     setComponent(updatedComponent);
 
-    if (component.id === 'warmup' || component.id === 'cooldown') {
-      updateWhenWarmupOrCooldown(
-        training,
-        component,
-        updatedComponent,
-        filteredTrainings,
-        setTraining,
-        setFilteredTrainings
-      );
-    } else {
-      updateWhenComponent(
-        training,
-        component,
-        updatedComponent,
-        filteredTrainings,
-        setTraining,
-        setFilteredTrainings
-      );
-    }
+    updateGlobalStates(
+      training,
+      component,
+      updatedComponent,
+      filteredTrainings,
+      setTraining,
+      setFilteredTrainings,
+      component.id === WARMUP_ID || component.id === COOLDOWN_ID
+    );
 
     setSelectedSubgroup({
       subgroup: updatedSubgroup,
@@ -711,25 +655,15 @@ export async function onDragEnd(
     };
     setComponent(updatedComponent);
 
-    if (component.id === 'warmup' || component.id === 'cooldown') {
-      updateWhenWarmupOrCooldown(
-        training,
-        component,
-        updatedComponent,
-        filteredTrainings,
-        setTraining,
-        setFilteredTrainings
-      );
-    } else {
-      updateWhenComponent(
-        training,
-        component,
-        updatedComponent,
-        filteredTrainings,
-        setTraining,
-        setFilteredTrainings
-      );
-    }
+    updateGlobalStates(
+      training,
+      component,
+      updatedComponent,
+      filteredTrainings,
+      setTraining,
+      setFilteredTrainings,
+      component.id === WARMUP_ID || component.id === COOLDOWN_ID
+    );
   }
   setDetectedChanges(true);
 }
@@ -957,51 +891,45 @@ export function handleDeleteSuperset(
   }
 }
 
-function updateWhenWarmupOrCooldown(
+function updateGlobalStates(
   training: Training,
   component: TrainingComponent,
   updatedComponent: TrainingComponent,
   filteredTrainings: Training[],
   setTraining: SetState<Training | undefined>,
-  setFilteredTrainings: SetState<Training[]>
+  setFilteredTrainings: SetState<Training[]>,
+  warmupOrCooldown: boolean
 ) {
-  let newTraining = { ...training };
-  if (component.id === 'warmup') newTraining.warmup = updatedComponent;
-  else newTraining.cooldown = updatedComponent;
+  if (warmupOrCooldown) {
+    let newTraining = { ...training };
+    if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
+    else newTraining.cooldown = updatedComponent;
 
-  setTraining(newTraining);
+    setTraining(newTraining);
 
-  const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
-    if (filteredTraining.id === training.id) {
-      return newTraining;
-    }
-    return filteredTraining;
-  });
+    const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
 
-  setFilteredTrainings(updatedTrainings);
-}
+    setFilteredTrainings(updatedTrainings);
+  } else {
+    const updatedComponents = [...training.components].map((c) =>
+      c.id === component.id ? updatedComponent : c
+    );
 
-function updateWhenComponent(
-  training: Training,
-  component: TrainingComponent,
-  updatedComponent: TrainingComponent,
-  filteredTrainings: Training[],
-  setTraining: SetState<Training | undefined>,
-  setFilteredTrainings: SetState<Training[]>
-) {
-  const updatedComponents = [...training.components].map((c) =>
-    c.id === component.id ? updatedComponent : c
-  );
+    const newTraining = { ...training, components: updatedComponents };
+    setTraining(newTraining);
 
-  const newTraining = { ...training, components: updatedComponents };
-  setTraining(newTraining);
+    const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
+      if (filteredTraining.id === training.id) {
+        return newTraining;
+      }
+      return filteredTraining;
+    });
 
-  const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
-    if (filteredTraining.id === training.id) {
-      return newTraining;
-    }
-    return filteredTraining;
-  });
-
-  setFilteredTrainings(updatedTrainings);
+    setFilteredTrainings(updatedTrainings);
+  }
 }
