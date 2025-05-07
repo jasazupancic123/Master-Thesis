@@ -26,7 +26,6 @@ export interface GroupIdPageProps {
   exercises: Exercise[];
   groups: Group[];
   trainings: Training[];
-  workloads: CompletedFutureWorkloads;
 }
 
 export type GroupContextProps = GroupIdPageProps & {
@@ -35,8 +34,6 @@ export type GroupContextProps = GroupIdPageProps & {
   setUsers: SetState<User[]>;
   group: Group;
   setGroup: SetState<Group>;
-  workloads: CompletedFutureWorkloads;
-  setWorkloads: SetState<CompletedFutureWorkloads>;
   cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
   dateFrom: Dayjs;

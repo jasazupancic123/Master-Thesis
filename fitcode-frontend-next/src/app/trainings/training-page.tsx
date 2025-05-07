@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { TrainingPageProps } from './type';
 import { useTheme } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
+import { all } from '@tensorflow/tfjs';
 
 const commonService = CommonService.instance;
 
@@ -27,10 +28,11 @@ export default function TrainingPage(props: TrainingPageProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { profile, token, trainings: allTrainings } = props;
+  const { profile, token, trainings: allTrainingsProps } = props;
   const { selectedDate } = useAthlete();
   const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
 
+  const [allTrainings, setAllTrainings] = useState([...allTrainingsProps]);
   const [trainings, setTrainings] = useState(() =>
     allTrainings.filter(({ from }) =>
       commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
@@ -38,7 +40,6 @@ export default function TrainingPage(props: TrainingPageProps) {
   );
 
   const { view, setView } = useTraining();
-  //const [statuses, setStatuses] = useState<TrainingStatus[]>([]);
 
   const {
     selectedTraining,
@@ -72,7 +73,17 @@ export default function TrainingPage(props: TrainingPageProps) {
   }, [selectedDate]);
 
   useEffect(() => {
-    console.log('trainings', trainings);
+    setAllTrainings((prev) => {
+      const newTrainings = prev.map((training) => {
+        trainings.map((t) => {
+          if (t.id === training.id) {
+            training = t;
+          }
+        });
+        return training;
+      });
+      return newTrainings;
+    });
   }, [trainings]);
 
   return view === 'exercises' ? (
@@ -173,7 +184,6 @@ export default function TrainingPage(props: TrainingPageProps) {
     )
   ) : (
     <TrainingInProgress
-      selectedTraining={selectedTraining!}
       selectedComponent={selectedComponent!}
       profile={profile}
       token={token}

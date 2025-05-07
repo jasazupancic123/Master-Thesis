@@ -31,15 +31,11 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     groups,
     group: providedGroup,
     trainings: allTrainings,
-    workloads: completedFutureWorkloads,
   } = props;
 
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
   const [group, setGroup] = useState<Group>(providedGroup);
-  const [workloads, setWorkloads] = useState<CompletedFutureWorkloads>(
-    completedFutureWorkloads
-  );
   //find the cycle which is in the current date, else undefined:
   const todaysCycle = group.cycles.find((c) =>
     dateService.isBetween(dayjs(), c.from, c.to)
@@ -79,8 +75,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setFilter,
     group,
     setGroup,
-    workloads,
-    setWorkloads,
     cycle,
     setCycle,
     dateFrom,

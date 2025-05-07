@@ -33,23 +33,15 @@ export default async function Page(props: GroupIdPageParams) {
 
   if ([UserRole.ATHLETE, UserRole.ADMIN].includes(role)) return notFound();
 
-  const [
-    users,
-    groups,
-    exercises,
-    attributes,
-    components,
-    trainings,
-    workloads,
-  ] = await Promise.all([
-    UserController.findAll(token),
-    GroupController.findAll(token),
-    ExerciseController.findAll(token),
-    AttributeController.findAll(),
-    ComponentController.findAll(),
-    TrainingController.findAll(token, { groupId }),
-    TrainingController.getUserWorkloadsByGroupId(token, groupId),
-  ]);
+  const [users, groups, exercises, attributes, components, trainings] =
+    await Promise.all([
+      UserController.findAll(token),
+      GroupController.findAll(token),
+      ExerciseController.findAll(token),
+      AttributeController.findAll(),
+      ComponentController.findAll(),
+      TrainingController.findAll(token, { groupId }),
+    ]);
 
   const mappedTrainings = trainings.map((t) =>
     TrainingService.mapComponents(
@@ -68,11 +60,7 @@ export default async function Page(props: GroupIdPageParams) {
     attributes,
     components,
     trainings: mappedTrainings,
-    workloads,
   };
-
-  console.log('mappedTrainings', mappedTrainings);
-  console.log('workloads', workloads);
 
   const mapper: Record<UserRole, ReactNode> = {
     [UserRole.ADMIN]: null,

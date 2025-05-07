@@ -72,8 +72,6 @@ export default function TrainerDayView() {
   async function handleUpdateMultipleTrainings() {
     if (!filteredTrainings || !filteredTrainings.length) return;
 
-    console.log('filteredTrainings', filteredTrainings);
-
     await handleApiRequest(
       router,
       () =>

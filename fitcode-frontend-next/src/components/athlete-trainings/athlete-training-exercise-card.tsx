@@ -27,8 +27,6 @@ export default function AthleteTrainingExerciseCard(
   const { components, setView, training, profile } = props;
   const screenSize = useScreenSize();
 
-  console.log('components', components);
-
   const {
     selectedTraining,
     setSelectedTraining,
