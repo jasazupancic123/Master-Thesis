@@ -4,17 +4,12 @@ import {
   Select,
   MenuItem,
   TextField,
-  useTheme,
 } from '@mui/material';
 import { disableBorder, exerciseCardSetAttributeSx } from '../style';
 import { SetState } from '@/common/type/state.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { useState } from 'react';
-import { Redo } from '@mui/icons-material';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { TrainingExercise } from '@/controller/training/type/training-plan.type';
-import { set } from 'date-fns';
 
 interface Props {
   param: Attribute;

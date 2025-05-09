@@ -133,6 +133,7 @@ export class ExerciseService {
       const component = components.find(
         (c) => c.id === exercise.componentIds[0],
       )!;
+
       const root = this.componentService.getRoot(component, components);
       const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
@@ -144,6 +145,7 @@ export class ExerciseService {
 
       exercise.defaultParams =
         this.trainingPlanService.getParamAttributes(params);
+
       return exercise;
     });
 
@@ -541,6 +543,7 @@ export class ExerciseService {
     const updateExerciseQuery = this.firebaseService.buildUpdateQuery<Exercise>(
       { ...input, updatedAt: new Date() },
     );
+
     batch.update(docRef, updateExerciseQuery);
 
     attributeValues.forEach((v) => {

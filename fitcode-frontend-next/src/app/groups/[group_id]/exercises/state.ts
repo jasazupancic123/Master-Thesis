@@ -9,8 +9,17 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import toast from 'react-hot-toast';
 import { DEFAULT_EXERCISE } from './exercises-page';
 import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
+import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 
 const commonService = CommonService.instance;
+
+function getBeforeLastColon(str: string) {
+  const lastColonIndex = str.lastIndexOf(':');
+  return lastColonIndex === -1 ? str : str.slice(0, lastColonIndex);
+}
+
+const getAfterLastColon = (str: string) => str.replace(/.*:(.*)/, '$1') || str;
 
 export function handlePaginateExercises(
   filter: { componentsIds?: string[]; name?: string },
@@ -60,6 +69,7 @@ export async function handleAddExercise(
   state: {
     router: AppRouterInstance;
     components: Component[];
+    attributes: Attribute[];
     component?: Component;
     filteredExercises: Exercise[];
     setFilteredExercises: SetState<Exercise[]>;
@@ -76,6 +86,7 @@ export async function handleAddExercise(
   const {
     router,
     components,
+    attributes,
     component,
     filteredExercises,
     setFilteredExercises,
@@ -84,23 +95,54 @@ export async function handleAddExercise(
     setModal,
   } = state;
 
-  //name
   if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
 
-  const attributeValues = [] as ExerciseAttributeValue[];
-  for (const key in input.valuesObject) {
-    const attributeValue: Partial<ExerciseAttributeValue> = {
-      field: key,
-      selected: input.valuesObject[key],
-      value: input.valuesObject[key],
-      componentIds: input.componentIds || [],
-    };
-    attributeValues.push(attributeValue as ExerciseAttributeValue);
+  // find all nested select attributes and convert them to a multi-level object
+  const attributeValues: ExerciseAttributeValue[] = [];
+  const nestedSelectAttributes = attributes
+    .filter(
+      (attribute) =>
+        [AttributeType.Select, AttributeType.Multiselect].includes(
+          attribute.type
+        ) &&
+        [AttributeType.Select, AttributeType.Multiselect].includes(
+          attribute.options?.[0]?.type || AttributeType.Value
+        )
+    )
+    .map((attribute) => attribute.field);
+
+  for (const key of nestedSelectAttributes) {
+    const nested = ExerciseService.parseAttributeValue(
+      input.valuesObject || {},
+      key
+    );
+
+    if (nested[key])
+      attributeValues.push({
+        field: key,
+        selected: getBeforeLastColon(nested[key]),
+        value: getAfterLastColon(nested[key]),
+        componentIds: input.componentIds || [],
+      } as ExerciseAttributeValue);
   }
-  input.attributeValues = attributeValues;
-  delete input.valuesObject;
+
+  // add all other attributes
+  const otherAttributes = attributes.filter(
+    (attribute) => !nestedSelectAttributes.includes(attribute.field)
+  );
+
+  for (const attribute of otherAttributes) {
+    const valueWithColons = input.valuesObject?.[attribute.field];
+    if (valueWithColons)
+      attributeValues.push({
+        field: attribute.field,
+        selected: getBeforeLastColon(valueWithColons),
+        value: getAfterLastColon(valueWithColons),
+        componentIds: input.componentIds || [],
+      } as ExerciseAttributeValue);
+  }
 
   handleApiRequest(
     router,
@@ -111,10 +153,11 @@ export async function handleAddExercise(
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction,
-        attributeValues: input.attributeValues as Record<string, any>,
+        attributeValues: attributeValues,
       }),
     (exercise) => {
       const id = exercise.id;
+
       const rootComponents = exercise.componentIds!.map((cId) => {
         const component = components.find((c) => c.id === cId)!;
         return commonService.tree.getRoot(component, components);
@@ -146,6 +189,7 @@ export async function handleUpdateExercise(
   state: {
     router: AppRouterInstance;
     components: Component[];
+    attributes: Attribute[];
     setFilteredExercises: SetState<Exercise[]>;
     setExercises: SetState<Exercise[]>;
     setExercise: SetState<Partial<Exercise>>;
@@ -160,6 +204,7 @@ export async function handleUpdateExercise(
   const {
     router,
     components,
+    attributes,
     setFilteredExercises,
     setExercises,
     setExercise,
@@ -167,23 +212,53 @@ export async function handleUpdateExercise(
   } = state;
 
   if (!input.name) return toast.error('Name is required');
-
-  if (!input.name) return toast.error('Name is required');
   if (!input.componentIds?.length)
     return toast.error('Select at least one component to add');
 
-  const attributeValues = [] as ExerciseAttributeValue[];
-  for (const key in input.valuesObject) {
-    const attributeValue: Partial<ExerciseAttributeValue> = {
-      field: key,
-      selected: input.valuesObject[key],
-      value: input.valuesObject[key],
-      componentIds: input.componentIds || [],
-    };
-    attributeValues.push(attributeValue as ExerciseAttributeValue);
+  // find all nested select attributes and convert them to a multi-level object
+  const attributeValues: ExerciseAttributeValue[] = [];
+  const nestedSelectAttributes = attributes
+    .filter(
+      (attribute) =>
+        [AttributeType.Select, AttributeType.Multiselect].includes(
+          attribute.type
+        ) &&
+        [AttributeType.Select, AttributeType.Multiselect].includes(
+          attribute.options?.[0]?.type || AttributeType.Value
+        )
+    )
+    .map((attribute) => attribute.field);
+
+  for (const key of nestedSelectAttributes) {
+    const nested = ExerciseService.parseAttributeValue(
+      input.valuesObject || {},
+      key
+    );
+
+    if (nested[key])
+      attributeValues.push({
+        field: key,
+        selected: getBeforeLastColon(nested[key]),
+        value: getAfterLastColon(nested[key]),
+        componentIds: input.componentIds || [],
+      } as ExerciseAttributeValue);
   }
-  input.attributeValues = attributeValues;
-  delete input.valuesObject;
+
+  // add all other attributes
+  const otherAttributes = attributes.filter(
+    (attribute) => !nestedSelectAttributes.includes(attribute.field)
+  );
+
+  for (const attribute of otherAttributes) {
+    const valueWithColons = input.valuesObject?.[attribute.field];
+    if (valueWithColons)
+      attributeValues.push({
+        field: attribute.field,
+        selected: getBeforeLastColon(valueWithColons),
+        value: getAfterLastColon(valueWithColons),
+        componentIds: input.componentIds || [],
+      } as ExerciseAttributeValue);
+  }
 
   handleApiRequest(
     router,

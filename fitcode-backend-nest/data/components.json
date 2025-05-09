@@ -7,7 +7,9 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [
+            { "field": "set", "defaultValue": 3 }
+          ]
         },
         {
           "field": "vol1",
@@ -38,16 +40,20 @@
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [
+            { "field": "time", "defaultValue": "60" }
+          ]
         }
       ],
       "equipment:!": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [
+            { "field": "set", "defaultValue": 3 }
+          ]
         },
-        {
+        { 
           "field": "vol1",
           "defaultValue": "rep",
           "options": [
@@ -67,7 +73,9 @@
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [
+            { "field": "time", "defaultValue": "60" }
+          ]
         }
       ]
     },
@@ -234,9 +242,11 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [
+            { "field": "set", "defaultValue": 3 }
+          ]
         },
-        {
+        { 
           "field": "vol1",
           "defaultValue": "dist",
           "options": [
@@ -248,12 +258,16 @@
         {
           "field": "int1",
           "defaultValue": "eff",
-          "options": [{ "field": "eff", "defaultValue": "mod" }]
+          "options": [
+            { "field": "eff", "defaultValue": "mod" }
+          ]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [
+            { "field": "time", "defaultValue": "60" }
+          ]
         }
       ]
     },
@@ -470,7 +484,7 @@
     "slug": "endurance",
     "params": {
       "default": [
-        {
+        { 
           "field": "vol1",
           "defaultValue": "time",
           "options": [
@@ -492,9 +506,11 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [
+            { "field": "set", "defaultValue": 3 }
+          ]
         },
-        {
+        { 
           "field": "vol1",
           "defaultValue": "time",
           "options": [
@@ -533,9 +549,11 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [
+            { "field": "set", "defaultValue": 3 }
+          ]
         },
-        {
+        { 
           "field": "vol1",
           "defaultValue": "time",
           "options": [
@@ -543,7 +561,7 @@
             { "field": "dist", "defaultValue": "50" }
           ]
         },
-        {
+        { 
           "field": "vol2",
           "defaultValue": "time",
           "options": [
@@ -591,14 +609,18 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [{ "field": "set", "defaultValue": 3 }]
+          "options": [
+            { "field": "set", "defaultValue": 3 }
+          ]
         },
-        {
+        { 
           "field": "vol1",
           "defaultValue": "rep",
-          "options": [{ "field": "rep", "defaultValue": "12" }]
+          "options": [
+            { "field": "rep", "defaultValue": "12" }
+          ]
         },
-        {
+        { 
           "field": "vol2",
           "defaultValue": "time",
           "options": [
@@ -638,25 +660,45 @@
       {
         "name": "Aerobic Capacity",
         "slug": "aerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": [
+          "pattern",
+          "coeff",
+          "method",
+          "sportTask"
+        ],
         "children": []
       },
       {
         "name": "Aerobic Power",
         "slug": "aerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": [
+          "pattern",
+          "coeff",
+          "method",
+          "sportTask"
+        ],
         "children": []
       },
       {
         "name": "Anaerobic Capacity",
         "slug": "anaerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": [
+          "pattern",
+          "coeff",
+          "method",
+          "sportTask"
+        ],
         "children": []
       },
       {
         "name": "Anaerobic Power",
         "slug": "anaerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": [
+          "pattern",
+          "coeff",
+          "method",
+          "sportTask"
+        ],
         "children": []
       }
     ]
@@ -719,7 +761,7 @@
     "slug": "rom",
     "params": {
       "default": [
-        {
+        { 
           "field": "vol",
           "defaultValue": "rep",
           "options": [
@@ -730,7 +772,9 @@
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [{ "field": "time", "defaultValue": "60" }]
+          "options": [
+            { "field": "time", "defaultValue": "60" }
+          ]
         }
       ]
     },
