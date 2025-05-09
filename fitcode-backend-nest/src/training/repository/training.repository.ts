@@ -62,6 +62,7 @@ export class TrainingRepository
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
         wellness: input.wellness || [],
+        completedMembersIds: input.completedMembersIds || [],
         warmup: {
           id: WARMUP_COMPONENT_ID,
           color: input.warmup.color || null,
@@ -69,6 +70,7 @@ export class TrainingRepository
           to: input.warmup.to,
           supersets: [{ color: null, exercises: [] }],
           subgroups: [],
+          completedMembersIds: [],
         },
         cooldown: {
           id: COOLDOWN_COMPONENT_ID,
@@ -77,6 +79,7 @@ export class TrainingRepository
           to: input.cooldown.to,
           supersets: [{ color: null, exercises: [] }],
           subgroups: [],
+          completedMembersIds: [],
         },
         components: input.components.map((c, i) => ({
           id: c.id,
@@ -85,6 +88,7 @@ export class TrainingRepository
           to: c.to ? c.to : endOfHour(addHours(new Date(), i + 1)),
           supersets: [{ color: null, exercises: [] }],
           subgroups: [],
+          completedMembersIds: [],
         })),
       },
       { timestamps: true },
@@ -102,6 +106,7 @@ export class TrainingRepository
         from: c.from,
         to: c.to,
         color: c.color,
+        completedMembersIds: c.completedMembersIds,
         subgroups: c.subgroups.map((s) => ({
           id: s.id,
           name: s.name,

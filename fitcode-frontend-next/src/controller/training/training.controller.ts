@@ -3,6 +3,7 @@ import { DateRange } from '@/common/type/date-range.type';
 import { TrainingComponent } from './type/training-plan.type';
 import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
+import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 
 const api = CommonService.instance.api;
 
@@ -17,12 +18,28 @@ export class TrainingController {
     return api.get<Training[]>('/training', { token, query });
   }
 
+  static async getUserWorkloadsByGroupIdAndExerciseIds(
+    token: string,
+    groupId: string,
+    exerciseIds: string[],
+    userId?: string
+  ) {
+    return api.post<CompletedFutureWorkloads>(
+      `/training/${groupId}/workloads`,
+      { exerciseIds, athleteId: userId },
+      {
+        token,
+      }
+    );
+  }
+
   static async create(
     token: string,
     body: {
       groupId: string;
       cycleId: string;
       components: TrainingComponent[];
+      completedMembersIds: string[];
     }
   ) {
     return api.post<Training>('/training', body, { token });
@@ -31,7 +48,13 @@ export class TrainingController {
   static async update(
     token: string,
     trainingId: string,
-    body: Partial<DateRange & { components: TrainingComponent[], warmup: TrainingComponent, cooldown: TrainingComponent }>
+    body: Partial<
+      DateRange & {
+        components: TrainingComponent[];
+        warmup: TrainingComponent;
+        cooldown: TrainingComponent;
+      }
+    >
   ) {
     return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }
@@ -94,6 +117,21 @@ export class TrainingController {
     return api.get<TrainingStatus[]>(`/training/${trainingId}/status`, {
       token,
     });
+  }
+
+  static async finishComponent(
+    token: string,
+    trainingId: string,
+    userId: string,
+    componentId: string
+  ): Promise<Training> {
+    return api.patch<Training>(
+      `/training/${trainingId}/finish/component`,
+      { userId, componentId },
+      {
+        token,
+      }
+    );
   }
 
   static async updateWorkloads(
