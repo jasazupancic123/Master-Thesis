@@ -31,17 +31,26 @@ export class TrainingController {
   static async update(
     token: string,
     trainingId: string,
-    body: Partial<DateRange & { components: TrainingComponent[] }>
+    body: Partial<DateRange & { components: TrainingComponent[], warmup: TrainingComponent, cooldown: TrainingComponent }>
   ) {
     return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }
 
-  static async updateMultiple(
+  static async batchUpdate(
     token: string,
-    trainingId: string,
-    body: Partial<DateRange & { id: string, components: TrainingComponent[] }>[]
+    params: { groupId: string; cycleId: string },
+    body: {
+      id: string;
+      components: TrainingComponent[];
+      membersIds: string[];
+    }[]
   ) {
-    return api.patch<Training[]>(`/training/${trainingId}/multiple`, body, { token });
+    const { groupId, cycleId } = params;
+    return api.patch<Training[]>(
+      `/training/batch/${groupId}/${cycleId}`,
+      { trainings: body },
+      { token }
+    );
   }
 
   static async copy(
@@ -55,27 +64,26 @@ export class TrainingController {
   static async copyComponent(
     token: string,
     trainingId: string,
-    body: {trainingComponent: TrainingComponent, copiedFromTrainingId: string, overwrite?: boolean},
+    body: {
+      trainingComponent: TrainingComponent;
+      copiedFromTrainingId: string;
+      overwrite?: boolean;
+    }
   ) {
-    return api.patch<Training>(
-      `/training/${trainingId}/component/copy`,
-      body,
-      { token }
-    );
+    return api.patch<Training>(`/training/${trainingId}/component/copy`, body, {
+      token,
+    });
   }
 
   static async createWithTrainingComponent(
     token: string,
     trainingId: string,
-    body: { trainingComponent: TrainingComponent, date: DateRange }
+    body: { trainingComponent: TrainingComponent; date: DateRange }
   ) {
-    return api.post<Training>(
-      `/training/${trainingId}/withComponent`,
-      body,
-      { token }
-    );
+    return api.post<Training>(`/training/${trainingId}/withComponent`, body, {
+      token,
+    });
   }
-
 
   static async delete(token: string, trainingId: string) {
     await api.delete<{}>(`/training/${trainingId}`, { token });

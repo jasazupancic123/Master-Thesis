@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
-import { Attribute } from 'src/attribute/entity/attribute.entity';
+import { Attribute } from '../../attribute/entity/attribute.entity';
 
 export class Exercise extends BaseEntity {
   @IsString()
@@ -17,7 +17,7 @@ export class Exercise extends BaseEntity {
   @ApiProperty()
   name: string;
 
-  @IsString({each: true})
+  @IsString({ each: true })
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
