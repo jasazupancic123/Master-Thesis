@@ -48,14 +48,16 @@ export class TrainingController {
     });
   }
 
-  @Get(':groupId/workloads')
+  @Post(':groupId/workloads')
   @Auth()
-  async getUserWorkloadsByGroupId(
+  async getUserWorkloadsByGroupIdAndExerciseIds(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
+    @Body() body: {exerciseIds: string[], athleteId?: string},
   ) {
-    return await this.trainingService.getUserWorkloadsByGroupId(user, {
+    return await this.trainingService.getUserWorkloadsByGroupIdAndExerciseIds(user, {
       groupId,
+      body,
     });
   }
 

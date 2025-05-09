@@ -141,11 +141,13 @@ export class TrainingService {
     return trainings;
   }
 
-  async getUserWorkloadsByGroupId(
+  async getUserWorkloadsByGroupIdAndExerciseIds(
     user: User,
-    input: { groupId: string },
+    input: { groupId: string; body: {exerciseIds: string[], athleteId?: string}},
   ): Promise<{ completedWorkloads: Workload[]; futureWorkloads: Workload[] }> {
-    const { groupId } = input;
+    const { groupId, body } = input;
+    const { exerciseIds, athleteId } = body;
+
     this.logger.log(
       `User ${user.uid} is getting workloads for group ${groupId}`,
     );
@@ -153,18 +155,35 @@ export class TrainingService {
     const groupRef = { groupId };
 
     const group = await this.groupService.findByIdOrFail(user, groupRef);
-    let workloads = await this.workloadService.findAllByMembers(
-      group.membersIds,
-    );
-    workloads = workloads.filter((w) => w.groupId === group.id);
+    let workloads = [];
+    if(athleteId){
+      workloads = await this.workloadService.findAllByAthleteGroupExerciseIds(
+        athleteId,
+        groupId,
+        exerciseIds,
+      );
+    }
+    else {
+      workloads = await this.workloadService.findAllByMembersGroupExerciseIds(
+        group.membersIds,
+        groupId,
+        exerciseIds,
+      );
+    }
 
+    const { completedWorkloads, futureWorkloads } = this.getCompletedAndFutureWorkloads(workloads);
+
+    return { completedWorkloads, futureWorkloads };
+  }
+
+  private getCompletedAndFutureWorkloads(workloads: Workload[]){
     const completedWorkloads = workloads.filter(
       (w) => w.status !== SetStatus.NOT_STARTED,
     );
     const futureWorkloads = workloads.filter(
       (w) => w.status === SetStatus.NOT_STARTED,
     );
-
+  
     return { completedWorkloads, futureWorkloads };
   }
 

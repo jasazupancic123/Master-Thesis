@@ -10,6 +10,7 @@ import { ChildrenProps } from '@/common/type/props.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+import { Workload } from '@/controller/training/type/workload.type';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -50,6 +51,10 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
+  const [workloads, setWorkloads] = useState<CompletedFutureWorkloads>({
+    futureWorkloads: [],
+    completedWorkloads: [],
+  });
 
   // filter trainings every time date changes
   useEffect(() => {
@@ -87,6 +92,8 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setFilteredTrainings,
     filteredUsers,
     setFilteredUsers,
+    workloads,
+    setWorkloads,
     detectedChanges,
     setDetectedChanges,
   };

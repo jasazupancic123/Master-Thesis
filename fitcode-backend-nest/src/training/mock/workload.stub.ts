@@ -11,6 +11,7 @@ export function generateWorkloadStub(data?: Partial<Workload>): Workload {
     componentId: data?.componentId,
     exerciseId: data?.exerciseId,
     setNumber: data?.setNumber || 1,
+    plannedAt: data?.plannedAt || new Date(),
     status: data?.status || SetStatus.NOT_STARTED,
     notes: data?.notes || null,
     createdAt: new Date(),

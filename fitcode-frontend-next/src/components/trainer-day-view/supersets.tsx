@@ -61,7 +61,6 @@ export default function Supersets(props: SupersetsProps) {
     setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
-    selectedAthlete,
     setSearch,
   } = useTrainerDayViewContext();
 
@@ -122,10 +121,6 @@ export default function Supersets(props: SupersetsProps) {
   }, [supersetsWithAdd]);
 
   useEffect(() => {
-    if (!selectedAthlete) setSelectedExercise(null);
-  }, [selectedAthlete]);
-
-  useEffect(() => {
     if (selectedSubgroup?.subgroup?.supersets) {
       setSupersetsWithAdd(selectedSubgroup.subgroup.supersets);
     } else {
@@ -133,6 +128,8 @@ export default function Supersets(props: SupersetsProps) {
       else if (component.supersets) setSupersetsWithAdd(component.supersets);
     }
   }, [component, selectedSubgroup]);
+
+  useEffect(() => {}, [selectedExercise]);
 
   if (!component || !training) return null;
 
@@ -164,7 +161,6 @@ export default function Supersets(props: SupersetsProps) {
                 xs: 12,
                 sm:
                   selectedExercise &&
-                  selectedAthlete &&
                   superset.exercises.some((e) => e.id === selectedExercise.id)
                     ? 12
                     : screenSize.isLandscapeMobile
@@ -172,7 +168,6 @@ export default function Supersets(props: SupersetsProps) {
                       : 6,
                 md:
                   selectedExercise &&
-                  selectedAthlete &&
                   superset.exercises.some((e) => e.id === selectedExercise.id)
                     ? screenSize.isLandscapeMobile
                       ? 4
@@ -269,10 +264,7 @@ export default function Supersets(props: SupersetsProps) {
                               draggableId={exercise.id.toString()}
                               index={k}
                               isDragDisabled={
-                                !!(
-                                  selectedAthlete &&
-                                  selectedExercise === exercise
-                                )
+                                !!(selectedExercise?.id === exercise.id)
                               } // Disable dragging
                             >
                               {(provided, snapshot) => (
@@ -285,8 +277,7 @@ export default function Supersets(props: SupersetsProps) {
                                   p={1}
                                   px={screenSize.isLaptop ? 0.5 : 0}
                                   py={
-                                    selectedAthlete &&
-                                    selectedExercise === exercise
+                                    selectedExercise?.id === exercise.id
                                       ? 0
                                       : undefined
                                   }
@@ -307,9 +298,7 @@ export default function Supersets(props: SupersetsProps) {
                                     display="flex"
                                     flexDirection="column"
                                     onClick={() => {
-                                      if (selectedAthlete) {
-                                        setSelectedExercise(exercise);
-                                      }
+                                      setSelectedExercise(exercise);
                                     }}
                                     sx={{
                                       cursor: 'pointer',
@@ -323,7 +312,6 @@ export default function Supersets(props: SupersetsProps) {
                                       {`${i + 1}${String.fromCharCode(65 + k)}`}
                                     </Typography>
                                   </Box>
-
                                   <Box
                                     position="absolute"
                                     top={5}
@@ -331,8 +319,7 @@ export default function Supersets(props: SupersetsProps) {
                                       screenSize.isLandscapeMobile ? 0 : 10
                                     }
                                     display={
-                                      selectedAthlete &&
-                                      exercise === selectedExercise
+                                      selectedExercise?.id === exercise.id
                                         ? 'none'
                                         : 'flex'
                                     }
@@ -493,7 +480,6 @@ export default function Supersets(props: SupersetsProps) {
                                       )}
                                     </Menu>
                                   </Box>
-
                                   <TrainingExerciseCardContainer
                                     supersetIndex={i}
                                     exercise={exercise}
