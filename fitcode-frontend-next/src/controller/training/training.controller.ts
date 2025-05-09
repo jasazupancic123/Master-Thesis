@@ -18,10 +18,19 @@ export class TrainingController {
     return api.get<Training[]>('/training', { token, query });
   }
 
-  static async getUserWorkloadsByGroupId(token: string, groupId: string) {
-    return api.get<CompletedFutureWorkloads>(`/training/${groupId}/workloads`, {
-      token,
-    });
+  static async getUserWorkloadsByGroupIdAndExerciseIds(
+    token: string,
+    groupId: string,
+    exerciseIds: string[],
+    userId?: string
+  ) {
+    return api.post<CompletedFutureWorkloads>(
+      `/training/${groupId}/workloads`,
+      { exerciseIds, athleteId: userId },
+      {
+        token,
+      }
+    );
   }
 
   static async create(

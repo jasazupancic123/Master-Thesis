@@ -97,6 +97,39 @@ export class UserWorkloadService {
       );
   }
 
+  async findAllByMembersGroupExerciseIds(membersIds: string[], groupId: string, exerciseIds: string[]): Promise<Workload[]> {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', 'in', membersIds)
+      .where('groupId', '==', groupId)
+      .where('exerciseId', 'in', exerciseIds)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+  }
+
+  
+  async findAllByAthleteGroupExerciseIds(athleteId: string, groupId: string, exerciseIds: string[]): Promise<Workload[]> {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', '==', athleteId)
+      .where('groupId', '==', groupId)
+      .where('exerciseId', 'in', exerciseIds)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+  }
+
   getTrainingStatus(ref: TrainingComponentRef, workloads: Workload[]) {
     const users: Record<string, any> = {};
 
@@ -184,6 +217,7 @@ export class UserWorkloadService {
             exerciseId: exercise.id,
             setNumber,
             status: SetStatus.NOT_STARTED,
+            plannedAt: training.from,
             notes: null,
             ...this.parseParamValues(paramValues),
             ...this.calculateIntValues(paramValues, bodyweight, workloads),

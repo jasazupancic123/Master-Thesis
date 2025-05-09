@@ -46,6 +46,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilteredTrainings: SetState<Training[]>; // filter by from & to & cycle
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
+  workloads: CompletedFutureWorkloads;  
+  setWorkloads: SetState<CompletedFutureWorkloads>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
 };

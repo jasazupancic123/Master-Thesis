@@ -9,21 +9,20 @@ import {
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import TrainingExerciseCard from './training-exercise-card';
-
-const data = [
-  { name: 'A', intensity: 50, volume: 80 },
-  { name: 'B', intensity: 70, volume: 60 },
-  { name: 'C', intensity: 40, volume: 90 },
-  { name: 'D', intensity: 90, volume: 40 },
-  { name: 'E', intensity: 60, volume: 70 },
-  { name: 'F', intensity: 80, volume: 50 },
-  { name: 'G', intensity: 55, volume: 85 },
-  { name: 'H', intensity: 75, volume: 65 },
-  { name: 'I', intensity: 45, volume: 95 },
-  { name: 'J', intensity: 85, volume: 45 },
-];
+import { useGroup } from '@/context/group-provider';
+import { Workload } from '@/controller/training/type/workload.type';
+import { isBefore } from 'date-fns';
+import { ChartData } from '@/controller/training/type/chart-data.type';
+import { useTheme } from '@mui/material/styles';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -41,6 +40,7 @@ export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
   const screenSize = useScreenSize();
+  const theme = useTheme();
   const {
     supersetIndex,
     exercise,
@@ -52,14 +52,165 @@ export default function TrainingExerciseCardContainer(
     setSupersetsWithAdd,
   } = props;
 
-  const { selectedAthlete } = useTrainerDayViewContext();
+  const { training, selectedAthlete } = useTrainerDayViewContext();
+  const { workloads } = useGroup();
+  const [data, setData] = useState<ChartData[]>([]);
+  const [percentageForChartBackground, setPercentageForChartBackground] =
+    useState<number>(0);
+  const [paddingForChartBackground, setPaddingForChartBackground] =
+    useState<number>(0);
 
-  const [range, setRange] = useState<number[]>([1, 10]); // Example range
+  const [range, setRange] = useState<number[]>([1, 6]); // Example range
+  const [max, setMax] = useState<number>(10);
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setRange(newValue as number[]);
   };
 
-  return selectedAthlete && exercise === selectedExercise ? (
+  const groupByTrainingId = (
+    workloads: Workload[],
+    skipIfAlreadyInOther: boolean = false,
+    otherWorkloads: {
+      [key: string]: Workload[];
+    } = {}
+  ) => {
+    return workloads.reduce((acc: { [key: string]: Workload[] }, workload) => {
+      // skip if already in completed workloads
+      if (skipIfAlreadyInOther && otherWorkloads[workload.trainingId])
+        return acc;
+      if (!acc[workload.trainingId]) {
+        acc[workload.trainingId] = [];
+      }
+      acc[workload.trainingId].push(workload);
+      return acc;
+    }, {});
+  };
+
+  useEffect(() => {
+    if (exercise.id !== selectedExercise?.id || !training) return;
+
+    let completedWorkloadsFiltered = workloads.completedWorkloads
+      .filter((workload) => workload.exerciseId === exercise.id)
+      .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
+
+    const futureWorkloadsFiltered = workloads.futureWorkloads
+      .filter((workload) => workload.exerciseId === exercise.id)
+      .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
+
+    let groupedCompletedWorkloads = groupByTrainingId(
+      completedWorkloadsFiltered
+    );
+
+    let groupedFutureWorkloads = groupByTrainingId(
+      futureWorkloadsFiltered,
+      true,
+      groupedCompletedWorkloads
+    );
+
+    const numOfCompletedWorkloads = Object.keys(
+      groupedCompletedWorkloads
+    ).length;
+    const numOfFutureWorkloads = Object.keys(groupedFutureWorkloads).length;
+    const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
+
+    const newData = [];
+    let i = 0;
+    for (const workloads of [
+      groupedCompletedWorkloads,
+      groupedFutureWorkloads,
+    ]) {
+      for (const completedWorkload of Object.values(workloads)) {
+        const validIntensityValues = completedWorkload
+          .map((w) => w.prescribedIntWork1Value)
+          .filter((v) => v !== undefined);
+
+        const validVolumeValues = completedWorkload
+          .map((w) => w.prescribedVolWork1Value)
+          .filter((v) => v !== undefined);
+
+        const avgIntensity =
+          validIntensityValues.reduce((acc, val) => acc + val, 0) /
+          validIntensityValues.length;
+
+        const avgVolume =
+          validVolumeValues.reduce((acc, val) => acc + val, 0) /
+          validVolumeValues.length;
+
+        const date = new Date(completedWorkload[0].plannedAt);
+
+        const day = date.getDate().toString().padStart(2, '0');
+        let month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
+        if (month[0] === '0') month = month.slice(1);
+
+        let hours = date.getHours();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+
+        // Final format: "DD MM, AM/PM"
+        const formatted = `${day}.${month}. ${ampm}`;
+
+        newData.push({
+          name: formatted,
+          intensity: Math.round(avgIntensity * 100) / 100,
+          volume: Math.round(avgVolume * 100) / 100,
+          completed: groupedCompletedWorkloads === workloads,
+        });
+        i++;
+      }
+      i = 0;
+    }
+
+    setData(newData);
+    setMax(numOfTotalWorkloads);
+    setRange([1, numOfTotalWorkloads]);
+  }, [selectedExercise, workloads]);
+
+  useEffect(() => {
+    // Set the percentage for the chart background (completed vs future) based on the range
+    if (exercise.id !== selectedExercise?.id) return;
+
+    const newDataInRange = data.slice(range[0] - 1, range[1]);
+    const numberOfCompletedWorkloads = newDataInRange.filter(
+      (workload) => workload.completed
+    ).length;
+    const numberOfTotalWorkloads = newDataInRange.length;
+
+    let percentage;
+    if (newDataInRange.length === 1) {
+      percentage = newDataInRange[0].completed ? 100 : 0;
+    } else {
+      percentage = Math.round(
+        (numberOfCompletedWorkloads / (numberOfTotalWorkloads - 1)) * 100
+      );
+    }
+    setPercentageForChartBackground(percentage);
+  }, [range]);
+
+  useEffect(() => {
+    // Sets the padding for the chart background based on the percentage
+    const observer = new MutationObserver(() => {
+      const graphDotsElement = document.querySelector('.recharts-line-dots');
+      const rechartsSurfaceElement =
+        document.querySelector('.recharts-surface');
+      if (graphDotsElement && rechartsSurfaceElement) {
+        const parentRect = rechartsSurfaceElement.getBoundingClientRect();
+        const childRect = graphDotsElement.getBoundingClientRect();
+
+        const distanceFromLeft = childRect.left - parentRect.left;
+        const percentage = (distanceFromLeft / parentRect.width) * 100;
+
+        setPaddingForChartBackground(percentage);
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => observer.disconnect();
+  }, [window.innerWidth]);
+
+  return exercise.id === selectedExercise?.id ? (
     <Grid2
       container
       width="100%"
@@ -96,28 +247,34 @@ export default function TrainingExerciseCardContainer(
           alignItems="center"
           flexDirection="column"
         >
-          <Typography variant="subtitle1" sx={{ color: 'rgb(108, 121, 134)' }}>
-            <i>
-              {selectedAthlete.displayName?.split(' ')[0] || ''}{' '}
-              {selectedAthlete.displayName
-                ?.split(' ')
-                .slice(1)
-                .map((name) => name.toUpperCase())
-                .join(' ') || ''}
-            </i>
-          </Typography>
+          {selectedAthlete && (
+            <Typography
+              variant="subtitle1"
+              sx={{ color: 'rgb(108, 121, 134)' }}
+            >
+              <i>
+                {selectedAthlete.displayName?.split(' ')[0] || ''}{' '}
+                {selectedAthlete.displayName
+                  ?.split(' ')
+                  .slice(1)
+                  .map((name) => name.toUpperCase())
+                  .join(' ') || ''}
+              </i>
+            </Typography>
+          )}
           <Box
             width="100%"
             display="flex"
             flexDirection="column"
             alignItems="center"
+            zIndex={1}
           >
             <Slider
               value={range}
               onChange={handleChange}
               valueLabelDisplay="off"
               min={1}
-              max={10}
+              max={max}
               step={1}
               sx={{
                 width: '80%',
@@ -139,84 +296,18 @@ export default function TrainingExerciseCardContainer(
               }}
             />
             <Box display="flex" justifyContent="space-between" width="80%">
-              <Typography variant="body2">1st training</Typography>
-              <Typography variant="body2">last</Typography>
+              <Typography variant="body2">First training</Typography>
+              <Typography variant="body2">Last training</Typography>
             </Box>
           </Box>
-          <Box sx={{ position: 'absolute', top: 5, right: 20 }}>
-            <IconButton
-              sx={{ p: 0, m: 0 }}
-              onClick={() => setSelectedExercise(null)}
-            >
-              <RemoveIcon />
-            </IconButton>
-          </Box>
-        </Box>
-      </Grid2>
-
-      {/* Second Row - Graph */}
-      <Grid2 size={{ xs: 12 }} sx={{ height: '100%' }}>
-        <Box
-          sx={{
-            width: '100%',
-            maxHeight: 200,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            justifyContent: 'flex-start',
-          }}
-        >
-          {/* Graph */}
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={data.slice(range[0] - 1, range[1])}>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#222',
-                  borderRadius: '10px',
-                  color: '#fff',
-                }}
-              />
-              <defs>
-                <filter id="glow-red">
-                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <filter id="glow-yellow">
-                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              <Line
-                type="monotone"
-                dataKey="intensity"
-                stroke="#FF5555"
-                strokeWidth={3}
-                filter="url(#glow-red)"
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="volume"
-                stroke="#FFD700"
-                strokeWidth={3}
-                filter="url(#glow-yellow)"
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-
           {/* Custom Legend */}
           <Box
             display="flex"
-            justifyContent="center"
+            justifyContent="flex-end"
+            width="100%"
             mt={2}
-            sx={{ position: 'absolute', bottom: 20, left: 20 }}
+            mr={5}
+            zIndex={1}
           >
             <Box display="flex" alignItems="center" mr={2}>
               <Box
@@ -247,6 +338,87 @@ export default function TrainingExerciseCardContainer(
               </Typography>
             </Box>
           </Box>
+          <Box sx={{ position: 'absolute', top: 5, right: 2, zIndex: 1000 }}>
+            <IconButton
+              sx={{ p: 0, m: 0, cursor: 'pointer' }}
+              onClick={() => setSelectedExercise(null)}
+            >
+              <RemoveIcon />
+            </IconButton>
+          </Box>
+        </Box>
+      </Grid2>
+      {/* Second Row - Graph */}
+      <Grid2 size={{ xs: 12 }} sx={{ height: '100%' }}>
+        <Box
+          sx={{
+            width: '100%',
+            maxHeight: 200,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            justifyContent: 'flex-start',
+          }}
+        >
+          {/* Background */}
+          <Box
+            //width={screenSize.isDesktop ? '93%' : '87%'}
+            width={`${100 - paddingForChartBackground}%`}
+            height="100%"
+            display="flex"
+            flexDirection="column"
+            sx={{ position: 'absolute', top: 5, right: 0, px: 0.5 }}
+          >
+            <Box height={screenSize.isSmallerThanLaptop ? '53%' : '35%'} />
+            <Box
+              height={screenSize.isSmallerThanLaptop ? '47%' : '65%'}
+              display="flex"
+            >
+              <Box
+                width={`${percentageForChartBackground}%`}
+                //width="50%"
+                height="100%"
+                sx={{
+                  backgroundColor: theme.palette.background.paper,
+                  zIndex: 0,
+                }}
+              />
+              <Box
+                width={`${100 - percentageForChartBackground}%`}
+                // width="50%"
+                height="100%"
+                sx={{ zIndex: 0 }}
+              />
+            </Box>
+          </Box>
+          {/* Graph */}
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={data.slice(range[0] - 1, range[1])}>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#222',
+                  borderRadius: '10px',
+                  color: '#fff',
+                }}
+              />
+              <XAxis dataKey="name" />
+              <YAxis domain={['dataMin - 3', 'dataMax + 3']} />
+              <Line
+                type="monotone"
+                dataKey="intensity"
+                stroke="#FF5555"
+                strokeWidth={3}
+                dot={true}
+              />
+              <Line
+                type="monotone"
+                dataKey="volume"
+                stroke="#FFD700"
+                strokeWidth={3}
+                dot={true}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </Box>
       </Grid2>
     </Grid2>
