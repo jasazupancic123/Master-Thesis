@@ -31,8 +31,8 @@ import {
   generateTrainingExercise,
 } from '../mock/training.stub';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
-import { ComponentParam } from 'src/component/entity/component-param.entity';
-import { AttributeValue } from 'src/attribute/entity/attribute-value.entity';
+import { ComponentParam } from '../../component/entity/component-param.entity';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;

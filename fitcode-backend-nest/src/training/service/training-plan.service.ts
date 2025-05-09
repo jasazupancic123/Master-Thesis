@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { addMinutes } from 'date-fns';
+import { addMinutes, subMinutes } from 'date-fns';
 import { Update } from '../../common/type/entity.type';
 import { TrainingComponentRef } from '../../common/type/firestore.type';
 import { TrainingComponent } from '../entity/training-component.entity';
@@ -26,18 +26,14 @@ import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import {
-  IntType,
-  ParamType,
-  VolWorkSetType,
-} from '../../component/enum/param.enum';
+import { ParamType, VolWorkSetType } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
 import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '../constant/warmup-cooldown-ids.constant';
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
 
 @Injectable()
 export class TrainingPlanService {
@@ -123,12 +119,11 @@ export class TrainingPlanService {
     warmup: TrainingComponent,
     cooldown: TrainingComponent,
   ) {
-    if (!warmup || !cooldown) {
+    if (!warmup || !cooldown)
       throw new BadRequestException(
         'Training must have warmup and cooldown components',
       );
-    }
-    
+
     const allTrainingComponents = [warmup, ...trainingComponents, cooldown];
 
     const duplicates = new Set<string>();
@@ -142,6 +137,7 @@ export class TrainingPlanService {
         throw new BadRequestException(
           `Component ${component.name} cannot be selected for training`,
         );
+
       // check duplicates
       if (duplicates.has(curr.id))
         throw new BadRequestException(`Duplicate component ${component.name}`);
@@ -244,7 +240,7 @@ export class TrainingPlanService {
           'You can only have up to 4 exercises per superset',
         );
 
-      if (component.id !== COOLDOWN_ID && component.id != WARMUP_ID) {
+      if ([COOLDOWN_COMPONENT_ID, WARMUP_COMPONENT_ID].includes(component.id)) {
         for (const exercise of superset.exercises) {
           const trainingExercise = exercises.find((e) => e.id === exercise.id);
           if (!trainingExercise)
@@ -431,6 +427,60 @@ export class TrainingPlanService {
     }
 
     return componentParams;
+  }
+
+  createWarmupAndCooldown(
+    from: Date,
+    to: Date,
+    components: TrainingComponent[],
+  ): { warmup: TrainingComponent; cooldown: TrainingComponent } {
+    let cooldownFrom = to;
+    if (components.length) {
+      cooldownFrom = components
+        .map((c) => c.to)
+        .sort((a: Date, b: Date) => {
+          return new Date(b).getTime() - new Date(a).getTime();
+        })[0];
+    }
+
+    const warmup: TrainingComponent = {
+      id: WARMUP_COMPONENT_ID,
+      from: subMinutes(from, 5),
+      to: from,
+      supersets: [],
+      subgroups: [],
+    };
+
+    const cooldown: TrainingComponent = {
+      id: COOLDOWN_COMPONENT_ID,
+      from: cooldownFrom,
+      to: addMinutes(cooldownFrom, 5),
+      supersets: [],
+      subgroups: [],
+    };
+
+    return { warmup, cooldown };
+  }
+
+  updateWarmupAndCooldownTimes(
+    warmup: TrainingComponent,
+    cooldown: TrainingComponent,
+    training: Training,
+    trainingComponents: TrainingComponent[],
+  ): void {
+    let cooldownFrom = training.to;
+    if (trainingComponents.length) {
+      cooldownFrom = trainingComponents
+        .map((c) => c.to)
+        .sort((a: Date, b: Date) => {
+          return new Date(b).getTime() - new Date(a).getTime();
+        })[0];
+    }
+
+    warmup.from = subMinutes(training.from, 5);
+    warmup.to = training.from;
+    cooldown.from = cooldownFrom;
+    cooldown.to = addMinutes(cooldownFrom, 5);
   }
 
   /**

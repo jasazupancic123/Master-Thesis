@@ -19,7 +19,6 @@ import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import {
   UpdateTrainingDto,
   UpdateTrainingDtoWithId,
-  UpdateTrainingDtoWithWarmupAndCooldown,
 } from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
@@ -59,10 +58,18 @@ export class TrainingController {
   async createWithTrainingComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: { trainingComponent: TrainingComponent, date: {from: Date, to: Date} },
+    @Body()
+    body: {
+      trainingComponent: TrainingComponent;
+      date: { from: Date; to: Date };
+    },
   ) {
     const ref = { trainingId };
-    return await this.trainingService.createWithTrainingComponent(user, ref, body);
+    return await this.trainingService.createWithTrainingComponent(
+      user,
+      ref,
+      body,
+    );
   }
 
   @Patch(':trainingId')
@@ -70,7 +77,7 @@ export class TrainingController {
   async update(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: UpdateTrainingDtoWithWarmupAndCooldown,
+    @Body() body: UpdateTrainingDto,
   ) {
     const ref = { trainingId };
     return await this.trainingService.update(user, ref, body);
