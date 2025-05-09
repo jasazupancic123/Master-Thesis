@@ -61,6 +61,7 @@ export class TrainingPlanService {
           color: c.color,
           from: c.from ? c.from : addMinutes(lastComponent.from, 30),
           to: c.to ? c.to : addMinutes(lastComponent.from, 60),
+          completedMembersIds: [],
           subgroups: [],
           supersets: [{ exercises: [] }],
         })),
@@ -453,6 +454,7 @@ export class TrainingPlanService {
       to: from,
       supersets: [],
       subgroups: [],
+      completedMembersIds: [],
     };
 
     const cooldown: TrainingComponent = {
@@ -461,6 +463,7 @@ export class TrainingPlanService {
       to: addMinutes(cooldownFrom, 5),
       supersets: [],
       subgroups: [],
+      completedMembersIds: [],
     };
 
     return { warmup, cooldown };

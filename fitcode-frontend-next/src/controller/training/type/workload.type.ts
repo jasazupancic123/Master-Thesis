@@ -9,6 +9,7 @@ export type Workload = TimestampEntity & {
   exerciseId: string;
   setNumber: number;
   status: SetStatus;
+  plannedAt: Date;
   notes?: string;
   volWork1Type?: VolType;
   prescribedVolWork1Value?: number;

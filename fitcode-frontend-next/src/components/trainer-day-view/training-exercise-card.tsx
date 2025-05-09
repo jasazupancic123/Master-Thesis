@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { TrainingExerciseCardProps } from './props';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Circle } from '@mui/icons-material';
+import { Circle, Info } from '@mui/icons-material';
 import { ExerciseParam } from './exercise-card/exercise-param';
 import {
   ExerciseSet,
@@ -19,6 +19,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
   const {
     supersetIndex,
+    selectedExercise,
     setSelectedExercise,
     chartView,
     setOpenVideoPlayerModal,
@@ -249,7 +250,26 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Tooltip>
       </Stack>
 
-      {!expandedSetsView ? (
+      {chartView ? (
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          zIndex={10}
+          gap={0.5}
+        >
+          <Info sx={{ fontSize: 18 }} />
+          <Typography
+            variant="body2"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            Update training to view updated workloads
+          </Typography>
+        </Box>
+      ) : !expandedSetsView ? (
         <Grid2
           container
           spacing={1}
@@ -270,6 +290,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             >
               <Circle
                 sx={{
+                  display:
+                    selectedExercise?.id === exercise.id ? 'none' : undefined,
                   color: 'white !important',
                   fontSize: screenSize.isTablet ? 14 : 16,
                   ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
@@ -277,7 +299,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               />
             </IconButton>
           </Grid2>
-
           <Grid2 size={10}>
             <Box
               display="flex"
@@ -441,6 +462,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                   >
                     <Circle
                       sx={{
+                        display:
+                          selectedExercise?.id === exercise.id
+                            ? 'none'
+                            : undefined,
                         color: 'white !important',
                         fontSize: screenSize.isTablet ? 14 : 16,
                         ml: screenSize.isUltraSmall

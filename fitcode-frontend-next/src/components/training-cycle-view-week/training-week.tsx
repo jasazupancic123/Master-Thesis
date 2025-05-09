@@ -123,6 +123,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         selectedComponents: selected!.map((c, i) => ({
           id: c.id,
           subgroups: [],
+          completedMembersIds: [],
           supersets: [],
           from: addMinutes(from, i * 30),
           to: addMinutes(addMinutes(from, i * 30), 30),
@@ -398,6 +399,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                                 id: c.id,
                                 subgroups: [],
                                 supersets: [],
+                                completedMembersIds: [],
                                 from: addMinutes(lastTo, i * 30),
                                 to: addMinutes(addMinutes(lastTo, i * 30), 30),
                               })),

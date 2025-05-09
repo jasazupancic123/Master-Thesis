@@ -12,11 +12,9 @@ import {
   isBefore,
   startOfDay,
   startOfHour,
-  subMinutes,
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
@@ -24,7 +22,6 @@ import {
   CycleRef,
   TrainingComponentRef,
   TrainingRef,
-  TrainingStatusRef,
   WorkloadRef,
 } from '../../common/type/firestore.type';
 import { Filter } from '../../common/type/orm.type';
@@ -35,7 +32,6 @@ import { Group } from '../../group/entity/group.entity';
 import { GroupService } from '../../group/group.service';
 import { UserService } from '../../user/user.service';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
@@ -43,12 +39,7 @@ import { UserWorkloadService } from './user-workload.service';
 import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
 import dayjs from 'dayjs';
-import {
-  COOLDOWN_COMPONENT,
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT,
-  WARMUP_COMPONENT_ID,
-} from '../../component/constant/warmup-cooldown.constant';
+import { SetStatus } from '../enum/set-status.enum';
 
 @Injectable()
 export class TrainingService {
@@ -145,6 +136,55 @@ export class TrainingService {
       );
 
     return trainings;
+  }
+
+  async getUserWorkloadsByGroupIdAndExerciseIds(
+    user: User,
+    input: {
+      groupId: string;
+      body: { exerciseIds: string[]; athleteId?: string };
+    },
+  ): Promise<{ completedWorkloads: Workload[]; futureWorkloads: Workload[] }> {
+    const { groupId, body } = input;
+    const { exerciseIds, athleteId } = body;
+
+    this.logger.log(
+      `User ${user.uid} is getting workloads for group ${groupId}`,
+    );
+
+    const groupRef = { groupId };
+
+    const group = await this.groupService.findByIdOrFail(user, groupRef);
+    let workloads = [];
+    if (athleteId) {
+      workloads = await this.workloadService.findAllByAthleteGroupExerciseIds(
+        athleteId,
+        groupId,
+        exerciseIds,
+      );
+    } else {
+      workloads = await this.workloadService.findAllByMembersGroupExerciseIds(
+        group.membersIds,
+        groupId,
+        exerciseIds,
+      );
+    }
+
+    const { completedWorkloads, futureWorkloads } =
+      this.getCompletedAndFutureWorkloads(workloads);
+
+    return { completedWorkloads, futureWorkloads };
+  }
+
+  private getCompletedAndFutureWorkloads(workloads: Workload[]) {
+    const completedWorkloads = workloads.filter(
+      (w) => w.status !== SetStatus.NOT_STARTED,
+    );
+    const futureWorkloads = workloads.filter(
+      (w) => w.status === SetStatus.NOT_STARTED,
+    );
+
+    return { completedWorkloads, futureWorkloads };
   }
 
   private getFromAndToDates(components: TrainingComponent[]): {
@@ -250,6 +290,7 @@ export class TrainingService {
       to,
       membersIds: group.membersIds,
       wellness,
+      completedMembersIds: [],
       warmup,
       cooldown,
       components: input.components.map((c) => ({
@@ -259,6 +300,7 @@ export class TrainingService {
         color: c.color,
         subgroups: c.subgroups || [],
         supersets: c.supersets || [],
+        completedMembersIds: [],
       })),
     };
 
@@ -367,6 +409,7 @@ export class TrainingService {
       to,
       membersIds: group.membersIds,
       wellness,
+      completedMembersIds: [],
       warmup,
       cooldown,
       components: [
@@ -383,6 +426,7 @@ export class TrainingService {
               ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
               : ref.trainingId,
           },
+          completedMembersIds: [],
         },
       ],
     };
@@ -640,6 +684,7 @@ export class TrainingService {
       to: addMinutes(startOfHour(input.from), training.components.length * 30),
       membersIds: training.membersIds,
       wellness,
+      completedMembersIds: [],
       warmup: { ...training.warmup },
       cooldown: { ...training.cooldown },
       components: training.components.map((c, i) => {
@@ -653,6 +698,7 @@ export class TrainingService {
           color: c.color,
           subgroups: c.subgroups || [],
           supersets: c.supersets || [],
+          completedMembersIds: [],
         };
       }),
     };
@@ -822,6 +868,63 @@ export class TrainingService {
     await batch.commit();
   }
 
+  async finishComponent(
+    user: User,
+    ref: TrainingRef,
+    input: { userId: string; componentId: string },
+  ): Promise<Training> {
+    const { userId, componentId } = input;
+    this.logger.log(
+      `User ${user.uid} is finishing component ${componentId} for user ${input.userId} for training ${ref.trainingId}`,
+    );
+
+    if (user.uid !== userId)
+      throw new UnauthorizedException(
+        'You are not allowed to perform this action',
+      );
+
+    const workloads =
+      await this.workloadService.findAllByTrainingAndUserAndComponent({
+        trainingId: ref.trainingId,
+        userId,
+        componentId,
+      });
+
+    const batch = this.firebaseService.firestore.batch();
+    for (const workload of workloads) {
+      const docRef = this.workloadService.getDoc(workload);
+      batch.update(docRef, {
+        status: SetStatus.COMPLETED,
+        finishedAt: new Date(),
+      });
+    }
+
+    const training = await this.findOneOrFail(user, ref);
+    const component = training.components.find((c) => c.id === componentId);
+    if (!component) throw new BadRequestException('Component not found');
+    component.completedMembersIds.push(userId);
+
+    const hasCompletedTraining = training.components.every((c) =>
+      c.completedMembersIds.includes(userId),
+    );
+    if (hasCompletedTraining) {
+      training.completedMembersIds.push(userId);
+    }
+
+    const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+    const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
+      {
+        components: training.components,
+        completedMembersIds: training.completedMembersIds,
+      },
+    );
+
+    batch.update(trainingDocRef, updateTrainingQuery);
+    await batch.commit();
+
+    return training;
+  }
+
   async addComponents(
     user: User,
     ref: TrainingRef,
@@ -866,6 +969,7 @@ export class TrainingService {
 
     // add components
     await this.trainingRepository.updateDoc(training.id, query);
+
     return updatedTraining;
   }
 

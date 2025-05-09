@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import {
+  IsDate,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -60,6 +61,12 @@ export class Workload extends TimestampEntity {
   @ApiProperty()
   @Expose()
   status: SetStatus;
+
+  @IsDate()
+  @ApiProperty()
+  @Transform(({ value }) => new Date(value))
+  @Expose()
+  plannedAt: Date; // same date as the training
 
   @IsString()
   @IsOptional()

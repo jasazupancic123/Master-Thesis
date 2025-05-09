@@ -23,6 +23,7 @@ import {
 import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
 import { TrainingComponent } from './entity/training-component.entity';
+import { TrainingRef } from 'src/common/type/firestore.type';
 
 @Controller('training')
 export class TrainingController {
@@ -44,6 +45,19 @@ export class TrainingController {
       cycleId: filter.cycleId,
       ...(filter.from && { from: filter.from }),
       ...(filter.to && { to: filter.to }),
+    });
+  }
+
+  @Post(':groupId/workloads')
+  @Auth()
+  async getUserWorkloadsByGroupIdAndExerciseIds(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Body() body: {exerciseIds: string[], athleteId?: string},
+  ) {
+    return await this.trainingService.getUserWorkloadsByGroupIdAndExerciseIds(user, {
+      groupId,
+      body,
     });
   }
 
@@ -144,6 +158,17 @@ export class TrainingController {
     const ref = { trainingId, componentId, userId: user.uid };
     await this.trainingService.updateWorkloads(user, ref, workloads);
     return {};
+  }
+
+  @Patch(':trainingId/finish/component')
+  @Auth()
+  async finishComponent(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Body() body: {userId: string, componentId: string},
+  ) {
+    const ref = { trainingId } as TrainingRef;
+    return await this.trainingService.finishComponent(user, ref, body);
   }
 
   /* @Get(':trainingId/status')

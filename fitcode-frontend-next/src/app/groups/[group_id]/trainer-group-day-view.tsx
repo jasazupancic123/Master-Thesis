@@ -21,6 +21,8 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
 
 dayjs.extend(weekOfYear);
 
@@ -35,6 +37,7 @@ export default function TrainerDayView() {
     cycle,
     components,
     exercises,
+    trainings,
     setTrainings,
     setFilteredTrainings,
     filteredTrainings,
@@ -42,6 +45,8 @@ export default function TrainerDayView() {
     setDateTo,
     setDetectedChanges,
     setCycle,
+    workloads,
+    setWorkloads,
   } = useGroup();
 
   const {
@@ -160,6 +165,7 @@ export default function TrainerDayView() {
   const [pmTraining, setPmTraining] = useState<Training | undefined>(
     todaysTrainings.find((t) => dayjs(t.from).hour() >= 12)
   );
+
   useEffect(() => {
     const newTodaysTrainings = filteredTrainings.filter((t) =>
       commonService.date.isSameDay(day.date, dayjs(t.from))
@@ -174,6 +180,53 @@ export default function TrainerDayView() {
   }, [todaysTrainings]);
 
   useEffect(() => {}, [selectedSubgroup]);
+
+  useEffect(() => {
+    const fetchWorkloads = async () => {
+      const combinedComponents = [] as TrainingComponent[];
+      if (amTraining) combinedComponents.push(...amTraining.components);
+      if (pmTraining) combinedComponents.push(...pmTraining.components);
+
+      if (!combinedComponents || !combinedComponents.length) {
+        setWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+        return;
+      }
+
+      const uniqueExerciseIds = [] as string[];
+      combinedComponents.forEach((c) => {
+        c.supersets.forEach((s) => {
+          s.exercises.forEach((e) => {
+            if (!uniqueExerciseIds.includes(e.id)) uniqueExerciseIds.push(e.id);
+          });
+        });
+      });
+
+      if (!uniqueExerciseIds.length) {
+        setWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+        return;
+      }
+
+      handleApiRequest(
+        router,
+        () =>
+          TrainingController.getUserWorkloadsByGroupIdAndExerciseIds(
+            token,
+            group.id,
+            uniqueExerciseIds,
+            selectedAthlete?.uid
+          ),
+        (workloads) => {
+          setWorkloads(workloads);
+        },
+        undefined,
+        'Failed to fetch workloads'
+      );
+    };
+
+    fetchWorkloads();
+  }, [day, week, selectedAthlete, trainings]);
+
+  useEffect(() => {}, [workloads]);
 
   return (
     <>

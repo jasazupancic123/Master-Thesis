@@ -375,13 +375,19 @@ export default function AthleteTrainingExerciseCard(
                   key={`${c.id}`}
                   width="100%"
                   sx={{
-                    backgroundColor: '#404c54',
+                    backgroundColor: c.completedMembersIds.includes(profile.uid)
+                      ? '#2f3940'
+                      : '#404c54',
                     py: 1,
                     borderTopRightRadius: i === 0 ? 5 : 0,
                     borderBottomRightRadius: i === arr.length - 1 ? 5 : 0,
                     borderBottomLeftRadius: i === arr.length - 1 ? 5 : 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                   onClick={() => {
+                    if (c.completedMembersIds.includes(profile.uid)) return;
                     setSelectedTraining(training);
                     setSelectedComponent(c);
                     setUserId(profile.uid);
@@ -391,7 +397,9 @@ export default function AthleteTrainingExerciseCard(
                     variant="h6"
                     sx={{
                       textTransform: 'uppercase',
-                      color: '#e4ece9',
+                      color: c.completedMembersIds.includes(profile.uid)
+                        ? 'rgba(228, 236, 233, 0.5)'
+                        : 'rgb(228, 236, 233)',
                       textAlign: 'center',
                       cursor: 'pointer',
                       overflow: 'hidden',
@@ -403,6 +411,16 @@ export default function AthleteTrainingExerciseCard(
                   >
                     {c.id}
                   </Typography>
+                  <CheckCircle
+                    sx={{
+                      position: 'absolute',
+                      right: 10,
+                      color: theme.palette.primary.main,
+                      display: c.completedMembersIds.includes(profile.uid)
+                        ? undefined
+                        : 'none',
+                    }}
+                  />
                 </Box>
               )
             )}

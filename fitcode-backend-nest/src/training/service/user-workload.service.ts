@@ -25,6 +25,10 @@ export class UserWorkloadService {
     private readonly workloadRepository: WorkloadRepository,
   ) {}
 
+  getDoc(id: WorkloadRef) {
+    return this.workloadRepository.doc(id);
+  }
+
   /**
    * Gets all training workload data for all trainings for a user by exercise id.
    */
@@ -58,10 +62,64 @@ export class UserWorkloadService {
       );
   }
 
+  async findAllByTrainingAndUserAndComponent(ref: {
+    trainingId: string;
+    userId: string;
+    componentId: string;
+  }) {
+    const { trainingId, userId, componentId } = ref;
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('trainingId', '==', trainingId)
+      .where('userId', '==', userId)
+      .where('componentId', '==', componentId)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+  }
+
   async findAllByMembers(membersIds: string[]): Promise<Workload[]> {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+  }
+
+  async findAllByMembersGroupExerciseIds(membersIds: string[], groupId: string, exerciseIds: string[]): Promise<Workload[]> {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', 'in', membersIds)
+      .where('groupId', '==', groupId)
+      .where('exerciseId', 'in', exerciseIds)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+  }
+
+  
+  async findAllByAthleteGroupExerciseIds(athleteId: string, groupId: string, exerciseIds: string[]): Promise<Workload[]> {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', '==', athleteId)
+      .where('groupId', '==', groupId)
+      .where('exerciseId', 'in', exerciseIds)
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -159,6 +217,7 @@ export class UserWorkloadService {
             exerciseId: exercise.id,
             setNumber,
             status: SetStatus.NOT_STARTED,
+            plannedAt: training.from,
             notes: null,
             ...this.parseParamValues(paramValues),
             ...this.calculateIntValues(paramValues, bodyweight, workloads),
