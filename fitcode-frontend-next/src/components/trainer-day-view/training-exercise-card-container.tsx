@@ -57,8 +57,10 @@ export default function TrainingExerciseCardContainer(
   const [data, setData] = useState<ChartData[]>([]);
   const [percentageForChartBackground, setPercentageForChartBackground] =
     useState<number>(0);
-  const [paddingForChartBackground, setPaddingForChartBackground] =
-    useState<number>(0);
+  const [paddingForChartBackground, setPaddingForChartBackground] = useState<{
+    width: number;
+    height: number;
+  }>({ width: 0, height: 0 });
 
   const [range, setRange] = useState<number[]>([1, 6]); // Example range
   const [max, setMax] = useState<number>(10);
@@ -190,14 +192,29 @@ export default function TrainingExerciseCardContainer(
       const graphDotsElement = document.querySelector('.recharts-line-dots');
       const rechartsSurfaceElement =
         document.querySelector('.recharts-surface');
-      if (graphDotsElement && rechartsSurfaceElement) {
+      const graphBackgroundElement = document.querySelector('.recharts-line');
+      if (
+        graphDotsElement &&
+        rechartsSurfaceElement &&
+        graphBackgroundElement
+      ) {
+        console.log('found elements');
         const parentRect = rechartsSurfaceElement.getBoundingClientRect();
-        const childRect = graphDotsElement.getBoundingClientRect();
+        const dotsRect = graphDotsElement.getBoundingClientRect();
+        const graphBackgroundRect =
+          graphBackgroundElement.getBoundingClientRect();
 
-        const distanceFromLeft = childRect.left - parentRect.left;
-        const percentage = (distanceFromLeft / parentRect.width) * 100;
+        const distanceFromLeft = dotsRect.left - parentRect.left;
+        const percentageWidth = (distanceFromLeft / parentRect.width) * 100;
 
-        setPaddingForChartBackground(percentage);
+        const distanceFromBottom =
+          parentRect.bottom - graphBackgroundRect.bottom;
+        const percentageHeight = (distanceFromBottom / parentRect.height) * 100;
+
+        setPaddingForChartBackground({
+          width: percentageWidth,
+          height: percentageHeight,
+        });
         observer.disconnect();
       }
     });
@@ -300,14 +317,71 @@ export default function TrainingExerciseCardContainer(
               <Typography variant="body2">Last training</Typography>
             </Box>
           </Box>
+          <Box sx={{ position: 'absolute', top: 5, right: 2, zIndex: 1000 }}>
+            <IconButton
+              sx={{ p: 0, m: 0, cursor: 'pointer' }}
+              onClick={() => setSelectedExercise(null)}
+            >
+              <RemoveIcon />
+            </IconButton>
+          </Box>
+        </Box>
+      </Grid2>
+      {/* Second Row - Graph */}
+      <Grid2 size={{ xs: 12 }} sx={{ height: '100%' }}>
+        <Box
+          sx={{
+            width: '100%',
+            maxHeight: 200,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            justifyContent: 'flex-start',
+            position: 'relative',
+          }}
+        >
+          {/* Background */}
+          <Box
+            width={`${100 - paddingForChartBackground.width}%`}
+            height={`${100 - paddingForChartBackground.height}%`}
+            display="flex"
+            flexDirection="column"
+            sx={{
+              position: 'absolute',
+              top: 5,
+              right: 0,
+              px: 0.5,
+            }}
+          >
+            <Box height="100%" display="flex">
+              <Box
+                width={`${percentageForChartBackground}%`}
+                //width="50%"
+                height="100%"
+                sx={{
+                  backgroundColor: theme.palette.background.paper,
+                  zIndex: 0,
+                }}
+              />
+              <Box
+                width={`${100 - percentageForChartBackground}%`}
+                // width="50%"
+                height="100%"
+                sx={{ zIndex: 0 }}
+              />
+            </Box>
+          </Box>
+
           {/* Custom Legend */}
           <Box
             display="flex"
             justifyContent="flex-end"
             width="100%"
-            mt={2}
-            mr={5}
-            zIndex={1}
+            sx={{
+              position: 'absolute',
+              top: -5,
+              right: 5,
+            }}
           >
             <Box display="flex" alignItems="center" mr={2}>
               <Box
@@ -338,59 +412,7 @@ export default function TrainingExerciseCardContainer(
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ position: 'absolute', top: 5, right: 2, zIndex: 1000 }}>
-            <IconButton
-              sx={{ p: 0, m: 0, cursor: 'pointer' }}
-              onClick={() => setSelectedExercise(null)}
-            >
-              <RemoveIcon />
-            </IconButton>
-          </Box>
-        </Box>
-      </Grid2>
-      {/* Second Row - Graph */}
-      <Grid2 size={{ xs: 12 }} sx={{ height: '100%' }}>
-        <Box
-          sx={{
-            width: '100%',
-            maxHeight: 200,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            justifyContent: 'flex-start',
-          }}
-        >
-          {/* Background */}
-          <Box
-            //width={screenSize.isDesktop ? '93%' : '87%'}
-            width={`${100 - paddingForChartBackground}%`}
-            height="100%"
-            display="flex"
-            flexDirection="column"
-            sx={{ position: 'absolute', top: 5, right: 0, px: 0.5 }}
-          >
-            <Box height={screenSize.isSmallerThanLaptop ? '53%' : '35%'} />
-            <Box
-              height={screenSize.isSmallerThanLaptop ? '47%' : '65%'}
-              display="flex"
-            >
-              <Box
-                width={`${percentageForChartBackground}%`}
-                //width="50%"
-                height="100%"
-                sx={{
-                  backgroundColor: theme.palette.background.paper,
-                  zIndex: 0,
-                }}
-              />
-              <Box
-                width={`${100 - percentageForChartBackground}%`}
-                // width="50%"
-                height="100%"
-                sx={{ zIndex: 0 }}
-              />
-            </Box>
-          </Box>
+
           {/* Graph */}
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={data.slice(range[0] - 1, range[1])}>
