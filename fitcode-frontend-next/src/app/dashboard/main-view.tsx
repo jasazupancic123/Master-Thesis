@@ -26,9 +26,9 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import DashboardChat from '@/components/dashboard/dashboard-chat';
 import { Group } from '@/controller/group/type/group.type';
-import { Institution } from '@/controller/institution/type/institution.type';
+import { Organization } from '@/controller/organization/type/organization.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
-import AthletesView from './athletes/athletes';
+import AthletesView from './athletes-view';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { redirect } from 'next/navigation';
 import { useDashboard } from '@/context/dashboard-provider';
@@ -38,7 +38,7 @@ import { GroupController } from '@/controller/group/group.controller';
 const AVATAR_SIZE = 45;
 
 interface MainDashboardViewProps {
-  organization: Institution;
+  organization: Organization;
   users: User[];
   token: string;
   profile: User;
@@ -57,7 +57,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
   const [groupName, setGroupName] = useState('');
 
   const [selectedOrganization, setSelectedOrganization] =
-    useState<Institution | null>(organization);
+    useState<Organization | null>(organization);
 
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(
     organization.groups[0] || null
@@ -70,6 +70,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
   const setTrainers = (trainers: User[]) => {
     setSelectedOrganization({
       ...selectedOrganization!,
+      trainers,
     });
   };
 
@@ -234,7 +235,10 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                       gap={1}
                     >
                       <Typography variant="body1">MANAGER</Typography>
-                      <Tooltip title={''} placement="top">
+                      <Tooltip
+                        title={selectedOrganization?.manager.displayName || ''}
+                        placement="top"
+                      >
                         <Avatar
                           className="avatar-border"
                           src={'/user_avatar.png'}
@@ -255,7 +259,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                     maxHeight={150}
                     overflow="auto"
                   >
-                    {/* {selectedOrganization &&
+                    {selectedOrganization &&
                       selectedOrganization.trainers.map((trainer) => (
                         <Box
                           key={trainer.uid}
@@ -276,7 +280,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                             />
                           </Tooltip>
                         </Box>
-                      ))} */}
+                      ))}
                   </Grid2>
                 </Grid2>
               </Grid2>
@@ -608,7 +612,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
           users={users.filter((user) =>
             user.customClaims.role.includes(UserRole.TRAINER)
           )}
-          members={/* selectedOrganization?.trainers ||  */ []}
+          members={selectedOrganization?.trainers || []}
           setMembers={setTrainers}
           addUserToEnd={true}
           dissableMaxWidth={true}

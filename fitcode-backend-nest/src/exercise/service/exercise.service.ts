@@ -154,7 +154,7 @@ export class ExerciseService {
     const dbUser = await this.userService.findOneByIdOrFail(user.uid);
     const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
 
-    return await this.exerciseRepository
+    let exercises = await this.exerciseRepository
       .collection()
       .where('ownerId', 'in', userIds)
       .where(FieldPath.documentId(), 'in', ids)
@@ -166,6 +166,40 @@ export class ExerciseService {
           ),
         ),
       );
+
+    // map attributes
+    exercises = await Promise.all(
+      exercises.map(async (e) => ({
+        ...e,
+        attributeValues:
+          await this.exerciseAttributeValueRepository.getAllByExercise({
+            exerciseId: e.id,
+          }),
+      })),
+    );
+
+    const components = await this.cacheManagerService.getComponents();
+    const attributes = await this.cacheManagerService.getAttributes();
+
+    return exercises.map((exercise) => {
+      const component = components.find(
+        (c) => c.id === exercise.componentIds[0],
+      )!;
+
+      const root = this.componentService.getRoot(component, components);
+      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
+
+      const params = this.trainingPlanService.getComponentParamAttributes(
+        componentParams,
+        exercise.attributeValues,
+        attributes,
+      );
+
+      exercise.defaultParams =
+        this.trainingPlanService.getParamAttributes(params);
+
+      return exercise;
+    });
   }
 
   async findById(

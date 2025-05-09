@@ -7,16 +7,16 @@ import { COLOR } from '@/common/constant/browser.constant';
 import BorderColor from '@/components/border-color';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useDashboard } from '@/context/dashboard-provider';
+import { Organization } from '@/controller/organization/type/organization.type';
 import { SetState } from '@/common/type/state.type';
-import { Institution } from '@/controller/institution/type/institution.type';
 
 interface AthletesViewProps {
   groups: Group[];
   users: User[];
   selectedGroup: Group | null;
   setSelectedGroup: (group: Group) => void;
-  selectedOrganization: Institution | null;
-  setSelectedOrganization: SetState<Institution | null>;
+  selectedOrganization: Organization | null;
+  setSelectedOrganization: SetState<Organization | null>;
 }
 
 export default function AthletesView(props: AthletesViewProps) {
@@ -29,7 +29,6 @@ export default function AthletesView(props: AthletesViewProps) {
     selectedOrganization,
     setSelectedOrganization,
   } = props;
-
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { detectedChanges, setDetectedChanges } = useDashboard();
 
