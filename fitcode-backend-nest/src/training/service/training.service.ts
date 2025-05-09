@@ -42,7 +42,12 @@ import { UserWorkloadService } from './user-workload.service';
 import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
 import dayjs from 'dayjs';
-import { COOLDOWN_ID, WARMUP_ID } from '../constant/warmup-cooldown-ids.constant';
+import {
+  COOLDOWN_COMPONENT,
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
 
 @Injectable()
 export class TrainingService {
@@ -196,11 +201,12 @@ export class TrainingService {
     await this.validateOverlap(from, to, group.id, cycle.id);
 
     // warmup and cooldown components
-    const { warmup, cooldown } = this.createWarmupAndCooldown(
-      from,
-      to,
-      input.components,
-    );
+    const { warmup, cooldown } =
+      this.trainingPlanService.createWarmupAndCooldown(
+        from,
+        to,
+        input.components,
+      );
 
     // validate components & exercises
     const attributes = await this.cacheManagerService.getAttributes();
@@ -309,9 +315,10 @@ export class TrainingService {
     const to = date.to;
 
     // warmup and cooldown components
-    const { warmup, cooldown } = this.createWarmupAndCooldown(from, to, [
-      trainingComponent,
-    ]);
+    const { warmup, cooldown } =
+      this.trainingPlanService.createWarmupAndCooldown(from, to, [
+        trainingComponent,
+      ]);
 
     this.validateOwner(user.uid, group);
     this.checkTrainingIsInCycle(from, cycle);
@@ -534,7 +541,7 @@ export class TrainingService {
         trainingInput.components,
       );
 
-      this.updateWarmupAndCooldownTimes(
+      this.trainingPlanService.updateWarmupAndCooldownTimes(
         trainingInput.warmup,
         trainingInput.cooldown,
         training,
@@ -547,7 +554,7 @@ export class TrainingService {
         trainingInput.components,
         components,
         trainingInput.warmup,
-        trainingInput.cooldown
+        trainingInput.cooldown,
       );
 
       // populate exercise params from components
@@ -760,7 +767,7 @@ export class TrainingService {
       newComponents,
       components,
       training.warmup,
-      training.cooldown
+      training.cooldown,
     );
 
     const updated = {
@@ -845,7 +852,7 @@ export class TrainingService {
       trainingComponents,
     );
 
-    this.updateWarmupAndCooldownTimes(
+    this.trainingPlanService.updateWarmupAndCooldownTimes(
       training.warmup,
       training.cooldown,
       training,
@@ -858,7 +865,7 @@ export class TrainingService {
       trainingComponents,
       components,
       training.warmup,
-      training.cooldown
+      training.cooldown,
     );
 
     // get query for training
@@ -883,13 +890,11 @@ export class TrainingService {
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
 
-    this.updateWarmupAndCooldownTimes(
+    this.trainingPlanService.updateWarmupAndCooldownTimes(
       training.warmup,
       training.cooldown,
       training,
-      training.components.filter(
-        (c) => c.id !== ref.componentId,
-      ),
+      training.components.filter((c) => c.id !== ref.componentId),
     );
 
     // get query for training
@@ -904,60 +909,6 @@ export class TrainingService {
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 
     return updatedTraining;
-  }
-
-  private createWarmupAndCooldown(
-    from: Date,
-    to: Date,
-    components: TrainingComponent[],
-  ): { warmup: TrainingComponent; cooldown: TrainingComponent } {
-    let cooldownFrom = to;
-    if(components.length){
-      cooldownFrom = components
-      .map((c) => c.to)
-      .sort((a: Date, b: Date) => {
-        return new Date(b).getTime() - new Date(a).getTime();
-      })[0];
-    }
-    
-    const warmup: TrainingComponent = {
-      id: WARMUP_ID,
-      from: subMinutes(from, 5),
-      to: from,
-      supersets: [],
-      subgroups: [],
-    };
-
-    const cooldown: TrainingComponent = {
-      id: COOLDOWN_ID,
-      from: cooldownFrom,
-      to: addMinutes(cooldownFrom, 5),
-      supersets: [],
-      subgroups: [],
-    };
-
-    return { warmup, cooldown };
-  }
-
-  private updateWarmupAndCooldownTimes(
-    warmup: TrainingComponent,
-    cooldown: TrainingComponent,
-    training: Training,
-    trainingComponents: TrainingComponent[],
-  ): void {
-    let cooldownFrom = training.to;
-    if (trainingComponents.length) {
-      cooldownFrom = trainingComponents
-        .map((c) => c.to)
-        .sort((a: Date, b: Date) => {
-          return new Date(b).getTime() - new Date(a).getTime();
-        })[0];
-    }
-
-    warmup.from = subMinutes(training.from, 5);
-    warmup.to = training.from;
-    cooldown.from = cooldownFrom;
-    cooldown.to = addMinutes(cooldownFrom, 5);
   }
 
   private async validateOverlap(
