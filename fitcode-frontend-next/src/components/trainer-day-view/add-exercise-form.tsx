@@ -15,6 +15,10 @@ import { AddExerciseFormProps } from './props';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useEffect, useState } from 'react';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const screenSize = useScreenSize();
@@ -34,6 +38,11 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
 
   useEffect(() => {
     if (!component) return;
+
+    if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
+      setComponentExercises(allExercises);
+      return;
+    }
 
     setComponentExercises(
       allExercises.filter((exercise) =>

@@ -33,6 +33,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
 import toast from 'react-hot-toast';
 import { CommonService } from '@/common/service/common.service';
+import { ExerciseService } from '@/controller/exercise/exercise.service';
 
 const commonService = CommonService.instance;
 
@@ -227,10 +228,11 @@ export function ExercisesPage() {
             isOpen={modal.add}
             setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
             title={'Add Exercise'}
-            onConfirm={async () => {
+            onConfirm={async (attributes) => {
               handleAddExercise(token, exercise, {
                 router,
                 components,
+                attributes,
                 component: selectedComponent!,
                 filteredExercises,
                 setFilteredExercises,
@@ -245,7 +247,14 @@ export function ExercisesPage() {
         {/* Edit Exercise Modal */}
         {modal.edit && (
           <ExerciseModal
-            data={exercise}
+            data={{
+              ...exercise,
+              /* valuesObject: commonService.object.flattenObject(
+                ExerciseService.attributeValuesToNestedObject(
+                  exercise.attributeValues || []
+                )
+              ), */
+            }}
             setData={setExercise}
             attributes={attributes}
             components={components}
@@ -257,10 +266,11 @@ export function ExercisesPage() {
                 : 'Update Exercise'
             }
             {...(exercise.ownerId !== 'global' && {
-              onConfirm: async () => {
+              onConfirm: async (attributes) => {
                 handleUpdateExercise(token, exercise!.id!, exercise, {
                   router,
                   components,
+                  attributes,
                   setFilteredExercises,
                   setExercises,
                   setExercise,
@@ -274,6 +284,7 @@ export function ExercisesPage() {
             })}
           />
         )}
+
         <MyModal
           isOpen={modal.confirmDelete}
           setIsOpen={(open) =>

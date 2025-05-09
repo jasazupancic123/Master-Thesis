@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { addMinutes } from 'date-fns';
+import { addMinutes, subMinutes } from 'date-fns';
 import { Update } from '../../common/type/entity.type';
 import { TrainingComponentRef } from '../../common/type/firestore.type';
 import { TrainingComponent } from '../entity/training-component.entity';
@@ -26,14 +26,14 @@ import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import {
-  IntType,
-  ParamType,
-  VolWorkSetType,
-} from '../../component/enum/param.enum';
+import { ParamType, VolWorkSetType } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
 
 @Injectable()
 export class TrainingPlanService {
@@ -116,10 +116,19 @@ export class TrainingPlanService {
     trainingMemberIds: string[],
     trainingComponents: TrainingComponent[],
     allComponents: Component[],
+    warmup: TrainingComponent,
+    cooldown: TrainingComponent,
   ) {
+    if (!warmup || !cooldown)
+      throw new BadRequestException(
+        'Training must have warmup and cooldown components',
+      );
+
+    const allTrainingComponents = [warmup, ...trainingComponents, cooldown];
+
     const duplicates = new Set<string>();
-    for (let i = 0; i < trainingComponents.length; i++) {
-      const curr = trainingComponents[i];
+    for (let i = 0; i < allTrainingComponents.length; i++) {
+      const curr = allTrainingComponents[i];
       const component = allComponents.find((c) => c.id === curr.id);
 
       // validate components are valid
@@ -135,10 +144,10 @@ export class TrainingPlanService {
       duplicates.add(component.id);
 
       // validate training component times
-      const next = trainingComponents[i + 1];
+      const next = allTrainingComponents[i + 1];
       if (next) {
         const nextComponent = allComponents.find((c) => c.id === next.id);
-        if (i < trainingComponents.length - 1)
+        if (i < allTrainingComponents.length - 1)
           if (curr.from >= next.from)
             throw new BadRequestException(
               `Component ${component.name} has to start before ${nextComponent.name}`,
@@ -151,16 +160,18 @@ export class TrainingPlanService {
 
       // validate exercises
       const leafs = this.componentService.leafsFromFlat(allComponents);
+      for (const exercise of exercises) {
+        for (const componentId of exercise.componentIds) {
+          const leaf = leafs.find((leaf) => leaf.id === componentId)!;
+          const root = this.componentService.getRoot(leaf, allComponents);
 
-      if (
-        exercises.length > 0 &&
-        exercises.every((e) =>
-          e.componentIds.some(() =>
-            leafs.some((leaf) => leaf.parents?.includes(component.id)),
-          ),
-        )
-      )
-        this.exerciseService.validateExercises(component.id, exercises, leafs);
+          if (root.id !== component.id) continue;
+          if (!leaf.parents.includes(component.id))
+            throw new BadRequestException(
+              `Exercise ${exercise.name} cannot be part of selected component`,
+            );
+        }
+      }
     }
 
     if (trainingComponents.length > 5)
@@ -231,10 +242,14 @@ export class TrainingPlanService {
           'You can only have up to 4 exercises per superset',
         );
 
-      for (const exercise of superset.exercises) {
-        const trainingExercise = exercises.find((e) => e.id === exercise.id);
-        if (!trainingExercise)
-          throw new NotFoundException('Training exercise not found');
+      if (
+        ![COOLDOWN_COMPONENT_ID, WARMUP_COMPONENT_ID].includes(component.id)
+      ) {
+        for (const exercise of superset.exercises) {
+          const trainingExercise = exercises.find((e) => e.id === exercise.id);
+          if (!trainingExercise)
+            throw new NotFoundException('Training exercise not found');
+        }
       }
     }
   }
@@ -416,6 +431,60 @@ export class TrainingPlanService {
     }
 
     return componentParams;
+  }
+
+  createWarmupAndCooldown(
+    from: Date,
+    to: Date,
+    components: TrainingComponent[],
+  ): { warmup: TrainingComponent; cooldown: TrainingComponent } {
+    let cooldownFrom = to;
+    if (components.length) {
+      cooldownFrom = components
+        .map((c) => c.to)
+        .sort((a: Date, b: Date) => {
+          return new Date(b).getTime() - new Date(a).getTime();
+        })[0];
+    }
+
+    const warmup: TrainingComponent = {
+      id: WARMUP_COMPONENT_ID,
+      from: subMinutes(from, 5),
+      to: from,
+      supersets: [],
+      subgroups: [],
+    };
+
+    const cooldown: TrainingComponent = {
+      id: COOLDOWN_COMPONENT_ID,
+      from: cooldownFrom,
+      to: addMinutes(cooldownFrom, 5),
+      supersets: [],
+      subgroups: [],
+    };
+
+    return { warmup, cooldown };
+  }
+
+  updateWarmupAndCooldownTimes(
+    warmup: TrainingComponent,
+    cooldown: TrainingComponent,
+    training: Training,
+    trainingComponents: TrainingComponent[],
+  ): void {
+    let cooldownFrom = training.to;
+    if (trainingComponents.length) {
+      cooldownFrom = trainingComponents
+        .map((c) => c.to)
+        .sort((a: Date, b: Date) => {
+          return new Date(b).getTime() - new Date(a).getTime();
+        })[0];
+    }
+
+    warmup.from = subMinutes(training.from, 5);
+    warmup.to = training.from;
+    cooldown.from = cooldownFrom;
+    cooldown.to = addMinutes(cooldownFrom, 5);
   }
 
   /**

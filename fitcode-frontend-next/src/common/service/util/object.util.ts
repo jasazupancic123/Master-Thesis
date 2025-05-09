@@ -5,10 +5,12 @@ export class ObjectUtil {
    * @example
    * nestObject({ a: 'b', b: 'c', c: 1 }, 'a') // => { a: { b: { c: 1 }}}
    */
-  nestObject<T extends Record<string, any>>(obj: T, rootKey: keyof T): Record<string, any> | null {
+  nestObject<T extends Record<string, any>>(
+    obj: T,
+    rootKey: keyof T
+  ): Record<string, any> | null {
     const rootValue = obj[rootKey];
-    if (!rootValue)
-      return null; // The root key is not found or has no value
+    if (!rootValue) return null; // The root key is not found or has no value
 
     const result = {} as Record<string, any>;
 
@@ -48,7 +50,7 @@ export class ObjectUtil {
       }
     };
 
-    Object.keys(obj).forEach(key => flatten(obj[key], key));
+    Object.keys(obj).forEach((key) => flatten(obj[key], key));
     return result;
   }
 }

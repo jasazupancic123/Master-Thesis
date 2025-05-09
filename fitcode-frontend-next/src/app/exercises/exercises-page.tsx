@@ -15,15 +15,7 @@ export default function ExercisesPage() {
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const {
-    token,
-    components,
-    attributes,
-    setAttributes,
-    exercises,
-    setExercises,
-  } = useExerciseContext();
-
+  const { token, setExercises } = useExerciseContext();
   const [importedExercises, setImportedExercises] = useState<Exercise[]>([]);
   const [modal, setModal] = useState({
     add: false,

@@ -1,3 +1,4 @@
+import { COOLDOWN_ID, WARMUP_ID } from '@/common/constant/warmup-cooldown-ids-constants';
 import { Component } from '../component/type/component.type';
 import { Exercise } from '../exercise/type/exercise.type';
 import { User } from '../user/type/user.type';
@@ -7,6 +8,9 @@ export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training {
     for (const tc of item.components)
       tc.component = components.find((c) => c.id === tc.id);
+
+    item.warmup.component = components.find((c) => c.id === item.warmup.id);
+    item.cooldown.component = components.find((c) => c.id === item.cooldown.id);
 
     return item;
   }
@@ -46,5 +50,13 @@ export class TrainingService {
 
     training.availableMembersIds = availableMembersIds;
     return training;
+  }
+
+  static excludeWarmupCooldown(
+    components: Component[],
+  ): Component[] {
+    return components.filter(
+      (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
+    );
   }
 }

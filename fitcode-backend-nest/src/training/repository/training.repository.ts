@@ -11,7 +11,10 @@ import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Training } from '../entity/training.entity';
-import { v4 } from 'uuid';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
 
 @Injectable()
 export class TrainingRepository
@@ -59,11 +62,27 @@ export class TrainingRepository
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
         wellness: input.wellness || [],
+        warmup: {
+          id: WARMUP_COMPONENT_ID,
+          color: input.warmup.color || null,
+          from: input.warmup.from,
+          to: input.warmup.to,
+          supersets: [{ color: null, exercises: [] }],
+          subgroups: [],
+        },
+        cooldown: {
+          id: COOLDOWN_COMPONENT_ID,
+          color: input.cooldown.color || null,
+          from: input.cooldown.from,
+          to: input.cooldown.to,
+          supersets: [{ color: null, exercises: [] }],
+          subgroups: [],
+        },
         components: input.components.map((c, i) => ({
           id: c.id,
           color: c.color || null,
-          from: c.from ? c.from : startOfHour(addHours(new Date(), i)),
-          to: c.to ? c.to : endOfHour(addHours(new Date(), i)),
+          from: c.from ? c.from : startOfHour(addHours(new Date(), i + 1)),
+          to: c.to ? c.to : endOfHour(addHours(new Date(), i + 1)),
           supersets: [{ color: null, exercises: [] }],
           subgroups: [],
         })),

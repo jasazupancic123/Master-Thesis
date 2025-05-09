@@ -17,7 +17,6 @@ import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
 import { User } from '../../common/type/firebase-auth.type';
 import { ExerciseRef } from '../../common/type/firestore.type';
-import { Validate } from '../../common/type/validate.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ComponentService } from '../../component/component.service';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -27,10 +26,10 @@ import { ExerciseAttributeValueRepository } from '../repository/exercise-attribu
 import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { AttributeService } from '../../attribute/service/attribute.service';
-import { Component } from 'src/component/entity/component.entity';
-import { FieldPath, FieldValue, Query } from 'firebase-admin/firestore';
+import { Component } from '../../component/entity/component.entity';
+import { FieldPath, Query } from 'firebase-admin/firestore';
 import { TrainingPlanService } from '../../training/service/training-plan.service';
-import { DEFAULT_PARAMS_KEY } from 'src/component/constant/param.constant';
+import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
 
 @Injectable()
 export class ExerciseService {
@@ -134,6 +133,7 @@ export class ExerciseService {
       const component = components.find(
         (c) => c.id === exercise.componentIds[0],
       )!;
+
       const root = this.componentService.getRoot(component, components);
       const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
@@ -145,6 +145,7 @@ export class ExerciseService {
 
       exercise.defaultParams =
         this.trainingPlanService.getParamAttributes(params);
+
       return exercise;
     });
 
@@ -155,7 +156,7 @@ export class ExerciseService {
     const dbUser = await this.userService.findOneByIdOrFail(user.uid);
     const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
 
-    return await this.exerciseRepository
+    let exercises = await this.exerciseRepository
       .collection()
       .where('ownerId', 'in', userIds)
       .where(FieldPath.documentId(), 'in', ids)
@@ -167,6 +168,40 @@ export class ExerciseService {
           ),
         ),
       );
+
+    // map attributes
+    exercises = await Promise.all(
+      exercises.map(async (e) => ({
+        ...e,
+        attributeValues:
+          await this.exerciseAttributeValueRepository.getAllByExercise({
+            exerciseId: e.id,
+          }),
+      })),
+    );
+
+    const components = await this.cacheManagerService.getComponents();
+    const attributes = await this.cacheManagerService.getAttributes();
+
+    return exercises.map((exercise) => {
+      const component = components.find(
+        (c) => c.id === exercise.componentIds[0],
+      )!;
+
+      const root = this.componentService.getRoot(component, components);
+      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
+
+      const params = this.trainingPlanService.getComponentParamAttributes(
+        componentParams,
+        exercise.attributeValues,
+        attributes,
+      );
+
+      exercise.defaultParams =
+        this.trainingPlanService.getParamAttributes(params);
+
+      return exercise;
+    });
   }
 
   async findById(
@@ -508,6 +543,7 @@ export class ExerciseService {
     const updateExerciseQuery = this.firebaseService.buildUpdateQuery<Exercise>(
       { ...input, updatedAt: new Date() },
     );
+
     batch.update(docRef, updateExerciseQuery);
 
     attributeValues.forEach((v) => {
