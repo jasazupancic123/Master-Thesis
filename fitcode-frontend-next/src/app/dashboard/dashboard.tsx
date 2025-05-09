@@ -2,11 +2,27 @@
 
 import DashboardSidebar from '@/components/dashboard/dashboard-sidebar';
 import { useScreenSize } from '@/context/screen-size-provider';
+import { User } from '@/controller/user/type/user.type';
 import { Box } from '@mui/material';
+import { useState } from 'react';
 import MainDashboardView from './main-view';
+import { Organization } from '@/controller/organization/type/organization.type';
 
-export default function Dashboard() {
+interface DashboardProps {
+  organization: Organization;
+  organizations: Organization[] | null;
+  role: string;
+  users: User[];
+  token: string;
+  profile: User;
+}
+
+export default function Dashboard(props: DashboardProps) {
   const screenSize = useScreenSize();
+  const [view, setView] = useState<'mainView' | 'athletes'>('mainView');
+  const { organization, organizations, role, users, token, profile } = props;
+  const [selectedOrganization, setSelectedOrganization] =
+    useState<Organization | null>(organization);
 
   return (
     <>

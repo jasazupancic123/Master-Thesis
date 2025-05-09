@@ -76,6 +76,7 @@
         "name": "Power",
         "slug": "power",
         "attributes": [
+          "equipment",
           "pattern",
           "loadingSide",
           "movDir",
@@ -132,6 +133,7 @@
         "name": "Other",
         "slug": "other-1",
         "attributes": [
+          "equipment",
           "pattern",
           "loadingSide",
           "movDir",
@@ -147,6 +149,7 @@
         "name": "General",
         "slug": "general-strength",
         "attributes": [
+          "equipment",
           "pattern",
           "loadingSide",
           "movDir",
@@ -183,6 +186,7 @@
         "name": "Corrective",
         "slug": "corrective",
         "attributes": [
+          "equipment",
           "pattern",
           "loadingSide",
           "coeff",
@@ -801,21 +805,5 @@
         ]
       }
     ]
-  },
-  {
-    "name": "Warmup",
-    "slug": "warmup",
-    "params": {
-      "default": []
-    },
-    "children": []
-  },
-  {
-    "name": "Cooldown",
-    "slug": "cooldown",
-    "params": {
-      "default": []
-    },
-    "children": []
   }
 ]
