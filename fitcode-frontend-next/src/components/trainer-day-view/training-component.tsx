@@ -56,6 +56,10 @@ import { DateRange } from '@/common/type/date-range.type';
 import { COLORS } from '@/common/constant/color.constant';
 import TrainerCycleView from '@/app/groups/[group_id]/trainer-group-cycle-view';
 import TrainingComponentCalendar from './training-component-calendar';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 const commonService = CommonService.instance;
 
@@ -211,89 +215,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     handleMenuClose();
   };
 
-  const isDateUnavailable = (date: Dayjs): boolean => {
-    if (!component) return true;
-    const thisCycleTrainings = trainings.filter((t) => t.cycleId === cycle?.id);
-
-    if (
-      cycle &&
-      (dayjs(cycle.from).isAfter(date) || dayjs(cycle.to).isBefore(date))
-    )
-      return true;
-
-    return thisCycleTrainings.some(
-      (t) =>
-        dayjs(t.from).isSame(date, 'day') &&
-        ((dayjs(t.from).hour() < 12 &&
-          selectedPeriod === 'AM' &&
-          t.components.find((c) => c.id === component.id)) ||
-          (dayjs(t.from).hour() >= 12 &&
-            selectedPeriod === 'PM' &&
-            t.components.find((c) => c.id === component.id)))
-    );
-  };
-
-  const handleCopyComponent = async (newDate: Dayjs) => {
-    if (!component) {
-      toast.error('No component selected');
-      return;
-    }
-    const trainingInPeriod = trainings.find(
-      (t) =>
-        dayjs(t.from).isSame(newDate, 'day') &&
-        ((dayjs(t.from).hour() < 12 && selectedPeriod === 'AM') ||
-          (dayjs(t.from).hour() >= 12 && selectedPeriod === 'PM'))
-    );
-
-    if (trainingInPeriod) {
-      //a training already exists there, just add the same component to it
-      if (
-        trainingInPeriod.components.find((c) => c.id === trainingComponent.id)
-      ) {
-        //ask user if he wants to overwrite the component
-        setTrainingInPeriodForModal(trainingInPeriod);
-        setOpenOverwriteModal(true);
-      } else {
-        //add the component to the training
-        handleCopyComponentApiRequest(
-          trainingInPeriod,
-          trainingComponent,
-          false
-        );
-      }
-    } else {
-      if (!trainingComponent.component) return;
-      //no training exsits on the date, create a new training only with the same component
-      const from = dayjs(newDate)
-        .set('hour', selectedPeriod === 'AM' ? 8 : 14)
-        .set('minute', 0)
-        .toDate();
-      const to = dayjs(from).add(30, 'minute').toDate();
-
-      handleApiRequest(
-        router,
-        () =>
-          TrainingController.createWithTrainingComponent(token, training.id, {
-            trainingComponent: component,
-            date: { from, to } as DateRange,
-          }),
-        (training) => {
-          training = TrainingService.mapComponents(training, allComponents);
-          training = TrainingService.mapExercises(training, allExercises);
-
-          setTrainings((prev) => [...prev, training]);
-          if (filteredTrainings.length > 0) {
-            const selectedDay = dayjs(filteredTrainings[0].from).dayOfYear();
-            if (selectedDay === dayjs(training.from).dayOfYear()) {
-              setFilteredTrainings((prev) => [...prev, training]);
-            }
-          }
-          toast.success('Training with current component created successfully');
-        },
-        undefined,
-        'Failed to create training with current component'
-      );
-    }
+  const isWarmupOrCooldown = (component: TrainingComponent) => {
+    return component.id === WARMUP_ID || component.id === COOLDOWN_ID;
   };
 
   const handleCopyComponentApiRequest = async (
@@ -323,61 +246,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
       },
       undefined,
       'Failed to copy component'
-    );
-  };
-
-  const ServerDay = (
-    props: PickersDayProps<Dayjs> & {
-      highlightedDays?: number[];
-      trainingDays?: number[];
-    }
-  ) => {
-    if (!trainingComponent || !trainingComponent.component) return null;
-    const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
-
-    const sameComponent =
-      !props.outsideCurrentMonth &&
-      highlightedDays.indexOf(props.day.date()) >= 0;
-
-    const hasTraining =
-      !props.outsideCurrentMonth && trainingDays.indexOf(props.day.date()) >= 0;
-
-    const isGrouped = groupedTrainingsByRootIds.find(
-      (g) => g.trainings.indexOf(props.day.date()) >= 0
-    );
-
-    const IconComponent = commonService.navigation.getComponentIcon(
-      trainingComponent.component.name
-    );
-
-    return (
-      <Badge
-        key={props.day.toString()}
-        overlap="circular"
-        badgeContent={
-          sameComponent ? (
-            <IconComponent
-              sx={{
-                fontSize: 14,
-                zIndex: 100,
-                color: isGrouped ? isGrouped.color : undefined,
-              }}
-            />
-          ) : null
-        }
-      >
-        <PickersDay
-          {...other}
-          outsideCurrentMonth={outsideCurrentMonth}
-          day={day}
-          sx={{
-            ...(hasTraining && {
-              border: '1px solid', // or '2px dashed', or whatever
-              borderColor: 'rgba(255, 255, 255, 0.1)',
-            }),
-          }}
-        />
-      </Badge>
     );
   };
 
@@ -539,93 +407,101 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                   )}
                                 </MenuItem>
 
-                                <MenuItem
-                                  onClick={() => {
-                                    if (
-                                      !component ||
-                                      trainingComponent.id !== component.id
-                                    ) {
-                                      setTraining(training);
-                                      setComponent(trainingComponent);
-                                    }
+                                {!isWarmupOrCooldown(trainingComponent) && (
+                                  <>
+                                    <MenuItem
+                                      onClick={() => {
+                                        if (
+                                          !component ||
+                                          trainingComponent.id !== component.id
+                                        ) {
+                                          setTraining(training);
+                                          setComponent(trainingComponent);
+                                        }
 
-                                    setSelectedMonth(dayjs());
-                                    setOpenCalendarModal(true);
-                                    handleMenuClose();
-                                  }}
-                                >
-                                  <CalendarIcon sx={{ mr: 1 }} /> Component
-                                  Calendar
-                                </MenuItem>
+                                        setSelectedMonth(dayjs());
+                                        setOpenCalendarModal(true);
+                                        handleMenuClose();
+                                      }}
+                                    >
+                                      <CalendarIcon sx={{ mr: 1 }} /> Component
+                                      Calendar
+                                    </MenuItem>
 
-                                <MenuItem
-                                  onClick={() => {
-                                    if (
-                                      trainingComponent &&
+                                    <MenuItem
+                                      onClick={() => {
+                                        if (
+                                          trainingComponent &&
+                                          component &&
+                                          training.id ===
+                                            selectedTraining?.id &&
+                                          trainingComponent.id ===
+                                            component.id &&
+                                          heatmapView
+                                        ) {
+                                          setHeatmapView(false);
+                                          handleMenuClose();
+                                          return;
+                                        }
+                                        if (
+                                          !component ||
+                                          trainingComponent.id !== component.id
+                                        ) {
+                                          setTraining(training);
+                                          setComponent(trainingComponent);
+                                        }
+
+                                        setHeatmapView(true);
+                                        handleMenuClose();
+                                      }}
+                                    >
+                                      {trainingComponent &&
                                       component &&
                                       training.id === selectedTraining?.id &&
                                       trainingComponent.id === component.id &&
-                                      heatmapView
-                                    ) {
-                                      setHeatmapView(false);
-                                      handleMenuClose();
-                                      return;
-                                    }
-                                    if (
-                                      !component ||
-                                      trainingComponent.id !== component.id
-                                    ) {
-                                      setTraining(training);
-                                      setComponent(trainingComponent);
-                                    }
+                                      heatmapView ? (
+                                        <>
+                                          <DoNotDisturb
+                                            sx={{
+                                              position: 'absolute',
+                                              fontSize: 22,
+                                            }}
+                                          />
+                                          <MonitorHeart
+                                            sx={{ mr: 1, opacity: 0.5 }}
+                                          />{' '}
+                                          Hide Heatmap
+                                        </>
+                                      ) : (
+                                        <>
+                                          <MonitorHeart sx={{ mr: 1 }} />{' '}
+                                          Workout Heatmap
+                                        </>
+                                      )}
+                                    </MenuItem>
 
-                                    setHeatmapView(true);
-                                    handleMenuClose();
-                                  }}
-                                >
-                                  {trainingComponent &&
-                                  component &&
-                                  training.id === selectedTraining?.id &&
-                                  trainingComponent.id === component.id &&
-                                  heatmapView ? (
-                                    <>
-                                      <DoNotDisturb
-                                        sx={{
-                                          position: 'absolute',
-                                          fontSize: 22,
-                                        }}
-                                      />
-                                      <MonitorHeart
-                                        sx={{ mr: 1, opacity: 0.5 }}
-                                      />{' '}
-                                      Hide Heatmap
-                                    </>
-                                  ) : (
-                                    <>
-                                      <MonitorHeart sx={{ mr: 1 }} /> Workout
-                                      Heatmap
-                                    </>
-                                  )}
-                                </MenuItem>
-
-                                <MenuItem
-                                  onClick={() => {
-                                    const newTraining = { ...training };
-                                    newTraining.components =
-                                      newTraining.components.filter(
-                                        (c) => c.id !== trainingComponent.id
-                                      );
-                                    setFilteredTrainings((prev) =>
-                                      prev.map((t) =>
-                                        t.id === training.id ? newTraining : t
-                                      )
-                                    );
-                                    setDetectedChanges(true);
-                                    handleMenuClose();
-                                  }}
-                                >
-                                  <Delete sx={{ mr: 1 }} /> Delete Component
-                                </MenuItem>
+                                    <MenuItem
+                                      onClick={() => {
+                                        const newTraining = { ...training };
+                                        newTraining.components =
+                                          newTraining.components.filter(
+                                            (c) => c.id !== trainingComponent.id
+                                          );
+                                        setFilteredTrainings((prev) =>
+                                          prev.map((t) =>
+                                            t.id === training.id
+                                              ? newTraining
+                                              : t
+                                          )
+                                        );
+                                        setDetectedChanges(true);
+                                        handleMenuClose();
+                                      }}
+                                    >
+                                      <Delete sx={{ mr: 1 }} /> Delete Component
+                                    </MenuItem>
+                                  </>
+                                )}
                               </Menu>
                             </Box>
                           )}
@@ -737,89 +613,94 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           )}
                         </MenuItem>
 
-                        <MenuItem
-                          onClick={() => {
-                            if (
-                              !component ||
-                              trainingComponent.id !== component.id
-                            ) {
-                              setTraining(training);
-                              setComponent(trainingComponent);
-                            }
+                        {!isWarmupOrCooldown(trainingComponent) && (
+                          <>
+                            <MenuItem
+                              onClick={() => {
+                                if (
+                                  !component ||
+                                  trainingComponent.id !== component.id
+                                ) {
+                                  setTraining(training);
+                                  setComponent(trainingComponent);
+                                }
 
-                            setSelectedMonth(dayjs());
-                            setOpenCalendarModal(true);
-                            handleMenuClose();
-                          }}
-                        >
-                          <CalendarIcon sx={{ mr: 1 }} /> Component Calendar
-                        </MenuItem>
+                                setSelectedMonth(dayjs());
+                                setOpenCalendarModal(true);
+                                handleMenuClose();
+                              }}
+                            >
+                              <CalendarIcon sx={{ mr: 1 }} /> Component Calendar
+                            </MenuItem>
 
-                        <MenuItem
-                          onClick={() => {
-                            if (
-                              trainingComponent &&
+                            <MenuItem
+                              onClick={() => {
+                                if (
+                                  trainingComponent &&
+                                  component &&
+                                  training.id === selectedTraining?.id &&
+                                  trainingComponent.id === component.id &&
+                                  heatmapView
+                                ) {
+                                  setHeatmapView(false);
+                                  handleMenuClose();
+                                  return;
+                                }
+                                if (
+                                  !component ||
+                                  trainingComponent.id !== component.id
+                                ) {
+                                  setTraining(training);
+                                  setComponent(trainingComponent);
+                                }
+
+                                setHeatmapView(true);
+                                handleMenuClose();
+                              }}
+                            >
+                              {trainingComponent &&
                               component &&
                               training.id === selectedTraining?.id &&
                               trainingComponent.id === component.id &&
-                              heatmapView
-                            ) {
-                              setHeatmapView(false);
-                              handleMenuClose();
-                              return;
-                            }
-                            if (
-                              !component ||
-                              trainingComponent.id !== component.id
-                            ) {
-                              setTraining(training);
-                              setComponent(trainingComponent);
-                            }
+                              heatmapView ? (
+                                <>
+                                  <DoNotDisturb
+                                    sx={{
+                                      position: 'absolute',
+                                      fontSize: 22,
+                                    }}
+                                  />
+                                  <MonitorHeart sx={{ mr: 1, opacity: 0.5 }} />{' '}
+                                  Hide Heatmap
+                                </>
+                              ) : (
+                                <>
+                                  <MonitorHeart sx={{ mr: 1 }} /> Workout
+                                  Heatmap
+                                </>
+                              )}
+                            </MenuItem>
 
-                            setHeatmapView(true);
-                            handleMenuClose();
-                          }}
-                        >
-                          {trainingComponent &&
-                          component &&
-                          training.id === selectedTraining?.id &&
-                          trainingComponent.id === component.id &&
-                          heatmapView ? (
-                            <>
-                              <DoNotDisturb
-                                sx={{
-                                  position: 'absolute',
-                                  fontSize: 22,
-                                }}
-                              />
-                              <MonitorHeart sx={{ mr: 1, opacity: 0.5 }} /> Hide
-                              Heatmap
-                            </>
-                          ) : (
-                            <>
-                              <MonitorHeart sx={{ mr: 1 }} /> Workout Heatmap
-                            </>
-                          )}
-                        </MenuItem>
-
-                        <MenuItem
-                          onClick={() => {
-                            const newTraining = { ...training };
-                            newTraining.components =
-                              newTraining.components.filter(
-                                (c) => c.id !== trainingComponent.id
-                              );
-                            setFilteredTrainings((prev) =>
-                              prev.map((t) =>
-                                t.id === training.id ? newTraining : t
-                              )
-                            );
-                            setDetectedChanges(true);
-                            handleMenuClose();
-                          }}
-                        >
-                          <Delete sx={{ mr: 1 }} /> Delete Component
-                        </MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                const newTraining = { ...training };
+                                newTraining.components =
+                                  newTraining.components.filter(
+                                    (c) => c.id !== trainingComponent.id
+                                  );
+                                setFilteredTrainings((prev) =>
+                                  prev.map((t) =>
+                                    t.id === training.id ? newTraining : t
+                                  )
+                                );
+                                setDetectedChanges(true);
+                                handleMenuClose();
+                              }}
+                            >
+                              <Delete sx={{ mr: 1 }} /> Delete Component
+                            </MenuItem>
+                          </>
+                        )}
                       </Menu>
                     </>
                   )}
@@ -880,68 +761,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           handleCopyComponentApiRequest={handleCopyComponentApiRequest}
         />
-        {/*
-        <Box display="flex" flexDirection="column" gap={2}>
-          <Typography variant="h6">Select Training Period</Typography>
-          <Select
-            value={selectedPeriod}
-            onChange={(event) => setSelectedPeriod(event.target.value as any)}
-            fullWidth
-          >
-            <MenuItem value="AM">AM</MenuItem>
-            <MenuItem value="PM">PM</MenuItem>
-          </Select>
-
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Typography variant="h6">Select Date</Typography>
-            <DesktopDatePicker
-              open={datePickerOpen}
-              value={null}
-              onOpen={() => {
-                setSelectedMonth(dayjs());
-              }}
-              onChange={(newDate) => {
-                if (!newDate) return;
-                handleCopyComponent(newDate);
-              }}
-              onClose={() => {}}
-              //shouldDisableDate={isDateUnavailable}
-              slots={{
-                day: ServerDay,
-              }}
-              onMonthChange={(date) => {
-                setSelectedMonth(date);
-              }}
-              onYearChange={(date) => {
-                setSelectedMonth(date);
-              }}
-              slotProps={{
-                textField: {
-                  disabled: true,
-                  InputProps: {
-                    endAdornment: (
-                      <IconButton
-                        onClick={() => setDatePickerOpen(!datePickerOpen)}
-                      >
-                        <CalendarIcon />
-                      </IconButton>
-                    ),
-                  },
-                },
-                openPickerButton: {
-                  sx: { display: 'flex !important' },
-                  onClick: () => {
-                    setDatePickerOpen(false);
-                  },
-                },
-                day: {
-                  highlightedDays,
-                  trainingDays,
-                } as any,
-              }}
-            />
-          </LocalizationProvider>
-        </Box>*/}
       </MyModal>
       <MyModal
         isOpen={openOverwriteModal}

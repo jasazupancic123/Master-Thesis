@@ -9,7 +9,6 @@ import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { Component } from '../../src/component/entity/component.entity';
 import { ComponentService } from '../../src/component/component.service';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { createTrainerUserAndToken } from '../utils/auth.util';

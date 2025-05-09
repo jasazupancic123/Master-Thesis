@@ -26,6 +26,8 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
     copiedFromId: null,
     from: data?.from || addDays(new Date(), 1),
     to: data?.to || addHours(addDays(new Date(), 1), 2),
+    warmup: data?.warmup || generateTrainingComponent(),
+    cooldown: data?.cooldown || generateTrainingComponent(),
     components: data?.components || [],
     wellness: data?.wellness || [],
   };

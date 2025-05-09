@@ -41,6 +41,10 @@ import { AttributeValue } from '@/controller/attribute/type/attribute-value.type
 import { ComponentParam } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { idID } from '@mui/material/locale';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
@@ -646,6 +650,95 @@ export default function Supersets(props: SupersetsProps) {
               };
             }
           );
+
+          if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
+            const wOrC =
+              component.id === WARMUP_ID
+                ? { ...training.warmup }
+                : { ...training.cooldown };
+            let supersets = !selectedSubgroup?.subgroup
+              ? wOrC.supersets
+              : selectedSubgroup?.subgroup.supersets;
+            if (!Array.isArray(supersets)) supersets = [];
+            if (supersets.length === 0)
+              supersets.push({ exercises: [], color: COLOR[supersets.length] });
+
+            for (const superset of supersets) {
+              while (
+                superset.exercises.length < NUM_MAX_EXERCISES_PER_SUPERSET &&
+                exercisesToAdd.length > 0
+              ) {
+                const exerciseToAdd = exercisesToAdd.shift(); // remove from the front
+                if (exerciseToAdd)
+                  superset.exercises.push({ ...exerciseToAdd });
+              }
+
+              if (exercisesToAdd.length === 0) break; // stop if no exercises left
+            }
+
+            if (!selectedSubgroup?.subgroup) {
+              const updatedWOrC = {
+                ...wOrC,
+                supersets: [...supersets],
+              };
+
+              let updatedTraining = { ...training };
+
+              if (component.id === WARMUP_ID) {
+                updatedTraining = {
+                  ...updatedTraining,
+                  warmup: updatedWOrC,
+                };
+              } else {
+                updatedTraining = {
+                  ...updatedTraining,
+                  cooldown: updatedWOrC,
+                };
+              }
+
+              const newFilteredTrainings = [...filteredTrainings].map((t) =>
+                t.id === updatedTraining.id ? updatedTraining : t
+              );
+              setTraining(updatedTraining);
+              setFilteredTrainings(newFilteredTrainings);
+              setOpenAddExerciseModal(false);
+              setDetectedChanges(true);
+            } else {
+              const updatedSubgroup = {
+                ...selectedSubgroup.subgroup,
+                supersets: [...supersets],
+              };
+
+              const updatedSubgroups = [...component.subgroups];
+              updatedSubgroups[selectedSubgroup.index] = updatedSubgroup;
+
+              const updatedWOrC = {
+                ...wOrC,
+                subgroups: updatedSubgroups,
+              };
+
+              let updatedTraining = { ...training };
+              if (component.id === WARMUP_ID) {
+                updatedTraining = {
+                  ...updatedTraining,
+                  warmup: updatedWOrC,
+                };
+              } else {
+                updatedTraining = {
+                  ...updatedTraining,
+                  cooldown: updatedWOrC,
+                };
+              }
+              setTraining(updatedTraining);
+              const newFilteredTrainings = [...filteredTrainings].map((t) =>
+                t.id === updatedTraining.id ? updatedTraining : t
+              );
+              setFilteredTrainings(newFilteredTrainings);
+              setOpenAddExerciseModal(false);
+              setDetectedChanges(true);
+            }
+            return;
+          }
 
           // get training component index
           const trainingComponentIndex = [...training.components].findIndex(

@@ -8,6 +8,16 @@ import { IdEntity } from '../../common/entity/id.entity';
 export class UpdateTrainingDto extends PickType(Training, [
   'components',
   'membersIds',
+  'warmup',
+  'cooldown',
+]) {}
+
+export class UpdateTrainingDtoWithId extends PickType(Training, [
+  'id',
+  'components',
+  'membersIds',
+  'warmup',
+  'cooldown',
 ]) {}
 
 export class BatchUpdateTrainingDto extends IntersectionType(

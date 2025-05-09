@@ -61,7 +61,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   if (!training || !component || !params) return null;
 
   useEffect(() => {
-    if (propsExercise !== exercise) setExercise(propsExercise);
+    if (propsExercise !== exercise) {
+      setSetsNumber(propsExercise.sets.length);
+      setExercise(propsExercise);
+    }
   }, [propsExercise]);
 
   useEffect(() => {
@@ -193,9 +196,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           : exercise.exercise?.imageUrl
             ? 'rgba(0, 0, 0, 0.6)'
             : 'rgba(255, 255, 255, 0.05)',
-        backgroundImage: exercise.exercise?.imageUrl
-          ? `url(${exercise.exercise?.imageUrl})`
-          : undefined,
+        backgroundImage:
+          exercise.exercise?.imageUrl && !expandedSetsView
+            ? `url(${exercise.exercise?.imageUrl})`
+            : undefined,
         backgroundPosition: 'center',
         backgroundSize: '100% auto',
         backgroundRepeat: 'no-repeat',

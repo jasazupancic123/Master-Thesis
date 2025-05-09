@@ -5,8 +5,8 @@ import { GroupController } from '@/controller/group/group.controller';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import Dashboard from './dashboard';
-import { Organization } from '@/controller/organization/type/organization.type';
 import { DashboardProvider } from '@/context/dashboard-provider';
+import { Organization } from '@/controller/organization/type/organization.type';
 
 export default async function Page() {
   const cookieStore = await cookies();

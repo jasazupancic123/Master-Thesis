@@ -15,7 +15,6 @@ import {
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
@@ -23,7 +22,6 @@ import {
   CycleRef,
   TrainingComponentRef,
   TrainingRef,
-  TrainingStatusRef,
   WorkloadRef,
 } from '../../common/type/firestore.type';
 import { Filter } from '../../common/type/orm.type';
@@ -34,7 +32,6 @@ import { Group } from '../../group/entity/group.entity';
 import { GroupService } from '../../group/group.service';
 import { UserService } from '../../user/user.service';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingStatus } from '../entity/training-status.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
@@ -143,7 +140,10 @@ export class TrainingService {
 
   async getUserWorkloadsByGroupIdAndExerciseIds(
     user: User,
-    input: { groupId: string; body: {exerciseIds: string[], athleteId?: string}},
+    input: {
+      groupId: string;
+      body: { exerciseIds: string[]; athleteId?: string };
+    },
   ): Promise<{ completedWorkloads: Workload[]; futureWorkloads: Workload[] }> {
     const { groupId, body } = input;
     const { exerciseIds, athleteId } = body;
@@ -156,14 +156,13 @@ export class TrainingService {
 
     const group = await this.groupService.findByIdOrFail(user, groupRef);
     let workloads = [];
-    if(athleteId){
+    if (athleteId) {
       workloads = await this.workloadService.findAllByAthleteGroupExerciseIds(
         athleteId,
         groupId,
         exerciseIds,
       );
-    }
-    else {
+    } else {
       workloads = await this.workloadService.findAllByMembersGroupExerciseIds(
         group.membersIds,
         groupId,
@@ -171,19 +170,20 @@ export class TrainingService {
       );
     }
 
-    const { completedWorkloads, futureWorkloads } = this.getCompletedAndFutureWorkloads(workloads);
+    const { completedWorkloads, futureWorkloads } =
+      this.getCompletedAndFutureWorkloads(workloads);
 
     return { completedWorkloads, futureWorkloads };
   }
 
-  private getCompletedAndFutureWorkloads(workloads: Workload[]){
+  private getCompletedAndFutureWorkloads(workloads: Workload[]) {
     const completedWorkloads = workloads.filter(
       (w) => w.status !== SetStatus.NOT_STARTED,
     );
     const futureWorkloads = workloads.filter(
       (w) => w.status === SetStatus.NOT_STARTED,
     );
-  
+
     return { completedWorkloads, futureWorkloads };
   }
 
@@ -215,7 +215,14 @@ export class TrainingService {
     input: Create<
       Omit<
         Training,
-        'id' | 'ownerId' | 'membersIds' | 'wellness' | 'from' | 'to'
+        | 'id'
+        | 'ownerId'
+        | 'membersIds'
+        | 'wellness'
+        | 'from'
+        | 'to'
+        | 'warmup'
+        | 'cooldown'
       >
     >,
   ): Promise<Training> {
@@ -234,6 +241,14 @@ export class TrainingService {
     this.validateIsTrainingInFuture(from);
     await this.validateOverlap(from, to, group.id, cycle.id);
 
+    // warmup and cooldown components
+    const { warmup, cooldown } =
+      this.trainingPlanService.createWarmupAndCooldown(
+        from,
+        to,
+        input.components,
+      );
+
     // validate components & exercises
     const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
@@ -247,6 +262,8 @@ export class TrainingService {
       group.membersIds,
       input.components,
       components,
+      warmup,
+      cooldown,
     );
 
     // populate exercise params from components
@@ -274,6 +291,8 @@ export class TrainingService {
       membersIds: group.membersIds,
       wellness,
       completedMembersIds: [],
+      warmup,
+      cooldown,
       components: input.components.map((c) => ({
         id: c.id,
         from: c.from,
@@ -338,6 +357,12 @@ export class TrainingService {
     const from = date.from;
     const to = date.to;
 
+    // warmup and cooldown components
+    const { warmup, cooldown } =
+      this.trainingPlanService.createWarmupAndCooldown(from, to, [
+        trainingComponent,
+      ]);
+
     this.validateOwner(user.uid, group);
     this.checkTrainingIsInCycle(from, cycle);
     this.validateIsTrainingInFuture(from);
@@ -356,6 +381,8 @@ export class TrainingService {
       group.membersIds,
       [trainingComponent],
       components,
+      warmup,
+      cooldown,
     );
 
     // populate exercise params from components
@@ -383,6 +410,8 @@ export class TrainingService {
       membersIds: group.membersIds,
       wellness,
       completedMembersIds: [],
+      warmup,
+      cooldown,
       components: [
         {
           id: trainingComponent.id,
@@ -479,6 +508,8 @@ export class TrainingService {
       membersIds,
       input.components,
       components,
+      input.warmup,
+      input.cooldown,
     );
 
     // populate exercise params from components
@@ -546,11 +577,20 @@ export class TrainingService {
         data.components,
       );
 
+      this.trainingPlanService.updateWarmupAndCooldownTimes(
+        data.warmup,
+        data.cooldown,
+        training,
+        data.components,
+      );
+
       this.trainingPlanService.validateTrainingComponents(
         exercises,
         membersIds,
         data.components,
         components,
+        data.warmup,
+        data.cooldown,
       );
 
       // populate exercise params from components
@@ -628,6 +668,8 @@ export class TrainingService {
       membersIds,
       training.components,
       components,
+      training.warmup,
+      training.cooldown,
     );
 
     // for future trainings, update latest meta and calculate workloads
@@ -643,6 +685,8 @@ export class TrainingService {
       membersIds: training.membersIds,
       wellness,
       completedMembersIds: [],
+      warmup: { ...training.warmup },
+      cooldown: { ...training.cooldown },
       components: training.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
@@ -760,6 +804,8 @@ export class TrainingService {
       [],
       newComponents,
       components,
+      training.warmup,
+      training.cooldown,
     );
 
     const updated = {
@@ -901,11 +947,20 @@ export class TrainingService {
       trainingComponents,
     );
 
+    this.trainingPlanService.updateWarmupAndCooldownTimes(
+      training.warmup,
+      training.cooldown,
+      training,
+      trainingComponents,
+    );
+
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       training.membersIds,
       trainingComponents,
       components,
+      training.warmup,
+      training.cooldown,
     );
 
     // get query for training
@@ -930,6 +985,13 @@ export class TrainingService {
     const training = await this.findOneOrFail(user, ref);
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
+
+    this.trainingPlanService.updateWarmupAndCooldownTimes(
+      training.warmup,
+      training.cooldown,
+      training,
+      training.components.filter((c) => c.id !== ref.componentId),
+    );
 
     // get query for training
     const [query, updatedTraining] =

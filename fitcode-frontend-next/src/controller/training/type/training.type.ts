@@ -12,6 +12,8 @@ export type Training = BaseEntity &
     ownerId: string;
     membersIds: string[];
     copiedFromId?: string;
+    warmup: TrainingComponent;
+    cooldown: TrainingComponent;
     components: TrainingComponent[];
     wellness: Wellness[];
 
