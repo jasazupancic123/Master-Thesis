@@ -48,7 +48,13 @@ export class TrainingController {
   static async update(
     token: string,
     trainingId: string,
-    body: Partial<DateRange & { components: TrainingComponent[] }>
+    body: Partial<
+      DateRange & {
+        components: TrainingComponent[];
+        warmup: TrainingComponent;
+        cooldown: TrainingComponent;
+      }
+    >
   ) {
     return api.patch<Training>(`/training/${trainingId}`, body, { token });
   }

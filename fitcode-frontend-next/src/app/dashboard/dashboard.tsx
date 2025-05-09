@@ -2,11 +2,11 @@
 
 import DashboardSidebar from '@/components/dashboard/dashboard-sidebar';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { Organization } from '@/controller/organization/type/organization.type';
 import { User } from '@/controller/user/type/user.type';
 import { Box } from '@mui/material';
 import { useState } from 'react';
 import MainDashboardView from './main-view';
+import { Organization } from '@/controller/organization/type/organization.type';
 
 interface DashboardProps {
   organization: Organization;

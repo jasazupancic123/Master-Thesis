@@ -59,6 +59,18 @@ export class Training extends BaseEntity {
   @Transform(({ value }) => new Date(value))
   to: Date;
 
+  @ValidateNested()
+  @Type(() => TrainingComponent)
+  @ApiProperty()
+  @Expose()
+  warmup: TrainingComponent; // warmup component
+
+  @ValidateNested()
+  @Type(() => TrainingComponent)
+  @ApiProperty()
+  @Expose()
+  cooldown: TrainingComponent; // cooldown component
+
   @ValidateNested({ each: true })
   @Type(() => TrainingComponent)
   @ApiProperty()

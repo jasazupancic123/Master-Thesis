@@ -12,7 +12,6 @@ import { generateAttributeStub } from '../../src/attribute/mock/attribute.stub';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
 import { GLOBAL_EXERCISE_OWNER } from '../../src/exercise/constant/global-exercise-owner.constant';
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
-import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
 import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
 import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
 import { NUM_MAX_EXERCISES } from '../../src/common/constant/limit.constant';

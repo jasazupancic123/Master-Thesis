@@ -12,6 +12,10 @@ import { Component } from './entity/component.entity';
 import { ComponentRepository } from './repository/component.repository';
 import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
 import { Wrapper } from '../../src/common/type/wrapper.type';
+import {
+  COOLDOWN_COMPONENT,
+  WARMUP_COMPONENT,
+} from './constant/warmup-cooldown.constant';
 
 @Injectable()
 export class ComponentService {
@@ -66,8 +70,11 @@ export class ComponentService {
     return component;
   }
 
-  async findAllFlat(): Promise<Component[]> {
+  async findAllFlat(excludeHardcoded = false): Promise<Component[]> {
     const components = await this.componentRepository.getDocs();
+    if (!excludeHardcoded)
+      components.push(WARMUP_COMPONENT, COOLDOWN_COMPONENT);
+
     for (const component of components) this.populate(component, components);
     return components;
   }

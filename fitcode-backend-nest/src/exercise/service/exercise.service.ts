@@ -17,7 +17,6 @@ import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
 import { User } from '../../common/type/firebase-auth.type';
 import { ExerciseRef } from '../../common/type/firestore.type';
-import { Validate } from '../../common/type/validate.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ComponentService } from '../../component/component.service';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -27,10 +26,10 @@ import { ExerciseAttributeValueRepository } from '../repository/exercise-attribu
 import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { AttributeService } from '../../attribute/service/attribute.service';
-import { Component } from 'src/component/entity/component.entity';
-import { FieldPath, FieldValue, Query } from 'firebase-admin/firestore';
+import { Component } from '../../component/entity/component.entity';
+import { FieldPath, Query } from 'firebase-admin/firestore';
 import { TrainingPlanService } from '../../training/service/training-plan.service';
-import { DEFAULT_PARAMS_KEY } from 'src/component/constant/param.constant';
+import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
 
 @Injectable()
 export class ExerciseService {
