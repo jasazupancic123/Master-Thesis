@@ -21,6 +21,7 @@ import { CommonService } from '../../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
 import {
+  CycleRef,
   TrainingComponentRef,
   TrainingRef,
   TrainingStatusRef,
@@ -497,35 +498,26 @@ export class TrainingService {
     return updated;
   }
 
-  async updateMultiple(
+  async batchUpdate(
     user: User,
+    ref: CycleRef,
     input: Update<Training>[],
   ): Promise<Training[]> {
     this.logger.log(
-      `User ${user.uid} is updating multiple trainings: ${JSON.stringify(input)}`,
+      `User ${user.uid} is updating ${input.length} trainings: ${JSON.stringify(input)}`,
     );
 
+    const { groupId, cycleId } = ref;
+    const group = await this.groupService.findByIdOrFail(user, { groupId });
+    const cycle = this.groupService.findCycleOrFail(cycleId, group);
+    this.validateOwner(user.uid, group);
+
     const updated = [];
-    for (const trainingInput of input) {
-      const ref = { trainingId: trainingInput.id };
+    for (const data of input) {
       // validate training
-      const training = await this.findOneOrFail(user, ref);
-      const { groupId, cycleId } = training;
+      const training = await this.findOneOrFail(user, { trainingId: data.id });
 
-      const group = await this.groupService.findByIdOrFail(user, { groupId });
-      const cycle = this.groupService.findCycleOrFail(cycleId, group);
-      this.validateOwner(user.uid, training);
-
-      // if no components, delete training
-      if (training.components.length === 0) {
-        await this.trainingRepository.deleteDoc(ref.trainingId);
-        updated.push({
-          ...training,
-          ...this.commonService.object.clean(trainingInput),
-        });
-      }
-
-      const { from, to } = this.getFromAndToDates(trainingInput.components);
+      const { from, to } = this.getFromAndToDates(data.components);
       this.checkTrainingIsInCycle(from, cycle);
       this.validateIsTrainingInFuture(from);
       await this.validateOverlap(from, to, groupId, cycleId, training.id);
@@ -533,33 +525,33 @@ export class TrainingService {
       // validate components & exercises
       const attributes = await this.cacheManagerService.getAttributes();
       const components = await this.cacheManagerService.getComponents();
-      const membersIds = trainingInput.membersIds || training.membersIds;
+      const membersIds = data.membersIds || training.membersIds;
       await this.validateTrainingMembers(membersIds);
 
       const exercises = await this.trainingPlanService.findAllTrainingExercises(
         user,
-        trainingInput.components,
+        data.components,
       );
 
       this.trainingPlanService.updateWarmupAndCooldownTimes(
-        trainingInput.warmup,
-        trainingInput.cooldown,
+        data.warmup,
+        data.cooldown,
         training,
-        trainingInput.components,
+        data.components,
       );
 
       this.trainingPlanService.validateTrainingComponents(
         exercises,
         membersIds,
-        trainingInput.components,
+        data.components,
         components,
-        trainingInput.warmup,
-        trainingInput.cooldown,
+        data.warmup,
+        data.cooldown,
       );
 
       // populate exercise params from components
       this.trainingPlanService.populateTrainingExerciseParams(
-        trainingInput.components,
+        data.components,
         components,
         exercises,
         attributes,
@@ -569,23 +561,23 @@ export class TrainingService {
       const wellness = await this.userService.getRecentWellness(membersIds);
       const workloads = await this.workloadService.findAllByMembers(membersIds);
 
-      const updatedTrainig = {
+      const updatedTraining = {
         ...training,
-        ...this.commonService.object.clean(trainingInput),
+        ...this.commonService.object.clean(data),
       };
 
-      updated.push(updatedTrainig);
+      updated.push(updatedTraining);
 
-      const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+      const trainingDocRef = this.trainingRepository.doc(data.id);
       const updateTrainingQuery =
         this.firebaseService.buildUpdateQuery<Training>({
-          ...trainingInput,
+          ...data,
           wellness,
         });
 
       const batch = this.firebaseService.firestore.batch();
       batch.update(trainingDocRef, updateTrainingQuery);
-      this.workloadService.createForTraining(batch, updatedTrainig, workloads);
+      this.workloadService.createForTraining(batch, updatedTraining, workloads);
       await batch.commit();
     }
 

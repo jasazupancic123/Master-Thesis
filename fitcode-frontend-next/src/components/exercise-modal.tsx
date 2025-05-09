@@ -1,6 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
+import { SetState } from '@/common/type/state.type';
 import FileUpload from '@/components/file-upload';
 import MyModal from '@/components/modal';
 import { useScreenSize } from '@/context/screen-size-provider';
@@ -9,13 +9,7 @@ import {
   TreeComponent,
 } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
-import {
-  Button,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  InputLabel,
-} from '@mui/material';
+import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
@@ -25,12 +19,8 @@ import React, { useEffect, useState } from 'react';
 import SelectAttribute from './select-attribute';
 import SelectComponent from './select-component';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
-import { v4 } from 'uuid';
-import toast from 'react-hot-toast';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
-import { useGroup } from '@/context/group-provider';
-import { useRouter } from 'next/navigation';
+import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
+import { ExerciseService } from '@/controller/exercise/exercise.service';
 
 interface Props {
   data: Partial<Exercise>;
@@ -42,12 +32,11 @@ interface Props {
   title: string;
   cancelText?: string;
   onDelete?: () => void;
-  onConfirm?: () => Promise<void>;
+  onConfirm?: (filteredAttributes: Attribute[]) => Promise<void>;
 }
 
 export default function ExerciseModal(props: Props) {
   const screenSize = useScreenSize();
-  const router = useRouter();
   const {
     data,
     setData,
@@ -61,14 +50,24 @@ export default function ExerciseModal(props: Props) {
     onConfirm,
   } = props;
 
-  const { token } = useGroup();
-
   const [selectedComponents, setSelectedComponents] = useState<{
     [key: number]: string;
   }>({});
+
   const [hasSelectedLeafComponent, setHasSelectedLeafComponent] =
     useState(false);
-  const [filteredAttributes, setFilteredAttributes] = useState<Attribute[]>([]);
+
+  const [filteredAttributes, setFilteredAttributes] = useState(attributes);
+
+  function handleSelectChange(field: string, value: string) {
+    setData((prev) => ({
+      ...prev,
+      valuesObject: {
+        ...prev.valuesObject,
+        [field]: value,
+      },
+    }));
+  }
 
   useEffect(() => {
     // set the selected components to the data's components
@@ -97,16 +96,6 @@ export default function ExerciseModal(props: Props) {
     setSelectedComponents(selected);
   }, [data?.id]);
 
-  function handleSelectChange(field: string, value: string) {
-    setData((prev) => ({
-      ...prev,
-      valuesObject: {
-        ...prev.valuesObject,
-        [field]: value,
-      },
-    }));
-  }
-
   useEffect(() => {
     const componentsIds = Object.values(selectedComponents);
     if (!componentsIds.length) return;
@@ -122,46 +111,30 @@ export default function ExerciseModal(props: Props) {
   useEffect(() => {
     const componentId = data.componentIds?.[0];
     if (!componentId) return;
+
     const foundComponent = components.find((c) => c.id === componentId);
     if (!foundComponent) return;
-    const hasSelectedLeafComponent = foundComponent.children.length === 0;
-    if (hasSelectedLeafComponent) {
-      const parents = foundComponent.parents.map((parent) => {
-        const foundParent = components.find((c) => c.id === parent);
-        if (!foundParent) return null;
-        return foundParent;
-      });
-      const attributesIds = foundComponent.attributes || [];
-      for (const parent of parents) {
-        if (!parent || !parent?.attributes) continue;
-        for (const attribute of parent.attributes) {
-          if (!attributesIds.find((a) => a === attribute))
-            attributesIds.push(attribute);
-        }
-      }
-      const filteredAttributes: Attribute[] = attributesIds
-        .map((attribute) => {
-          const foundAttribute = attributes.find((a) => a.field === attribute);
-          if (!foundAttribute) return null;
-          if (foundAttribute.type === 'select') {
-            const foundSelectAttribute = attributes.find(
-              (a) => a.field === foundAttribute.field
-            );
-            if (!foundSelectAttribute) return null;
-            foundAttribute.options = foundSelectAttribute.options;
-          }
-          return foundAttribute;
-        })
-        .filter((a): a is Attribute => Boolean(a));
 
-      setFilteredAttributes(filteredAttributes);
-    } else {
-      setFilteredAttributes([]);
-    }
+    const hasSelectedLeafComponent = foundComponent.children.length === 0;
+    if (!hasSelectedLeafComponent) setFilteredAttributes([]);
+
+    const parents = foundComponent.parents.map((parent) =>
+      components.find((c) => c.id === parent)
+    );
+
+    const attributeIds = foundComponent.attributes || [];
+    for (const parent of parents)
+      if (parent?.attributes)
+        for (const attribute of parent.attributes)
+          if (!attributeIds.find((a) => a === attribute))
+            attributeIds.push(attribute);
+
+    setFilteredAttributes(
+      attributes.filter((a) => attributeIds.includes(a.field))
+    );
+
     setHasSelectedLeafComponent(hasSelectedLeafComponent);
   }, [data.componentIds]);
-
-  useEffect(() => {}, [data]);
 
   useEffect(() => {
     if (!isOpen) setSelectedComponents({});
@@ -172,7 +145,7 @@ export default function ExerciseModal(props: Props) {
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       width={screenSize.isMobile ? undefined : 500}
-      onConfirm={onConfirm}
+      onConfirm={() => onConfirm?.(filteredAttributes)}
       onDelete={onDelete}
       cancelText={cancelText}
     >
@@ -257,15 +230,18 @@ export default function ExerciseModal(props: Props) {
             </Box>
           ) : (
             filteredAttributes.map((attribute) => {
-              const type = attribute.type === 'number' ? 'number' : 'text';
+              const type =
+                attribute.type === AttributeType.Number ? 'number' : 'text';
 
               return (
                 <Grid size={{ xs: 6 }} key={attribute.field}>
-                  {attribute.type === 'select' ? (
+                  {attribute.type === 'select' ||
+                  attribute.type === 'multiselect' ? (
                     <SelectAttribute
                       attribute={attribute}
                       onChange={handleSelectChange}
                       initialValue={data.valuesObject}
+                      label
                     />
                   ) : attribute.type === 'boolean' ? (
                     <FormControlLabel

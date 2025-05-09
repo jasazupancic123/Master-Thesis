@@ -4,6 +4,8 @@ import { SetStatus } from '../enum/set-status.enum';
 
 export function generateWorkloadStub(data?: Partial<Workload>): Workload {
   return {
+    groupId: data?.groupId,
+    cycleId: data?.cycleId,
     userId: data?.userId || global.athlete.uid,
     trainingId: data?.trainingId,
     componentId: data?.componentId,

@@ -17,8 +17,8 @@ import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import {
+  BatchUpdateTrainingsDto,
   UpdateTrainingDto,
-  UpdateTrainingDtoWithId,
 } from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
@@ -83,14 +83,16 @@ export class TrainingController {
     return await this.trainingService.update(user, ref, body);
   }
 
-  @Patch(':trainingId/multiple')
+  @Patch('batch/:groupId/:cycleId')
   @Auth()
-  async updateMultiple(
+  async batchUpdate(
     @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Body() body: UpdateTrainingDtoWithId[],
+    @Param('groupId') groupId: string,
+    @Param('cycleId') cycleId: string,
+    @Body() { trainings }: BatchUpdateTrainingsDto,
   ) {
-    return await this.trainingService.updateMultiple(user, body);
+    const ref = { groupId, cycleId };
+    return await this.trainingService.batchUpdate(user, ref, trainings);
   }
 
   @Patch(':trainingId/component/copy')

@@ -66,45 +66,18 @@ export default function TrainerDayView() {
     }))
   );
 
-  const [showSubgroups, setShowSubgroups] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  async function handleUpdateTraining() {
-    if (!training) return;
-
-    await handleApiRequest(
-      router,
-      () => TrainingController.update(token, training.id, training),
-      (newTraining) => {
-        let mapped = TrainingService.mapComponents(newTraining, components);
-        mapped = TrainingService.mapExercises(newTraining, exercises);
-
-        if (training && newTraining.id === training.id) setTraining(mapped);
-        setTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-
-        setFilteredTrainings((prev) =>
-          prev.map((t) => (t.id === newTraining.id ? mapped : t))
-        );
-
-        setDetectedChanges(false);
-        toast.success('Training updated successfully');
-      },
-      undefined,
-      'Error when updating training'
-    );
-  }
   async function handleUpdateMultipleTrainings() {
     if (!filteredTrainings || !filteredTrainings.length) return;
 
     await handleApiRequest(
       router,
       () =>
-        TrainingController.updateMultiple(
+        TrainingController.batchUpdate(
           token,
-          filteredTrainings[0].id,
+          { groupId: group.id, cycleId: cycle!.id },
           filteredTrainings
         ),
       (newTrainings) => {
@@ -113,10 +86,9 @@ export default function TrainerDayView() {
           mapped = TrainingService.mapExercises(newTraining, exercises);
           return mapped;
         });
-        const currentTraining = mappedTrainings.find(
-          (t) => t.id === training?.id
-        );
-        if (currentTraining) setTraining(currentTraining);
+
+        const current = mappedTrainings.find((t) => t.id === training?.id);
+        if (current) setTraining(current);
 
         setTrainings((prev) =>
           prev.map((t) => {
@@ -562,25 +534,6 @@ export default function TrainerDayView() {
             </>
           )}
         </Box>
-      )}
-      {screenSize.isSmallerThanLaptop && (
-        <IconButton
-          onClick={() => {
-            handleUpdateTraining();
-          }}
-          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
-        >
-          <Save
-            sx={{
-              mr: 0,
-              cursor: 'pointer',
-              backgroundColor: theme.palette.primary.main,
-              borderRadius: '50%',
-              p: 1,
-              fontSize: 40,
-            }}
-          />
-        </IconButton>
       )}
     </>
   );
