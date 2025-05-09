@@ -5,8 +5,22 @@ import {
 } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { UserEntity } from '@/controller/user/type/user.type';
+import {
+  UserEntity,
+  User as CustomUser,
+} from '@/controller/user/type/user.type';
 import { User } from 'firebase/auth';
+import { SetState } from './state.type';
+
+export type CommonContextType = {
+  token: string;
+  user: CustomUser;
+};
+
+export type DetectChangesContextType = {
+  detectedChanges: boolean;
+  setDetectedChanges: SetState<boolean>;
+};
 
 export type AppContextType = {
   token: string;
