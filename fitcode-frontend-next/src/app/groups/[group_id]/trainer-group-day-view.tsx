@@ -230,7 +230,7 @@ export default function TrainerDayView() {
 
   return (
     <>
-      {!screenSize.isSmallerThanLaptop && (
+      {!screenSize.isSmallerThanLaptop ? (
         <Box position="absolute" top="50%" right={0}>
           <FloatingButton
             label="Save trainings"
@@ -238,6 +238,24 @@ export default function TrainerDayView() {
             onClick={handleUpdateMultipleTrainings}
           />
         </Box>
+      ) : (
+        <IconButton
+          onClick={() => {
+            handleUpdateMultipleTrainings();
+          }}
+          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
+        >
+          <Save
+            sx={{
+              mr: 0,
+              cursor: 'pointer',
+              backgroundColor: theme.palette.primary.main,
+              borderRadius: '50%',
+              p: 1,
+              fontSize: 40,
+            }}
+          />
+        </IconButton>
       )}
 
       <Box
