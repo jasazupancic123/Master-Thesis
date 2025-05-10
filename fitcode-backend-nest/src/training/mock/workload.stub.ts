@@ -37,11 +37,11 @@ export function generateCompletedRepWorkloadsStub(
         status: data?.status || SetStatus.COMPLETED,
         setNumber: i + 1,
         volWork1Type: VolType.Rep,
-        prescribedVolWork1Value: reps,
-        volWork1Value: reps,
+        prescribedVolWork1ValueL: reps,
+        volWork1ValueL: reps,
         intWork1Type: intType,
-        prescribedIntWork1Value: int,
-        intWork1Value: int,
+        prescribedIntWork1ValueL: int,
+        intWork1ValueL: int,
       }),
     );
 
