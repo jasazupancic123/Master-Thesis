@@ -2,14 +2,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { CommonModule } from '../../common/common.module';
 import { validationSchema } from '../../config/environment-validation-schema';
-import { FirebaseModule } from '../../firebase/firebase.module';
 import { TrainingPlanService } from './training-plan.service';
-import { ComponentModule } from '../../component/component.module';
-import { ExerciseModule } from '../../exercise/exercise.module';
-import { UserModule } from '../../user/user.module';
-import { GroupModule } from '../../group/group.module';
-import { CacheManagerModule } from '../../cache-manager/cache-manager.module';
-import { AttributeModule } from '../../attribute/attribute.module';
 import { ComponentService } from '../../component/component.service';
 import { generateComponentStub } from '../../component/mock/component.stub';
 import { generateAttributeStub } from '../../attribute/mock/attribute.stub';
@@ -33,6 +26,11 @@ import {
 import { AttributeType } from '../../common/enum/attribute-type.enum';
 import { ComponentParam } from '../../component/entity/component-param.entity';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { createMock } from '@golevelup/ts-jest';
+import { AttributeService } from '../../attribute/service/attribute.service';
+import { ExerciseService } from '../../exercise/service/exercise.service';
+import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
+import { AttributeRepository } from '../../attribute/repository/attribute.repository';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
@@ -42,23 +40,27 @@ describe('TrainingPlanService (unit)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, validationSchema }),
-        FirebaseModule.forRoot(),
         CommonModule,
-        AttributeModule,
-        CacheManagerModule,
-        ComponentModule,
-        ExerciseModule,
-        UserModule,
-        GroupModule,
       ],
       providers: [
-        TrainingPlanService,
+        {
+          provide: AttributeRepository,
+          useValue: createMock<AttributeRepository>(),
+        },
+        AttributeService,
         {
           provide: ComponentService,
-          useValue: {
-            getRoot: jest.fn(),
-          },
+          useValue: createMock<ComponentService>(),
         },
+        {
+          provide: ExerciseService,
+          useValue: createMock<ExerciseService>(),
+        },
+        {
+          provide: ExerciseAttributeValueRepository,
+          useValue: createMock<ExerciseAttributeValueRepository>(),
+        },
+        TrainingPlanService,
       ],
     }).compile();
 
@@ -182,7 +184,15 @@ describe('TrainingPlanService (unit)', () => {
     expect(trainingComponent.supersets[0].exercises[0].sets).toEqual([
       {
         setNumber: 1,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -193,7 +203,15 @@ describe('TrainingPlanService (unit)', () => {
       },
       {
         setNumber: 2,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -204,7 +222,15 @@ describe('TrainingPlanService (unit)', () => {
       },
       {
         setNumber: 3,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -215,7 +241,15 @@ describe('TrainingPlanService (unit)', () => {
       },
       {
         setNumber: 4,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -275,7 +309,10 @@ describe('TrainingPlanService (unit)', () => {
     expect(trainingComponent.supersets[0].exercises[0].sets).toEqual([
       {
         setNumber: 1,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
         ],
       },
@@ -731,7 +768,7 @@ describe('TrainingPlanService (unit)', () => {
 
       // Each set should have the correct param values
       result.forEach((set) => {
-        expect(set.paramValues).toEqual([
+        expect(set.paramValuesL).toEqual([
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
         ]);
       });
@@ -755,7 +792,7 @@ describe('TrainingPlanService (unit)', () => {
 
       expect(result.length).toBe(1);
       expect(result[0].setNumber).toBe(1);
-      expect(result[0].paramValues).toEqual([
+      expect(result[0].paramValuesL).toEqual([
         { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
       ]);
     });
@@ -795,7 +832,7 @@ describe('TrainingPlanService (unit)', () => {
 
       expect(result.length).toBe(2);
       result.forEach((set) => {
-        expect(set.paramValues).toEqual([
+        expect(set.paramValuesL).toEqual([
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '25' },
         ]);
       });
@@ -827,7 +864,7 @@ describe('TrainingPlanService (unit)', () => {
       const result = service.getSetData(params);
 
       expect(result.length).toBe(1);
-      expect(result[0].paramValues).toEqual([
+      expect(result[0].paramValuesL).toEqual([
         {
           field: ParamType.IntWork1,
           selected: `${IntType.Eff}:2`,
@@ -861,11 +898,11 @@ describe('TrainingPlanService (unit)', () => {
       const params = service.getParamAttributes(componentParams);
       const result = service.getSetData(params);
 
-      expect(result[0].paramValues).not.toContainEqual(
+      expect(result[0].paramValuesL).not.toContainEqual(
         expect.objectContaining({ field: ParamType.VolWorkSets }),
       );
 
-      expect(result[0].paramValues).toEqual([
+      expect(result[0].paramValuesL).toEqual([
         { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
       ]);
     });
@@ -873,7 +910,7 @@ describe('TrainingPlanService (unit)', () => {
     it('should handle empty params array', () => {
       const result = service.getSetData([]);
       expect(result.length).toBe(1); // Default 1 set
-      expect(result[0].paramValues).toEqual([]); // No params to include
+      expect(result[0].paramValuesL).toEqual([]); // No params to include
     });
 
     it('should handle params without options', () => {
@@ -888,7 +925,7 @@ describe('TrainingPlanService (unit)', () => {
       const result = service.getSetData(params);
 
       expect(result.length).toBe(1);
-      expect(result[0].paramValues).toEqual([
+      expect(result[0].paramValuesL).toEqual([
         { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
       ]);
     });

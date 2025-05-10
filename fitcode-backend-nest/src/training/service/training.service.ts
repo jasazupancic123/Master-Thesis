@@ -580,7 +580,6 @@ export class TrainingService {
       this.trainingPlanService.updateWarmupAndCooldownTimes(
         data.warmup,
         data.cooldown,
-        training,
         data.components,
       );
 
@@ -883,12 +882,13 @@ export class TrainingService {
         'You are not allowed to perform this action',
       );
 
-    const workloads =
-      await this.workloadService.findAllByTrainingAndUserAndComponent({
+    const workloads = await this.workloadService.findAllByTrainingUserComponent(
+      {
         trainingId: ref.trainingId,
         userId,
         componentId,
-      });
+      },
+    );
 
     const batch = this.firebaseService.firestore.batch();
     for (const workload of workloads) {
@@ -950,7 +950,6 @@ export class TrainingService {
     this.trainingPlanService.updateWarmupAndCooldownTimes(
       training.warmup,
       training.cooldown,
-      training,
       trainingComponents,
     );
 
@@ -989,7 +988,6 @@ export class TrainingService {
     this.trainingPlanService.updateWarmupAndCooldownTimes(
       training.warmup,
       training.cooldown,
-      training,
       training.components.filter((c) => c.id !== ref.componentId),
     );
 

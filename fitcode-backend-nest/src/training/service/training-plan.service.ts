@@ -291,9 +291,15 @@ export class TrainingPlanService {
 
     params = params.filter((p) => p.field !== ParamType.VolWorkSets);
 
+    const paramValuesLR = this.getTrainingExerciseParamValues(
+      params,
+      paramValues,
+    );
+
     return Array.from({ length: sets }).map((_, i) => ({
       setNumber: i + 1,
-      paramValues: this.getTrainingExerciseParamValues(params, paramValues),
+      paramValuesL: paramValuesLR,
+      paramValuesR: paramValuesLR,
     }));
   }
 
@@ -472,10 +478,9 @@ export class TrainingPlanService {
   updateWarmupAndCooldownTimes(
     warmup: TrainingComponent,
     cooldown: TrainingComponent,
-    training: Training,
     trainingComponents: TrainingComponent[],
   ): void {
-    let cooldownFrom = training.to;
+    let cooldownFrom = trainingComponents[trainingComponents.length - 1].to;
     if (trainingComponents.length) {
       cooldownFrom = trainingComponents
         .map((c) => c.to)
@@ -484,8 +489,8 @@ export class TrainingPlanService {
         })[0];
     }
 
-    warmup.from = subMinutes(training.from, 5);
-    warmup.to = training.from;
+    warmup.from = subMinutes(trainingComponents[0].from, 5);
+    warmup.to = trainingComponents[0].from;
     cooldown.from = cooldownFrom;
     cooldown.to = addMinutes(cooldownFrom, 5);
   }

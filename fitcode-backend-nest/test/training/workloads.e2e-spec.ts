@@ -134,20 +134,20 @@ describe('Training Workloads (e2e)', () => {
 
       for (const workload of workloads) {
         expect(workload.volWork1Type).toBeUndefined();
-        expect(workload.prescribedVolWork1Value).toBeUndefined();
-        expect(workload.volWork1Value).toBeNull();
+        expect(workload.prescribedVolWork1ValueL).toBeUndefined();
+        expect(workload.volWork1ValueL).toBeNull();
 
         expect(workload.volRecType).toBeUndefined();
-        expect(workload.prescribedVolWork1Value).toBeUndefined();
-        expect(workload.volRecValue).toBeNull();
+        expect(workload.prescribedVolWork1ValueL).toBeUndefined();
+        expect(workload.volRecValueL).toBeNull();
 
         expect(workload.intWork1Type).toBeUndefined();
-        expect(workload.prescribedIntWork1Value).toBeUndefined();
-        expect(workload.intWork1Value).toBeNull();
+        expect(workload.prescribedIntWork1ValueL).toBeUndefined();
+        expect(workload.intWork1ValueL).toBeNull();
 
         expect(workload.intRecType).toBeUndefined();
-        expect(workload.prescribedIntRecValue).toBeUndefined();
-        expect(workload.intRecValue).toBeNull();
+        expect(workload.prescribedIntRecValueL).toBeUndefined();
+        expect(workload.intRecValueL).toBeNull();
       }
     });
 
@@ -192,17 +192,17 @@ describe('Training Workloads (e2e)', () => {
 
       for (const workload of workloads) {
         expect(workload.volWork1Type).toBeUndefined();
-        expect(workload.prescribedVolWork1Value).toBeUndefined();
-        expect(workload.volWork1Value).toBeNull();
+        expect(workload.prescribedVolWork1ValueL).toBeUndefined();
+        expect(workload.volWork1ValueL).toBeNull();
         expect(workload.volRecType).toBeUndefined();
-        expect(workload.prescribedVolWork1Value).toBeUndefined();
-        expect(workload.volRecValue).toBeNull();
+        expect(workload.prescribedVolWork1ValueL).toBeUndefined();
+        expect(workload.volRecValueL).toBeNull();
         expect(workload.intWork1Type).toBeUndefined();
-        expect(workload.prescribedIntWork1Value).toBeUndefined();
-        expect(workload.intWork1Value).toBeNull();
+        expect(workload.prescribedIntWork1ValueL).toBeUndefined();
+        expect(workload.intWork1ValueL).toBeNull();
         expect(workload.intRecType).toBeUndefined();
-        expect(workload.prescribedIntRecValue).toBeUndefined();
-        expect(workload.intRecValue).toBeNull();
+        expect(workload.prescribedIntRecValueL).toBeUndefined();
+        expect(workload.intRecValueL).toBeNull();
       }
     });
 
@@ -321,23 +321,23 @@ describe('Training Workloads (e2e)', () => {
 
       for (const workload of workloads) {
         expect(workload.volWork1Type).toBe(VolType.Rep);
-        expect(workload.prescribedVolWork1Value).toBe(12);
-        expect(workload.volWork1Value).toBeNull();
+        expect(workload.prescribedVolWork1ValueL).toBe(12);
+        expect(workload.volWork1ValueL).toBeNull();
         expect(workload.volWork2Type).toBeUndefined();
-        expect(workload.prescribedVolWork2Value).toBeUndefined();
-        expect(workload.volWork2Value).toBeNull();
+        expect(workload.prescribedVolWork2ValueL).toBeUndefined();
+        expect(workload.volWork2ValueL).toBeNull();
         expect(workload.volRecType).toBe(VolType.Time);
-        expect(workload.prescribedVolRecValue).toBe(30);
-        expect(workload.volRecValue).toBeNull();
+        expect(workload.prescribedVolRecValueL).toBe(30);
+        expect(workload.volRecValueL).toBeNull();
         expect(workload.intWork1Type).toBe(IntType.Kg);
-        expect(workload.prescribedIntWork1Value).toBe(20);
-        expect(workload.intWork1Value).toBeNull();
+        expect(workload.prescribedIntWork1ValueL).toBe(20);
+        expect(workload.intWork1ValueL).toBeNull();
         expect(workload.intWork2Type).toBeUndefined;
-        expect(workload.prescribedIntWork2Value).toBeUndefined;
-        expect(workload.intWork2Value).toBeNull();
+        expect(workload.prescribedIntWork2ValueL).toBeUndefined;
+        expect(workload.intWork2ValueL).toBeNull();
         expect(workload.intRecType).toBe(IntType.Eff);
-        expect(workload.prescribedIntRecValue).toBe(1);
-        expect(workload.intRecValue).toBeNull();
+        expect(workload.prescribedIntRecValueL).toBe(1);
+        expect(workload.intRecValueL).toBeNull();
       }
     });
 
@@ -384,8 +384,8 @@ describe('Training Workloads (e2e)', () => {
         expect(workloads).toHaveLength(9); // 3 members * 1 exercise * 3 sets
         for (const workload of workloads) {
           expect(workload.intWork1Type).toBe(intType);
-          expect(workload.prescribedIntWork1Value).toBe(0.7);
-          expect(workload.intWork1Value).toBeNull();
+          expect(workload.prescribedIntWork1ValueL).toBe(0.7);
+          expect(workload.intWork1ValueL).toBeNull();
         }
       },
     );
@@ -452,8 +452,8 @@ describe('Training Workloads (e2e)', () => {
 
       for (const workload of workloads) {
         expect(workload.intWork1Type).toBe(IntType.Rm);
-        expect(workload.prescribedIntWork1Value).toBeGreaterThanOrEqual(113); // epley and brzycki return value 116.1, lander returns 113.5
-        expect(workload.intWork1Value).toBeNull();
+        expect(workload.prescribedIntWork1ValueL).toBeGreaterThanOrEqual(113); // epley and brzycki return value 116.1, lander returns 113.5
+        expect(workload.intWork1ValueL).toBeNull();
       }
     });
 
