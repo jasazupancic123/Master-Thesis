@@ -105,7 +105,6 @@ export async function handleAddTrainingComponents(
   }
 ) {
   const { trainingId, ...restInput } = input;
-  console.log('restInput', restInput);
   const { router, setFilteredTrainings, setTrainings, components } = state;
 
   handleApiRequest(

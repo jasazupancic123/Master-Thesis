@@ -198,7 +198,6 @@ export default function TrainingExerciseCardContainer(
         rechartsSurfaceElement &&
         graphBackgroundElement
       ) {
-        console.log('found elements');
         const parentRect = rechartsSurfaceElement.getBoundingClientRect();
         const dotsRect = graphDotsElement.getBoundingClientRect();
         const graphBackgroundRect =

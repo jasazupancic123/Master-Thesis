@@ -705,8 +705,8 @@ export class TrainingService {
 
     const trainingDocRef = this.trainingRepository.collection().doc();
     const copiedTraining: Training = {
-      id: trainingDocRef.id,
       ...data,
+      id: trainingDocRef.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -729,10 +729,10 @@ export class TrainingService {
       });
     }
 
-    this.workloadService.createForTraining(batch, training, workloads);
+    this.workloadService.createForTraining(batch, copiedTraining, workloads);
     await batch.commit();
 
-    return training;
+    return copiedTraining;
   }
 
   async copyComponent(
