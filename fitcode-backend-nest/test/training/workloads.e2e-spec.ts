@@ -13,7 +13,7 @@ import { Group } from '../../src/group/entity/group.entity';
 import {
   generateSuperset,
   generateTrainingComponent,
-  generateTrainingExercise,
+  generateTrainingExerciseStub,
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
@@ -109,9 +109,9 @@ describe('Training Workloads (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
-                  generateTrainingExercise({ id: exercises[2].id }),
+                  generateTrainingExerciseStub({ id: exercises[0].id }),
+                  generateTrainingExerciseStub({ id: exercises[1].id }),
+                  generateTrainingExerciseStub({ id: exercises[2].id }),
                 ],
               }),
             ],
@@ -167,9 +167,9 @@ describe('Training Workloads (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
-                  generateTrainingExercise({ id: exercises[2].id }),
+                  generateTrainingExerciseStub({ id: exercises[0].id }),
+                  generateTrainingExerciseStub({ id: exercises[1].id }),
+                  generateTrainingExerciseStub({ id: exercises[2].id }),
                 ],
               }),
             ],
@@ -254,9 +254,9 @@ describe('Training Workloads (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
-                  generateTrainingExercise({ id: exercises[2].id }),
+                  generateTrainingExerciseStub({ id: exercises[0].id }),
+                  generateTrainingExerciseStub({ id: exercises[1].id }),
+                  generateTrainingExerciseStub({ id: exercises[2].id }),
                 ],
               }),
             ],
@@ -371,7 +371,9 @@ describe('Training Workloads (e2e)', () => {
               id: component.id,
               supersets: [
                 generateSuperset({
-                  exercises: [generateTrainingExercise({ id: exercise.id })],
+                  exercises: [
+                    generateTrainingExerciseStub({ id: exercise.id }),
+                  ],
                 }),
               ],
             }),
@@ -418,7 +420,7 @@ describe('Training Workloads (e2e)', () => {
             id: component.id,
             supersets: [
               generateSuperset({
-                exercises: [generateTrainingExercise({ id: exercise.id })],
+                exercises: [generateTrainingExerciseStub({ id: exercise.id })],
               }),
             ],
           }),
@@ -487,7 +489,9 @@ describe('Training Workloads (e2e)', () => {
               id: component.id,
               supersets: [
                 generateSuperset({
-                  exercises: [generateTrainingExercise({ id: exercise.id })],
+                  exercises: [
+                    generateTrainingExerciseStub({ id: exercise.id }),
+                  ],
                 }),
               ],
             }),

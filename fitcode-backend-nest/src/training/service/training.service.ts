@@ -260,10 +260,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
-      input.components,
+      [warmup, ...input.components, cooldown],
       components,
-      warmup,
-      cooldown,
     );
 
     // populate exercise params from components
@@ -379,10 +377,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
-      [trainingComponent],
+      [warmup, trainingComponent, cooldown],
       components,
-      warmup,
-      cooldown,
     );
 
     // populate exercise params from components
@@ -506,10 +502,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
-      input.components,
+      [input.warmup, ...input.components, input.cooldown],
       components,
-      input.warmup,
-      input.cooldown,
     );
 
     // populate exercise params from components
@@ -586,10 +580,8 @@ export class TrainingService {
       this.trainingPlanService.validateTrainingComponents(
         exercises,
         membersIds,
-        data.components,
+        [data.warmup, ...data.components, data.cooldown],
         components,
-        data.warmup,
-        data.cooldown,
       );
 
       // populate exercise params from components
@@ -665,10 +657,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
-      training.components,
+      [training.warmup, ...training.components, training.cooldown],
       components,
-      training.warmup,
-      training.cooldown,
     );
 
     // for future trainings, update latest meta and calculate workloads
@@ -801,10 +791,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       [],
-      newComponents,
+      [training.warmup, ...newComponents, training.cooldown],
       components,
-      training.warmup,
-      training.cooldown,
     );
 
     const updated = {
@@ -956,10 +944,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       training.membersIds,
-      trainingComponents,
+      [training.warmup, ...trainingComponents, training.cooldown],
       components,
-      training.warmup,
-      training.cooldown,
     );
 
     // get query for training

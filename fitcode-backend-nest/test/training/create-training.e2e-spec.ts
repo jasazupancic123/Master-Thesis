@@ -16,7 +16,7 @@ import {
   generateSubgroup,
   generateSuperset,
   generateTrainingComponent,
-  generateTrainingExercise,
+  generateTrainingExerciseStub,
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
@@ -508,11 +508,11 @@ describe('Create Training (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
-                  generateTrainingExercise({ id: exercises[2].id }),
-                  generateTrainingExercise({ id: exercises[3].id }),
-                  generateTrainingExercise({ id: exercises[4].id }),
+                  generateTrainingExerciseStub({ id: exercises[0].id }),
+                  generateTrainingExerciseStub({ id: exercises[1].id }),
+                  generateTrainingExerciseStub({ id: exercises[2].id }),
+                  generateTrainingExerciseStub({ id: exercises[3].id }),
+                  generateTrainingExerciseStub({ id: exercises[4].id }),
                 ],
               }),
             ],
@@ -576,8 +576,8 @@ describe('Create Training (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExerciseStub({ id: exercises[0].id }),
+                  generateTrainingExerciseStub({ id: exercises[1].id }),
                 ],
               }),
             ],
@@ -648,8 +648,8 @@ describe('Create Training (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExerciseStub({ id: exercises[0].id }),
+                  generateTrainingExerciseStub({ id: exercises[1].id }),
                 ],
               }),
             ],

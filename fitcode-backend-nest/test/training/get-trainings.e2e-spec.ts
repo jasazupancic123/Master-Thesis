@@ -24,7 +24,7 @@ import {
 import {
   generateSuperset,
   generateTrainingComponent,
-  generateTrainingExercise,
+  generateTrainingExerciseStub,
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';

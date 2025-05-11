@@ -117,19 +117,16 @@ export class TrainingPlanService {
     trainingMemberIds: string[],
     trainingComponents: TrainingComponent[],
     allComponents: Component[],
-    warmup: TrainingComponent,
-    cooldown: TrainingComponent,
   ) {
-    if (!warmup || !cooldown)
-      throw new BadRequestException(
-        'Training must have warmup and cooldown components',
-      );
+    if (!trainingComponents.map((tc) => tc.id).includes(WARMUP_COMPONENT_ID))
+      throw new BadRequestException('Training must have warmup component');
 
-    const allTrainingComponents = [warmup, ...trainingComponents, cooldown];
+    if (!trainingComponents.map((tc) => tc.id).includes(COOLDOWN_COMPONENT_ID))
+      throw new BadRequestException('Training must have cooldown component');
 
     const duplicates = new Set<string>();
-    for (let i = 0; i < allTrainingComponents.length; i++) {
-      const curr = allTrainingComponents[i];
+    for (let i = 0; i < trainingComponents.length; i++) {
+      const curr = trainingComponents[i];
       const component = allComponents.find((c) => c.id === curr.id);
 
       // validate components are valid
@@ -145,10 +142,10 @@ export class TrainingPlanService {
       duplicates.add(component.id);
 
       // validate training component times
-      const next = allTrainingComponents[i + 1];
+      const next = trainingComponents[i + 1];
       if (next) {
         const nextComponent = allComponents.find((c) => c.id === next.id);
-        if (i < allTrainingComponents.length - 1)
+        if (i < trainingComponents.length - 1 && nextComponent)
           if (curr.from >= next.from)
             throw new BadRequestException(
               `Component ${component.name} has to start before ${nextComponent.name}`,
@@ -156,26 +153,15 @@ export class TrainingPlanService {
       }
 
       // validate supersets and subgroups
-      this.validateSupersets(curr, exercises);
-      this.validateSubgroups(trainingMemberIds, curr, exercises);
-
-      // validate exercises
-      const leafs = this.componentService.leafsFromFlat(allComponents);
-      for (const exercise of exercises) {
-        for (const componentId of exercise.componentIds) {
-          const leaf = leafs.find((leaf) => leaf.id === componentId)!;
-          const root = this.componentService.getRoot(leaf, allComponents);
-
-          if (root.id !== component.id) continue;
-          if (!leaf.parents.includes(component.id))
-            throw new BadRequestException(
-              `Exercise ${exercise.name} cannot be part of selected component`,
-            );
-        }
-      }
+      this.validateSupersets(curr, exercises, allComponents);
+      this.validateSubgroups(trainingMemberIds, curr, exercises, allComponents);
     }
 
-    if (trainingComponents.length > 5)
+    if (
+      trainingComponents.filter(
+        (tc) => ![WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tc.id),
+      ).length > 5
+    )
       throw new ConflictException(
         'You can only have up to 5 components per training',
       );
@@ -231,7 +217,11 @@ export class TrainingPlanService {
     }
   }
 
-  validateSupersets(component: TrainingComponent, exercises: Exercise[]) {
+  validateSupersets(
+    component: TrainingComponent,
+    exercises: Exercise[],
+    allComponents: Component[],
+  ) {
     if (component.supersets.length > 8)
       throw new ConflictException(
         'You can only have up to 8 supersets per training component',
@@ -243,14 +233,29 @@ export class TrainingPlanService {
           'You can only have up to 4 exercises per superset',
         );
 
-      if (
-        ![COOLDOWN_COMPONENT_ID, WARMUP_COMPONENT_ID].includes(component.id)
-      ) {
-        for (const exercise of superset.exercises) {
-          const trainingExercise = exercises.find((e) => e.id === exercise.id);
-          if (!trainingExercise)
-            throw new NotFoundException('Training exercise not found');
-        }
+      // don't check exercises for warmup and cooldown
+      if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(component.id))
+        continue;
+
+      // validate exercises
+      for (const trainingExercise of superset.exercises) {
+        const exercise = exercises.find((e) => e.id === trainingExercise.id);
+        if (!exercise)
+          throw new NotFoundException('Training exercise not found');
+
+        const exerciseComponentLeaf = allComponents.find(
+          (c) => c.id === exercise.componentIds[0],
+        );
+
+        const exerciseComponentRoot = this.componentService.getRoot(
+          exerciseComponentLeaf,
+          allComponents,
+        );
+
+        if (exerciseComponentRoot.id !== component.id)
+          throw new BadRequestException(
+            `Exercise ${exercise.name} cannot be part of selected component`,
+          );
       }
     }
   }
@@ -259,6 +264,7 @@ export class TrainingPlanService {
     trainingMemberIds: string[],
     component: TrainingComponent,
     exercises: Exercise[],
+    allComponents: Component[],
   ) {
     // validate all subgroups have unique members (one member cannot be in multiple subgroups)
     const trainingMemberIdsSet = new Set(trainingMemberIds);
@@ -266,15 +272,18 @@ export class TrainingPlanService {
 
     for (const subgroup of component.subgroups) {
       for (const userId of subgroup.membersIds) {
-        if (!trainingMemberIdsSet.has(userId) || membersIdsSet.has(userId))
+        if (!trainingMemberIdsSet.has(userId))
+          throw new ConflictException('Invalid member');
+
+        if (membersIdsSet.has(userId))
           throw new ConflictException(
-            `Member ${userId} cannot be in multiple subgroups in the same training component`,
+            'Member cannot be part of multiple subgroups simultaneously',
           );
 
         membersIdsSet.add(userId);
       }
 
-      this.validateSupersets(component, exercises);
+      this.validateSupersets(component, exercises, allComponents);
     }
   }
 
