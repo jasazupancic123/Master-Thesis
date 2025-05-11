@@ -971,11 +971,15 @@ export class TrainingService {
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
 
-    this.trainingPlanService.updateWarmupAndCooldownTimes(
-      training.warmup,
-      training.cooldown,
-      training.components.filter((c) => c.id !== ref.componentId),
+    const filtered = training.components.filter(
+      (c) => c.id !== ref.componentId,
     );
+    if (filtered.length > 0)
+      this.trainingPlanService.updateWarmupAndCooldownTimes(
+        training.warmup,
+        training.cooldown,
+        filtered,
+      );
 
     // get query for training
     const [query, updatedTraining] =
