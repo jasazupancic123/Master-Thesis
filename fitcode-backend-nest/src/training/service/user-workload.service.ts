@@ -389,7 +389,41 @@ export class UserWorkloadService {
     return this.commonService.number.rm(weight, reps <= 0 ? 1 : reps)(n);
   }
 
-  private parseParamValues(paramValues: AttributeValue[]) {
+  private parseParamValues(
+    paramValues: AttributeValue[],
+  ): Pick<
+    Workload,
+    | 'volWork1Type'
+    | 'prescribedVolWork1ValueL'
+    | 'prescribedVolWork1ValueR'
+    | 'volWork1ValueL'
+    | 'volWork1ValueR'
+    | 'volWork2Type'
+    | 'prescribedVolWork2ValueL'
+    | 'prescribedVolWork2ValueR'
+    | 'volWork2ValueL'
+    | 'volWork2ValueR'
+    | 'volRecType'
+    | 'prescribedVolRecValueL'
+    | 'prescribedVolRecValueR'
+    | 'volRecValueL'
+    | 'volRecValueR'
+    | 'intWork1Type'
+    | 'prescribedIntWork1ValueL'
+    | 'prescribedIntWork1ValueR'
+    | 'intWork1ValueL'
+    | 'intWork1ValueR'
+    | 'intWork2Type'
+    | 'prescribedIntWork2ValueL'
+    | 'prescribedIntWork2ValueR'
+    | 'intWork2ValueL'
+    | 'intWork2ValueR'
+    | 'intRecType'
+    | 'prescribedIntRecValueL'
+    | 'prescribedIntRecValueR'
+    | 'intRecValueL'
+    | 'intRecValueR'
+  > {
     const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
     const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
     const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
@@ -399,21 +433,31 @@ export class UserWorkloadService {
 
     return {
       volWork1Type: this.parseSelected<VolType>(volWork1),
-      prescribedVolWork1Value: this.parseValue(volWork1) as number,
-      volWork1Value: null,
+      prescribedVolWork1ValueL: this.parseValue(volWork1) as number,
+      prescribedVolWork1ValueR: this.parseValue(volWork1) as number,
+      volWork1ValueL: null,
+      volWork1ValueR: null,
       volWork2Type: this.parseSelected<VolType>(volWork2),
-      prescribedVolWork2Value: this.parseValue(volWork2) as number,
-      volWork2Value: null,
+      prescribedVolWork2ValueL: this.parseValue(volWork2) as number,
+      prescribedVolWork2ValueR: this.parseValue(volWork2) as number,
+      volWork2ValueL: null,
+      volWork2ValueR: null,
       volRecType: this.parseSelected<VolType>(volRec),
-      prescribedVolRecValue: this.parseValue(volRec) as number,
-      volRecValue: null,
+      prescribedVolRecValueL: this.parseValue(volRec) as number,
+      prescribedVolRecValueR: this.parseValue(volRec) as number,
+      volRecValueL: null,
+      volRecValueR: null,
       intWork1Type: this.parseSelected<IntType>(intWork1),
-      intWork1Value: null,
+      intWork1ValueL: null,
+      intWork1ValueR: null,
       intWork2Type: this.parseSelected<IntType>(intWork2),
-      intWork2Value: null,
+      intWork2ValueL: null,
+      intWork2ValueR: null,
       intRecType: this.parseSelected<IntType>(intRec),
-      prescribedIntRecValue: this.parseValue(intRec),
-      intRecValue: null,
+      prescribedIntRecValueL: this.parseValue(intRec),
+      prescribedIntRecValueR: this.parseValue(intRec),
+      intRecValueL: null,
+      intRecValueR: null,
     };
   }
 
@@ -421,7 +465,13 @@ export class UserWorkloadService {
     paramValues: AttributeValue[],
     bodyweight: number,
     workloads: Workload[],
-  ) {
+  ): Pick<
+    Workload,
+    | 'prescribedIntWork1ValueL'
+    | 'prescribedIntWork1ValueR'
+    | 'prescribedIntWork2ValueL'
+    | 'prescribedIntWork2ValueR'
+  > {
     const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
     const intWork1Field = this.parseSelected<IntType>(intWork1);
     const intWork1Value = this.parseValue(intWork1);
@@ -430,27 +480,33 @@ export class UserWorkloadService {
     const intWork2Field = this.parseSelected<IntType>(intWork2);
     const intWork2Value = this.parseValue(intWork2);
 
+    const prescribedIntWork1Value = isNaN(intWork1Value)
+      ? undefined
+      : intWork1Field === IntType.Rm && !isNaN(intWork1Value)
+        ? this.calculateRM(intWork1Value, workloads)
+        : intWork1Field === IntType.Bw && !isNaN(intWork1Value)
+          ? bodyweight * this.commonService.number.percent(intWork1Value)
+          : [IntType.Mas, IntType.Hrmax].includes(intWork1Field) &&
+              !isNaN(intWork1Value)
+            ? this.commonService.number.percent(intWork1Value)
+            : intWork1Value;
+
+    const prescribedIntWork2Value = isNaN(intWork1Value)
+      ? undefined
+      : intWork2Field === IntType.Rm && !isNaN(intWork2Value)
+        ? this.calculateRM(intWork2Value, workloads)
+        : intWork2Field === IntType.Bw && !isNaN(intWork2Value)
+          ? bodyweight * this.commonService.number.percent(intWork2Value)
+          : [IntType.Mas, IntType.Hrmax].includes(intWork2Field) &&
+              !isNaN(intWork1Value)
+            ? this.commonService.number.percent(intWork2Value)
+            : intWork2Value;
+
     return {
-      prescribedIntWork1Value: isNaN(intWork1Value)
-        ? undefined
-        : intWork1Field === IntType.Rm && !isNaN(intWork1Value)
-          ? this.calculateRM(intWork1Value, workloads)
-          : intWork1Field === IntType.Bw && !isNaN(intWork1Value)
-            ? bodyweight * this.commonService.number.percent(intWork1Value)
-            : [IntType.Mas, IntType.Hrmax].includes(intWork1Field) &&
-                !isNaN(intWork1Value)
-              ? this.commonService.number.percent(intWork1Value)
-              : intWork1Value,
-      prescribedIntWork2Value: isNaN(intWork1Value)
-        ? undefined
-        : intWork2Field === IntType.Rm && !isNaN(intWork2Value)
-          ? this.calculateRM(intWork2Value, workloads)
-          : intWork2Field === IntType.Bw && !isNaN(intWork2Value)
-            ? bodyweight * this.commonService.number.percent(intWork2Value)
-            : [IntType.Mas, IntType.Hrmax].includes(intWork2Field) &&
-                !isNaN(intWork1Value)
-              ? this.commonService.number.percent(intWork2Value)
-              : intWork2Value,
+      prescribedIntWork1ValueL: prescribedIntWork1Value,
+      prescribedIntWork1ValueR: prescribedIntWork1Value,
+      prescribedIntWork2ValueL: prescribedIntWork2Value,
+      prescribedIntWork2ValueR: prescribedIntWork2Value,
     };
   }
 

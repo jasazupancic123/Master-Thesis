@@ -13,7 +13,7 @@ import { Group } from '../../src/group/entity/group.entity';
 import {
   generateSuperset,
   generateTrainingComponent,
-  generateTrainingExerciseStub,
+  generateTrainingExercise,
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
@@ -109,9 +109,9 @@ describe('Training Workloads (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExerciseStub({ id: exercises[0].id }),
-                  generateTrainingExerciseStub({ id: exercises[1].id }),
-                  generateTrainingExerciseStub({ id: exercises[2].id }),
+                  generateTrainingExercise({ id: exercises[0].id }),
+                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExercise({ id: exercises[2].id }),
                 ],
               }),
             ],
@@ -135,19 +135,27 @@ describe('Training Workloads (e2e)', () => {
       for (const workload of workloads) {
         expect(workload.volWork1Type).toBeUndefined();
         expect(workload.prescribedVolWork1ValueL).toBeUndefined();
+        expect(workload.prescribedVolWork1ValueR).toBeUndefined();
         expect(workload.volWork1ValueL).toBeNull();
+        expect(workload.volWork1ValueR).toBeNull();
 
         expect(workload.volRecType).toBeUndefined();
         expect(workload.prescribedVolWork1ValueL).toBeUndefined();
+        expect(workload.prescribedVolWork1ValueR).toBeUndefined();
         expect(workload.volRecValueL).toBeNull();
+        expect(workload.volRecValueR).toBeNull();
 
         expect(workload.intWork1Type).toBeUndefined();
         expect(workload.prescribedIntWork1ValueL).toBeUndefined();
+        expect(workload.prescribedIntWork1ValueR).toBeUndefined();
         expect(workload.intWork1ValueL).toBeNull();
+        expect(workload.intWork1ValueR).toBeNull();
 
         expect(workload.intRecType).toBeUndefined();
         expect(workload.prescribedIntRecValueL).toBeUndefined();
+        expect(workload.prescribedIntRecValueR).toBeUndefined();
         expect(workload.intRecValueL).toBeNull();
+        expect(workload.intRecValueR).toBeNull();
       }
     });
 
@@ -167,9 +175,9 @@ describe('Training Workloads (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExerciseStub({ id: exercises[0].id }),
-                  generateTrainingExerciseStub({ id: exercises[1].id }),
-                  generateTrainingExerciseStub({ id: exercises[2].id }),
+                  generateTrainingExercise({ id: exercises[0].id }),
+                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExercise({ id: exercises[2].id }),
                 ],
               }),
             ],
@@ -254,9 +262,9 @@ describe('Training Workloads (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExerciseStub({ id: exercises[0].id }),
-                  generateTrainingExerciseStub({ id: exercises[1].id }),
-                  generateTrainingExerciseStub({ id: exercises[2].id }),
+                  generateTrainingExercise({ id: exercises[0].id }),
+                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExercise({ id: exercises[2].id }),
                 ],
               }),
             ],
@@ -371,9 +379,7 @@ describe('Training Workloads (e2e)', () => {
               id: component.id,
               supersets: [
                 generateSuperset({
-                  exercises: [
-                    generateTrainingExerciseStub({ id: exercise.id }),
-                  ],
+                  exercises: [generateTrainingExercise({ id: exercise.id })],
                 }),
               ],
             }),
@@ -420,7 +426,7 @@ describe('Training Workloads (e2e)', () => {
             id: component.id,
             supersets: [
               generateSuperset({
-                exercises: [generateTrainingExerciseStub({ id: exercise.id })],
+                exercises: [generateTrainingExercise({ id: exercise.id })],
               }),
             ],
           }),
@@ -489,9 +495,7 @@ describe('Training Workloads (e2e)', () => {
               id: component.id,
               supersets: [
                 generateSuperset({
-                  exercises: [
-                    generateTrainingExerciseStub({ id: exercise.id }),
-                  ],
+                  exercises: [generateTrainingExercise({ id: exercise.id })],
                 }),
               ],
             }),

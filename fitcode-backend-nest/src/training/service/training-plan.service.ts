@@ -490,13 +490,12 @@ export class TrainingPlanService {
     trainingComponents: TrainingComponent[],
   ): void {
     let cooldownFrom = trainingComponents[trainingComponents.length - 1].to;
-    if (trainingComponents.length) {
+    if (trainingComponents.length)
       cooldownFrom = trainingComponents
         .map((c) => c.to)
         .sort((a: Date, b: Date) => {
           return new Date(b).getTime() - new Date(a).getTime();
         })[0];
-    }
 
     warmup.from = subMinutes(trainingComponents[0].from, 5);
     warmup.to = trainingComponents[0].from;
