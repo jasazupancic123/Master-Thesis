@@ -11,7 +11,10 @@ import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
-import { Save } from '@mui/icons-material';
+import {
+  Save,
+  SignalCellularConnectedNoInternet0BarSharp,
+} from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { IconButton, MenuItem, Select, Stack, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -223,8 +226,10 @@ export default function TrainerDayView() {
       );
     };
 
-    fetchWorkloads();
-  }, [day, week, selectedAthlete, trainings]);
+    // fetch only for selectedAthlete, group avg is already on training itself
+    if (selectedAthlete) fetchWorkloads();
+    else setWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+  }, [selectedAthlete]);
 
   useEffect(() => {}, [workloads]);
 
