@@ -4,6 +4,7 @@ import { TrainingComponent } from './type/training-plan.type';
 import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
+import { AverageWorkloadValues } from './type/average-workload-values.type';
 
 const api = CommonService.instance.api;
 
@@ -66,6 +67,7 @@ export class TrainingController {
       id: string;
       components: TrainingComponent[];
       membersIds: string[];
+      avgFutureWorkloadValues: AverageWorkloadValues[];
     }[]
   ) {
     const { groupId, cycleId } = params;

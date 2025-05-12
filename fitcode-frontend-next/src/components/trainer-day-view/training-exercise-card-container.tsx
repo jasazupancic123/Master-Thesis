@@ -53,7 +53,7 @@ export default function TrainingExerciseCardContainer(
   } = props;
 
   const { training, selectedAthlete } = useTrainerDayViewContext();
-  const { workloads } = useGroup();
+  const { trainings, workloads } = useGroup();
   const [data, setData] = useState<ChartData[]>([]);
   const [percentageForChartBackground, setPercentageForChartBackground] =
     useState<number>(0);
@@ -94,32 +94,83 @@ export default function TrainingExerciseCardContainer(
       .filter((workload) => workload.exerciseId === exercise.id)
       .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 
-    const futureWorkloadsFiltered = workloads.futureWorkloads
-      .filter((workload) => workload.exerciseId === exercise.id)
-      .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
-
     let groupedCompletedWorkloads = groupByTrainingId(
       completedWorkloadsFiltered
     );
 
-    let groupedFutureWorkloads = groupByTrainingId(
-      futureWorkloadsFiltered,
-      true,
-      groupedCompletedWorkloads
-    );
+    // init future workloads for the selected exercise
+    const futureWorkloadsData = [];
+    for (const t of trainings) {
+      if (groupedCompletedWorkloads[t.id]) continue; // skip if already in completed workloads
+      if (!t.avgFutureWorkloadValues.find((w) => w.exerciseId === exercise.id))
+        continue; // skip if no future workloads for the selected exercise
+
+      let totalNumMembers = 0;
+      const futureData = [];
+
+      // add future workloads of main group
+      for (const w of t.avgFutureWorkloadValues) {
+        if (w.exerciseId === exercise.id && w.numMembers > 0) {
+          totalNumMembers += w.numMembers;
+          for (let j = 0; j < w.numMembers; j++) futureData.push(w);
+        }
+      }
+
+      // add future workloads of all subgroups
+      t.components.forEach((c) => {
+        c.subgroups.forEach((sg) => {
+          const futureWorkload = sg.avgFutureWorkloadValues.find(
+            (w) => w.exerciseId === exercise.id
+          );
+          if (futureWorkload && futureWorkload.numMembers > 0) {
+            totalNumMembers += futureWorkload.numMembers;
+            for (let j = 0; j < futureWorkload.numMembers; j++)
+              futureData.push(futureWorkload);
+          }
+        });
+      });
+
+      const avgIntensity =
+        futureData.reduce(
+          (acc, val) => acc + val.avgWorkloadValue.intensity,
+          0
+        ) / totalNumMembers;
+      const avgVolume =
+        futureData.reduce((acc, val) => acc + val.avgWorkloadValue.volume, 0) /
+        totalNumMembers;
+
+      const date = new Date(t.from);
+
+      const day = date.getDate().toString().padStart(2, '0');
+      let month = (date.getMonth() + 1).toString().padStart(2, '0');
+      if (month[0] === '0') month = month.slice(1);
+
+      let hours = date.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      // Final format: "DD MM, AM/PM"
+      const formatted = `${day}.${month}. ${ampm}`;
+
+      futureWorkloadsData.push({
+        trainingId: t.id,
+        name: formatted,
+        intensity: Math.round(avgIntensity * 100) / 100,
+        volume: Math.round(avgVolume * 100) / 100,
+        completed: false,
+      });
+    }
 
     const numOfCompletedWorkloads = Object.keys(
       groupedCompletedWorkloads
     ).length;
-    const numOfFutureWorkloads = Object.keys(groupedFutureWorkloads).length;
+    const numOfFutureWorkloads = futureWorkloadsData.length;
     const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
 
     const newData = [];
+
+    // add completed workloads
     let i = 0;
-    for (const workloads of [
-      groupedCompletedWorkloads,
-      groupedFutureWorkloads,
-    ]) {
+    for (const workloads of [groupedCompletedWorkloads]) {
       for (const completedWorkload of Object.values(workloads)) {
         const validIntensityValues = completedWorkload
           .map((w) => w.prescribedIntWork1Value)
@@ -150,6 +201,7 @@ export default function TrainingExerciseCardContainer(
         const formatted = `${day}.${month}. ${ampm}`;
 
         newData.push({
+          trainingId: completedWorkload[0].trainingId,
           name: formatted,
           intensity: Math.round(avgIntensity * 100) / 100,
           volume: Math.round(avgVolume * 100) / 100,
@@ -160,10 +212,13 @@ export default function TrainingExerciseCardContainer(
       i = 0;
     }
 
+    // add future workloads
+    newData.push(...futureWorkloadsData);
+
     setData(newData);
     setMax(numOfTotalWorkloads);
     setRange([1, numOfTotalWorkloads]);
-  }, [selectedExercise, workloads]);
+  }, [selectedExercise, workloads, trainings]);
 
   useEffect(() => {
     // Set the percentage for the chart background (completed vs future) based on the range
@@ -327,7 +382,7 @@ export default function TrainingExerciseCardContainer(
         </Box>
       </Grid2>
       {/* Second Row - Graph */}
-      <Grid2 size={{ xs: 12 }} sx={{ height: '100%' }}>
+      <Grid2 size={{ xs: 12 }}>
         <Box
           sx={{
             width: '100%',

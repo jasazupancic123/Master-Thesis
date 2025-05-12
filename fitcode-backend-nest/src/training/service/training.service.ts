@@ -291,6 +291,8 @@ export class TrainingService {
       membersIds: group.membersIds,
       wellness,
       completedMembersIds: [],
+      avgCompletedWorkloadValues: [],
+      avgFutureWorkloadValues: [],
       warmup,
       cooldown,
       components: input.components.map((c) => ({
@@ -399,6 +401,17 @@ export class TrainingService {
       group.membersIds,
     );
 
+    // keep avg workload values for exercises of only the copied component
+    const exerciseIdsToKeep = trainingComponent.supersets.map(
+      (superset) => superset.exercises.map((e) => e.id),
+    ).flat();
+    const avgCompletedWorkloadValues = copyFromTraining.avgCompletedWorkloadValues.filter(
+      (w) => !exerciseIdsToKeep.includes(w.exerciseId),
+    );
+    const avgFutureWorkloadValues = copyFromTraining.avgFutureWorkloadValues.filter(
+      (w) => !exerciseIdsToKeep.includes(w.exerciseId),
+    );
+
     const data: Create<Training> = {
       id: null,
       groupId: group.id,
@@ -410,6 +423,8 @@ export class TrainingService {
       membersIds: group.membersIds,
       wellness,
       completedMembersIds: [],
+      avgCompletedWorkloadValues: avgCompletedWorkloadValues,
+      avgFutureWorkloadValues: avgFutureWorkloadValues,
       warmup,
       cooldown,
       components: [
@@ -685,6 +700,8 @@ export class TrainingService {
       membersIds: training.membersIds,
       wellness,
       completedMembersIds: [],
+      avgCompletedWorkloadValues: training.avgCompletedWorkloadValues || [],
+      avgFutureWorkloadValues: training.avgFutureWorkloadValues || [],
       warmup: { ...training.warmup },
       cooldown: { ...training.cooldown },
       components: training.components.map((c, i) => {
