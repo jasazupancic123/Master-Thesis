@@ -127,7 +127,10 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         )
     );
 
-    setSubgroups([DEFAULT_SUBGROUP(availableMembers), ...subgroups]);
+    setSubgroups([
+      DEFAULT_SUBGROUP(availableMembers, training.avgFutureWorkloadValues),
+      ...subgroups,
+    ]);
   }, [training, component]);
 
   useEffect(() => {
@@ -149,9 +152,16 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     if (sameSubgroup && sameSubgroup.membersIds.includes(member.uid))
       return toast.error('Subgroup for this member already exists');
     else if (sameSubgroup && !sameSubgroup.membersIds.includes(member.uid)) {
+      // subgroup already exists, add the member to it
       const newSubgroup = {
         ...sameSubgroup,
         membersIds: [...sameSubgroup.membersIds, member.uid],
+        avgFutureWorkloadValues: [...sameSubgroup.avgFutureWorkloadValues].map(
+          (value) => ({
+            ...value,
+            numMembers: value.numMembers + 1,
+          })
+        ),
       };
 
       let newSubgroups = [...component.subgroups].map((subgroup) =>
@@ -159,6 +169,12 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           ? {
               ...subgroup,
               membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
+              avgFutureWorkloadValues: [
+                ...subgroup.avgFutureWorkloadValues,
+              ].map((value) => ({
+                ...value,
+                numMembers: value.numMembers - 1,
+              })),
             }
           : subgroup
       );
@@ -186,11 +202,18 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     );
 
     if (memberSubgroup) {
+      // member already exists in a subgroup, remove him from it
       const newSubgroups = [...component.subgroups].map((subgroup) =>
         subgroup.membersIds.includes(member.uid)
           ? {
               ...subgroup,
               membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
+              avgFutureWorkloadValues: [
+                ...subgroup.avgFutureWorkloadValues,
+              ].map((value) => ({
+                ...value,
+                numMembers: value.numMembers - 1,
+              })),
             }
           : subgroup
       );
@@ -231,6 +254,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       filteredTrainings,
       setFilteredTrainings,
       setDetectedChanges,
+      updateTrainingsAvgFutureWorkload: true,
     });
   }
 
@@ -249,7 +273,10 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         availableMembers,
         setAvailableMembers,
         users,
+        component,
+        training,
         setTraining,
+        setFilteredTrainings,
       });
     }
   };
@@ -645,8 +672,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
             ...editedSubgroup,
             name: editSubgroupName,
           };
-
-          console.log('updatedSubgroup', updatedSubgroup);
 
           const updatedSubgroups = [...component.subgroups].map((subgroup) =>
             subgroup.id === updatedSubgroup.id ? updatedSubgroup : subgroup

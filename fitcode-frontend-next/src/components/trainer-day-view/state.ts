@@ -24,6 +24,8 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
+import { avgPool, train } from '@tensorflow/tfjs';
 
 export async function handleCopyTraining(
   token: string,
@@ -125,7 +127,10 @@ export function onDragEndSubgroup(
     availableMembers: User[];
     setAvailableMembers: SetState<User[]>;
     users: User[];
+    component: TrainingComponent | undefined;
+    training: Training | undefined;
     setTraining: SetStateNullable<Training>;
+    setFilteredTrainings: SetState<Training[]>;
   }
 ) {
   const {
@@ -136,10 +141,13 @@ export function onDragEndSubgroup(
     availableMembers,
     setAvailableMembers,
     users,
+    component,
+    training,
     setTraining,
+    setFilteredTrainings,
   } = state;
 
-  if (!destination) return;
+  if (!destination || !training || !component) return;
 
   // remove member from all subgroups, including the default subgroup
   const updatedSubgroups = [...subgroups];
@@ -149,27 +157,61 @@ export function onDragEndSubgroup(
     s.membersIds.includes(draggableId)
   );
 
+  if (fromSubgroup && fromSubgroup.id === destination.droppableId) return;
+
+  const newTraining = { ...training };
+
+  if (fromSubgroup && fromSubgroup.id !== DEFAULT_SUBGROUP([], []).id) {
+    fromSubgroup.avgFutureWorkloadValues =
+      fromSubgroup.avgFutureWorkloadValues.map((avg) => {
+        avg.numMembers -= 1;
+        return avg;
+      });
+  } else if (fromSubgroup && fromSubgroup.id === DEFAULT_SUBGROUP([], []).id) {
+    newTraining.avgFutureWorkloadValues =
+      newTraining.avgFutureWorkloadValues.map((avg) => {
+        if (avg.rootComponentId === component.component?.id) {
+          avg.numMembers -= 1;
+        }
+        return avg;
+      });
+  }
+
   if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id))
     setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
 
-  [DEFAULT_SUBGROUP(availableMembers), ...updatedSubgroups].forEach((s) => {
+  [DEFAULT_SUBGROUP(availableMembers, newTraining.avgFutureWorkloadValues), ...updatedSubgroups].forEach((s) => {
     if (!s.membersIds) return;
     s.membersIds = s.membersIds.filter((id) => id !== draggableId);
   });
 
   // Add member to the new subgroup
-  if (destination.droppableId === 'default') {
-    if (!availableMembers.some((user) => user.uid === draggableId))
+  if (destination.droppableId === DEFAULT_SUBGROUP([], []).id) {
+    newTraining.avgFutureWorkloadValues =
+      newTraining.avgFutureWorkloadValues.map((avg) => {
+        avg.numMembers += 1;
+        return avg;
+      });
+
+    if (!availableMembers.some((user) => user.uid === draggableId)) {
       setAvailableMembers((prev) => [
         ...prev,
         users.find((user) => user.uid === draggableId)!,
       ]);
+    }
   } else {
     const targetSubgroup = updatedSubgroups.find(
       (s) => s.id === destination.droppableId
     );
 
-    if (targetSubgroup) targetSubgroup.membersIds.push(draggableId);
+    if (targetSubgroup) {
+      targetSubgroup.membersIds.push(draggableId);
+      targetSubgroup.avgFutureWorkloadValues =
+        targetSubgroup.avgFutureWorkloadValues.map((avg) => {
+          avg.numMembers += 1;
+          return avg;
+        });
+    }
 
     setAvailableMembers((prev) =>
       prev.filter((user) => user.uid !== draggableId)
@@ -181,8 +223,23 @@ export function onDragEndSubgroup(
 
   setTraining((prev: any) => {
     if (!prev) return null;
-    return { ...prev, subgroups: updatedSubgroups };
+    return {
+      ...prev,
+      avgFutureWorkloadValues: newTraining.avgFutureWorkloadValues,
+    };
   });
+
+  setFilteredTrainings((prev) =>
+    prev.map((t) => {
+      if (t.id === training.id) {
+        return {
+          ...t,
+          avgFutureWorkloadValues: newTraining.avgFutureWorkloadValues,
+        };
+      }
+      return t;
+    })
+  );
 
   setSubgroups(updatedSubgroups);
 }
@@ -266,6 +323,7 @@ export async function handleAddSubgroup(state: {
   filteredTrainings: Training[];
   setFilteredTrainings: SetState<Training[]>;
   setDetectedChanges: SetState<boolean>;
+  updateTrainingsAvgFutureWorkload?: boolean;
 }) {
   const {
     training,
@@ -277,9 +335,26 @@ export async function handleAddSubgroup(state: {
     filteredTrainings,
     setFilteredTrainings,
     setDetectedChanges,
+    updateTrainingsAvgFutureWorkload,
   } = state;
 
   if (!training || !component) return;
+
+  const avgFutureWorkloadValues = [];
+  for (const superset of component.supersets) {
+    for (const exercise of superset.exercises) {
+      const intensityVolumeValue = TrainingService.getIntensityVolumeValues(
+        exercise.sets
+      );
+
+      avgFutureWorkloadValues.push({
+        exerciseId: exercise.id,
+        rootComponentId: component.component?.id || '',
+        numMembers: createSubgroup.membersIds.length,
+        avgWorkloadValue: intensityVolumeValue,
+      });
+    }
+  }
 
   const newSubgroup: Subgroup = {
     id: `subgroup-${String(Date.now())}`,
@@ -290,6 +365,7 @@ export async function handleAddSubgroup(state: {
         ...exercise,
       })),
     })),
+    avgFutureWorkloadValues,
     membersIds: createSubgroup.membersIds || [],
   };
 
@@ -299,6 +375,19 @@ export async function handleAddSubgroup(state: {
   };
 
   setComponent(newComponent);
+
+  // update training's avg future workload values's numMembers
+  if (updateTrainingsAvgFutureWorkload) {
+    // member was not in a subgroup before, therfore update numMembers for avgFutureWorkloadValues
+    training.avgFutureWorkloadValues = training.avgFutureWorkloadValues.map(
+      (avg) => {
+        if (avg.rootComponentId === component.component?.id) {
+          avg.numMembers -= newSubgroup.membersIds.length;
+        }
+        return avg;
+      }
+    );
+  }
 
   updateGlobalStates(
     training,
@@ -357,7 +446,26 @@ export function handleDeleteSubgroup(
     c.id === component.id ? newComponent : c
   );
 
-  const newTraining = { ...training, components: updatedComponents };
+  // update avg future workload values's numMembers
+  const numberOfMembers = component.subgroups.find(
+    (subgroup) => subgroup.id === subgroupId
+  )?.membersIds.length;
+  const avgFutureWorkloadValues = [...training.avgFutureWorkloadValues].map(
+    (avg) => {
+      if (avg.rootComponentId === component.component?.id) {
+        avg.numMembers = numberOfMembers
+          ? avg.numMembers + numberOfMembers
+          : avg.numMembers;
+      }
+      return avg;
+    }
+  );
+
+  const newTraining = {
+    ...training,
+    components: updatedComponents,
+    avgFutureWorkloadValues,
+  };
   setTraining(newTraining);
 
   const updatedTrainings = filteredTrainings.map((filteredTraining) => {
@@ -722,9 +830,14 @@ export function handleDeleteExercise(
 
   if (selectedSubgroup?.subgroup) {
     // update selected subgroup's supersets
+    const newAvgFutureWorkloadValues =
+      selectedSubgroup.subgroup.avgFutureWorkloadValues.filter(
+        (avg) => avg.exerciseId !== exerciseId
+      );
     const updatedSubgroup = {
       ...selectedSubgroup.subgroup,
       supersets: updatedSupersets,
+      avgFutureWorkloadValues: newAvgFutureWorkloadValues,
     };
 
     const updatedComponent = {
@@ -767,7 +880,15 @@ export function handleDeleteExercise(
       c.id === component.id ? updatedComponent : c
     );
 
-    const newTraining = { ...training, components: updatedComponents };
+    const newAvgFutureWorkloadValues = training.avgFutureWorkloadValues.filter(
+      (avg) => avg.exerciseId !== exerciseId
+    );
+
+    const newTraining = {
+      ...training,
+      components: updatedComponents,
+      avgFutureWorkloadValues: newAvgFutureWorkloadValues,
+    };
     setTraining(newTraining);
 
     const updatedTrainings = filteredTrainings.map((filteredTraining) => {

@@ -6,4 +6,6 @@ export class CreateTrainingDto extends PickType(Training, [
   'cycleId',
   'components',
   'completedMembersIds',
+  'avgCompletedWorkloadValues',
+  'avgFutureWorkloadValues'
 ]) {}
