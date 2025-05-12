@@ -19,6 +19,8 @@ import { SetExerciseAttribute } from '../trainer-day-view/exercise-card-set-attr
 import { AthleteTrainingExerciseCardProps } from './props';
 import { useTheme } from '@mui/material';
 import { ExerciseParam } from '../trainer-day-view/exercise-card/exercise-param';
+import { preconnect } from 'react-dom';
+import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
@@ -27,13 +29,7 @@ export default function AthleteTrainingExerciseCard(
   const { components, setView, training, profile } = props;
   const screenSize = useScreenSize();
 
-  const {
-    selectedTraining,
-    setSelectedTraining,
-    selectedComponent,
-    setSelectedComponent,
-    setUserId,
-  } = useTraining();
+  const { trainingInProgress, setTrainingInProgress } = useTraining();
 
   const [selectedSuperset, setSelectedSuperset] = useState<Superset | null>(
     null
@@ -47,19 +43,19 @@ export default function AthleteTrainingExerciseCard(
   const [videoUrl, setVideoUrl] = useState('');
 
   useEffect(() => {
-    if (!selectedComponent) return;
+    if (!trainingInProgress || !trainingInProgress.selectedComponent) return;
     let usersSupersets = undefined;
-    for (const subgroup of selectedComponent.subgroups) {
+    for (const subgroup of trainingInProgress.selectedComponent.subgroups) {
       if (subgroup.membersIds.includes(profile.uid)) {
         usersSupersets = subgroup.supersets;
         break;
       }
     }
     if (!usersSupersets) {
-      usersSupersets = selectedComponent.supersets; //default group
+      usersSupersets = trainingInProgress.selectedComponent.supersets; //default group
     }
     setSupersets(usersSupersets);
-  }, [selectedComponent]);
+  }, [trainingInProgress?.selectedComponent]);
 
   useEffect(() => {}, [supersets]);
 
@@ -87,8 +83,8 @@ export default function AthleteTrainingExerciseCard(
         >
           <Box display="flex" flexDirection="column" width="100%" gap={0.25}>
             {components.map((c, i, arr) =>
-              c.id === selectedComponent?.id &&
-              training.id === selectedTraining?.id ? (
+              c.id === trainingInProgress?.selectedComponent?.id &&
+              training.id === trainingInProgress?.training?.id ? (
                 <Box
                   key={c.id}
                   display="flex"
@@ -127,8 +123,7 @@ export default function AthleteTrainingExerciseCard(
                           maxWidth: '100%', // Adjust width as needed
                         }}
                         onClick={() => {
-                          setSelectedComponent(null);
-                          setSelectedTraining(null);
+                          setTrainingInProgress(null);
                         }}
                       >
                         {c.id}
@@ -156,7 +151,7 @@ export default function AthleteTrainingExerciseCard(
                     <Box display="flex" flexDirection="column" gap={2}>
                       {supersets?.map((superset, i) => (
                         <Box
-                          key={`superset-${selectedComponent.id}-${i}`}
+                          key={`superset-${trainingInProgress?.selectedComponent.id}-${i}`}
                           display="flex"
                           flexDirection="column"
                           gap={0.25}
@@ -295,7 +290,7 @@ export default function AthleteTrainingExerciseCard(
                               )}
                               {selectedExercises.includes(exercise) && (
                                 <Box
-                                  key={exercise.id}
+                                  key={`${exercise.id}-sets`}
                                   display="flex"
                                   flexDirection="column"
                                   width="100%"
@@ -388,9 +383,23 @@ export default function AthleteTrainingExerciseCard(
                   }}
                   onClick={() => {
                     if (c.completedMembersIds.includes(profile.uid)) return;
-                    setSelectedTraining(training);
-                    setSelectedComponent(c);
-                    setUserId(profile.uid);
+                    if (!trainingInProgress) {
+                      setTrainingInProgress({
+                        training: training,
+                        selectedComponent: c,
+                        userId: profile.uid,
+                      } as AthleteTrainingInProgress);
+                    } else {
+                      setTrainingInProgress(
+                        (prev) =>
+                          ({
+                            ...prev,
+                            training: training,
+                            selectedComponent: c,
+                            userId: profile.uid,
+                          }) as AthleteTrainingInProgress
+                      );
+                    }
                   }}
                 >
                   <Typography

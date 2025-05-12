@@ -1,6 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
 import { DateRange } from '@/common/type/date-range.type';
-import { TrainingComponent } from './type/training-plan.type';
+import { Superset, TrainingComponent } from './type/training-plan.type';
 import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
@@ -125,11 +125,13 @@ export class TrainingController {
     token: string,
     trainingId: string,
     userId: string,
-    componentId: string
+    componentId: string,
+    rootComponentId: string,
+    supersets: Superset[]
   ): Promise<Training> {
     return api.patch<Training>(
       `/training/${trainingId}/finish/component`,
-      { userId, componentId },
+      { userId, componentId, supersets, rootComponentId },
       {
         token,
       }

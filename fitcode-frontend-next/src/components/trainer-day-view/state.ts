@@ -26,6 +26,12 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import { avgPool, train } from '@tensorflow/tfjs';
+import { Workload } from '@/controller/training/type/workload.type';
+import { AverageWorkloadValues } from '@/controller/training/type/average-workload-values.type';
+import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+import { isBefore } from 'date-fns';
+import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
+import { Dispatch } from 'react';
 
 export async function handleCopyTraining(
   token: string,
@@ -180,7 +186,10 @@ export function onDragEndSubgroup(
   if (fromSubgroup && !changedSubgroupIds.includes(fromSubgroup.id))
     setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
 
-  [DEFAULT_SUBGROUP(availableMembers, newTraining.avgFutureWorkloadValues), ...updatedSubgroups].forEach((s) => {
+  [
+    DEFAULT_SUBGROUP(availableMembers, newTraining.avgFutureWorkloadValues),
+    ...updatedSubgroups,
+  ].forEach((s) => {
     if (!s.membersIds) return;
     s.membersIds = s.membersIds.filter((id) => id !== draggableId);
   });
@@ -1053,4 +1062,206 @@ function updateGlobalStates(
 
     setFilteredTrainings(updatedTrainings);
   }
+}
+
+const groupByTrainingId = (
+  workloads: Workload[],
+  skipIfAlreadyInOther: boolean = false,
+  otherWorkloads: {
+    [key: string]: Workload[];
+  } = {}
+) => {
+  return workloads.reduce((acc: { [key: string]: Workload[] }, workload) => {
+    // skip if already in completed workloads
+    if (skipIfAlreadyInOther && otherWorkloads[workload.trainingId]) return acc;
+    if (!acc[workload.trainingId]) {
+      acc[workload.trainingId] = [];
+    }
+    acc[workload.trainingId].push(workload);
+    return acc;
+  }, {});
+};
+
+const getFormatedDate = (from: Date) => {
+  // format: "DD MM, AM/PM"
+  const date = new Date(from);
+
+  const day = date.getDate().toString().padStart(2, '0');
+  let month = (date.getMonth() + 1).toString().padStart(2, '0');
+  if (month[0] === '0') month = month.slice(1);
+
+  let hours = date.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+
+  const formatted = `${day}.${month}. ${ampm}`;
+
+  return formatted;
+};
+
+export function prepareGroupAvgWorkloadsForChart(
+  trainings: Training[],
+  exerciseId: string,
+  setData: SetState<ChartWorkloadData[]>,
+  setMax: SetState<number>,
+  setRange: SetState<number[]>
+) {
+  const completedWorkloadsData = [];
+  for (const t of trainings) {
+    const foundExerciseEntry = t.avgCompletedWorkloadValues.find(
+      (w) => w.exerciseId === exerciseId
+    );
+    if (!foundExerciseEntry) continue; // skip if no completed workloads for the selected exercise on this training
+    const formatted = getFormatedDate(t.from);
+
+    // calculation is ran on backend, no need to do it here as for future workloads
+    completedWorkloadsData.push({
+      trainingId: t.id,
+      name: formatted,
+      intensity:
+        Math.round(foundExerciseEntry.avgWorkloadValue.intensity * 100) / 100,
+      volume:
+        Math.round(foundExerciseEntry.avgWorkloadValue.volume * 100) / 100,
+      completed: true,
+    });
+  }
+
+  // init avg future workloads for the selected exercise
+  const futureWorkloadsData = [];
+  for (const t of trainings) {
+    if (completedWorkloadsData.find((w) => w.trainingId === t.id)) continue; // skip if already in completed workloads
+    if (!t.avgFutureWorkloadValues.find((w) => w.exerciseId === exerciseId))
+      continue; // skip if no future workloads for the selected exercise on this training
+
+    let totalNumMembers = 0;
+    const futureData = [];
+
+    // add future workloads of main group
+    for (const w of t.avgFutureWorkloadValues) {
+      if (w.exerciseId === exerciseId && w.numMembers > 0) {
+        totalNumMembers += w.numMembers;
+        for (let j = 0; j < w.numMembers; j++) futureData.push(w);
+      }
+    }
+
+    // add future workloads of all subgroups
+    t.components.forEach((c) => {
+      c.subgroups.forEach((sg) => {
+        const futureWorkload = sg.avgFutureWorkloadValues.find(
+          (w) => w.exerciseId === exerciseId
+        );
+        if (futureWorkload && futureWorkload.numMembers > 0) {
+          totalNumMembers += futureWorkload.numMembers;
+          for (let j = 0; j < futureWorkload.numMembers; j++)
+            futureData.push(futureWorkload);
+        }
+      });
+    });
+
+    const avgIntensity =
+      futureData.reduce((acc, val) => acc + val.avgWorkloadValue.intensity, 0) /
+      totalNumMembers;
+    const avgVolume =
+      futureData.reduce((acc, val) => acc + val.avgWorkloadValue.volume, 0) /
+      totalNumMembers;
+
+    const formatted = getFormatedDate(t.from);
+
+    futureWorkloadsData.push({
+      trainingId: t.id,
+      name: formatted,
+      intensity: Math.round(avgIntensity * 100) / 100,
+      volume: Math.round(avgVolume * 100) / 100,
+      completed: false,
+    });
+  }
+
+  const numOfCompletedWorkloads = completedWorkloadsData.length;
+  const numOfFutureWorkloads = futureWorkloadsData.length;
+  const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
+
+  const newData = [...completedWorkloadsData, ...futureWorkloadsData];
+
+  setData(newData);
+  setMax(numOfTotalWorkloads);
+  setRange([1, numOfTotalWorkloads]);
+}
+
+export function prepareSelectedAthleteAvgWorkloadsForChart(
+  workloads: CompletedFutureWorkloads,
+  exerciseId: string,
+  setData: SetState<ChartWorkloadData[]>,
+  setMax: SetState<number>,
+  setRange: SetState<number[]>
+) {
+  let completedWorkloadsFiltered = workloads.completedWorkloads
+    .filter((workload) => workload.exerciseId === exerciseId)
+    .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
+
+  const futureWorkloadsFiltered = workloads.futureWorkloads
+    .filter((workload) => workload.exerciseId === exerciseId)
+    .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
+
+  let groupedCompletedWorkloads = groupByTrainingId(completedWorkloadsFiltered);
+
+  let groupedFutureWorkloads = groupByTrainingId(
+    futureWorkloadsFiltered,
+    true,
+    groupedCompletedWorkloads
+  );
+
+  const numOfCompletedWorkloads = Object.keys(groupedCompletedWorkloads).length;
+  const numOfFutureWorkloads = Object.keys(groupedFutureWorkloads).length;
+  const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
+
+  const newData = [];
+  let i = 0;
+  for (const workloads of [groupedCompletedWorkloads, groupedFutureWorkloads]) {
+    for (const completedWorkload of Object.values(workloads)) {
+      const validIntensityValues = completedWorkload
+        .map((w) => workloads === groupedCompletedWorkloads ? w.intWork1Value : w.prescribedIntWork1Value)
+        .filter((v) => v !== undefined)
+        .map((w) => (!w ? w : parseFloat(w.toString())));
+
+      const validVolumeValues = completedWorkload
+        .map((w) => workloads === groupedCompletedWorkloads ? w.volWork1Value : w.prescribedVolWork1Value)
+        .filter((v) => v !== undefined)
+        .map((w) => (!w ? w : parseFloat(w.toString())));
+
+      const avgIntensity =
+        validIntensityValues.reduce((acc, val) => acc + val, 0) /
+        validIntensityValues.length;
+
+      const avgVolume =
+        validVolumeValues.reduce((acc, val) => acc + val, 0) /
+        validVolumeValues.length;
+
+      const date = new Date(completedWorkload[0].plannedAt);
+
+      const day = date.getDate().toString().padStart(2, '0');
+      let month = (date.getMonth() + 1).toString().padStart(2, '0');
+      if (month[0] === '0') month = month.slice(1);
+
+      let hours = date.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      // Final format: "DD MM, AM/PM"
+      const formatted = `${day}.${month}. ${ampm}`;
+
+      newData.push({
+        trainingId: completedWorkload.length
+          ? completedWorkload[0].trainingId
+          : '',
+        name: formatted,
+        intensity: Math.round(avgIntensity * 100) / 100,
+        volume: Math.round(avgVolume * 100) / 100,
+        completed: groupedCompletedWorkloads === workloads,
+      });
+      i++;
+    }
+    i = 0;
+  }
+
+  setData(newData);
+  setMax(numOfTotalWorkloads);
+  setRange([1, numOfTotalWorkloads]);
 }

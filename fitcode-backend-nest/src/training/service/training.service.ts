@@ -40,6 +40,10 @@ import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
 import dayjs from 'dayjs';
 import { SetStatus } from '../enum/set-status.enum';
+import { Superset } from '../entity/superset.entity';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import { IntType, ParamType, VolType } from 'src/component/enum/param.enum';
+import { TrainingExercise } from '../entity/training-exercise.entity';
 
 @Injectable()
 export class TrainingService {
@@ -402,15 +406,17 @@ export class TrainingService {
     );
 
     // keep avg workload values for exercises of only the copied component
-    const exerciseIdsToKeep = trainingComponent.supersets.map(
-      (superset) => superset.exercises.map((e) => e.id),
-    ).flat();
-    const avgCompletedWorkloadValues = copyFromTraining.avgCompletedWorkloadValues.filter(
-      (w) => !exerciseIdsToKeep.includes(w.exerciseId),
-    );
-    const avgFutureWorkloadValues = copyFromTraining.avgFutureWorkloadValues.filter(
-      (w) => !exerciseIdsToKeep.includes(w.exerciseId),
-    );
+    const exerciseIdsToKeep = trainingComponent.supersets
+      .map((superset) => superset.exercises.map((e) => e.id))
+      .flat();
+    const avgCompletedWorkloadValues =
+      copyFromTraining.avgCompletedWorkloadValues.filter(
+        (w) => !exerciseIdsToKeep.includes(w.exerciseId),
+      );
+    const avgFutureWorkloadValues =
+      copyFromTraining.avgFutureWorkloadValues.filter(
+        (w) => !exerciseIdsToKeep.includes(w.exerciseId),
+      );
 
     const data: Create<Training> = {
       id: null,
@@ -888,9 +894,9 @@ export class TrainingService {
   async finishComponent(
     user: User,
     ref: TrainingRef,
-    input: { userId: string; componentId: string },
+    input: { userId: string; componentId: string; rootComponentId: string, supersets: Superset[] },
   ): Promise<Training> {
-    const { userId, componentId } = input;
+    const { userId, componentId, rootComponentId, supersets } = input;
     this.logger.log(
       `User ${user.uid} is finishing component ${componentId} for user ${input.userId} for training ${ref.trainingId}`,
     );
@@ -908,20 +914,104 @@ export class TrainingService {
       });
 
     const batch = this.firebaseService.firestore.batch();
+
+    const completedExercises = supersets
+      .map((superset) => superset.exercises.map((exercise) => exercise))
+      .flat();
+
+    // update workloads
     for (const workload of workloads) {
       const docRef = this.workloadService.getDoc(workload);
+      const completedExercise = completedExercises.find(
+        (e) => e.id === workload.exerciseId,
+      );
+      const correctSet = completedExercise.sets.find(
+        (s) => s.setNumber === workload.setNumber,
+      );
+
+      const {
+        volWork1Value,
+        volWork2Value,
+        volRecValue,
+        intWork1Value,
+        intWork2Value,
+        intRecValue,
+      } = this.getWorkloadValues(correctSet, workload);
+
       batch.update(docRef, {
         status: SetStatus.COMPLETED,
         finishedAt: new Date(),
+        volWork1Value: volWork1Value,
+        volWork2Value: volWork2Value,
+        volRecValue: volRecValue,
+        intWork1Value: intWork1Value,
+        intWork2Value: intWork2Value,
+        intRecValue: intRecValue,
       });
     }
 
     const training = await this.findOneOrFail(user, ref);
+
+    // update avg completed workload values
+    for (const completedExercise of completedExercises) {
+      let avgIntensity = 0;
+      let avgVolume = 0;
+
+      const workload = workloads.find(
+        (w) => w.exerciseId === completedExercise.id,
+      );
+
+      for (const set of completedExercise.sets) {
+        const { volWork1Value, intWork1Value } = this.getWorkloadValues(
+          set,
+          workload,
+        );
+        
+        if (intWork1Value && volWork1Value) {
+          avgIntensity += parseFloat(intWork1Value);
+          avgVolume += parseFloat(volWork1Value);
+        }
+      }
+
+      if (avgIntensity === 0 || avgVolume === 0) continue;
+
+      avgIntensity = avgIntensity / completedExercise.sets.length;
+      avgVolume = avgVolume / completedExercise.sets.length;
+
+      const foundAvgCompletedWorkload =
+        training.avgCompletedWorkloadValues.find(
+          (w) => w.exerciseId === completedExercise.id,
+        );
+
+      if (!foundAvgCompletedWorkload) {
+        training.avgCompletedWorkloadValues.push({
+          exerciseId: completedExercise.id,
+          rootComponentId,
+          numMembers: 1,
+          avgWorkloadValue: {
+            intensity: avgIntensity,
+            volume: avgVolume,
+          },
+        });
+
+        // we can optimize the training object here by removing the entry with the same exerciseId from avgFutureWorkloadValues if needed
+      } else {
+        foundAvgCompletedWorkload.numMembers++;
+        foundAvgCompletedWorkload.avgWorkloadValue.intensity =
+          ((foundAvgCompletedWorkload.avgWorkloadValue.intensity * (foundAvgCompletedWorkload.numMembers - 1)) +
+            avgIntensity) /
+          foundAvgCompletedWorkload.numMembers;
+        foundAvgCompletedWorkload.avgWorkloadValue.volume =
+          ((foundAvgCompletedWorkload.avgWorkloadValue.volume * (foundAvgCompletedWorkload.numMembers - 1)) + avgVolume) /
+          foundAvgCompletedWorkload.numMembers;
+      }
+    }
+
     const component = training.components.find((c) => c.id === componentId);
     if (!component) throw new BadRequestException('Component not found');
     component.completedMembersIds.push(userId);
 
-    const hasCompletedTraining = training.components.every((c) =>
+    const hasCompletedTraining = [training.warmup, ...training.components, training.cooldown].every((c) =>
       c.completedMembersIds.includes(userId),
     );
     if (hasCompletedTraining) {
@@ -933,6 +1023,7 @@ export class TrainingService {
       {
         components: training.components,
         completedMembersIds: training.completedMembersIds,
+        avgCompletedWorkloadValues: training.avgCompletedWorkloadValues,
       },
     );
 
@@ -1022,6 +1113,36 @@ export class TrainingService {
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 
     return updatedTraining;
+  }
+
+  private getWorkloadValues(set: ExerciseSet, workload: Workload) {
+    const volWork1Value = set.paramValues.find(
+      (p) => p.field === ParamType.VolWork1
+    )?.value;
+    const volWork2Value = set.paramValues.find(
+      (p) => p.field === ParamType.VolWork2
+    )?.value;
+    const volRecValue = set.paramValues.find(
+      (p) => p.field === ParamType.VolRec1
+    )?.value;
+    const intWork1Value = set.paramValues.find(
+      (p) => p.field === ParamType.IntWork1
+    )?.value;
+    const intWork2Value = set.paramValues.find(
+      (p) => p.field === ParamType.IntWork2
+    )?.value;
+    const intRecValue = set.paramValues.find(
+      (p) => p.field === ParamType.IntRec1
+    )?.value;
+
+    return {
+      volWork1Value,
+      volWork2Value,
+      volRecValue,
+      intWork1Value,
+      intWork2Value,
+      intRecValue,
+    };
   }
 
   private async validateOverlap(
