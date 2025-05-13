@@ -4,4 +4,5 @@ export type ChartWorkloadData = {
     intensity: number,
     volume: number,
     completed: boolean,
+    plannedAt: Date,
 }

@@ -7,11 +7,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {
+  addDays,
   addMinutes,
   endOfDay,
   isBefore,
   startOfDay,
   startOfHour,
+  subMinutes,
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
@@ -350,7 +352,7 @@ export class TrainingService {
   ): Promise<Training> {
     const { trainingComponent, date } = input;
     this.logger.log(
-      `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
+      `User ${user.uid} is creating training with training component: ${JSON.stringify(input)}`,
     );
 
     const copyFromTraining = await this.findOneOrFail(user, ref);
@@ -411,11 +413,11 @@ export class TrainingService {
       .flat();
     const avgCompletedWorkloadValues =
       copyFromTraining.avgCompletedWorkloadValues.filter(
-        (w) => !exerciseIdsToKeep.includes(w.exerciseId),
+        (w) => exerciseIdsToKeep.includes(w.exerciseId),
       );
     const avgFutureWorkloadValues =
       copyFromTraining.avgFutureWorkloadValues.filter(
-        (w) => !exerciseIdsToKeep.includes(w.exerciseId),
+        (w) => exerciseIdsToKeep.includes(w.exerciseId),
       );
 
     const data: Create<Training> = {
@@ -665,36 +667,12 @@ export class TrainingService {
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
 
-    this.checkTrainingIsInCycle(input.from, cycle);
-    this.validateIsTrainingInFuture(input.from);
-    await this.validateOverlap(
-      input.from,
-      training.components[training.components.length - 1].from,
-      groupId,
-      cycleId,
-    );
-
-    // validate components & exercises in case user cannot view exercises of another user
-    const components = await this.cacheManagerService.getComponents();
     const membersIds = input.membersIds || training.membersIds;
     await this.validateTrainingMembers(membersIds);
 
-    const exercises = await this.trainingPlanService.findAllTrainingExercises(
-      user,
-      training.components,
-    );
-
-    this.trainingPlanService.validateTrainingComponents(
-      exercises,
-      membersIds,
-      training.components,
-      components,
-      training.warmup,
-      training.cooldown,
-    );
-
-    // for future trainings, update latest meta and calculate workloads
     const wellness = await this.userService.getRecentWellness(membersIds);
+    const trainingTo = addMinutes(startOfHour(input.from), training.components.length * 30)
+
     const data: Create<Training> = {
       id: null,
       groupId: training.groupId,
@@ -702,28 +680,28 @@ export class TrainingService {
       ownerId: user.uid,
       copiedFromId: training.id,
       from: input.from,
-      to: addMinutes(startOfHour(input.from), training.components.length * 30),
+      to: trainingTo,
       membersIds: training.membersIds,
       wellness,
       completedMembersIds: [],
       avgCompletedWorkloadValues: training.avgCompletedWorkloadValues || [],
       avgFutureWorkloadValues: training.avgFutureWorkloadValues || [],
-      warmup: { ...training.warmup },
-      cooldown: { ...training.cooldown },
       components: training.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
 
         return {
           id: c.id,
-          from: c.from ? c.from : from,
-          to: c.to ? c.to : to,
+          from: from,
+          to: to,
           color: c.color,
           subgroups: c.subgroups || [],
           supersets: c.supersets || [],
           completedMembersIds: [],
         };
       }),
+      warmup: { ...training.warmup, from: subMinutes(input.from, 5), to: input.from },
+      cooldown: { ...training.cooldown, from: trainingTo, to: addMinutes(trainingTo, 5) },
     };
 
     const trainingDocRef = this.trainingRepository.collection().doc();
@@ -733,6 +711,32 @@ export class TrainingService {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    // for future trainings, update latest meta and calculate workloads
+    this.checkTrainingIsInCycle(input.from, cycle);
+    this.validateIsTrainingInFuture(input.from);
+    await this.validateOverlap(
+      copiedTraining.from,
+      copiedTraining.components[copiedTraining.components.length - 1].from,
+      groupId,
+      cycleId,
+    );
+
+    // validate components & exercises in case user cannot view exercises of another user
+    const components = await this.cacheManagerService.getComponents();
+    const exercises = await this.trainingPlanService.findAllTrainingExercises(
+      user,
+      copiedTraining.components,
+    );
+
+    this.trainingPlanService.validateTrainingComponents(
+      exercises,
+      membersIds,
+      copiedTraining.components,
+      components,
+      copiedTraining.warmup,
+      copiedTraining.cooldown,
+    );
 
     const copyTrainingQuery = this.firebaseService.buildCreateQuery<Training>(
       { ...data, id: copiedTraining.id },
@@ -894,7 +898,12 @@ export class TrainingService {
   async finishComponent(
     user: User,
     ref: TrainingRef,
-    input: { userId: string; componentId: string; rootComponentId: string, supersets: Superset[] },
+    input: {
+      userId: string;
+      componentId: string;
+      rootComponentId: string;
+      supersets: Superset[];
+    },
   ): Promise<Training> {
     const { userId, componentId, rootComponentId, supersets } = input;
     this.logger.log(
@@ -966,7 +975,7 @@ export class TrainingService {
           set,
           workload,
         );
-        
+
         if (intWork1Value && volWork1Value) {
           avgIntensity += parseFloat(intWork1Value);
           avgVolume += parseFloat(volWork1Value);
@@ -998,11 +1007,14 @@ export class TrainingService {
       } else {
         foundAvgCompletedWorkload.numMembers++;
         foundAvgCompletedWorkload.avgWorkloadValue.intensity =
-          ((foundAvgCompletedWorkload.avgWorkloadValue.intensity * (foundAvgCompletedWorkload.numMembers - 1)) +
+          (foundAvgCompletedWorkload.avgWorkloadValue.intensity *
+            (foundAvgCompletedWorkload.numMembers - 1) +
             avgIntensity) /
           foundAvgCompletedWorkload.numMembers;
         foundAvgCompletedWorkload.avgWorkloadValue.volume =
-          ((foundAvgCompletedWorkload.avgWorkloadValue.volume * (foundAvgCompletedWorkload.numMembers - 1)) + avgVolume) /
+          (foundAvgCompletedWorkload.avgWorkloadValue.volume *
+            (foundAvgCompletedWorkload.numMembers - 1) +
+            avgVolume) /
           foundAvgCompletedWorkload.numMembers;
       }
     }
@@ -1011,9 +1023,11 @@ export class TrainingService {
     if (!component) throw new BadRequestException('Component not found');
     component.completedMembersIds.push(userId);
 
-    const hasCompletedTraining = [training.warmup, ...training.components, training.cooldown].every((c) =>
-      c.completedMembersIds.includes(userId),
-    );
+    const hasCompletedTraining = [
+      training.warmup,
+      ...training.components,
+      training.cooldown,
+    ].every((c) => c.completedMembersIds.includes(userId));
     if (hasCompletedTraining) {
       training.completedMembersIds.push(userId);
     }
@@ -1117,22 +1131,22 @@ export class TrainingService {
 
   private getWorkloadValues(set: ExerciseSet, workload: Workload) {
     const volWork1Value = set.paramValues.find(
-      (p) => p.field === ParamType.VolWork1
+      (p) => p.field === ParamType.VolWork1,
     )?.value;
     const volWork2Value = set.paramValues.find(
-      (p) => p.field === ParamType.VolWork2
+      (p) => p.field === ParamType.VolWork2,
     )?.value;
     const volRecValue = set.paramValues.find(
-      (p) => p.field === ParamType.VolRec1
+      (p) => p.field === ParamType.VolRec1,
     )?.value;
     const intWork1Value = set.paramValues.find(
-      (p) => p.field === ParamType.IntWork1
+      (p) => p.field === ParamType.IntWork1,
     )?.value;
     const intWork2Value = set.paramValues.find(
-      (p) => p.field === ParamType.IntWork2
+      (p) => p.field === ParamType.IntWork2,
     )?.value;
     const intRecValue = set.paramValues.find(
-      (p) => p.field === ParamType.IntRec1
+      (p) => p.field === ParamType.IntRec1,
     )?.value;
 
     return {

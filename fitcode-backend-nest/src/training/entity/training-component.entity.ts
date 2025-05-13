@@ -39,8 +39,7 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @Expose()
   completedMembersIds: string[]; // members who completed the training
 
-  @IsString()
-  @IsNotEmpty()
+  @Type(() => CopiedFrom)
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()
