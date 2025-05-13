@@ -96,8 +96,6 @@ export async function handleCopyTraining(
     router,
     () => TrainingController.copy(token, training.id, { from, to }),
     (copiedTraining) => {
-      copiedTraining.from = new Date(copiedTraining.from);
-      copiedTraining.to = new Date(copiedTraining.to);
       copiedTraining = TrainingService.mapExercises(copiedTraining, exercises);
       copiedTraining = TrainingService.mapComponents(
         copiedTraining,
@@ -1122,7 +1120,8 @@ export function prepareGroupAvgWorkloadsForChart(
       volume:
         Math.round(foundExerciseEntry.avgWorkloadValue.volume * 100) / 100,
       completed: true,
-    });
+      plannedAt: t.from,
+    } as ChartWorkloadData);
   }
 
   // init avg future workloads for the selected exercise
@@ -1172,14 +1171,22 @@ export function prepareGroupAvgWorkloadsForChart(
       intensity: Math.round(avgIntensity * 100) / 100,
       volume: Math.round(avgVolume * 100) / 100,
       completed: false,
-    });
+      plannedAt: t.from,
+    } as ChartWorkloadData);
   }
 
   const numOfCompletedWorkloads = completedWorkloadsData.length;
   const numOfFutureWorkloads = futureWorkloadsData.length;
   const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
 
-  const newData = [...completedWorkloadsData, ...futureWorkloadsData];
+  let newData = [...completedWorkloadsData, ...futureWorkloadsData];
+
+  // sort by plannedAt
+  newData.sort((a, b) => {
+    const dateA = new Date(a.plannedAt);
+    const dateB = new Date(b.plannedAt);
+    return dateA.getTime() - dateB.getTime();
+  });
 
   setData(newData);
   setMax(numOfTotalWorkloads);
@@ -1213,17 +1220,25 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
   const numOfFutureWorkloads = Object.keys(groupedFutureWorkloads).length;
   const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
 
-  const newData = [];
+  let newData = [];
   let i = 0;
   for (const workloads of [groupedCompletedWorkloads, groupedFutureWorkloads]) {
     for (const completedWorkload of Object.values(workloads)) {
       const validIntensityValues = completedWorkload
-        .map((w) => workloads === groupedCompletedWorkloads ? w.intWork1Value : w.prescribedIntWork1Value)
+        .map((w) =>
+          workloads === groupedCompletedWorkloads
+            ? w.intWork1Value
+            : w.prescribedIntWork1Value
+        )
         .filter((v) => v !== undefined)
         .map((w) => (!w ? w : parseFloat(w.toString())));
 
       const validVolumeValues = completedWorkload
-        .map((w) => workloads === groupedCompletedWorkloads ? w.volWork1Value : w.prescribedVolWork1Value)
+        .map((w) =>
+          workloads === groupedCompletedWorkloads
+            ? w.volWork1Value
+            : w.prescribedVolWork1Value
+        )
         .filter((v) => v !== undefined)
         .map((w) => (!w ? w : parseFloat(w.toString())));
 
@@ -1255,11 +1270,19 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
         intensity: Math.round(avgIntensity * 100) / 100,
         volume: Math.round(avgVolume * 100) / 100,
         completed: groupedCompletedWorkloads === workloads,
+        plannedAt: completedWorkload[0].plannedAt,
       });
       i++;
     }
     i = 0;
   }
+
+  // sort by plannedAt
+  newData.sort((a, b) => {
+    const dateA = new Date(a.plannedAt);
+    const dateB = new Date(b.plannedAt);
+    return dateA.getTime() - dateB.getTime();
+  });
 
   setData(newData);
   setMax(numOfTotalWorkloads);

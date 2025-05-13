@@ -104,10 +104,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     updateTraining(newExercise);
   }, [setsNumber]);
 
-  useEffect(() => {
-    console.log('new training', training);
-  }, [training]);
-
   function updateTraining(
     exercise: TrainingExercise,
     intensityVolumeValue?: IntensityVolumeValues

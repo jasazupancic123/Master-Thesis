@@ -26,6 +26,7 @@ import {
   prepareSelectedAthleteAvgWorkloadsForChart,
   prepareGroupAvgWorkloadsForChart,
 } from './state';
+import { isBefore } from 'date-fns';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -100,8 +101,8 @@ export default function TrainingExerciseCardContainer(
     if (exercise.id !== selectedExercise?.id) return;
 
     const newDataInRange = data.slice(range[0] - 1, range[1]);
-    const numberOfCompletedWorkloads = newDataInRange.filter(
-      (workload) => workload.completed
+    const numberOfCompletedWorkloads = newDataInRange.filter((workload) =>
+      isBefore(workload.plannedAt, new Date())
     ).length;
     const numberOfTotalWorkloads = newDataInRange.length;
 
