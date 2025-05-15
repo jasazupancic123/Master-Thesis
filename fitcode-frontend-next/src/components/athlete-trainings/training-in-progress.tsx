@@ -5,6 +5,7 @@ import { useTraining } from '@/context/training-provider';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import {
+  ExerciseSet,
   Superset,
   TrainingComponent,
 } from '@/controller/training/type/training-plan.type';
@@ -40,13 +41,13 @@ import { CameraAlt } from '@mui/icons-material';
 import dynamic from 'next/dynamic';
 import { ExerciseParam } from '../trainer-day-view/exercise-card/exercise-param';
 import { TrainingService } from '@/controller/training/training.service';
+import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 interface TrainingInProgressProps {
-  selectedComponent: TrainingComponent;
   profile: User;
   token: string;
   setView: (view: 'exercises' | 'training') => void;
-  setSelectedComponent: (component: TrainingComponent | null) => void;
   setTrainings: SetState<Training[]>;
 }
 
@@ -57,28 +58,17 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
 
   const {
     clearTrainingState,
-    supersetIndex,
-    setSupersetIndex,
-    startOfTraining,
-    setStartOfTraining,
+    trainingInProgress,
+    setTrainingInProgress,
     setView,
-    selectedTraining,
-    setSelectedTraining,
   } = useTraining();
 
-  const {
-    selectedComponent,
-    profile,
-    token,
-    setSelectedComponent,
-    setTrainings,
-  } = props;
+  const { profile, token, setTrainings } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
     Superset | undefined
   >();
 
-  const [supersets, setSupersets] = useState<Superset[]>();
   const [elapsedTime, setElapsedTime] = useState(0);
   const [openNextSupersetModal, setOpenNextSupersetModal] = useState(false);
   const [openFinishTrainingModal, setOpenFinishTrainingModal] = useState(false);
@@ -92,48 +82,72 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const { user } = useAuth();
 
   useEffect(() => {
-    let usersSupersets = undefined;
-    for (const subgroup of selectedComponent.subgroups) {
-      if (subgroup.membersIds.includes(profile.uid)) {
-        usersSupersets = subgroup.supersets;
-        break;
+    if (!trainingInProgress) return;
+
+    const newTrainingInProgress = { ...trainingInProgress };
+    if (!newTrainingInProgress.supersets) {
+      let usersSupersets = undefined;
+      for (const subgroup of newTrainingInProgress.selectedComponent
+        .subgroups) {
+        if (subgroup.membersIds.includes(profile.uid)) {
+          usersSupersets = subgroup.supersets;
+          break;
+        }
       }
-    }
-    if (!usersSupersets) usersSupersets = selectedComponent.supersets; //default group
+      if (!usersSupersets)
+        usersSupersets = newTrainingInProgress.selectedComponent.supersets; //default group
 
-    if (!selectedTraining) {
-      setStartOfTraining(dayjs());
+      newTrainingInProgress.supersets = usersSupersets;
     }
-    setSupersets(usersSupersets);
 
-    if (!supersetIndex) setSelectedSuperset(usersSupersets[0]);
-    else setSelectedSuperset(usersSupersets[supersetIndex]);
-  }, [selectedComponent]);
+    if (!newTrainingInProgress.startOfTraining) {
+      newTrainingInProgress.startOfTraining = dayjs();
+    }
+
+    if (!newTrainingInProgress.supersetIndex) {
+      newTrainingInProgress.supersetIndex = 0;
+      setSelectedSuperset(newTrainingInProgress.supersets[0]);
+    } else
+      setSelectedSuperset(
+        newTrainingInProgress.supersets[
+          newTrainingInProgress.supersetIndex || 0
+        ]
+      );
+
+    setTrainingInProgress(
+      (prev) =>
+        ({
+          ...prev,
+          supersets: newTrainingInProgress.supersets,
+          startOfTraining: newTrainingInProgress.startOfTraining,
+          supersetIndex: newTrainingInProgress.supersetIndex,
+        }) as AthleteTrainingInProgress
+    );
+  }, [trainingInProgress?.selectedComponent]);
 
   useEffect(() => {
-    if (!startOfTraining) {
-      setStartOfTraining(dayjs()); // Set start time to now
-      return;
+    if (!trainingInProgress) return;
+    if (!trainingInProgress.startOfTraining) {
+      setTrainingInProgress(
+        (prev) =>
+          ({
+            ...prev,
+            startOfTraining: dayjs(),
+          }) as AthleteTrainingInProgress
+      );
     }
 
-    const startTime = dayjs(startOfTraining).valueOf(); // Convert to timestamp
+    const startTime = dayjs(trainingInProgress.startOfTraining).valueOf();
     const interval = setInterval(() => {
       const now = dayjs().valueOf();
-      setElapsedTime(Math.floor((now - startTime) / 1000)); // Get seconds difference
+      setElapsedTime(Math.floor((now - startTime) / 1000));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startOfTraining]); // Re-run if startOfTraining changes
-
-  useEffect(() => {}, [elapsedTime]);
+  }, [trainingInProgress?.startOfTraining]);
 
   const handleFinishTraining = async () => {
-    clearTrainingState();
-    setView('exercises');
-    setSelectedComponent(null);
-    setSelectedSuperset(undefined);
-
-    if (!selectedTraining || !user || !selectedComponent)
+    if (!trainingInProgress || !user || !trainingInProgress.selectedComponent)
       return toast.error('An error occurred');
 
     handleApiRequest(
@@ -141,18 +155,25 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
       () =>
         TrainingController.finishComponent(
           token,
-          selectedTraining.id,
+          trainingInProgress.training.id,
           user.uid,
-          selectedComponent.id
+          trainingInProgress.selectedComponent.id,
+          trainingInProgress.selectedComponent.component?.id || '',
+          trainingInProgress.supersets
         ),
       (training) => {
         toast.success('Training data updated successfully');
         clearTrainingState();
         setView('exercises');
-        setSelectedComponent(null);
         setSelectedSuperset(undefined);
-        if (selectedTraining.id === training.id) {
-          setSelectedTraining(training);
+        if (trainingInProgress.training.id === training.id) {
+          setTrainingInProgress(
+            (prev) =>
+              ({
+                ...prev,
+                training: training,
+              }) as AthleteTrainingInProgress
+          );
         }
         setTrainings((prev) =>
           prev.map((t) => {
@@ -172,7 +193,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     clearTrainingState();
     setView('exercises');
     setElapsedTime(0);
-    setSelectedComponent(null);
     setSelectedSuperset(undefined);
   };
 
@@ -196,9 +216,12 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   };
 
   const handleContinue = () => {
-    if (!supersets || !selectedSuperset) return;
+    if (!trainingInProgress?.supersets || !selectedSuperset) return;
     handleCloseMenu();
-    if (supersets.indexOf(selectedSuperset) === supersets.length - 1) {
+    if (
+      trainingInProgress?.supersets.indexOf(selectedSuperset) ===
+      trainingInProgress?.supersets.length - 1
+    ) {
       setOpenFinishTrainingModal(true);
     } else {
       setOpenNextSupersetModal(true);
@@ -221,7 +244,9 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     />
   ) : (
     <>
-      {supersets && selectedSuperset ? (
+      {trainingInProgress &&
+      trainingInProgress.supersets &&
+      selectedSuperset ? (
         <Box
           width="100%"
           display="flex"
@@ -240,7 +265,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
               variant="body1"
               fontSize={screenSize.isUltraSmall ? 13 : undefined}
             >
-              Superset {supersets.indexOf(selectedSuperset) + 1}
+              Superset{' '}
+              {trainingInProgress.supersets.indexOf(selectedSuperset) + 1}
             </Typography>
             <Typography
               color={theme.palette.primary.main}
@@ -251,7 +277,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                 textTransform: 'uppercase',
               }}
             >
-              {selectedComponent.id}
+              {trainingInProgress.selectedComponent.id}
             </Typography>
             <Typography
               variant="body1"
@@ -324,7 +350,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                     }
                   >
                     <Typography variant="body2" color="rgb(177, 183, 189)">
-                      {`${supersets.indexOf(selectedSuperset) + 1}${String.fromCharCode(65 + i)}`}
+                      {`${trainingInProgress.supersets.indexOf(selectedSuperset) + 1}${String.fromCharCode(65 + i)}`}
                     </Typography>
                   </Box>
                   <Grid2
@@ -408,14 +434,92 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                                       }
                                     >
                                       <ExerciseParam
-                                        showOptions={set.setNumber === 1}
-                                        disableOptions
+                                        showOptions={i === 0}
                                         disableSets
                                         param={param}
                                         value={value}
                                         onOptionChange={(newValue) => {}}
-                                        onSubOptionChange={(newValue) => {}}
-                                        readOnly={true}
+                                        onSubOptionChange={(newValue) => {
+                                          if (
+                                            +newValue < 0 ||
+                                            param.field === 'volWorkSets'
+                                          )
+                                            return;
+
+                                          const paramIndex =
+                                            exercise.sets[0].paramValues.findIndex(
+                                              (pv) => pv.field === param.field
+                                            );
+
+                                          const newExercise = { ...exercise };
+
+                                          const updatedSets: ExerciseSet[] =
+                                            newExercise.sets.map((set, j) => {
+                                              if (i !== j) return set;
+                                              return {
+                                                setNumber: set.setNumber,
+                                                paramValues: [
+                                                  ...set.paramValues,
+                                                ].map((param, index) => {
+                                                  if (index === paramIndex) {
+                                                    return {
+                                                      field: param.field,
+                                                      selected: param.selected,
+                                                      value: newValue as string,
+                                                    } as AttributeValue;
+                                                  }
+                                                  return {
+                                                    field: param.field,
+                                                    selected: param.selected,
+                                                    value: param.value,
+                                                  } as AttributeValue;
+                                                }),
+                                              };
+                                            });
+
+                                          newExercise.sets = [...updatedSets];
+
+                                          const newExercises =
+                                            selectedSuperset.exercises.map(
+                                              (ex) => {
+                                                if (ex.id === exercise.id) {
+                                                  return newExercise;
+                                                }
+                                                return ex;
+                                              }
+                                            );
+
+                                          const newSuperset = {
+                                            ...selectedSuperset,
+                                            exercises: newExercises,
+                                          };
+
+                                          setSelectedSuperset((prev) => {
+                                            if (!prev) return undefined;
+                                            return newSuperset;
+                                          });
+
+                                          const newSupersets =
+                                            trainingInProgress.supersets.map(
+                                              (superset, j) => {
+                                                if (
+                                                  j ===
+                                                  trainingInProgress.supersetIndex
+                                                ) {
+                                                  return newSuperset;
+                                                }
+                                                return superset;
+                                              }
+                                            );
+
+                                          setTrainingInProgress((prev) => {
+                                            if (!prev) return null;
+                                            return {
+                                              ...prev,
+                                              supersets: newSupersets,
+                                            } as AthleteTrainingInProgress;
+                                          });
+                                        }}
                                       />
                                     </Box>
                                   );
@@ -459,7 +563,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             }}
           >
             <MenuItem onClick={handleContinue}>
-              {supersets.indexOf(selectedSuperset) === supersets.length - 1 ? (
+              {trainingInProgress.supersets.indexOf(selectedSuperset) ===
+              trainingInProgress.supersets.length - 1 ? (
                 <>
                   <DoneIcon sx={{ marginRight: 1 }} />
                   Finish Training
@@ -483,10 +588,29 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             onCancel={() => setOpenNextSupersetModal(false)}
             onConfirm={() => {
               setSelectedSuperset(
-                supersets[supersets.indexOf(selectedSuperset) + 1]
+                trainingInProgress.supersets[
+                  trainingInProgress.supersets.indexOf(selectedSuperset) + 1
+                ]
               );
-              if (!supersetIndex) setSupersetIndex(1);
-              else setSupersetIndex(supersetIndex + 1);
+              if (!trainingInProgress.supersetIndex) {
+                setTrainingInProgress(
+                  (prev) =>
+                    ({
+                      ...prev,
+                      supersetIndex: 1,
+                    }) as AthleteTrainingInProgress
+                );
+              } else {
+                setTrainingInProgress(
+                  (prev: AthleteTrainingInProgress | null) => {
+                    if (!prev) return null;
+                    return {
+                      ...prev,
+                      supersetIndex: prev.supersetIndex + 1,
+                    } as AthleteTrainingInProgress;
+                  }
+                );
+              }
               setOpenNextSupersetModal(false);
               if (boxRef.current) {
                 boxRef.current.scrollTop = 0; // Scroll to the top
