@@ -5,6 +5,7 @@ import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { ColorEntity } from '../../common/entity/color.entity';
 import { IdEntity } from '../../common/entity/id.entity';
 import { Superset } from './superset.entity';
+import { AverageWorkloadValues } from './average-workload-values.entity';
 
 export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @IsString()
@@ -24,4 +25,10 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @ApiProperty()
   @Expose()
   supersets: Superset[];
+
+  @ValidateNested({ each: true })
+  @Type(() => AverageWorkloadValues)
+  @ApiProperty()
+  @Expose()
+  avgFutureWorkloadValues: AverageWorkloadValues[]; // average future workload values
 }

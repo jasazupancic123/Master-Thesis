@@ -97,8 +97,6 @@ export async function handleCreateGroupWithReturn(
       'Failed to create group.'
     );
 
-    console.log('group:', group);
-
     return group;
   } catch (error) {
     console.error('Error creating group:', error);
