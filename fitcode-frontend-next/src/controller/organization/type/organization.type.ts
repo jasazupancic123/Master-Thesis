@@ -10,3 +10,4 @@ export type Organization = BaseEntity & {
   trainers: User[];
   groups: Group[];
 };
+ 

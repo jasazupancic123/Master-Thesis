@@ -25,6 +25,7 @@ import { UserRepository } from './repository/user.repository';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
   password: string;
+  institutionId?: string;
 } & { customClaims: CustomClaims };
 
 @Injectable()
@@ -95,7 +96,7 @@ export class UserService {
 
   async upsert(data: CreateUser): Promise<User> {
     const { auth } = this.firebaseService;
-    const { email, password, displayName, customClaims } = data;
+    const { email, password, displayName, customClaims, institutionId } = data;
 
     let user: UserRecord;
     try {
@@ -111,6 +112,7 @@ export class UserService {
       id: user.uid,
       groupsIds: [],
       trainersIds: [],
+      institutionIds: [],
     });
 
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
