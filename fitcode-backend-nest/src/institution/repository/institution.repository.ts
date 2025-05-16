@@ -47,9 +47,11 @@ export class InstitutionRepository
     const query = this.firebaseService.buildCreateQuery<Institution>({
       id,
       name: input.name,
+      ownerId: input.ownerId,
       trainerIds: input.trainerIds || [],
       athleteIds: input.athleteIds || [],
       groupIds: input.groupIds || [],
+      imageUrl: input.imageUrl,
     });
 
     await this.doc(id).set(query);
@@ -59,8 +61,11 @@ export class InstitutionRepository
   async updateDoc(id: string, input: Update<Institution>) {
     const query = this.firebaseService.buildUpdateQuery<Institution>({
       name: input.name,
+      ownerId: input.ownerId,
       trainerIds: input.trainerIds,
       athleteIds: input.athleteIds,
+      groupIds: input.groupIds,
+      imageUrl: input.imageUrl,
     });
 
     await this.doc(id).update(query);

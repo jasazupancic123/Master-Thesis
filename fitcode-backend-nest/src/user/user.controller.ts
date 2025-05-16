@@ -17,6 +17,7 @@ import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserRole } from './enum/user-role.enum';
 import { UserService } from './user.service';
+import { RegisterUserDto } from './dto/register-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -90,5 +91,14 @@ export class UserController {
   @Auth([UserRole.TRAINER])
   async addAthlete(@RequestUser() user: User, @Body() body: AddAthleteDto) {
     return await this.userService.addAthlete(user, body);
+  }
+
+  @Post('add/register')
+  @Auth([UserRole.ADMIN])
+  async registerUser(
+    @RequestUser() user: User,
+    @Body() body: RegisterUserDto,
+  ) {
+    return await this.userService.registerUser(user, body);
   }
 }

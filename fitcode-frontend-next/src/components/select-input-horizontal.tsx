@@ -1,4 +1,5 @@
-import { FormControl, InputAdornment } from '@mui/material';
+import { useScreenSize } from '@/context/screen-size-provider';
+import { Box, FormControl, InputAdornment } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import React, { ReactNode } from 'react';
@@ -14,8 +15,19 @@ interface Props<T> {
 }
 
 export default function SelectInputHorizontal<T>(props: Props<T>) {
+  const screenSize = useScreenSize();
   return (
-    <FormControl sx={{ mr: 1, minWidth: 120 }}>
+    <FormControl
+      sx={{
+        mr: 1,
+        minWidth: screenSize.isUltraSmall ? 100 : 120,
+        maxWidth: screenSize.isUltraSmall
+          ? 100
+          : screenSize.isMobile
+            ? 140
+            : undefined,
+      }}
+    >
       <Select
         variant="outlined"
         value={props.value}
@@ -42,6 +54,7 @@ export default function SelectInputHorizontal<T>(props: Props<T>) {
           '.MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
+          p: screenSize.isMobile ? 0 : undefined,
         }}
       >
         {props.items.map((item, i) => (

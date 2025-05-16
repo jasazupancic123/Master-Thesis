@@ -11,6 +11,12 @@ export class Institution extends BaseEntity {
   @Expose()
   name: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  ownerId: string;
+
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @ApiProperty()
@@ -28,4 +34,10 @@ export class Institution extends BaseEntity {
   @ApiProperty()
   @Expose()
   groupIds: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  imageUrl: string;
 }

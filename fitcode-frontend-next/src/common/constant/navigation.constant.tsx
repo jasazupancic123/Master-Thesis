@@ -13,7 +13,13 @@ import SpaIcon from '@mui/icons-material/Spa';
 import { ReactNode } from 'react';
 import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
-import { Dashboard, Groups } from '@mui/icons-material';
+import { Dashboard, Groups, PersonAddAlt1 } from '@mui/icons-material';
+import {
+  DASHBOARD_ADD_INSTITUTION_VIEW,
+  DASHBOARD_GROUPS_VIEW,
+  DASHBOARD_MAIN_VIEW,
+  DASHBOARD_REGISTER_USERS_VIEW,
+} from '@/components/dashboard/constant/dashboard-views-constant';
 
 export function link(
   label: string,
@@ -94,15 +100,22 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
 
-export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = () => ({
-  home: link('Home', 'mainView', <HomeIcon />),
-  athletes: link('Athletes', 'athletes', <Groups />),
+export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: string) => ({
+  home: link('Home', DASHBOARD_MAIN_VIEW, <HomeIcon />),
+  athletes: link('Groups', DASHBOARD_GROUPS_VIEW, <Groups />),
+  addInstitution:
+    role === UserRole.ADMIN
+      ? link('Add Institution', DASHBOARD_ADD_INSTITUTION_VIEW, <AddIcon />)
+      : undefined,
+  register:
+    role === UserRole.ADMIN
+      ? link('Register Users', DASHBOARD_REGISTER_USERS_VIEW, <PersonAddAlt1 />)
+      : undefined,
 });
 
 export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
-
 
 // grouped links (for utility)
 export const LINKS_AUTH = {
@@ -142,5 +155,6 @@ export const LINKS_SIDEBAR = {
     users: LINK_USERS,
     components: LINK_COMPONENTS,
     exercises: LINK_EXERCISES,
+    dashboard: LINK_DASHBOARD,
   },
 };

@@ -16,11 +16,7 @@ import { useTheme } from '@mui/material/styles';
 import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import {
-  handleCreateGroup,
-  handleFilterMembers,
-  handleRemoveMember,
-} from './state';
+import { handleFilterMembers, handleRemoveMember } from './state';
 
 export default function AddGroupPage() {
   const { token, users, groups, group } = useGroup();
@@ -185,18 +181,7 @@ export default function AddGroupPage() {
             addUserToEnd={true}
           />
         </MyModal>
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-          onClick={() =>
-            handleCreateGroup(
-              token,
-              { name, membersIds: members.map((m) => m.uid) },
-              { router, setMembers }
-            )
-          }
-        >
+        <Button variant="contained" color="primary" sx={{ mt: 2 }}>
           Create Group
         </Button>
       </Box>

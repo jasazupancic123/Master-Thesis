@@ -1,12 +1,12 @@
-import { Organization } from '@/controller/organization/type/organization.type';
+import { Institution } from '@/controller/institution/type/institution.type';
 import toast from 'react-hot-toast';
 
 export function handleLinkClick(
   e: React.MouseEvent,
-  states: { organization: Organization | null }
+  states: { institution: Institution | null }
 ) {
-  if (!states.organization) {
+  if (!states.institution) {
     e.preventDefault();
-    toast.error('Select organization first!');
+    toast.error('Select institution first!');
   }
 }
