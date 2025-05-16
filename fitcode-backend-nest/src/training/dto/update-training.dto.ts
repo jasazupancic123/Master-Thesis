@@ -10,6 +10,7 @@ export class UpdateTrainingDto extends PickType(Training, [
   'membersIds',
   'warmup',
   'cooldown',
+  'avgFutureWorkloadValues',
 ]) {}
 
 export class UpdateTrainingDtoWithId extends PickType(Training, [
@@ -18,6 +19,7 @@ export class UpdateTrainingDtoWithId extends PickType(Training, [
   'membersIds',
   'warmup',
   'cooldown',
+  'avgFutureWorkloadValues',
 ]) {}
 
 export class BatchUpdateTrainingDto extends IntersectionType(
