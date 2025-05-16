@@ -24,6 +24,7 @@ import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
 import { TrainingComponent } from './entity/training-component.entity';
 import { TrainingRef } from 'src/common/type/firestore.type';
+import { Superset } from './entity/superset.entity';
 
 @Controller('training')
 export class TrainingController {
@@ -165,7 +166,7 @@ export class TrainingController {
   async finishComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: {userId: string, componentId: string},
+    @Body() body: {userId: string, componentId: string, rootComponentId: string, supersets: Superset[]},
   ) {
     const ref = { trainingId } as TrainingRef;
     return await this.trainingService.finishComponent(user, ref, body);

@@ -309,7 +309,16 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                                 allExercises
                               );
 
-                              setTrainings((prev) => [...prev, training]);
+                              const sortedTrainings = [
+                                ...trainings,
+                                training,
+                              ].sort((a, b) => {
+                                const aDate = new Date(a.from);
+                                const bDate = new Date(b.from);
+                                return aDate.getTime() - bDate.getTime();
+                              });
+
+                              setTrainings(sortedTrainings);
                               setFilteredTrainings((prev) => [
                                 ...prev,
                                 training,

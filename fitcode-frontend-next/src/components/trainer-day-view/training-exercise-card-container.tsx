@@ -20,9 +20,13 @@ import {
 import TrainingExerciseCard from './training-exercise-card';
 import { useGroup } from '@/context/group-provider';
 import { Workload } from '@/controller/training/type/workload.type';
-import { isBefore } from 'date-fns';
-import { ChartData } from '@/controller/training/type/chart-data.type';
 import { useTheme } from '@mui/material/styles';
+import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
+import {
+  prepareSelectedAthleteAvgWorkloadsForChart,
+  prepareGroupAvgWorkloadsForChart,
+} from './state';
+import { isBefore } from 'date-fns';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -53,8 +57,8 @@ export default function TrainingExerciseCardContainer(
   } = props;
 
   const { training, selectedAthlete } = useTrainerDayViewContext();
-  const { workloads } = useGroup();
-  const [data, setData] = useState<ChartData[]>([]);
+  const { trainings, workloads, group } = useGroup();
+  const [data, setData] = useState<ChartWorkloadData[]>([]);
   const [percentageForChartBackground, setPercentageForChartBackground] =
     useState<number>(0);
   const [paddingForChartBackground, setPaddingForChartBackground] = useState<{
@@ -68,120 +72,53 @@ export default function TrainingExerciseCardContainer(
     setRange(newValue as number[]);
   };
 
-  const groupByTrainingId = (
-    workloads: Workload[],
-    skipIfAlreadyInOther: boolean = false,
-    otherWorkloads: {
-      [key: string]: Workload[];
-    } = {}
-  ) => {
-    return workloads.reduce((acc: { [key: string]: Workload[] }, workload) => {
-      // skip if already in completed workloads
-      if (skipIfAlreadyInOther && otherWorkloads[workload.trainingId])
-        return acc;
-      if (!acc[workload.trainingId]) {
-        acc[workload.trainingId] = [];
-      }
-      acc[workload.trainingId].push(workload);
-      return acc;
-    }, {});
-  };
-
   useEffect(() => {
     if (exercise.id !== selectedExercise?.id || !training) return;
-
-    let completedWorkloadsFiltered = workloads.completedWorkloads
-      .filter((workload) => workload.exerciseId === exercise.id)
-      .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
-
-    const futureWorkloadsFiltered = workloads.futureWorkloads
-      .filter((workload) => workload.exerciseId === exercise.id)
-      .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
-
-    let groupedCompletedWorkloads = groupByTrainingId(
-      completedWorkloadsFiltered
-    );
-
-    let groupedFutureWorkloads = groupByTrainingId(
-      futureWorkloadsFiltered,
-      true,
-      groupedCompletedWorkloads
-    );
-
-    const numOfCompletedWorkloads = Object.keys(
-      groupedCompletedWorkloads
-    ).length;
-    const numOfFutureWorkloads = Object.keys(groupedFutureWorkloads).length;
-    const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
-
-    const newData = [];
-    let i = 0;
-    for (const workloads of [
-      groupedCompletedWorkloads,
-      groupedFutureWorkloads,
-    ]) {
-      for (const completedWorkload of Object.values(workloads)) {
-        const validIntensityValues = completedWorkload
-          .map((w) => w.prescribedIntWork1Value)
-          .filter((v) => v !== undefined);
-
-        const validVolumeValues = completedWorkload
-          .map((w) => w.prescribedVolWork1Value)
-          .filter((v) => v !== undefined);
-
-        const avgIntensity =
-          validIntensityValues.reduce((acc, val) => acc + val, 0) /
-          validIntensityValues.length;
-
-        const avgVolume =
-          validVolumeValues.reduce((acc, val) => acc + val, 0) /
-          validVolumeValues.length;
-
-        const date = new Date(completedWorkload[0].plannedAt);
-
-        const day = date.getDate().toString().padStart(2, '0');
-        let month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
-        if (month[0] === '0') month = month.slice(1);
-
-        let hours = date.getHours();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-
-        // Final format: "DD MM, AM/PM"
-        const formatted = `${day}.${month}. ${ampm}`;
-
-        newData.push({
-          name: formatted,
-          intensity: Math.round(avgIntensity * 100) / 100,
-          volume: Math.round(avgVolume * 100) / 100,
-          completed: groupedCompletedWorkloads === workloads,
-        });
-        i++;
-      }
-      i = 0;
+    // useEffect to init avg workloads
+    if (selectedAthlete) {
+      // use fetched data for selected athlete from api
+      prepareSelectedAthleteAvgWorkloadsForChart(
+        workloads,
+        exercise.id,
+        setData,
+        setMax,
+        setRange
+      );
+    } else {
+      // group avg is already on training
+      prepareGroupAvgWorkloadsForChart(
+        trainings,
+        exercise.id,
+        setData,
+        setMax,
+        setRange
+      );
     }
-
-    setData(newData);
-    setMax(numOfTotalWorkloads);
-    setRange([1, numOfTotalWorkloads]);
-  }, [selectedExercise, workloads]);
+  }, [selectedExercise, workloads, trainings]);
 
   useEffect(() => {
     // Set the percentage for the chart background (completed vs future) based on the range
     if (exercise.id !== selectedExercise?.id) return;
 
     const newDataInRange = data.slice(range[0] - 1, range[1]);
-    const numberOfCompletedWorkloads = newDataInRange.filter(
-      (workload) => workload.completed
+    const numberOfCompletedWorkloads = newDataInRange.filter((workload) =>
+      isBefore(workload.plannedAt, new Date())
     ).length;
     const numberOfTotalWorkloads = newDataInRange.length;
 
     let percentage;
     if (newDataInRange.length === 1) {
       percentage = newDataInRange[0].completed ? 100 : 0;
+    } else if (
+      newDataInRange.length === 2 &&
+      newDataInRange[0].completed &&
+      !newDataInRange[1].completed
+    ) {
+      percentage = 50;
     } else {
-      percentage = Math.round(
-        (numberOfCompletedWorkloads / (numberOfTotalWorkloads - 1)) * 100
-      );
+      percentage =
+        0.5 + // 0.5% offset so that the last completed one is also in dark background
+        ((numberOfCompletedWorkloads - 1) / (numberOfTotalWorkloads - 1)) * 100;
     }
     setPercentageForChartBackground(percentage);
   }, [range]);
@@ -192,23 +129,18 @@ export default function TrainingExerciseCardContainer(
       const graphDotsElement = document.querySelector('.recharts-line-dots');
       const rechartsSurfaceElement =
         document.querySelector('.recharts-surface');
-      const graphBackgroundElement = document.querySelector('.recharts-line');
-      if (
-        graphDotsElement &&
-        rechartsSurfaceElement &&
-        graphBackgroundElement
-      ) {
+      const xAxisElement = document.querySelector('.recharts-xAxis');
+      if (graphDotsElement && rechartsSurfaceElement && xAxisElement) {
         const parentRect = rechartsSurfaceElement.getBoundingClientRect();
         const dotsRect = graphDotsElement.getBoundingClientRect();
-        const graphBackgroundRect =
-          graphBackgroundElement.getBoundingClientRect();
+        const xAxisRect = xAxisElement.getBoundingClientRect();
 
         const distanceFromLeft = dotsRect.left - parentRect.left;
         const percentageWidth = (distanceFromLeft / parentRect.width) * 100;
 
-        const distanceFromBottom =
-          parentRect.bottom - graphBackgroundRect.bottom;
-        const percentageHeight = (distanceFromBottom / parentRect.height) * 100;
+        const distanceFromBottom = parentRect.bottom - xAxisRect.top;
+        const percentageHeight =
+          (distanceFromBottom / parentRect.height) * 100 + 2; // +2% for little offset
 
         setPaddingForChartBackground({
           width: percentageWidth,
@@ -263,21 +195,21 @@ export default function TrainingExerciseCardContainer(
           alignItems="center"
           flexDirection="column"
         >
-          {selectedAthlete && (
-            <Typography
-              variant="subtitle1"
-              sx={{ color: 'rgb(108, 121, 134)' }}
-            >
-              <i>
-                {selectedAthlete.displayName?.split(' ')[0] || ''}{' '}
-                {selectedAthlete.displayName
-                  ?.split(' ')
-                  .slice(1)
-                  .map((name) => name.toUpperCase())
-                  .join(' ') || ''}
-              </i>
-            </Typography>
-          )}
+          <Typography variant="subtitle1" sx={{ color: 'rgb(108, 121, 134)' }}>
+            <i>
+              {selectedAthlete && selectedAthlete.displayName
+                ? selectedAthlete.displayName.split(' ').length > 1
+                  ? selectedAthlete.displayName?.split(' ')[0] +
+                    ' ' +
+                    selectedAthlete.displayName
+                      ?.split(' ')
+                      .slice(1)
+                      .map((name) => name.toUpperCase())
+                      .join(' ')
+                  : selectedAthlete.displayName?.toUpperCase()
+                : group.name}
+            </i>
+          </Typography>
           <Box
             width="100%"
             display="flex"
@@ -327,7 +259,7 @@ export default function TrainingExerciseCardContainer(
         </Box>
       </Grid2>
       {/* Second Row - Graph */}
-      <Grid2 size={{ xs: 12 }} sx={{ height: '100%' }}>
+      <Grid2 size={{ xs: 12 }}>
         <Box
           sx={{
             width: '100%',
@@ -364,9 +296,10 @@ export default function TrainingExerciseCardContainer(
               />
               <Box
                 width={`${100 - percentageForChartBackground}%`}
-                // width="50%"
                 height="100%"
-                sx={{ zIndex: 0 }}
+                sx={{
+                  zIndex: 0,
+                }}
               />
             </Box>
           </Box>
