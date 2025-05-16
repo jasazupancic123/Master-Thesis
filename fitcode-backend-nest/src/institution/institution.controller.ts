@@ -17,15 +17,18 @@ import { CreateInstitutionDto } from './dto/create-insitution.dto';
 
 @Controller('institution')
 export class InstitutionController {
-  constructor(
-    private readonly commonService: CommonService,
-    private readonly institutionService: InstitutionService,
-  ) {}
+  constructor(private readonly institutionService: InstitutionService) {}
 
   @Get()
   @Auth()
   async findAll(@RequestUser() user: User) {
     return this.institutionService.findAll(user);
+  }
+
+  @Get('/user')
+  @Auth()
+  async findAllByUser(@RequestUser() user: User) {
+    return this.institutionService.findAllByUser(user);
   }
 
   @Get(':institutionId')
@@ -37,21 +40,33 @@ export class InstitutionController {
     return this.institutionService.findOneOrFail(user, { institutionId });
   }
 
-  @Get('user/:userId')
-  @Auth()
-  async findByTrainerId(
-    @RequestUser() user: User,
-    @Param('trainerId') trainerId: string,
-  ) {
-    return this.institutionService.findByTrainerId(user, { uid: trainerId });
-  }
-
   @Post()
   @Auth()
-  async create(
-    @RequestUser() user: User,
-    @Body() body: CreateInstitutionDto,
-  ) {
+  async create(@RequestUser() user: User, @Body() body: CreateInstitutionDto) {
     return this.institutionService.create(user, body);
+  }
+
+  @Post(':institutionId/athletes')
+  @Auth()
+  async addAthletes(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Body() body: { athleteIds: string[] },
+  ) {
+    return this.institutionService.addAthletes(user, { institutionId }, body);
+  }
+
+  @Post(':institutionId/remove/athletes')
+  @Auth()
+  async removeAthletes(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Body() body: { athleteIds: string[] },
+  ) {
+    return this.institutionService.removeAthletes(
+      user,
+      { institutionId },
+      body,
+    );
   }
 }

@@ -6,7 +6,8 @@ import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import Dashboard from './dashboard';
 import { DashboardProvider } from '@/context/dashboard-provider';
-import { Organization } from '@/controller/organization/type/organization.type';
+import { InstitutionController } from '@/controller/institution/institution.controller';
+import { InstitutionService } from '@/controller/institution/institution.service';
 
 export default async function Page() {
   const cookieStore = await cookies();
@@ -17,36 +18,45 @@ export default async function Page() {
   if (!profile) return <div>Unauthorized</div>;
 
   const role = profile.customClaims.role[0];
-  const [users, groups] = await Promise.all([
-    UserController.findAll(token),
-    GroupController.findAll(token),
-  ]);
+  const users = await UserController.findAll(token);
 
-  const organizations: Organization[] = [
-    {
-      id: '1',
-      name: 'NK Maribor',
-      manager: { ...profile },
-      // trainers: Array.from({ length: 12 }, () => ({ ...profile })),
-      trainers: [{ ...profile }],
-      groups: groups,
-      // groups: Array.from({ length: 24 }, () => ({ ...groups[0] })),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
+  const institutions = InstitutionService.mapAllUsers(
+    await InstitutionController.findAllByUser(token),
+    users
+  );
 
-  const organization: Organization = { ...organizations[0] };
-  return (
-    <DashboardProvider>
-      <Dashboard
-        organization={organization}
-        organizations={organizations}
+  if (!institutions || !institutions.length) {
+    return (
+      <DashboardProvider
         role={role}
-        users={users}
         token={token}
         profile={profile}
-      />
+        institutions={[]}
+        selectedInstitution={null}
+        users={users}
+      >
+        <Dashboard />
+      </DashboardProvider>
+    );
+  }
+
+  const selectedInstitution = institutions[0];
+  const groups = await GroupController.findByInstitutionId(
+    token,
+    selectedInstitution.id
+  );
+  selectedInstitution.groups = groups;
+
+  return (
+    <DashboardProvider
+      role={role}
+      token={token}
+      profile={profile}
+      institutions={institutions}
+      selectedInstitution={selectedInstitution}
+      users={users}
+    >
+      <Dashboard />
     </DashboardProvider>
   );
 }

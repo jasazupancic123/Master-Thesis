@@ -32,7 +32,6 @@
       "field":"equipment",
       "name":"Equipment",
       "type":"multiselect",
-      "required": "true",
       "options":[
         {
           "field":"cardio",

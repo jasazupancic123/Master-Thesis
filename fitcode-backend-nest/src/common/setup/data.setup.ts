@@ -15,6 +15,7 @@ import { User } from '../type/firebase-auth.type';
 import { BaseSetup } from './base.setup';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
+import { InstitutionService } from 'src/institution/service/institution.service';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
@@ -104,6 +105,7 @@ export class DataSetup extends BaseSetup {
   private async importUsers(filename: string) {
     const userRepository = this.app.get(UserRepository);
     const groupService = this.app.get(GroupService);
+    const institutionService = this.app.get(InstitutionService);
 
     const file = await readFile(filename, 'utf-8');
     const data: {
@@ -157,18 +159,43 @@ export class DataSetup extends BaseSetup {
       emails: data.map((u) => u.email),
     });
 
+    const trainer = users.find((u) => u.email === 'trainer@mail.com');
+    const athletes = users.filter((u) => u.customClaims.role?.includes(UserRole.ATHLETE));
+
+    const institution = await institutionService.create(this.admin, {
+      name: 'Nk Maribor',
+      ownerId: users[0].uid,
+      trainerIds: trainer ? [trainer.uid] : users.map((u) => u.uid),
+      athleteIds: athletes.map((u) => u.uid),
+      imageUrl: 'https://img.sofascore.com/api/v1/team/2420/image',
+    });
+
     // import groups
+    const groupIds = [];
     for (const trainer of users) {
       const groups = data.find((u) => u.email === trainer.email)?.groups;
       for (const { name, membersIds: emails } of groups) {
         const members = await this.userService.findAll({ emails });
         const membersIds = members.map((m) => m.uid);
-        await groupService.create(trainer, { name, membersIds });
+        const group = await groupService.create(trainer, {
+          group: { name, membersIds },
+          institutionId: institution.id,
+        });
+        groupIds.push(group.id);
 
         for (const member of members)
           await this.userService.addTrainer({ uid: member.uid }, trainer.uid);
       }
     }
+
+    institution.groupIds = groupIds;
+    await institutionService.update(
+      trainer,
+      { institutionId: institution.id },
+      {
+        groupIds: institution.groupIds,
+      },
+    );
   }
 
   private async isInit() {

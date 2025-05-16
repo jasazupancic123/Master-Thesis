@@ -21,12 +21,9 @@ import {
 } from '@mui/material';
 import { Box } from '@mui/material';
 import { useState } from 'react';
-import { handleCreateGroupWithReturn } from '../groups/[group_id]/add-group/state';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import DashboardChat from '@/components/dashboard/dashboard-chat';
-import { Group } from '@/controller/group/type/group.type';
-import { Organization } from '@/controller/organization/type/organization.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import AthletesView from './athletes-view';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
@@ -34,20 +31,28 @@ import { redirect } from 'next/navigation';
 import { useDashboard } from '@/context/dashboard-provider';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
+import { DASHBOARD_VIEWS } from '@/components/dashboard/constant/dashboard-views-constant';
 
 const AVATAR_SIZE = 45;
 
 interface MainDashboardViewProps {
-  organization: Organization;
-  users: User[];
-  token: string;
-  profile: User;
-  view: 'mainView' | 'athletes';
+  view: (typeof DASHBOARD_VIEWS)[number];
 }
 
 export default function MainDashboardView(props: MainDashboardViewProps) {
-  const { organization, users, token, profile, view } = props;
-  const { detectedChanges, setDetectedChanges } = useDashboard();
+  const { view } = props;
+  const {
+    users,
+    token,
+    profile,
+    institutions,
+    selectedInstitution,
+    setSelectedInstitution,
+    detectedChanges,
+    setDetectedChanges,
+    selectedGroup,
+    setSelectedGroup,
+  } = useDashboard();
 
   const screenSize = useScreenSize();
   const theme = useTheme();
@@ -56,23 +61,79 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
   const [modal, setModal] = useState({ add_trainer: false, add_group: false });
   const [groupName, setGroupName] = useState('');
 
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<Organization | null>(organization);
-
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(
-    organization.groups[0] || null
-  );
-
   const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     selectedGroup?.cycles[0] || null
   );
 
   const setTrainers = (trainers: User[]) => {
-    setSelectedOrganization({
-      ...selectedOrganization!,
+    setSelectedInstitution({
+      ...selectedInstitution!,
       trainers,
     });
   };
+
+  const handleSaveGroups = () => {
+    if (!selectedInstitution) return;
+
+    const inputs: { id: string; membersIds: string[] }[] = [];
+    for (const group of selectedInstitution.groups) {
+      inputs.push({
+        id: group.id,
+        membersIds: group.membersIds,
+      });
+    }
+
+    handleApiRequest(
+      router,
+      () => GroupController.updateMultiple(token, inputs),
+      (groups) => {
+        const newGroup = groups.find((g) => g.id === selectedGroup?.id);
+        if (newGroup) {
+          setSelectedGroup(newGroup);
+        }
+        setSelectedInstitution({
+          ...selectedInstitution!,
+          groups: groups,
+        });
+        setDetectedChanges(false);
+        toast.success('Groups saved successfully');
+      },
+      undefined,
+      'Failed to save groups'
+    );
+  };
+
+  if (!institutions.length) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          width: '100%',
+        }}
+      >
+        <Typography variant="h6">No institutions available</Typography>
+      </Box>
+    );
+  }
+
+  if (!selectedInstitution) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          width: '100%',
+        }}
+      >
+        <Typography variant="h6">No institution selected</Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -100,42 +161,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
         >
           {detectedChanges && (
             <Tooltip title="Save changes" placement="top">
-              <Fab
-                color="primary"
-                aria-label="save"
-                onClick={() => {
-                  //Save changes here
-                  const inputs: { id: string; membersIds: string[] }[] = [];
-                  for (const group of selectedOrganization!.groups) {
-                    inputs.push({
-                      id: group.id,
-                      membersIds: group.membersIds,
-                    });
-                  }
-
-                  handleApiRequest(
-                    router,
-                    () => GroupController.updateMultiple(token, inputs),
-                    (groups) => {
-                      console.log('groups', groups);
-                      const newGroup = groups.find(
-                        (g) => g.id === selectedGroup?.id
-                      );
-                      if (newGroup) {
-                        setSelectedGroup(newGroup);
-                      }
-                      setSelectedOrganization({
-                        ...selectedOrganization!,
-                        groups: groups,
-                      });
-                      setDetectedChanges(false);
-                      toast.success('Groups saved successfully');
-                    },
-                    undefined,
-                    'Failed to save groups'
-                  );
-                }}
-              >
+              <Fab color="primary" aria-label="save" onClick={handleSaveGroups}>
                 <Save />
               </Fab>
             </Tooltip>
@@ -146,11 +172,19 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
               color="primary"
               aria-label="go"
               onClick={() => {
-                if (selectedGroup)
-                  redirect(
-                    LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
-                      .home.href
-                  );
+                if (selectedGroup) {
+                  if (detectedChanges) {
+                    toast.error('Unsaved changes will be lost', {
+                      icon: '⚠️',
+                      duration: 1000,
+                    });
+                    setDetectedChanges(false);
+                  } else
+                    redirect(
+                      LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
+                        .home.href
+                    );
+                }
               }}
             >
               <ArrowForward />
@@ -169,26 +203,24 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
             size={screenSize.isMobile ? 12 : 6}
             sx={{ position: 'relative' }}
           >
-            {/* {profile.customClaims.role.includes(UserRole.MANAGER) ||
-              (profile.customClaims.role.includes(UserRole.ADMIN) && ( */}
-            <Tooltip title="Add trainer" placement="top">
-              <IconButton
-                onClick={() =>
-                  setModal({ add_trainer: true, add_group: false })
-                }
-                sx={{
-                  m: 0,
-                  p: 0,
-                  position: 'absolute',
-                  top: 10,
-                  right: 20,
-                }}
-              >
-                <PersonAddAlt />
-              </IconButton>
-            </Tooltip>
-            {/* ))} */}
-
+            {profile.customClaims.role.includes(UserRole.ADMIN) && (
+              <Tooltip title="Add trainer" placement="top">
+                <IconButton
+                  onClick={() =>
+                    setModal({ add_trainer: true, add_group: false })
+                  }
+                  sx={{
+                    m: 0,
+                    p: 0,
+                    position: 'absolute',
+                    top: 10,
+                    right: 20,
+                  }}
+                >
+                  <PersonAddAlt />
+                </IconButton>
+              </Tooltip>
+            )}
             <Grid2
               container
               size={12}
@@ -234,9 +266,9 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                       alignItems="center"
                       gap={1}
                     >
-                      <Typography variant="body1">MANAGER</Typography>
+                      <Typography variant="body1">OWNER</Typography>
                       <Tooltip
-                        title={selectedOrganization?.manager.displayName || ''}
+                        title={selectedInstitution.owner?.displayName || ''}
                         placement="top"
                       >
                         <Avatar
@@ -259,8 +291,9 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                     maxHeight={150}
                     overflow="auto"
                   >
-                    {selectedOrganization &&
-                      selectedOrganization.trainers.map((trainer) => (
+                    {selectedInstitution &&
+                      selectedInstitution.trainers &&
+                      selectedInstitution.trainers.map((trainer) => (
                         <Box
                           key={trainer.uid}
                           display="flex"
@@ -345,8 +378,18 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                   },
                 }}
               >
-                {selectedOrganization &&
-                  selectedOrganization.groups.map((group) => {
+                {!selectedInstitution.groups?.length ? (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    width="100%"
+                    sx={{ height: 85 }}
+                  >
+                    <Typography variant="h6">No groups yet</Typography>
+                  </Box>
+                ) : (
+                  selectedInstitution.groups.map((group) => {
                     const name = group.name || ''; // Ensure group.name exists
                     const isFirstTwoNumbers = /^\d{2}/.test(name); // Check if first two characters are numbers
                     const displayText = isFirstTwoNumbers
@@ -407,7 +450,8 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                         </Box>
                       </IconButton>
                     );
-                  })}
+                  })
+                )}
               </Grid2>
               <Grid2
                 size={6}
@@ -442,7 +486,9 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                     justifyContent="center"
                     alignItems="center"
                     width="100%"
-                    sx={{ height: 85 }}
+                    sx={{
+                      height: 85,
+                    }}
                   >
                     <Typography variant="h6">No cycles yet</Typography>
                   </Box>
@@ -527,8 +573,6 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                       DashboardReportType.FLAGGED_ATHLETES,
                       DashboardReportType.ATTENDANCE,
                     ]}
-                    users={users}
-                    selectedOrganization={selectedOrganization}
                   />
                 </Grid2>
                 <Grid2 size={screenSize.isMobile ? 12 : 6}>
@@ -538,8 +582,6 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                       DashboardReportType.CYCLE_PROGRESS,
                       DashboardReportType.TODAYS_SESSIONS,
                     ]}
-                    users={users}
-                    selectedOrganization={selectedOrganization}
                   />
                 </Grid2>
               </Grid2>
@@ -559,24 +601,18 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                     DashboardReportType.FLAGGED_ATHLETES,
                     DashboardReportType.ATTENDANCE,
                   ]}
-                  users={users}
-                  selectedOrganization={selectedOrganization}
                 />
               </Grid2>
               <Grid2 size={3}>
                 <ReportsContainer
                   index={1}
                   reportTypes={[DashboardReportType.CYCLE_PROGRESS]}
-                  users={users}
-                  selectedOrganization={selectedOrganization}
                 />
               </Grid2>
               <Grid2 size={3}>
                 <ReportsContainer
                   index={2}
                   reportTypes={[DashboardReportType.TODAYS_SESSIONS]}
-                  users={users}
-                  selectedOrganization={selectedOrganization}
                 />
               </Grid2>
               <Grid2 size={3}>
@@ -584,17 +620,8 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
               </Grid2>
             </Grid2>
           )
-        ) : view === 'athletes' ? (
-          <AthletesView
-            groups={selectedOrganization?.groups || []}
-            users={users}
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            selectedOrganization={selectedOrganization}
-            setSelectedOrganization={setSelectedOrganization}
-          />
         ) : (
-          <></>
+          view === 'athletes' && <AthletesView />
         )}
       </Box>
       <MyModal
@@ -612,7 +639,7 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
           users={users.filter((user) =>
             user.customClaims.role.includes(UserRole.TRAINER)
           )}
-          members={selectedOrganization?.trainers || []}
+          members={selectedInstitution.trainers || []}
           setMembers={setTrainers}
           addUserToEnd={true}
           dissableMaxWidth={true}
@@ -627,26 +654,29 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
         }}
         cancelText="Close"
         onConfirm={async () => {
-          setModal({ add_trainer: false, add_group: false });
-          setGroupName('');
-          try {
-            const group = await handleCreateGroupWithReturn(
-              token,
-              { name: groupName, membersIds: [profile.uid] },
-              { router, setMembers: () => {} }
-            );
-            if (!group) {
-              toast.error('Failed to create group.');
-              return;
-            }
-            setSelectedOrganization({
-              ...selectedOrganization!,
-              groups: [...selectedOrganization!.groups, group],
-            });
-          } catch (error) {
-            console.error(error);
-            toast.error('Failed to create group.');
-          }
+          const input = {
+            group: {
+              name: groupName,
+              membersIds: [],
+            },
+            institutionId: selectedInstitution.id,
+          };
+          handleApiRequest(
+            router,
+            () => GroupController.create(token, input),
+            (group) => {
+              setSelectedInstitution({
+                ...selectedInstitution,
+                groups: [...selectedInstitution.groups, group],
+              });
+              setModal({ add_trainer: false, add_group: false });
+              setGroupName('');
+              setDetectedChanges(false);
+              toast.success('Group created successfully.');
+            },
+            undefined,
+            'Failed to create group.'
+          );
         }}
       >
         <AddGroupModal groupName={groupName} setGroupName={setGroupName} />

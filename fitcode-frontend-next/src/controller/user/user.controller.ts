@@ -48,6 +48,13 @@ export class UserController {
     return api.post<Wellness>('/user/me/meta', body, { token });
   }
 
+  static async registerUser(
+    token: string,
+    input: { email: string; displayName: string; password: string, role: UserRole }
+  ) {
+    return api.post<User>('/user/add/register', input, { token });
+  }
+
   static async addAthlete(
     token: string,
     input: { email: string; displayName: string; password: string }
