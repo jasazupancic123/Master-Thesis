@@ -44,8 +44,7 @@ import dayjs from 'dayjs';
 import { SetStatus } from '../enum/set-status.enum';
 import { Superset } from '../entity/superset.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import { IntType, ParamType, VolType } from 'src/component/enum/param.enum';
-import { TrainingExercise } from '../entity/training-exercise.entity';
+import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
 
 @Injectable()
 export class TrainingService {
@@ -266,10 +265,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
-      input.components,
+      [warmup, ...input.components, cooldown],
       components,
-      warmup,
-      cooldown,
     );
 
     // populate exercise params from components
@@ -387,10 +384,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
-      [trainingComponent],
+      [warmup, trainingComponent, cooldown],
       components,
-      warmup,
-      cooldown,
     );
 
     // populate exercise params from components
@@ -412,12 +407,12 @@ export class TrainingService {
       .map((superset) => superset.exercises.map((e) => e.id))
       .flat();
     const avgCompletedWorkloadValues =
-      copyFromTraining.avgCompletedWorkloadValues.filter(
-        (w) => exerciseIdsToKeep.includes(w.exerciseId),
+      copyFromTraining.avgCompletedWorkloadValues.filter((w) =>
+        exerciseIdsToKeep.includes(w.exerciseId),
       );
     const avgFutureWorkloadValues =
-      copyFromTraining.avgFutureWorkloadValues.filter(
-        (w) => exerciseIdsToKeep.includes(w.exerciseId),
+      copyFromTraining.avgFutureWorkloadValues.filter((w) =>
+        exerciseIdsToKeep.includes(w.exerciseId),
       );
 
     const data: Create<Training> = {
@@ -529,10 +524,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
-      input.components,
+      [input.warmup, ...input.components, input.cooldown],
       components,
-      input.warmup,
-      input.cooldown,
     );
 
     // populate exercise params from components
@@ -603,17 +596,14 @@ export class TrainingService {
       this.trainingPlanService.updateWarmupAndCooldownTimes(
         data.warmup,
         data.cooldown,
-        training,
         data.components,
       );
 
       this.trainingPlanService.validateTrainingComponents(
         exercises,
         membersIds,
-        data.components,
+        [data.warmup, ...data.components, data.cooldown],
         components,
-        data.warmup,
-        data.cooldown,
       );
 
       // populate exercise params from components
@@ -671,7 +661,10 @@ export class TrainingService {
     await this.validateTrainingMembers(membersIds);
 
     const wellness = await this.userService.getRecentWellness(membersIds);
-    const trainingTo = addMinutes(startOfHour(input.from), training.components.length * 30)
+    const trainingTo = addMinutes(
+      startOfHour(input.from),
+      training.components.length * 30,
+    );
 
     const data: Create<Training> = {
       id: null,
@@ -700,8 +693,16 @@ export class TrainingService {
           completedMembersIds: [],
         };
       }),
-      warmup: { ...training.warmup, from: subMinutes(input.from, 5), to: input.from },
-      cooldown: { ...training.cooldown, from: trainingTo, to: addMinutes(trainingTo, 5) },
+      warmup: {
+        ...training.warmup,
+        from: subMinutes(input.from, 5),
+        to: input.from,
+      },
+      cooldown: {
+        ...training.cooldown,
+        from: trainingTo,
+        to: addMinutes(trainingTo, 5),
+      },
     };
 
     const trainingDocRef = this.trainingRepository.collection().doc();
@@ -734,8 +735,6 @@ export class TrainingService {
       membersIds,
       copiedTraining.components,
       components,
-      copiedTraining.warmup,
-      copiedTraining.cooldown,
     );
 
     const copyTrainingQuery = this.firebaseService.buildCreateQuery<Training>(
@@ -829,10 +828,8 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       [],
-      newComponents,
+      [training.warmup, ...newComponents, training.cooldown],
       components,
-      training.warmup,
-      training.cooldown,
     );
 
     const updated = {
@@ -915,12 +912,13 @@ export class TrainingService {
         'You are not allowed to perform this action',
       );
 
-    const workloads =
-      await this.workloadService.findAllByTrainingAndUserAndComponent({
+    const workloads = await this.workloadService.findAllByTrainingUserComponent(
+      {
         trainingId: ref.trainingId,
         userId,
         componentId,
-      });
+      },
+    );
 
     const batch = this.firebaseService.firestore.batch();
 
@@ -1072,17 +1070,14 @@ export class TrainingService {
     this.trainingPlanService.updateWarmupAndCooldownTimes(
       training.warmup,
       training.cooldown,
-      training,
       trainingComponents,
     );
 
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       training.membersIds,
-      trainingComponents,
+      [training.warmup, ...trainingComponents, training.cooldown],
       components,
-      training.warmup,
-      training.cooldown,
     );
 
     // get query for training
@@ -1108,12 +1103,15 @@ export class TrainingService {
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
 
-    this.trainingPlanService.updateWarmupAndCooldownTimes(
-      training.warmup,
-      training.cooldown,
-      training,
-      training.components.filter((c) => c.id !== ref.componentId),
+    const filtered = training.components.filter(
+      (c) => c.id !== ref.componentId,
     );
+    if (filtered.length > 0)
+      this.trainingPlanService.updateWarmupAndCooldownTimes(
+        training.warmup,
+        training.cooldown,
+        filtered,
+      );
 
     // get query for training
     const [query, updatedTraining] =
@@ -1130,22 +1128,22 @@ export class TrainingService {
   }
 
   private getWorkloadValues(set: ExerciseSet, workload: Workload) {
-    const volWork1Value = set.paramValues.find(
+    const volWork1Value = set.paramValuesL.find(
       (p) => p.field === ParamType.VolWork1,
     )?.value;
-    const volWork2Value = set.paramValues.find(
+    const volWork2Value = set.paramValuesL.find(
       (p) => p.field === ParamType.VolWork2,
     )?.value;
-    const volRecValue = set.paramValues.find(
+    const volRecValue = set.paramValuesL.find(
       (p) => p.field === ParamType.VolRec1,
     )?.value;
-    const intWork1Value = set.paramValues.find(
+    const intWork1Value = set.paramValuesL.find(
       (p) => p.field === ParamType.IntWork1,
     )?.value;
-    const intWork2Value = set.paramValues.find(
+    const intWork2Value = set.paramValuesL.find(
       (p) => p.field === ParamType.IntWork2,
     )?.value;
-    const intRecValue = set.paramValues.find(
+    const intRecValue = set.paramValuesL.find(
       (p) => p.field === ParamType.IntRec1,
     )?.value;
 

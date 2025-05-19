@@ -611,6 +611,24 @@ export default function Supersets(props: SupersetsProps) {
           const exercisesToAdd: TrainingExercise[] = exercisesIdsToAdd.map(
             (id) => {
               const exercise = allExercises.find((e) => e.id === id);
+              const paramValues =
+                (exercise?.defaultParams &&
+                  (exercise?.defaultParams
+                    .map((p) => {
+                      if (p.field === 'volWorkSets') return undefined;
+                      return {
+                        field: p.field,
+                        selected: p.defaultValue,
+                        value: p.options?.find(
+                          (o) => o.field === p.defaultValue
+                        )?.options?.length
+                          ? '0' //picks the first element in the options array
+                          : p.options?.find((o) => o.field === p.defaultValue)
+                              ?.defaultValue,
+                      } as AttributeValue;
+                    })
+                    .filter((p) => p !== undefined) as AttributeValue[])) ||
+                [];
 
               return {
                 id,
@@ -620,27 +638,8 @@ export default function Supersets(props: SupersetsProps) {
                 sets: exercise?.defaultParams
                   ? Array.from({ length: 3 }, (_, i) => ({
                       setNumber: i + 1,
-                      paramValues:
-                        (exercise?.defaultParams &&
-                          (exercise?.defaultParams
-                            .map((p) => {
-                              if (p.field === 'volWorkSets') return undefined;
-                              return {
-                                field: p.field,
-                                selected: p.defaultValue,
-                                value: p.options?.find(
-                                  (o) => o.field === p.defaultValue
-                                )?.options?.length
-                                  ? '0' //picks the first element in the options array
-                                  : p.options?.find(
-                                      (o) => o.field === p.defaultValue
-                                    )?.defaultValue,
-                              } as AttributeValue;
-                            })
-                            .filter(
-                              (p) => p !== undefined
-                            ) as AttributeValue[])) ||
-                        [],
+                      paramValuesL: paramValues,
+                      paramValuesR: paramValues,
                     }))
                   : [],
               };
