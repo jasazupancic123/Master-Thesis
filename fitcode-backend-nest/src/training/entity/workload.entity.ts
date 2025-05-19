@@ -86,14 +86,28 @@ export class Workload extends TimestampEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  prescribedVolWork1Value?: number;
+  prescribedVolWork1ValueL?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  volWork1Value?: number;
+  prescribedVolWork1ValueR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork1ValueL?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork1ValueR?: number;
 
   /* --------------- Vol Work 2 --------------- */
   @IsEnum(VolType)
@@ -107,14 +121,28 @@ export class Workload extends TimestampEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  prescribedVolWork2Value?: number;
+  prescribedVolWork2ValueL?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  volWork2Value?: number;
+  prescribedVolWork2ValueR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork2ValueL?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volWork2ValueR?: number;
 
   /* --------------- Vol Rec --------------- */
   @IsEnum(VolType)
@@ -128,14 +156,28 @@ export class Workload extends TimestampEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  prescribedVolRecValue?: number;
+  prescribedVolRecValueL?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  volRecValue?: number;
+  prescribedVolRecValueR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volRecValueL?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  volRecValueR?: number;
 
   /* --------------- Int Work 1 --------------- */
   @IsEnum(IntType)
@@ -149,14 +191,28 @@ export class Workload extends TimestampEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  prescribedIntWork1Value?: number;
+  prescribedIntWork1ValueL?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  intWork1Value?: number;
+  prescribedIntWork1ValueR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork1ValueL?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork1ValueR?: number;
 
   /* --------------- Int Work 2 --------------- */
   @IsEnum(IntType)
@@ -170,14 +226,28 @@ export class Workload extends TimestampEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  prescribedIntWork2Value?: number;
+  prescribedIntWork2ValueL?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  intWork2Value?: number;
+  prescribedIntWork2ValueR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork2ValueL?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intWork2ValueR?: number;
 
   /* --------------- Int Rec --------------- */
   @IsEnum(IntType)
@@ -191,12 +261,26 @@ export class Workload extends TimestampEntity {
   @IsOptional()
   @ApiProperty()
   @Expose()
-  prescribedIntRecValue?: number;
+  prescribedIntRecValueL?: number;
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @ApiProperty()
   @Expose()
-  intRecValue?: number;
+  prescribedIntRecValueR?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intRecValueL?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  intRecValueR?: number;
 }

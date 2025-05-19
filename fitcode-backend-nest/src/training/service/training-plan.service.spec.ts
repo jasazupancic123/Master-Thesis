@@ -2,14 +2,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { CommonModule } from '../../common/common.module';
 import { validationSchema } from '../../config/environment-validation-schema';
-import { FirebaseModule } from '../../firebase/firebase.module';
 import { TrainingPlanService } from './training-plan.service';
-import { ComponentModule } from '../../component/component.module';
-import { ExerciseModule } from '../../exercise/exercise.module';
-import { UserModule } from '../../user/user.module';
-import { GroupModule } from '../../group/group.module';
-import { CacheManagerModule } from '../../cache-manager/cache-manager.module';
-import { AttributeModule } from '../../attribute/attribute.module';
 import { ComponentService } from '../../component/component.service';
 import { generateComponentStub } from '../../component/mock/component.stub';
 import { generateAttributeStub } from '../../attribute/mock/attribute.stub';
@@ -26,6 +19,7 @@ import {
   VOL_WORK_SET_OPTIONS,
 } from '../../component/constant/param.constant';
 import {
+  generateSubgroup,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
@@ -33,37 +27,452 @@ import {
 import { AttributeType } from '../../common/enum/attribute-type.enum';
 import { ComponentParam } from '../../component/entity/component-param.entity';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { createMock } from '@golevelup/ts-jest';
+import { AttributeService } from '../../attribute/service/attribute.service';
+import { ExerciseService } from '../../exercise/service/exercise.service';
+import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
+import { AttributeRepository } from '../../attribute/repository/attribute.repository';
+import {
+  COOLDOWN_COMPONENT,
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
+import { addMinutes, subMinutes } from 'date-fns';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
   let componentService: ComponentService;
+  let exerciseService: ExerciseService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, validationSchema }),
-        FirebaseModule.forRoot(),
         CommonModule,
-        AttributeModule,
-        CacheManagerModule,
-        ComponentModule,
-        ExerciseModule,
-        UserModule,
-        GroupModule,
       ],
       providers: [
-        TrainingPlanService,
+        {
+          provide: AttributeRepository,
+          useValue: createMock<AttributeRepository>(),
+        },
+        AttributeService,
         {
           provide: ComponentService,
-          useValue: {
-            getRoot: jest.fn(),
-          },
+          useValue: createMock<ComponentService>(),
         },
+        {
+          provide: ExerciseService,
+          useValue: createMock<ExerciseService>(),
+        },
+        {
+          provide: ExerciseAttributeValueRepository,
+          useValue: createMock<ExerciseAttributeValueRepository>(),
+        },
+        TrainingPlanService,
       ],
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
     componentService = moduleRef.get(ComponentService);
+    exerciseService = moduleRef.get(ExerciseService);
+  });
+
+  it('should find all training exercises', async () => {
+    exerciseService.findAllByIds = jest
+      .fn()
+      .mockReturnValueOnce([
+        generateExerciseStub({ id: 'e1' }),
+        generateExerciseStub({ id: 'e2' }),
+        generateExerciseStub({ id: 'e3' }),
+        generateExerciseStub({ id: 'e4' }),
+        generateExerciseStub({ id: 'e5' }),
+      ]);
+
+    const trainingExercises = [
+      generateTrainingExercise({ id: 'e1' }),
+      generateTrainingExercise({ id: 'e2' }),
+      generateTrainingExercise({ id: 'e3' }),
+      generateTrainingExercise({ id: 'e4' }),
+      generateTrainingExercise({ id: 'e5' }),
+    ];
+
+    // both components have 3 exercises and the middle one is overlapping
+    const trainingComponents = [
+      generateTrainingComponent({
+        supersets: [
+          generateSuperset({
+            exercises: [
+              trainingExercises[0],
+              trainingExercises[1],
+              trainingExercises[2],
+            ],
+          }),
+        ],
+      }),
+      generateTrainingComponent({
+        supersets: [
+          generateSuperset({
+            exercises: [
+              trainingExercises[2],
+              trainingExercises[3],
+              trainingExercises[4],
+            ],
+          }),
+        ],
+      }),
+    ];
+
+    const result = await service.findAllTrainingExercises(
+      undefined,
+      trainingComponents,
+    );
+
+    expect(result).toHaveLength(5);
+    expect(result).toEqual([
+      expect.objectContaining({ id: 'e1' }),
+      expect.objectContaining({ id: 'e2' }),
+      expect.objectContaining({ id: 'e3' }),
+      expect.objectContaining({ id: 'e4' }),
+      expect.objectContaining({ id: 'e5' }),
+    ]);
+  });
+
+  describe('validateTrainingComponents', () => {
+    const components = [
+      WARMUP_COMPONENT,
+      generateComponentStub({ id: 'c1', name: 'Component 1' }),
+      generateComponentStub({ id: 'c2', name: 'Component 2' }),
+      generateComponentStub({ id: 'c3', name: 'Component 3' }),
+      generateComponentStub({ id: 'c4' }),
+      generateComponentStub({ id: 'c5' }),
+      generateComponentStub({ id: 'c6' }),
+      generateComponentStub({ id: 'leaf1', parentId: 'c1', name: 'Leaf 1' }),
+      generateComponentStub({ id: 'leaf2', parentId: 'c1', name: 'Leaf 2' }),
+      generateComponentStub({ id: 'leaf3', parentId: 'c2', name: 'Leaf 3' }),
+      COOLDOWN_COMPONENT,
+    ];
+
+    const exercises = [
+      generateExerciseStub({ id: 'e1', componentIds: ['leaf1'] }),
+      generateExerciseStub({ id: 'e2', componentIds: ['leaf1'] }),
+      generateExerciseStub({ id: 'e3', componentIds: ['leaf2'] }),
+      generateExerciseStub({ id: 'e4', componentIds: ['leaf3'] }),
+      generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
+    ];
+
+    beforeEach(() => {
+      jest
+        .spyOn(componentService, 'leafsFromFlat')
+        .mockReturnValue(components.filter((c) => c.id.includes('leaf')));
+
+      jest
+        .spyOn(componentService, 'getRoot')
+        .mockImplementation((leaf, allComponents) => {
+          return allComponents.find((c) => c.id === leaf.parentId) || leaf;
+        });
+    });
+
+    it('should throw error if there is no warmup component', () => {
+      const trainingComponents = [generateTrainingComponent({ id: 'c1' })];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow('Training must have warmup component');
+    });
+
+    it('should throw error if there is no cooldown component', () => {
+      const trainingComponents = [
+        generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+        generateTrainingComponent({ id: 'c1' }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow('Training must have cooldown component');
+    });
+
+    it('should throw error if component does not exist', () => {
+      const trainingComponents = [
+        generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+        generateTrainingComponent({ id: 'invalid-component-id' }),
+        generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow('Component does not exist');
+    });
+
+    it('should throw error if component is not root', () => {
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({ id: 'leaf1', from: now }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 5),
+        }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow(`Component Leaf 1 cannot be selected for training`);
+    });
+
+    it('should throw error if there are duplicate components', () => {
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({ id: 'c1', from: now }),
+        generateTrainingComponent({ id: 'c2', from: addMinutes(now, 5) }),
+        generateTrainingComponent({ id: 'c3', from: addMinutes(now, 10) }),
+        generateTrainingComponent({ id: 'c1', from: addMinutes(now, 15) }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 20),
+        }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow(`Duplicate component Component 1`);
+    });
+
+    it('should throw error if component times are invalid', () => {
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({ id: 'c1', from: now }),
+        generateTrainingComponent({ id: 'c2', from: now }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 20),
+        }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow(`Component Component 1 has to start before Component 2`);
+    });
+
+    it('should throw error if wrong exercises is provided', () => {
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({
+          id: 'c1',
+          from: now,
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({ id: 'e1' }), // leaf1 -> c1
+                generateTrainingExercise({ id: 'e2' }), // leaf1 -> c1
+                generateTrainingExercise({ id: 'e4' }), // leaf3 -> c2, NOT ALLOWED
+              ],
+            }),
+          ],
+        }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 5),
+        }),
+      ];
+
+      const exercise = exercises.find((e) => e.id === 'e4');
+
+      expect(() =>
+        service.validateTrainingComponents(
+          exercises.filter((e) => ['e1', 'e2', 'e4'].includes(e.id)),
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow(
+        `Exercise ${exercise?.name} cannot be part of selected component`,
+      );
+    });
+
+    it('should throw error if there is an invalid member in subgroup', () => {
+      const memberIds = ['m1', 'm2', 'm3'];
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({
+          id: 'c1',
+          from: now,
+          subgroups: [
+            generateSubgroup({ membersIds: ['m1', 'm2'] }),
+            generateSubgroup({ membersIds: ['m3'] }),
+            generateSubgroup({ membersIds: ['invalid-member'] }),
+          ],
+        }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 5),
+        }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          memberIds,
+          trainingComponents,
+          components,
+        ),
+      ).toThrow('Invalid member');
+    });
+
+    it('should throw error if some member is in multiple subgroups simultaneously', () => {
+      const memberIds = ['m1', 'm2', 'm3'];
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({
+          id: 'c1',
+          from: now,
+          subgroups: [
+            generateSubgroup({ membersIds: ['m1', 'm2'] }),
+            generateSubgroup({ membersIds: ['m3', 'm1'] }),
+          ],
+        }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 5),
+        }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          memberIds,
+          trainingComponents,
+          components,
+        ),
+      ).toThrow('Member cannot be part of multiple subgroups simultaneously');
+    });
+
+    it('should throw error if there are more than 5 components', () => {
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({ id: 'c1', from: now }),
+        generateTrainingComponent({ id: 'c2', from: addMinutes(now, 5) }),
+        generateTrainingComponent({ id: 'c3', from: addMinutes(now, 10) }),
+        generateTrainingComponent({ id: 'c4', from: addMinutes(now, 15) }),
+        generateTrainingComponent({ id: 'c5', from: addMinutes(now, 20) }),
+        generateTrainingComponent({ id: 'c6', from: addMinutes(now, 25) }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 30),
+        }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          [],
+          [],
+          trainingComponents,
+          components,
+        ),
+      ).toThrow('You can only have up to 5 components per training');
+    });
+
+    it('should not throw error for valid training components', () => {
+      const now = new Date();
+      const trainingComponents = [
+        generateTrainingComponent({
+          id: WARMUP_COMPONENT_ID,
+          from: subMinutes(now, 5),
+        }),
+        generateTrainingComponent({
+          id: 'c1',
+          from: now,
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({ id: 'e1' }),
+                generateTrainingExercise({ id: 'e2' }),
+              ],
+            }),
+          ],
+          subgroups: [
+            generateSubgroup({
+              membersIds: ['m1'],
+              supersets: [
+                generateSuperset({
+                  exercises: [generateTrainingExercise({ id: 'e1' })],
+                }),
+              ],
+            }),
+          ],
+        }),
+        generateTrainingComponent({
+          id: COOLDOWN_COMPONENT_ID,
+          from: addMinutes(now, 5),
+        }),
+      ];
+
+      expect(() =>
+        service.validateTrainingComponents(
+          exercises.filter((e) => e.id !== 'e5'), // remove invalid exercise
+          ['m1'],
+          trainingComponents,
+          components,
+        ),
+      ).not.toThrow();
+    });
   });
 
   it('should correctly populate exercise parameters', () => {
@@ -182,7 +591,15 @@ describe('TrainingPlanService (unit)', () => {
     expect(trainingComponent.supersets[0].exercises[0].sets).toEqual([
       {
         setNumber: 1,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -193,7 +610,15 @@ describe('TrainingPlanService (unit)', () => {
       },
       {
         setNumber: 2,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -204,7 +629,15 @@ describe('TrainingPlanService (unit)', () => {
       },
       {
         setNumber: 3,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -215,7 +648,15 @@ describe('TrainingPlanService (unit)', () => {
       },
       {
         setNumber: 4,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
+          {
+            field: ParamType.IntWork2,
+            selected: `${IntType.Eff}:0`,
+            value: '0',
+          },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '30' },
           {
             field: ParamType.IntWork2,
@@ -275,7 +716,10 @@ describe('TrainingPlanService (unit)', () => {
     expect(trainingComponent.supersets[0].exercises[0].sets).toEqual([
       {
         setNumber: 1,
-        paramValues: [
+        paramValuesL: [
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+        ],
+        paramValuesR: [
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
         ],
       },
@@ -731,9 +1175,10 @@ describe('TrainingPlanService (unit)', () => {
 
       // Each set should have the correct param values
       result.forEach((set) => {
-        expect(set.paramValues).toEqual([
-          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
-        ]);
+        for (const paramValues of [set.paramValuesL, set.paramValuesR])
+          expect(paramValues).toEqual([
+            { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+          ]);
       });
     });
 
@@ -755,7 +1200,12 @@ describe('TrainingPlanService (unit)', () => {
 
       expect(result.length).toBe(1);
       expect(result[0].setNumber).toBe(1);
-      expect(result[0].paramValues).toEqual([
+
+      expect(result[0].paramValuesL).toEqual([
+        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+      ]);
+
+      expect(result[0].paramValuesR).toEqual([
         { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
       ]);
     });
@@ -795,9 +1245,10 @@ describe('TrainingPlanService (unit)', () => {
 
       expect(result.length).toBe(2);
       result.forEach((set) => {
-        expect(set.paramValues).toEqual([
-          { field: ParamType.IntWork1, selected: IntType.Kg, value: '25' },
-        ]);
+        for (const paramValues of [set.paramValuesL, set.paramValuesR])
+          expect(paramValues).toEqual([
+            { field: ParamType.IntWork1, selected: IntType.Kg, value: '25' },
+          ]);
       });
     });
 
@@ -827,13 +1278,18 @@ describe('TrainingPlanService (unit)', () => {
       const result = service.getSetData(params);
 
       expect(result.length).toBe(1);
-      expect(result[0].paramValues).toEqual([
-        {
-          field: ParamType.IntWork1,
-          selected: `${IntType.Eff}:2`,
-          value: '2',
-        },
-      ]);
+
+      for (const paramValues of [
+        result[0].paramValuesL,
+        result[0].paramValuesR,
+      ])
+        expect(paramValues).toEqual([
+          {
+            field: ParamType.IntWork1,
+            selected: `${IntType.Eff}:2`,
+            value: '2',
+          },
+        ]);
     });
 
     it('should filter out VolWorkSets from the param values', () => {
@@ -861,19 +1317,25 @@ describe('TrainingPlanService (unit)', () => {
       const params = service.getParamAttributes(componentParams);
       const result = service.getSetData(params);
 
-      expect(result[0].paramValues).not.toContainEqual(
-        expect.objectContaining({ field: ParamType.VolWorkSets }),
-      );
+      for (const paramValues of [
+        result[0].paramValuesL,
+        result[0].paramValuesR,
+      ]) {
+        expect(paramValues).not.toContainEqual(
+          expect.objectContaining({ field: ParamType.VolWorkSets }),
+        );
 
-      expect(result[0].paramValues).toEqual([
-        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
-      ]);
+        expect(paramValues).toEqual([
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+        ]);
+      }
     });
 
     it('should handle empty params array', () => {
       const result = service.getSetData([]);
       expect(result.length).toBe(1); // Default 1 set
-      expect(result[0].paramValues).toEqual([]); // No params to include
+      expect(result[0].paramValuesL).toEqual([]); // No params to include
+      expect(result[0].paramValuesR).toEqual([]); // No params to include
     });
 
     it('should handle params without options', () => {
@@ -888,9 +1350,13 @@ describe('TrainingPlanService (unit)', () => {
       const result = service.getSetData(params);
 
       expect(result.length).toBe(1);
-      expect(result[0].paramValues).toEqual([
-        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
-      ]);
+      for (const paramValues of [
+        result[0].paramValuesL,
+        result[0].paramValuesR,
+      ])
+        expect(paramValues).toEqual([
+          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+        ]);
     });
   });
 });
