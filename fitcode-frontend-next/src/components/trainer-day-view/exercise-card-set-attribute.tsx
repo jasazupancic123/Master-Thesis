@@ -8,9 +8,6 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
   const screenSize = useScreenSize();
   const { options, state, onChange, expandedView } = props;
 
-  console.log('options', options);
-  console.log('state', state);
-
   return (
     <Stack direction="column" justifyContent="center" alignItems="center">
       {/* On option change */}
@@ -52,10 +49,8 @@ export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
           onChange={(e) => {
             const value = e.target.value as string;
             const option = options.find((option) => option.name === value);
-            console.log('option', option);
 
             if (!option) return;
-
 
             onChange({
               field: option.field,

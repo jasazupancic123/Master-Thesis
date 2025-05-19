@@ -10,6 +10,7 @@ import {
 import { BaseEntity } from '../../common/entity/base.entity';
 import { TrainingComponent } from './training-component.entity';
 import { Wellness } from '../../user/entity/wellness.entity';
+import { AverageWorkloadValues } from './average-workload-values.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -46,6 +47,18 @@ export class Training extends BaseEntity {
   @ApiPropertyOptional()
   @Expose()
   copiedFromId?: string; // if this training is copied from another training
+
+  @ValidateNested({ each: true })
+  @Type(() => AverageWorkloadValues)
+  @ApiProperty()
+  @Expose()
+  avgCompletedWorkloadValues: AverageWorkloadValues[]; // average completed workload values
+
+  @ValidateNested({ each: true })
+  @Type(() => AverageWorkloadValues)
+  @ApiProperty()
+  @Expose()
+  avgFutureWorkloadValues: AverageWorkloadValues[]; // average future workload values
 
   @IsDate()
   @ApiProperty()

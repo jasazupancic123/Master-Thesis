@@ -41,17 +41,15 @@ export default function TrainingPage(props: TrainingPageProps) {
 
   const { view, setView } = useTraining();
 
-  const {
-    selectedTraining,
-    selectedComponent,
-    setSelectedComponent,
-    clearTrainingState,
-    isLoaded,
-  } = useTraining();
+  const { clearTrainingState, trainingInProgress, isLoaded } = useTraining();
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (selectedTraining && selectedComponent) {
+    if (
+      trainingInProgress &&
+      trainingInProgress.training &&
+      trainingInProgress.selectedComponent
+    ) {
       setView('training');
     } else {
       clearTrainingState();
@@ -188,11 +186,9 @@ export default function TrainingPage(props: TrainingPageProps) {
     )
   ) : (
     <TrainingInProgress
-      selectedComponent={selectedComponent!}
       profile={profile}
       token={token}
       setView={setView}
-      setSelectedComponent={setSelectedComponent}
       setTrainings={setTrainings}
     />
   );

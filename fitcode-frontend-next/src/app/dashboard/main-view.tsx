@@ -117,7 +117,6 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
                     router,
                     () => GroupController.updateMultiple(token, inputs),
                     (groups) => {
-                      console.log('groups', groups);
                       const newGroup = groups.find(
                         (g) => g.id === selectedGroup?.id
                       );

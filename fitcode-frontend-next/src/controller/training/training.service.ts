@@ -3,6 +3,8 @@ import { Component } from '../component/type/component.type';
 import { Exercise } from '../exercise/type/exercise.type';
 import { User } from '../user/type/user.type';
 import { Training } from './type/training.type';
+import { ExerciseSet } from './type/training-plan.type';
+import { IntensityVolumeValues } from './type/intensity-volume-values.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training {
@@ -58,5 +60,27 @@ export class TrainingService {
     return components.filter(
       (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
     );
+  }
+
+  static getIntensityVolumeValues(sets: ExerciseSet[]): IntensityVolumeValues {
+    const intensitySum = sets.reduce((sum, set) => {
+      const intensityValue = set.paramValues.find(
+        (pv) => pv.field === 'int1'
+      )?.value;
+      return sum + (intensityValue ? +intensityValue : 0);
+    }, 0);
+    const avgIntensity = intensitySum / sets.length;
+
+    const volumeSum = sets.reduce((sum, set) => {
+      const volumeValue = set.paramValues.find(
+        (pv) => pv.field === 'vol1'
+      )?.value;
+      return sum + (volumeValue ? +volumeValue : 0);
+    }, 0);
+    const avgVolume = volumeSum / sets.length;
+    return {
+      intensity: avgIntensity,
+      volume: avgVolume,
+    };
   }
 }

@@ -1,6 +1,7 @@
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
 import { Method } from '@/controller/component/type/method.type';
+import { AverageWorkloadValues } from '@/controller/training/type/average-workload-values.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 
@@ -32,11 +33,12 @@ export const METHODS: Method[] = [
   { id: '7', name: 'Foam Rolling' },
 ];
 
-export const DEFAULT_SUBGROUP = (availableMembers: User[]): Subgroup => ({
+export const DEFAULT_SUBGROUP = (availableMembers: User[], avgFutureWorkloadValues: AverageWorkloadValues[]): Subgroup => ({
   id: 'default',
   name: 'Main Group',
   color: '#9e9e9e',
   membersIds: availableMembers.map((user) => user.uid),
+  avgFutureWorkloadValues: avgFutureWorkloadValues,
   supersets: [],
 });
 
@@ -44,6 +46,7 @@ export const ABSENT_SUBGRUP = (): Subgroup => ({
   id: 'absent',
   name: 'Absent',
   color: '#454545',
+  avgFutureWorkloadValues: [],
   membersIds: [],
   supersets: [],
 });
