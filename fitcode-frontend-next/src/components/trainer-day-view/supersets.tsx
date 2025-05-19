@@ -45,6 +45,9 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { TrainingService } from '@/controller/training/training.service';
+import { AverageWorkloadValues } from '@/controller/training/type/average-workload-values.type';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
@@ -233,7 +236,7 @@ export default function Supersets(props: SupersetsProps) {
                       />
                     </Box>
 
-                    <Grid2 container>
+                    <Grid2 container gap={0.5}>
                       {supersetsWithAdd.length === 1 &&
                       superset.exercises.length === 0 ? (
                         <Box
@@ -278,13 +281,6 @@ export default function Supersets(props: SupersetsProps) {
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                   position="relative"
-                                  p={1}
-                                  px={screenSize.isLaptop ? 0.5 : 0}
-                                  py={
-                                    selectedExercise?.id === exercise.id
-                                      ? 0
-                                      : undefined
-                                  }
                                   borderRadius={1}
                                   boxShadow={
                                     snapshot.isDragging && !open ? 2 : 0
@@ -806,10 +802,46 @@ export default function Supersets(props: SupersetsProps) {
               supersets: [...supersets],
             };
 
+            const numberOfAvailableMembers =
+              training.membersIds.length -
+              component.subgroups.reduce(
+                (acc, subgroup) => acc + subgroup.membersIds.length,
+                0
+              );
+
+            // insert future workload data
+            const avgFutureWorkloadValues = [
+              ...training.avgFutureWorkloadValues,
+            ];
+            supersets.map((s) =>
+              s.exercises.map((e) => {
+                const { intensity, volume } =
+                  TrainingService.getIntensityVolumeValues(e.sets);
+                const found = avgFutureWorkloadValues.find(
+                  (v) => v.exerciseId === e.id
+                );
+                if (found) {
+                  found.numMembers = numberOfAvailableMembers;
+                  found.avgWorkloadValue = { intensity, volume };
+                } else {
+                  avgFutureWorkloadValues.push({
+                    exerciseId: e.id,
+                    rootComponentId: component.component?.id || '',
+                    numMembers: numberOfAvailableMembers,
+                    avgWorkloadValue: { intensity, volume },
+                  });
+                }
+              })
+            );
+
             setDetectedChanges(true);
             setSupersetsWithAdd([...supersets]);
             setComponent({ ...updatedComponent });
-            const newTraining = { ...training, components: updatedComponents };
+            const newTraining = {
+              ...training,
+              components: updatedComponents,
+              avgFutureWorkloadValues,
+            };
             setTraining(newTraining);
             const newFilteredTrainings = [...filteredTrainings].map((t) =>
               t.id === newTraining.id ? newTraining : t
@@ -817,10 +849,37 @@ export default function Supersets(props: SupersetsProps) {
             setFilteredTrainings(newFilteredTrainings);
             setOpenAddExerciseModal(false);
           } else {
+            // update subgroup's future workload values
+            const avgFutureWorkloadValues = [
+              ...selectedSubgroup.subgroup.avgFutureWorkloadValues,
+            ];
+            supersets.map((s) =>
+              s.exercises.map((e) => {
+                const { intensity, volume } =
+                  TrainingService.getIntensityVolumeValues(e.sets);
+                const found = avgFutureWorkloadValues.find(
+                  (v) => v.exerciseId === e.id
+                );
+                if (found) {
+                  found.numMembers =
+                    selectedSubgroup.subgroup!.membersIds.length;
+                  found.avgWorkloadValue = { intensity, volume };
+                } else {
+                  avgFutureWorkloadValues.push({
+                    exerciseId: e.id,
+                    rootComponentId: component.component?.id || '',
+                    numMembers: selectedSubgroup.subgroup!.membersIds.length,
+                    avgWorkloadValue: { intensity, volume },
+                  });
+                }
+              })
+            );
+
             // update subgroup's supersets
             const updatedSubgroup = {
               ...selectedSubgroup.subgroup,
               supersets: [...supersets],
+              avgFutureWorkloadValues,
             };
 
             const updatedSubgroups = [...component.subgroups];

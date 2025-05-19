@@ -15,6 +15,7 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
+import { Subgroup } from '../entity/subgroup.entity';
 
 @Injectable()
 export class TrainingRepository
@@ -61,6 +62,8 @@ export class TrainingRepository
         to: addMinutes(startOfHour(input.from), input.components.length * 30),
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
+        avgCompletedWorkloadValues: input.avgCompletedWorkloadValues || [],
+        avgFutureWorkloadValues: input.avgFutureWorkloadValues || [],
         wellness: input.wellness || [],
         completedMembersIds: input.completedMembersIds || [],
         warmup: {
@@ -111,6 +114,7 @@ export class TrainingRepository
           id: s.id,
           name: s.name,
           membersIds: s.membersIds,
+          avgFutureWorkloadValues: s.avgFutureWorkloadValues || [],
           supersets: s.supersets.map((s) => ({
             color: s.color,
             exercises: s.exercises.map((e) => ({

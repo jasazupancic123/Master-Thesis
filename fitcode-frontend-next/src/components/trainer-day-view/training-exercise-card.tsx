@@ -14,6 +14,10 @@ import {
 import { useGroup } from '@/context/group-provider';
 import ReactDOM from 'react-dom';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
+import { Training } from '@/controller/training/type/training.type';
+import { TrainingService } from '@/controller/training/training.service';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -100,7 +104,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     updateTraining(newExercise);
   }, [setsNumber]);
 
-  function updateTraining(exercise: TrainingExercise) {
+  function updateTraining(
+    exercise: TrainingExercise,
+    intensityVolumeValue?: IntensityVolumeValues
+  ) {
     if (!training || !component) return;
 
     const newSuperset = { ...supersets[supersetIndex] };
@@ -118,10 +125,40 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       setSupersetsWithAdd(newSupersets);
 
       if (selectedSubgroup?.subgroup) {
-        const updatedSubgroup = {
-          ...selectedSubgroup.subgroup,
-          supersets: newSupersets,
-        };
+        // set new avg future workload values
+        let newAvgFutureWorkloadValues = undefined;
+        if (intensityVolumeValue) {
+          newAvgFutureWorkloadValues = [
+            ...selectedSubgroup.subgroup.avgFutureWorkloadValues,
+          ];
+          const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
+            (aw) => aw.exerciseId === exercise.id
+          );
+          if (!foundAvgWorkloadValue) {
+            newAvgFutureWorkloadValues.push({
+              exerciseId: exercise.id,
+              rootComponentId: component.component?.id || '',
+              numMembers: selectedSubgroup.subgroup.membersIds.length,
+              avgWorkloadValue: intensityVolumeValue!,
+            });
+          } else {
+            foundAvgWorkloadValue.numMembers =
+              selectedSubgroup.subgroup.membersIds.length;
+            foundAvgWorkloadValue.avgWorkloadValue = intensityVolumeValue!;
+          }
+        }
+
+        const updatedSubgroup = newAvgFutureWorkloadValues
+          ? {
+              ...selectedSubgroup.subgroup,
+              supersets: newSupersets,
+              avgFutureWorkloadValues: newAvgFutureWorkloadValues,
+            }
+          : {
+              ...selectedSubgroup.subgroup,
+              supersets: newSupersets,
+            };
+
         const updatedComponent = {
           ...component,
           subgroups: component.subgroups.map((s, i) =>
@@ -164,7 +201,44 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           c.id === component.id ? updatedComponent : c
         );
 
-        const newTraining = { ...training, components: updatedComponents };
+        // set new avg future workload values
+        let newAvgFutureWorkloadValues = undefined;
+        if (intensityVolumeValue) {
+          newAvgFutureWorkloadValues = [...training.avgFutureWorkloadValues];
+          const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
+            (aw) => aw.exerciseId === exercise.id
+          );
+
+          // get number of members in main group
+          const subgroupsMembersIds = updatedComponent.subgroups.reduce(
+            (acc, subgroup) => {
+              return [...acc, ...subgroup.membersIds];
+            },
+            [] as string[]
+          );
+          const numberOfMainGroupMembers =
+            training.membersIds.length - subgroupsMembersIds.length;
+
+          if (!foundAvgWorkloadValue) {
+            newAvgFutureWorkloadValues.push({
+              exerciseId: exercise.id,
+              rootComponentId: component.component?.id || '',
+              numMembers: numberOfMainGroupMembers,
+              avgWorkloadValue: intensityVolumeValue!,
+            });
+          } else {
+            foundAvgWorkloadValue.numMembers = numberOfMainGroupMembers;
+            foundAvgWorkloadValue.avgWorkloadValue = intensityVolumeValue!;
+          }
+        }
+
+        const newTraining = newAvgFutureWorkloadValues
+          ? {
+              ...training,
+              components: updatedComponents,
+              avgFutureWorkloadValues: newAvgFutureWorkloadValues,
+            }
+          : { ...training, components: updatedComponents };
         setTraining(newTraining);
 
         const updatedTrainings = filteredTrainings.map((filteredTraining) => {
@@ -189,7 +263,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       pb={2}
       sx={{
         width: '100% !important',
-        my: -1,
         position: 'relative',
         backgroundColor: chartView
           ? 'transparent'
@@ -251,24 +324,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       </Stack>
 
       {chartView ? (
-        <Box
-          width="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          zIndex={10}
-          gap={0.5}
-        >
-          <Info sx={{ fontSize: 18 }} />
-          <Typography
-            variant="body2"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            Update training to view updated workloads
-          </Typography>
-        </Box>
+        <></>
       ) : !expandedSetsView ? (
         <Grid2
           container
@@ -425,8 +481,11 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                           }
                         );
 
+                        const intensityVolumeValue =
+                          TrainingService.getIntensityVolumeValues(updatedSets);
+
                         newExercise.sets = [...updatedSets];
-                        updateTraining(newExercise);
+                        updateTraining(newExercise, intensityVolumeValue);
                       }}
                     />
                   </Box>
@@ -549,8 +608,25 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                                   };
                                 });
 
+                              const intensitySum = updatedSets.reduce(
+                                (sum, set) => {
+                                  const intensityValue = set.paramValues.find(
+                                    (pv) => pv.field === 'int1'
+                                  )?.value;
+                                  return (
+                                    sum + (intensityValue ? +intensityValue : 0)
+                                  );
+                                },
+                                0
+                              );
+
+                              const intensityVolumeValue =
+                                TrainingService.getIntensityVolumeValues(
+                                  updatedSets
+                                );
+
                               newExercise.sets = [...updatedSets];
-                              updateTraining(newExercise);
+                              updateTraining(newExercise, intensityVolumeValue);
                             }}
                           />
                         </Box>
