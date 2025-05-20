@@ -308,7 +308,7 @@ export default function AthleteTrainingExerciseCard(
                                         gap={1}
                                       >
                                         {exercise.params.map((param, j) => {
-                                          const value = set.paramValues.find(
+                                          const value = set.paramValuesL.find(
                                             (pv) => pv.field === param.field
                                           ) || {
                                             field: param.field,

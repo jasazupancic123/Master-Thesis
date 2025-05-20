@@ -59,7 +59,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     selectedTrainingOrSubgroup?.supersets?.[supersetIndex!]?.exercises?.[k!];
 
   const params =
-    currentExercise?.sets?.[0]?.paramValues
+    currentExercise?.sets?.[0]?.paramValuesL
       ?.map((pv) => exercise?.params?.find((p) => p.field === pv.field)!)
       ?.filter((p) => p) || [];
 
@@ -88,15 +88,18 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       };
     } else {
       // add sets to the end
+      const paramValues = exercise.sets[
+        exercise.sets.length - 1
+      ].paramValuesL.map((pv) => ({ ...pv }));
+
       newExercise = {
         ...exercise,
         sets: [
           ...exercise.sets,
           ...Array.from({ length: newSets - prevSets }, (_, i) => ({
             setNumber: prevSets + i + 1,
-            paramValues: exercise.sets[
-              exercise.sets.length - 1
-            ].paramValues.map((pv) => ({ ...pv })),
+            paramValuesL: paramValues,
+            paramValuesR: paramValues,
           })),
         ],
       };
@@ -294,6 +297,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           opacity: 100,
         }}
       />
+
       <Stack
         direction="row"
         justifyContent="center"
@@ -366,6 +370,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               />
             </IconButton>
           </Grid2>
+
           <Grid2 size={10}>
             <Box
               display="flex"
@@ -374,8 +379,16 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               alignItems="center"
               gap={1}
             >
-              {exercise.params.map((param) => {
-                const value = exercise.sets[0].paramValues.find(
+              {exercise.params.map((param, i) => {
+                const valueL = exercise.sets[0].paramValuesL.find(
+                  (pv) => pv.field === param.field
+                ) || {
+                  field: param.field,
+                  selected: 'set',
+                  value: exercise.sets.length.toString(),
+                };
+
+                const valueR = exercise.sets[0].paramValuesR.find(
                   (pv) => pv.field === param.field
                 ) || {
                   field: param.field,
@@ -384,122 +397,167 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                 };
 
                 return (
-                  <Box
-                    key={param.field}
-                    flexBasis={(100 / exercise.params.length).toString() + '%'}
-                  >
-                    <ExerciseParam
-                      param={param}
-                      value={
-                        param.field === 'volWorkSets'
-                          ? ({
-                              field: value.field,
-                              selected: value.selected,
-                              value: setsNumber.toString(),
-                            } as AttributeValue)
-                          : value
+                  <>
+                    <Box
+                      key={param.field}
+                      flexBasis={
+                        (100 / exercise.params.length).toString() + '%'
                       }
-                      exercise={exercise}
-                      setsNumber={setsNumber}
-                      setSetsNumber={setSetsNumber}
-                      onOptionChange={(newValue) => {
-                        const paramIndex =
-                          exercise.sets[0].paramValues.findIndex(
-                            (pv) => pv.field === param.field
-                          );
+                    >
+                      <ExerciseParam
+                        param={param}
+                        value={
+                          param.field === 'volWorkSets'
+                            ? ({
+                                field: valueL.field,
+                                selected: valueL.selected,
+                                value: setsNumber.toString(),
+                              } as AttributeValue)
+                            : valueL
+                        }
+                        exercise={exercise}
+                        setsNumber={setsNumber}
+                        setSetsNumber={setSetsNumber}
+                        onOptionChange={(newValue) => {
+                          const paramIndex =
+                            exercise.sets[0].paramValuesL.findIndex(
+                              (pv) => pv.field === param.field
+                            );
 
-                        const newExercise = { ...exercise };
-                        newExercise.sets.forEach(({ paramValues }) => {
-                          if (paramValues[paramIndex])
-                            paramValues[paramIndex].selected =
-                              newValue as string;
-                        });
+                          const newExercise = { ...exercise };
+                          newExercise.sets.forEach(({ paramValuesL }) => {
+                            if (paramValuesL[paramIndex])
+                              paramValuesL[paramIndex].selected =
+                                newValue as string;
+                          });
 
-                        setExercise(newExercise);
-                      }}
-                      onSubOptionChange={(newValue) => {
-                        if (+newValue < 0) return;
-
-                        if (param.field === 'volWorkSets') {
-                          setSetsNumber(+newValue);
-                          return;
-                          /*
-                          const newSets = +newValue;
-                          if (newSets > 16 || newSets < 1) return;
-
-                          const prevSets = exercise.sets.length;
-
-                          let newExercise;
-                          if (prevSets > newSets) {
-                            // remove sets
-                            newExercise = {
-                              ...exercise,
-                              sets: [...exercise.sets].slice(0, newSets),
-                              params: [...exercise.params],
-                            };
-                          } else {
-                            // add sets to the end
-                            newExercise = {
-                              ...exercise,
-                              sets: [
-                                ...exercise.sets,
-                                ...Array.from(
-                                  { length: newSets - prevSets },
-                                  (_, i) => ({
-                                    setNumber: prevSets + i + 1,
-                                    paramValues: exercise.sets[
-                                      exercise.sets.length - 1
-                                    ].paramValues.map((pv) => ({ ...pv })),
-                                  })
-                                ),
-                              ],
-                            };
+                          setExercise(newExercise);
+                        }}
+                        onSubOptionChange={(newValue) => {
+                          if (+newValue < 0) return;
+                          if (param.field === 'volWorkSets') {
+                            setSetsNumber(+newValue);
+                            return;
                           }
 
-                          updateTraining(newExercise);
-                          return;
-                          */
-                        }
+                          const paramIndex =
+                            exercise.sets[0].paramValuesL.findIndex(
+                              (pv) => pv.field === param.field
+                            );
 
-                        const paramIndex =
-                          exercise.sets[0].paramValues.findIndex(
-                            (pv) => pv.field === param.field
-                          );
-
-                        const newExercise = { ...exercise };
-
-                        const updatedSets: ExerciseSet[] = newExercise.sets.map(
-                          (set) => {
-                            return {
-                              setNumber: set.setNumber,
-                              paramValues: [...set.paramValues].map(
-                                (param, index) => {
-                                  if (index === paramIndex) {
+                          const newExercise = { ...exercise };
+                          const updatedSets: ExerciseSet[] =
+                            newExercise.sets.map((set) => {
+                              return {
+                                setNumber: set.setNumber,
+                                paramValuesR: set.paramValuesR,
+                                paramValuesL: [...set.paramValuesL].map(
+                                  (param, index) => {
+                                    if (index === paramIndex) {
+                                      return {
+                                        field: param.field,
+                                        selected: param.selected,
+                                        value: newValue as string,
+                                      } as AttributeValue;
+                                    }
                                     return {
                                       field: param.field,
                                       selected: param.selected,
-                                      value: newValue as string,
+                                      value: param.value,
                                     } as AttributeValue;
                                   }
-                                  return {
-                                    field: param.field,
-                                    selected: param.selected,
-                                    value: param.value,
-                                  } as AttributeValue;
-                                }
-                              ),
-                            };
+                                ),
+                              };
+                            });
+
+                          const intensityVolumeValue =
+                            TrainingService.getIntensityVolumeValues(
+                              updatedSets
+                            );
+
+                          newExercise.sets = [...updatedSets];
+                          updateTraining(newExercise, intensityVolumeValue);
+                        }}
+                      />
+
+                      <ExerciseParam
+                        param={param}
+                        showOptions={false}
+                        value={
+                          param.field === 'volWorkSets'
+                            ? ({
+                                field: valueR.field,
+                                selected: valueR.selected,
+                                value: setsNumber.toString(),
+                              } as AttributeValue)
+                            : valueR
+                        }
+                        exercise={exercise}
+                        setsNumber={setsNumber}
+                        setSetsNumber={setSetsNumber}
+                        onOptionChange={(newValue) => {
+                          const paramIndex =
+                            exercise.sets[0].paramValuesR.findIndex(
+                              (pv) => pv.field === param.field
+                            );
+
+                          const newExercise = { ...exercise };
+                          newExercise.sets.forEach(({ paramValuesR }) => {
+                            if (paramValuesR[paramIndex])
+                              paramValuesR[paramIndex].selected =
+                                newValue as string;
+                          });
+
+                          setExercise(newExercise);
+                        }}
+                        onSubOptionChange={(newValue) => {
+                          if (+newValue < 0) return;
+                          if (param.field === 'volWorkSets') {
+                            setSetsNumber(+newValue);
+                            return;
                           }
-                        );
 
-                        const intensityVolumeValue =
-                          TrainingService.getIntensityVolumeValues(updatedSets);
+                          const paramIndex =
+                            exercise.sets[0].paramValuesR.findIndex(
+                              (pv) => pv.field === param.field
+                            );
 
-                        newExercise.sets = [...updatedSets];
-                        updateTraining(newExercise, intensityVolumeValue);
-                      }}
-                    />
-                  </Box>
+                          const newExercise = { ...exercise };
+                          const updatedSets: ExerciseSet[] =
+                            newExercise.sets.map((set) => {
+                              return {
+                                setNumber: set.setNumber,
+                                paramValuesL: set.paramValuesL,
+                                paramValuesR: [...set.paramValuesR].map(
+                                  (param, index) => {
+                                    if (index === paramIndex) {
+                                      return {
+                                        field: param.field,
+                                        selected: param.selected,
+                                        value: newValue as string,
+                                      } as AttributeValue;
+                                    }
+                                    return {
+                                      field: param.field,
+                                      selected: param.selected,
+                                      value: param.value,
+                                    } as AttributeValue;
+                                  }
+                                ),
+                              };
+                            });
+
+                          const intensityVolumeValue =
+                            TrainingService.getIntensityVolumeValues(
+                              updatedSets
+                            );
+
+                          newExercise.sets = [...updatedSets];
+                          updateTraining(newExercise, intensityVolumeValue);
+                        }}
+                      />
+                    </Box>
+                  </>
                 );
               })}
             </Box>
@@ -553,7 +611,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                     gap={1}
                   >
                     {exercise.params.map((param, j) => {
-                      const value = set.paramValues.find(
+                      const value = set.paramValuesL.find(
                         (pv) => pv.field === param.field
                       ) || {
                         field: param.field,
@@ -579,7 +637,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                               if (+newValue < 0) return;
 
                               const paramIndex =
-                                exercise.sets[0].paramValues.findIndex(
+                                exercise.sets[0].paramValuesL.findIndex(
                                   (pv) => pv.field === param.field
                                 );
 
@@ -593,7 +651,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                                 newExercise.sets.map((set, i) => {
                                   return {
                                     setNumber: set.setNumber,
-                                    paramValues: [...set.paramValues].map(
+                                    paramValuesR: set.paramValuesR,
+                                    paramValuesL: [...set.paramValuesL].map(
                                       (param, index) => {
                                         if (
                                           index === paramIndex &&
@@ -615,17 +674,62 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                                   };
                                 });
 
-                              const intensitySum = updatedSets.reduce(
-                                (sum, set) => {
-                                  const intensityValue = set.paramValues.find(
-                                    (pv) => pv.field === 'int1'
-                                  )?.value;
-                                  return (
-                                    sum + (intensityValue ? +intensityValue : 0)
-                                  );
-                                },
-                                0
+                              const intensityVolumeValue =
+                                TrainingService.getIntensityVolumeValues(
+                                  updatedSets
+                                );
+
+                              newExercise.sets = [...updatedSets];
+                              updateTraining(newExercise, intensityVolumeValue);
+                            }}
+                          />
+
+                          <ExerciseParam
+                            showOptions={set.setNumber === 1}
+                            disableOptions
+                            disableSets
+                            param={param}
+                            value={value}
+                            onOptionChange={(newValue) => {}}
+                            onSubOptionChange={(newValue) => {
+                              if (+newValue < 0) return;
+
+                              const paramIndex =
+                                exercise.sets[0].paramValuesR.findIndex(
+                                  (pv) => pv.field === param.field
+                                );
+
+                              const newExercise = { ...exercise };
+                              const setIndex = newExercise.sets.findIndex(
+                                (s) => s.setNumber === set.setNumber
                               );
+
+                              const updatedSets: ExerciseSet[] =
+                                newExercise.sets.map((set, i) => {
+                                  return {
+                                    setNumber: set.setNumber,
+                                    paramValuesL: set.paramValuesL,
+                                    paramValuesR: [...set.paramValuesR].map(
+                                      (param, index) => {
+                                        if (
+                                          index === paramIndex &&
+                                          setIndex === i
+                                        ) {
+                                          return {
+                                            field: param.field,
+                                            selected: param.selected,
+                                            value: newValue as string,
+                                          } as AttributeValue;
+                                        }
+                                        return {
+                                          field: param.field,
+                                          selected: param.selected,
+                                          value: param.value,
+                                        } as AttributeValue;
+                                      }
+                                    ),
+                                  };
+                                });
 
                               const intensityVolumeValue =
                                 TrainingService.getIntensityVolumeValues(

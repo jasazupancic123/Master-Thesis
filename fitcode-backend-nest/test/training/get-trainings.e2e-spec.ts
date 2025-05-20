@@ -14,20 +14,8 @@ import { GroupService } from '../../src/group/group.service';
 import { generateGroupStub } from '../../src/group/mock/group.stub';
 import { Group } from '../../src/group/entity/group.entity';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
-import {
-  addHours,
-  addWeeks,
-  endOfWeek,
-  startOfDay,
-  startOfWeek,
-} from 'date-fns';
-import {
-  generateSuperset,
-  generateTrainingComponent,
-  generateTrainingExercise,
-  generateTrainingStub,
-} from '../../src/training/mock/training.stub';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
+import { addWeeks, endOfWeek, startOfWeek } from 'date-fns';
+import { generateTrainingStub } from '../../src/training/mock/training.stub';
 import { UserService } from '../../src/user/user.service';
 
 describe('Get Trainings (e2e)', () => {

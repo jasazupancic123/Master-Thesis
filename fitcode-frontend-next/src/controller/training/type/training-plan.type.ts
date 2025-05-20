@@ -35,5 +35,6 @@ export type TrainingExercise = IdEntity &
 
 export interface ExerciseSet {
   setNumber: number;
-  paramValues: AttributeValue[];
+  paramValuesL: AttributeValue[];
+  paramValuesR: AttributeValue[];
 }
