@@ -291,15 +291,7 @@ export class InstitutionService {
     if (trainerIds.length === 0) return;
 
     for (const id of trainerIds) {
-      const institutions = await this.getDocs((query) =>
-        query.where('trainerIds', 'array-contains', id),
-      ).then((snapshot) => {
-        return snapshot.docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Institution>,
-          ),
-        );
-      });
+      const institutions = await this.getInstitutionsByTrainerId(id);
 
       if (institutions.length > 0) {
         throw new BadRequestException(
@@ -307,5 +299,21 @@ export class InstitutionService {
         );
       }
     }
+  }
+
+  private async getInstitutionsByTrainerId(
+    trainerId: string,
+  ): Promise<Institution[]> {
+    const institutions = await this.getDocs((query) =>
+      query.where('trainerIds', 'array-contains', trainerId),
+    ).then((snapshot) => {
+      return snapshot.docs.map((doc) =>
+        this.firebaseService.serialize(
+          doc.data() as FirestoreEntity<Institution>,
+        ),
+      );
+    });
+
+    return institutions;
   }
 }

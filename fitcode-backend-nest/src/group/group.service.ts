@@ -129,18 +129,15 @@ export class GroupService {
 
   async create(
     user: User,
-    input: {
-      group: Create<Group, 'name' | 'membersIds'>;
-      institutionId: string;
-    },
+    input: Create<Group, 'name' | 'membersIds' | 'institutionId'>,
   ): Promise<Group> {
-    const { group, institutionId } = input;
+    const { name, membersIds, institutionId } = input;
     this.logger.log(
       `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
     );
 
     // validate
-    await this.validateMembers(group.membersIds);
+    await this.validateMembers(membersIds);
     await this.checkLimit(user.uid);
 
     const institution = await this.institutionService.findOneOrFail(user, {
@@ -156,9 +153,10 @@ export class GroupService {
       const query = this.firebaseService.buildCreateQuery<Group>(
         {
           id: groupId,
-          name: group.name,
+          name: name,
           ownerId: user.uid,
-          membersIds: group.membersIds,
+          membersIds: membersIds,
+          institutionId: institutionId,
           cycles: [],
         },
         { timestamps: true },
@@ -167,7 +165,7 @@ export class GroupService {
       transaction.set(docRef, query);
 
       // add group to all members and trainer
-      [...group.membersIds, user.uid].map((userId) =>
+      [...membersIds, user.uid].map((userId) =>
         this.userService.addGroup(transaction, userId, groupId),
       );
     });
@@ -182,9 +180,10 @@ export class GroupService {
 
     return {
       id: groupId,
-      name: group.name,
+      name: name,
       ownerId: user.uid,
-      membersIds: group.membersIds,
+      membersIds: membersIds,
+      institutionId: institutionId,
       cycles: [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -435,9 +434,7 @@ export class GroupService {
   }
 
   private validateOwner(user: User, groupOrTraining: Group | Training) {
-    if (
-      !this.isOwner(user.uid, groupOrTraining)
-    )
+    if (!this.isOwner(user.uid, groupOrTraining))
       throw new UnauthorizedException(
         'You are not authorized to perform this action',
       );

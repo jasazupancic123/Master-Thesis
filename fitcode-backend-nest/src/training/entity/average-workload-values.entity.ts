@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Expose, Type } from "class-transformer";
 import { IsString, IsNotEmpty, IsNumber, IsInt, ValidateNested } from "class-validator";
-import { IntensityVolumeValues } from "./intensity-volume-values.type";
+import { CalculatedAvgWorkloadValues } from "./avg-workload-values.entity";
 
 export class AverageWorkloadValues {
   @IsString()
@@ -22,8 +22,8 @@ export class AverageWorkloadValues {
   numMembers: number;
 
   @ValidateNested()
-  @Type(() => IntensityVolumeValues)
+  @Type(() => CalculatedAvgWorkloadValues)
   @ApiProperty()
   @Expose()
-  avgWorkloadValue: IntensityVolumeValues;
+  avgWorkloadValue: CalculatedAvgWorkloadValues;
 }

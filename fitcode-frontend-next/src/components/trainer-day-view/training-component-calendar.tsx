@@ -34,10 +34,17 @@ export default function TrainingComponentCalendar(
     handleCopyComponentApiRequest,
   } = props;
 
-  const { cycle } = useGroup();
+  const { cycle, setDateFrom, setDateTo } = useGroup();
 
   const theme = useTheme();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
+
+  // filter trainings by cycle
+  useEffect(() => {
+    if (!cycle) return;
+    setDateFrom(dayjs(cycle.from));
+    setDateTo(dayjs(cycle.to));
+  }, [cycle]);
 
   return (
     <Box>
