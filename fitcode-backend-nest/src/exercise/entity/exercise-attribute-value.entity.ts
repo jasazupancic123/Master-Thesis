@@ -3,11 +3,8 @@ import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { IntersectionType } from '@nestjs/mapped-types';
-import { IdEntity } from '../../common/entity/id.entity';
 
-export class ExerciseAttributeValue extends IntersectionType(
-  AttributeValue,
-) {
+export class ExerciseAttributeValue extends IntersectionType(AttributeValue) {
   @IsString()
   @IsOptional()
   @IsNotEmpty()
