@@ -1,7 +1,8 @@
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
-import { Box, Grid2, IconButton, Tooltip } from '@mui/material';
+import { Box, Collapse, Grid2, IconButton, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { useEffect, useState } from 'react';
 import { TrainingExerciseCardProps } from './props';
 import { useScreenSize } from '@/context/screen-size-provider';
@@ -339,18 +340,28 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               sx={{
                 p: 0,
                 m: 0,
-                mt: 1.66,
+                // mt: 1.66,
+                pb: 3.66,
                 height: '100%',
               }}
               onClick={() => setExpandedSetsView(!expandedSetsView)}
             >
-              <Circle
+              {/* <Circle
                 sx={{
                   display:
                     selectedExercise?.id === exercise.id ? 'none' : undefined,
                   color: 'white !important',
                   fontSize: screenSize.isTablet ? 14 : 16,
                   ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
+                }}
+              /> */}
+                <KeyboardArrowRightIcon
+                sx={{
+                  transform: expandedSetsView ? 'rotate(90deg)' : 'rotate(0deg)',
+                  color: 'white',
+                  fontSize: screenSize.isTablet ? 14 : 16,
+                  ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
+                  transition: 'transform 0.3s ease-in-out',
                 }}
               />
             </IconButton>
@@ -511,7 +522,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                     sx={{
                       p: 0,
                       m: 0,
-                      mt: 1.66,
+                      // mt: 1.66,
+                      pb: 3.66,
                       height: '100%',
                       display: i === 0 ? undefined : 'none',
                     }}
@@ -519,21 +531,16 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                       setExpandedSetsView(!expandedSetsView);
                     }}
                   >
-                    <Circle
-                      sx={{
-                        display:
-                          selectedExercise?.id === exercise.id
-                            ? 'none'
-                            : undefined,
-                        color: 'white !important',
-                        fontSize: screenSize.isTablet ? 14 : 16,
-                        ml: screenSize.isUltraSmall
-                          ? 0
-                          : screenSize.isMobile
-                            ? 1
-                            : 0,
-                      }}
-                    />
+                    <KeyboardArrowRightIcon
+                sx={{
+                  transform: expandedSetsView ? 'rotate(90deg)' : 'rotate(0deg)',
+                  color: 'white',
+                  fontSize: screenSize.isTablet ? 14 : 16,
+                  ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
+                  transition: 'transform 0.3s ease-in-out',
+                }}
+              />
+                    
                   </IconButton>
                 </Grid2>
 
