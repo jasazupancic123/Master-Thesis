@@ -258,11 +258,7 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
-<<<<<<< HEAD
-      propsTraining.components,
-=======
-      [warmup, ...input.components, cooldown],
->>>>>>> main
+      [warmup, ...propsTraining.components, cooldown],
       components,
     );
 
@@ -581,7 +577,6 @@ export class TrainingService {
     this.trainingPlanService.updateWarmupAndCooldownTimes(
       input.warmup,
       input.cooldown,
-      training,
       input.components,
     );
 
@@ -796,7 +791,7 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
-      copiedTraining.components,
+      [copiedTraining.warmup, ...copiedTraining.components, copiedTraining.cooldown],
       components,
     );
 
