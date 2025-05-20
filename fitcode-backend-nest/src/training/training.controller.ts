@@ -24,7 +24,7 @@ import {
 import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
 import { TrainingComponent } from './entity/training-component.entity';
-import { ComponentRef, TrainingRef } from 'src/common/type/firestore.type';
+import { ComponentRef, TrainingRef } from '../common/type/firestore.type';
 import { Superset } from './entity/superset.entity';
 import { FinishComponentDto } from './dto/finish-component.dto';
 
