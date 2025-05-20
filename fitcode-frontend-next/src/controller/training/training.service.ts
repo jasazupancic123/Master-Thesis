@@ -1,4 +1,7 @@
-import { COOLDOWN_ID, WARMUP_ID } from '@/common/constant/warmup-cooldown-ids-constants';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 import { Component } from '../component/type/component.type';
 import { Exercise } from '../exercise/type/exercise.type';
 import { User } from '../user/type/user.type';
@@ -54,29 +57,27 @@ export class TrainingService {
     return training;
   }
 
-  static excludeWarmupCooldown(
-    components: Component[],
-  ): Component[] {
-    return components.filter(
-      (c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID
-    );
+  static excludeWarmupCooldown(components: Component[]): Component[] {
+    return components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID);
   }
 
   static getIntensityVolumeValues(sets: ExerciseSet[]): IntensityVolumeValues {
     const intensitySum = sets.reduce((sum, set) => {
-      const intensityValue = set.paramValues.find(
+      const intensityValue = set.paramValuesL.find(
         (pv) => pv.field === 'int1'
       )?.value;
       return sum + (intensityValue ? +intensityValue : 0);
     }, 0);
+
     const avgIntensity = intensitySum / sets.length;
 
     const volumeSum = sets.reduce((sum, set) => {
-      const volumeValue = set.paramValues.find(
+      const volumeValue = set.paramValuesL.find(
         (pv) => pv.field === 'vol1'
       )?.value;
       return sum + (volumeValue ? +volumeValue : 0);
     }, 0);
+
     const avgVolume = volumeSum / sets.length;
     return {
       intensity: avgIntensity,

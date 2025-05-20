@@ -1,10 +1,4 @@
-import {
-  Stack,
-  FormControl,
-  Select,
-  MenuItem,
-  TextField,
-} from '@mui/material';
+import { Stack, FormControl, Select, MenuItem, TextField } from '@mui/material';
 import { disableBorder, exerciseCardSetAttributeSx } from '../style';
 import { SetState } from '@/common/type/state.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';

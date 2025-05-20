@@ -15,5 +15,11 @@ export class ExerciseSet {
   @Type(() => AttributeValue)
   @ApiProperty()
   @Expose()
-  paramValues: AttributeValue[];
+  paramValuesL: AttributeValue[];
+
+  @ValidateNested({ each: true })
+  @Type(() => AttributeValue)
+  @ApiProperty()
+  @Expose()
+  paramValuesR: AttributeValue[];
 }

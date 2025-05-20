@@ -417,7 +417,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                             >
                               {Array.isArray(exercise.params) &&
                                 exercise.params.map((param, j) => {
-                                  const value = set.paramValues.find(
+                                  const value = set.paramValuesL.find(
                                     (pv) => pv.field === param.field
                                   ) || {
                                     field: param.field,
@@ -448,7 +448,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                                             return;
 
                                           const paramIndex =
-                                            exercise.sets[0].paramValues.findIndex(
+                                            exercise.sets[0].paramValuesL.findIndex(
                                               (pv) => pv.field === param.field
                                             );
 
@@ -459,8 +459,24 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                                               if (i !== j) return set;
                                               return {
                                                 setNumber: set.setNumber,
-                                                paramValues: [
-                                                  ...set.paramValues,
+                                                paramValuesL: [
+                                                  ...set.paramValuesL,
+                                                ].map((param, index) => {
+                                                  if (index === paramIndex) {
+                                                    return {
+                                                      field: param.field,
+                                                      selected: param.selected,
+                                                      value: newValue as string,
+                                                    } as AttributeValue;
+                                                  }
+                                                  return {
+                                                    field: param.field,
+                                                    selected: param.selected,
+                                                    value: param.value,
+                                                  } as AttributeValue;
+                                                }),
+                                                paramValuesR: [
+                                                  ...set.paramValuesR,
                                                 ].map((param, index) => {
                                                   if (index === paramIndex) {
                                                     return {
