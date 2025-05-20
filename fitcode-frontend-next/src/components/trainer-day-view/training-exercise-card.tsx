@@ -18,6 +18,7 @@ import { IntensityVolumeValues } from '@/controller/training/type/intensity-volu
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { Training } from '@/controller/training/type/training.type';
 import { TrainingService } from '@/controller/training/training.service';
+import LeftRightExerciseText from './exercise-card/left-right-exercise-text';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -368,6 +369,16 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               alignItems="center"
               gap={1}
             >
+              <Box
+                display="flex"
+                flexDirection="column"
+                gap={1}
+                justifyContent="end"
+                height={85}
+              >
+                <LeftRightExerciseText title="L" />
+                <LeftRightExerciseText title="R" />
+              </Box>
               {exercise.params.map((param, i) => {
                 const valueL = exercise.sets[0].paramValuesL.find(
                   (pv) => pv.field === param.field
@@ -468,7 +479,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                           updateTraining(newExercise, intensityVolumeValue);
                         }}
                       />
-
                       <ExerciseParam
                         param={param}
                         showOptions={false}
@@ -603,13 +613,31 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                     alignItems="center"
                     gap={1}
                   >
+                    <Box
+                      display="flex"
+                      flexDirection="column"
+                      gap={1}
+                      justifyContent="end"
+                      height={set.setNumber === 1 ? 85 : 60}
+                    >
+                      <LeftRightExerciseText title="L" />
+                      <LeftRightExerciseText title="R" />
+                    </Box>
                     {exercise.params.map((param, j) => {
-                      const value = set.paramValuesL.find(
+                      const valueL = exercise.sets[i].paramValuesL.find(
                         (pv) => pv.field === param.field
                       ) || {
                         field: param.field,
                         selected: 'set',
-                        value: (i + 1).toString(),
+                        value: exercise.sets.length.toString(),
+                      };
+
+                      const valueR = exercise.sets[i].paramValuesR.find(
+                        (pv) => pv.field === param.field
+                      ) || {
+                        field: param.field,
+                        selected: 'set',
+                        value: exercise.sets.length.toString(),
                       };
 
                       return (
@@ -624,15 +652,16 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                             disableOptions
                             disableSets
                             param={param}
-                            value={value}
+                            value={valueL}
                             onOptionChange={(newValue) => {}}
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
 
-                              const paramIndex =
-                                exercise.sets[0].paramValuesL.findIndex(
-                                  (pv) => pv.field === param.field
-                                );
+                              const paramIndex = exercise.sets[
+                                i
+                              ].paramValuesL.findIndex(
+                                (pv) => pv.field === param.field
+                              );
 
                               const newExercise = { ...exercise };
 
@@ -641,7 +670,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                               );
 
                               const updatedSets: ExerciseSet[] =
-                                newExercise.sets.map((set, i) => {
+                                newExercise.sets.map((set, k) => {
                                   return {
                                     setNumber: set.setNumber,
                                     paramValuesR: set.paramValuesR,
@@ -649,7 +678,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                                       (param, index) => {
                                         if (
                                           index === paramIndex &&
-                                          setIndex === i
+                                          setIndex === k
                                         ) {
                                           return {
                                             field: param.field,
@@ -678,19 +707,20 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                           />
 
                           <ExerciseParam
-                            showOptions={set.setNumber === 1}
+                            showOptions={false}
                             disableOptions
                             disableSets
                             param={param}
-                            value={value}
+                            value={valueR}
                             onOptionChange={(newValue) => {}}
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
 
-                              const paramIndex =
-                                exercise.sets[0].paramValuesR.findIndex(
-                                  (pv) => pv.field === param.field
-                                );
+                              const paramIndex = exercise.sets[
+                                i
+                              ].paramValuesR.findIndex(
+                                (pv) => pv.field === param.field
+                              );
 
                               const newExercise = { ...exercise };
                               const setIndex = newExercise.sets.findIndex(
@@ -698,7 +728,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                               );
 
                               const updatedSets: ExerciseSet[] =
-                                newExercise.sets.map((set, i) => {
+                                newExercise.sets.map((set, k) => {
                                   return {
                                     setNumber: set.setNumber,
                                     paramValuesL: set.paramValuesL,
@@ -706,7 +736,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                                       (param, index) => {
                                         if (
                                           index === paramIndex &&
-                                          setIndex === i
+                                          setIndex === k
                                         ) {
                                           return {
                                             field: param.field,
