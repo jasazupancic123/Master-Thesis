@@ -42,6 +42,7 @@ export class GroupRepository
         name: input.name,
         ownerId: input.ownerId,
         membersIds: input.membersIds,
+        institutionId: input.institutionId,
         cycles: [],
       },
       { timestamps: true },

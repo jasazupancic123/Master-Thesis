@@ -24,10 +24,7 @@ export class GroupController {
 
   static async create(
     token: string,
-    body: {
-      group: { name: string; membersIds: string[] };
-      institutionId: string;
-    }
+    body: { name: string; membersIds: string[]; institutionId: string }
   ) {
     return api.post<Group>('/group', body, { token });
   }

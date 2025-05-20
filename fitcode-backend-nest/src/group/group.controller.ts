@@ -50,7 +50,7 @@ export class GroupController {
 
   @Post()
   @Auth()
-  async create(@RequestUser() user: User, @Body() body: {group: CreateGroupDto, institutionId: string}) {
+  async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {
     return await this.groupService.create(user, body);
   }
 

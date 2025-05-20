@@ -655,10 +655,8 @@ export default function MainDashboardView(props: MainDashboardViewProps) {
         cancelText="Close"
         onConfirm={async () => {
           const input = {
-            group: {
-              name: groupName,
-              membersIds: [],
-            },
+            name: groupName,
+            membersIds: [],
             institutionId: selectedInstitution.id,
           };
           handleApiRequest(

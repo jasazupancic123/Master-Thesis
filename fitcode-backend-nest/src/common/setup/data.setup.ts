@@ -160,7 +160,9 @@ export class DataSetup extends BaseSetup {
     });
 
     const trainer = users.find((u) => u.email === 'trainer@mail.com');
-    const athletes = users.filter((u) => u.customClaims.role?.includes(UserRole.ATHLETE));
+    const athletes = users.filter((u) =>
+      u.customClaims.role?.includes(UserRole.ATHLETE),
+    );
 
     const institution = await institutionService.create(this.admin, {
       name: 'Nk Maribor',
@@ -178,7 +180,8 @@ export class DataSetup extends BaseSetup {
         const members = await this.userService.findAll({ emails });
         const membersIds = members.map((m) => m.uid);
         const group = await groupService.create(trainer, {
-          group: { name, membersIds },
+          name,
+          membersIds,
           institutionId: institution.id,
         });
         groupIds.push(group.id);

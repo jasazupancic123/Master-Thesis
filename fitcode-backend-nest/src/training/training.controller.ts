@@ -18,13 +18,15 @@ import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import {
   BatchUpdateTrainingsDto,
+  UpdateSingleTrainingDto,
   UpdateTrainingDto,
 } from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
 import { CreateWorkloadsDto } from './dto/create-workload.dto';
 import { TrainingComponent } from './entity/training-component.entity';
-import { TrainingRef } from 'src/common/type/firestore.type';
+import { ComponentRef, TrainingRef } from 'src/common/type/firestore.type';
 import { Superset } from './entity/superset.entity';
+import { FinishComponentDto } from './dto/finish-component.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -54,45 +56,52 @@ export class TrainingController {
   async getUserWorkloadsByGroupIdAndExerciseIds(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Body() body: {exerciseIds: string[], athleteId?: string},
+    @Body() body: { exerciseIds: string[]; athleteId?: string },
   ) {
-    return await this.trainingService.getUserWorkloadsByGroupIdAndExerciseIds(user, {
-      groupId,
-      body,
-    });
+    return await this.trainingService.getUserWorkloadsByGroupIdAndExerciseIds(
+      user,
+      {
+        groupId,
+        body,
+      },
+    );
   }
 
   @Post()
   @Auth()
-  async create(@RequestUser() user: User, @Body() body: CreateTrainingDto) {
+  async create(
+    @RequestUser() user: User,
+    @Body()
+    body: CreateTrainingDto,
+  ) {
     return await this.trainingService.create(user, body);
   }
 
-  @Post(':trainingId/withComponent')
-  @Auth()
-  async createWithTrainingComponent(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Body()
-    body: {
-      trainingComponent: TrainingComponent;
-      date: { from: Date; to: Date };
-    },
-  ) {
-    const ref = { trainingId };
-    return await this.trainingService.createWithTrainingComponent(
-      user,
-      ref,
-      body,
-    );
-  }
+  // @Post(':trainingId/withComponent')
+  // @Auth()
+  // async createWithTrainingComponent(
+  //   @RequestUser() user: User,
+  //   @Param('trainingId') trainingId: string,
+  //   @Body()
+  //   body: {
+  //     trainingComponent: TrainingComponent;
+  //     date: { from: Date; to: Date };
+  //   },
+  // ) {
+  //   const ref = { trainingId };
+  //   return await this.trainingService.createWithTrainingComponent(
+  //     user,
+  //     ref,
+  //     body,
+  //   );
+  // }
 
   @Patch(':trainingId')
   @Auth()
   async update(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: UpdateTrainingDto,
+    @Body() body: UpdateSingleTrainingDto,
   ) {
     const ref = { trainingId };
     return await this.trainingService.update(user, ref, body);
@@ -110,21 +119,21 @@ export class TrainingController {
     return await this.trainingService.batchUpdate(user, ref, trainings);
   }
 
-  @Patch(':trainingId/component/copy')
-  @Auth()
-  async copyComponent(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Body()
-    body: {
-      trainingComponent: TrainingComponent;
-      copiedFromTrainingId: string;
-      overwrite?: boolean;
-    },
-  ) {
-    const ref = { trainingId };
-    return await this.trainingService.copyComponent(user, ref, body);
-  }
+  // @Patch(':trainingId/component/copy')
+  // @Auth()
+  // async copyComponent(
+  //   @RequestUser() user: User,
+  //   @Param('trainingId') trainingId: string,
+  //   @Body()
+  //   body: {
+  //     trainingComponent: TrainingComponent;
+  //     copiedFromTrainingId: string;
+  //     overwrite?: boolean;
+  //   },
+  // ) {
+  //   const ref = { trainingId };
+  //   return await this.trainingService.copyComponent(user, ref, body);
+  // }
 
   @Post(':trainingId/copy')
   @Auth()
@@ -161,14 +170,15 @@ export class TrainingController {
     return {};
   }
 
-  @Patch(':trainingId/finish/component')
+  @Patch(':trainingId/finish/:componentId/component')
   @Auth()
   async finishComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: {userId: string, componentId: string, rootComponentId: string, supersets: Superset[]},
+    @Param('componentId') componentId: string,
+    @Body() body: FinishComponentDto,
   ) {
-    const ref = { trainingId } as TrainingRef;
+    const ref = { trainingId, componentId } as TrainingRef & ComponentRef;
     return await this.trainingService.finishComponent(user, ref, body);
   }
 

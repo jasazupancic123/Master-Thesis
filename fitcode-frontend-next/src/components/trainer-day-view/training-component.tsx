@@ -60,6 +60,8 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { train } from '@tensorflow/tfjs';
+import { addMinutes } from 'date-fns';
 
 const commonService = CommonService.instance;
 
@@ -224,13 +226,64 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     component: TrainingComponent,
     overwrite: boolean = false
   ) => {
+    let from;
+    const componentInTraining = trainingInPeriod.components.find(
+      (c) =>
+        c.id === component.id || c.component?.id === component.component?.id
+    );
+    let newComponents = [] as TrainingComponent[];
+    if (componentInTraining) {
+      // replace the component in the training
+      newComponents = [...trainingInPeriod.components].map((c) => {
+        if (
+          c.id === component.id ||
+          c.component?.id === component.component?.id
+        ) {
+          from = c.from;
+          return {
+            ...component,
+            from,
+            to: addMinutes(from, 30),
+            copiedFrom: {
+              ...c.copiedFrom,
+              lastCopiedFromTrainingId: training.id,
+            } as CopiedFrom,
+          };
+        }
+        return { ...c };
+      });
+    } else {
+      // add the component to the training
+      const lastComponentInTraining = {
+        ...[...trainingInPeriod.components][
+          trainingInPeriod.components.length - 1
+        ],
+      };
+      const from = lastComponentInTraining
+        ? addMinutes(new Date(lastComponentInTraining.from), 30)
+        : trainingInPeriod.from;
+
+      newComponents = [
+        ...trainingInPeriod.components,
+        {
+          ...component,
+          from: new Date(from),
+          to: addMinutes(new Date(from), 30),
+          copiedFrom: {
+            rootCopiedFromTrainingId: training.id,
+            lastCopiedFromTrainingId: training.id,
+          } as CopiedFrom,
+        },
+      ];
+    }
+
     handleApiRequest(
       router,
       () =>
-        TrainingController.copyComponent(token, trainingInPeriod.id, {
-          trainingComponent: component,
-          copiedFromTrainingId: training.id,
-          overwrite,
+        TrainingController.update(token, trainingInPeriod.id, {
+          components: newComponents,
+          warmup: trainingInPeriod.warmup,
+          cooldown: trainingInPeriod.cooldown,
         }),
       (training) => {
         training = TrainingService.mapComponents(training, allComponents);

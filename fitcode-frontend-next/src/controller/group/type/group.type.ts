@@ -6,6 +6,7 @@ export type Group = BaseEntity & {
   name: string;
   ownerId: string;
   membersIds: string[];
+  institutionId: string;
   cycles: Cycle[];
 
   // mapped properties

@@ -15,9 +15,7 @@ import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
 export class InstitutionRepository
   implements RootFirestoreCollectionRepository<Institution>
 {
-  constructor(
-    private readonly firebaseService: FirebaseService,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -81,7 +79,7 @@ export class InstitutionRepository
 
   collection(): CollectionReference {
     return this.firebaseService.firestore.collection(
-      FirestoreCollection.TRAINING,
+      FirestoreCollection.INSTITUTION,
     );
   }
 }
