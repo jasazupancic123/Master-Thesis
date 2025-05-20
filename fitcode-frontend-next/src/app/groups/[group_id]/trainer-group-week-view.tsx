@@ -92,12 +92,13 @@ export default function TrainerWeekView() {
       </Box>
 
       {/* Trainings */}
-      <Box pt={4} px={1}>
+      <Box pt={0} px={1}>
         <Grid
           container
           spacing={2}
           display="flex"
-          justifyContent="space-between"
+          justifyContent="space-between"        
+
         >
           {weeks[index].map(({ date }, i) => {
             const day = dayjs(date);
