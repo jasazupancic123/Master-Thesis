@@ -19,10 +19,12 @@ export async function createGroupWithCycles(
   const { owner = global.trainer, membersIds = [global.athlete.uid] } =
     input || {};
 
-  let group = await groupService.create(
-    owner,
-    generateGroupStub({ membersIds }),
-  );
+  const groupStub = generateGroupStub({ membersIds });
+  let group = await groupService.create(owner, {
+    name: groupStub.name,
+    membersIds: groupStub.membersIds,
+    institutionId: global.institution.id,
+  });
 
   const start = subDays(new Date(), 7);
   const cycles = [

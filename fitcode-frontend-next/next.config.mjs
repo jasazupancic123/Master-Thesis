@@ -9,12 +9,22 @@ const nextConfig = {
       },
       {
         protocol: 'http',
-        hostname: 'localhost'
+        hostname: 'localhost',
       },
       {
         protocol: 'https',
-        hostname: 'iamaspire.aspire.qa'
-      }
+        hostname: 'iamaspire.aspire.qa',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.sofascore.com',
+      },
+    ],
+    domains: [
+      'fitcode-testing.appspot.com',
+      'localhost',
+      'iamaspire.aspire.qa',
+      'img.sofascore.com',
     ],
   },
 };

@@ -24,7 +24,13 @@ export class Group extends BaseEntity {
   @IsNotEmpty({ each: true })
   @ApiProperty()
   @Expose()
-  membersIds: string[]; // all members of the group
+  membersIds: string[]; // all members of the group 
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  institutionId: string; // institution id
 
   @ValidateNested({ each: true })
   @Type(() => Cycle)

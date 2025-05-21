@@ -22,6 +22,12 @@ export class UpdateTrainingDtoWithId extends PickType(Training, [
   'avgFutureWorkloadValues',
 ]) {}
 
+export class UpdateSingleTrainingDto extends PickType(Training, [
+  'components',
+  'warmup',
+  'cooldown',
+]) {}
+
 export class BatchUpdateTrainingDto extends IntersectionType(
   IdEntity,
   UpdateTrainingDto,

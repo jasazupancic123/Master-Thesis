@@ -21,6 +21,7 @@ import { CommonService } from '../../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
 import {
+  ComponentRef,
   CycleRef,
   TrainingComponentRef,
   TrainingRef,
@@ -44,7 +45,11 @@ import dayjs from 'dayjs';
 import { SetStatus } from '../enum/set-status.enum';
 import { Superset } from '../entity/superset.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
+import { IntType, ParamType, VolType } from 'src/component/enum/param.enum';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { FinishComponentDto } from '../dto/finish-component.dto';
+import { AverageWorkloadValues } from '../entity/average-workload-values.entity';
+import { CreateTrainingDto } from '../dto/create-training.dto';
 
 @Injectable()
 export class TrainingService {
@@ -215,23 +220,9 @@ export class TrainingService {
     return { from, to };
   }
 
-  async create(
-    user: User,
-    input: Create<
-      Omit<
-        Training,
-        | 'id'
-        | 'ownerId'
-        | 'membersIds'
-        | 'wellness'
-        | 'from'
-        | 'to'
-        | 'warmup'
-        | 'cooldown'
-      >
-    >,
-  ): Promise<Training> {
-    const { groupId, cycleId } = input;
+  async create(user: User, input: CreateTrainingDto): Promise<Training> {
+    const { training: propsTraining, copyFromTrainingId, date } = input;
+    const { groupId, cycleId } = propsTraining;
     this.logger.log(
       `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
     );
@@ -239,7 +230,9 @@ export class TrainingService {
     // validate parent references
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    const { from, to } = this.getFromAndToDates(input.components);
+    const { from, to } = date
+      ? date
+      : this.getFromAndToDates(propsTraining.components);
 
     this.validateOwner(user.uid, group);
     this.checkTrainingIsInCycle(from, cycle);
@@ -251,7 +244,7 @@ export class TrainingService {
       this.trainingPlanService.createWarmupAndCooldown(
         from,
         to,
-        input.components,
+        propsTraining.components,
       );
 
     // validate components & exercises
@@ -259,19 +252,19 @@ export class TrainingService {
     const components = await this.cacheManagerService.getComponents();
     const exercises = await this.trainingPlanService.findAllTrainingExercises(
       user,
-      input.components,
+      propsTraining.components,
     );
 
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
-      [warmup, ...input.components, cooldown],
+      [warmup, ...propsTraining.components, cooldown],
       components,
     );
 
     // populate exercise params from components
     this.trainingPlanService.populateTrainingExerciseParams(
-      input.components,
+      propsTraining.components,
       components,
       exercises,
       attributes,
@@ -283,10 +276,48 @@ export class TrainingService {
       group.membersIds,
     );
 
+    // create by copying a component from another training section
+    let copyFromTraining: Training | undefined,
+      trainingComponent: TrainingComponent | undefined,
+      avgCompletedWorkloadValues: AverageWorkloadValues[] | undefined,
+      avgFutureWorkloadValues: AverageWorkloadValues[] | undefined;
+
+    if (copyFromTrainingId) {
+      copyFromTraining = await this.findOneOrFail(user, {
+        trainingId: copyFromTrainingId,
+      });
+
+      // frontend needs to pass only the copied component
+      if (propsTraining.components.length !== 1) {
+        throw new BadRequestException(
+          'You can only copy a training with one component',
+        );
+      }
+
+      trainingComponent = propsTraining.components[0];
+      if (!trainingComponent) {
+        throw new BadRequestException(
+          'You must provide a training component to copy',
+        );
+      }
+
+      // keep avg workload values for exercises of only the copied component
+      const exerciseIdsToKeep = trainingComponent.supersets
+        .map((superset) => superset.exercises.map((e) => e.id))
+        .flat();
+      avgCompletedWorkloadValues =
+        copyFromTraining.avgCompletedWorkloadValues.filter((w) =>
+          exerciseIdsToKeep.includes(w.exerciseId),
+        );
+      avgFutureWorkloadValues = copyFromTraining.avgFutureWorkloadValues.filter(
+        (w) => exerciseIdsToKeep.includes(w.exerciseId),
+      );
+    }
+
     const data: Create<Training> = {
       id: null,
       groupId: group.id,
-      cycleId: input.cycleId,
+      cycleId: propsTraining.cycleId,
       ownerId: user.uid,
       copiedFromId: null,
       from,
@@ -294,19 +325,40 @@ export class TrainingService {
       membersIds: group.membersIds,
       wellness,
       completedMembersIds: [],
-      avgCompletedWorkloadValues: [],
-      avgFutureWorkloadValues: [],
+      avgCompletedWorkloadValues: avgCompletedWorkloadValues || [],
+      avgFutureWorkloadValues: avgFutureWorkloadValues || [],
       warmup,
       cooldown,
-      components: input.components.map((c) => ({
-        id: c.id,
-        from: c.from,
-        to: c.to,
-        color: c.color,
-        subgroups: c.subgroups || [],
-        supersets: c.supersets || [],
-        completedMembersIds: [],
-      })),
+      components:
+        // copy with component
+        trainingComponent && copyFromTrainingId
+          ? [
+              {
+                id: trainingComponent.id,
+                from,
+                to: dayjs(from).add(30, 'minute').toDate(),
+                color: trainingComponent.color,
+                subgroups: trainingComponent.subgroups || [],
+                supersets: trainingComponent.supersets || [],
+                copiedFrom: {
+                  lastCopiedFromTrainingId: copyFromTrainingId,
+                  rootCopiedFromTrainingId: trainingComponent.copiedFrom
+                    ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
+                    : copyFromTrainingId,
+                },
+                completedMembersIds: [],
+              },
+            ]
+          : // normal create training
+            propsTraining.components.map((c) => ({
+              id: c.id,
+              from: c.from,
+              to: c.to,
+              color: c.color,
+              subgroups: c.subgroups || [],
+              supersets: c.supersets || [],
+              completedMembersIds: [],
+            })),
     };
 
     const trainingDocRef = this.trainingRepository.collection().doc();
@@ -339,6 +391,7 @@ export class TrainingService {
     return training;
   }
 
+  // old, not used anymore
   async createWithTrainingComponent(
     user: User,
     ref: TrainingRef,
@@ -362,16 +415,16 @@ export class TrainingService {
     const from = date.from;
     const to = date.to;
 
+    this.validateOwner(user.uid, group);
+    this.checkTrainingIsInCycle(from, cycle);
+    this.validateIsTrainingInFuture(from);
+    await this.validateOverlap(from, to, group.id, cycle.id);
+
     // warmup and cooldown components
     const { warmup, cooldown } =
       this.trainingPlanService.createWarmupAndCooldown(from, to, [
         trainingComponent,
       ]);
-
-    this.validateOwner(user.uid, group);
-    this.checkTrainingIsInCycle(from, cycle);
-    this.validateIsTrainingInFuture(from);
-    await this.validateOverlap(from, to, group.id, cycle.id);
 
     // validate components & exercises
     const attributes = await this.cacheManagerService.getAttributes();
@@ -418,7 +471,7 @@ export class TrainingService {
     const data: Create<Training> = {
       id: null,
       groupId: group.id,
-      cycleId: cycleId,
+      cycleId,
       ownerId: user.uid,
       copiedFromId: null,
       from,
@@ -433,7 +486,7 @@ export class TrainingService {
       components: [
         {
           id: trainingComponent.id,
-          from: from,
+          from,
           to: dayjs(from).add(30, 'minute').toDate(),
           color: trainingComponent.color,
           subgroups: trainingComponent.subgroups || [],
@@ -518,6 +571,12 @@ export class TrainingService {
 
     const exercises = await this.trainingPlanService.findAllTrainingExercises(
       user,
+      input.components,
+    );
+
+    this.trainingPlanService.updateWarmupAndCooldownTimes(
+      input.warmup,
+      input.cooldown,
       input.components,
     );
 
@@ -658,7 +717,6 @@ export class TrainingService {
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
 
     const membersIds = input.membersIds || training.membersIds;
-    await this.validateTrainingMembers(membersIds);
 
     const wellness = await this.userService.getRecentWellness(membersIds);
     const trainingTo = addMinutes(
@@ -733,7 +791,11 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
-      copiedTraining.components,
+      [
+        copiedTraining.warmup,
+        ...copiedTraining.components,
+        copiedTraining.cooldown,
+      ],
       components,
     );
 
@@ -761,6 +823,7 @@ export class TrainingService {
     return copiedTraining;
   }
 
+  // old, not used anymore
   async copyComponent(
     user: User,
     ref: TrainingRef,
@@ -894,17 +957,13 @@ export class TrainingService {
 
   async finishComponent(
     user: User,
-    ref: TrainingRef,
-    input: {
-      userId: string;
-      componentId: string;
-      rootComponentId: string;
-      supersets: Superset[];
-    },
+    ref: TrainingRef & ComponentRef,
+    input: FinishComponentDto,
   ): Promise<Training> {
-    const { userId, componentId, rootComponentId, supersets } = input;
+    const { trainingId, componentId } = ref;
+    const { userId, rootComponentId, supersets } = input;
     this.logger.log(
-      `User ${user.uid} is finishing component ${componentId} for user ${input.userId} for training ${ref.trainingId}`,
+      `User ${user.uid} is finishing component ${componentId} for user ${input.userId} for training ${trainingId}`,
     );
 
     if (user.uid !== userId)
@@ -1017,7 +1076,11 @@ export class TrainingService {
       }
     }
 
-    const component = [training.warmup, ...training.components, training.cooldown].find((c) => c.id === componentId);
+    const component = [
+      training.warmup,
+      ...training.components,
+      training.cooldown,
+    ].find((c) => c.id === componentId);
     if (!component) throw new BadRequestException('Component not found');
     component.completedMembersIds.push(userId);
 
@@ -1030,7 +1093,7 @@ export class TrainingService {
       training.completedMembersIds.push(userId);
     }
 
-    const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+    const trainingDocRef = this.trainingRepository.doc(trainingId);
     const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
       {
         components: training.components,

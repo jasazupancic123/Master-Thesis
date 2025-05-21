@@ -13,6 +13,7 @@ import { TrainingModule } from './training/training.module';
 import { CommonModule } from './common/common.module';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import { AttributeModule } from './attribute/attribute.module';
+import { InstitutionModule } from './institution/institution.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AttributeModule } from './attribute/attribute.module';
     ExerciseModule,
     GroupModule,
     TrainingModule,
+    InstitutionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

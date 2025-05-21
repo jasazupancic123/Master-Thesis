@@ -9,11 +9,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { NUM_MAX_GROUPS } from '../common/constant/limit.constant';
-import { Create, Update } from '../common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '../common/type/entity.type';
 import { Training } from '../training/entity/training.entity';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
-import { GroupRef } from '../common/type/firestore.type';
+import { GroupRef, InstitutionRef } from '../common/type/firestore.type';
 import { Wrapper } from '../common/type/wrapper.type';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Subgroup } from '../training/entity/subgroup.entity';
@@ -23,6 +23,8 @@ import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
 import { GroupRepository } from './repository/group.repository';
 import { UserEntity } from '../user/entity/user.entity';
+import { InstitutionService } from 'src/institution/service/institution.service';
+import { Institution } from 'src/institution/entity/institution.entity';
 
 @Injectable()
 export class GroupService {
@@ -36,10 +38,29 @@ export class GroupService {
     private readonly trainingService: Wrapper<TrainingService>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: Wrapper<UserService>,
+    @Inject(forwardRef(() => InstitutionService))
+    private readonly institutionService: Wrapper<InstitutionService>,
   ) {}
 
-  isAuthorized(user: User, group: Group): boolean {
-    return this.isMember(user.uid, group) || this.isOwner(user.uid, group);
+  async isAuthorized(user: User, group: Group) {
+    if (
+      !this.isMember(user.uid, group) &&
+      !(await this.isTrainer(user.uid, group)) &&
+      !this.isOwner(user.uid, group)
+    )
+      throw new UnauthorizedException(
+        'You are not authorized to perform this action',
+      );
+  }
+
+  async isTrainer(userId: string, group: Group): Promise<boolean> {
+    const trainers = await this.userService.getDocs((query) =>
+      query.where('id', '==', userId),
+    );
+    if (trainers.length !== 1) return false;
+    const trainer = trainers[0];
+
+    return trainer.groupsIds.includes(group.id);
   }
 
   isMember(userId: string, group: Group | Subgroup): boolean {
@@ -68,7 +89,8 @@ export class GroupService {
     if (!group || group.deletedAt) return null;
 
     // authorize
-    if (!this.isAuthorized(user, group)) return null;
+    await this.isAuthorized(user, group);
+
     return group;
   }
 
@@ -80,24 +102,47 @@ export class GroupService {
 
   async findMembers(user: User, ref: GroupRef): Promise<UserEntity[]> {
     const group = await this.findByIdOrFail(user, ref);
-    this.validateOwner(user.uid, group);
+    this.validateOwner(user, group);
 
     return await this.userService.getDocs((q) =>
       q.where('id', 'in', group.membersIds),
     );
   }
 
+  async findByInstitutionId(
+    user: User,
+    ref: InstitutionRef,
+  ): Promise<Group[] | null> {
+    const institution = await this.institutionService.findOneOrFail(user, ref);
+    if (!institution) return null;
+
+    const groupIds = institution.groupIds;
+
+    if (!groupIds || !groupIds.length) return [];
+
+    const groups = await this.groupRepository.getDocs((q) =>
+      q.where('id', 'in', groupIds),
+    );
+
+    return groups;
+  }
+
   async create(
     user: User,
-    input: Create<Group, 'name' | 'membersIds'>,
+    input: Create<Group, 'name' | 'membersIds' | 'institutionId'>,
   ): Promise<Group> {
+    const { name, membersIds, institutionId } = input;
     this.logger.log(
       `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
     );
 
     // validate
-    await this.validateMembers(input.membersIds);
+    await this.validateMembers(membersIds);
     await this.checkLimit(user.uid);
+
+    const institution = await this.institutionService.findOneOrFail(user, {
+      institutionId,
+    });
 
     let groupId: string;
     await this.firebaseService.firestore.runTransaction(async (transaction) => {
@@ -108,9 +153,10 @@ export class GroupService {
       const query = this.firebaseService.buildCreateQuery<Group>(
         {
           id: groupId,
-          name: input.name,
+          name: name,
           ownerId: user.uid,
-          membersIds: input.membersIds,
+          membersIds: membersIds,
+          institutionId: institutionId,
           cycles: [],
         },
         { timestamps: true },
@@ -119,20 +165,29 @@ export class GroupService {
       transaction.set(docRef, query);
 
       // add group to all members and trainer
-      [...input.membersIds, user.uid].map((userId) =>
+      [...membersIds, user.uid].map((userId) =>
         this.userService.addGroup(transaction, userId, groupId),
       );
     });
 
+    // add group to institution
+    institution.groupIds.push(groupId);
+    await this.institutionService.update(
+      user,
+      { institutionId: institution.id },
+      { groupIds: institution.groupIds },
+    );
+
     return {
       id: groupId,
-      name: input.name,
+      name: name,
       ownerId: user.uid,
-      membersIds: input.membersIds,
+      membersIds: membersIds,
+      institutionId: institutionId,
       cycles: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as Group;
   }
 
   async update(
@@ -147,7 +202,7 @@ export class GroupService {
     const group = await this.findByIdOrFail(user, ref);
 
     // validate
-    this.validateOwner(user.uid, group);
+    this.validateOwner(user, group);
     if (input.membersIds)
       await this.validateMembers(input.membersIds as string[]);
     if (input.cycles) this.checkCycleOverlap(input.cycles);
@@ -214,12 +269,36 @@ export class GroupService {
     );
 
     const updatedGroups: Group[] = [];
+    let updateInstitution = false;
     for (const i of input) {
       const ref: GroupRef = { groupId: i.id };
       const group = await this.findByIdOrFail(user, ref);
 
+      // athletes in group might miss in institution, also add them to institution if yes
+      const institutions = await this.institutionService
+        .getDocs((q) => q.where('groupIds', 'array-contains', group.id))
+        .then(({ docs }) =>
+          docs.map((doc) =>
+            this.firebaseService.serialize(
+              doc.data() as FirestoreEntity<Institution>,
+            ),
+          ),
+        );
+
+      if (institutions.length !== 1)
+        throw new ConflictException('Group is not in exactly one institution');
+
+      const instituion = institutions[0];
+
+      group.membersIds.map((userId) => {
+        if (!instituion.athleteIds.includes(userId)) {
+          updateInstitution = true;
+          instituion.athleteIds.push(userId);
+        }
+      });
+
       // validate
-      this.validateOwner(user.uid, group);
+      this.validateOwner(user, group);
       if (i.membersIds) await this.validateMembers(i.membersIds as string[]);
       if (i.cycles) this.checkCycleOverlap(i.cycles);
 
@@ -237,7 +316,7 @@ export class GroupService {
             });
 
             // update all members by adding group id to their groupsIds field if it doesn't exist yet
-            (i.membersIds as string[]).forEach((userId) => 
+            (i.membersIds as string[]).forEach((userId) =>
               this.userService.addGroup(transaction, userId, group.id),
             );
 
@@ -274,6 +353,14 @@ export class GroupService {
         .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds());
 
       updatedGroups.push(updatedGroup as Group);
+
+      if (updateInstitution) {
+        await this.institutionService.update(
+          user,
+          { institutionId: instituion.id },
+          { athleteIds: instituion.athleteIds },
+        );
+      }
     }
 
     return updatedGroups;
@@ -283,7 +370,24 @@ export class GroupService {
     this.logger.log(`User ${user.uid} is removing group ${ref.groupId}`);
 
     const group = await this.findByIdOrFail(user, ref);
-    this.validateOwner(user.uid, group);
+    this.validateOwner(user, group);
+
+    // remove group from institution
+    const institutions = await this.institutionService
+      .getDocs((q) => q.where('groupIds', 'array-contains', group.id))
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Institution>,
+          ),
+        ),
+      );
+
+    if (institutions.length !== 1)
+      throw new ConflictException('Group is not in exactly one institution');
+
+    const institution = institutions[0];
+    institution.groupIds = institution.groupIds.filter((id) => id !== group.id);
 
     await this.firebaseService.firestore.runTransaction(async (transaction) => {
       // remove group from all members and owner
@@ -295,6 +399,13 @@ export class GroupService {
       const docRef = this.groupRepository.doc(group.id);
       transaction.delete(docRef);
     });
+
+    // institution transaction
+    await this.institutionService.update(
+      user,
+      { institutionId: institution.id },
+      { groupIds: institution.groupIds },
+    );
   }
 
   findCycle(cycleId: string, group: Group) {
@@ -322,8 +433,8 @@ export class GroupService {
     }
   }
 
-  private validateOwner(userId: string, groupOrTraining: Group | Training) {
-    if (!this.isOwner(userId, groupOrTraining))
+  private validateOwner(user: User, groupOrTraining: Group | Training) {
+    if (!this.isOwner(user.uid, groupOrTraining))
       throw new UnauthorizedException(
         'You are not authorized to perform this action',
       );

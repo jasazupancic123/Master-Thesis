@@ -10,6 +10,11 @@ export class UserEntity extends BaseEntity {
   @IsString({ each: true })
   @Expose()
   @ApiProperty()
+  institutionIds: string[]; // array of institution ids user is trainer or athlete of
+
+  @IsString({ each: true })
+  @Expose()
+  @ApiProperty()
   groupsIds: string[]; // array of group ids user is owner or member of
 
   @IsString({ each: true })

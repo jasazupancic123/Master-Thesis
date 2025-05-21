@@ -13,6 +13,8 @@ import { SearchBar } from '../search-bar';
 import { AddMembersModalProps } from './type';
 import { useDashboard } from '@/context/dashboard-provider';
 import { Group } from '@/controller/group/type/group.type';
+import { Institution } from '@/controller/institution/type/institution.type';
+import { set } from 'date-fns';
 
 export function AddMembersModal(props: AddMembersModalProps) {
   const {
@@ -24,8 +26,10 @@ export function AddMembersModal(props: AddMembersModalProps) {
     dissableMaxWidth,
     dashboardView,
     group,
-    selectedOrganization,
-    setSelectedOrganization,
+    selectedInstitution,
+    setSelectedInstitution,
+    singleMember,
+    setSingleMember,
   } = props;
   const { setDetectedChanges } = useDashboard();
 
@@ -41,13 +45,13 @@ export function AddMembersModal(props: AddMembersModalProps) {
 
     if (dashboardView) {
       setDetectedChanges(true);
-      if (setSelectedOrganization && group) {
-        const newGroup = selectedOrganization?.groups.find(
+      if (setSelectedInstitution && group) {
+        const newGroup = selectedInstitution?.groups.find(
           (g) => g.id === group.id
         );
         if (!newGroup) return;
 
-        setSelectedOrganization((prev) => {
+        setSelectedInstitution((prev) => {
           if (!prev) return null;
           const updatedGroups = prev.groups.map((g: Group) =>
             g.id === newGroup.id
@@ -62,17 +66,22 @@ export function AddMembersModal(props: AddMembersModalProps) {
   };
 
   const handleRemoveMember = (user: User) => {
+    if (setSingleMember) {
+      setSingleMember(null);
+      return;
+    }
+
     const updatedMembers = members.filter((m) => m.uid !== user.uid);
     setMembers(updatedMembers);
     if (dashboardView) {
       setDetectedChanges(true);
-      if (setSelectedOrganization && group) {
-        const newGroup = selectedOrganization?.groups.find(
+      if (setSelectedInstitution && group) {
+        const newGroup = selectedInstitution?.groups.find(
           (g) => g.id === group.id
         );
         if (!newGroup) return;
 
-        setSelectedOrganization((prev) => {
+        setSelectedInstitution((prev) => {
           if (!prev) return null;
           const updatedGroups = prev.groups.map((g: Group) =>
             g.id === newGroup.id
@@ -86,6 +95,18 @@ export function AddMembersModal(props: AddMembersModalProps) {
         });
       }
     }
+  };
+
+  const handleChangeMember = (user: User) => {
+    if (!setSingleMember) return;
+    setSingleMember(user);
+  };
+
+  const isUserIncluded = (user: User) => {
+    if (setSingleMember) {
+      return user.uid === singleMember?.uid;
+    }
+    return members.some((m) => m.uid === user.uid);
   };
 
   useEffect(() => {
@@ -150,7 +171,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
                           secondary={user.email}
                           sx={{ m: 0 }}
                         />
-                        {members.some((m) => m.uid === user.uid) ? (
+                        {isUserIncluded(user) ? (
                           <Button
                             variant="contained"
                             sx={{
@@ -178,7 +199,11 @@ export function AddMembersModal(props: AddMembersModalProps) {
                                 backgroundColor: theme.palette.primary.dark,
                               },
                             }}
-                            onClick={() => handleAddMember(user)}
+                            onClick={() =>
+                              setSingleMember
+                                ? handleChangeMember(user)
+                                : handleAddMember(user)
+                            }
                           >
                             <Typography variant="body2">Add</Typography>
                           </Button>

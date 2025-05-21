@@ -251,7 +251,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                           trainingInPeriod &&
                           !trainingInPeriodIncludesComponent
                         ) {
-                          //ADD THE SELECTED TRAINING COMPONENT TO THE TRAINING
+                          // ADD THE SELECTED TRAINING COMPONENT TO THE TRAINING
                           if (handleCopyComponentApiRequest) {
                             handleCopyComponentApiRequest(
                               trainingInPeriod,
@@ -263,7 +263,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                           trainingInPeriod &&
                           trainingInPeriodIncludesComponent
                         ) {
-                          //ASK USER IF OVERWRITE THE TRAINING COMPONENT
+                          // ASK USER IF OVERWRITE THE TRAINING COMPONENT
                           if (
                             setOpenOverwriteModal &&
                             setTrainingInPeriodForModal
@@ -272,7 +272,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                             setOpenOverwriteModal(true);
                           }
                         } else if (!trainingInPeriod) {
-                          //ADD A NEW TRAINING WITH THE SELECTED TRAINING COMPONENT
+                          // ADD A NEW TRAINING WITH THE SELECTED TRAINING COMPONENT
                           if (!training) {
                             toast.error('Training not found');
                             return;
@@ -281,24 +281,32 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                             toast.error('Training component not found');
                             return;
                           }
+                          if (!group || !cycle) {
+                            toast.error('Group or cycle not found');
+                            return;
+                          }
 
                           const from =
                             period === 'AM'
-                              ? dayjs(date).set('hour', 8)
+                              ? dayjs(date).set('hour', 8).toDate()
                               : dayjs(date).set('hour', 14).toDate();
                           const to = dayjs(from).add(30, 'minutes').toDate();
+
+                          trainingComponent.from = from;
+                          trainingComponent.to = to;
 
                           handleApiRequest(
                             router,
                             () =>
-                              TrainingController.createWithTrainingComponent(
-                                token,
-                                training.id,
-                                {
-                                  trainingComponent: trainingComponent,
-                                  date: { from, to } as DateRange,
-                                }
-                              ),
+                              TrainingController.create(token, {
+                                training: {
+                                  groupId: group.id,
+                                  cycleId: cycle.id,
+                                  components: [trainingComponent],
+                                },
+                                copyFromTrainingId: training.id,
+                                date: { from, to },
+                              }),
                             (training) => {
                               training = TrainingService.mapComponents(
                                 training,
