@@ -430,7 +430,7 @@ export default function Supersets(props: SupersetsProps) {
                                         )}
                                       </MenuItem>
                                       {openPeriodize && (
-                                        <>
+                                        <Box>
                                           <MenuItem
                                             onClick={() => {
                                               handlePeriodizeSelect(
@@ -476,7 +476,7 @@ export default function Supersets(props: SupersetsProps) {
                                               Block
                                             </Typography>
                                           </MenuItem>
-                                        </>
+                                        </Box>
                                       )}
                                     </Menu>
                                   </Box>

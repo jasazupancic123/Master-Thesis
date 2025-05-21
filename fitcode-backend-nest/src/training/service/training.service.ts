@@ -1017,7 +1017,7 @@ export class TrainingService {
       }
     }
 
-    const component = training.components.find((c) => c.id === componentId);
+    const component = [training.warmup, ...training.components, training.cooldown].find((c) => c.id === componentId);
     if (!component) throw new BadRequestException('Component not found');
     component.completedMembersIds.push(userId);
 
@@ -1036,6 +1036,8 @@ export class TrainingService {
         components: training.components,
         completedMembersIds: training.completedMembersIds,
         avgCompletedWorkloadValues: training.avgCompletedWorkloadValues,
+        warmup: training.warmup,
+        cooldown: training.cooldown,
       },
     );
 
