@@ -43,12 +43,14 @@ import { ExerciseParam } from '../trainer-day-view/exercise-card/exercise-param'
 import { TrainingService } from '@/controller/training/training.service';
 import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import LeftRightExerciseText from '../trainer-day-view/exercise-card/left-right-exercise-text';
 
 interface TrainingInProgressProps {
   profile: User;
   token: string;
   setView: (view: 'exercises' | 'training') => void;
   setTrainings: SetState<Training[]>;
+  setAllTrainings: SetState<Training[]>;
 }
 
 export default function TrainingInProgress(props: TrainingInProgressProps) {
@@ -63,7 +65,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setView,
   } = useTraining();
 
-  const { profile, token, setTrainings } = props;
+  const { profile, token, setTrainings, setAllTrainings } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
     Superset | undefined
@@ -177,6 +179,14 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           );
         }
         setTrainings((prev) =>
+          prev.map((t) => {
+            if (t.id === training.id) {
+              return training; // Update the training data
+            }
+            return t;
+          })
+        );
+        setAllTrainings((prev) =>
           prev.map((t) => {
             if (t.id === training.id) {
               return training; // Update the training data
@@ -302,6 +312,15 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             }}
           >
             {selectedSuperset.exercises.map((exercise, i) => {
+              let isBilateral = false;
+              exercise.sets.forEach((set) => {
+                set.paramValuesL.forEach((param, j) => {
+                  if (param.value !== set.paramValuesR[j].value) {
+                    isBilateral = true;
+                  }
+                });
+              });
+
               return (
                 <Box
                   key={`${exercise.id}${i}`}
@@ -363,7 +382,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                     alignItems="center"
                   >
                     <Grid2
-                      size={6}
+                      size={4.5}
                       display="flex"
                       alignItems="center"
                       justifyContent="center"
@@ -397,7 +416,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                         }}
                       />
                     </Grid2>
-                    <Grid2 size={6} px={1}>
+                    <Grid2 size={7.5} px={1}>
                       <Box
                         key={exercise.id}
                         display="flex"
@@ -415,9 +434,29 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                               alignItems="center"
                               gap={1}
                             >
+                              {isBilateral && (
+                                <Box
+                                  display="flex"
+                                  flexDirection="column"
+                                  gap={1}
+                                  justifyContent="end"
+                                  height={i === 0 ? 85 : 60}
+                                >
+                                  <LeftRightExerciseText title="L" />
+                                  <LeftRightExerciseText title="R" />
+                                </Box>
+                              )}
+
                               {Array.isArray(exercise.params) &&
                                 exercise.params.map((param, j) => {
-                                  const value = set.paramValuesL.find(
+                                  const valueL = set.paramValuesL.find(
+                                    (pv) => pv.field === param.field
+                                  ) || {
+                                    field: param.field,
+                                    selected: 'set',
+                                    value: (i + 1).toString(),
+                                  };
+                                  const valueR = set.paramValuesR.find(
                                     (pv) => pv.field === param.field
                                   ) || {
                                     field: param.field,
@@ -425,7 +464,9 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                                     value: (i + 1).toString(),
                                   };
 
-                                  return (
+                                  const value = valueL;
+
+                                  return isBilateral ? (
                                     <Box
                                       key={param.field}
                                       flexBasis={
@@ -438,7 +479,195 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                                         showOptions={i === 0}
                                         disableSets
                                         param={param}
-                                        value={value}
+                                        value={valueL}
+                                        onOptionChange={(newValue) => {}}
+                                        onSubOptionChange={(newValue) => {
+                                          if (
+                                            +newValue < 0 ||
+                                            param.field === 'volWorkSets'
+                                          )
+                                            return;
+
+                                          const paramIndex =
+                                            exercise.sets[0].paramValuesL.findIndex(
+                                              (pv) => pv.field === param.field
+                                            );
+
+                                          const newExercise = { ...exercise };
+
+                                          const updatedSets: ExerciseSet[] =
+                                            newExercise.sets.map((set, j) => {
+                                              if (i !== j) return set;
+                                              return {
+                                                setNumber: set.setNumber,
+                                                paramValuesL: [
+                                                  ...set.paramValuesL,
+                                                ].map((param, index) => {
+                                                  if (index === paramIndex) {
+                                                    return {
+                                                      field: param.field,
+                                                      selected: param.selected,
+                                                      value: newValue as string,
+                                                    } as AttributeValue;
+                                                  }
+                                                  return {
+                                                    field: param.field,
+                                                    selected: param.selected,
+                                                    value: param.value,
+                                                  } as AttributeValue;
+                                                }),
+                                                paramValuesR: set.paramValuesR,
+                                              };
+                                            });
+
+                                          newExercise.sets = [...updatedSets];
+
+                                          const newExercises =
+                                            selectedSuperset.exercises.map(
+                                              (ex) => {
+                                                if (ex.id === exercise.id) {
+                                                  return newExercise;
+                                                }
+                                                return ex;
+                                              }
+                                            );
+
+                                          const newSuperset = {
+                                            ...selectedSuperset,
+                                            exercises: newExercises,
+                                          };
+
+                                          setSelectedSuperset((prev) => {
+                                            if (!prev) return undefined;
+                                            return newSuperset;
+                                          });
+
+                                          const newSupersets =
+                                            trainingInProgress.supersets.map(
+                                              (superset, j) => {
+                                                if (
+                                                  j ===
+                                                  trainingInProgress.supersetIndex
+                                                ) {
+                                                  return newSuperset;
+                                                }
+                                                return superset;
+                                              }
+                                            );
+
+                                          setTrainingInProgress((prev) => {
+                                            if (!prev) return null;
+                                            return {
+                                              ...prev,
+                                              supersets: newSupersets,
+                                            } as AthleteTrainingInProgress;
+                                          });
+                                        }}
+                                      />
+                                      <ExerciseParam
+                                        showOptions={false}
+                                        disableSets
+                                        param={param}
+                                        value={valueR}
+                                        onOptionChange={(newValue) => {}}
+                                        onSubOptionChange={(newValue) => {
+                                          if (
+                                            +newValue < 0 ||
+                                            param.field === 'volWorkSets'
+                                          )
+                                            return;
+
+                                          const paramIndex =
+                                            exercise.sets[0].paramValuesL.findIndex(
+                                              (pv) => pv.field === param.field
+                                            );
+
+                                          const newExercise = { ...exercise };
+
+                                          const updatedSets: ExerciseSet[] =
+                                            newExercise.sets.map((set, j) => {
+                                              if (i !== j) return set;
+                                              return {
+                                                setNumber: set.setNumber,
+                                                paramValuesL: set.paramValuesL,
+                                                paramValuesR: [
+                                                  ...set.paramValuesR,
+                                                ].map((param, index) => {
+                                                  if (index === paramIndex) {
+                                                    return {
+                                                      field: param.field,
+                                                      selected: param.selected,
+                                                      value: newValue as string,
+                                                    } as AttributeValue;
+                                                  }
+                                                  return {
+                                                    field: param.field,
+                                                    selected: param.selected,
+                                                    value: param.value,
+                                                  } as AttributeValue;
+                                                }),
+                                              };
+                                            });
+
+                                          newExercise.sets = [...updatedSets];
+
+                                          const newExercises =
+                                            selectedSuperset.exercises.map(
+                                              (ex) => {
+                                                if (ex.id === exercise.id) {
+                                                  return newExercise;
+                                                }
+                                                return ex;
+                                              }
+                                            );
+
+                                          const newSuperset = {
+                                            ...selectedSuperset,
+                                            exercises: newExercises,
+                                          };
+
+                                          setSelectedSuperset((prev) => {
+                                            if (!prev) return undefined;
+                                            return newSuperset;
+                                          });
+
+                                          const newSupersets =
+                                            trainingInProgress.supersets.map(
+                                              (superset, j) => {
+                                                if (
+                                                  j ===
+                                                  trainingInProgress.supersetIndex
+                                                ) {
+                                                  return newSuperset;
+                                                }
+                                                return superset;
+                                              }
+                                            );
+
+                                          setTrainingInProgress((prev) => {
+                                            if (!prev) return null;
+                                            return {
+                                              ...prev,
+                                              supersets: newSupersets,
+                                            } as AthleteTrainingInProgress;
+                                          });
+                                        }}
+                                      />
+                                    </Box>
+                                  ) : (
+                                    <Box
+                                      key={param.field}
+                                      flexBasis={
+                                        (
+                                          100 / exercise.params.length
+                                        ).toString() + '%'
+                                      }
+                                    >
+                                      <ExerciseParam
+                                        showOptions={i === 0}
+                                        disableSets
+                                        param={param}
+                                        value={value!}
                                         onOptionChange={(newValue) => {}}
                                         onSubOptionChange={(newValue) => {
                                           if (
