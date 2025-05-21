@@ -791,7 +791,11 @@ export class TrainingService {
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
-      [copiedTraining.warmup, ...copiedTraining.components, copiedTraining.cooldown],
+      [
+        copiedTraining.warmup,
+        ...copiedTraining.components,
+        copiedTraining.cooldown,
+      ],
       components,
     );
 
