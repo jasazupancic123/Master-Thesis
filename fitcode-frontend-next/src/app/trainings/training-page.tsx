@@ -190,6 +190,7 @@ export default function TrainingPage(props: TrainingPageProps) {
       token={token}
       setView={setView}
       setTrainings={setTrainings}
+      setAllTrainings={setAllTrainings}
     />
   );
 }

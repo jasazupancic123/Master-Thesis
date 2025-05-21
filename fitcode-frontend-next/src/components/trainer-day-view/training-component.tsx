@@ -408,7 +408,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                 </MenuItem>
 
                                 {!isWarmupOrCooldown(trainingComponent) && (
-                                  <>
+                                  <Box>
                                     <MenuItem
                                       onClick={() => {
                                         if (
@@ -507,7 +507,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                     >
                                       <Delete sx={{ mr: 1 }} /> Delete Component
                                     </MenuItem>
-                                  </>
+                                  </Box>
                                 )}
                               </Menu>
                             </Box>
@@ -621,7 +621,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                         </MenuItem>
 
                         {!isWarmupOrCooldown(trainingComponent) && (
-                          <>
+                          <Box>
                             <MenuItem
                               onClick={() => {
                                 if (
@@ -713,7 +713,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                             >
                               <Delete sx={{ mr: 1 }} /> Delete Component
                             </MenuItem>
-                          </>
+                          </Box>
                         )}
                       </Menu>
                     </>
