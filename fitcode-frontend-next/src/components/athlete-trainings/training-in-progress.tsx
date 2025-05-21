@@ -160,7 +160,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           trainingInProgress.training.id,
           user.uid,
           trainingInProgress.selectedComponent.id,
-          trainingInProgress.selectedComponent.component?.id || '',
+          trainingInProgress.selectedComponent.component?.id ||
+            trainingInProgress.selectedComponent.id,
           trainingInProgress.supersets
         ),
       (training) => {

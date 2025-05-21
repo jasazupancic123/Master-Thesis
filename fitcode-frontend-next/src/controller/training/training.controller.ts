@@ -37,10 +37,13 @@ export class TrainingController {
   static async create(
     token: string,
     body: {
-      groupId: string;
-      cycleId: string;
-      components: TrainingComponent[];
-      completedMembersIds: string[];
+      training: {
+        groupId: string;
+        cycleId: string;
+        components: TrainingComponent[];
+      };
+      copyFromTrainingId?: string;
+      date?: { from: Date; to: Date };
     }
   ) {
     return api.post<Training>('/training', body, { token });
@@ -130,8 +133,8 @@ export class TrainingController {
     supersets: Superset[]
   ): Promise<Training> {
     return api.patch<Training>(
-      `/training/${trainingId}/finish/component`,
-      { userId, componentId, supersets, rootComponentId },
+      `/training/${trainingId}/finish/${componentId}/component`,
+      { userId, rootComponentId, supersets },
       {
         token,
       }

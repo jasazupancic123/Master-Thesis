@@ -3,49 +3,56 @@ import BorderColor from '@/components/border-color';
 import MyModal from '@/components/modal';
 import { Group } from '@/controller/group/type/group.type';
 import { User } from '@/controller/user/type/user.type';
-import { PersonAddAlt } from '@mui/icons-material';
+import { PersonAddAlt, Remove } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useDashboard } from '@/context/dashboard-provider';
-import { Organization } from '@/controller/organization/type/organization.type';
-import { SetState } from '@/common/type/state.type';
+import { Institution } from '@/controller/institution/type/institution.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 interface GroupAthletesCardProps {
   group: Group;
-  users: User[];
-  selectedGroup: Group | null;
-  setSelectedGroup: (group: Group) => void;
   selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
-  selectedOrganization: Organization | null;
-  setSelectedOrganization: SetState<Organization | null>;
 }
 
 export default function GroupAthletesCard(props: GroupAthletesCardProps) {
-  const {
-    group,
-    users,
-    selectedGroup,
-    setSelectedGroup,
-    selectedUser,
-    setSelectedUser,
-    selectedOrganization,
-    setSelectedOrganization,
-  } = props;
+  const { group, selectedUser, setSelectedUser } = props;
 
   const screenSize = useScreenSize();
-  const { detectedChanges, setDetectedChanges } = useDashboard();
+  const router = useRouter();
+  const {
+    token,
+    setDetectedChanges,
+    selectedGroup,
+    setSelectedGroup,
+    selectedInstitution,
+    setSelectedInstitution,
+    users,
+  } = useDashboard();
 
   const [groupMembers, setGroupMembers] = useState<User[]>(
-    users.filter((user) => group.membersIds.includes(user.uid)).splice(0, 7) // only show first 7 users
+    users
+      .filter((user: User) => selectedGroup?.membersIds.includes(user.uid))
+      .splice(0, 7) // only show first 7 users
   );
-  const [modal, setModal] = useState<{ add_member: boolean }>({
+
+  const [modal, setModal] = useState<{
+    add_member: boolean;
+    remove_group: boolean;
+  }>({
     add_member: false,
+    remove_group: false,
   });
 
   useEffect(() => {
-    if (selectedGroup === group) {
+    if (!selectedGroup) return;
+    if (selectedGroup.id === group.id) {
       setGroupMembers(
         users.filter((user) => group.membersIds.includes(user.uid)) // show all users
       );
@@ -55,6 +62,24 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
       );
     }
   }, [selectedGroup]);
+
+  const handleRemoveGroup = () => {
+    handleApiRequest(
+      router,
+      () => GroupController.delete(token, group.id),
+      () => {
+        setSelectedGroup(null);
+        setSelectedInstitution((prev) => {
+          if (!prev) return null;
+          const updatedGroups = prev.groups.filter((g) => g.id !== group.id);
+          return { ...prev, groups: updatedGroups };
+        });
+        toast.success('Successfully deleted group');
+      },
+      undefined,
+      'Failed to delete group'
+    );
+  };
 
   return (
     <Box
@@ -83,15 +108,31 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
         }}
         onClick={() => setSelectedGroup(group)}
       >
-        <Tooltip title="Add athlete" placement="top">
+        <Tooltip title="Remove group" placement="top">
           <IconButton
-            onClick={() => setModal({ add_member: true })}
+            onClick={() =>
+              setModal((prev) => ({ ...prev, remove_group: true }))
+            }
             sx={{
               m: 0,
               p: 0,
               position: 'absolute',
               top: 10,
-              right: screenSize.isTablet ? 5 : 20,
+              left: screenSize.isTablet ? 5 : 10,
+            }}
+          >
+            <Remove />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Add athlete" placement="top">
+          <IconButton
+            onClick={() => setModal((prev) => ({ ...prev, add_member: true }))}
+            sx={{
+              m: 0,
+              p: 0,
+              position: 'absolute',
+              top: 10,
+              right: screenSize.isTablet ? 5 : 10,
             }}
           >
             <PersonAddAlt />
@@ -137,20 +178,33 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
       />
       <MyModal
         isOpen={modal.add_member}
-        setIsOpen={(open) => setModal({ add_member: open })}
-        onCancel={() => setModal({ add_member: false })}
+        setIsOpen={(open) =>
+          setModal((prev) => ({ ...prev, add_member: open }))
+        }
+        onCancel={() => setModal((prev) => ({ ...prev, add_member: false }))}
         cancelText="Close"
       >
         <AddMembersModal
-          users={users}
+          users={selectedInstitution?.athletes || []}
           members={groupMembers}
           setMembers={setGroupMembers}
           addUserToEnd={true}
           dashboardView={true}
           group={group}
-          selectedOrganization={selectedOrganization}
-          setSelectedOrganization={setSelectedOrganization}
+          selectedInstitution={selectedInstitution}
+          setSelectedInstitution={setSelectedInstitution}
         />
+      </MyModal>
+      <MyModal
+        isOpen={modal.remove_group}
+        setIsOpen={(open) =>
+          setModal((prev) => ({ ...prev, remove_group: open }))
+        }
+        onCancel={() => setModal((prev) => ({ ...prev, remove_group: false }))}
+        onConfirm={handleRemoveGroup}
+        cancelText="Close"
+      >
+        {`Remove group ${group.name}`}
       </MyModal>
     </Box>
   );

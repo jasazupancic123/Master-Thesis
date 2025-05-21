@@ -22,9 +22,12 @@ import { Wellness } from './entity/wellness.entity';
 import { UserEntity } from './entity/user.entity';
 import { WellnessRepository } from './repository/user-meta.repository';
 import { UserRepository } from './repository/user.repository';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { UserRole } from './enum/user-role.enum';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
   password: string;
+  institutionId?: string;
 } & { customClaims: CustomClaims };
 
 @Injectable()
@@ -95,7 +98,7 @@ export class UserService {
 
   async upsert(data: CreateUser): Promise<User> {
     const { auth } = this.firebaseService;
-    const { email, password, displayName, customClaims } = data;
+    const { email, password, displayName, customClaims, institutionId } = data;
 
     let user: UserRecord;
     try {
@@ -111,6 +114,7 @@ export class UserService {
       id: user.uid,
       groupsIds: [],
       trainersIds: [],
+      institutionIds: [],
     });
 
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
@@ -166,6 +170,31 @@ export class UserService {
       displayName,
       password,
     });
+  }
+
+  async registerUser(user: User, input: RegisterUserDto) {
+    const { email, displayName, password, role } = input;
+
+    this.logger.log(
+      `User ${user.uid} is registering new user: ${JSON.stringify(input)})`,
+    );
+
+    const firebaseUser = await this.firebaseService.auth.createUser({
+      email,
+      displayName,
+      password,
+    });
+
+    const createdUser = await this.upsert({
+      email,
+      displayName,
+      password,
+      customClaims: { role: [role as UserRole] },
+    });
+
+    if (!createdUser) throw new BadRequestException('User not created');
+
+    return createdUser;
   }
 
   addGroup(transaction: Transaction, userId: string, groupId: string) {

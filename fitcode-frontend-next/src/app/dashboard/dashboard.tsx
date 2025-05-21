@@ -2,53 +2,85 @@
 
 import DashboardSidebar from '@/components/dashboard/dashboard-sidebar';
 import { useScreenSize } from '@/context/screen-size-provider';
-import { User } from '@/controller/user/type/user.type';
-import { Box } from '@mui/material';
-import { useState } from 'react';
-import MainDashboardView from './main-view';
-import { Organization } from '@/controller/organization/type/organization.type';
+import { Box, Grid2 } from '@mui/material';
+import { useEffect, useState } from 'react';
+import MainDashboardView from '../../components/dashboard/main-view';
+import {
+  DASHBOARD_ADD_INSTITUTION_VIEW,
+  DASHBOARD_GROUPS_VIEW,
+  DASHBOARD_MAIN_VIEW,
+  DASHBOARD_REGISTER_USERS_VIEW,
+  DASHBOARD_VIEWS,
+} from '@/components/dashboard/constant/dashboard-views-constant';
+import AddInstitutionDashboardView from '../../components/dashboard/add-institution-view';
+import { GroupController } from '@/controller/group/group.controller';
+import { useDashboard } from '@/context/dashboard-provider';
+import { Institution } from '@/controller/institution/type/institution.type';
+import RegisterUsersView from '@/components/dashboard/register-users-view';
 
-interface DashboardProps {
-  organization: Organization;
-  organizations: Organization[] | null;
-  role: string;
-  users: User[];
-  token: string;
-  profile: User;
-}
-
-export default function Dashboard(props: DashboardProps) {
+export default function Dashboard() {
   const screenSize = useScreenSize();
-  const [view, setView] = useState<'mainView' | 'athletes'>('mainView');
-  const { organization, organizations, role, users, token, profile } = props;
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<Organization | null>(organization);
+  const [view, setView] =
+    useState<(typeof DASHBOARD_VIEWS)[number]>(DASHBOARD_MAIN_VIEW);
+  const {
+    token,
+    selectedInstitution,
+    setSelectedInstitution,
+    setSelectedGroup,
+  } = useDashboard();
+
+  useEffect(() => {
+    // fetch groups when selected institution changes
+    if (!selectedInstitution || selectedInstitution.groups) return;
+    const fetchGroups = async () => {
+      const groups = await GroupController.findByInstitutionId(
+        token,
+        selectedInstitution.id
+      );
+      setSelectedInstitution(
+        (prev) =>
+          ({
+            ...prev,
+            groups: groups,
+          }) as Institution
+      );
+      if (groups.length) setSelectedGroup(groups[0]);
+    };
+    fetchGroups();
+  }, [selectedInstitution]);
+
+  const renderView = () => {
+    switch (view) {
+      case DASHBOARD_MAIN_VIEW:
+        return <MainDashboardView view={view} />;
+      case DASHBOARD_GROUPS_VIEW:
+        return <MainDashboardView view={view} />; //athletes view is inside main view
+      case DASHBOARD_ADD_INSTITUTION_VIEW:
+        return <AddInstitutionDashboardView />;
+      case DASHBOARD_REGISTER_USERS_VIEW:
+        return <RegisterUsersView />;
+      default:
+        return <MainDashboardView view={DASHBOARD_MAIN_VIEW} />;
+    }
+  };
 
   return (
     <>
       <Box mt="16px" display="flex" flexDirection="row" width="100%">
+        {!screenSize.isMobile && (
+          <Box sx={{ width: 50 }}>
+            <DashboardSidebar view={view} setView={setView} />
+          </Box>
+        )}
+
         <Box
           sx={{
-            width: screenSize.isMobile ? 0 : 50,
+            flex: 1,
+            overflow: 'hidden',
           }}
         >
-          <DashboardSidebar
-            organizations={organizations}
-            selectedOrganization={selectedOrganization}
-            setSelectedOrganization={setSelectedOrganization}
-            role={role}
-            view={view}
-            setView={setView}
-          />
+          {renderView()}
         </Box>
-
-        <MainDashboardView
-          organization={organization}
-          users={users}
-          token={token}
-          profile={profile}
-          view={view}
-        />
       </Box>
     </>
   );

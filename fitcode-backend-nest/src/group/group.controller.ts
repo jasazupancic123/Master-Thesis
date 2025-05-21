@@ -39,6 +39,15 @@ export class GroupController {
     return await this.groupService.findMembers(user, { groupId });
   }
 
+  @Get('institution/:institutionId')
+  @Auth()
+  async findByInstitutionId(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+  ) {
+    return await this.groupService.findByInstitutionId(user, { institutionId });
+  }
+
   @Post()
   @Auth()
   async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {

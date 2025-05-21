@@ -19,6 +19,7 @@ export enum FirestoreCollection {
   GROUP = 'groups',
   SUBGROUP = 'subgroups',
   TRAINING = 'trainings',
+  INSTITUTION = 'institutions',
   TRAINING_WORKLOAD = 'training-workload',
   TRAINING_STATUS = 'training-status',
 }

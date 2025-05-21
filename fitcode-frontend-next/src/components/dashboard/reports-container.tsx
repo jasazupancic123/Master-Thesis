@@ -1,19 +1,18 @@
 import { Box } from '@mui/material';
 import { DashboardReportType } from '@/common/enum/dashboard-report-type.enum';
 import { COLOR } from '@/common/constant/browser.constant';
-import { User } from '@/controller/user/type/user.type';
-import { Organization } from '@/controller/organization/type/organization.type';
 import DashboardReport from './dashboard-report';
+import { useDashboard } from '@/context/dashboard-provider';
 
 interface ReportsContainerProps {
   index: number;
   reportTypes: DashboardReportType[];
-  users: User[];
-  selectedOrganization: Organization | null;
 }
 
 export default function ReportsContainer(props: ReportsContainerProps) {
-  const { index, reportTypes, users, selectedOrganization } = props;
+  const { index, reportTypes } = props;
+
+  const { users, selectedInstitution } = useDashboard();
 
   const colors = COLOR.filter((_, i) => i % 3 === index);
   return (
@@ -113,7 +112,7 @@ export default function ReportsContainer(props: ReportsContainerProps) {
             break;
           }
           case DashboardReportType.TODAYS_SESSIONS: {
-            if (!selectedOrganization) return null;
+            if (!selectedInstitution) return null;
             const sessions = [
               {
                 from: new Date().setHours(8, 30, 0, 0),
@@ -133,16 +132,19 @@ export default function ReportsContainer(props: ReportsContainerProps) {
               },
             ];
 
-            for (const group of selectedOrganization?.groups) {
-              data.push({
-                ...group,
-                session:
-                  sessions[
-                    selectedOrganization.groups.indexOf(group) % sessions.length
-                  ],
-              });
+            if (selectedInstitution?.groups) {
+              for (const group of selectedInstitution?.groups) {
+                data.push({
+                  ...group,
+                  session:
+                    sessions[
+                      selectedInstitution.groups.indexOf(group) %
+                        sessions.length
+                    ],
+                });
+              }
+              break;
             }
-            break;
           }
           default:
             data = null;

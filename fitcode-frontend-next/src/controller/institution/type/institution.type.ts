@@ -4,14 +4,15 @@ import { User } from '@/controller/user/type/user.type';
 
 export interface Institution extends IdEntity, TimestampEntity {
   name: string;
-  description?: string;
   ownerId: string; // creator of the institution
   trainerIds: string[]; // all managers and trainers
-  memberIds: string[]; // all athletes
+  athleteIds: string[]; // all athletes
   groupIds: string[];
+  imageUrl: string;
 
   // mapped properties
+  owner: User;
   trainers: User[];
-  members: User[];
+  athletes: User[];
   groups: Group[];
 }
