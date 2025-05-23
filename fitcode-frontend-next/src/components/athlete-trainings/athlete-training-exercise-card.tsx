@@ -21,12 +21,17 @@ import { useTheme } from '@mui/material';
 import { ExerciseParam } from '../trainer-day-view/exercise-card/exercise-param';
 import { preconnect } from 'react-dom';
 import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import toast from 'react-hot-toast';
+import { handleApiRequest } from '@/common/type/state.type';
+import { useRouter } from 'next/navigation';
 
 export default function AthleteTrainingExerciseCard(
   props: AthleteTrainingExerciseCardProps
 ) {
   const theme = useTheme();
-  const { components, setView, training, profile } = props;
+  const router = useRouter();
+  const { components, setView, training, profile, token } = props;
   const screenSize = useScreenSize();
 
   const { trainingInProgress, setTrainingInProgress } = useTraining();
@@ -443,8 +448,42 @@ export default function AthleteTrainingExerciseCard(
         cancelText="Cancel"
         onCancel={() => setOpenAreYouSureModal(false)}
         onConfirm={() => {
-          setView('training');
-          setOpenAreYouSureModal(false);
+          if (!trainingInProgress) {
+            toast.error('No training selected.');
+            return;
+          }
+
+          handleApiRequest(
+            router,
+            () =>
+              TrainingController.findByIdAndPopulateAthleteWorkloads(
+                token,
+                trainingInProgress.training.id,
+                trainingInProgress.selectedComponent.id,
+                profile.uid
+              ),
+            (training) => {
+              const selectedComponent = training.components.find(
+                (c) => c.id === trainingInProgress?.selectedComponent?.id
+              );
+              if (!selectedComponent) {
+                toast.error('Component not found.');
+                return;
+              }
+              setTrainingInProgress(
+                (prev) =>
+                  ({
+                    ...prev,
+                    training: training,
+                    selectedComponent: selectedComponent,
+                  }) as AthleteTrainingInProgress
+              );
+              setView('training');
+              setOpenAreYouSureModal(false);
+            },
+            undefined,
+            'Failed to import exercises'
+          );
         }}
       >
         <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>

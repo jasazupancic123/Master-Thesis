@@ -51,10 +51,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
-  const [workloads, setWorkloads] = useState<CompletedFutureWorkloads>({
-    futureWorkloads: [],
-    completedWorkloads: [],
-  });
 
   // filter trainings every time date changes
   useEffect(() => {
@@ -92,8 +88,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setFilteredTrainings,
     filteredUsers,
     setFilteredUsers,
-    workloads,
-    setWorkloads,
     detectedChanges,
     setDetectedChanges,
   };

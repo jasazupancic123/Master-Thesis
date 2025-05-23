@@ -1208,6 +1208,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 
+  
   let groupedCompletedWorkloads = groupByTrainingId(completedWorkloadsFiltered);
 
   let groupedFutureWorkloads = groupByTrainingId(
@@ -1222,22 +1223,22 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
 
   let newData = [];
   let i = 0;
-  for (const workloads of [groupedCompletedWorkloads, groupedFutureWorkloads]) {
-    for (const completedWorkload of Object.values(workloads)) {
-      const validIntensityValues = completedWorkload
+  for (const groupedWorkload of [groupedCompletedWorkloads, groupedFutureWorkloads]) {
+    for (const workloads of Object.values(groupedWorkload)) {
+      const validIntensityValues = workloads
         .map((w) =>
-          workloads === groupedCompletedWorkloads
+          groupedWorkload === groupedCompletedWorkloads
             ? w.intWork1Value
-            : w.prescribedIntWork1Value
+            : w.prescribedIntWork1ValueL
         )
         .filter((v) => v !== undefined)
         .map((w) => (!w ? w : parseFloat(w.toString())));
 
-      const validVolumeValues = completedWorkload
+      const validVolumeValues = workloads
         .map((w) =>
-          workloads === groupedCompletedWorkloads
+          groupedWorkload === groupedCompletedWorkloads
             ? w.volWork1Value
-            : w.prescribedVolWork1Value
+            : w.prescribedVolWork1ValueL
         )
         .filter((v) => v !== undefined)
         .map((w) => (!w ? w : parseFloat(w.toString())));
@@ -1250,7 +1251,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
         validVolumeValues.reduce((acc, val) => acc + val, 0) /
         validVolumeValues.length;
 
-      const date = new Date(completedWorkload[0].plannedAt);
+      const date = new Date(workloads[0].plannedAt);
 
       const day = date.getDate().toString().padStart(2, '0');
       let month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -1263,14 +1264,14 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
       const formatted = `${day}.${month}. ${ampm}`;
 
       newData.push({
-        trainingId: completedWorkload.length
-          ? completedWorkload[0].trainingId
+        trainingId: workloads.length
+          ? workloads[0].trainingId
           : '',
         name: formatted,
         intensity: Math.round(avgIntensity * 100) / 100,
         volume: Math.round(avgVolume * 100) / 100,
-        completed: groupedCompletedWorkloads === workloads,
-        plannedAt: completedWorkload[0].plannedAt,
+        completed: groupedCompletedWorkloads === groupedWorkload,
+        plannedAt: workloads[0].plannedAt,
       });
       i++;
     }

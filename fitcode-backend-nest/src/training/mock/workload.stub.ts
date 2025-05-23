@@ -14,6 +14,7 @@ export function generateWorkloadStub(data?: Partial<Workload>): Workload {
     plannedAt: data?.plannedAt || new Date(),
     status: data?.status || SetStatus.NOT_STARTED,
     notes: data?.notes || null,
+    isPersonalized: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...data,

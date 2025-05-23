@@ -46,8 +46,6 @@ export type GroupContextProps = GroupIdPageProps & {
   setFilteredTrainings: SetState<Training[]>; // filter by from & to & cycle
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
-  workloads: CompletedFutureWorkloads;  
-  setWorkloads: SetState<CompletedFutureWorkloads>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
 };
@@ -77,4 +75,10 @@ export type TrainerDayViewContextProps = {
   setSearch: SetState<string>;
   showAthleteReport: boolean;
   setShowAthleteReport: SetState<boolean>;
+  selectedAthleteWorkloads: CompletedFutureWorkloads;
+  setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
+  customAthleteWorkloads: Workload[]; 
+  setCustomAthleteWorkloads: SetState<Workload[]>;
+  isSettingAthleteWorkloads: React.RefObject<boolean>;
+  previousSelectedAthlete: React.RefObject<User | undefined>;
 };
