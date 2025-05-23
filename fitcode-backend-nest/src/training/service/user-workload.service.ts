@@ -16,6 +16,7 @@ import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { TimestampEntity } from 'src/common/entity/timestamp.entity';
 
 @Injectable()
 export class UserWorkloadService {
@@ -46,6 +47,27 @@ export class UserWorkloadService {
           ),
         ),
       );
+  }
+
+  async findOne(trainingId: string, componentId: string, exerciseId: string, setNumber: number, userId: string) {
+    return await this.workloadRepository
+      .collection({ trainingId })
+      .doc(
+        this.workloadRepository.getKey({
+          trainingId,
+          componentId,
+          exerciseId,
+          setNumber,
+          userId,
+        }),
+      )
+      .get()
+      .then((doc) => {
+        if (!doc.exists) return null;
+        return this.firebaseService.serialize(
+          doc.data() as FirestoreEntity<Workload>,
+        );
+      });
   }
 
   async findAllByTraining(trainingId: string) {
@@ -131,7 +153,27 @@ export class UserWorkloadService {
       .then(({ docs }) =>
         docs.map((doc) =>
           this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
+            doc.data() as FirestoreEntity<Workload & TimestampEntity>,
+          ),
+        ),
+      );
+  }
+
+  async findAllByUserTrainingComponentId(
+    athleteId: string,
+    trainingId: string,
+    componentId: string,
+  ): Promise<Workload[]> {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', '==', athleteId)
+      .where('trainingId', '==', trainingId)
+      .where('componentId', '==', componentId)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload & TimestampEntity>,
           ),
         ),
       );
@@ -152,7 +194,7 @@ export class UserWorkloadService {
    * meta, calculates individual values for each member and saves them to the
    * correct training component exercise user data document.
    */
-  createForTraining(
+  async createForTraining(
     batch: WriteBatch,
     training: Training,
     workloads: Workload[], // to calculate RMs
@@ -203,6 +245,17 @@ export class UserWorkloadService {
           .filter((e) => e.exerciseId === exercise.id);
 
         for (const { setNumber, paramValuesL: paramValues } of exercise.sets) {
+          const foundWorkload = await this.findOne(
+            training.id,
+            exercise.componentId,
+            exercise.id,
+            setNumber,
+            userId,
+          );
+          
+          // skip if workload is already personalized
+          if(foundWorkload && foundWorkload.isPersonalized) continue;
+
           const docRef = this.workloadRepository
             .collection({ trainingId: training.id })
             .doc(
@@ -215,24 +268,75 @@ export class UserWorkloadService {
               }),
             );
 
-          const query = this.firebaseService.buildCreateQuery<Workload>({
-            groupId: training.groupId,
-            cycleId: training.cycleId,
-            userId,
-            trainingId: training.id,
-            componentId: exercise.componentId,
-            exerciseId: exercise.id,
-            setNumber,
-            status: SetStatus.NOT_STARTED,
-            plannedAt: training.from,
-            notes: null,
-            ...this.parseParamValues(paramValues),
-            ...this.calculateIntValues(paramValues, bodyweight, workloads),
-          });
+          const query = this.firebaseService.buildCreateQuery<Workload>(
+            {
+              groupId: training.groupId,
+              cycleId: training.cycleId,
+              userId,
+              trainingId: training.id,
+              componentId: exercise.componentId,
+              exerciseId: exercise.id,
+              setNumber,
+              status: SetStatus.NOT_STARTED,
+              plannedAt: training.from,
+              notes: null,
+              isPersonalized: false,
+              ...this.parseParamValues(paramValues),
+              ...this.calculateIntValues(paramValues, bodyweight, workloads),
+            },
+            { timestamps: true },
+          );
 
           batch.set(docRef, query);
         }
       }
+    }
+  }
+
+  createForCustomAthleteWorkloads(batch: WriteBatch, workloads: Workload[]) {
+    for (const workload of workloads) {
+      const docRef = this.workloadRepository
+        .collection({ trainingId: workload.trainingId })
+        .doc(
+          this.workloadRepository.getKey({
+            trainingId: workload.trainingId,
+            componentId: workload.componentId,
+            exerciseId: workload.exerciseId,
+            setNumber: workload.setNumber,
+            userId: workload.userId,
+          }),
+        );
+
+      const query = this.firebaseService.buildCreateQuery<Workload>(
+        {
+          groupId: workload.groupId,
+          cycleId: workload.cycleId,
+          userId: workload.userId,
+          trainingId: workload.trainingId,
+          componentId: workload.componentId,
+          exerciseId: workload.exerciseId,
+          setNumber: workload.setNumber,
+          status: SetStatus.NOT_STARTED,
+          plannedAt: new Date(),
+          notes: null,
+          isPersonalized: true,
+          prescribedIntRecValueL: workload.prescribedIntRecValueL,
+          prescribedIntRecValueR: workload.prescribedIntRecValueR,
+          prescribedIntWork1ValueL: workload.prescribedIntWork1ValueL,
+          prescribedIntWork1ValueR: workload.prescribedIntWork1ValueR,
+          prescribedIntWork2ValueL: workload.prescribedIntWork2ValueL,
+          prescribedIntWork2ValueR: workload.prescribedIntWork2ValueR,
+          prescribedVolRecValueL: workload.prescribedVolRecValueL,
+          prescribedVolRecValueR: workload.prescribedVolRecValueR,
+          prescribedVolWork1ValueL: workload.prescribedVolWork1ValueL,
+          prescribedVolWork1ValueR: workload.prescribedVolWork1ValueR,
+          prescribedVolWork2ValueL: workload.prescribedVolWork2ValueL,
+          prescribedVolWork2ValueR: workload.prescribedVolWork2ValueR,
+        },
+        { timestamps: true },
+      );
+
+      batch.set(docRef, query);
     }
   }
 

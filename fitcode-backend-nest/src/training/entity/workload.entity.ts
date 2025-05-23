@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsDate,
   IsEnum,
   IsInt,
@@ -73,6 +74,11 @@ export class Workload extends TimestampEntity {
   @ApiPropertyOptional()
   @Expose()
   notes?: string;
+
+  @IsBoolean()
+  @ApiProperty()
+  @Expose()
+  isPersonalized: boolean;
 
   /* --------------- Vol Work 1 --------------- */
   @IsEnum(VolType)

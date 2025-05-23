@@ -8,12 +8,14 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { GroupController } from '@/controller/group/group.controller';
+import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
+import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { useRouter } from 'next/navigation';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);
@@ -55,6 +57,23 @@ export function TrainerDayViewProvider(
     index: number;
   } | null>(null);
   const [showAthleteReport, setShowAthleteReport] = useState(false);
+  const [selectedAthleteWorkloads, setSelectedAthleteWorkloads] =
+    useState<CompletedFutureWorkloads>({
+      futureWorkloads: [],
+      completedWorkloads: [],
+    });
+  const [customAthleteWorkloads, setCustomAthleteWorkloads] = useState<
+    Workload[]
+  >([]);
+
+  const isSettingAthleteWorkloads = useRef(false);
+  const previousSelectedAthlete = useRef<User | undefined>(undefined);
+
+  useEffect(() => {
+    if (selectedAthlete) {
+      previousSelectedAthlete.current = selectedAthlete;
+    }
+  }, [selectedAthlete]);
 
   /**
    * Group members
@@ -124,6 +143,12 @@ export function TrainerDayViewProvider(
     setSearch,
     showAthleteReport,
     setShowAthleteReport,
+    selectedAthleteWorkloads,
+    setSelectedAthleteWorkloads,
+    customAthleteWorkloads,
+    setCustomAthleteWorkloads,
+    isSettingAthleteWorkloads,
+    previousSelectedAthlete,
   };
 
   return (

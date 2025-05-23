@@ -48,8 +48,7 @@ export default function TrainerDayView() {
     setDateTo,
     setDetectedChanges,
     setCycle,
-    workloads,
-    setWorkloads,
+    detectedChanges,
   } = useGroup();
 
   const {
@@ -59,6 +58,11 @@ export default function TrainerDayView() {
     setSelectedSubgroup,
     selectedAthlete,
     selectedSubgroup,
+    selectedAthleteWorkloads,
+    setSelectedAthleteWorkloads,
+    customAthleteWorkloads,
+    setCustomAthleteWorkloads,
+    isSettingAthleteWorkloads,
   } = useTrainerDayViewContext();
 
   const router = useRouter();
@@ -86,7 +90,8 @@ export default function TrainerDayView() {
         TrainingController.batchUpdate(
           token,
           { groupId: group.id, cycleId: cycle!.id },
-          filteredTrainings
+          filteredTrainings,
+          customAthleteWorkloads
         ),
       (newTrainings) => {
         const mappedTrainings = newTrainings.map((newTraining) => {
@@ -111,6 +116,8 @@ export default function TrainerDayView() {
             return newTraining ? newTraining : t;
           })
         );
+
+        setCustomAthleteWorkloads([]);
 
         setDetectedChanges(false);
         toast.success('Trainings updated successfully');
@@ -186,12 +193,14 @@ export default function TrainerDayView() {
 
   useEffect(() => {
     const fetchWorkloads = async () => {
+      if (!selectedAthlete) return;
+
       const combinedComponents = [] as TrainingComponent[];
       if (amTraining) combinedComponents.push(...amTraining.components);
       if (pmTraining) combinedComponents.push(...pmTraining.components);
 
       if (!combinedComponents || !combinedComponents.length) {
-        setWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+        setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
         return;
       }
 
@@ -205,10 +214,11 @@ export default function TrainerDayView() {
       });
 
       if (!uniqueExerciseIds.length) {
-        setWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+        setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
         return;
       }
 
+      isSettingAthleteWorkloads.current = true;
       handleApiRequest(
         router,
         () =>
@@ -216,22 +226,22 @@ export default function TrainerDayView() {
             token,
             group.id,
             uniqueExerciseIds,
-            selectedAthlete?.uid
+            selectedAthlete.uid
           ),
         (workloads) => {
-          setWorkloads(workloads);
+          setSelectedAthleteWorkloads(workloads);
+          isSettingAthleteWorkloads.current = false;
         },
         undefined,
         'Failed to fetch workloads'
       );
+      isSettingAthleteWorkloads.current = false;
     };
 
     // fetch only for selectedAthlete, group avg is already on training itself
     if (selectedAthlete) fetchWorkloads();
-    else setWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
+    else setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
   }, [selectedAthlete]);
-
-  useEffect(() => {}, [workloads]);
 
   return (
     <>
