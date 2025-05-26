@@ -64,6 +64,14 @@ export class WorkloadRepository
     await this.doc(ref).delete();
   }
 
+  async deleteDocs(ref: WorkloadRef[]) {
+    const batch = this.firebaseService.firestore.batch();
+    ref.forEach((r) => {
+      batch.delete(this.doc(r));
+    });
+    await batch.commit();
+  }
+
   doc(ref: WorkloadRef): DocumentReference {
     return this.collection(ref).doc(this.getKey(ref));
   }

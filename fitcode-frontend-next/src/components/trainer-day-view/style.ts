@@ -14,12 +14,12 @@ export const exerciseCardSetAttributeSx = {
     height: 27,
     fontSize: '0.7rem',
     color: 'white',
-    backgroundColor: 'transparent',
+    backgroundColor: 'background.default',
   },
 };
 
 export const disableBorder = {
-  backgroundColor: 'transparent',
+  backgroundColor: 'background.default',
   border: '0 !important',
   outline: 'none !important',
   '&:before': { borderBottom: '0 !important' },

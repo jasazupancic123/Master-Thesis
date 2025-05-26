@@ -653,7 +653,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                 flexDirection="column"
                 gap={1}
                 justifyContent="end"
-                height={85}
+                height={80}
               >
                 <LeftRightExerciseText title="L" />
                 <LeftRightExerciseText title="R" />
@@ -923,7 +923,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                       flexDirection="column"
                       gap={1}
                       justifyContent="end"
-                      height={set.setNumber === 1 ? 85 : 60}
+                      height={set.setNumber === 1 ? 80 : 55}
                     >
                       <LeftRightExerciseText title="L" />
                       <LeftRightExerciseText title="R" />
