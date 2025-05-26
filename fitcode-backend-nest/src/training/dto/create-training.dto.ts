@@ -9,8 +9,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { DateRangeDto } from 'src/common/dto/date-range.dto';
-import { TrainingComponent } from '../entity/training-component.entity';
+import { DateRangeDto } from '../../common/dto/date-range.dto';
 
 export class PartialCreateTrainingDto extends PickType(Training, [
   'groupId',

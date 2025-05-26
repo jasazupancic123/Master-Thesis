@@ -44,15 +44,12 @@ import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
 import dayjs from 'dayjs';
 import { SetStatus } from '../enum/set-status.enum';
-import { Superset } from '../entity/superset.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import { IntType, ParamType, VolType } from 'src/component/enum/param.enum';
-import { TrainingExercise } from '../entity/training-exercise.entity';
+import { ParamType } from '../../component/enum/param.enum';
 import { FinishComponentDto } from '../dto/finish-component.dto';
 import { AverageWorkloadValues } from '../entity/average-workload-values.entity';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { BatchUpdateTrainingsWithCustomAthleteWorkloadsDto } from '../dto/update-training.dto';
-import { custom, StringSchema } from 'joi';
 
 @Injectable()
 export class TrainingService {
@@ -153,17 +150,10 @@ export class TrainingService {
 
   async findByIdAndPopulateAthleteWorkloads(
     user: User,
-    ref: TrainingRef & UserRef & ComponentRef,
+    ref: TrainingRef & ComponentRef,
   ): Promise<Training> {
-    const { trainingId, uid: athleteId, componentId } = ref;
-    this.logger.log(
-      `User ${user.uid} is getting training ${trainingId} for athlete ${athleteId}`,
-    );
-
-    if (user.uid !== athleteId)
-      throw new UnauthorizedException(
-        'You are not authorized to view this training',
-      );
+    const { trainingId, componentId } = ref;
+    this.logger.log(`User ${user.uid} is getting training ${trainingId}`);
 
     const training = await this.findOneOrFail(user, { trainingId });
 
@@ -178,7 +168,7 @@ export class TrainingService {
 
     const workloads =
       await this.workloadService.findAllByUserTrainingComponentId(
-        athleteId,
+        user.uid,
         trainingId,
         componentId,
       );
@@ -190,22 +180,27 @@ export class TrainingService {
             (w) =>
               w.exerciseId === exercise.id && w.setNumber === set.setNumber,
           );
+
           if (!workload) continue;
+
           for (const paramValue of set.paramValuesL) {
-            const value = this.getPerscribedValueByParamField(
+            const value = this.getPrescribedValueByParamField(
               paramValue.field,
               workload,
               'L',
             );
+
             if (!value) continue;
             paramValue.value = value;
           }
+
           for (const paramValue of set.paramValuesR) {
-            const value = this.getPerscribedValueByParamField(
+            const value = this.getPrescribedValueByParamField(
               paramValue.field,
               workload,
               'R',
             );
+
             if (!value) continue;
             paramValue.value = value;
           }
@@ -216,7 +211,7 @@ export class TrainingService {
     return training;
   }
 
-  private getPerscribedValueByParamField(
+  private getPrescribedValueByParamField(
     field: string,
     workload: Workload,
     leftOrRight: 'L' | 'R',
@@ -807,10 +802,12 @@ export class TrainingService {
         updatedTraining,
         filteredWorkloads,
       );
+
       this.workloadService.createForCustomAthleteWorkloads(
         batch,
         customAthleteWorkloads,
       );
+
       await batch.commit();
     }
 
@@ -934,7 +931,11 @@ export class TrainingService {
       });
     }
 
-    await this.workloadService.createForTraining(batch, copiedTraining, workloads);
+    await this.workloadService.createForTraining(
+      batch,
+      copiedTraining,
+      workloads,
+    );
     await batch.commit();
 
     return copiedTraining;
