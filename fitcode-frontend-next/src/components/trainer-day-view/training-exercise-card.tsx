@@ -19,6 +19,10 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { Training } from '@/controller/training/type/training.type';
 import { TrainingService } from '@/controller/training/training.service';
 import LeftRightExerciseText from './exercise-card/left-right-exercise-text';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
+import toast from 'react-hot-toast';
+import { set } from 'date-fns';
+import { Workload } from '@/controller/training/type/workload.type';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -43,6 +47,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setSelectedSubgroup,
     setComponent,
     setTraining,
+    selectedAthlete,
+    selectedAthleteWorkloads,
+    customAthleteWorkloads,
+    setCustomAthleteWorkloads,
+    isSettingAthleteWorkloads,
+    previousSelectedAthlete,
   } = useTrainerDayViewContext();
 
   const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
@@ -259,6 +269,275 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     });
   }
 
+  const getPerscribedFieldName = (param: Attribute, leftOrRight: 'L' | 'R') => {
+    let perscribedFieldName;
+    switch (param.field) {
+      case 'int1':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedIntWork1ValueL'
+            : 'prescribedIntWork1ValueR';
+        break;
+      case 'int2':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedIntWork2ValueL'
+            : 'prescribedIntWork2ValueR';
+        break;
+      case 'vol1':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedVolWork1ValueL'
+            : 'prescribedVolWork1ValueR';
+        break;
+      case 'vol2':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedVolWork2ValueL'
+            : 'prescribedVolWork2ValueR';
+        break;
+      case 'intRec':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedIntRecValueL'
+            : 'prescribedIntRecValueR';
+        break;
+      case 'volRec':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedVolRecValueL'
+            : 'prescribedVolRecValueR';
+        break;
+      default:
+        break;
+    }
+
+    return perscribedFieldName;
+  };
+
+  const handleAthleteWorkloadsChange = (
+    exercise: TrainingExercise,
+    setNumber: number,
+    param: Attribute,
+    newValue: string,
+    leftOrRight: 'L' | 'R',
+    updateAllSets: boolean = false
+  ) => {
+    if (!selectedAthlete) return;
+
+    if (updateAllSets) {
+      // the first set has been updated on non expanded view, update all sets
+      let foundFutureWorkloads =
+        selectedAthleteWorkloads.futureWorkloads.filter(
+          (fw) =>
+            fw.trainingId === training.id &&
+            fw.exerciseId === exercise.id &&
+            fw.userId === selectedAthlete.uid
+        );
+
+      if (!foundFutureWorkloads.length) {
+        toast.error("Save the training to update athlete's workloads", {
+          icon: '⚠️',
+          duration: 3000,
+        });
+        return;
+      }
+
+      const perscribedFieldName = getPerscribedFieldName(param, leftOrRight);
+      if (!perscribedFieldName) {
+        toast.error(`Invalid parameter field: ${param.field}`);
+        return;
+      }
+
+      const foundAlreadyCustomWorkloads = customAthleteWorkloads.filter(
+        (cw) =>
+          cw.trainingId === training.id &&
+          cw.exerciseId === exercise.id &&
+          cw.userId === selectedAthlete.uid
+      );
+
+      const newCustomAthleteWorkloads = [] as Workload[];
+      if (foundAlreadyCustomWorkloads.length) {
+        foundFutureWorkloads = foundFutureWorkloads.filter(
+          (fw) =>
+            !foundAlreadyCustomWorkloads.some(
+              (cw) =>
+                cw.trainingId === fw.trainingId &&
+                cw.exerciseId === fw.exerciseId &&
+                cw.setNumber === fw.setNumber &&
+                cw.userId === fw.userId
+            )
+        );
+
+        for (const w of foundAlreadyCustomWorkloads) {
+          const newCustomWorkload = {
+            ...w,
+            [perscribedFieldName]: newValue,
+          };
+          newCustomAthleteWorkloads.push(newCustomWorkload);
+        }
+      }
+
+      for (const w of foundFutureWorkloads) {
+        const newCustomWorkload = {
+          ...w,
+          [perscribedFieldName]: newValue,
+        };
+        newCustomAthleteWorkloads.push(newCustomWorkload);
+      }
+
+      setCustomAthleteWorkloads(newCustomAthleteWorkloads);
+    } else {
+      const foundFutureWorkload = selectedAthleteWorkloads.futureWorkloads.find(
+        (fw) =>
+          fw.trainingId === training.id &&
+          fw.exerciseId === exercise.id &&
+          fw.setNumber === setNumber &&
+          fw.userId === selectedAthlete.uid
+      );
+
+      if (!foundFutureWorkload) {
+        toast.error("Save the training to update athlete's workloads", {
+          icon: '⚠️',
+          duration: 3000,
+        });
+        return;
+      }
+
+      const perscribedFieldName = getPerscribedFieldName(param, leftOrRight);
+      if (!perscribedFieldName) {
+        toast.error(`Invalid parameter field: ${param.field}`);
+        return;
+      }
+
+      const foundAlreadyCustomWorkload = customAthleteWorkloads.find(
+        (cw) =>
+          cw.trainingId === training.id &&
+          cw.exerciseId === exercise.id &&
+          cw.setNumber === setNumber &&
+          cw.userId === selectedAthlete.uid
+      );
+
+      if (foundAlreadyCustomWorkload) {
+        // if the workload is already custom, update it
+        const newCustomWorkload = {
+          ...foundAlreadyCustomWorkload,
+          [perscribedFieldName]: newValue,
+        };
+        setCustomAthleteWorkloads((prev) =>
+          prev.map((cw) =>
+            cw.trainingId === newCustomWorkload.trainingId &&
+            cw.exerciseId === newCustomWorkload.exerciseId &&
+            cw.setNumber === newCustomWorkload.setNumber &&
+            cw.userId === selectedAthlete.uid
+              ? newCustomWorkload
+              : cw
+          )
+        );
+      } else {
+        // if the workload is not already custom, create a new one
+        const newFutureWorkload = {
+          ...foundFutureWorkload,
+          [perscribedFieldName]: newValue,
+        };
+        setCustomAthleteWorkloads((prev) => [...prev, newFutureWorkload]);
+      }
+    }
+  };
+
+  const getLAndRValues = (
+    set: ExerciseSet,
+    param: Attribute,
+    setIndex: number,
+    paramIndex: number
+  ) => {
+    let valueL, valueR;
+
+    // find the custom workload for the selected athlete
+    const foundCustomFutureWorkload = customAthleteWorkloads.find(
+      (cw) =>
+        cw.trainingId === training.id &&
+        cw.exerciseId === exercise.id &&
+        cw.setNumber === set.setNumber &&
+        cw.userId === selectedAthlete?.uid
+    );
+    //  ||
+    // customAthleteWorkloads.find(
+    //   (cw) =>
+    //     cw.trainingId === training.id &&
+    //     cw.exerciseId === exercise.id &&
+    //     cw.setNumber === set.setNumber &&
+    //     cw.userId === previousSelectedAthlete.current?.uid
+    // );
+
+    // find the future workload for the selected athlete, not yet custom/modified
+    const foundFutureWorkload = selectedAthleteWorkloads.futureWorkloads.find(
+      (fw) =>
+        fw.trainingId === training.id &&
+        fw.exerciseId === exercise.id &&
+        fw.setNumber === set.setNumber &&
+        fw.userId === selectedAthlete?.uid
+    );
+    //  ||
+    // selectedAthleteWorkloads.futureWorkloads.find(
+    //   (fw) =>
+    //     fw.trainingId === training.id &&
+    //     fw.exerciseId === exercise.id &&
+    //     fw.setNumber === set.setNumber &&
+    //     fw.userId === previousSelectedAthlete.current?.uid
+    // );
+
+    if (
+      (foundCustomFutureWorkload || foundFutureWorkload) &&
+      param.field !== 'volWorkSets'
+    ) {
+      const perscribedFieldNameL = getPerscribedFieldName(param, 'L');
+      const perscribedFieldNameR = getPerscribedFieldName(param, 'R');
+
+      if (!perscribedFieldNameL || !perscribedFieldNameR) {
+        toast.error(`Invalid parameter field: ${param.field}`);
+        return { valueL: null, valueR: null };
+      }
+
+      const selected =
+        exercise.sets[setIndex].paramValuesL[paramIndex].selected;
+
+      valueL = {
+        field: param.field,
+        selected: selected,
+        value: ((foundCustomFutureWorkload || foundFutureWorkload) as any)[
+          perscribedFieldNameL
+        ].toString(),
+      };
+
+      valueR = {
+        field: param.field,
+        selected: selected,
+        value: ((foundCustomFutureWorkload || foundFutureWorkload) as any)[
+          perscribedFieldNameR
+        ].toString(),
+      };
+    } else {
+      valueL = exercise.sets[setIndex].paramValuesL.find(
+        (pv) => pv.field === param.field
+      ) || {
+        field: param.field,
+        selected: 'set',
+        value: exercise.sets.length.toString(),
+      };
+
+      valueR = exercise.sets[setIndex].paramValuesR.find(
+        (pv) => pv.field === param.field
+      ) || {
+        field: param.field,
+        selected: 'set',
+        value: exercise.sets.length.toString(),
+      };
+    }
+
+    return { valueL, valueR };
+  };
+
   return (
     <Stack
       spacing={1}
@@ -380,21 +659,19 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                 <LeftRightExerciseText title="R" />
               </Box>
               {exercise.params.map((param, i) => {
-                const valueL = exercise.sets[0].paramValuesL.find(
-                  (pv) => pv.field === param.field
-                ) || {
-                  field: param.field,
-                  selected: 'set',
-                  value: exercise.sets.length.toString(),
-                };
+                /* find the custom workload for the selected athlete if selected, otherwise
+                get the value from the exercise sets */
+                const { valueL, valueR } = getLAndRValues(
+                  exercise.sets[0],
+                  param,
+                  0,
+                  i - 1
+                );
 
-                const valueR = exercise.sets[0].paramValuesR.find(
-                  (pv) => pv.field === param.field
-                ) || {
-                  field: param.field,
-                  selected: 'set',
-                  value: exercise.sets.length.toString(),
-                };
+                if (!valueL || !valueR) {
+                  toast.error(`Invalid parameter field: ${param.field}`);
+                  return null;
+                }
 
                 return (
                   <>
@@ -435,8 +712,22 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                         }}
                         onSubOptionChange={(newValue) => {
                           if (+newValue < 0) return;
+
                           if (param.field === 'volWorkSets') {
                             setSetsNumber(+newValue);
+                            return;
+                          }
+
+                          // update only selected athletes workloads
+                          if (selectedAthlete) {
+                            handleAthleteWorkloadsChange(
+                              exercise,
+                              1,
+                              param,
+                              newValue as string,
+                              'L',
+                              true
+                            );
                             return;
                           }
 
@@ -511,8 +802,22 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                         }}
                         onSubOptionChange={(newValue) => {
                           if (+newValue < 0) return;
+
                           if (param.field === 'volWorkSets') {
                             setSetsNumber(+newValue);
+                            return;
+                          }
+
+                          // update only selected athletes workloads
+                          if (selectedAthlete) {
+                            handleAthleteWorkloadsChange(
+                              exercise,
+                              1,
+                              param,
+                              newValue as string,
+                              'R',
+                              true
+                            );
                             return;
                           }
 
@@ -624,21 +929,19 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                       <LeftRightExerciseText title="R" />
                     </Box>
                     {exercise.params.map((param, j) => {
-                      const valueL = exercise.sets[i].paramValuesL.find(
-                        (pv) => pv.field === param.field
-                      ) || {
-                        field: param.field,
-                        selected: 'set',
-                        value: exercise.sets.length.toString(),
-                      };
+                      /* find the custom workload for the selected athlete if selected, otherwise
+                      get the value from the exercise sets */
+                      const { valueL, valueR } = getLAndRValues(
+                        set,
+                        param,
+                        i,
+                        j - 1
+                      );
 
-                      const valueR = exercise.sets[i].paramValuesR.find(
-                        (pv) => pv.field === param.field
-                      ) || {
-                        field: param.field,
-                        selected: 'set',
-                        value: exercise.sets.length.toString(),
-                      };
+                      if (!valueL || !valueR) {
+                        toast.error(`Invalid parameter field: ${param.field}`);
+                        return null;
+                      }
 
                       return (
                         <Box
@@ -656,6 +959,18 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                             onOptionChange={(newValue) => {}}
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
+
+                              // update only selected athletes workloads
+                              if (selectedAthlete) {
+                                handleAthleteWorkloadsChange(
+                                  exercise,
+                                  set.setNumber,
+                                  param,
+                                  newValue as string,
+                                  'L'
+                                );
+                                return;
+                              }
 
                               const paramIndex = exercise.sets[
                                 i
@@ -715,6 +1030,18 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                             onOptionChange={(newValue) => {}}
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
+
+                              // update only selected athletes workloads
+                              if (selectedAthlete) {
+                                handleAthleteWorkloadsChange(
+                                  exercise,
+                                  set.setNumber,
+                                  param,
+                                  newValue as string,
+                                  'R'
+                                );
+                                return;
+                              }
 
                               const paramIndex = exercise.sets[
                                 i

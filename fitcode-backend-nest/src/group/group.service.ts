@@ -23,8 +23,8 @@ import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
 import { GroupRepository } from './repository/group.repository';
 import { UserEntity } from '../user/entity/user.entity';
-import { InstitutionService } from 'src/institution/service/institution.service';
-import { Institution } from 'src/institution/entity/institution.entity';
+import { InstitutionService } from '../institution/service/institution.service';
+import { Institution } from '../institution/entity/institution.entity';
 
 @Injectable()
 export class GroupService {

@@ -19,15 +19,29 @@ export class TrainingController {
     return api.get<Training[]>('/training', { token, query });
   }
 
+  static async findByIdAndPopulateAthleteWorkloads(
+    token: string,
+    trainingId: string,
+    componentId: string,
+    userId: string
+  ) {
+    return api.get<Training>(
+      `/training/${trainingId}/component/${componentId}`,
+      {
+        token,
+      }
+    );
+  }
+
   static async getUserWorkloadsByGroupIdAndExerciseIds(
     token: string,
     groupId: string,
     exerciseIds: string[],
-    userId?: string
+    userId: string
   ) {
     return api.post<CompletedFutureWorkloads>(
-      `/training/${groupId}/workloads`,
-      { exerciseIds, athleteId: userId },
+      `/training/${groupId}/${userId}/workloads`,
+      { exerciseIds },
       {
         token,
       }
@@ -71,12 +85,13 @@ export class TrainingController {
       components: TrainingComponent[];
       membersIds: string[];
       avgFutureWorkloadValues: AverageWorkloadValues[];
-    }[]
+    }[],
+    customAthleteWorkloads: Workload[]
   ) {
     const { groupId, cycleId } = params;
     return api.patch<Training[]>(
       `/training/batch/${groupId}/${cycleId}`,
-      { trainings: body },
+      { trainings: body, customAthleteWorkloads },
       { token }
     );
   }
@@ -152,12 +167,18 @@ export class TrainingController {
         | 'exerciseId'
         | 'setNumber'
         | 'notes'
-        | 'volWork1Value'
-        | 'volWork2Value'
-        | 'volRecValue'
-        | 'intWork1Value'
-        | 'intWork2Value'
-        | 'intRecValue'
+        | 'volWork1ValueL'
+        | 'volWork1ValueR'
+        | 'volWork2ValueL'
+        | 'volWork2ValueR'
+        | 'volRecValueL'
+        | 'volRecValueR'
+        | 'intWork1ValueL'
+        | 'intWork1ValueR'
+        | 'intWork2ValueL'
+        | 'intWork2ValueR'
+        | 'intRecValueL'
+        | 'intRecValueR'
       >[];
     }
   ) {

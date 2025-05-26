@@ -18,6 +18,7 @@ import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import {
   BatchUpdateTrainingsDto,
+  BatchUpdateTrainingsWithCustomAthleteWorkloadsDto,
   UpdateSingleTrainingDto,
   UpdateTrainingDto,
 } from './dto/update-training.dto';
@@ -27,6 +28,8 @@ import { TrainingComponent } from './entity/training-component.entity';
 import { ComponentRef, TrainingRef } from '../common/type/firestore.type';
 import { Superset } from './entity/superset.entity';
 import { FinishComponentDto } from './dto/finish-component.dto';
+import { Workload } from './entity/workload.entity';
+import { FindWorkloadsByExercises } from './dto/find-workload.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -51,18 +54,33 @@ export class TrainingController {
     });
   }
 
-  @Post(':groupId/workloads')
+  @Get(':trainingId/component/:componentId')
+  @Auth()
+  async findByIdAndPopulateAthleteWorkloads(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('componentId') componentId: string,
+  ) {
+    const ref = { trainingId, componentId };
+    return await this.trainingService.findByIdAndPopulateAthleteWorkloads(
+      user,
+      ref,
+    );
+  }
+
+  @Post(':groupId/:athleteId/workloads')
   @Auth()
   async getUserWorkloadsByGroupIdAndExerciseIds(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Body() body: { exerciseIds: string[]; athleteId?: string },
+    @Param('athleteId') athleteId: string,
+    @Body() body: FindWorkloadsByExercises,
   ) {
     return await this.trainingService.getUserWorkloadsByGroupIdAndExerciseIds(
       user,
       {
         groupId,
-        body,
+        body: { exerciseIds: body.exerciseIds, athleteId },
       },
     );
   }
@@ -113,10 +131,10 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
-    @Body() { trainings }: BatchUpdateTrainingsDto,
+    @Body() body: BatchUpdateTrainingsWithCustomAthleteWorkloadsDto,
   ) {
     const ref = { groupId, cycleId };
-    return await this.trainingService.batchUpdate(user, ref, trainings);
+    return await this.trainingService.batchUpdate(user, ref, body);
   }
 
   // @Patch(':trainingId/component/copy')

@@ -11,12 +11,12 @@ import { CommonService } from '../../common/service/common.service';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { Institution } from '../entity/institution.entity';
-import { InstitutionRef } from 'src/common/type/firestore.type';
-import { User } from 'src/common/type/firebase-auth.type';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { InstitutionRef } from '../../common/type/firestore.type';
+import { User } from '../../common/type/firebase-auth.type';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { CreateInstitutionDto } from '../dto/create-insitution.dto';
-import { UserRole } from 'src/user/enum/user-role.enum';
-import { UserService } from 'src/user/user.service';
+import { UserRole } from '../../user/enum/user-role.enum';
+import { UserService } from '../../user/user.service';
 import { Query } from 'firebase-admin/firestore';
 
 @Injectable()
