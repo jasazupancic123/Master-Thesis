@@ -23,11 +23,14 @@ export class TrainingController {
     token: string,
     trainingId: string,
     componentId: string,
-    userId: string,
-  ){
-    return api.get<Training>(`/training/${trainingId}/athlete/${userId}/component/${componentId}`, {
-      token,
-    });
+    userId: string
+  ) {
+    return api.get<Training>(
+      `/training/${trainingId}/component/${componentId}`,
+      {
+        token,
+      }
+    );
   }
 
   static async getUserWorkloadsByGroupIdAndExerciseIds(
@@ -83,7 +86,7 @@ export class TrainingController {
       membersIds: string[];
       avgFutureWorkloadValues: AverageWorkloadValues[];
     }[],
-    customAthleteWorkloads: Workload[],
+    customAthleteWorkloads: Workload[]
   ) {
     const { groupId, cycleId } = params;
     return api.patch<Training[]>(
