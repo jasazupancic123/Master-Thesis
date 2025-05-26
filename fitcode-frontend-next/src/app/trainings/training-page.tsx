@@ -175,6 +175,7 @@ export default function TrainingPage(props: TrainingPageProps) {
                       setView={setView}
                       training={training}
                       profile={profile}
+                      token={token}
                     />
                   </Stack>
                 </Box>

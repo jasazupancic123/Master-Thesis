@@ -19,7 +19,7 @@ export async function createTestUserAndToken(
   await firebaseService.auth.setCustomUserClaims(user.uid, customClaims);
 
   const createUserQuery = firebaseService.buildCreateQuery<UserEntity>(
-    { id: user.uid, groupsIds: [], trainersIds: [] },
+    { id: user.uid, groupsIds: [], trainersIds: [], institutionIds: [] },
     { timestamps: true },
   );
 

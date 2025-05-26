@@ -56,8 +56,9 @@ export default function TrainingExerciseCardContainer(
     setSupersetsWithAdd,
   } = props;
 
-  const { training, selectedAthlete } = useTrainerDayViewContext();
-  const { trainings, workloads, group } = useGroup();
+  const { training, selectedAthlete, selectedAthleteWorkloads } =
+    useTrainerDayViewContext();
+  const { trainings, group } = useGroup();
   const [data, setData] = useState<ChartWorkloadData[]>([]);
   const [percentageForChartBackground, setPercentageForChartBackground] =
     useState<number>(0);
@@ -78,7 +79,7 @@ export default function TrainingExerciseCardContainer(
     if (selectedAthlete) {
       // use fetched data for selected athlete from api
       prepareSelectedAthleteAvgWorkloadsForChart(
-        workloads,
+        selectedAthleteWorkloads,
         exercise.id,
         setData,
         setMax,
@@ -94,7 +95,7 @@ export default function TrainingExerciseCardContainer(
         setRange
       );
     }
-  }, [selectedExercise, workloads, trainings]);
+  }, [selectedExercise, selectedAthleteWorkloads, trainings]);
 
   useEffect(() => {
     // Set the percentage for the chart background (completed vs future) based on the range
@@ -287,7 +288,6 @@ export default function TrainingExerciseCardContainer(
             <Box height="100%" display="flex">
               <Box
                 width={`${percentageForChartBackground}%`}
-                //width="50%"
                 height="100%"
                 sx={{
                   backgroundColor: theme.palette.background.paper,

@@ -8,8 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CommonService } from 'src/common/service/common.service';
-import { User } from 'src/common/type/firebase-auth.type';
+import { User } from '../common/type/firebase-auth.type';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { Auth } from '../common/decorator/auth.decorator';
 import { InstitutionService } from './service/institution.service';

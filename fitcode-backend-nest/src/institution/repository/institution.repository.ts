@@ -1,15 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { RootFirestoreCollectionRepository } from 'src/common/type/firestore.type';
+import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { Institution } from '../entity/institution.entity';
-import { CommonService } from 'src/common/service/common.service';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { FirebaseService } from '../../firebase/firebase.service';
 import {
   DocumentReference,
   CollectionReference,
   Query,
 } from 'firebase-admin/firestore';
-import { FirestoreCollection } from 'src/common/enum/firestore-collection.enum';
-import { Create, FirestoreEntity, Update } from 'src/common/type/entity.type';
+import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 
 @Injectable()
 export class InstitutionRepository

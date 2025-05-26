@@ -25,6 +25,7 @@ import {
   CycleRef,
   TrainingComponentRef,
   TrainingRef,
+  UserRef,
   WorkloadRef,
 } from '../../common/type/firestore.type';
 import { Filter } from '../../common/type/orm.type';
@@ -43,13 +44,12 @@ import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
 import dayjs from 'dayjs';
 import { SetStatus } from '../enum/set-status.enum';
-import { Superset } from '../entity/superset.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import { IntType, ParamType, VolType } from 'src/component/enum/param.enum';
-import { TrainingExercise } from '../entity/training-exercise.entity';
+import { ParamType } from '../../component/enum/param.enum';
 import { FinishComponentDto } from '../dto/finish-component.dto';
 import { AverageWorkloadValues } from '../entity/average-workload-values.entity';
 import { CreateTrainingDto } from '../dto/create-training.dto';
+import { BatchUpdateTrainingsWithCustomAthleteWorkloadsDto } from '../dto/update-training.dto';
 
 @Injectable()
 export class TrainingService {
@@ -148,6 +148,107 @@ export class TrainingService {
     return trainings;
   }
 
+  async findByIdAndPopulateAthleteWorkloads(
+    user: User,
+    ref: TrainingRef & ComponentRef,
+  ): Promise<Training> {
+    const { trainingId, componentId } = ref;
+    this.logger.log(`User ${user.uid} is getting training ${trainingId}`);
+
+    const training = await this.findOneOrFail(user, { trainingId });
+
+    const component = [
+      training.warmup,
+      ...training.components,
+      training.cooldown,
+    ].find((c) => c.id === componentId);
+
+    if (!component)
+      throw new BadRequestException('Component not found in training');
+
+    const workloads =
+      await this.workloadService.findAllByUserTrainingComponentId(
+        user.uid,
+        trainingId,
+        componentId,
+      );
+
+    for (const superset of component.supersets) {
+      for (const exercise of superset.exercises) {
+        for (const set of exercise.sets) {
+          const workload = workloads.find(
+            (w) =>
+              w.exerciseId === exercise.id && w.setNumber === set.setNumber,
+          );
+
+          if (!workload) continue;
+
+          for (const paramValue of set.paramValuesL) {
+            const value = this.getPrescribedValueByParamField(
+              paramValue.field,
+              workload,
+              'L',
+            );
+
+            if (!value) continue;
+            paramValue.value = value;
+          }
+
+          for (const paramValue of set.paramValuesR) {
+            const value = this.getPrescribedValueByParamField(
+              paramValue.field,
+              workload,
+              'R',
+            );
+
+            if (!value) continue;
+            paramValue.value = value;
+          }
+        }
+      }
+    }
+
+    return training;
+  }
+
+  private getPrescribedValueByParamField(
+    field: string,
+    workload: Workload,
+    leftOrRight: 'L' | 'R',
+  ) {
+    switch (field) {
+      case ParamType.VolWorkSets:
+        // cannot set different number of sets for athlete
+        return null;
+      case ParamType.VolRec1:
+        return leftOrRight === 'L'
+          ? workload.prescribedVolRecValueL.toString()
+          : workload.prescribedVolRecValueR.toString();
+      case ParamType.VolWork1:
+        return leftOrRight === 'L'
+          ? workload.prescribedVolWork1ValueL.toString()
+          : workload.prescribedVolWork1ValueR.toString();
+      case ParamType.VolWork2:
+        return leftOrRight === 'L'
+          ? workload.prescribedVolWork2ValueL.toString()
+          : workload.prescribedVolWork2ValueR.toString();
+      case ParamType.IntRec1:
+        return leftOrRight === 'L'
+          ? workload.prescribedIntRecValueL.toString()
+          : workload.prescribedIntRecValueR.toString();
+      case ParamType.IntWork1:
+        return leftOrRight === 'L'
+          ? workload.prescribedIntWork1ValueL.toString()
+          : workload.prescribedIntWork1ValueR.toString();
+      case ParamType.IntWork2:
+        return leftOrRight === 'L'
+          ? workload.prescribedIntWork2ValueL.toString()
+          : workload.prescribedIntWork2ValueR.toString();
+      default:
+        return null;
+    }
+  }
+
   async getUserWorkloadsByGroupIdAndExerciseIds(
     user: User,
     input: {
@@ -159,26 +260,15 @@ export class TrainingService {
     const { exerciseIds, athleteId } = body;
 
     this.logger.log(
-      `User ${user.uid} is getting workloads for group ${groupId}`,
+      `User ${user.uid} is getting workloads for athlete ${athleteId}`,
     );
 
-    const groupRef = { groupId };
-
-    const group = await this.groupService.findByIdOrFail(user, groupRef);
-    let workloads = [];
-    if (athleteId) {
-      workloads = await this.workloadService.findAllByAthleteGroupExerciseIds(
+    const workloads =
+      await this.workloadService.findAllByAthleteGroupExerciseIds(
         athleteId,
         groupId,
         exerciseIds,
       );
-    } else {
-      workloads = await this.workloadService.findAllByMembersGroupExerciseIds(
-        group.membersIds,
-        groupId,
-        exerciseIds,
-      );
-    }
 
     const { completedWorkloads, futureWorkloads } =
       this.getCompletedAndFutureWorkloads(workloads);
@@ -385,7 +475,7 @@ export class TrainingService {
       });
     }
 
-    this.workloadService.createForTraining(batch, training, workloads);
+    await this.workloadService.createForTraining(batch, training, workloads);
     await batch.commit();
 
     return training;
@@ -526,7 +616,7 @@ export class TrainingService {
       });
     }
 
-    this.workloadService.createForTraining(batch, training, workloads);
+    await this.workloadService.createForTraining(batch, training, workloads);
     await batch.commit();
 
     return training;
@@ -611,7 +701,7 @@ export class TrainingService {
 
     const batch = this.firebaseService.firestore.batch();
     batch.update(trainingDocRef, updateTrainingQuery);
-    this.workloadService.createForTraining(batch, updated, workloads);
+    await this.workloadService.createForTraining(batch, updated, workloads);
     await batch.commit();
 
     return updated;
@@ -620,8 +710,9 @@ export class TrainingService {
   async batchUpdate(
     user: User,
     ref: CycleRef,
-    input: Update<Training>[],
+    body: BatchUpdateTrainingsWithCustomAthleteWorkloadsDto,
   ): Promise<Training[]> {
+    const { trainings: input, customAthleteWorkloads } = body;
     this.logger.log(
       `User ${user.uid} is updating ${input.length} trainings: ${JSON.stringify(input)}`,
     );
@@ -693,7 +784,30 @@ export class TrainingService {
 
       const batch = this.firebaseService.firestore.batch();
       batch.update(trainingDocRef, updateTrainingQuery);
-      this.workloadService.createForTraining(batch, updatedTraining, workloads);
+
+      const filteredWorkloads = workloads.filter(
+        (w) =>
+          !customAthleteWorkloads.some(
+            (cw) =>
+              cw.trainingId === w.trainingId &&
+              cw.userId === w.userId &&
+              cw.exerciseId === w.exerciseId &&
+              cw.setNumber === w.setNumber &&
+              cw.componentId === w.componentId,
+          ),
+      );
+
+      await this.workloadService.createForTraining(
+        batch,
+        updatedTraining,
+        filteredWorkloads,
+      );
+
+      this.workloadService.createForCustomAthleteWorkloads(
+        batch,
+        customAthleteWorkloads,
+      );
+
       await batch.commit();
     }
 
@@ -817,7 +931,11 @@ export class TrainingService {
       });
     }
 
-    this.workloadService.createForTraining(batch, copiedTraining, workloads);
+    await this.workloadService.createForTraining(
+      batch,
+      copiedTraining,
+      workloads,
+    );
     await batch.commit();
 
     return copiedTraining;
