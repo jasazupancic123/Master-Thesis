@@ -440,7 +440,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                                   flexDirection="column"
                                   gap={1}
                                   justifyContent="end"
-                                  height={i === 0 ? 85 : 60}
+                                  height={i === 0 ? 80 : 55}
                                 >
                                   <LeftRightExerciseText title="L" />
                                   <LeftRightExerciseText title="R" />

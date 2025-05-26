@@ -934,7 +934,11 @@ export class TrainingService {
       });
     }
 
-    await this.workloadService.createForTraining(batch, copiedTraining, workloads);
+    await this.workloadService.createForTraining(
+      batch,
+      copiedTraining,
+      workloads,
+    );
     await batch.commit();
 
     return copiedTraining;
@@ -1035,6 +1039,16 @@ export class TrainingService {
     const training = await this.findOneOrFail(user, ref);
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
+
+    const workloads = await this.workloadService.findAllByTraining(
+      ref.trainingId,
+    );
+    const notStartedWorkloads = workloads.filter(
+      (w) => w.status === SetStatus.NOT_STARTED,
+    );
+
+    // delete non started workloads
+    await this.workloadService.deleteWorkloads(notStartedWorkloads);
 
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
@@ -1303,6 +1317,17 @@ export class TrainingService {
     if (query.components.length === 0) {
       // delete doc
       this.logger.log('No components left, deleting training');
+
+      const workloads = await this.workloadService.findAllByTraining(
+        ref.trainingId,
+      );
+      const notStartedWorkloads = workloads.filter(
+        (w) => w.status === SetStatus.NOT_STARTED,
+      );
+
+      // delete non started workloads
+      await this.workloadService.deleteWorkloads(notStartedWorkloads);
+      
       await this.trainingRepository.deleteDoc(ref.trainingId);
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 

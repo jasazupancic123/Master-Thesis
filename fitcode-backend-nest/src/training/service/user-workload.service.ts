@@ -49,7 +49,13 @@ export class UserWorkloadService {
       );
   }
 
-  async findOne(trainingId: string, componentId: string, exerciseId: string, setNumber: number, userId: string) {
+  async findOne(
+    trainingId: string,
+    componentId: string,
+    exerciseId: string,
+    setNumber: number,
+    userId: string,
+  ) {
     return await this.workloadRepository
       .collection({ trainingId })
       .doc(
@@ -252,9 +258,9 @@ export class UserWorkloadService {
             setNumber,
             userId,
           );
-          
+
           // skip if workload is already personalized
-          if(foundWorkload && foundWorkload.isPersonalized) continue;
+          if (foundWorkload && foundWorkload.isPersonalized) continue;
 
           const docRef = this.workloadRepository
             .collection({ trainingId: training.id })
@@ -377,6 +383,18 @@ export class UserWorkloadService {
 
       batch.set(docRef, query);
     }
+  }
+
+  async deleteWorkloads(workloads: Workload[]): Promise<void> {
+    const refs = workloads.map((w) => ({
+      trainingId: w.trainingId,
+      componentId: w.componentId,
+      exerciseId: w.exerciseId,
+      setNumber: w.setNumber,
+      userId: w.userId,
+    }));
+
+    this.workloadRepository.deleteDocs(refs);
   }
 
   getStatus(workload: Workload): SetStatus {

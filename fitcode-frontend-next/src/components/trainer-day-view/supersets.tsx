@@ -290,6 +290,13 @@ export default function Supersets(props: SupersetsProps) {
                                       ? '#f0f0f0'
                                       : 'transparent'
                                   }
+                                  sx={{
+                                    px:
+                                      screenSize.isDesktop ||
+                                      screenSize.isMobile
+                                        ? 0
+                                        : 0.5,
+                                  }}
                                 >
                                   <Box
                                     position="absolute"
@@ -298,7 +305,9 @@ export default function Supersets(props: SupersetsProps) {
                                     display="flex"
                                     flexDirection="column"
                                     onClick={() => {
-                                      setSelectedExercise(exercise);
+                                      if (selectedExercise)
+                                        setSelectedExercise(null);
+                                      else setSelectedExercise(exercise);
                                     }}
                                     sx={{
                                       cursor: 'pointer',

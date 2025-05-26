@@ -87,13 +87,6 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
     `/groups/${groupId}/exercises`,
     <FitnessCenterIcon />
   ),
-  members: link('Members', `/groups/${groupId}/members`, <PeopleIcon />),
-  createGroup: link(
-    'Create group',
-    `/groups/${groupId}/add-group`,
-    <AddIcon />
-  ),
-  settings: link('Settings', `/groups/${groupId}/settings`, <SettingsIcon />),
 });
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {

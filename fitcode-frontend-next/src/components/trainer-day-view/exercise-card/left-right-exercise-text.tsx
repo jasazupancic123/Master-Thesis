@@ -1,4 +1,5 @@
-import { Typography } from "@mui/material";
+import { Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 
 interface LeftRightExerciseTextProps {
   title: string;
@@ -7,6 +8,7 @@ interface LeftRightExerciseTextProps {
 export default function LeftRightExerciseText(
   props: LeftRightExerciseTextProps
 ) {
+  const theme = useTheme();
   const { title } = props;
   return (
     <Typography
@@ -14,9 +16,9 @@ export default function LeftRightExerciseText(
       sx={{
         p: 0,
         m: 0,
-        color: 'white !important',
+        color: theme.palette.background.dark,
         zIndex: 1,
-        fontSize: 15,
+        fontSize: 12,
       }}
     >
       {title}
