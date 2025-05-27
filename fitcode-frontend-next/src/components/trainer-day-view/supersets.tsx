@@ -89,7 +89,6 @@ export default function Supersets(props: SupersetsProps) {
     null
   );
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [openPeriodize, setOpenPeriodize] = useState(false);
   const open = Boolean(anchorEl);
 
   const handleMenuClick = (event: any) => {
@@ -98,12 +97,7 @@ export default function Supersets(props: SupersetsProps) {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setOpenPeriodize(false);
     setMenuExercise(null);
-  };
-
-  const handeleTogglePeriodize = () => {
-    setOpenPeriodize(!openPeriodize);
   };
 
   const handlePeriodizeSelect = (
@@ -404,89 +398,6 @@ export default function Supersets(props: SupersetsProps) {
                                           Delete
                                         </Typography>
                                       </MenuItem>
-                                      <MenuItem
-                                        onClick={handeleTogglePeriodize}
-                                        sx={{
-                                          width: '100%',
-                                          position: 'relative',
-                                          textAlign: 'center !important',
-                                        }}
-                                      >
-                                        <Typography
-                                          width="100%"
-                                          display="flex"
-                                          alignItems="center"
-                                          justifyContent="center"
-                                          sx={{ pr: 1 }}
-                                        >
-                                          <Timeline sx={{ marginRight: 1 }} />{' '}
-                                          Periodize
-                                        </Typography>
-                                        {openPeriodize ? (
-                                          <ArrowDropUp
-                                            sx={{
-                                              position: 'absolute',
-                                              right: 0,
-                                            }}
-                                          />
-                                        ) : (
-                                          <ArrowDropDown
-                                            sx={{
-                                              position: 'absolute',
-                                              right: 0,
-                                            }}
-                                          />
-                                        )}
-                                      </MenuItem>
-                                      {openPeriodize && (
-                                        <Box>
-                                          <MenuItem
-                                            onClick={() => {
-                                              handlePeriodizeSelect(
-                                                exercise,
-                                                'linear'
-                                              );
-                                            }}
-                                            sx={{
-                                              textAlign: 'center !important',
-                                            }}
-                                          >
-                                            <Typography width="100%">
-                                              Linear
-                                            </Typography>
-                                          </MenuItem>
-                                          <MenuItem
-                                            onClick={() => {
-                                              handlePeriodizeSelect(
-                                                exercise,
-                                                'undulating'
-                                              );
-                                            }}
-                                            sx={{
-                                              textAlign: 'center !important',
-                                            }}
-                                          >
-                                            <Typography width="100%">
-                                              Undulating
-                                            </Typography>
-                                          </MenuItem>
-                                          <MenuItem
-                                            onClick={() => {
-                                              handlePeriodizeSelect(
-                                                exercise,
-                                                'block'
-                                              );
-                                            }}
-                                            sx={{
-                                              textAlign: 'center !important',
-                                            }}
-                                          >
-                                            <Typography width="100%">
-                                              Block
-                                            </Typography>
-                                          </MenuItem>
-                                        </Box>
-                                      )}
                                     </Menu>
                                   </Box>
                                   <TrainingExerciseCardContainer

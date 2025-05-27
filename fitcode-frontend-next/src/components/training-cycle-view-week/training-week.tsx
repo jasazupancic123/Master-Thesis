@@ -28,6 +28,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     week,
     selected,
     componentCalendarView,
+    periodizationView,
     trainingComponent,
     training,
     setOpenOverwriteModal,
@@ -373,7 +374,9 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                       return (
                         <Box
                           key={key}
-                          borderRadius={componentCalendarView ? 0 : 2}
+                          borderRadius={
+                            componentCalendarView || periodizationView ? 0 : 2
+                          }
                           sx={{
                             cursor: 'pointer',
                             p: 0,
@@ -433,6 +436,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                               props.deleteTrainingComponent
                             }
                             componentCalendarView={componentCalendarView}
+                            periodizationView={periodizationView}
                             trainingComponent={trainingComponent}
                             isSameDayAsSelectedComponent={
                               trainingComponent &&

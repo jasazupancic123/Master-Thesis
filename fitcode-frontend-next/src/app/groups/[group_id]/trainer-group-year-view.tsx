@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { Fab, IconButton } from '@mui/material';
 import Save from '@mui/icons-material/Save';
+import { handleSaveGroup } from './state';
 
 export default function TrainerYearView() {
   const screenSize = useScreenSize();
@@ -43,41 +44,51 @@ export default function TrainerYearView() {
     setDetectedChanges(true);
   }
 
-  async function handleSaveGroup() {
-    for (const cycle of selectedGroup.cycles) {
-      if (cycle.from >= cycle.to) {
-        toast.error('Start date must be before end date.');
-        return;
-      }
-    }
-    handleApiRequest(
-      router,
-      () =>
-        GroupController.update(token, group.id, {
-          cycles: selectedGroup.cycles,
-        }),
-      (response) => {
-        if (cycle) {
-          const newCycle = response.cycles.find((c) => c.id === cycle.id);
-          setCycle(newCycle);
-        }
+  // async function handleSaveGroup() {
+  //   for (const cycle of selectedGroup.cycles) {
+  //     if (cycle.from >= cycle.to) {
+  //       toast.error('Start date must be before end date.');
+  //       return;
+  //     }
+  //   }
+  //   handleApiRequest(
+  //     router,
+  //     () =>
+  //       GroupController.update(token, group.id, {
+  //         cycles: selectedGroup.cycles,
+  //       }),
+  //     (response) => {
+  //       if (cycle) {
+  //         const newCycle = response.cycles.find((c) => c.id === cycle.id);
+  //         setCycle(newCycle);
+  //       }
 
-        setGroup(response);
-        setSelectedGroup(response);
-        setDetectedChanges(false);
+  //       setGroup(response);
+  //       setSelectedGroup(response);
+  //       setDetectedChanges(false);
 
-        toast.success('Group successfully saved');
-      },
-      undefined,
-      'Failed to save group'
-    );
-  }
+  //       toast.success('Group successfully saved');
+  //     },
+  //     undefined,
+  //     'Failed to save group'
+  //   );
+  // }
 
   return (
     <>
       {screenSize.isSmallerThanLaptop ? (
         <IconButton
-          onClick={handleSaveGroup}
+          onClick={() =>
+            handleSaveGroup(
+              selectedGroup,
+              setSelectedGroup,
+              cycle,
+              setCycle,
+              setDetectedChanges,
+              token,
+              router
+            )
+          }
           sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
         >
           <Save
@@ -92,7 +103,20 @@ export default function TrainerYearView() {
           />
         </IconButton>
       ) : (
-        <FloatingButton label="Save group" onClick={handleSaveGroup} />
+        <FloatingButton
+          label="Save group"
+          onClick={() =>
+            handleSaveGroup(
+              selectedGroup,
+              setSelectedGroup,
+              cycle,
+              setCycle,
+              setDetectedChanges,
+              token,
+              router
+            )
+          }
+        />
       )}
 
       <Box

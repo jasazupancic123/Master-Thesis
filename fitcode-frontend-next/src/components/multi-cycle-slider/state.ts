@@ -1,6 +1,8 @@
 import { SetState, SetStateNullable } from '@/common/type/state.type';
+import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
+import { Periodization } from '@/controller/group/type/periodization.type';
 import dayjs from 'dayjs';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { RefObject } from 'react';
@@ -43,9 +45,13 @@ export async function handleAddCycle(
       leafComponentsIds: [],
       rootComponentsIds: [],
       weeks: [],
+      periodization: {
+        type: PeriodizationType.NONE,
+        basePeriodizationTrainingIds: [],
+      } as Periodization,
       createdAt: new Date(),
       updatedAt: new Date(),
-    },
+    } as Cycle,
   ];
   setDetectedChanges(true);
   setCycles(newCycles);

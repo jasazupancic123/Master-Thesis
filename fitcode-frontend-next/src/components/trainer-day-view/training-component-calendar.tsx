@@ -83,7 +83,6 @@ export default function TrainingComponentCalendar(
         </Box>
       )}
 
-      {/* Choose cycle */}
       <Box mb={2} />
       {cycle && (
         <Box borderRadius={2} borderColor={theme.palette.primary.main}>

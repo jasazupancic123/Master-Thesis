@@ -8,15 +8,19 @@ import TrainingWeek from '@/components/training-cycle-view-week/training-week';
 import { useGroup } from '@/context/group-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
+import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { TrainingService } from '@/controller/training/training.service';
-import { RotateRight } from '@mui/icons-material';
-import { useTheme } from '@mui/material';
+import { Redo, RotateRight, Save } from '@mui/icons-material';
+import { IconButton, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
+import { useScreenSize } from '@/context/screen-size-provider';
+import FloatingButton from '@/components/floating-button';
+import { handleSaveGroup } from './state';
 
 export default function TrainerCycleView() {
   const {
@@ -29,9 +33,12 @@ export default function TrainerCycleView() {
     setFilteredTrainings,
     setDateFrom,
     setDateTo,
+    setGroup,
+    setDetectedChanges,
   } = useGroup();
 
   const theme = useTheme();
+  const screenSize = useScreenSize();
   const router = useRouter();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
   const [isSticky, setIsSticky] = useState(false);
@@ -55,114 +62,199 @@ export default function TrainerCycleView() {
   }, [cycle]);
 
   return (
-    <Box pb={10}>
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="space-evenly"
-        width="100%"
-        minHeight={195}
-        sx={{
-          backgroundColor: theme.palette.background.paper,
-          borderBottomLeftRadius: 20,
-          borderBottomRightRadius: 20,
-        }}
-      >
-        <SelectInput<Cycle>
-          label=""
-          icon={<RotateRight />}
-          value={cycle?.id || ''}
-          items={group.cycles}
-          itemKey="id"
-          itemName="name"
-          setValue={(value) => {
-            const cycle = group.cycles.find((cycle) => cycle.id === value)!;
-            setCycle(cycle);
-          }}
+    <>
+      {screenSize.isSmallerThanLaptop ? (
+        <IconButton
+          onClick={() =>
+            handleSaveGroup(
+              group,
+              setGroup,
+              cycle,
+              setCycle,
+              setDetectedChanges,
+              token,
+              router
+            )
+          }
+          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
+        >
+          <Save
+            sx={{
+              mr: 0,
+              cursor: 'pointer',
+              backgroundColor: theme.palette.primary.main,
+              borderRadius: '50%',
+              p: 1,
+              fontSize: 40,
+            }}
+          />
+        </IconButton>
+      ) : (
+        <FloatingButton
+          label="Save group"
+          onClick={() =>
+            handleSaveGroup(
+              group,
+              setGroup,
+              cycle,
+              setCycle,
+              setDetectedChanges,
+              token,
+              router
+            )
+          }
         />
-
-        {/* Component Chips (Sticky Behavior) */}
+      )}
+      <Box pb={10}>
         <Box
           display="flex"
           flexDirection="column"
-          justifyContent="center"
           alignItems="center"
-          pb={!isSticky ? 1 : 0}
+          justifyContent="space-evenly"
+          width="100%"
+          minHeight={195}
           sx={{
-            borderBottomRightRadius: '20px',
-            borderBottomLeftRadius: '20px',
-            borderTopRightRadius: isSticky ? '20px' : 0,
-            borderTopLeftRadius: isSticky ? '20px' : 0,
             backgroundColor: theme.palette.background.paper,
-            position: isSticky ? 'fixed' : undefined,
-            top: isSticky ? '70px' : undefined,
-            zIndex: 1000,
-            transition: 'top 1s ease-in-out',
-            boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
-            border: isSticky ? '1px solid grey' : 'none',
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
           }}
         >
-          <ExerciseChips
-            components={ComponentService.toTree(
-              TrainingService.excludeWarmupCooldown(components)
-            )}
-            selected={selectedComponents}
-            bgColor={theme.palette.background.default}
-            primaryColor={theme.palette.primary.main}
-            setSelected={(component) =>
-              setSelectedComponents(component as Component[])
-            }
-          />
+          <Box display="flex" justifyContent="center" alignItems="center">
+            <Box display="flex" flexGrow={1}>
+              <SelectInput<Cycle>
+                label="Cycle"
+                icon={<RotateRight />}
+                value={cycle?.id || ''}
+                items={group.cycles}
+                itemKey="id"
+                itemName="name"
+                setValue={(value) => {
+                  const cycle = group.cycles.find(
+                    (cycle) => cycle.id === value
+                  )!;
+                  setCycle(cycle);
+                }}
+              />
+            </Box>
+
+            <Box display="flex" flexGrow={1}>
+              <SelectInput<PeriodizationType>
+                label="Periodization"
+                icon={<Redo />}
+                value={cycle?.periodization?.type || ''}
+                items={Object.values(PeriodizationType).filter(
+                  (p) => p !== PeriodizationType.NONE
+                )}
+                itemKey={undefined}
+                itemName={undefined}
+                setValue={(value) => {
+                  if (!cycle) return;
+
+                  const updatedCycle = {
+                    ...cycle,
+                    periodization: {
+                      ...cycle.periodization,
+                      type: !value
+                        ? PeriodizationType.NONE
+                        : (value as PeriodizationType),
+                    },
+                  };
+
+                  setCycle(updatedCycle);
+                  setGroup({
+                    ...group,
+                    cycles: group.cycles.map((c) =>
+                      c.id === updatedCycle.id ? updatedCycle : c
+                    ),
+                  });
+                  setDetectedChanges(true);
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Component Chips (Sticky Behavior) */}
+          <Box
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            pb={!isSticky ? 1 : 0}
+            sx={{
+              borderBottomRightRadius: '20px',
+              borderBottomLeftRadius: '20px',
+              borderTopRightRadius: isSticky ? '20px' : 0,
+              borderTopLeftRadius: isSticky ? '20px' : 0,
+              backgroundColor: theme.palette.background.paper,
+              position: isSticky ? 'fixed' : undefined,
+              top: isSticky ? '70px' : undefined,
+              zIndex: 1000,
+              transition: 'top 1s ease-in-out',
+              boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
+              border: isSticky ? '1px solid grey' : 'none',
+            }}
+          >
+            <ExerciseChips
+              components={ComponentService.toTree(
+                TrainingService.excludeWarmupCooldown(components)
+              )}
+              selected={selectedComponents}
+              bgColor={theme.palette.background.default}
+              primaryColor={theme.palette.primary.main}
+              setSelected={(component) =>
+                setSelectedComponents(component as Component[])
+              }
+            />
+          </Box>
         </Box>
+
+        {/* Choose cycle */}
+        <Box mb={2} />
+
+        {cycle && (
+          <Box borderRadius={2} borderColor={theme.palette.primary.main}>
+            {/* Training weeks */}
+            <Stack spacing={1} mt={2}>
+              {cycle.weeks.map((week, i) => (
+                <Fragment key={i}>
+                  <TrainingWeek
+                    index={i}
+                    week={week.map(({ date }) => dayjs(date!))}
+                    selected={selectedComponents}
+                    setSelected={(component) =>
+                      setSelectedComponents(component as Component[])
+                    }
+                    addTrainingComponent={(trainingId, input) =>
+                      handleAddTrainingComponents(
+                        token,
+                        { trainingId, ...input },
+                        {
+                          router,
+                          components,
+                          setTrainings,
+                          setFilteredTrainings,
+                        }
+                      )
+                    }
+                    deleteTrainingComponent={(trainingId, componentId) =>
+                      handleDeleteTrainingComponent(
+                        token,
+                        { trainingId, componentId },
+                        {
+                          router,
+                          setTrainings,
+                          setFilteredTrainings,
+                          components,
+                        }
+                      )
+                    }
+                  />
+                </Fragment>
+              ))}
+            </Stack>
+          </Box>
+        )}
       </Box>
-
-      {/* Choose cycle */}
-      <Box mb={2} />
-
-      {cycle && (
-        <Box borderRadius={2} borderColor={theme.palette.primary.main}>
-          {/* Training weeks */}
-          <Stack spacing={1} mt={2}>
-            {cycle.weeks.map((week, i) => (
-              <Fragment key={i}>
-                <TrainingWeek
-                  index={i}
-                  week={week.map(({ date }) => dayjs(date!))}
-                  selected={selectedComponents}
-                  setSelected={(component) =>
-                    setSelectedComponents(component as Component[])
-                  }
-                  addTrainingComponent={(trainingId, input) =>
-                    handleAddTrainingComponents(
-                      token,
-                      { trainingId, ...input },
-                      {
-                        router,
-                        components,
-                        setTrainings,
-                        setFilteredTrainings,
-                      }
-                    )
-                  }
-                  deleteTrainingComponent={(trainingId, componentId) =>
-                    handleDeleteTrainingComponent(
-                      token,
-                      { trainingId, componentId },
-                      {
-                        router,
-                        setTrainings,
-                        setFilteredTrainings,
-                        components,
-                      }
-                    )
-                  }
-                />
-              </Fragment>
-            ))}
-          </Stack>
-        </Box>
-      )}
-    </Box>
+    </>
   );
 }

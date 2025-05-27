@@ -15,14 +15,15 @@ interface Props<T> {
   value: string | number;
   setValue: (value: string | number) => void;
   items: T[];
-  itemKey: keyof T;
-  itemName: keyof T;
+  itemKey: keyof T | undefined;
+  itemName: keyof T | undefined;
   placeholder?: string;
   disableInputLabel?: boolean;
   enableRemove?: boolean;
   sx?: SxProps<Theme>;
   useRenderValue?: boolean;
   displayEmpty?: boolean;
+  disabled?: boolean;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -49,6 +50,7 @@ export default function SelectInput<T>(props: Props<T>) {
           <InputAdornment position="start">{props.icon}</InputAdornment>
         }
         displayEmpty={props.displayEmpty}
+        disabled={props.disabled}
         renderValue={
           props.useRenderValue
             ? (selected) => {
@@ -57,11 +59,17 @@ export default function SelectInput<T>(props: Props<T>) {
                     <em>{props.placeholder ? props.placeholder : 'None'}</em>
                   );
                 }
-                const selectedItem = props.items.find(
-                  (item) => item[props.itemKey] === selected
+                const selectedItem = props.items.find((item) =>
+                  props.itemKey
+                    ? item[props.itemKey] === selected
+                    : item === selected
                 );
                 return selectedItem ? (
-                  (selectedItem[props.itemName] as unknown as string)
+                  props.itemName ? (
+                    (selectedItem[props.itemName] as unknown as string)
+                  ) : (
+                    selectedItem.toString()
+                  )
                 ) : (
                   <em></em>
                 );
@@ -82,8 +90,17 @@ export default function SelectInput<T>(props: Props<T>) {
           <em>{props.placeholder ? props.placeholder : <>None</>}</em>
         </MenuItem>
         {props.items.map((item, i) => (
-          <MenuItem key={i} value={item[props.itemKey] as unknown as string}>
-            {item[props.itemName] as unknown as string}
+          <MenuItem
+            key={i}
+            value={
+              props.itemKey
+                ? (item[props.itemKey] as unknown as string)
+                : (item as unknown as string)
+            }
+          >
+            {props.itemName
+              ? (item[props.itemName] as unknown as string)
+              : (item as unknown as string)}
           </MenuItem>
         ))}
       </Select>
