@@ -14,6 +14,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   const {
     training,
     componentCalendarView,
+    periodizationView,
     trainingComponent,
     isSameDayAsSelectedComponent,
   } = props;
@@ -21,7 +22,9 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWrapped, setIsWrapped] = useState(false);
   const [components, setComponents] = useState<TrainingComponent[]>(
-    componentCalendarView && trainingComponent && trainingComponent.component
+    (componentCalendarView || periodizationView) &&
+      trainingComponent &&
+      trainingComponent.component
       ? (training.components
           .map((c) => {
             if (
@@ -37,7 +40,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
 
   useEffect(() => {
     if (
-      componentCalendarView &&
+      (componentCalendarView || periodizationView) &&
       trainingComponent &&
       trainingComponent.component
     ) {
@@ -76,7 +79,9 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     // Initial check & event listener for resizes
 
     setComponents(
-      componentCalendarView && trainingComponent && trainingComponent.component
+      (componentCalendarView || periodizationView) &&
+        trainingComponent &&
+        trainingComponent.component
         ? (training.components
             .map((c) => {
               if (
@@ -166,7 +171,8 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                       ? trainingComponent.color
                       : undefined,
                     fontSize:
-                      componentCalendarView && isSameDayAsSelectedComponent
+                      (componentCalendarView || periodizationView) &&
+                      isSameDayAsSelectedComponent
                         ? screenSize.isMobile
                           ? 20
                           : 33

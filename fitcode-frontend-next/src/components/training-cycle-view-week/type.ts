@@ -11,6 +11,7 @@ export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
   selected?: Component[];
   setSelected?: SetState<Component[]>;
   componentCalendarView?: boolean;
+  periodizationView?: boolean;
   trainingComponent?: TrainingComponent;
   training?: Training;
   setOpenOverwriteModal?: SetState<boolean>;
@@ -26,6 +27,7 @@ export type TrainingCycleViewGridItemProps = TrainingCycleViewCommonProps & {
   order: number;
   training: Training;
   componentCalendarView?: boolean;
+  periodizationView?: boolean;
   trainingComponent?: TrainingComponent;
   isSameDayAsSelectedComponent?: boolean;
 };

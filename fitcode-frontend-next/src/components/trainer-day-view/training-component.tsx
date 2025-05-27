@@ -9,6 +9,7 @@ import {
   Delete,
   MonitorHeart,
   MoreVert,
+  Timeline,
   Visibility,
   VisibilityOff,
 } from '@mui/icons-material';
@@ -62,6 +63,7 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { train } from '@tensorflow/tfjs';
 import { addMinutes } from 'date-fns';
+import ComponentPeriodization from './component-periodization';
 
 const commonService = CommonService.instance;
 
@@ -95,8 +97,9 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
   const [method, setMethod] = useState<Method | null>();
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
+  const [openPeriodizationModal, setOpenPeriodizationModal] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [heatmapView, setHeatmapView] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
   const [datePickerOpen, setDatePickerOpen] = useState(false); // Keep it open
@@ -312,7 +315,136 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
+            position="relative"
           >
+            <Box position="absolute" right={0} top={10}>
+              <IconButton sx={{ p: 0 }} onClick={handleMenuOpen}>
+                <MoreVert />
+              </IconButton>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem onClick={handleToggleVisibility}>
+                  {trainingComponent &&
+                  component &&
+                  training.id === selectedTraining?.id &&
+                  trainingComponent.id === component.id ? (
+                    <>
+                      <VisibilityOff sx={{ mr: 1 }} /> Hide Component
+                    </>
+                  ) : (
+                    <>
+                      <Visibility sx={{ mr: 1 }} /> Show Component
+                    </>
+                  )}
+                </MenuItem>
+
+                {!isWarmupOrCooldown(trainingComponent) && (
+                  <Box>
+                    <MenuItem
+                      onClick={() => {
+                        setOpenPeriodizationModal(true);
+                        handleMenuClose();
+                      }}
+                    >
+                      <Timeline sx={{ mr: 1 }} /> Periodize
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        if (
+                          !component ||
+                          trainingComponent.id !== component.id
+                        ) {
+                          setTraining(training);
+                          setComponent(trainingComponent);
+                        }
+
+                        setSelectedMonth(dayjs());
+                        setOpenCalendarModal(true);
+                        handleMenuClose();
+                      }}
+                    >
+                      <CalendarIcon sx={{ mr: 1 }} /> Component Calendar
+                    </MenuItem>
+
+                    <MenuItem
+                      onClick={() => {
+                        if (
+                          trainingComponent &&
+                          component &&
+                          training.id === selectedTraining?.id &&
+                          trainingComponent.id === component.id &&
+                          heatmapView
+                        ) {
+                          setHeatmapView(false);
+                          handleMenuClose();
+                          return;
+                        }
+                        if (
+                          !component ||
+                          trainingComponent.id !== component.id
+                        ) {
+                          setTraining(training);
+                          setComponent(trainingComponent);
+                        }
+
+                        setHeatmapView(true);
+                        handleMenuClose();
+                      }}
+                    >
+                      {trainingComponent &&
+                      component &&
+                      training.id === selectedTraining?.id &&
+                      trainingComponent.id === component.id &&
+                      heatmapView ? (
+                        <>
+                          <DoNotDisturb
+                            sx={{
+                              position: 'absolute',
+                              fontSize: 22,
+                            }}
+                          />
+                          <MonitorHeart sx={{ mr: 1, opacity: 0.5 }} /> Hide
+                          Heatmap
+                        </>
+                      ) : (
+                        <>
+                          <MonitorHeart sx={{ mr: 1 }} /> Workout Heatmap
+                        </>
+                      )}
+                    </MenuItem>
+
+                    <MenuItem
+                      onClick={() => {
+                        const newTraining = { ...training };
+                        newTraining.components = newTraining.components.filter(
+                          (c) => c.id !== trainingComponent.id
+                        );
+                        newTraining.avgFutureWorkloadValues =
+                          newTraining.avgFutureWorkloadValues.filter(
+                            (c) =>
+                              c.rootComponentId !==
+                              trainingComponent.component?.id
+                          );
+                        setTraining(newTraining);
+                        setFilteredTrainings((prev) =>
+                          prev.map((t) =>
+                            t.id === training.id ? newTraining : t
+                          )
+                        );
+                        setDetectedChanges(true);
+                        handleMenuClose();
+                      }}
+                    >
+                      <Delete sx={{ mr: 1 }} /> Delete Component
+                    </MenuItem>
+                  </Box>
+                )}
+              </Menu>
+            </Box>
             <Stack
               direction={
                 screenSize.isMobile ||
@@ -332,7 +464,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 alignItems="center"
                 flexDirection={screenSize.isMobile ? 'column' : 'row'}
                 width="100%"
-                position="relative"
               >
                 <Box display="flex" p={0} py={1}>
                   {trainingComponent.component &&
@@ -387,7 +518,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                 color="primary"
                               />
                             )}
-
                             <Typography
                               variant="h6"
                               sx={{
@@ -412,7 +542,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                               }}
                             >
                               {trainingComponent.component.name}
-                            </Typography>
+                            </Typography>{' '}
                           </Box>
 
                           {screenSize.isMobile ? (
@@ -427,143 +557,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                 trainingComponent.from
                               )}
                             </Typography>
-                          )}
-
-                          {screenSize.isMobile && (
-                            <Box position="absolute" right={0}>
-                              <IconButton
-                                sx={{ p: 0 }}
-                                onClick={handleMenuOpen}
-                              >
-                                <MoreVert />
-                              </IconButton>
-
-                              <Menu
-                                anchorEl={anchorEl}
-                                open={Boolean(anchorEl)}
-                                onClose={handleMenuClose}
-                              >
-                                <MenuItem onClick={handleToggleVisibility}>
-                                  {trainingComponent &&
-                                  component &&
-                                  training.id === selectedTraining?.id &&
-                                  trainingComponent.id === component.id ? (
-                                    <>
-                                      <VisibilityOff sx={{ mr: 1 }} /> Hide
-                                      Component
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Visibility sx={{ mr: 1 }} /> Show
-                                      Component
-                                    </>
-                                  )}
-                                </MenuItem>
-
-                                {!isWarmupOrCooldown(trainingComponent) && (
-                                  <Box>
-                                    <MenuItem
-                                      onClick={() => {
-                                        if (
-                                          !component ||
-                                          trainingComponent.id !== component.id
-                                        ) {
-                                          setTraining(training);
-                                          setComponent(trainingComponent);
-                                        }
-
-                                        setSelectedMonth(dayjs());
-                                        setOpenCalendarModal(true);
-                                        handleMenuClose();
-                                      }}
-                                    >
-                                      <CalendarIcon sx={{ mr: 1 }} /> Component
-                                      Calendar
-                                    </MenuItem>
-
-                                    <MenuItem
-                                      onClick={() => {
-                                        if (
-                                          trainingComponent &&
-                                          component &&
-                                          training.id ===
-                                            selectedTraining?.id &&
-                                          trainingComponent.id ===
-                                            component.id &&
-                                          heatmapView
-                                        ) {
-                                          setHeatmapView(false);
-                                          handleMenuClose();
-                                          return;
-                                        }
-                                        if (
-                                          !component ||
-                                          trainingComponent.id !== component.id
-                                        ) {
-                                          setTraining(training);
-                                          setComponent(trainingComponent);
-                                        }
-
-                                        setHeatmapView(true);
-                                        handleMenuClose();
-                                      }}
-                                    >
-                                      {trainingComponent &&
-                                      component &&
-                                      training.id === selectedTraining?.id &&
-                                      trainingComponent.id === component.id &&
-                                      heatmapView ? (
-                                        <>
-                                          <DoNotDisturb
-                                            sx={{
-                                              position: 'absolute',
-                                              fontSize: 22,
-                                            }}
-                                          />
-                                          <MonitorHeart
-                                            sx={{ mr: 1, opacity: 0.5 }}
-                                          />{' '}
-                                          Hide Heatmap
-                                        </>
-                                      ) : (
-                                        <>
-                                          <MonitorHeart sx={{ mr: 1 }} />{' '}
-                                          Workout Heatmap
-                                        </>
-                                      )}
-                                    </MenuItem>
-
-                                    <MenuItem
-                                      onClick={() => {
-                                        const newTraining = { ...training };
-                                        newTraining.components =
-                                          newTraining.components.filter(
-                                            (c) => c.id !== trainingComponent.id
-                                          );
-                                        newTraining.avgFutureWorkloadValues =
-                                          newTraining.avgFutureWorkloadValues.filter(
-                                            (c) =>
-                                              c.rootComponentId !==
-                                              trainingComponent.component?.id
-                                          );
-                                        setTraining(newTraining);
-                                        setFilteredTrainings((prev) =>
-                                          prev.map((t) =>
-                                            t.id === training.id
-                                              ? newTraining
-                                              : t
-                                          )
-                                        );
-                                        setDetectedChanges(true);
-                                        handleMenuClose();
-                                      }}
-                                    >
-                                      <Delete sx={{ mr: 1 }} /> Delete Component
-                                    </MenuItem>
-                                  </Box>
-                                )}
-                              </Menu>
-                            </Box>
                           )}
                         </Box>
                       );
@@ -646,131 +639,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                         />
                       </Box>
                     )}
-
-                  {!screenSize.isMobile && (
-                    <>
-                      <IconButton sx={{ p: 0 }} onClick={handleMenuOpen}>
-                        <MoreVert />
-                      </IconButton>
-
-                      <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleMenuClose}
-                      >
-                        <MenuItem onClick={handleToggleVisibility}>
-                          {trainingComponent &&
-                          component &&
-                          training.id === selectedTraining?.id &&
-                          trainingComponent.id === component.id ? (
-                            <>
-                              <VisibilityOff sx={{ mr: 1 }} /> Hide Component
-                            </>
-                          ) : (
-                            <>
-                              <Visibility sx={{ mr: 1 }} /> Show Component
-                            </>
-                          )}
-                        </MenuItem>
-
-                        {!isWarmupOrCooldown(trainingComponent) && (
-                          <Box>
-                            <MenuItem
-                              onClick={() => {
-                                if (
-                                  !component ||
-                                  trainingComponent.id !== component.id
-                                ) {
-                                  setTraining(training);
-                                  setComponent(trainingComponent);
-                                }
-
-                                setSelectedMonth(dayjs());
-                                setOpenCalendarModal(true);
-                                handleMenuClose();
-                              }}
-                            >
-                              <CalendarIcon sx={{ mr: 1 }} /> Component Calendar
-                            </MenuItem>
-
-                            <MenuItem
-                              onClick={() => {
-                                if (
-                                  trainingComponent &&
-                                  component &&
-                                  training.id === selectedTraining?.id &&
-                                  trainingComponent.id === component.id &&
-                                  heatmapView
-                                ) {
-                                  setHeatmapView(false);
-                                  handleMenuClose();
-                                  return;
-                                }
-                                if (
-                                  !component ||
-                                  trainingComponent.id !== component.id
-                                ) {
-                                  setTraining(training);
-                                  setComponent(trainingComponent);
-                                }
-
-                                setHeatmapView(true);
-                                handleMenuClose();
-                              }}
-                            >
-                              {trainingComponent &&
-                              component &&
-                              training.id === selectedTraining?.id &&
-                              trainingComponent.id === component.id &&
-                              heatmapView ? (
-                                <>
-                                  <DoNotDisturb
-                                    sx={{
-                                      position: 'absolute',
-                                      fontSize: 22,
-                                    }}
-                                  />
-                                  <MonitorHeart sx={{ mr: 1, opacity: 0.5 }} />{' '}
-                                  Hide Heatmap
-                                </>
-                              ) : (
-                                <>
-                                  <MonitorHeart sx={{ mr: 1 }} /> Workout
-                                  Heatmap
-                                </>
-                              )}
-                            </MenuItem>
-
-                            <MenuItem
-                              onClick={() => {
-                                const newTraining = { ...training };
-                                newTraining.components =
-                                  newTraining.components.filter(
-                                    (c) => c.id !== trainingComponent.id
-                                  );
-                                newTraining.avgFutureWorkloadValues =
-                                  newTraining.avgFutureWorkloadValues.filter(
-                                    (c) =>
-                                      c.rootComponentId !==
-                                      trainingComponent.component?.id
-                                  );
-                                setTraining(newTraining);
-                                setFilteredTrainings((prev) =>
-                                  prev.map((t) =>
-                                    t.id === training.id ? newTraining : t
-                                  )
-                                );
-                                setDetectedChanges(true);
-                                handleMenuClose();
-                              }}
-                            >
-                              <Delete sx={{ mr: 1 }} /> Delete Component
-                            </MenuItem>
-                          </Box>
-                        )}
-                      </Menu>
-                    </>
-                  )}
                 </Box>
               </Box>
             </Stack>
@@ -827,6 +695,30 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           setOpenOverwriteModal={setOpenOverwriteModal}
           setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           handleCopyComponentApiRequest={handleCopyComponentApiRequest}
+        />
+      </MyModal>
+      <MyModal
+        isOpen={openPeriodizationModal}
+        setIsOpen={(open) => setOpenPeriodizationModal(open)}
+        cancelText="Close"
+        onCancel={() => {
+          setOpenPeriodizationModal(false);
+        }}
+        componentCalendarView
+        dialogueContentSx={{
+          minWidth: screenSize.isTablet
+            ? 500
+            : screenSize.isSmallerThanLaptop
+              ? 300
+              : 1000,
+        }}
+        onConfirm={async () => {
+          setOpenPeriodizationModal(false);
+        }}
+      >
+        <ComponentPeriodization
+          selectedComponent={trainingComponent}
+          training={training}
         />
       </MyModal>
       <MyModal

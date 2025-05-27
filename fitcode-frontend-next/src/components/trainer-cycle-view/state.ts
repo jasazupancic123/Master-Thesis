@@ -121,6 +121,7 @@ export async function handleAddTrainingComponents(
         // training was deleted
         setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
         setFilteredTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+        toast.success('Training deleted successfully');
         return;
       }
 
