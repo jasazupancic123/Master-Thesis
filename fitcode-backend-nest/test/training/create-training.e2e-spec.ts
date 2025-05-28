@@ -29,7 +29,7 @@ import {
 } from '../../src/component/constant/param.constant';
 import { ParamType, VolType } from '../../src/component/enum/param.enum';
 import { TrainingComponent } from '../../src/training/entity/training-component.entity';
-import { UserWorkloadService } from '../../src/training/service/user-workload.service';
+import { WorkloadService } from '../../src/training/service/workload.service';
 import { SetStatus } from '../../src/training/enum/set-status.enum';
 
 describe('Create Training (e2e)', () => {
@@ -40,7 +40,7 @@ describe('Create Training (e2e)', () => {
   let trainingService: TrainingService;
   let groupService: GroupService;
   let userService: UserService;
-  let workloadService: UserWorkloadService;
+  let workloadService: WorkloadService;
 
   let group: Group;
   let component: Component;
@@ -59,7 +59,7 @@ describe('Create Training (e2e)', () => {
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     userService = moduleFixture.get(UserService);
-    workloadService = moduleFixture.get(UserWorkloadService);
+    workloadService = moduleFixture.get(WorkloadService);
 
     component = await componentService.create(generateComponentStub());
     group = await createGroupWithCycles(groupService, {

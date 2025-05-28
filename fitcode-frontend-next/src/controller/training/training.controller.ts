@@ -156,39 +156,6 @@ export class TrainingController {
     );
   }
 
-  static async updateWorkloads(
-    token: string,
-    trainingId: string,
-    componentId: string,
-    body: {
-      workloads: Pick<
-        Workload,
-        | 'userId'
-        | 'exerciseId'
-        | 'setNumber'
-        | 'notes'
-        | 'volWork1ValueL'
-        | 'volWork1ValueR'
-        | 'volWork2ValueL'
-        | 'volWork2ValueR'
-        | 'volRecValueL'
-        | 'volRecValueR'
-        | 'intWork1ValueL'
-        | 'intWork1ValueR'
-        | 'intWork2ValueL'
-        | 'intWork2ValueR'
-        | 'intRecValueL'
-        | 'intRecValueR'
-      >[];
-    }
-  ) {
-    return api.patch<{}>(
-      `/training/${trainingId}/component/${componentId}`,
-      body,
-      { token }
-    );
-  }
-
   static async addComponents(
     token: string,
     trainingId: string,
