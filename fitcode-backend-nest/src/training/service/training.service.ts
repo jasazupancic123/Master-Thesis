@@ -1080,6 +1080,7 @@ export class TrainingService {
   ): Promise<Training> {
     const { trainingId, componentId } = ref;
     const { userId, rootComponentId, supersets } = input;
+
     this.logger.log(
       `User ${user.uid} is finishing component ${componentId} for user ${input.userId} for training ${trainingId}`,
     );
