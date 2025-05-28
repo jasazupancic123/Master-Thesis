@@ -7,7 +7,7 @@ import { TrainingRepository } from './repository/training.repository';
 import { WorkloadRepository } from './repository/workload.repository';
 import { TrainingPlanService } from './service/training-plan.service';
 import { TrainingService } from './service/training.service';
-import { UserWorkloadService } from './service/user-workload.service';
+import { WorkloadService } from './service/workload.service';
 import { TrainingController } from './training.controller';
 import { AttributeModule } from '../attribute/attribute.module';
 
@@ -15,18 +15,24 @@ import { AttributeModule } from '../attribute/attribute.module';
   imports: [
     AttributeModule,
     ComponentModule,
-    ExerciseModule,
+    forwardRef(() => ExerciseModule),
     forwardRef(() => UserModule),
     forwardRef(() => GroupModule),
   ],
   providers: [
     WorkloadRepository,
     TrainingRepository,
-    UserWorkloadService,
+    WorkloadService,
     TrainingPlanService,
     TrainingService,
   ],
   controllers: [TrainingController],
-  exports: [TrainingService],
+  exports: [
+    TrainingService,
+    WorkloadRepository,
+    TrainingRepository,
+    WorkloadService,
+    TrainingPlanService,
+  ],
 })
 export class TrainingModule {}

@@ -187,26 +187,6 @@ export class WorkloadService {
       );
   }
 
-  async findAllByAthleteGroupExerciseIds(
-    athleteId: string,
-    groupId: string,
-    exerciseIds: string[],
-  ): Promise<Workload[]> {
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', '==', athleteId)
-      .where('groupId', '==', groupId)
-      .where('exerciseId', 'in', exerciseIds)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload & TimestampEntity>,
-          ),
-        ),
-      );
-  }
-
   async findAllByUserTrainingComponentId(
     athleteId: string,
     trainingId: string,
@@ -319,7 +299,7 @@ export class WorkloadService {
               plannedAt: training.from,
               notes: null,
               isPersonalized: false,
-              ...this.parseParamValues(paramValues),
+              ...this.parsePrescribedParamValues(paramValues),
               ...this.calculateIntValues(paramValues, bodyweight, workloads),
             },
             { timestamps: true },
@@ -533,7 +513,29 @@ export class WorkloadService {
     return this.commonService.number.rm(weight, reps <= 0 ? 1 : reps)(n);
   }
 
-  private parseParamValues(
+  /**
+   * Parses values that athlete completed, so it's assumed that `paramValues`
+   * are populated with correct values
+   */
+  parseActualParamValues(paramValues: AttributeValue[]) {
+    const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
+    const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
+    const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
+    const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
+    const intWork2 = paramValues.find((p) => p.field === ParamType.IntWork2);
+    const intRec = paramValues.find((p) => p.field === ParamType.IntRec1);
+
+    return {
+      volWork1Value: this.parseValue(volWork1),
+      volWork2Value: this.parseValue(volWork2),
+      volRecValue: this.parseValue(volRec),
+      intWork1Value: this.parseValue(intWork1),
+      intWork2Value: this.parseValue(intWork2),
+      intRecValue: this.parseValue(intRec),
+    };
+  }
+
+  private parsePrescribedParamValues(
     paramValues: AttributeValue[],
   ): Pick<
     Workload,

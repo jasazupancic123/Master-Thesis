@@ -1,9 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Expose, Type } from "class-transformer";
-import { IsString, IsNotEmpty, IsNumber, IsInt, ValidateNested } from "class-validator";
-import { CalculatedAvgWorkloadValues } from "./avg-workload-values.entity";
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
+import { IsString, IsNotEmpty, IsInt, IsNumber } from 'class-validator';
 
-export class AverageWorkloadValues {
+export class GroupWorkloadStats {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -19,11 +18,15 @@ export class AverageWorkloadValues {
   @IsInt()
   @ApiProperty()
   @Expose()
-  numMembers: number;
+  numMembers: number; // to calculate new average workload stats
 
-  @ValidateNested()
-  @Type(() => CalculatedAvgWorkloadValues)
+  @IsNumber()
   @ApiProperty()
   @Expose()
-  avgWorkloadValue: CalculatedAvgWorkloadValues;
+  intensity: number;
+
+  @IsNumber()
+  @ApiProperty()
+  @Expose()
+  volume: number;
 }

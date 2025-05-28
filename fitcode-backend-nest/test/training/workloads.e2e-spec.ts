@@ -29,7 +29,7 @@ import {
   ParamType,
   VolType,
 } from '../../src/component/enum/param.enum';
-import { UserWorkloadService } from '../../src/training/service/user-workload.service';
+import { WorkloadService } from '../../src/training/service/workload.service';
 import { createAthleteUserAndToken } from '../utils/auth.util';
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
@@ -42,7 +42,7 @@ describe('Training Workloads (e2e)', () => {
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
-  let workloadService: UserWorkloadService;
+  let workloadService: WorkloadService;
 
   let group: Group;
   let component: Component;
@@ -60,7 +60,7 @@ describe('Training Workloads (e2e)', () => {
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
-    workloadService = moduleFixture.get(UserWorkloadService);
+    workloadService = moduleFixture.get(WorkloadService);
 
     component = await componentService.create(
       generateComponentStub({ params: { [DEFAULT_PARAMS_KEY]: [] } }),

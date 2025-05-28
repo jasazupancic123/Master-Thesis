@@ -18,9 +18,4 @@ export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {
   @ApiProperty()
   @Expose()
   sets: ExerciseSet[];
-
-  @IsBoolean()
-  @ApiProperty()
-  @Expose()
-  periodized: boolean;
 }

@@ -34,6 +34,8 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { WorkloadService } from './workload.service';
 
 @Injectable()
 export class TrainingPlanService {
@@ -45,7 +47,13 @@ export class TrainingPlanService {
     private readonly exerciseService: Wrapper<ExerciseService>,
     @Inject(forwardRef(() => ExerciseAttributeValueRepository))
     private readonly exerciseAttributeValueRepository: Wrapper<ExerciseAttributeValueRepository>,
+    @Inject(forwardRef(() => WorkloadService))
+    private readonly workloadService: Wrapper<WorkloadService>,
   ) {}
+
+  getTrainingComponents(training: Training) {
+    return [training.warmup, ...training.components, training.cooldown];
+  }
 
   getAddComponentsQuery(
     training: Training,
@@ -109,6 +117,69 @@ export class TrainingPlanService {
             exerciseId: e.id,
           }),
       })),
+    );
+  }
+
+  /**
+   * @param training - Existing training in database
+   * @param exercises - New completed exercises values from athlete
+   * @param rootComponentId - Root component ID for exercises
+   */
+  calculateTrainingStats(
+    training: Training,
+    exercises: TrainingExercise[],
+    rootComponentId: string,
+  ) {
+    for (const e of exercises) {
+      // completed exercises
+      let volume = 0;
+      let intensity = 0;
+
+      for (const set of e.sets) {
+        // currently stats only for left side
+        const { volWork1Value, intWork1Value } =
+          this.workloadService.parseActualParamValues(set.paramValuesL);
+
+        if (volWork1Value && intWork1Value) {
+          volume += volWork1Value;
+          intensity += intWork1Value;
+        }
+      }
+
+      if (intensity === 0 || volume === 0) continue;
+
+      volume = volume / e.sets.length;
+      intensity = intensity / e.sets.length;
+
+      let stats = training.stats.find((w) => w.exerciseId === e.id);
+
+      if (!stats) {
+        stats = {
+          exerciseId: e.id,
+          rootComponentId,
+          numMembers: 1,
+          volume,
+          intensity,
+        };
+
+        // we can optimize the training object here by removing the entry with the same exerciseId from avgFutureWorkloadValues if needed
+      } else {
+        stats.numMembers++;
+        stats.volume =
+          (stats.volume * (stats.numMembers - 1) + volume) / stats.numMembers;
+
+        stats.intensity =
+          (stats.intensity * (stats.numMembers - 1) + intensity) /
+          stats.numMembers;
+      }
+
+      return stats;
+    }
+  }
+
+  isTrainingCompleted(userId: string, trainingComponents: TrainingComponent[]) {
+    return trainingComponents.every((c) =>
+      c.completedMembersIds.includes(userId),
     );
   }
 
