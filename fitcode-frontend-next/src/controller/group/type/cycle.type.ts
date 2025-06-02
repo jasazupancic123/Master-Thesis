@@ -9,7 +9,6 @@ export type Cycle = BaseEntity &
     description?: string;
     rootComponentsIds: string[];
     leafComponentsIds: string[];
-    periodization: Periodization;
 
     // virtual
     weeks: Week[][];

@@ -1,20 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { Menu, MenuItem, Popover, TextField, Box } from '@mui/material';
 import { Component } from '@/controller/component/type/component.type';
+import { useTheme } from '@mui/material';
+import { Clear, Remove } from '@mui/icons-material';
 
-export default function CycleComponentsSelect({
-  label,
-  selectedValue,
-  components,
-  parentId,
-  setValue,
-}: {
+interface CycleComponentsSelectProps {
   label: string;
   selectedValue: string;
+  rootComponent: Component;
   components: Component[];
   parentId: string;
   setValue: (value: string) => void;
-}) {
+}
+
+export default function CycleComponentsSelect(
+  props: CycleComponentsSelectProps
+) {
+  const {
+    label,
+    selectedValue,
+    rootComponent,
+    components,
+    parentId,
+    setValue,
+  } = props;
+
+  const theme = useTheme();
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [subMenuAnchor, setSubMenuAnchor] = useState<null | HTMLElement>(null);
   const [subMenuItems, setSubMenuItems] = useState<Component[]>([]);
@@ -57,6 +69,15 @@ export default function CycleComponentsSelect({
 
       {/* Main Menu */}
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+        <MenuItem
+          key="remove"
+          onClick={() => setValue('Remove')}
+          sx={{ color: theme.palette.error.main }}
+        >
+          <Clear sx={{ color: theme.palette.error.main, pl: 0, ml: 0 }} />{' '}
+          Remove
+        </MenuItem>
+
         {!components.filter((c) => c.parentId === parentId).length ? (
           <MenuItem>No child components</MenuItem>
         ) : (

@@ -67,11 +67,9 @@ export default function Dashboard() {
   return (
     <>
       <Box mt="16px" display="flex" flexDirection="row" width="100%">
-        {!screenSize.isMobile && (
-          <Box sx={{ width: 50 }}>
-            <DashboardSidebar view={view} setView={setView} />
-          </Box>
-        )}
+        <Box sx={{ width: !screenSize.isMobile ? 50 : undefined }}>
+          <DashboardSidebar view={view} setView={setView} />
+        </Box>
 
         <Box
           sx={{

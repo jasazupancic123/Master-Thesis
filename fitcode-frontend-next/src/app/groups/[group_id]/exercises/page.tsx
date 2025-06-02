@@ -10,6 +10,7 @@ import { notFound } from 'next/navigation';
 import { GroupIdPageParams, GroupIdPageProps } from '../props';
 import { ExercisesPage } from './exercises-page';
 import { AttributeController } from '@/controller/attribute/attribute.controller';
+import { MethodController } from '@/controller/method/method.controller';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -30,13 +31,15 @@ export default async function Page(props: GroupIdPageParams) {
 
   if ([UserRole.ATHLETE, UserRole.ADMIN].includes(role)) return notFound();
 
-  const [users, groups, exercises, attributes, components] = await Promise.all([
-    UserController.findAll(token),
-    GroupController.findAll(token),
-    ExerciseController.findAll(token),
-    AttributeController.findAll(),
-    ComponentController.findAll(),
-  ]);
+  const [users, groups, exercises, attributes, components, methods] =
+    await Promise.all([
+      UserController.findAll(token),
+      GroupController.findAll(token),
+      ExerciseController.findAll(token),
+      AttributeController.findAll(),
+      ComponentController.findAll(),
+      MethodController.findAll(token),
+    ]);
 
   const pageProps: GroupIdPageProps = {
     token,
@@ -48,6 +51,7 @@ export default async function Page(props: GroupIdPageParams) {
     attributes,
     components,
     trainings: [],
+    methods,
   };
 
   return (

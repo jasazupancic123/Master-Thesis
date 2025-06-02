@@ -13,6 +13,7 @@ import { ReactNode } from 'react';
 import { GroupIdPageParams, GroupIdPageProps } from './props';
 import TrainerGroupPage from './trainer-group-page';
 import { AttributeController } from '@/controller/attribute/attribute.controller';
+import { MethodController } from '@/controller/method/method.controller';
 
 export default async function Page(props: GroupIdPageParams) {
   // fetch data
@@ -33,7 +34,7 @@ export default async function Page(props: GroupIdPageParams) {
 
   if ([UserRole.ATHLETE, UserRole.ADMIN].includes(role)) return notFound();
 
-  const [users, groups, exercises, attributes, components, trainings] =
+  const [users, groups, exercises, attributes, components, trainings, methods] =
     await Promise.all([
       UserController.findAll(token),
       GroupController.findAll(token),
@@ -41,13 +42,11 @@ export default async function Page(props: GroupIdPageParams) {
       AttributeController.findAll(),
       ComponentController.findAll(),
       TrainingController.findAll(token, { groupId }),
+      MethodController.findAll(token),
     ]);
 
   const mappedTrainings = trainings.map((t) =>
-    TrainingService.mapComponents(
-      TrainingService.mapExercises(t, exercises),
-      components
-    )
+    TrainingService.mapComponentsExercises(t, components, exercises)
   );
 
   const context: GroupIdPageProps = {
@@ -60,6 +59,7 @@ export default async function Page(props: GroupIdPageParams) {
     attributes,
     components,
     trainings: mappedTrainings,
+    methods,
   };
 
   const mapper: Record<UserRole, ReactNode> = {

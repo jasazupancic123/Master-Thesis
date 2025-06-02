@@ -299,7 +299,11 @@ export class UserWorkloadService {
     }
   }
 
-  createForCustomAthleteWorkloads(batch: WriteBatch, workloads: Workload[]) {
+  createForCustomAthleteWorkloads(
+    batch: WriteBatch,
+    workloads: Workload[],
+    trainings: Training[],
+  ) {
     for (const workload of workloads) {
       const docRef = this.workloadRepository
         .collection({ trainingId: workload.trainingId })
@@ -313,6 +317,9 @@ export class UserWorkloadService {
           }),
         );
 
+      const training = trainings.find((t) => t.id === workload.trainingId);
+      if(!training) continue;
+
       const query = this.firebaseService.buildCreateQuery<Workload>(
         {
           groupId: workload.groupId,
@@ -323,7 +330,7 @@ export class UserWorkloadService {
           exerciseId: workload.exerciseId,
           setNumber: workload.setNumber,
           status: SetStatus.NOT_STARTED,
-          plannedAt: new Date(),
+          plannedAt: training.from,
           notes: null,
           isPersonalized: true,
           prescribedIntRecValueL: workload.prescribedIntRecValueL,

@@ -62,8 +62,9 @@ export class TrainingPlanService {
           from: c.from ? c.from : addMinutes(lastComponent.from, 30),
           to: c.to ? c.to : addMinutes(lastComponent.from, 60),
           completedMembersIds: [],
+          target: c.target,
           subgroups: [],
-          supersets: [{ exercises: [] }],
+          supersets: [],
         })),
       ],
     };

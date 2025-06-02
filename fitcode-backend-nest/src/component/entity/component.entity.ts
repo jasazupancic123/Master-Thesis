@@ -3,6 +3,7 @@ import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { IdEntity } from '../../common/entity/id.entity';
 import { ComponentParam } from './component-param.entity';
+import { Target } from 'src/target/entity/target.entity';
 
 export class Component extends IdEntity {
   @IsString()
@@ -20,6 +21,13 @@ export class Component extends IdEntity {
   @ApiProperty()
   @Expose()
   parentId: string | null; // parent component slug
+
+  @IsString({each: true})
+  @IsNotEmpty({ each: true })
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  targets: Target[]; // targets which the component supports
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })

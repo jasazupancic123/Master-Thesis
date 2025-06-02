@@ -8,8 +8,6 @@ import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import TrainingPage from './training-page';
-import { AthleteProvider } from '@/context/athlete-provider';
-import { TrainingProvider } from '@/context/training-provider';
 
 export default async function Page() {
   // fetch data
@@ -30,8 +28,7 @@ export default async function Page() {
   if ([UserRole.ADMIN, UserRole.MANAGER].includes(role)) return notFound();
 
   const mappedTrainings = trainings.map((t) => {
-    t = TrainingService.mapComponents(t, components);
-    t = TrainingService.mapExercises(t, exercises);
+    t = TrainingService.mapComponentsExercises(t, components, exercises);
     return t;
   });
 

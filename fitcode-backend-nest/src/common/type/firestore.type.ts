@@ -52,6 +52,8 @@ export interface RootFirestoreCollectionRepository<Model = any> {
 
 export type ComponentRef = { componentId: string };
 export type InstitutionRef = { institutionId: string };
+export type TargetRef = { targetId: string };
+export type MethodRef = { methodId: string };
 export type ExerciseRef = { exerciseId: string };
 export type ExerciseAttributeValueRef = ExerciseRef & {
   exerciseAttributeValueId: string;

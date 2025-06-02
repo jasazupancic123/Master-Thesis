@@ -91,6 +91,7 @@ export class TrainingRepository
           to: c.to ? c.to : endOfHour(addHours(new Date(), i + 1)),
           supersets: [{ color: null, exercises: [] }],
           subgroups: [],
+          target: c.target || null,
           completedMembersIds: [],
         })),
       },
@@ -108,6 +109,7 @@ export class TrainingRepository
         id: c.id,
         from: c.from,
         to: c.to,
+        target: c.target || null,
         color: c.color,
         completedMembersIds: c.completedMembersIds,
         subgroups: c.subgroups.map((s) => ({

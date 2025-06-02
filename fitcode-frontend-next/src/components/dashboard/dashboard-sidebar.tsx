@@ -52,7 +52,7 @@ export default function DashboardSidebar(props: DashboardSidebarProps) {
           width: '100%',
           transition: 'margin-left 0.3s ease-in-out',
           boxShadow: 'none',
-          zIndex: 1100,
+          zIndex: 1500,
         }}
       >
         <Toolbar
@@ -241,7 +241,7 @@ export default function DashboardSidebar(props: DashboardSidebarProps) {
             bottom: 0,
             left: 0,
             right: 0,
-            zIndex: 1000,
+            zIndex: 10000,
           }}
         >
           {Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role)).map(

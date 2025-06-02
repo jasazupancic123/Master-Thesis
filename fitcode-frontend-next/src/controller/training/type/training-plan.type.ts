@@ -6,6 +6,7 @@ import { Subgroup } from './subgroup.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { CopiedFrom } from '@/controller/component/type/copied-from.type';
+import { Target } from '@/controller/target/type/target.type';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
@@ -15,6 +16,7 @@ export type TrainingComponent = IdEntity &
 
     // mapped properties
     completedMembersIds: string[]; // members who completed the component
+    target?: Target; // selected target
     component?: Component;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
   };

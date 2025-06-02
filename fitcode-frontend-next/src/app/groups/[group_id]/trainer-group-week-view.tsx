@@ -24,6 +24,7 @@ export default function TrainerWeekView() {
   const {
     token,
     components,
+    exercises,
     cycle,
     filteredTrainings,
     setTrainings,
@@ -151,10 +152,12 @@ export default function TrainerWeekView() {
                                 cooldown: training.cooldown,
                               }),
                             (training) => {
-                              const mapped = TrainingService.mapComponents(
-                                training,
-                                components
-                              );
+                              const mapped =
+                                TrainingService.mapComponentsExercises(
+                                  training,
+                                  components,
+                                  exercises
+                                );
 
                               setTrainings((prev) =>
                                 prev.map((t) =>

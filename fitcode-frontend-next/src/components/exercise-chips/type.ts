@@ -3,6 +3,7 @@ import {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
+import { Target } from '@/controller/target/type/target.type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { SxProps } from '@mui/material';
 
@@ -23,4 +24,7 @@ export interface ExerciseChipsProps {
   bgColor?: string;
   primaryColor?: string;
   type?: 'single' | 'multiple';
+  cycleView?: boolean; // used in cycle view to show only components with methods
+  selectedTargets?: { componentId: string; target: Target }[];
+  setSelectedTargets?: SetState<{ componentId: string; target: Target }[]>;
 }

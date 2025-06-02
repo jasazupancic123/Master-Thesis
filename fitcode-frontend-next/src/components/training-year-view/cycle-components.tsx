@@ -149,12 +149,13 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         (c) => c.id === cycle.leafComponentsIds[i]
                       )?.name || ''
                     }
+                    rootComponent={component}
                     components={components}
                     parentId={component.id}
                     setValue={(value) => {
                       setDetectedChanges(true);
 
-                      if (value === 'Remove Component') {
+                      if (value === 'Remove') {
                         const newCycle = {
                           ...cycle,
                           rootComponentsIds: cycle.rootComponentsIds.filter(

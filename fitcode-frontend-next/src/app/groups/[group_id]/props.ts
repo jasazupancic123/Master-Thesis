@@ -3,6 +3,7 @@ import { Pagination } from '@/common/type/paginate.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { Component } from '@/controller/component/type/component.type';
+import { Method } from '@/controller/method/type/method.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
@@ -13,6 +14,7 @@ import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
+import { Target } from '@/controller/target/type/target.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -26,6 +28,7 @@ export interface GroupIdPageProps {
   exercises: Exercise[];
   groups: Group[];
   trainings: Training[];
+  methods: Method[];
 }
 
 export type GroupContextProps = GroupIdPageProps & {

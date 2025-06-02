@@ -1,3 +1,4 @@
+import { useScreenSize } from '@/context/screen-size-provider';
 import {
   Dialog,
   DialogActions,
@@ -41,6 +42,8 @@ export default function MyModal(props: Props) {
     componentCalendarView,
   } = props;
 
+  const screenSize = useScreenSize();
+
   function handleClose() {
     setIsOpen(false);
     if (onCancel) onCancel();
@@ -64,7 +67,12 @@ export default function MyModal(props: Props) {
           {title && <DialogTitle>{title}</DialogTitle>}
           <DialogContent
             dividers
-            sx={{ ...dialogueContentSx, width, bgcolor: 'background.default' }}
+            sx={{
+              ...dialogueContentSx,
+              width,
+              bgcolor: 'background.default',
+              p: screenSize.isMobile ? 0.5 : undefined,
+            }}
           >
             {children}
 
