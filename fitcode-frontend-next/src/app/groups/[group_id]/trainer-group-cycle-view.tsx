@@ -60,9 +60,12 @@ export default function TrainerCycleView() {
         display="flex"
         flexDirection="column"
         alignItems="center"
-        justifyContent="space-evenly"
+        // justifyContent="space-evenly"
+        justifyContent="flex-start"
+        gap={0}
+        pt={0}
         width="100%"
-        minHeight={195}
+        minHeight={165}
         sx={{
           backgroundColor: theme.palette.background.paper,
           borderBottomLeftRadius: 20,

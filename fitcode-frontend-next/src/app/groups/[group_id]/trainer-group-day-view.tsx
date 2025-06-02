@@ -26,6 +26,7 @@ import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
+import { blue } from '@mui/material/colors';
 
 dayjs.extend(weekOfYear);
 
@@ -72,9 +73,12 @@ export default function TrainerDayView() {
     commonService.date.getWeekDays().map(({ label, date }) => ({
       label: label[0],
       value: date.toString(),
-      sublabel: screenSize.isSmallerThanLaptop
-        ? commonService.date.format(date, { withYear: false })
-        : undefined,
+      // sublabel: screenSize.isSmallerThanLaptop
+      //   ? commonService.date.format(date, { withYear: false })
+      //   : undefined,
+      sublabel: commonService.date.format(date, {
+                withYear: false,
+                })
     }))
   );
 
@@ -330,6 +334,7 @@ export default function TrainerDayView() {
               </Typography>
             </Box>
             <Box
+            
               bgcolor={theme.palette.background.light}
               p={1}
               px={3}
@@ -449,6 +454,7 @@ export default function TrainerDayView() {
                   ? theme.palette.primary.main
                   : 'rgba(255, 255, 255, 0.1)'
               }
+
               sx={{
                 borderBottomRightRadius: 0,
                 borderBottomLeftRadius: 0,
@@ -469,11 +475,15 @@ export default function TrainerDayView() {
                     .map(({ label, date }) => ({
                       label: label[0],
                       value: date.toString(),
-                      sublabel: screenSize.isSmallerThanLaptop
-                        ? commonService.date.format(date, {
-                            withYear: false,
-                          })
-                        : undefined,
+                      // sublabel: screenSize.isSmallerThanLaptop
+                      //   ? commonService.date.format(date, {
+                      //       withYear: false,
+                      //     })
+                      //   : undefined,
+                      sublabel: commonService.date.format(date, {
+                             withYear: false,
+                           })
+                      
                     }))
                 );
               }}
