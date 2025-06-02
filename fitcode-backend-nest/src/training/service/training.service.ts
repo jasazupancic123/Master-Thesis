@@ -44,10 +44,8 @@ import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
 import dayjs from 'dayjs';
 import { SetStatus } from '../enum/set-status.enum';
-import { Superset } from '../entity/superset.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import { IntType, ParamType, VolType } from 'src/component/enum/param.enum';
-import { TrainingExercise } from '../entity/training-exercise.entity';
+import { ParamType } from '../../component/enum/param.enum';
 import { FinishComponentDto } from '../dto/finish-component.dto';
 import { AverageWorkloadValues } from '../entity/average-workload-values.entity';
 import { CreateTrainingDto } from '../dto/create-training.dto';
@@ -159,17 +157,10 @@ export class TrainingService {
 
   async findByIdAndPopulateAthleteWorkloads(
     user: User,
-    ref: TrainingRef & UserRef & ComponentRef,
+    ref: TrainingRef & ComponentRef,
   ): Promise<Training> {
-    const { trainingId, uid: athleteId, componentId } = ref;
-    this.logger.log(
-      `User ${user.uid} is getting training ${trainingId} for athlete ${athleteId}`,
-    );
-
-    if (user.uid !== athleteId)
-      throw new UnauthorizedException(
-        'You are not authorized to view this training',
-      );
+    const { trainingId, componentId } = ref;
+    this.logger.log(`User ${user.uid} is getting training ${trainingId}`);
 
     const training = await this.findOneOrFail(user, { trainingId });
 
@@ -184,7 +175,7 @@ export class TrainingService {
 
     const workloads =
       await this.workloadService.findAllByUserTrainingComponentId(
-        athleteId,
+        user.uid,
         trainingId,
         componentId,
       );
@@ -200,7 +191,7 @@ export class TrainingService {
           if (!workload) continue;
 
           for (const paramValue of set.paramValuesL) {
-            const value = this.getPerscribedValueByParamField(
+            const value = this.getPrescribedValueByParamField(
               paramValue.field,
               workload,
               'L',
@@ -211,7 +202,7 @@ export class TrainingService {
           }
 
           for (const paramValue of set.paramValuesR) {
-            const value = this.getPerscribedValueByParamField(
+            const value = this.getPrescribedValueByParamField(
               paramValue.field,
               workload,
               'R',
@@ -227,7 +218,7 @@ export class TrainingService {
     return training;
   }
 
-  private getPerscribedValueByParamField(
+  private getPrescribedValueByParamField(
     field: string,
     workload: Workload,
     leftOrRight: 'L' | 'R',
@@ -945,6 +936,7 @@ export class TrainingService {
         filteredWorkloads,
       );
 
+<<<<<<< HEAD
       const flatTrainingIds = customAthleteWorkloads.flatMap(
         (cw) => cw.trainingId,
       );
@@ -955,11 +947,14 @@ export class TrainingService {
           )
         : [];
 
+=======
+>>>>>>> main
       this.workloadService.createForCustomAthleteWorkloads(
         batch,
         customAthleteWorkloads,
         trainings,
       );
+
       await batch.commit();
     }
 

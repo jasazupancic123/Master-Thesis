@@ -16,7 +16,7 @@ import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { TimestampEntity } from 'src/common/entity/timestamp.entity';
+import { TimestampEntity } from '../../common/entity/timestamp.entity';
 
 @Injectable()
 export class UserWorkloadService {

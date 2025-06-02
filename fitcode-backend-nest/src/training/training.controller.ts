@@ -30,6 +30,7 @@ import { Superset } from './entity/superset.entity';
 import { FinishComponentDto } from './dto/finish-component.dto';
 import { Workload } from './entity/workload.entity';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
+import { FindWorkloadsByExercises } from './dto/find-workload.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -54,15 +55,14 @@ export class TrainingController {
     });
   }
 
-  @Get(':trainingId/athlete/:athleteId/component/:componentId')
+  @Get(':trainingId/component/:componentId')
   @Auth()
   async findByIdAndPopulateAthleteWorkloads(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Param('athleteId') athleteId: string,
     @Param('componentId') componentId: string,
   ) {
-    const ref = { trainingId, uid: athleteId, componentId };
+    const ref = { trainingId, componentId };
     return await this.trainingService.findByIdAndPopulateAthleteWorkloads(
       user,
       ref,
@@ -75,7 +75,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('athleteId') athleteId: string,
-    @Body() body: { exerciseIds: string[] },
+    @Body() body: FindWorkloadsByExercises,
   ) {
     return await this.trainingService.getUserWorkloadsByGroupIdAndExerciseIds(
       user,

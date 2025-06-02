@@ -214,7 +214,7 @@ describe('Create Training (e2e)', () => {
       ];
 
       await Promise.all(
-        trainings.map((t) => trainingService.create(trainer, t)),
+        trainings.map((t) => trainingService.create(trainer, { training: t })),
       );
 
       const training = generateTrainingStub({
@@ -259,7 +259,7 @@ describe('Create Training (e2e)', () => {
       ];
 
       await Promise.all(
-        trainings.map((t) => trainingService.create(trainer, t)),
+        trainings.map((t) => trainingService.create(trainer, { training: t })),
       );
 
       const training = generateTrainingStub({
@@ -618,16 +618,15 @@ describe('Create Training (e2e)', () => {
       );
 
       const from = addDays(new Date(), 1);
-      await trainingService.create(
-        trainer,
-        generateTrainingStub({
+      await trainingService.create(trainer, {
+        training: generateTrainingStub({
           groupId: otherGroup.id,
           cycleId: otherGroup.cycles[1].id,
           components: [generateTrainingComponent({ id: component.id })],
           from,
           to: addHours(from, 1),
         }),
-      );
+      });
 
       const exercises = await exerciseService.createMany(trainer, [
         generateExerciseStub({ componentIds: [component.id] }),
@@ -916,9 +915,8 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to add components if user is not owner of the training', async () => {
-      const training = await trainingService.create(
-        trainer,
-        generateTrainingStub({
+      const training = await trainingService.create(trainer, {
+        training: generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -928,7 +926,7 @@ describe('Create Training (e2e)', () => {
             }),
           ],
         }),
-      );
+      });
 
       const response = await request(app.getHttpServer())
         .post(`/training/${training.id}/component`)
@@ -978,9 +976,8 @@ describe('Create Training (e2e)', () => {
 
   it('should successfully add training components', async () => {
     const newComponent = await componentService.create(generateComponentStub());
-    const training = await trainingService.create(
-      trainer,
-      generateTrainingStub({
+    const training = await trainingService.create(trainer, {
+      training: generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -990,7 +987,7 @@ describe('Create Training (e2e)', () => {
           }),
         ],
       }),
-    );
+    });
 
     const response = await request(app.getHttpServer())
       .post(`/training/${training.id}/component`)
@@ -1006,9 +1003,8 @@ describe('Create Training (e2e)', () => {
 
   it('should successfully delete training component', async () => {
     const newComponent = await componentService.create(generateComponentStub());
-    const training = await trainingService.create(
-      trainer,
-      generateTrainingStub({
+    const training = await trainingService.create(trainer, {
+      training: generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -1026,7 +1022,7 @@ describe('Create Training (e2e)', () => {
           }),
         ],
       }),
-    );
+    });
 
     const response = await request(app.getHttpServer())
       .delete(`/training/${training.id}/component/${newComponent.id}`)
@@ -1038,9 +1034,8 @@ describe('Create Training (e2e)', () => {
   });
 
   it('should delete training when training has no more components', async () => {
-    const training = await trainingService.create(
-      trainer,
-      generateTrainingStub({
+    const training = await trainingService.create(trainer, {
+      training: generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -1050,7 +1045,7 @@ describe('Create Training (e2e)', () => {
           }),
         ],
       }),
-    );
+    });
 
     const response = await request(app.getHttpServer())
       .delete(`/training/${training.id}/component/${component.id}`)

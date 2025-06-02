@@ -137,11 +137,15 @@ export default function TrainerYearView() {
           display="flex"
           flexDirection="column"
           alignItems="center"
-          minHeight={195}
+          minHeight={165}
           sx={{
             backgroundColor: theme.palette.background.paper,
             borderBottomLeftRadius: 20,
             borderBottomRightRadius: 20,
+            '& > :first-of-type': {
+              marginTop: 0,
+              paddingTop: 0,
+            },
           }}
         >
           <MultiCycleSlider

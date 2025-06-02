@@ -4,10 +4,14 @@ import { UserModule } from '../user/user.module';
 import { GroupController } from './group.controller';
 import { GroupService } from './group.service';
 import { GroupRepository } from './repository/group.repository';
-import { InstitutionModule } from 'src/institution/institution.module';
+import { InstitutionModule } from '../institution/institution.module';
 
 @Module({
-  imports: [forwardRef(() => UserModule), forwardRef(() => TrainingModule), forwardRef(() => InstitutionModule)],
+  imports: [
+    forwardRef(() => UserModule),
+    forwardRef(() => TrainingModule),
+    forwardRef(() => InstitutionModule),
+  ],
   controllers: [GroupController],
   providers: [GroupRepository, GroupService],
   exports: [GroupService],
