@@ -86,7 +86,8 @@ export default function TrainerYearView() {
               setCycle,
               setDetectedChanges,
               token,
-              router
+              router,
+              setGroup
             )
           }
           sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
@@ -113,7 +114,8 @@ export default function TrainerYearView() {
               setCycle,
               setDetectedChanges,
               token,
-              router
+              router,
+              setGroup
             )
           }
         />

@@ -34,12 +34,6 @@ export class Cycle extends IntersectionType(BaseEntity, ColorEntity) {
   @Transform(({ value }) => new Date(value))
   to: Date;
 
-  @ValidateNested()
-  @Type(() => Periodization)
-  @ApiProperty()
-  @Expose()
-  periodization: Periodization;
-
   @IsString({ each: true })
   @IsOptional()
   @ApiPropertyOptional()

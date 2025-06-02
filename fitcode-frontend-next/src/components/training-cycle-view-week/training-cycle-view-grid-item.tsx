@@ -1,11 +1,15 @@
 import { CommonService } from '@/common/service/common.service';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { SvgIconComponent } from '@mui/icons-material';
-import { Tooltip } from '@mui/material';
+import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import React, { useEffect, useRef, useState } from 'react';
 import { TrainingCycleViewGridItemProps } from './type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { COLORS } from '@/common/constant/color.constant';
+import { preconnect } from 'react-dom';
+import { useGroup } from '@/context/group-provider';
+import toast from 'react-hot-toast';
 
 const commonService = CommonService.instance;
 
@@ -15,9 +19,17 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     training,
     componentCalendarView,
     periodizationView,
+    cycleView,
     trainingComponent,
     isSameDayAsSelectedComponent,
+    selected,
+    selectedTrainings,
+    setSelectedTrainings,
+    basePeriodizationTraining,
+    selectedTarget,
   } = props;
+
+  const { cycle } = useGroup();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWrapped, setIsWrapped] = useState(false);
@@ -156,10 +168,68 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
             commonService.navigation.getComponentIcon(component?.name);
 
           return (
-            <Tooltip title={component.name} key={component!.id}>
+            <Tooltip
+              title={
+                (cycleView || periodizationView) && trainingComponent.target ? (
+                  <>
+                    <Box sx={{ textAlign: 'center' }}>{component.name}</Box>
+                    <Box sx={{ textAlign: 'center' }}>
+                      {trainingComponent.target?.name}
+                    </Box>
+                  </>
+                ) : (
+                  component.name
+                )
+              }
+              key={component!.id}
+            >
               <div>
                 <IconComponent
                   onClick={async (e) => {
+                    if (
+                      periodizationView &&
+                      selectedTrainings &&
+                      setSelectedTrainings &&
+                      basePeriodizationTraining?.id !== training.id
+                    ) {
+                      if (selectedTrainings.some((t) => t.id === training.id)) {
+                        setSelectedTrainings((prev) =>
+                          prev.filter((t) => t.id !== training.id)
+                        );
+                      } else if (
+                        trainingComponent.target &&
+                        trainingComponent.target.id !== selectedTarget?.id
+                      ) {
+                        toast.error(
+                          'Cannot periodize trainings with different targets'
+                        );
+                      } else if (
+                        trainingComponent.target &&
+                        trainingComponent.target.id === selectedTarget?.id &&
+                        cycle &&
+                        basePeriodizationTraining &&
+                        CommonService.instance.date.isBetween(
+                          training.to,
+                          basePeriodizationTraining.to,
+                          cycle?.to
+                        )
+                      ) {
+                        setSelectedTrainings((prev) => [...prev, training]);
+                      } else if (
+                        cycle &&
+                        basePeriodizationTraining &&
+                        !CommonService.instance.date.isBetween(
+                          training.to,
+                          basePeriodizationTraining.to,
+                          cycle?.to
+                        )
+                      ) {
+                        toast.error(
+                          'Cannot periodize trainings before the base training'
+                        );
+                      }
+                      return;
+                    }
                     e.stopPropagation();
                     await props.deleteTrainingComponent(
                       training.id,
@@ -167,9 +237,13 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                     );
                   }}
                   sx={{
-                    color: componentCalendarView
-                      ? trainingComponent.color
-                      : undefined,
+                    color: cycleView
+                      ? trainingComponent.target?.color
+                      : componentCalendarView
+                        ? trainingComponent.color
+                        : selected && selectedTarget
+                          ? selectedTarget.color
+                          : undefined,
                     fontSize:
                       (componentCalendarView || periodizationView) &&
                       isSameDayAsSelectedComponent
@@ -205,6 +279,10 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                       screenSize.isMobile || screenSize.isLandscapeMobile
                         ? 1
                         : undefined,
+                    mb:
+                      periodizationView || componentCalendarView
+                        ? 0
+                        : undefined,
                     cursor: 'pointer',
                     border: isSameDayAsSelectedComponent
                       ? '1px solid'
@@ -215,6 +293,26 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                     p: isSameDayAsSelectedComponent ? 0.5 : undefined,
                   }}
                 />
+                {(periodizationView || componentCalendarView) &&
+                  trainingComponent.target && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'grey.400',
+                        fontSize: 10,
+                        maxWidth: screenSize.isMobile
+                          ? 30
+                          : screenSize.isSmallerThanLaptop
+                            ? 60
+                            : 120,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {trainingComponent.target.name}
+                    </Typography>
+                  )}
               </div>
             </Tooltip>
           );

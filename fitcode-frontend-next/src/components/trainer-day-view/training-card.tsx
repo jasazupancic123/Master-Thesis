@@ -26,10 +26,6 @@ import MyModal from '../modal';
 import { TrainingCardProps } from './props';
 import { handleCopyTraining } from './state';
 import TrainingComponentCard from './training-component';
-import {
-  COOLDOWN_ID,
-  WARMUP_ID,
-} from '@/common/constant/warmup-cooldown-ids-constants';
 
 const commonService = CommonService.instance;
 

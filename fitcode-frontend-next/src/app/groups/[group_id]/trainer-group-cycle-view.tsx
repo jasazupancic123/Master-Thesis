@@ -21,12 +21,14 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { useScreenSize } from '@/context/screen-size-provider';
 import FloatingButton from '@/components/floating-button';
 import { handleSaveGroup } from './state';
+import { Target } from '@/controller/target/type/target.type';
 
 export default function TrainerCycleView() {
   const {
     token,
     group,
     components,
+    exercises: allExercises,
     cycle,
     setCycle,
     setTrainings,
@@ -41,6 +43,9 @@ export default function TrainerCycleView() {
   const screenSize = useScreenSize();
   const router = useRouter();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
+  const [selectedTargets, setSelectedTargets] = useState<
+    { componentId: string; target: Target }[]
+  >([]);
   const [isSticky, setIsSticky] = useState(false);
 
   // effect to track scroll position and set sticky mode
@@ -120,57 +125,18 @@ export default function TrainerCycleView() {
           }}
         >
           <Box display="flex" justifyContent="center" alignItems="center">
-            <Box display="flex" flexGrow={1}>
-              <SelectInput<Cycle>
-                label="Cycle"
-                icon={<RotateRight />}
-                value={cycle?.id || ''}
-                items={group.cycles}
-                itemKey="id"
-                itemName="name"
-                setValue={(value) => {
-                  const cycle = group.cycles.find(
-                    (cycle) => cycle.id === value
-                  )!;
-                  setCycle(cycle);
-                }}
-              />
-            </Box>
-
-            <Box display="flex" flexGrow={1}>
-              <SelectInput<PeriodizationType>
-                label="Periodization"
-                icon={<Redo />}
-                value={cycle?.periodization?.type || ''}
-                items={Object.values(PeriodizationType).filter(
-                  (p) => p !== PeriodizationType.NONE
-                )}
-                itemKey={undefined}
-                itemName={undefined}
-                setValue={(value) => {
-                  if (!cycle) return;
-
-                  const updatedCycle = {
-                    ...cycle,
-                    periodization: {
-                      ...cycle.periodization,
-                      type: !value
-                        ? PeriodizationType.NONE
-                        : (value as PeriodizationType),
-                    },
-                  };
-
-                  setCycle(updatedCycle);
-                  setGroup({
-                    ...group,
-                    cycles: group.cycles.map((c) =>
-                      c.id === updatedCycle.id ? updatedCycle : c
-                    ),
-                  });
-                  setDetectedChanges(true);
-                }}
-              />
-            </Box>
+            <SelectInput<Cycle>
+              label="Cycle"
+              icon={<RotateRight />}
+              value={cycle?.id || ''}
+              items={group.cycles}
+              itemKey="id"
+              itemName="name"
+              setValue={(value) => {
+                const cycle = group.cycles.find((cycle) => cycle.id === value)!;
+                setCycle(cycle);
+              }}
+            />
           </Box>
 
           {/* Component Chips (Sticky Behavior) */}
@@ -204,6 +170,9 @@ export default function TrainerCycleView() {
               setSelected={(component) =>
                 setSelectedComponents(component as Component[])
               }
+              cycleView
+              selectedTargets={selectedTargets}
+              setSelectedTargets={setSelectedTargets}
             />
           </Box>
         </Box>
@@ -221,10 +190,11 @@ export default function TrainerCycleView() {
                     index={i}
                     week={week.map(({ date }) => dayjs(date!))}
                     selected={selectedComponents}
+                    cycleView
                     setSelected={(component) =>
                       setSelectedComponents(component as Component[])
                     }
-                    addTrainingComponent={(trainingId, input) =>
+                    addTrainingComponent={(trainingId, input) => {
                       handleAddTrainingComponents(
                         token,
                         { trainingId, ...input },
@@ -233,9 +203,11 @@ export default function TrainerCycleView() {
                           components,
                           setTrainings,
                           setFilteredTrainings,
+                          exercises: allExercises,
+                          selectedTargets,
                         }
-                      )
-                    }
+                      );
+                    }}
                     deleteTrainingComponent={(trainingId, componentId) =>
                       handleDeleteTrainingComponent(
                         token,
@@ -245,9 +217,11 @@ export default function TrainerCycleView() {
                           setTrainings,
                           setFilteredTrainings,
                           components,
+                          exercises: allExercises,
                         }
                       )
                     }
+                    selectedTargets={selectedTargets}
                   />
                 </Fragment>
               ))}

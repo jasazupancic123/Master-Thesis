@@ -95,8 +95,11 @@ export default function TrainerDayView() {
         ),
       (newTrainings) => {
         const mappedTrainings = newTrainings.map((newTraining) => {
-          let mapped = TrainingService.mapComponents(newTraining, components);
-          mapped = TrainingService.mapExercises(newTraining, exercises);
+          const mapped = TrainingService.mapComponentsExercises(
+            newTraining,
+            components,
+            exercises
+          );
           return mapped;
         });
 

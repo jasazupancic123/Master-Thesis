@@ -31,7 +31,6 @@ import { AverageWorkloadValues } from '@/controller/training/type/average-worklo
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { isBefore } from 'date-fns';
 import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
-import { Dispatch } from 'react';
 
 export async function handleCopyTraining(
   token: string,
@@ -96,10 +95,10 @@ export async function handleCopyTraining(
     router,
     () => TrainingController.copy(token, training.id, { from, to }),
     (copiedTraining) => {
-      copiedTraining = TrainingService.mapExercises(copiedTraining, exercises);
-      copiedTraining = TrainingService.mapComponents(
+      copiedTraining = TrainingService.mapComponentsExercises(
         copiedTraining,
-        components
+        components,
+        exercises,
       );
 
       setTrainings((prev) =>
@@ -1208,7 +1207,6 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 
-  
   let groupedCompletedWorkloads = groupByTrainingId(completedWorkloadsFiltered);
 
   let groupedFutureWorkloads = groupByTrainingId(
@@ -1223,7 +1221,10 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
 
   let newData = [];
   let i = 0;
-  for (const groupedWorkload of [groupedCompletedWorkloads, groupedFutureWorkloads]) {
+  for (const groupedWorkload of [
+    groupedCompletedWorkloads,
+    groupedFutureWorkloads,
+  ]) {
     for (const workloads of Object.values(groupedWorkload)) {
       const validIntensityValues = workloads
         .map((w) =>
@@ -1264,9 +1265,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
       const formatted = `${day}.${month}. ${ampm}`;
 
       newData.push({
-        trainingId: workloads.length
-          ? workloads[0].trainingId
-          : '',
+        trainingId: workloads.length ? workloads[0].trainingId : '',
         name: formatted,
         intensity: Math.round(avgIntensity * 100) / 100,
         volume: Math.round(avgVolume * 100) / 100,

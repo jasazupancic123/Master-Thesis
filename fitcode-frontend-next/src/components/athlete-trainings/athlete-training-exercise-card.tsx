@@ -5,21 +5,19 @@ import {
   Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
-import { CheckCircle, ConstructionOutlined } from '@mui/icons-material';
+import { CheckCircle } from '@mui/icons-material';
 import SportsIcon from '@mui/icons-material/Sports';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { Box, Grid2, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 import BorderColor from '../border-color';
 import MyModal from '../modal';
-import { SetExerciseAttribute } from '../trainer-day-view/exercise-card-set-attribute';
 import { AthleteTrainingExerciseCardProps } from './props';
 import { useTheme } from '@mui/material';
 import { ExerciseParam } from '../trainer-day-view/exercise-card/exercise-param';
-import { preconnect } from 'react-dom';
 import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import toast from 'react-hot-toast';
@@ -306,6 +304,7 @@ export default function AthleteTrainingExerciseCard(
                                   {exercise.sets.map((set, i) => {
                                     return (
                                       <Box
+                                        key={`set-${exercise.id}-${i}`}
                                         display="flex"
                                         width="100%"
                                         justifyContent="center"

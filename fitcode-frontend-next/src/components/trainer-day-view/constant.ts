@@ -1,6 +1,5 @@
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
-import { Method } from '@/controller/component/type/method.type';
 import { AverageWorkloadValues } from '@/controller/training/type/average-workload-values.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
@@ -21,16 +20,6 @@ export const AFTER_SETS: AfterSet[] = [
   { id: '4', name: 'Myo Reps' },
   { id: '5', name: 'Dynamic Effort' },
   { id: '6', name: 'Issometric' },
-];
-
-export const METHODS: Method[] = [
-  { id: '1', name: 'Dynamic Stretching' },
-  { id: '2', name: 'Static Stretching' },
-  { id: '3', name: 'Joint Circles and Mobility Drills' },
-  { id: '4', name: 'Active Isolated Stretching' },
-  { id: '5', name: 'Yoga' },
-  { id: '6', name: 'PNF Stretching' },
-  { id: '7', name: 'Foam Rolling' },
 ];
 
 export const DEFAULT_SUBGROUP = (availableMembers: User[], avgFutureWorkloadValues: AverageWorkloadValues[]): Subgroup => ({

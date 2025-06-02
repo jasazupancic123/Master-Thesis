@@ -44,6 +44,7 @@ export class ComponentRepository
       id: slug,
       slug,
       parentId: input.parentId || null,
+      targets: input.targets || [],
       name: input.name,
       attributes: input.attributes,
       params: input.params || null,

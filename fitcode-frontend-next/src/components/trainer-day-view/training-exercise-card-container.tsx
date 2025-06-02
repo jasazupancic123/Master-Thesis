@@ -102,9 +102,11 @@ export default function TrainingExerciseCardContainer(
     if (exercise.id !== selectedExercise?.id) return;
 
     const newDataInRange = data.slice(range[0] - 1, range[1]);
+
     const numberOfCompletedWorkloads = newDataInRange.filter((workload) =>
       isBefore(workload.plannedAt, new Date())
     ).length;
+
     const numberOfTotalWorkloads = newDataInRange.length;
 
     let percentage;
@@ -128,9 +130,12 @@ export default function TrainingExerciseCardContainer(
     // Sets the padding for the chart background based on the percentage
     const observer = new MutationObserver(() => {
       const graphDotsElement = document.querySelector('.recharts-line-dots');
+
       const rechartsSurfaceElement =
         document.querySelector('.recharts-surface');
+
       const xAxisElement = document.querySelector('.recharts-xAxis');
+
       if (graphDotsElement && rechartsSurfaceElement && xAxisElement) {
         const parentRect = rechartsSurfaceElement.getBoundingClientRect();
         const dotsRect = graphDotsElement.getBoundingClientRect();

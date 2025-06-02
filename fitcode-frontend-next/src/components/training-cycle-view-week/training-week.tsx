@@ -29,12 +29,18 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     selected,
     componentCalendarView,
     periodizationView,
+    cycleView,
     trainingComponent,
     training,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
     handleCopyComponentApiRequest,
+    selectedTrainings,
+    setSelectedTrainings,
+    selectedTargets,
+    selectedTarget,
   } = props;
+
   const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
@@ -42,13 +48,13 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     token,
     group,
     cycle,
+    trainings,
     components,
     setCycle,
     setFilteredTrainings,
     filteredTrainings,
     setTrainings,
     exercises: allExercises,
-    trainings,
   } = useGroup();
 
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
@@ -59,6 +65,28 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   useEffect(() => {}, [filteredTrainings]);
 
   function getFilteredTrainings(date: Dayjs, period: string) {
+    if (periodizationView && selectedTrainings) {
+      return filteredTrainings.filter((training_) => {
+        const trainingDate = dayjs(training_.from);
+        const start = trainingDate.startOf('day');
+        const end = dayjs(training_.to).endOf('day');
+
+        // Check if training falls within the given day
+        const isBetween = CommonService.instance.date.isBetween(
+          date,
+          start,
+          end
+        );
+        if (!isBetween) return false;
+
+        // Apply AM/PM filtering
+        if (period === 'AM') return trainingDate.hour() < 12; // Before noon
+        if (period === 'PM') return trainingDate.hour() >= 12; // Noon or later
+
+        return false;
+      });
+    }
+
     date = dayjs(date);
 
     const newFilteredTrainings = [];
@@ -71,21 +99,26 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         const copiedFromTraining = filteredTrainings.find(
           (t) => t.id === tc.copiedFrom?.rootCopiedFromTrainingId
         );
+
         if (!copiedFromTraining) continue;
         const evaluatedTrainingId = evaluatedTrainingIds.find(
           (t) => t.trainingId === copiedFromTraining.id
         );
-        if (evaluatedTrainingId) {
+
+        if (evaluatedTrainingId)
           tc.color = COLORS[evaluatedTrainingId.colorIndex];
-        } else {
+        else {
           evaluatedTrainingIds.push({
             trainingId: copiedFromTraining.id,
             colorIndex,
           });
+
           const rootTrainingComponent = copiedFromTraining.components.find(
             (c) => trainingComponent?.component?.id === c.component?.id
           );
+
           if (!rootTrainingComponent) continue;
+
           rootTrainingComponent.color = COLORS[colorIndex];
           tc.color = COLORS[colorIndex];
           colorIndex++;
@@ -128,6 +161,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
           supersets: [],
           from: addMinutes(from, i * 30),
           to: addMinutes(addMinutes(from, i * 30), 30),
+          target: selectedTargets?.find((m) => m.componentId === c.id)?.target,
         })),
       },
       {
@@ -137,6 +171,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         setFilteredTrainings,
         setTrainings,
         components,
+        exercises: allExercises,
       }
     );
   }
@@ -293,8 +328,11 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                               : dayjs(date).set('hour', 14).toDate();
                           const to = dayjs(from).add(30, 'minutes').toDate();
 
-                          trainingComponent.from = from;
-                          trainingComponent.to = to;
+                          const newTrainingComponent = {
+                            ...trainingComponent,
+                            from,
+                            to,
+                          };
 
                           handleApiRequest(
                             router,
@@ -303,24 +341,22 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                                 training: {
                                   groupId: group.id,
                                   cycleId: cycle.id,
-                                  components: [trainingComponent],
+                                  components: [{ ...newTrainingComponent }],
                                 },
                                 copyFromTrainingId: training.id,
                                 date: { from, to },
                               }),
-                            (training) => {
-                              training = TrainingService.mapComponents(
-                                training,
-                                components
-                              );
-                              training = TrainingService.mapExercises(
-                                training,
-                                allExercises
-                              );
+                            (training_) => {
+                              training_ =
+                                TrainingService.mapComponentsExercises(
+                                  training_,
+                                  components,
+                                  allExercises
+                                );
 
                               const sortedTrainings = [
                                 ...trainings,
-                                training,
+                                training_,
                               ].sort((a, b) => {
                                 const aDate = new Date(a.from);
                                 const bDate = new Date(b.from);
@@ -330,8 +366,9 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                               setTrainings(sortedTrainings);
                               setFilteredTrainings((prev) => [
                                 ...prev,
-                                training,
+                                training_,
                               ]);
+
                               toast.success(
                                 'Training with current component created successfully'
                               );
@@ -340,6 +377,9 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                             'Failed to create training with current component'
                           );
                         }
+                      } else if (periodizationView) {
+                        // do nothing
+                        return;
                       } else {
                         if (
                           !cycle ||
@@ -370,87 +410,103 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                     </Typography>
 
                     {/* Trainings */}
-                    {getFilteredTrainings(date, period).map((training, key) => {
-                      return (
-                        <Box
-                          key={key}
-                          borderRadius={
-                            componentCalendarView || periodizationView ? 0 : 2
-                          }
-                          sx={{
-                            cursor: 'pointer',
-                            p: 0,
-                            m: 0,
-                            height: '100%',
-                            backgroundColor: componentCalendarView
-                              ? '#1e3045'
-                              : undefined,
-                          }}
-                          onClick={(e) => {
-                            if (
-                              !cycle ||
-                              !CommonService.instance.date.isBetween(
-                                date,
-                                cycle.from,
-                                cycle.to
+                    {getFilteredTrainings(date, period).map(
+                      (training_, key) => {
+                        return (
+                          <Box
+                            key={key}
+                            borderRadius={
+                              componentCalendarView || periodizationView ? 0 : 2
+                            }
+                            sx={{
+                              cursor: 'pointer',
+                              p: 0,
+                              m: 0,
+                              height: '100%',
+                              backgroundColor: componentCalendarView
+                                ? '#1e3045'
+                                : undefined,
+                            }}
+                            onClick={(e) => {
+                              if (
+                                !cycle ||
+                                !CommonService.instance.date.isBetween(
+                                  date,
+                                  cycle.from,
+                                  cycle.to
+                                )
                               )
-                            )
-                              return;
+                                return;
 
-                            if (
-                              !props.selected ||
-                              props.selected?.length === 0
-                            ) {
-                              setOpenAreYouSureModal(true);
-                              setSelectedTraining(training);
-                              return;
-                            }
+                              if (
+                                !props.selected ||
+                                props.selected?.length === 0
+                              ) {
+                                if (!periodizationView) {
+                                  setOpenAreYouSureModal(true);
+                                  setSelectedTraining(training_);
+                                  return;
+                                }
+                                return;
+                              }
 
-                            e.stopPropagation();
+                              e.stopPropagation();
 
-                            const lastTo = new Date(
-                              training.components[
-                                training.components.length - 1
-                              ].to
-                            );
+                              const lastTo = new Date(
+                                training_.components[
+                                  training_.components.length - 1
+                                ].to
+                              );
 
-                            props.addTrainingComponent(training.id, {
-                              components: props.selected?.map((c, i) => ({
-                                id: c.id,
-                                subgroups: [],
-                                supersets: [],
-                                completedMembersIds: [],
-                                from: addMinutes(lastTo, i * 30),
-                                to: addMinutes(addMinutes(lastTo, i * 30), 30),
-                              })),
-                            });
-                          }}
-                        >
-                          {key > 0 && <Divider />}
+                              props.addTrainingComponent(training_.id, {
+                                components: props.selected?.map((c, i) => ({
+                                  id: c.id,
+                                  subgroups: [],
+                                  supersets: [],
+                                  completedMembersIds: [],
+                                  from: addMinutes(lastTo, i * 30),
+                                  to: addMinutes(
+                                    addMinutes(lastTo, i * 30),
+                                    30
+                                  ),
+                                })),
+                              });
+                            }}
+                          >
+                            {key > 0 && <Divider />}
 
-                          <TrainingGridItem
-                            order={key + 1}
-                            training={training}
-                            addTrainingComponent={props.addTrainingComponent}
-                            deleteTrainingComponent={
-                              props.deleteTrainingComponent
-                            }
-                            componentCalendarView={componentCalendarView}
-                            periodizationView={periodizationView}
-                            trainingComponent={trainingComponent}
-                            isSameDayAsSelectedComponent={
-                              trainingComponent &&
-                              dayjs(training.from).isSame(
-                                dayjs(trainingComponent.from),
-                                'date'
-                              ) &&
-                              dayjs(training.from).hour() >= 12 ===
-                                dayjs(trainingComponent.from).hour() >= 12
-                            }
-                          />
-                        </Box>
-                      );
-                    })}
+                            <TrainingGridItem
+                              order={key + 1}
+                              training={training_}
+                              addTrainingComponent={props.addTrainingComponent}
+                              deleteTrainingComponent={
+                                props.deleteTrainingComponent
+                              }
+                              selected={selectedTrainings?.some(
+                                (t) => t.id === training_.id
+                              )}
+                              selectedTrainings={selectedTrainings}
+                              setSelectedTrainings={setSelectedTrainings}
+                              componentCalendarView={componentCalendarView}
+                              periodizationView={periodizationView}
+                              cycleView={cycleView}
+                              trainingComponent={trainingComponent}
+                              isSameDayAsSelectedComponent={
+                                trainingComponent &&
+                                dayjs(training_.from).isSame(
+                                  dayjs(trainingComponent.from),
+                                  'date'
+                                ) &&
+                                dayjs(training_.from).hour() >= 12 ===
+                                  dayjs(trainingComponent.from).hour() >= 12
+                              }
+                              basePeriodizationTraining={training}
+                              selectedTarget={selectedTarget}
+                            />
+                          </Box>
+                        );
+                      }
+                    )}
                   </Box>
                 </React.Fragment>
               ))}

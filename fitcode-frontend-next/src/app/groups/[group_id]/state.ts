@@ -12,7 +12,8 @@ export async function handleSaveGroup(
   setCycle: SetState<Cycle | undefined>,
   setDetectedChanges: SetState<boolean>,
   token: string,
-  router: AppRouterInstance
+  router: AppRouterInstance,
+  setGroup?: SetState<Group>
 ) {
   for (const cycle of selectedGroup.cycles) {
     if (cycle.from >= cycle.to) {
@@ -20,7 +21,7 @@ export async function handleSaveGroup(
       return;
     }
   }
-  
+
   handleApiRequest(
     router,
     () =>
@@ -33,6 +34,7 @@ export async function handleSaveGroup(
         setCycle(newCycle);
       }
 
+      if (setGroup) setGroup(response);
       setSelectedGroup(response);
       setDetectedChanges(false);
 

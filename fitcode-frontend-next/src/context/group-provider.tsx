@@ -9,8 +9,6 @@ import { GroupDateFilter } from '@/common/type/filter.type';
 import { ChildrenProps } from '@/common/type/props.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
-import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
-import { Workload } from '@/controller/training/type/workload.type';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -32,12 +30,14 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     groups,
     group: providedGroup,
     trainings: allTrainings,
+    methods,
   } = props;
 
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
   const [group, setGroup] = useState<Group>(providedGroup);
-  //find the cycle which is in the current date, else undefined:
+
+  // find the cycle which is in the current date, else undefined:
   const todaysCycle = group.cycles.find((c) =>
     dateService.isBetween(dayjs(), c.from, c.to)
   );
@@ -72,6 +72,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     components,
     attributes,
     exercises,
+    methods,
     filter,
     setFilter,
     group,

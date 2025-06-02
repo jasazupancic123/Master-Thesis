@@ -14,6 +14,7 @@ import { CommonModule } from './common/common.module';
 import { CacheManagerModule } from './cache-manager/cache-manager.module';
 import { AttributeModule } from './attribute/attribute.module';
 import { InstitutionModule } from './institution/institution.module';
+import { MethodModule } from './method/method.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { InstitutionModule } from './institution/institution.module';
     GroupModule,
     TrainingModule,
     InstitutionModule,
+    MethodModule,
   ],
   controllers: [AppController],
   providers: [AppService],

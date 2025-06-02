@@ -53,6 +53,12 @@ import { AverageWorkloadValues } from '../entity/average-workload-values.entity'
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { BatchUpdateTrainingsWithCustomAthleteWorkloadsDto } from '../dto/update-training.dto';
 import { custom, StringSchema } from 'joi';
+import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import { PeriodizationType } from 'src/group/enum/periodization-type.enum';
+import { PeriodizationUtil } from '../util/periodization.util';
+
+dayjs.extend(isoWeek);
 
 @Injectable()
 export class TrainingService {
@@ -190,22 +196,27 @@ export class TrainingService {
             (w) =>
               w.exerciseId === exercise.id && w.setNumber === set.setNumber,
           );
+
           if (!workload) continue;
+
           for (const paramValue of set.paramValuesL) {
             const value = this.getPerscribedValueByParamField(
               paramValue.field,
               workload,
               'L',
             );
+
             if (!value) continue;
             paramValue.value = value;
           }
+
           for (const paramValue of set.paramValuesR) {
             const value = this.getPerscribedValueByParamField(
               paramValue.field,
               workload,
               'R',
             );
+
             if (!value) continue;
             paramValue.value = value;
           }
@@ -390,6 +401,7 @@ export class TrainingService {
       }
 
       trainingComponent = propsTraining.components[0];
+
       if (!trainingComponent) {
         throw new BadRequestException(
           'You must provide a training component to copy',
@@ -441,6 +453,7 @@ export class TrainingService {
                     ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
                     : copyFromTrainingId,
                 },
+                target: trainingComponent.target || null,
                 completedMembersIds: [],
               },
             ]
@@ -450,6 +463,7 @@ export class TrainingService {
               from: c.from,
               to: c.to,
               color: c.color,
+              target: c.target || null,
               subgroups: c.subgroups || [],
               supersets: c.supersets || [],
               completedMembersIds: [],
@@ -484,6 +498,129 @@ export class TrainingService {
     await batch.commit();
 
     return training;
+  }
+
+  async periodizeTrainings(user: User, input: PeriodizeTrainingsDto) {
+    const {
+      baseTraining,
+      trainingIds,
+      componentId,
+      exerciseIds,
+      periodizationType,
+    } = input;
+
+    this.logger.log(
+      `User ${user.uid} is periodizing trainings: ${JSON.stringify(trainingIds)}`,
+    );
+
+    const trainings = await this.trainingRepository.getDocs((q) => {
+      q = q.where('id', 'in', trainingIds);
+      return q;
+    });
+
+    if (!trainings.length)
+      throw new BadRequestException('No trainings found for periodization');
+
+    const lastTraining = trainings.reduce((prev, curr) => {
+      const prevFrom = dayjs(prev.from);
+      const currFrom = dayjs(curr.from);
+      return prevFrom.isAfter(currFrom) ? prev : curr;
+    });
+
+    const startWeek = dayjs(baseTraining.from).isoWeek();
+    const lastWeek = dayjs(lastTraining.from).isoWeek();
+
+    const numWeeks = lastWeek - startWeek + 1;
+
+    const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
+
+    // fill the trainings in weeks
+    for (const training of trainings) {
+      const weekIndex = dayjs(training.from).isoWeek() - startWeek;
+      if (weekIndex < weeks.length) weeks[weekIndex].push(training);
+    }
+
+    // sort trainings in week by date
+    for (const week of weeks)
+      week.sort((a, b) => dayjs(a.from).diff(dayjs(b.from)));
+
+    const numTrainingInWeeks = weeks.flat().length;
+    if (trainings.length !== numTrainingInWeeks)
+      throw new BadRequestException('Some trainings are missing or not found');
+
+    this.validatePeriodizationType(periodizationType);
+
+    const periodizedTrainings = PeriodizationUtil.periodize(
+      baseTraining,
+      trainings,
+      weeks,
+      componentId,
+      exerciseIds,
+      periodizationType as PeriodizationType,
+    );
+
+    const batch = this.firebaseService.firestore.batch();
+
+    // calculate new avg future workload values
+    for (const training of trainings) {
+      const component = training.components.find((c) => c.id === componentId);
+      if (!component) continue;
+
+      const exercises = component.supersets.flatMap((s) => s.exercises);
+      for (const exercise of exercises) {
+        const avgFutureWorkloadValue = training.avgFutureWorkloadValues.find(
+          (avg) => avg.exerciseId === exercise.id,
+        );
+
+        if (!avgFutureWorkloadValue) continue;
+
+        const intensitiesL = exercise.sets
+          .flatMap((set) => set.paramValuesL)
+          .filter((p) => p.field === ParamType.IntWork1);
+        const intensitiesR = exercise.sets
+          .flatMap((set) => set.paramValuesR)
+          .filter((p) => p.field === ParamType.IntWork1);
+
+        const avgIntensity =
+          (intensitiesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+            intensitiesL.length +
+            intensitiesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+              intensitiesR.length) /
+          2;
+
+        const volumesL = exercise.sets
+          .flatMap((set) => set.paramValuesL)
+          .filter((p) => p.field === ParamType.VolWork1);
+        const volumesR = exercise.sets
+          .flatMap((set) => set.paramValuesR)
+          .filter((p) => p.field === ParamType.VolWork1);
+
+        const avgVolume =
+          (volumesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+            volumesL.length +
+            volumesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+              volumesR.length) /
+          2;
+
+        avgFutureWorkloadValue.avgWorkloadValue.intensity = avgIntensity;
+        avgFutureWorkloadValue.avgWorkloadValue.volume = avgVolume;
+      }
+
+      const updateTrainingQuery =
+        this.firebaseService.buildUpdateQuery<Training>({ ...training });
+
+      const trainingDocRef = this.trainingRepository.doc(training.id);
+      batch.update(trainingDocRef, updateTrainingQuery);
+
+      const workloads = await this.workloadService.findAllByMembers(
+        training.membersIds,
+      );
+      await this.workloadService.createForTraining(batch, training, workloads);
+    }
+
+    await batch.commit();
+
+    return periodizedTrainings;
   }
 
   // old, not used anymore
@@ -807,9 +944,21 @@ export class TrainingService {
         updatedTraining,
         filteredWorkloads,
       );
+
+      const flatTrainingIds = customAthleteWorkloads.flatMap(
+        (cw) => cw.trainingId,
+      );
+
+      const trainings = flatTrainingIds.length
+        ? await this.trainingRepository.getDocs((q) =>
+            q.where('id', 'in', flatTrainingIds),
+          )
+        : [];
+
       this.workloadService.createForCustomAthleteWorkloads(
         batch,
         customAthleteWorkloads,
+        trainings,
       );
       await batch.commit();
     }
@@ -1327,7 +1476,7 @@ export class TrainingService {
 
       // delete non started workloads
       await this.workloadService.deleteWorkloads(notStartedWorkloads);
-      
+
       await this.trainingRepository.deleteDoc(ref.trainingId);
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 
@@ -1397,6 +1546,18 @@ export class TrainingService {
 
     if (isOverlap)
       throw new BadRequestException('Training overlaps with other training');
+  }
+
+  private validatePeriodizationType(periodizationType: string) {
+    if (periodizationType === PeriodizationType.NONE)
+      throw new BadRequestException('Periodization type none is not supported');
+    if (
+      !Object.values(PeriodizationType).includes(
+        periodizationType as PeriodizationType,
+      )
+    ) {
+      throw new BadRequestException('Invalid periodization type');
+    }
   }
 
   private async validateTrainingMembers(membersIds: string[]) {

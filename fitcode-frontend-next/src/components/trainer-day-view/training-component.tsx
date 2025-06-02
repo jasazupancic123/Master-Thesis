@@ -4,7 +4,6 @@ import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
-import { Method } from '@/controller/component/type/method.type';
 import {
   Delete,
   MonitorHeart,
@@ -26,7 +25,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import SelectInput from '../select-input';
-import { AFTER_SETS, MAIN_SETS, METHODS } from './constant';
+import { AFTER_SETS, MAIN_SETS } from './constant';
 import { TrainingComponentProps } from './props';
 import Supersets from './supersets';
 import { useTheme } from '@mui/material';
@@ -61,9 +60,9 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { train } from '@tensorflow/tfjs';
 import { addMinutes } from 'date-fns';
 import ComponentPeriodization from './component-periodization';
+import { Method } from '@/controller/method/type/method.type';
 
 const commonService = CommonService.instance;
 
@@ -73,9 +72,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
   const router = useRouter();
 
   const { training, trainingComponent } = props;
+
   const {
     token,
     filter,
+    detectedChanges,
     setDetectedChanges,
     setTrainings,
     filteredTrainings,
@@ -84,6 +85,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     cycle,
     components: allComponents,
     exercises: allExercises,
+    methods: allMethods,
   } = useGroup();
 
   const {
@@ -95,7 +97,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
-  const [method, setMethod] = useState<Method | null>();
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
   const [openPeriodizationModal, setOpenPeriodizationModal] = useState(false);
@@ -289,8 +290,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           cooldown: trainingInPeriod.cooldown,
         }),
       (training) => {
-        training = TrainingService.mapComponents(training, allComponents);
-        training = TrainingService.mapExercises(training, allExercises);
+        training = TrainingService.mapComponentsExercises(
+          training,
+          allComponents,
+          allExercises
+        );
 
         setTrainings((prev) =>
           prev.map((t) => (t.id === training.id ? training : t))
@@ -346,6 +350,13 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   <Box>
                     <MenuItem
                       onClick={() => {
+                        if (detectedChanges) {
+                          toast.error('Save training before periodization', {
+                            icon: '⚠️',
+                            duration: 1000,
+                          });
+                          return;
+                        }
                         setOpenPeriodizationModal(true);
                         handleMenuClose();
                       }}
@@ -354,6 +365,14 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
+                        if (detectedChanges) {
+                          toast.error('Save training before copying', {
+                            icon: '⚠️',
+                            duration: 1000,
+                          });
+                          return;
+                        }
+
                         if (
                           !component ||
                           trainingComponent.id !== component.id
@@ -620,23 +639,94 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                           }}
                         />
 
-                        <SelectInput<MainSet>
-                          label={'Method'}
-                          value={method?.id || ''}
-                          icon={null}
-                          items={METHODS}
-                          itemKey="id"
-                          itemName="name"
-                          placeholder="Method"
-                          disableInputLabel={false}
-                          setValue={(methodId) => {
-                            setDetectedChanges(true);
-                            const method = METHODS.find(
-                              (g) => g.id === methodId
-                            )!;
-                            setMethod(method);
-                          }}
-                        />
+                        <Tooltip
+                          title={
+                            trainingComponent.target
+                              ? trainingComponent.target.name
+                              : 'No target'
+                          }
+                        >
+                          <SelectInput<Method>
+                            label={'Method'}
+                            value={trainingComponent.target?.id || ''}
+                            icon={null}
+                            items={
+                              allMethods.filter(
+                                (target) =>
+                                  target.targetId ===
+                                  trainingComponent.target?.id
+                              ) || []
+                            }
+                            itemKey="id"
+                            itemName="name"
+                            disabled={[WARMUP_ID, COOLDOWN_ID].includes(
+                              trainingComponent.id
+                            )}
+                            sx={{
+                              maxWidth: 75,
+                            }}
+                            setValue={(methodId) => {
+                              const method = allMethods.find(
+                                (m) => m.id === methodId
+                              );
+                              if (!method) return;
+
+                              setTrainings((prev) =>
+                                prev.map((t) => {
+                                  if (t.id !== training.id) return t;
+                                  const updatedComponents = t.components.map(
+                                    (c) => {
+                                      if (
+                                        c.id === trainingComponent.id ||
+                                        c.component?.id ===
+                                          trainingComponent.component?.id
+                                      ) {
+                                        return {
+                                          ...c,
+                                          method: method,
+                                          methodId: method.id,
+                                        };
+                                      }
+                                      return c;
+                                    }
+                                  );
+                                  return {
+                                    ...t,
+                                    components: updatedComponents,
+                                  };
+                                })
+                              );
+
+                              setFilteredTrainings((prev) =>
+                                prev.map((t) => {
+                                  if (t.id !== training.id) return t;
+                                  const updatedComponents = t.components.map(
+                                    (c) => {
+                                      if (
+                                        c.id === trainingComponent.id ||
+                                        c.component?.id ===
+                                          trainingComponent.component?.id
+                                      ) {
+                                        return {
+                                          ...c,
+                                          method: method,
+                                          methodId: method.id,
+                                        };
+                                      }
+                                      return c;
+                                    }
+                                  );
+                                  return {
+                                    ...t,
+                                    components: updatedComponents,
+                                  };
+                                })
+                              );
+
+                              setDetectedChanges(true);
+                            }}
+                          />
+                        </Tooltip>
                       </Box>
                     )}
                 </Box>
@@ -711,9 +801,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             : screenSize.isSmallerThanLaptop
               ? 300
               : 1000,
-        }}
-        onConfirm={async () => {
-          setOpenPeriodizationModal(false);
         }}
       >
         <ComponentPeriodization

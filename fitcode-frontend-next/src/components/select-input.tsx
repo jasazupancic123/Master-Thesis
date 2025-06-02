@@ -21,6 +21,7 @@ interface Props<T> {
   disableInputLabel?: boolean;
   enableRemove?: boolean;
   sx?: SxProps<Theme>;
+  selectPadding?: string;
   useRenderValue?: boolean;
   displayEmpty?: boolean;
   disabled?: boolean;
@@ -77,6 +78,9 @@ export default function SelectInput<T>(props: Props<T>) {
             : undefined
         }
         sx={{
+          '& .MuiSelect-select': {
+            p: props.selectPadding ? props.selectPadding : undefined,
+          },
           color: '#fff',
           '.MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },

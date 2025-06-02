@@ -10,6 +10,7 @@ export function generateComponentStub(data?: Partial<Component>): Component {
     name: data?.name || generateRandomName(),
     parentId: data?.parentId || null,
     slug: id,
+    targets: data?.targets || [],
     attributes: data?.attributes || undefined,
     params: data?.params || undefined,
   };

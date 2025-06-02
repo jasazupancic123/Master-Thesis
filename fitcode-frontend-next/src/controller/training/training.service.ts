@@ -8,6 +8,7 @@ import { User } from '../user/type/user.type';
 import { Training } from './type/training.type';
 import { ExerciseSet } from './type/training-plan.type';
 import { IntensityVolumeValues } from './type/intensity-volume-values.type';
+import { Target } from '../target/type/target.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training {
@@ -33,6 +34,17 @@ export class TrainingService {
     }
 
     return item;
+  }
+
+  static mapComponentsExercises(
+    training: Training,
+    components: Component[],
+    exercises: Exercise[],
+  ): Training {
+    return this.mapExercises(
+      this.mapComponents(training, components),
+      exercises
+    );
   }
 
   static mapMembers(item: Training, users: User[]): Training {

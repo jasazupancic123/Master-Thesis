@@ -5,6 +5,7 @@ import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import { AverageWorkloadValues } from './type/average-workload-values.type';
+import { PeriodizationType } from '../group/enum/periodization-type.enum';
 
 const api = CommonService.instance.api;
 
@@ -23,11 +24,14 @@ export class TrainingController {
     token: string,
     trainingId: string,
     componentId: string,
-    userId: string,
-  ){
-    return api.get<Training>(`/training/${trainingId}/athlete/${userId}/component/${componentId}`, {
-      token,
-    });
+    userId: string
+  ) {
+    return api.get<Training>(
+      `/training/${trainingId}/athlete/${userId}/component/${componentId}`,
+      {
+        token,
+      }
+    );
   }
 
   static async getUserWorkloadsByGroupIdAndExerciseIds(
@@ -60,6 +64,21 @@ export class TrainingController {
     return api.post<Training>('/training', body, { token });
   }
 
+  static async periodizeTrainings(
+    token: string,
+    body: {
+      baseTraining: Training;
+      trainingIds: string[];
+      componentId: string;
+      exerciseIds: string[];
+      periodizationType: PeriodizationType;
+    }
+  ) {
+    return api.post<Training[]>('/training/periodize/trainings', body, {
+      token,
+    });
+  }
+
   static async update(
     token: string,
     trainingId: string,
@@ -83,7 +102,7 @@ export class TrainingController {
       membersIds: string[];
       avgFutureWorkloadValues: AverageWorkloadValues[];
     }[],
-    customAthleteWorkloads: Workload[],
+    customAthleteWorkloads: Workload[]
   ) {
     const { groupId, cycleId } = params;
     return api.patch<Training[]>(

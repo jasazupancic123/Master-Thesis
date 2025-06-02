@@ -5,16 +5,14 @@ import Logo from '@/components/logo';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import BottomNavigation from './bottom-navigation';
 import Sidebar from './sidebar';
-import { Avatar, Grid2, MenuItem, Select } from '@mui/material';
+import { Avatar, Tooltip } from '@mui/material';
 import { LocalizationProvider, MobileDatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useAthlete } from '@/context/athlete-provider';
 import { useAuth } from '@/context/auth-provider';
@@ -25,7 +23,7 @@ export default function SidebarAthlete() {
   const screenSize = useScreenSize();
   const router = useRouter();
   const path = usePathname();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const mapper = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE]).map(
     (link) => link.href
   );
@@ -67,16 +65,18 @@ export default function SidebarAthlete() {
             transform: 'translateX(-50%)',
           }}
         >
-          <Avatar
-            className="avatar-border"
-            src={avatarSrc || '/user_avatar.png'} // Path to the image in the public folder
-            sx={{
-              width: 70,
-              height: 70,
-              mx: 0,
-              my: 1,
-            }}
-          />
+          <Tooltip title={user?.email}>
+            <Avatar
+              className="avatar-border"
+              src={avatarSrc || '/user_avatar.png'} // Path to the image in the public folder
+              sx={{
+                width: 70,
+                height: 70,
+                mx: 0,
+                my: 1,
+              }}
+            />
+          </Tooltip>
         </Box>
 
         <LocalizationProvider dateAdapter={AdapterDayjs as any}>

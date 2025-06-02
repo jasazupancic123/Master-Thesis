@@ -29,6 +29,7 @@ import { ComponentRef, TrainingRef } from '../common/type/firestore.type';
 import { Superset } from './entity/superset.entity';
 import { FinishComponentDto } from './dto/finish-component.dto';
 import { Workload } from './entity/workload.entity';
+import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -93,6 +94,14 @@ export class TrainingController {
     body: CreateTrainingDto,
   ) {
     return await this.trainingService.create(user, body);
+  }
+
+  @Post('/periodize/trainings')
+  async periodizeTrainings(
+    @RequestUser() user: User,
+    @Body() body: PeriodizeTrainingsDto,
+  ) {
+    return await this.trainingService.periodizeTrainings(user, body);
   }
 
   // @Post(':trainingId/withComponent')
