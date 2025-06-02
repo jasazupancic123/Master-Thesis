@@ -936,7 +936,6 @@ export class TrainingService {
         filteredWorkloads,
       );
 
-<<<<<<< HEAD
       const flatTrainingIds = customAthleteWorkloads.flatMap(
         (cw) => cw.trainingId,
       );
@@ -947,8 +946,6 @@ export class TrainingService {
           )
         : [];
 
-=======
->>>>>>> main
       this.workloadService.createForCustomAthleteWorkloads(
         batch,
         customAthleteWorkloads,
