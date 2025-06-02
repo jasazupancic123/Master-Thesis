@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import { IsString, IsNotEmpty, ValidateNested } from 'class-validator';
-import { BaseEntity } from 'src/common/entity/base.entity';
-import { Group } from 'src/group/entity/group.entity';
+import { Expose } from 'class-transformer';
+import { IsString, IsNotEmpty } from 'class-validator';
+import { BaseEntity } from '../../common/entity/base.entity';
 
 export class Institution extends BaseEntity {
   @IsString()

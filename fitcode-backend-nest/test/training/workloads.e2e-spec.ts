@@ -119,7 +119,7 @@ describe('Training Workloads (e2e)', () => {
         ],
       });
 
-      const response = await trainingService.create(trainer, training);
+      const response = await trainingService.create(trainer, { training });
       const trainingExercises = response.components.flatMap((c) =>
         c.supersets.flatMap((s) => s.exercises),
       );
@@ -185,7 +185,7 @@ describe('Training Workloads (e2e)', () => {
         ],
       });
 
-      const response = await trainingService.create(trainer, training);
+      const response = await trainingService.create(trainer, { training });
       const trainingExercises = response.components.flatMap((c) =>
         c.supersets.flatMap((s) => s.exercises),
       );
@@ -272,7 +272,7 @@ describe('Training Workloads (e2e)', () => {
         ],
       });
 
-      const response = await trainingService.create(trainer, training);
+      const response = await trainingService.create(trainer, { training });
       const trainingExercises = response.components.flatMap((c) =>
         c.supersets.flatMap((s) => s.exercises),
       );
@@ -386,7 +386,7 @@ describe('Training Workloads (e2e)', () => {
           ],
         });
 
-        const response = await trainingService.create(trainer, training);
+        const response = await trainingService.create(trainer, { training });
         const workloads = await workloadService.findAllByTraining(response.id);
 
         expect(workloads).toHaveLength(9); // 3 members * 1 exercise * 3 sets
@@ -454,7 +454,7 @@ describe('Training Workloads (e2e)', () => {
         .spyOn(workloadService, 'findAllByMembers')
         .mockImplementationOnce(async (_membersIds: string[]) => mockWorkloads);
 
-      const response = await trainingService.create(trainer, training);
+      const response = await trainingService.create(trainer, { training });
       const workloads = await workloadService.findAllByTraining(response.id);
       expect(workloads).toHaveLength(9); // 3 members * 1 exercise * 3 sets
 
@@ -485,9 +485,8 @@ describe('Training Workloads (e2e)', () => {
         generateExerciseStub({ componentIds: [component.id] }),
       );
 
-      const response = await trainingService.create(
-        trainer,
-        generateTrainingStub({
+      const response = await trainingService.create(trainer, {
+        training: generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -501,7 +500,7 @@ describe('Training Workloads (e2e)', () => {
             }),
           ],
         }),
-      );
+      });
 
       const workloads = await workloadService.findAllByTraining(response.id);
     });

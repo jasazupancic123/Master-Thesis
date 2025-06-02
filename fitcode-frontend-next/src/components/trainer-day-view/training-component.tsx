@@ -21,6 +21,7 @@ import {
   Select,
   Stack,
   Tooltip,
+  Collapse,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -734,9 +735,18 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             </Stack>
           </Box>
 
-          {component &&
+          {/* {component &&
             trainingComponent.id === component.id &&
-            training.id === selectedTraining?.id && (
+            training.id === selectedTraining?.id && ( */}
+            <Collapse
+              in={
+                component &&
+                trainingComponent.id === component.id &&
+                training.id === selectedTraining?.id
+              }
+              timeout="auto"
+              unmountOnExit
+            >
               <Box
                 bgcolor="background.paper"
                 p={2}
@@ -757,8 +767,10 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                   />
                 )}
               </Box>
-            )}
+              </Collapse>
+            {/* )} */}
         </Box>
+        
       </>
       <MyModal
         isOpen={openCalendarModal}

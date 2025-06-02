@@ -150,7 +150,6 @@ export default function TrainingCard(props: TrainingCardProps) {
           </Tooltip>
         </Box>
       </Box>
-
       <Box
         sx={{
           border: '1px solidrgb(36, 38, 46)',
