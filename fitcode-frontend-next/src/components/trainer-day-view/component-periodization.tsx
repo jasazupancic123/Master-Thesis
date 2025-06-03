@@ -57,6 +57,9 @@ export default function ComponentPeriodization(
   );
   const [expandExerciseView, setExpandExerciseView] = useState(false);
 
+  const [allPossibleTrainings, setAllPossibleTrainings] = useState<Training[]>(
+    []
+  );
   const [selectedTrainings, setSelectedTrainings] = useState<Training[]>([]);
 
   const [selectedTarget, setSelectedTarget] = useState(
@@ -66,34 +69,11 @@ export default function ComponentPeriodization(
   useEffect(() => {
     if (!selectedTarget) {
       // set to all
-      setSelectedTrainings(
-        trainings.filter((t) =>
-          t.components.some(
-            (c) =>
-              c.component?.id === selectedComponent.component?.id &&
-              cycle &&
-              CommonService.instance.date.isBetween(
-                t.from,
-                cycle.from,
-                cycle.to
-              ) &&
-              CommonService.instance.date.isBetween(
-                t.to,
-                training.to,
-                cycle?.to
-              )
-          )
-        )
-      );
-      return;
-    }
 
-    setSelectedTrainings(
-      trainings.filter((t) =>
+      const tmpSelectedTrainings = trainings.filter((t) =>
         t.components.some(
           (c) =>
             c.component?.id === selectedComponent.component?.id &&
-            c.target?.id === selectedTarget.id &&
             cycle &&
             CommonService.instance.date.isBetween(
               t.from,
@@ -102,8 +82,26 @@ export default function ComponentPeriodization(
             ) &&
             CommonService.instance.date.isBetween(t.to, training.to, cycle?.to)
         )
+      );
+
+      setSelectedTrainings(tmpSelectedTrainings);
+      setAllPossibleTrainings(tmpSelectedTrainings);
+      return;
+    }
+
+    const tmpSelectedTrainings = trainings.filter((t) =>
+      t.components.some(
+        (c) =>
+          c.component?.id === selectedComponent.component?.id &&
+          c.target?.id === selectedTarget.id &&
+          cycle &&
+          CommonService.instance.date.isBetween(t.from, cycle.from, cycle.to) &&
+          CommonService.instance.date.isBetween(t.to, training.to, cycle?.to)
       )
     );
+
+    setAllPossibleTrainings(tmpSelectedTrainings);
+    setSelectedTrainings(tmpSelectedTrainings);
   }, [selectedTarget]);
 
   // filter trainings by cycle
@@ -122,14 +120,17 @@ export default function ComponentPeriodization(
       return;
     }
 
-    const trainingIds = selectedTrainings.map((t) => t.id);
+    const excludedTrainingIds = allPossibleTrainings
+      .filter((t) => !selectedTrainings.some((st) => st.id === t.id))
+      .map((t) => t.id);
     const exerciseIds = selectedExercises.map((e) => e.id);
+
     handleApiRequest(
       router,
       () =>
         TrainingController.periodizeTrainings(token, {
-          baseTraining: training,
-          trainingIds,
+          baseTrainingId: training.id,
+          excludedTrainingIds,
           componentId: selectedComponent.id,
           exerciseIds,
           periodizationType: selectedPeriodizationType,

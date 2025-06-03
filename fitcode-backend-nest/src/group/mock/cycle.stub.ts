@@ -5,7 +5,6 @@ import {
   generateRandomName,
 } from '../../../test/utils/random.util';
 import { endOfMonth, startOfMonth } from 'date-fns';
-import { PeriodizationType } from '../enum/periodization-type.enum';
 
 export function generateCycleStub(data?: Partial<Cycle>): Cycle {
   return {

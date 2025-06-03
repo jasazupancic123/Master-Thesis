@@ -7,7 +7,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {
-  addDays,
   addMinutes,
   endOfDay,
   isBefore,
@@ -50,11 +49,9 @@ import { FinishComponentDto } from '../dto/finish-component.dto';
 import { AverageWorkloadValues } from '../entity/average-workload-values.entity';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { BatchUpdateTrainingsWithCustomAthleteWorkloadsDto } from '../dto/update-training.dto';
-import { custom, StringSchema } from 'joi';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import isoWeek from 'dayjs/plugin/isoWeek';
-import { PeriodizationType } from 'src/group/enum/periodization-type.enum';
-import { PeriodizationUtil } from '../util/periodization.util';
+import { PeriodizationService } from './periodization.service';
 
 dayjs.extend(isoWeek);
 
@@ -493,16 +490,43 @@ export class TrainingService {
 
   async periodizeTrainings(user: User, input: PeriodizeTrainingsDto) {
     const {
-      baseTraining,
-      trainingIds,
+      baseTrainingId,
+      excludedTrainingIds,
       componentId,
       exerciseIds,
       periodizationType,
     } = input;
 
     this.logger.log(
-      `User ${user.uid} is periodizing trainings: ${JSON.stringify(trainingIds)}`,
+      `User ${user.uid} is periodizing trainings: ${JSON.stringify(excludedTrainingIds)}`,
     );
+
+    const baseTraining = await this.findOneOrFail(user, {
+      trainingId: baseTrainingId,
+    });
+
+    const baseComponent = baseTraining.components.find(
+      (c) => c.id === componentId,
+    );
+    if (!baseComponent)
+      throw new BadRequestException('Base component not found in base training');
+
+    const mainTarget = baseComponent.target;
+    if (!mainTarget)
+      throw new BadRequestException('Target not found in base training');
+
+    let possibleTrainings = await this.findAll(user, {
+      groupId: baseTraining.groupId,
+      cycleId: baseTraining.cycleId,
+    });
+    possibleTrainings = possibleTrainings.filter(
+      (t) =>
+        t.components.some(
+          (c) => c.id === componentId && c.target.id === mainTarget.id,
+        ) && !excludedTrainingIds.includes(t.id),
+    );
+
+    const trainingIds = possibleTrainings.map((t) => t.id);
 
     const trainings = await this.trainingRepository.getDocs((q) => {
       q = q.where('id', 'in', trainingIds);
@@ -539,15 +563,13 @@ export class TrainingService {
     if (trainings.length !== numTrainingInWeeks)
       throw new BadRequestException('Some trainings are missing or not found');
 
-    this.validatePeriodizationType(periodizationType);
-
-    const periodizedTrainings = PeriodizationUtil.periodize(
+    const periodizedTrainings = PeriodizationService.periodize(
       baseTraining,
       trainings,
       weeks,
       componentId,
       exerciseIds,
-      periodizationType as PeriodizationType,
+      periodizationType,
     );
 
     const batch = this.firebaseService.firestore.batch();
@@ -1181,11 +1203,9 @@ export class TrainingService {
     this.validateOwner(user.uid, training);
     this.validateIsTrainingInFuture(training.from);
 
-    const workloads = await this.workloadService.findAllByTraining(
+    const notStartedWorkloads = await this.workloadService.findAllByTraining(
       ref.trainingId,
-    );
-    const notStartedWorkloads = workloads.filter(
-      (w) => w.status === SetStatus.NOT_STARTED,
+      SetStatus.NOT_STARTED
     );
 
     // delete non started workloads
@@ -1459,11 +1479,9 @@ export class TrainingService {
       // delete doc
       this.logger.log('No components left, deleting training');
 
-      const workloads = await this.workloadService.findAllByTraining(
+      const notStartedWorkloads = await this.workloadService.findAllByTraining(
         ref.trainingId,
-      );
-      const notStartedWorkloads = workloads.filter(
-        (w) => w.status === SetStatus.NOT_STARTED,
+        SetStatus.NOT_STARTED,
       );
 
       // delete non started workloads
@@ -1538,18 +1556,6 @@ export class TrainingService {
 
     if (isOverlap)
       throw new BadRequestException('Training overlaps with other training');
-  }
-
-  private validatePeriodizationType(periodizationType: string) {
-    if (periodizationType === PeriodizationType.NONE)
-      throw new BadRequestException('Periodization type none is not supported');
-    if (
-      !Object.values(PeriodizationType).includes(
-        periodizationType as PeriodizationType,
-      )
-    ) {
-      throw new BadRequestException('Invalid periodization type');
-    }
   }
 
   private async validateTrainingMembers(membersIds: string[]) {
