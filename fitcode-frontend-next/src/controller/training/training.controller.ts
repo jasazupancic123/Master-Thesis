@@ -67,8 +67,8 @@ export class TrainingController {
   static async periodizeTrainings(
     token: string,
     body: {
-      baseTraining: Training;
-      trainingIds: string[];
+      baseTrainingId: string;
+      excludedTrainingIds: string[];
       componentId: string;
       exerciseIds: string[];
       periodizationType: PeriodizationType;

@@ -6,5 +6,4 @@ export enum PeriodizationType {
   WAVE = 'Wave',
   AUTOREGULATORY = 'Autoregulatory',
   DUP_TABLE_BASED = 'Dup Table-Based',
-  NONE = 'None',
 }

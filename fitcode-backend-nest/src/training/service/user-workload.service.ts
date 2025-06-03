@@ -76,10 +76,14 @@ export class UserWorkloadService {
       });
   }
 
-  async findAllByTraining(trainingId: string) {
-    return await this.firebaseService.firestore
+  async findAllByTraining(trainingId: string, status?: SetStatus) {
+    const query = this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('trainingId', '==', trainingId)
+      .where('trainingId', '==', trainingId);
+
+    const finalQuery = status ? query.where('status', '==', status) : query;
+    
+    return await finalQuery
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -318,7 +322,7 @@ export class UserWorkloadService {
         );
 
       const training = trainings.find((t) => t.id === workload.trainingId);
-      if(!training) continue;
+      if (!training) continue;
 
       const query = this.firebaseService.buildCreateQuery<Workload>(
         {

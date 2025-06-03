@@ -4,7 +4,6 @@ import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { IntersectionType } from '@nestjs/mapped-types';
 import { ColorEntity } from '../../common/entity/color.entity';
-import { Periodization } from './periodization.entity';
 
 export interface Week {
   date: Date;
