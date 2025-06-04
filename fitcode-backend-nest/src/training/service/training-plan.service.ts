@@ -34,6 +34,13 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
+import { SetOrRep } from '../enum/set-or-rep-enum';
+import {
+  MAX_REP_VALUE,
+  MAX_SET_VALUE,
+  MIN_REP_VALUE,
+  MIN_SET_VALUE,
+} from '../constant/min-max-set-rep-values.constant';
 
 @Injectable()
 export class TrainingPlanService {
@@ -448,6 +455,41 @@ export class TrainingPlanService {
     }
 
     return componentParams;
+  }
+
+  getRangeValues(
+    range: string,
+    setOrRep: SetOrRep,
+  ): { min: number; max: number } {
+    const split = range.split('-');
+    if (split.length !== 2)
+      throw new BadRequestException(
+        'Invalid range value format. Expected "min-", "-max" or "min-max"',
+      );
+
+    const min = split[0];
+    const max = split[1];
+
+    if (!max.length && min.length) {
+      // format "min-"
+      return {
+        min: parseFloat(min),
+        max: setOrRep === SetOrRep.SET ? MAX_SET_VALUE : MAX_REP_VALUE,
+      };
+    } else if (!min.length && max.length) {
+      // format "-max"
+      return {
+        min: setOrRep === SetOrRep.SET ? MIN_SET_VALUE : MIN_REP_VALUE,
+        max: parseFloat(max),
+      };
+    } else if (min.length && max.length) {
+      // format "min-max"
+      return { min: parseFloat(min), max: parseFloat(max) };
+    } else {
+      throw new BadRequestException(
+        'Invalid range value format. Expected "min-", "-max" or "min-max"',
+      );
+    }
   }
 
   createWarmupAndCooldown(
