@@ -23,6 +23,7 @@ import {
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
+  generateTrainingStub,
 } from '../mock/training.stub';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
 import { ComponentParam } from '../../component/entity/component-param.entity';
@@ -39,6 +40,14 @@ import {
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
 import { addMinutes, subMinutes } from 'date-fns';
+import {
+  MAX_SET_VALUE,
+  MIN_SET_VALUE,
+  MAX_REP_VALUE,
+  MIN_REP_VALUE,
+} from '../constant/min-max-set-rep-values.constant';
+import { SetOrRep } from '../enum/set-or-rep-enum';
+import { Training } from '../entity/training.entity';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
@@ -136,6 +145,73 @@ describe('TrainingPlanService (unit)', () => {
       expect.objectContaining({ id: 'e4' }),
       expect.objectContaining({ id: 'e5' }),
     ]);
+  });
+
+  describe('getAddComponentsQuery', () => {
+    it('should return a correct query and a correct training', () => {
+      const components = [
+        generateTrainingComponent(),
+        generateTrainingComponent(),
+      ];
+      const trainingStub = generateTrainingStub({
+        id: 'training-id',
+        groupId: 'group-id',
+        cycleId: 'cycle-id',
+        ownerId: 'owner-id',
+        membersIds: [],
+        components,
+      });
+      const newComponent = generateTrainingComponent({
+        id: 'new-component-id',
+        from: new Date(),
+        to: new Date(),
+      });
+      const result = service.getAddComponentsQuery(trainingStub, [
+        newComponent,
+      ]);
+
+      expect(result.length).toBe(2);
+
+      const query = result[0];
+      const training = result[1] as Training;
+
+      expect(query.components).toEqual([...trainingStub.components]);
+      expect(training.components).toEqual([...trainingStub.components]);
+    });
+  });
+
+  describe('getDeleteComponentQuery', () => {
+    it('should return a correct training and a correct trainingRef', () => {
+      const components = [
+        generateTrainingComponent({ id: 'component-id-1' }),
+        generateTrainingComponent({ id: 'component-id-2' }),
+        generateTrainingComponent({ id: 'component-id-3' }),
+      ];
+      const trainingStub = generateTrainingStub({
+        id: 'training-id',
+        groupId: 'group-id',
+        cycleId: 'cycle-id',
+        ownerId: 'owner-id',
+        membersIds: [],
+        components,
+      });
+
+      const result = service.getDeleteComponentQuery(trainingStub, {
+        trainingId: 'training-id',
+        componentId: 'component-id-2',
+      });
+
+      expect(result.length).toBe(2);
+      const query = result[0] as Training;
+      const training = result[1];
+
+      expect(query.components).toEqual(
+        components.filter((c) => c.id !== 'component-id-2'),
+      );
+      expect(training.components).toEqual(
+        components.filter((c) => c.id !== 'component-id-2'),
+      );
+    });
   });
 
   describe('validateTrainingComponents', () => {
@@ -471,6 +547,119 @@ describe('TrainingPlanService (unit)', () => {
           trainingComponents,
           components,
         ),
+      ).not.toThrow();
+    });
+  });
+
+  describe('validateSupersets', () => {
+    const components = [
+      WARMUP_COMPONENT,
+      generateComponentStub({ id: 'c1', name: 'Component 1' }),
+      generateComponentStub({ id: 'c2', name: 'Component 2' }),
+      generateComponentStub({ id: 'c3', name: 'Component 3' }),
+      generateComponentStub({ id: 'c4' }),
+      generateComponentStub({ id: 'c5' }),
+      generateComponentStub({ id: 'c6' }),
+      generateComponentStub({ id: 'leaf1', parentId: 'c1', name: 'Leaf 1' }),
+      generateComponentStub({ id: 'leaf2', parentId: 'c1', name: 'Leaf 2' }),
+      generateComponentStub({ id: 'leaf3', parentId: 'c1', name: 'Leaf 3' }),
+      COOLDOWN_COMPONENT,
+    ];
+
+    const exercises = [
+      generateExerciseStub({ id: 'e1', componentIds: ['leaf1'] }),
+      generateExerciseStub({ id: 'e2', componentIds: ['leaf1'] }),
+      generateExerciseStub({ id: 'e3', componentIds: ['leaf2'] }),
+      generateExerciseStub({ id: 'e4', componentIds: ['leaf3'] }),
+      generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
+      generateExerciseStub({ id: 'e6', componentIds: ['leaf3'] }),
+      generateExerciseStub({ id: 'e7', componentIds: ['leaf3'] }),
+      generateExerciseStub({ id: 'e8', componentIds: ['leaf3'] }),
+      generateExerciseStub({ id: 'e9', componentIds: ['leaf3'] }),
+    ];
+
+    it('should throw error if there are more than 8 supersets in a training component', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: Array.from({ length: 9 }, (_, i) =>
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: `e${i + 1}` })],
+          }),
+        ),
+      });
+      expect(() =>
+        service.validateSupersets(trainingComponent, exercises, components),
+      ).toThrow('You can only have up to 8 supersets per training component');
+    });
+
+    it('should throw error if there are more than 4 exercises in a superset', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: Array.from({ length: 5 }, (_, i) =>
+              generateTrainingExercise({ id: `e${i + 1}` }),
+            ),
+          }),
+        ],
+      });
+      expect(() =>
+        service.validateSupersets(trainingComponent, exercises, components),
+      ).toThrow('You can only have up to 4 exercises per superset');
+    });
+
+    it('should throw error if there is a invalid exercise in a superset', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({ id: 'e1' }),
+              generateTrainingExercise({ id: 'e2' }),
+              generateTrainingExercise({ id: 'invalid-exercise' }), // invalid
+            ],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, exercises, components),
+      ).toThrow('Training exercise not found');
+    });
+
+    it('should successfuly validate supersets', () => {
+      const trainingComponent = generateTrainingComponent({
+        id: 'c1',
+        supersets: [
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({ id: 'e1' }),
+              generateTrainingExercise({ id: 'e2' }),
+            ],
+          }),
+          generateSuperset({
+            exercises: [
+              generateTrainingExercise({ id: 'e3' }),
+              generateTrainingExercise({ id: 'e4' }),
+            ],
+          }),
+        ],
+        subgroups: [
+          generateSubgroup({
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: 'e5' }),
+                  generateTrainingExercise({ id: 'e6' }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      expect(() =>
+        service.validateSupersets(trainingComponent, exercises, components),
       ).not.toThrow();
     });
   });
@@ -1358,5 +1547,66 @@ describe('TrainingPlanService (unit)', () => {
           { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
         ]);
     });
+  });
+
+  describe('getComponentParamAttributes', () => {
+    // TODO()
+  });
+
+  describe('getRangeValues', () => {
+    it.each([
+      {
+        range: '5-',
+        type: SetOrRep.SET,
+        expected: { min: 5, max: MAX_SET_VALUE },
+      },
+      {
+        range: '-50',
+        type: SetOrRep.SET,
+        expected: { min: MIN_SET_VALUE, max: 50 },
+      },
+      { range: '20-75', type: SetOrRep.SET, expected: { min: 20, max: 75 } },
+      {
+        range: '10-',
+        type: SetOrRep.REP,
+        expected: { min: 10, max: MAX_REP_VALUE },
+      },
+      {
+        range: '-20',
+        type: SetOrRep.REP,
+        expected: { min: MIN_REP_VALUE, max: 20 },
+      },
+      { range: '5-25', type: SetOrRep.REP, expected: { min: 5, max: 25 } },
+      {
+        range: '-',
+        type: SetOrRep.REP,
+        expected:
+          'Invalid range value format. Expected "min-", "-max" or "min-max"',
+      },
+      {
+        range: '20-50-',
+        type: SetOrRep.REP,
+        expected:
+          'Invalid range value format. Expected "min-", "-max" or "min-max"',
+      },
+      {
+        range: '20,50',
+        type: SetOrRep.REP,
+        expected:
+          'Invalid range value format. Expected "min-", "-max" or "min-max"',
+      },
+    ])(
+      'should successfully parse or reject all provided range examples',
+      async ({ range, type, expected }) => {
+        if (typeof expected === 'string') {
+          expect(() => service.getRangeValues(range, type)).toThrow(expected);
+          return;
+        }
+
+        const { min, max } = service.getRangeValues(range, type);
+        expect(min).toBe(expected.min);
+        expect(max).toBe(expected.max);
+      },
+    );
   });
 });
