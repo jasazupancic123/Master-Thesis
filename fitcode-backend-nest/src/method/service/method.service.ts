@@ -4,17 +4,13 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { FirebaseService } from '../../firebase/firebase.service';
 import { MethodRepository } from '../repository/method.repository';
 import { Query } from 'firebase-admin/firestore';
-import { User } from 'src/common/type/firebase-auth.type';
+import { User } from '../../common/type/firebase-auth.type';
 import { Method } from '../entity/method.entity';
-import { MethodRef } from 'src/common/type/firestore.type';
-import {
-  CreateMethodDto,
-  CreateMethodWithIdDto,
-} from '../dto/create-method.dto';
-import { Create } from 'src/common/type/entity.type';
+import { MethodRef } from '../../common/type/firestore.type';
+import { Create } from '../../common/type/entity.type';
 
 @Injectable()
 export class MethodService {

@@ -8,7 +8,7 @@ import { IdEntity } from '../../common/entity/id.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
 import { CopiedFrom } from './copied-from.entity';
-import { Target } from 'src/target/entity/target.entity';
+import { Target } from '../../target/entity/target.entity';
 
 export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsDate()

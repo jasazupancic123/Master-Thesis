@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import { Training } from '../entity/training.entity';
-import { addDays, addHours, startOfDay } from 'date-fns';
+import { addDays, addHours } from 'date-fns';
 import { TrainingComponent } from '../entity/training-component.entity';
 import {
   generateRandomColor,
@@ -8,9 +8,10 @@ import {
 } from '../../../test/utils/random.util';
 import { Superset } from '../entity/superset.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { PARAMS } from '../../component/constant/param.constant';
 import { Subgroup } from '../entity/subgroup.entity';
 import { getTime } from '../../../test/utils/data.util';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import { ParamType } from '../../component/enum/param.enum';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
   return {
@@ -43,6 +44,7 @@ export function generateTrainingComponent(
     color: data?.color || generateRandomColor(),
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
     to: data?.to || getTime(addDays(new Date(), 2), 8, 30),
+    target: data?.target || null,
     completedMembersIds: data?.completedMembersIds || [],
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
@@ -76,5 +78,57 @@ export function generateTrainingExercise(
     params: data?.params || [],
     periodized: data?.periodized || false,
     sets: data?.sets || [],
+  };
+}
+
+export function generateExerciseSet(
+  data?: Partial<ExerciseSet>,
+): ExerciseSet {
+  return {
+    setNumber: data?.setNumber || 1,
+    paramValuesL: data?.paramValuesL || [
+      {
+        field: ParamType.VolWork1,
+        selected: 'rep',
+        value: '12',
+      },
+      {
+        field: ParamType.IntWork1,
+        selected: 'kg',
+        value: '20',
+      },
+      {
+        field: ParamType.IntWork2,
+        selected: 'eff',
+        value: '0',
+      },
+      {
+        field: ParamType.VolRec1,
+        selected: 'time',
+        value: '60',
+      },
+    ],
+    paramValuesR: data?.paramValuesR || [
+      {
+        field: ParamType.VolWork1,
+        selected: 'rep',
+        value: '12',
+      },
+      {
+        field: ParamType.IntWork1,
+        selected: 'kg',
+        value: '20',
+      },
+      {
+        field: ParamType.IntWork2,
+        selected: 'eff',
+        value: '0',
+      },
+      {
+        field: ParamType.VolRec1,
+        selected: 'time',
+        value: '60',
+      },
+    ],
   };
 }

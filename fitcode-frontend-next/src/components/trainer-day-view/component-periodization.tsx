@@ -120,6 +120,11 @@ export default function ComponentPeriodization(
       return;
     }
 
+    if (selectedPeriodizationType === PeriodizationType.DUP_TABLE_BASED) {
+      toast.error('DUP table based periodization is not supported yet.');
+      return;
+    }
+
     const excludedTrainingIds = allPossibleTrainings
       .filter((t) => !selectedTrainings.some((st) => st.id === t.id))
       .map((t) => t.id);
