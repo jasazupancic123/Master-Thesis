@@ -11,12 +11,20 @@ import {
   createTrainerUserAndToken,
 } from './utils/auth.util';
 import { config } from 'dotenv';
+import { Institution } from '../src/institution/entity/institution.entity';
+import { InstitutionService } from '../src/institution/service/institution.service';
+import { InstitutionRepository } from '../src/institution/repository/institution.repository';
+import { createInstitution } from './utils/data.util';
+import { UserService } from '../src/user/user.service';
+import { UserRepository } from '../src/user/repository/user.repository';
+import { WellnessRepository } from '../src/user/repository/user-meta.repository';
 
 declare global {
   var athlete: TestUser;
   var trainer: TestUser;
   var manager: TestUser;
   var admin: TestUser;
+  var institution: Institution;
 }
 
 config();
@@ -33,8 +41,24 @@ export default async function () {
     firebaseAdminClient,
   );
 
+  const userRepository = new UserRepository(commonService, firebaseService);
+  const userService = new UserService(
+    configService,
+    firebaseService,
+    userRepository,
+    new WellnessRepository(commonService, userRepository),
+  );
+
+  const institutionService = new InstitutionService(
+    firebaseService,
+    commonService,
+    new InstitutionRepository(firebaseService),
+    userService
+  );
+
   global.athlete = await createAthleteUserAndToken(firebaseService);
   global.trainer = await createTrainerUserAndToken(firebaseService);
   global.manager = await createManagerUserAndToken(firebaseService);
   global.admin = await createAdminUserAndToken(firebaseService);
+  global.institution = await createInstitution(institutionService, {});
 }

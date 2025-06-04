@@ -41,7 +41,10 @@ import { TrainingPlanService } from './training-plan.service';
 import { UserWorkloadService } from './user-workload.service';
 import { Workload } from '../entity/workload.entity';
 import { CreateWorkload } from '../dto/create-workload.dto';
-import dayjs from 'dayjs';
+// import * as dayjs from 'dayjs'; // use for tests
+// import * as isoWeek from 'dayjs/plugin/isoWeek'; // use for tests
+import dayjs from 'dayjs'; // use for prod
+import isoWeek from 'dayjs/plugin/isoWeek'; // use for prod
 import { SetStatus } from '../enum/set-status.enum';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { ParamType } from '../../component/enum/param.enum';
@@ -50,8 +53,8 @@ import { AverageWorkloadValues } from '../entity/average-workload-values.entity'
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { BatchUpdateTrainingsWithCustomAthleteWorkloadsDto } from '../dto/update-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import isoWeek from 'dayjs/plugin/isoWeek';
 import { PeriodizationService } from './periodization.service';
+import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 
 dayjs.extend(isoWeek);
 
@@ -501,6 +504,11 @@ export class TrainingService {
       `User ${user.uid} is periodizing trainings: ${JSON.stringify(excludedTrainingIds)}`,
     );
 
+    if (periodizationType === PeriodizationType.DUP_TABLE_BASED)
+      throw new BadRequestException(
+        'Dup Table Based periodization is not supported yet',
+      );
+
     const baseTraining = await this.findOneOrFail(user, {
       trainingId: baseTrainingId,
     });
@@ -509,7 +517,9 @@ export class TrainingService {
       (c) => c.id === componentId,
     );
     if (!baseComponent)
-      throw new BadRequestException('Base component not found in base training');
+      throw new BadRequestException(
+        'Base component not found in base training',
+      );
 
     const mainTarget = baseComponent.target;
     if (!mainTarget)
@@ -519,6 +529,7 @@ export class TrainingService {
       groupId: baseTraining.groupId,
       cycleId: baseTraining.cycleId,
     });
+
     possibleTrainings = possibleTrainings.filter(
       (t) =>
         t.components.some(
@@ -633,7 +644,9 @@ export class TrainingService {
 
     await batch.commit();
 
-    return periodizedTrainings;
+    return periodizedTrainings.sort(
+      (a, b) => a.from.getTime() - b.from.getTime(),
+    );
   }
 
   // old, not used anymore
@@ -1205,7 +1218,7 @@ export class TrainingService {
 
     const notStartedWorkloads = await this.workloadService.findAllByTraining(
       ref.trainingId,
-      SetStatus.NOT_STARTED
+      SetStatus.NOT_STARTED,
     );
 
     // delete non started workloads

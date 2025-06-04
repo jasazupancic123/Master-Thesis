@@ -1,7 +1,6 @@
-import { ParamType } from 'src/component/enum/param.enum';
+import { ParamType } from '../../component/enum/param.enum';
 import { Training } from '../entity/training.entity';
-import { PeriodizationType } from 'src/group/enum/periodization-type.enum';
-import { start } from 'repl';
+import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 
 export class PeriodizationService {
   static periodize(
