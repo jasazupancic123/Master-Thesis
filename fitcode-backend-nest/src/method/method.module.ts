@@ -5,9 +5,8 @@ import { MethodRepository } from './repository/method.repository';
 import { MethodService } from './service/method.service';
 
 @Module({
-  imports: [forwardRef(() => UserModule)],
   controllers: [MethodController],
   providers: [MethodRepository, MethodService],
-  exports: [MethodService],
+  exports: [MethodRepository, MethodService],
 })
 export class MethodModule {}

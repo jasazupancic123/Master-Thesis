@@ -39,6 +39,7 @@ export default function TrainingCard(props: TrainingCardProps) {
     setTrainings,
     components,
     exercises,
+    methods,
   } = useGroup();
 
   const {
@@ -162,15 +163,23 @@ export default function TrainingCard(props: TrainingCardProps) {
       >
         {training && (
           <>
-            {[training.warmup, ...training.components, training.cooldown].map(
-              (trainingComponent, i) => (
-                <TrainingComponentCard
-                  key={i}
-                  training={training}
-                  trainingComponent={trainingComponent}
-                />
-              )
-            )}
+            <TrainingComponentCard
+              key={0}
+              training={training}
+              trainingComponent={training.warmup}
+            />
+            {training.components.map((trainingComponent, i) => (
+              <TrainingComponentCard
+                key={i + 1}
+                training={training}
+                trainingComponent={trainingComponent}
+              />
+            ))}
+            <TrainingComponentCard
+              key={training.components.length + 1}
+              training={training}
+              trainingComponent={training.cooldown}
+            />
           </>
         )}
       </Box>
@@ -218,6 +227,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                       setFilteredTrainings,
                       components,
                       exercises,
+                      methods,
                     }
                   );
                 }}
@@ -266,6 +276,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                       setFilteredTrainings,
                       components,
                       exercises,
+                      methods,
                     }
                   );
                 }}

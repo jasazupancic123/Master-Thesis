@@ -25,6 +25,7 @@ export default function TrainerWeekView() {
     token,
     components,
     exercises,
+    methods,
     cycle,
     filteredTrainings,
     setTrainings,
@@ -98,8 +99,7 @@ export default function TrainerWeekView() {
           container
           spacing={2}
           display="flex"
-          justifyContent="space-between"        
-
+          justifyContent="space-between"
         >
           {weeks[index].map(({ date }, i) => {
             const day = dayjs(date);
@@ -154,10 +154,11 @@ export default function TrainerWeekView() {
                               }),
                             (training) => {
                               const mapped =
-                                TrainingService.mapComponentsExercises(
+                                TrainingService.mapComponentsExercisesMethods(
                                   training,
                                   components,
-                                  exercises
+                                  exercises,
+                                  methods
                                 );
 
                               setTrainings((prev) =>

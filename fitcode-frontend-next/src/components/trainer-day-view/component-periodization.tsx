@@ -45,6 +45,7 @@ export default function ComponentPeriodization(
     setFilteredTrainings,
     components,
     exercises,
+    methods,
   } = useGroup();
 
   const [selectedPeriodizationType, setSelectedPeriodizationType] =
@@ -142,7 +143,12 @@ export default function ComponentPeriodization(
         }),
       (periodizedTrainings) => {
         periodizedTrainings = periodizedTrainings.map((t) =>
-          TrainingService.mapComponentsExercises(t, components, exercises)
+          TrainingService.mapComponentsExercisesMethods(
+            t,
+            components,
+            exercises,
+            methods
+          )
         );
 
         setFilteredTrainings((prev) =>

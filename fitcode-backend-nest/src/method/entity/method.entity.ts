@@ -1,7 +1,13 @@
 import { IdEntity } from 'src/common/entity/id.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
+import { AttributeRange } from 'src/attribute/entity/attribute-range.entity';
 
 export class Method extends IdEntity {
   @IsString()
@@ -16,17 +22,17 @@ export class Method extends IdEntity {
   @Expose()
   targetId: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => AttributeRange)
   @ApiProperty()
   @Expose()
-  ability: string;
+  attributeRanges: AttributeRange[];
 
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  repetition: string;
+  ability: string;
 
   @IsString()
   @IsNotEmpty()
@@ -44,11 +50,17 @@ export class Method extends IdEntity {
   @ApiProperty()
   @Expose()
   @IsOptional()
-  set: string;
+  tempo: string;
 
   @IsString()
   @ApiProperty()
   @Expose()
   @IsOptional()
-  tempo: string;
+  repetition: string;
+
+  @IsString()
+  @ApiProperty()
+  @Expose()
+  @IsOptional()
+  set: string;
 }

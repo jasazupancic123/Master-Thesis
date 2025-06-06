@@ -55,6 +55,7 @@ import { BatchUpdateTrainingsWithCustomAthleteWorkloadsDto } from '../dto/update
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { PeriodizationService } from './periodization.service';
 import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { MethodService } from 'src/method/service/method.service';
 
 dayjs.extend(isoWeek);
 
@@ -351,12 +352,14 @@ export class TrainingService {
       user,
       propsTraining.components,
     );
+    const methods = await this.cacheManagerService.getMethods();
 
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
       [warmup, ...propsTraining.components, cooldown],
       components,
+      methods,
     );
 
     // populate exercise params from components
@@ -445,6 +448,7 @@ export class TrainingService {
                     : copyFromTrainingId,
                 },
                 target: trainingComponent.target || null,
+                methodId: trainingComponent.methodId || null,
                 completedMembersIds: [],
               },
             ]
@@ -454,9 +458,10 @@ export class TrainingService {
               from: c.from,
               to: c.to,
               color: c.color,
-              target: c.target || null,
               subgroups: c.subgroups || [],
               supersets: c.supersets || [],
+              target: c.target || null,
+              methodId: c.methodId || null,
               completedMembersIds: [],
             })),
     };
@@ -691,12 +696,14 @@ export class TrainingService {
       user,
       [trainingComponent],
     );
+    const methods = await this.cacheManagerService.getMethods();
 
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
       [warmup, trainingComponent, cooldown],
       components,
+      methods,
     );
 
     // populate exercise params from components
@@ -755,6 +762,8 @@ export class TrainingService {
               ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
               : ref.trainingId,
           },
+          target: trainingComponent.target || null,
+          methodId: trainingComponent.methodId || null,
           completedMembersIds: [],
         },
       ],
@@ -824,6 +833,7 @@ export class TrainingService {
     // validate components & exercises
     const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
+    const methods = await this.cacheManagerService.getMethods();
     const membersIds = input.membersIds || training.membersIds;
     await this.validateTrainingMembers(membersIds);
 
@@ -843,6 +853,7 @@ export class TrainingService {
       membersIds,
       [input.warmup, ...input.components, input.cooldown],
       components,
+      methods,
     );
 
     // populate exercise params from components
@@ -890,7 +901,9 @@ export class TrainingService {
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
     this.validateOwner(user.uid, group);
 
-    const updated = [];
+    const methods = await this.cacheManagerService.getMethods();
+
+    const updated = [] as Training[];
     for (const data of input) {
       // validate training
       const training = await this.findOneOrFail(user, { trainingId: data.id });
@@ -922,6 +935,7 @@ export class TrainingService {
         membersIds,
         [data.warmup, ...data.components, data.cooldown],
         components,
+        methods,
       );
 
       // populate exercise params from components
@@ -1041,6 +1055,8 @@ export class TrainingService {
           color: c.color,
           subgroups: c.subgroups || [],
           supersets: c.supersets || [],
+          target: c.target || null,
+          methodId: c.methodId || null,
           completedMembersIds: [],
         };
       }),
@@ -1080,6 +1096,7 @@ export class TrainingService {
       user,
       copiedTraining.components,
     );
+    const methods = await this.cacheManagerService.getMethods();
 
     this.trainingPlanService.validateTrainingComponents(
       exercises,
@@ -1090,6 +1107,7 @@ export class TrainingService {
         copiedTraining.cooldown,
       ],
       components,
+      methods,
     );
 
     const copyTrainingQuery = this.firebaseService.buildCreateQuery<Training>(
@@ -1184,12 +1202,14 @@ export class TrainingService {
       user,
       newComponents,
     );
+    const methods = await this.cacheManagerService.getMethods();
 
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       [],
       [training.warmup, ...newComponents, training.cooldown],
       components,
+      methods,
     );
 
     const updated = {
@@ -1431,6 +1451,7 @@ export class TrainingService {
 
     // validate components & exercises
     const components = await this.cacheManagerService.getComponents();
+    const methods = await this.cacheManagerService.getMethods();
     const trainingComponents = [...training.components, ...input];
     const exercises = await this.trainingPlanService.findAllTrainingExercises(
       user,
@@ -1448,6 +1469,7 @@ export class TrainingService {
       training.membersIds,
       [training.warmup, ...trainingComponents, training.cooldown],
       components,
+      methods,
     );
 
     // get query for training

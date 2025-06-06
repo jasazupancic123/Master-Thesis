@@ -30,6 +30,13 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @Expose()
   target?: Target; // selected target id which the component uses
 
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  methodId?: string; // method id which the component uses  
+
   @ValidateNested({ each: true })
   @Type(() => Superset)
   @ApiProperty()

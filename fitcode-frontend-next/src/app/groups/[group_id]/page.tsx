@@ -46,7 +46,12 @@ export default async function Page(props: GroupIdPageParams) {
     ]);
 
   const mappedTrainings = trainings.map((t) =>
-    TrainingService.mapComponentsExercises(t, components, exercises)
+    TrainingService.mapComponentsExercisesMethods(
+      t,
+      components,
+      exercises,
+      methods
+    )
   );
 
   const context: GroupIdPageProps = {
