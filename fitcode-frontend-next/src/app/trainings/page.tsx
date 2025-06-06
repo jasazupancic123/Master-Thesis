@@ -8,6 +8,7 @@ import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import TrainingPage from './training-page';
+import { MethodController } from '@/controller/method/method.controller';
 
 export default async function Page() {
   // fetch data
@@ -19,16 +20,22 @@ export default async function Page() {
   if (!profile) return <div>Unauthorized</div>;
 
   const role = profile.customClaims.role[0];
-  const [trainings, exercises, components] = await Promise.all([
+  const [trainings, exercises, components, methods] = await Promise.all([
     TrainingController.findAll(token),
     ExerciseController.findAll(token),
     ComponentController.findAll(),
+    MethodController.findAll(token),
   ]);
 
   if ([UserRole.ADMIN, UserRole.MANAGER].includes(role)) return notFound();
 
   const mappedTrainings = trainings.map((t) => {
-    t = TrainingService.mapComponentsExercises(t, components, exercises);
+    t = TrainingService.mapComponentsExercisesMethods(
+      t,
+      components,
+      exercises,
+      methods
+    );
     return t;
   });
 

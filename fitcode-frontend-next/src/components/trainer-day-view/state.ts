@@ -31,6 +31,7 @@ import { AverageWorkloadValues } from '@/controller/training/type/average-worklo
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { isBefore } from 'date-fns';
 import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
+import { Method } from '@/controller/method/type/method.type';
 
 export async function handleCopyTraining(
   token: string,
@@ -46,6 +47,7 @@ export async function handleCopyTraining(
     setFilteredTrainings: SetState<Training[]>;
     components: Component[];
     exercises: Exercise[];
+    methods: Method[];
   }
 ) {
   const { newDate, period } = input;
@@ -57,6 +59,7 @@ export async function handleCopyTraining(
     setFilteredTrainings,
     components,
     exercises,
+    methods,
   } = state;
 
   if (
@@ -95,10 +98,11 @@ export async function handleCopyTraining(
     router,
     () => TrainingController.copy(token, training.id, { from, to }),
     (copiedTraining) => {
-      copiedTraining = TrainingService.mapComponentsExercises(
+      copiedTraining = TrainingService.mapComponentsExercisesMethods(
         copiedTraining,
         components,
         exercises,
+        methods,
       );
 
       setTrainings((prev) =>

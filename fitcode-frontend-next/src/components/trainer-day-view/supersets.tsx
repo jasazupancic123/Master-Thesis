@@ -6,7 +6,6 @@ import { useGroup } from '@/context/group-provider';
 import { useScreenSize } from '@/context/screen-size-provider';
 import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import {
-  ExerciseSet,
   Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
@@ -30,24 +29,13 @@ import { SupersetsProps } from './props';
 import { handleDeleteExercise, handleDeleteSuperset, onDragEnd } from './state';
 import TrainingExerciseCardContainer from './training-exercise-card-container';
 import { useTheme } from '@mui/material';
-import {
-  ArrowDropDown,
-  ArrowDropUp,
-  MoreVert,
-  Timeline,
-} from '@mui/icons-material';
-import { Attribute } from '@tensorflow/tfjs';
+import { MoreVert } from '@mui/icons-material';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { ComponentParam } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { idID } from '@mui/material/locale';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { TrainingService } from '@/controller/training/training.service';
-import { AverageWorkloadValues } from '@/controller/training/type/average-workload-values.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
@@ -528,6 +516,7 @@ export default function Supersets(props: SupersetsProps) {
                 )
               : selectedExercisesIds;
 
+          const method = component?.method;
           const exercisesToAdd: TrainingExercise[] = exercisesIdsToAdd.map(
             (id) => {
               const exercise = allExercises.find((e) => e.id === id);
@@ -536,15 +525,33 @@ export default function Supersets(props: SupersetsProps) {
                   (exercise?.defaultParams
                     .map((p) => {
                       if (p.field === 'volWorkSets') return undefined;
+
+                      let attributeRange = method?.attributeRanges.find(
+                        (ar) => ar.field === p.field
+                      );
+                      if (attributeRange) {
+                        const foundInOptions = attributeRange.options?.find(
+                          (o) => o.field === p.defaultValue
+                        );
+                        if (foundInOptions) attributeRange = foundInOptions;
+                      }
+
                       return {
                         field: p.field,
                         selected: p.defaultValue,
-                        value: p.options?.find(
-                          (o) => o.field === p.defaultValue
-                        )?.options?.length
-                          ? '0' //picks the first element in the options array
-                          : p.options?.find((o) => o.field === p.defaultValue)
-                              ?.defaultValue,
+                        value:
+                          attributeRange &&
+                          attributeRange.min !== undefined &&
+                          attributeRange.max !== undefined
+                            ? Math.ceil(
+                                (attributeRange.min + attributeRange.max) / 2
+                              )
+                            : p.options?.find((o) => o.field === p.defaultValue)
+                                  ?.options?.length
+                              ? '0' //picks the first element in the options array
+                              : p.options?.find(
+                                  (o) => o.field === p.defaultValue
+                                )?.defaultValue,
                       } as AttributeValue;
                     })
                     .filter((p) => p !== undefined) as AttributeValue[])) ||
@@ -554,6 +561,7 @@ export default function Supersets(props: SupersetsProps) {
                 id,
                 exercise: exercise,
                 periodized: false,
+                attributeRanges: component?.method?.attributeRanges || [],
                 params: exercise?.defaultParams || [],
                 sets: exercise?.defaultParams
                   ? Array.from({ length: 3 }, (_, i) => ({
@@ -571,9 +579,11 @@ export default function Supersets(props: SupersetsProps) {
               component.id === WARMUP_ID
                 ? { ...training.warmup }
                 : { ...training.cooldown };
+
             let supersets = !selectedSubgroup?.subgroup
               ? wOrC.supersets
               : selectedSubgroup?.subgroup.supersets;
+
             if (!Array.isArray(supersets)) supersets = [];
             if (supersets.length === 0)
               supersets.push({ exercises: [], color: COLOR[supersets.length] });
@@ -663,9 +673,11 @@ export default function Supersets(props: SupersetsProps) {
           // last superset index
           let supersets = selectedSubgroup?.subgroup?.supersets
             ? [...selectedSubgroup.subgroup.supersets]
-            : training.components[trainingComponentIndex]?.supersets
-              ? [...training.components[trainingComponentIndex].supersets]
-              : [];
+            : component
+              ? component.supersets
+              : training.components[trainingComponentIndex]?.supersets
+                ? [...training.components[trainingComponentIndex].supersets]
+                : [];
 
           if (!Array.isArray(supersets)) supersets = [];
           if (supersets.length === 0)

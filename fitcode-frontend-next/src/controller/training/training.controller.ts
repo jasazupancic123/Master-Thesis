@@ -60,7 +60,7 @@ export class TrainingController {
       copyFromTrainingId?: string;
       date?: { from: Date; to: Date };
     }
-  ) {
+  ): Promise<Training> {
     return api.post<Training>('/training', body, { token });
   }
 

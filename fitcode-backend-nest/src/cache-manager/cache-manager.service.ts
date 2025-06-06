@@ -3,12 +3,15 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   CACHE_KEY_ATTRIBUTES,
   CACHE_KEY_FLAT_COMPONENTS,
+  CACHE_KEY_METHODS,
 } from '../common/constant/cache.constant';
 import { Wrapper } from '../common/type/wrapper.type';
 import { ComponentService } from '../component/component.service';
 import { Component } from '../component/entity/component.entity';
 import { Attribute } from '../attribute/entity/attribute.entity';
 import { AttributeService } from '../attribute/service/attribute.service';
+import { MethodService } from 'src/method/service/method.service';
+import { Method } from 'src/method/entity/method.entity';
 
 @Injectable()
 export class CacheManagerService {
@@ -18,6 +21,8 @@ export class CacheManagerService {
     private readonly componentService: Wrapper<ComponentService>,
     @Inject(forwardRef(() => AttributeService))
     private readonly attributeService: Wrapper<AttributeService>,
+    @Inject(forwardRef(() => MethodService))
+    private readonly methodService: Wrapper<MethodService>,
   ) {}
 
   async getComponents(): Promise<Component[]> {
@@ -58,5 +63,21 @@ export class CacheManagerService {
 
   async clearAttributes(): Promise<void> {
     await this.cacheManager.del(CACHE_KEY_ATTRIBUTES);
+  }
+
+  async getMethods(): Promise<Method[]> {
+    const cached = await this.cacheManager.get(CACHE_KEY_METHODS);
+    if (!cached) {
+      const methods = await this.methodService.findAll();
+      await this.cacheManager.set(CACHE_KEY_METHODS, methods, 24 * 3600 * 1000);
+
+      return methods;
+    }
+
+    return await this.cacheManager.get(CACHE_KEY_METHODS);
+  }
+
+  async clearMethods(): Promise<void> {
+    await this.cacheManager.del(CACHE_KEY_METHODS);
   }
 }

@@ -9,6 +9,7 @@ import { Training } from './type/training.type';
 import { ExerciseSet } from './type/training-plan.type';
 import { IntensityVolumeValues } from './type/intensity-volume-values.type';
 import { Target } from '../target/type/target.type';
+import { Method } from '../method/type/method.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training {
@@ -36,13 +37,21 @@ export class TrainingService {
     return item;
   }
 
-  static mapComponentsExercises(
+  static mapMethods(item: Training, methods: Method[]): Training {
+    for (const tc of item.components)
+      tc.method = methods.find((m) => m.id === tc.methodId);
+
+    return item;
+  }
+
+  static mapComponentsExercisesMethods(
     training: Training,
     components: Component[],
     exercises: Exercise[],
+    methods: Method[]
   ): Training {
     return this.mapExercises(
-      this.mapComponents(training, components),
+      this.mapComponents(this.mapMethods(training, methods), components),
       exercises
     );
   }

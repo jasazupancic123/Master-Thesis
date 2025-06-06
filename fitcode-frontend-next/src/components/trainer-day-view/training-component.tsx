@@ -80,7 +80,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
     detectedChanges,
     setDetectedChanges,
     setTrainings,
-    filteredTrainings,
     setFilteredTrainings,
     trainings,
     cycle,
@@ -291,10 +290,11 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           cooldown: trainingInPeriod.cooldown,
         }),
       (training) => {
-        training = TrainingService.mapComponentsExercises(
+        training = TrainingService.mapComponentsExercisesMethods(
           training,
           allComponents,
-          allExercises
+          allExercises,
+          allMethods
         );
 
         setTrainings((prev) =>
@@ -649,15 +649,9 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                         >
                           <SelectInput<Method>
                             label={'Method'}
-                            value={trainingComponent.target?.id || ''}
+                            value={trainingComponent.method?.id || ''}
                             icon={null}
-                            items={
-                              allMethods.filter(
-                                (target) =>
-                                  target.targetId ===
-                                  trainingComponent.target?.id
-                              ) || []
-                            }
+                            items={allMethods}
                             itemKey="id"
                             itemName="name"
                             disabled={[WARMUP_ID, COOLDOWN_ID].includes(
@@ -670,27 +664,142 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                               const method = allMethods.find(
                                 (m) => m.id === methodId
                               );
-                              if (!method) return;
+
+                              const foundTraining = trainings.find(
+                                (t) => t.id === training.id
+                              );
+                              if (!foundTraining) return;
+
+                              const updatedComponent = {
+                                ...component,
+                                method: method,
+                                methodId: method?.id,
+                                supersets: component.supersets?.map((s) => ({
+                                  ...s,
+                                  exercises: s.exercises.map((e) => ({
+                                    ...e,
+                                    attributeRanges:
+                                      method?.attributeRanges || [],
+                                    sets: e.sets.map((set) => ({
+                                      ...set,
+                                      paramValuesL: set.paramValuesL.map(
+                                        (p) => {
+                                          let attributeRange =
+                                            method?.attributeRanges.find(
+                                              (ar) => ar.field === p.field
+                                            );
+                                          if (!attributeRange) return p;
+
+                                          const foundInOptions =
+                                            attributeRange.options?.find(
+                                              (o) => o.field === p.selected
+                                            );
+                                          if (foundInOptions)
+                                            attributeRange = foundInOptions;
+
+                                          try {
+                                            const numValue = parseFloat(
+                                              p.value
+                                            );
+                                            if (
+                                              attributeRange.min !==
+                                                undefined &&
+                                              numValue < attributeRange.min
+                                            ) {
+                                              return {
+                                                ...p,
+                                                value:
+                                                  attributeRange.min.toString(),
+                                              };
+                                            }
+                                            if (
+                                              attributeRange.max !==
+                                                undefined &&
+                                              numValue > attributeRange.max
+                                            ) {
+                                              return {
+                                                ...p,
+                                                value:
+                                                  attributeRange.max.toString(),
+                                              };
+                                            }
+                                            return p;
+                                          } catch (e) {
+                                            return p;
+                                          }
+                                        }
+                                      ),
+                                      paramValuesR: set.paramValuesR.map(
+                                        (p) => {
+                                          let attributeRange =
+                                            method?.attributeRanges.find(
+                                              (ar) => ar.field === p.field
+                                            );
+                                          if (!attributeRange) return p;
+
+                                          const foundInOptions =
+                                            attributeRange.options?.find(
+                                              (o) => o.field === p.selected
+                                            );
+                                          if (foundInOptions)
+                                            attributeRange = foundInOptions;
+
+                                          try {
+                                            const numValue = parseFloat(
+                                              p.value
+                                            );
+                                            if (
+                                              attributeRange.min !==
+                                                undefined &&
+                                              numValue < attributeRange.min
+                                            ) {
+                                              return {
+                                                ...p,
+                                                value:
+                                                  attributeRange.min.toString(),
+                                              };
+                                            }
+                                            if (
+                                              attributeRange.max !==
+                                                undefined &&
+                                              numValue > attributeRange.max
+                                            ) {
+                                              return {
+                                                ...p,
+                                                value:
+                                                  attributeRange.max.toString(),
+                                              };
+                                            }
+                                            return p;
+                                          } catch (e) {
+                                            return p;
+                                          }
+                                        }
+                                      ),
+                                    })),
+                                  })),
+                                })),
+                              };
+
+                              setComponent(updatedComponent);
+
+                              const updatedComponents =
+                                foundTraining.components.map((c) => {
+                                  if (
+                                    c.id === trainingComponent.id ||
+                                    c.component?.id ===
+                                      trainingComponent.component?.id
+                                  ) {
+                                    return {
+                                      ...updatedComponent,
+                                    };
+                                  }
+                                  return c;
+                                });
 
                               setTrainings((prev) =>
                                 prev.map((t) => {
                                   if (t.id !== training.id) return t;
-                                  const updatedComponents = t.components.map(
-                                    (c) => {
-                                      if (
-                                        c.id === trainingComponent.id ||
-                                        c.component?.id ===
-                                          trainingComponent.component?.id
-                                      ) {
-                                        return {
-                                          ...c,
-                                          method: method,
-                                          methodId: method.id,
-                                        };
-                                      }
-                                      return c;
-                                    }
-                                  );
                                   return {
                                     ...t,
                                     components: updatedComponents,
@@ -701,22 +810,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                               setFilteredTrainings((prev) =>
                                 prev.map((t) => {
                                   if (t.id !== training.id) return t;
-                                  const updatedComponents = t.components.map(
-                                    (c) => {
-                                      if (
-                                        c.id === trainingComponent.id ||
-                                        c.component?.id ===
-                                          trainingComponent.component?.id
-                                      ) {
-                                        return {
-                                          ...c,
-                                          method: method,
-                                          methodId: method.id,
-                                        };
-                                      }
-                                      return c;
-                                    }
-                                  );
                                   return {
                                     ...t,
                                     components: updatedComponents,
@@ -738,39 +831,38 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
           {/* {component &&
             trainingComponent.id === component.id &&
             training.id === selectedTraining?.id && ( */}
-            <Collapse
-              in={
-                component &&
-                trainingComponent.id === component.id &&
-                training.id === selectedTraining?.id
+          <Collapse
+            in={
+              component &&
+              trainingComponent.id === component.id &&
+              training.id === selectedTraining?.id
+            }
+            timeout="auto"
+            unmountOnExit
+          >
+            <Box
+              bgcolor="background.paper"
+              p={2}
+              pt={0}
+              px={
+                screenSize.isMobile || screenSize.isLandscapeMobile
+                  ? 0
+                  : undefined
               }
-              timeout="auto"
-              unmountOnExit
+              key={filter}
             >
-              <Box
-                bgcolor="background.paper"
-                p={2}
-                pt={0}
-                px={
-                  screenSize.isMobile || screenSize.isLandscapeMobile
-                    ? 0
-                    : undefined
-                }
-                key={filter}
-              >
-                {heatmapView ? (
-                  <MuscleHeatmapView setHeatmapView={setHeatmapView} />
-                ) : (
-                  <Supersets
-                    openAddExerciseModal={openAddExerciseModal}
-                    setOpenAddExerciseModal={setOpenAddExerciseModal}
-                  />
-                )}
-              </Box>
-              </Collapse>
-            {/* )} */}
+              {heatmapView ? (
+                <MuscleHeatmapView setHeatmapView={setHeatmapView} />
+              ) : (
+                <Supersets
+                  openAddExerciseModal={openAddExerciseModal}
+                  setOpenAddExerciseModal={setOpenAddExerciseModal}
+                />
+              )}
+            </Box>
+          </Collapse>
+          {/* )} */}
         </Box>
-        
       </>
       <MyModal
         isOpen={openCalendarModal}

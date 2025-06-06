@@ -17,6 +17,8 @@ interface Props {
   exercise?: TrainingExercise;
   setsNumber?: number;
   setSetsNumber?: SetState<number>;
+  min?: number;
+  max?: number;
 }
 
 export function ExerciseParam(props: Props) {
@@ -32,6 +34,8 @@ export function ExerciseParam(props: Props) {
     setsNumber,
     setSetsNumber,
     exercise: propsExercise,
+    min,
+    max,
   } = props;
 
   const nestedOption = param.options?.find((o) =>
@@ -181,6 +185,13 @@ export function ExerciseParam(props: Props) {
             size="small"
             onChange={(e) => {
               if (readOnly) return;
+              if ((max || min) && nestedOption?.type === 'number') {
+                const numValue = parseFloat(e.target.value);
+                if (typeof max === 'number' && numValue > max)
+                  e.target.value = max.toString();
+                else if (typeof min === 'number' && numValue < min)
+                  e.target.value = min.toString();
+              }
               onSubOptionChange(e.target.value as string);
             }}
             onBlur={(e) => {
@@ -200,6 +211,8 @@ export function ExerciseParam(props: Props) {
               readOnly || (nestedOption?.field === 'set' && disableSets)
             }
             inputProps={{
+              min: min && nestedOption?.type === 'number' ? min : undefined,
+              max: max && nestedOption?.type === 'number' ? max : undefined,
               style: {
                 textAlign: 'center',
                 paddingRight: '0px !important',

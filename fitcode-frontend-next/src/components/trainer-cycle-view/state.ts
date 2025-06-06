@@ -17,6 +17,7 @@ import { AddTrainingComponents } from './type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Target } from '@/controller/target/type/target.type';
+import { Method } from '@/controller/method/type/method.type';
 
 export async function handleCreateTraining(
   token: string,
@@ -35,6 +36,7 @@ export async function handleCreateTraining(
     setCycle: SetStateNullable<Cycle>;
     components: Component[];
     exercises: Exercise[];
+    methods: Method[];
   }
 ) {
   const { group, cycle, date, period, selectedComponents } = input;
@@ -45,6 +47,7 @@ export async function handleCreateTraining(
     setFilteredTrainings,
     components,
     exercises,
+    methods,
   } = state;
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
@@ -89,10 +92,11 @@ export async function handleCreateTraining(
         },
       }),
     (training) => {
-      const mapped = TrainingService.mapComponentsExercises(
+      const mapped = TrainingService.mapComponentsExercisesMethods(
         training,
         components,
-        exercises
+        exercises,
+        methods
       );
       setTrainings((prev) => [...prev, mapped]);
       setFilteredTrainings((prev) => [...prev, mapped]);
@@ -112,6 +116,7 @@ export async function handleAddTrainingComponents(
     setFilteredTrainings: SetState<Training[]>;
     components: Component[];
     exercises: Exercise[];
+    methods: Method[];
     selectedTargets: { componentId: string; target: Target }[];
   }
 ) {
@@ -122,6 +127,7 @@ export async function handleAddTrainingComponents(
     setTrainings,
     components,
     exercises,
+    methods,
     selectedTargets,
   } = state;
 
@@ -150,10 +156,11 @@ export async function handleAddTrainingComponents(
       }
 
       // add components to training
-      const mapped = TrainingService.mapComponentsExercises(
+      const mapped = TrainingService.mapComponentsExercisesMethods(
         training,
         components,
-        exercises
+        exercises,
+        methods
       );
 
       setTrainings((prev) =>
@@ -187,20 +194,28 @@ export async function handleDeleteTrainingComponent(
     setFilteredTrainings: SetState<Training[]>;
     components: Component[];
     exercises: Exercise[];
+    methods: Method[];
   }
 ) {
   const { trainingId, componentId } = input;
-  const { router, setTrainings, setFilteredTrainings, components, exercises } =
-    state;
+  const {
+    router,
+    setTrainings,
+    setFilteredTrainings,
+    components,
+    exercises,
+    methods,
+  } = state;
 
   handleApiRequest(
     router,
     () => TrainingController.deleteComponent(token, trainingId, componentId),
     (training) => {
-      const mapped = TrainingService.mapComponentsExercises(
+      const mapped = TrainingService.mapComponentsExercisesMethods(
         training,
         components,
-        exercises
+        exercises,
+        methods
       );
 
       if (mapped.components.length === 0) {

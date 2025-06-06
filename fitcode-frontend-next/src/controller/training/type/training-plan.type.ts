@@ -7,15 +7,19 @@ import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { CopiedFrom } from '@/controller/component/type/copied-from.type';
 import { Target } from '@/controller/target/type/target.type';
+import { Method } from '@/controller/method/type/method.type';
+import { AttributeRange } from '@/controller/attribute/type/attribute-range.entity';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
   Required<DateRange> & {
     supersets: Superset[];
     subgroups: Subgroup[];
+    methodId?: string;
 
     // mapped properties
     completedMembersIds: string[]; // members who completed the component
+    method?: Method;
     target?: Target; // selected target
     component?: Component;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
@@ -30,6 +34,7 @@ export type TrainingExercise = IdEntity &
     params: Attribute[];
     sets: ExerciseSet[];
     periodized: boolean;
+    attributeRanges: AttributeRange[];
 
     // mapped properties
     exercise?: Exercise;

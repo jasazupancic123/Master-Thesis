@@ -41,6 +41,7 @@ import {
   MIN_REP_VALUE,
   MIN_SET_VALUE,
 } from '../constant/min-max-set-rep-values.constant';
+import { Method } from 'src/method/entity/method.entity';
 
 @Injectable()
 export class TrainingPlanService {
@@ -70,6 +71,7 @@ export class TrainingPlanService {
           to: c.to ? c.to : addMinutes(lastComponent.from, 60),
           completedMembersIds: [],
           target: c.target,
+          methodId: c.methodId,
           subgroups: [],
           supersets: [],
         })),
@@ -125,6 +127,7 @@ export class TrainingPlanService {
     trainingMemberIds: string[],
     trainingComponents: TrainingComponent[],
     allComponents: Component[],
+    allMethods: Method[],
   ) {
     if (!trainingComponents.map((tc) => tc.id).includes(WARMUP_COMPONENT_ID))
       throw new BadRequestException('Training must have warmup component');
@@ -163,6 +166,7 @@ export class TrainingPlanService {
       // validate supersets and subgroups
       this.validateSupersets(curr, exercises, allComponents);
       this.validateSubgroups(trainingMemberIds, curr, exercises, allComponents);
+      this.validateTrainingExerciseValues(curr, allMethods);
     }
 
     if (
@@ -173,6 +177,57 @@ export class TrainingPlanService {
       throw new ConflictException(
         'You can only have up to 5 components per training',
       );
+  }
+
+  validateTrainingExerciseValues(
+    trainingComponent: TrainingComponent,
+    methods: Method[],
+  ) {
+    if (!trainingComponent.methodId) return; // no method to validate
+
+    const method = methods.find((m) => m.id === trainingComponent.methodId);
+    if (!method)
+      throw new NotFoundException('Method not found for training component');
+
+    if (!method.attributeRanges.length) return; // no values to validate
+
+    const exercises = trainingComponent.supersets.flatMap((s) => s.exercises);
+
+    for (const exercise of exercises) {
+      for (const set of exercise.sets) {
+        this.validateParamValues(method, set.paramValuesL);
+        this.validateParamValues(method, set.paramValuesR);
+      }
+    }
+  }
+
+  private validateParamValues(method: Method, paramValues: AttributeValue[]) {
+    for (const paramValue of paramValues) {
+      let attributeRange = method.attributeRanges.find(
+        (ar) => ar.field === paramValue.field,
+      );
+      if (!attributeRange) continue;
+
+      const foundInOptions = attributeRange.options.find(
+        (o) => o.field === paramValue.selected,
+      );
+      if (foundInOptions) attributeRange = foundInOptions;
+
+      if (attributeRange.min !== undefined) {
+        if (parseFloat(paramValue.value) < attributeRange.min) {
+          throw new BadRequestException(
+            `Value for ${paramValue.field} cannot be less than ${attributeRange.min}`,
+          );
+        }
+      }
+      if (attributeRange.max !== undefined) {
+        if (parseFloat(paramValue.value) > attributeRange.max) {
+          throw new BadRequestException(
+            `Value for ${paramValue.field} cannot be greater than ${attributeRange.max}`,
+          );
+        }
+      }
+    }
   }
 
   populateTrainingExerciseParams(
@@ -455,41 +510,6 @@ export class TrainingPlanService {
     }
 
     return componentParams;
-  }
-
-  getRangeValues(
-    range: string,
-    setOrRep: SetOrRep,
-  ): { min: number; max: number } {
-    const split = range.split('-');
-    if (split.length !== 2)
-      throw new BadRequestException(
-        'Invalid range value format. Expected "min-", "-max" or "min-max"',
-      );
-
-    const min = split[0];
-    const max = split[1];
-
-    if (!max.length && min.length) {
-      // format "min-"
-      return {
-        min: parseFloat(min),
-        max: setOrRep === SetOrRep.SET ? MAX_SET_VALUE : MAX_REP_VALUE,
-      };
-    } else if (!min.length && max.length) {
-      // format "-max"
-      return {
-        min: setOrRep === SetOrRep.SET ? MIN_SET_VALUE : MIN_REP_VALUE,
-        max: parseFloat(max),
-      };
-    } else if (min.length && max.length) {
-      // format "min-max"
-      return { min: parseFloat(min), max: parseFloat(max) };
-    } else {
-      throw new BadRequestException(
-        'Invalid range value format. Expected "min-", "-max" or "min-max"',
-      );
-    }
   }
 
   createWarmupAndCooldown(

@@ -21,10 +21,10 @@ import { AttributeModule } from '../attribute/attribute.module';
   ],
   providers: [
     WorkloadRepository,
+    TrainingService,
     TrainingRepository,
     UserWorkloadService,
     TrainingPlanService,
-    TrainingService,
   ],
   controllers: [TrainingController],
   exports: [TrainingService],

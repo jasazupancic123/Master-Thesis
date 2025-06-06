@@ -45,6 +45,7 @@ export function generateTrainingComponent(
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
     to: data?.to || getTime(addDays(new Date(), 2), 8, 30),
     target: data?.target || null,
+    methodId: data?.methodId || null,
     completedMembersIds: data?.completedMembersIds || [],
     supersets: data?.supersets || [],
     subgroups: data?.subgroups || [],
@@ -78,6 +79,7 @@ export function generateTrainingExercise(
     params: data?.params || [],
     periodized: data?.periodized || false,
     sets: data?.sets || [],
+    attributeRanges: data?.attributeRanges || [],
   };
 }
 

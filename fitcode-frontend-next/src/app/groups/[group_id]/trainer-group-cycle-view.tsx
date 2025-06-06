@@ -29,6 +29,7 @@ export default function TrainerCycleView() {
     group,
     components,
     exercises: allExercises,
+    methods,
     cycle,
     setCycle,
     setTrainings,
@@ -205,6 +206,7 @@ export default function TrainerCycleView() {
                           setFilteredTrainings,
                           exercises: allExercises,
                           selectedTargets,
+                          methods,
                         }
                       );
                     }}
@@ -218,6 +220,7 @@ export default function TrainerCycleView() {
                           setFilteredTrainings,
                           components,
                           exercises: allExercises,
+                          methods,
                         }
                       )
                     }

@@ -11,10 +11,7 @@ import { useTrainerDayViewContext } from '@/context/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
-import {
-  Save,
-  SignalCellularConnectedNoInternet0BarSharp,
-} from '@mui/icons-material';
+import { Save } from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { IconButton, MenuItem, Select, Stack, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -26,7 +23,6 @@ import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
-import { blue } from '@mui/material/colors';
 
 dayjs.extend(weekOfYear);
 
@@ -50,6 +46,7 @@ export default function TrainerDayView() {
     setDetectedChanges,
     setCycle,
     detectedChanges,
+    methods,
   } = useGroup();
 
   const {
@@ -77,8 +74,8 @@ export default function TrainerDayView() {
       //   ? commonService.date.format(date, { withYear: false })
       //   : undefined,
       sublabel: commonService.date.format(date, {
-                withYear: false,
-                })
+        withYear: false,
+      }),
     }))
   );
 
@@ -86,7 +83,9 @@ export default function TrainerDayView() {
   const [loading, setLoading] = useState(true);
 
   async function handleUpdateMultipleTrainings() {
-    if (!filteredTrainings || !filteredTrainings.length) return;
+    const todaysTrainings = [amTraining, pmTraining].filter(
+      (t) => t !== undefined
+    );
 
     await handleApiRequest(
       router,
@@ -94,15 +93,16 @@ export default function TrainerDayView() {
         TrainingController.batchUpdate(
           token,
           { groupId: group.id, cycleId: cycle!.id },
-          filteredTrainings,
+          todaysTrainings,
           customAthleteWorkloads
         ),
       (newTrainings) => {
         const mappedTrainings = newTrainings.map((newTraining) => {
-          const mapped = TrainingService.mapComponentsExercises(
+          const mapped = TrainingService.mapComponentsExercisesMethods(
             newTraining,
             components,
-            exercises
+            exercises,
+            methods
           );
           return mapped;
         });
@@ -170,31 +170,45 @@ export default function TrainerDayView() {
     if (!component) setSelectedSubgroup(null);
   }, [component]);
 
-  const [todaysTrainings, setTodaysTrainings] = useState<Training[]>(
-    filteredTrainings.filter((t) =>
-      commonService.date.isSameDay(day.date, dayjs(t.from))
-    )
-  );
-
   const [amTraining, setAmTraining] = useState<Training | undefined>(
-    todaysTrainings.find((t) => dayjs(t.from).hour() < 12)
+    trainings
+      .filter((t) => commonService.date.isSameDay(day.date, dayjs(t.from)))
+      .find((t) => dayjs(t.from).hour() < 12)
   );
   const [pmTraining, setPmTraining] = useState<Training | undefined>(
-    todaysTrainings.find((t) => dayjs(t.from).hour() >= 12)
+    trainings
+      .filter((t) => commonService.date.isSameDay(day.date, dayjs(t.from)))
+      .find((t) => dayjs(t.from).hour() >= 12)
   );
 
   useEffect(() => {
-    const newTodaysTrainings = filteredTrainings.filter((t) =>
+    const newTodaysTrainings = trainings.filter((t) =>
       commonService.date.isSameDay(day.date, dayjs(t.from))
     );
-    setTodaysTrainings(newTodaysTrainings);
     setAmTraining(newTodaysTrainings.find((t) => dayjs(t.from).hour() < 12));
     setPmTraining(newTodaysTrainings.find((t) => dayjs(t.from).hour() >= 12));
-  }, [filteredTrainings]);
+  }, [day]);
 
   useEffect(() => {
     setLoading(false);
-  }, [todaysTrainings]);
+  }, [amTraining, pmTraining]);
+
+  useEffect(() => {
+    if (!trainings || !trainings.length) return;
+
+    const todaysTrainings = trainings.filter((t) =>
+      commonService.date.isSameDay(day.date, dayjs(t.from))
+    );
+
+    if (todaysTrainings.length === 0) {
+      setAmTraining(undefined);
+      setPmTraining(undefined);
+      return;
+    }
+
+    setAmTraining(todaysTrainings.find((t) => dayjs(t.from).hour() < 12));
+    setPmTraining(todaysTrainings.find((t) => dayjs(t.from).hour() >= 12));
+  }, [trainings]);
 
   useEffect(() => {}, [selectedSubgroup]);
 
@@ -288,9 +302,9 @@ export default function TrainerDayView() {
         minHeight={195}
         sx={{
           borderBottomRightRadius:
-            todaysTrainings.length === 0 || !cycle ? 0 : 10,
+            (!amTraining && !pmTraining) || !cycle ? 0 : 10,
           borderBottomLeftRadius:
-            todaysTrainings.length === 0 || !cycle ? 0 : 10,
+            (!amTraining && !pmTraining) || !cycle ? 0 : 10,
           bgcolor: 'background.paper',
         }}
         justifyContent="space-evenly"
@@ -337,7 +351,6 @@ export default function TrainerDayView() {
               </Typography>
             </Box>
             <Box
-            
               bgcolor={theme.palette.background.light}
               p={1}
               px={3}
@@ -457,7 +470,6 @@ export default function TrainerDayView() {
                   ? theme.palette.primary.main
                   : 'rgba(255, 255, 255, 0.1)'
               }
-
               sx={{
                 borderBottomRightRadius: 0,
                 borderBottomLeftRadius: 0,
@@ -484,9 +496,8 @@ export default function TrainerDayView() {
                       //     })
                       //   : undefined,
                       sublabel: commonService.date.format(date, {
-                             withYear: false,
-                           })
-                      
+                        withYear: false,
+                      }),
                     }))
                 );
               }}
@@ -605,7 +616,7 @@ export default function TrainerDayView() {
           }}
         >
           {/* Training set groups with set exercises */}
-          {!loading && todaysTrainings.length === 0 ? (
+          {!loading && !amTraining && !pmTraining ? (
             <Box
               display="flex"
               bgcolor={'background.paper'}

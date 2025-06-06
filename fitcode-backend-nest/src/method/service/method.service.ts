@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -11,12 +13,16 @@ import { User } from '../../common/type/firebase-auth.type';
 import { Method } from '../entity/method.entity';
 import { MethodRef } from '../../common/type/firestore.type';
 import { Create } from '../../common/type/entity.type';
+import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
+import { Wrapper } from 'src/common/type/wrapper.type';
 
 @Injectable()
 export class MethodService {
   private logger = new Logger(MethodService.name);
 
   constructor(
+    @Inject(forwardRef(() => CacheManagerService))
+    private readonly cacheManagerService: Wrapper<CacheManagerService>,
     private readonly firebaseService: FirebaseService,
     private readonly methodRepository: MethodRepository,
   ) {}
@@ -50,11 +56,12 @@ export class MethodService {
       name,
       targetId,
       ability,
-      repetition,
       intensity,
-      set,
+      attributeRanges: limits,
       tempo,
       recovery,
+      repetition,
+      set,
     } = input;
 
     this.logger.log(`User ${user.uid} is creating a method`);
@@ -64,14 +71,17 @@ export class MethodService {
         'You are not authorized to create a method',
       );
 
+    await this.cacheManagerService.clearMethods();
+
     const data: Create<Method> = {
       id,
       name,
       targetId,
       ability,
-      repetition,
       intensity,
+      repetition,
       set,
+      attributeRanges: limits,
       tempo,
       recovery,
     };

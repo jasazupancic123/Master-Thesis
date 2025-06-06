@@ -55,6 +55,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     filteredTrainings,
     setTrainings,
     exercises: allExercises,
+    methods,
   } = useGroup();
 
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
@@ -172,6 +173,7 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
         setTrainings,
         components,
         exercises: allExercises,
+        methods,
       }
     );
   }
@@ -348,10 +350,11 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                               }),
                             (training_) => {
                               training_ =
-                                TrainingService.mapComponentsExercises(
+                                TrainingService.mapComponentsExercisesMethods(
                                   training_,
                                   components,
-                                  allExercises
+                                  allExercises,
+                                  methods
                                 );
 
                               const sortedTrainings = [

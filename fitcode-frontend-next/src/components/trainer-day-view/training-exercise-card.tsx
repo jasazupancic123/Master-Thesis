@@ -24,6 +24,7 @@ import { Attribute } from '@/controller/attribute/type/attribute.type';
 import toast from 'react-hot-toast';
 import { set } from 'date-fns';
 import { Workload } from '@/controller/training/type/workload.type';
+import { VolWorkSetType } from '@/controller/component/enum/param.enum';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -56,8 +57,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     previousSelectedAthlete,
   } = useTrainerDayViewContext();
 
-  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
-    useGroup();
+  const {
+    trainings,
+    filteredTrainings,
+    setFilteredTrainings,
+    setDetectedChanges,
+  } = useGroup();
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =
@@ -639,9 +644,11 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                   ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
                 }}
               /> */}
-                <KeyboardArrowRightIcon
+              <KeyboardArrowRightIcon
                 sx={{
-                  transform: expandedSetsView ? 'rotate(90deg)' : 'rotate(0deg)',
+                  transform: expandedSetsView
+                    ? 'rotate(90deg)'
+                    : 'rotate(0deg)',
                   color: 'white',
                   fontSize: screenSize.isTablet ? 14 : 16,
                   ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
@@ -684,6 +691,29 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                   return null;
                 }
 
+                let min, max;
+                const attributeRange = exercise.attributeRanges.find(
+                  (ar) => ar.field === param.field
+                );
+                if (attributeRange) {
+                  const foundInOptions = attributeRange.options?.find(
+                    (option) => option.field === valueL.selected
+                  );
+                  if (foundInOptions) {
+                    if (foundInOptions.field === VolWorkSetType.Set) {
+                      if (foundInOptions.min && setsNumber < foundInOptions.min)
+                        setSetsNumber(foundInOptions.min);
+                      if (foundInOptions.max && setsNumber > foundInOptions.max)
+                        setSetsNumber(foundInOptions.max);
+                    }
+                    min = foundInOptions.min;
+                    max = foundInOptions.max;
+                  } else {
+                    min = attributeRange.min;
+                    max = attributeRange.max;
+                  }
+                }
+
                 return (
                   <>
                     <Box
@@ -706,6 +736,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                         exercise={exercise}
                         setsNumber={setsNumber}
                         setSetsNumber={setSetsNumber}
+                        min={min}
+                        max={max}
                         onOptionChange={(newValue) => {
                           const paramIndex =
                             exercise.sets[0].paramValuesL.findIndex(
@@ -796,6 +828,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                         exercise={exercise}
                         setsNumber={setsNumber}
                         setSetsNumber={setSetsNumber}
+                        min={min}
+                        max={max}
                         onOptionChange={(newValue) => {
                           const paramIndex =
                             exercise.sets[0].paramValuesR.findIndex(
@@ -905,15 +939,20 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                     }}
                   >
                     <KeyboardArrowRightIcon
-                sx={{
-                  transform: expandedSetsView ? 'rotate(90deg)' : 'rotate(0deg)',
-                  color: 'white',
-                  fontSize: screenSize.isTablet ? 14 : 16,
-                  ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
-                  transition: 'transform 0.3s ease-in-out',
-                }}
-              />
-                    
+                      sx={{
+                        transform: expandedSetsView
+                          ? 'rotate(90deg)'
+                          : 'rotate(0deg)',
+                        color: 'white',
+                        fontSize: screenSize.isTablet ? 14 : 16,
+                        ml: screenSize.isUltraSmall
+                          ? 0
+                          : screenSize.isMobile
+                            ? 1
+                            : 0,
+                        transition: 'transform 0.3s ease-in-out',
+                      }}
+                    />
                   </IconButton>
                 </Grid2>
 
@@ -950,6 +989,23 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                         return null;
                       }
 
+                      let min, max;
+                      const attributeRange = exercise.attributeRanges.find(
+                        (ar) => ar.field === param.field
+                      );
+                      if (attributeRange) {
+                        const foundInOptions = attributeRange.options?.find(
+                          (option) => option.field === valueL.selected
+                        );
+                        if (foundInOptions) {
+                          min = foundInOptions.min;
+                          max = foundInOptions.max;
+                        } else {
+                          min = attributeRange.min;
+                          max = attributeRange.max;
+                        }
+                      }
+
                       return (
                         <Box
                           key={param.field}
@@ -964,6 +1020,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                             param={param}
                             value={valueL}
                             onOptionChange={(newValue) => {}}
+                            min={min}
+                            max={max}
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
 
@@ -1035,6 +1093,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
                             param={param}
                             value={valueR}
                             onOptionChange={(newValue) => {}}
+                            min={min}
+                            max={max}
                             onSubOptionChange={(newValue) => {
                               if (+newValue < 0) return;
 
