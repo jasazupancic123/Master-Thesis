@@ -1,5 +1,5 @@
-import SignIn from './sign-in';
+import SignInPage from '../../sites/sign-in.page';
 
-export default async function Page() {
-  return <SignIn />;
+export default function Page() {
+  return <SignInPage />;
 }

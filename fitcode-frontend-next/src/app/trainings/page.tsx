@@ -7,7 +7,7 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import TrainingPage from './training-page';
+import TrainingPage from '../../sites/training.page';
 import { MethodController } from '@/controller/method/method.controller';
 
 export default async function Page() {

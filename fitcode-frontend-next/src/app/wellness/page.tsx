@@ -1,7 +1,7 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
-import WellnessPage from './wellness-page';
+import WellnessPage from '../../sites/wellness.page';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { notFound } from 'next/navigation';
 

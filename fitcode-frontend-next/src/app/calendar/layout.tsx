@@ -1,6 +1,6 @@
 import { ChildrenProps } from '@/common/type/props.type';
-import SidebarAthlete from '@/components/sidebar-athlete';
-import { AthleteProvider } from '@/context/athlete-provider';
+import SidebarAthlete from '@/components/sidebar-athlete/sidebar-athlete';
+import { AthleteProvider } from '@/store/athlete-provider';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
