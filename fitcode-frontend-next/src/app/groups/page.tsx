@@ -3,13 +3,11 @@ import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/naviga
 import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
+import TrainerGroupsPage from '@/sites/trainer-groups.page';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
-import { ReactNode } from 'react';
-import TrainerGroupsPage from './trainer-groups-page';
 
 export default async function Page() {
-  // fetch data
   const cookieStore = await cookies();
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
   if (!token) return <div>Unauthorized</div>;
@@ -22,16 +20,8 @@ export default async function Page() {
 
   if ([UserRole.ADMIN, UserRole.ATHLETE].includes(role)) return notFound();
 
-  // redirect to the first group page
   if (groups.length > 0)
     redirect(LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(groups[0].id).home.href);
 
-  const mapper: Record<UserRole, ReactNode> = {
-    [UserRole.ATHLETE]: null,
-    [UserRole.ADMIN]: null,
-    [UserRole.MANAGER]: <div>Manager</div>,
-    [UserRole.TRAINER]: <TrainerGroupsPage token={token} groups={groups} />,
-  };
-
-  return <>{mapper[role]}</>;
+  return <TrainerGroupsPage />;
 }

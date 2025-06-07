@@ -1,7 +1,7 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
-import ProfilePage from './profile-page';
+import ProfilePage from '../../sites/profile.page';
 
 export default async function Page() {
   // fetch data

@@ -5,11 +5,11 @@ import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import toast from 'react-hot-toast';
 import Button from '@mui/material/Button';
-import MyModal from '@/components/modal';
+import MyModal from '@/components/modal/modal';
 import { TextField } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Tree, { TreeItem } from '@/components/tree';
+import Tree, { TreeItem } from '@/components/tree/tree';
 import { CommonService } from '@/common/service/common.service';
 import {
   Component,

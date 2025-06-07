@@ -1,0 +1,194 @@
+'use client';
+
+import EditCycleForm from '@/components/edit-cycle-form/edit-cycle-form';
+import FloatingButton from '@/components/floating-button/floating-button';
+import MyModal from '@/components/modal/modal';
+import MultiCycleSlider from '@/components/multi-cycle-slider/multi-cycle-slider';
+import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
+import { useGroup } from '@/store/group-provider';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { IconButton } from '@mui/material';
+import Save from '@mui/icons-material/Save';
+import { handleSaveGroup } from '../../app/groups/[group_id]/state';
+
+export default function TrainerYearView() {
+  const screenSize = useScreenSize();
+  const router = useRouter();
+  const { token, group, setGroup, cycle, setCycle, setDetectedChanges } =
+    useGroup();
+
+  const theme = useTheme();
+  const [selectedGroup, setSelectedGroup] = useState({ ...group });
+  const [showEditCycleModal, setShowEditCycleModal] = useState(false);
+  const [editCycle, setEditCycle] = useState<Cycle | null>(null);
+
+  function handleDeleteCycle() {
+    if (!editCycle || !selectedGroup) return;
+
+    const updatedCycles = [...selectedGroup.cycles].filter(
+      (cycle) => cycle.id !== editCycle.id
+    );
+
+    if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
+    setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
+    setEditCycle(null);
+    setDetectedChanges(true);
+  }
+
+  // async function handleSaveGroup() {
+  //   for (const cycle of selectedGroup.cycles) {
+  //     if (cycle.from >= cycle.to) {
+  //       toast.error('Start date must be before end date.');
+  //       return;
+  //     }
+  //   }
+  //   handleApiRequest(
+  //     router,
+  //     () =>
+  //       GroupController.update(token, group.id, {
+  //         cycles: selectedGroup.cycles,
+  //       }),
+  //     (response) => {
+  //       if (cycle) {
+  //         const newCycle = response.cycles.find((c) => c.id === cycle.id);
+  //         setCycle(newCycle);
+  //       }
+
+  //       setGroup(response);
+  //       setSelectedGroup(response);
+  //       setDetectedChanges(false);
+
+  //       toast.success('Group successfully saved');
+  //     },
+  //     undefined,
+  //     'Failed to save group'
+  //   );
+  // }
+
+  return (
+    <>
+      {screenSize.isSmallerThanLaptop ? (
+        <IconButton
+          onClick={() =>
+            handleSaveGroup(
+              selectedGroup,
+              setSelectedGroup,
+              cycle,
+              setCycle,
+              setDetectedChanges,
+              token,
+              router,
+              setGroup
+            )
+          }
+          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
+        >
+          <Save
+            sx={{
+              mr: 0,
+              cursor: 'pointer',
+              backgroundColor: theme.palette.primary.main,
+              borderRadius: '50%',
+              p: 1,
+              fontSize: 40,
+            }}
+          />
+        </IconButton>
+      ) : (
+        <FloatingButton
+          label="Save group"
+          onClick={() =>
+            handleSaveGroup(
+              selectedGroup,
+              setSelectedGroup,
+              cycle,
+              setCycle,
+              setDetectedChanges,
+              token,
+              router,
+              setGroup
+            )
+          }
+        />
+      )}
+
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        width="100%"
+        maxWidth="100%"
+        mb={3}
+        sx={{ overflowX: 'hidden' }}
+      >
+        <Box
+          width="100%"
+          maxWidth="100%"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          minHeight={165}
+          sx={{
+            backgroundColor: theme.palette.background.paper,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+            '& > :first-of-type': {
+              marginTop: 0,
+              paddingTop: 0,
+            },
+          }}
+        >
+          <MultiCycleSlider
+            selectedGroup={selectedGroup}
+            setSelectedGroup={setSelectedGroup}
+          />
+        </Box>
+
+        <Box
+          width="100%"
+          maxWidth="100%"
+          sx={{
+            overflowX: 'hidden', // Prevents unexpected expansion
+          }}
+        >
+          <CycleComponents
+            selectedGroup={selectedGroup}
+            setSelectedGroup={setSelectedGroup}
+            setEditModal={setShowEditCycleModal}
+            setEditCycle={setEditCycle}
+          />
+        </Box>
+      </Box>
+
+      {editCycle && (
+        <MyModal
+          isOpen={showEditCycleModal}
+          setIsOpen={(open) => setShowEditCycleModal(open)}
+          onCancel={() => setShowEditCycleModal(false)}
+          cancelText="Close"
+          onConfirm={() => {
+            const newCycles = selectedGroup.cycles.map((c) =>
+              c.id === editCycle.id ? { ...editCycle } : c
+            );
+            setSelectedGroup({ ...selectedGroup, cycles: newCycles });
+            setDetectedChanges(true);
+            setShowEditCycleModal(false);
+            setEditCycle(null);
+          }}
+        >
+          <EditCycleForm
+            selectedCycle={editCycle}
+            setSelectedCycle={setEditCycle}
+            handleDeleteCycle={handleDeleteCycle}
+          />
+        </MyModal>
+      )}
+    </>
+  );
+}

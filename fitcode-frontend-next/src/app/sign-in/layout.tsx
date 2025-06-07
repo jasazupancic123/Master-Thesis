@@ -1,4 +1,4 @@
-import HeroNavbar from '@/components/hero-navbar';
+import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import Container from '@mui/material/Container';
 import { ChildrenProps } from '@/common/type/props.type';
 

@@ -1,5 +1,5 @@
 import Container from '@mui/material/Container';
-import Sidebar from '@/components/sidebar';
+import Sidebar from '@/components/sidebar/sidebar';
 import Box from '@mui/material/Box';
 import { ChildrenProps } from '@/common/type/props.type';
 

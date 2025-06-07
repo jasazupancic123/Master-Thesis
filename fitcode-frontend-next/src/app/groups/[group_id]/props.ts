@@ -14,7 +14,6 @@ import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
-import { Target } from '@/controller/target/type/target.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -80,7 +79,7 @@ export type TrainerDayViewContextProps = {
   setShowAthleteReport: SetState<boolean>;
   selectedAthleteWorkloads: CompletedFutureWorkloads;
   setSelectedAthleteWorkloads: SetState<CompletedFutureWorkloads>;
-  customAthleteWorkloads: Workload[]; 
+  customAthleteWorkloads: Workload[];
   setCustomAthleteWorkloads: SetState<Workload[]>;
   isSettingAthleteWorkloads: React.RefObject<boolean>;
   previousSelectedAthlete: React.RefObject<User | undefined>;

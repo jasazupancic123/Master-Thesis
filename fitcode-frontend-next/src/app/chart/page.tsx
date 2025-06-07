@@ -3,7 +3,7 @@ import { ComponentController } from '@/controller/component/component.controller
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
-import ChartPage from './chart-page';
+import ChartPage from '../../sites/chart.page';
 
 export default async function Page() {
   // fetch data
