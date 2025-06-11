@@ -25,7 +25,7 @@ import { useEffect, useState } from 'react';
 import MyModal from '../modal/modal';
 import { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
-import TrainingComponentCard from '../training-component/training-component';
+import TrainingComponentLayout from '../training-component-layout/training-component-layout';
 
 const commonService = CommonService.instance;
 
@@ -163,19 +163,19 @@ export default function TrainingCard(props: TrainingCardProps) {
       >
         {training && (
           <>
-            <TrainingComponentCard
+            <TrainingComponentLayout
               key={0}
               training={training}
               trainingComponent={training.warmup}
             />
             {training.components.map((trainingComponent, i) => (
-              <TrainingComponentCard
+              <TrainingComponentLayout
                 key={i + 1}
                 training={training}
                 trainingComponent={trainingComponent}
               />
             ))}
-            <TrainingComponentCard
+            <TrainingComponentLayout
               key={training.components.length + 1}
               training={training}
               trainingComponent={training.cooldown}

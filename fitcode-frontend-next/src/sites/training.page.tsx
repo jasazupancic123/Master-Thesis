@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
 import { User } from '@/controller/user/type/user.type';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 
 const commonService = CommonService.instance;
 
@@ -54,7 +55,7 @@ export default function TrainingPage(props: TrainingPageProps) {
       trainingInProgress.training &&
       trainingInProgress.selectedComponent
     ) {
-      setView('training');
+      setView(ExerciseTrainingView.TrainingView);
     } else {
       clearTrainingState();
     }
@@ -88,7 +89,7 @@ export default function TrainingPage(props: TrainingPageProps) {
     });
   }, [trainings]);
 
-  return view === 'exercises' ? (
+  return view === ExerciseTrainingView.ExerciseView ? (
     hasJustLoggedIn === true ? (
       <Animation
         text="CHECKING YOUR TRAINING PLAN"
@@ -176,7 +177,6 @@ export default function TrainingPage(props: TrainingPageProps) {
                         ...training.components,
                         training.cooldown,
                       ]}
-                      setView={setView}
                       training={training}
                       profile={profile}
                       token={token}

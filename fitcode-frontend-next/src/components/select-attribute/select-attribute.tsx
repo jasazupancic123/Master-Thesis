@@ -1,4 +1,3 @@
-import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { FormControl, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';

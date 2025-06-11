@@ -5,13 +5,14 @@ import { Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { UpdateTrainingInput } from '../trainer-week-view/type';
 import { useGroup } from '@/store/group-provider';
+import { SetState } from '@/common/type/state.type';
 
 interface TrainerWeekComponentItemProps {
   component: TrainingComponent;
   training: Training;
-  setIsChanged: (isChanged: boolean) => void;
+  setIsChanged: SetState<boolean>;
   updatedComponents: TrainingComponent[];
-  setUpdatedComponents: (components: TrainingComponent[]) => void;
+  setUpdatedComponents: SetState<TrainingComponent[]>;
   warmupOrCooldown?: 'warmup' | 'cooldown';
 }
 
@@ -27,7 +28,7 @@ export default function TrainerWeekComponentItem(
     warmupOrCooldown,
   } = props;
 
-  const { filteredTrainings, setFilteredTrainings } = useGroup();
+  const { filteredTrainings, setFilteredTrainings, setTrainings } = useGroup();
   return (
     <Stack key={c.id}>
       <Typography
@@ -67,6 +68,10 @@ export default function TrainerWeekComponentItem(
 
               if (warmupOrCooldown === 'warmup') newTraining.warmup = wOrC;
               else newTraining.cooldown = wOrC;
+
+              setTrainings((prev) =>
+                prev.map((t) => (t.id === newTraining.id ? newTraining : t))
+              );
 
               const updatedTrainings = [...filteredTrainings].map((t) =>
                 t.id === training.id ? newTraining : t

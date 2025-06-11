@@ -538,7 +538,8 @@ export class TrainingService {
     possibleTrainings = possibleTrainings.filter(
       (t) =>
         t.components.some(
-          (c) => c.id === componentId && c.target.id === mainTarget.id,
+          (c) =>
+            c.id === componentId && c.target && c.target.id === mainTarget.id,
         ) && !excludedTrainingIds.includes(t.id),
     );
 

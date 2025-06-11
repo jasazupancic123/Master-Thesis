@@ -29,6 +29,7 @@ export default function TrainerWeekView() {
     cycle,
     filteredTrainings,
     setTrainings,
+    setFilteredTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
@@ -160,6 +161,12 @@ export default function TrainerWeekView() {
                                   exercises,
                                   methods
                                 );
+
+                              setFilteredTrainings((prev) =>
+                                prev.map((t) =>
+                                  t.id === training.id ? mapped : t
+                                )
+                              );
 
                               setTrainings((prev) =>
                                 prev.map((t) =>

@@ -8,7 +8,7 @@ import { useTheme } from '@mui/material';
 import { Fragment, useEffect, useState } from 'react';
 import TrainingWeek from '../training-week/training-week';
 import dayjs from 'dayjs';
-import { ArrowDropDown, ArrowDropUp, Info, Redo } from '@mui/icons-material';
+import { ArrowDropDown, ArrowDropUp, Redo } from '@mui/icons-material';
 import SelectInput from '../select-input/select-input';
 import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
 import { Training } from '@/controller/training/type/training.type';

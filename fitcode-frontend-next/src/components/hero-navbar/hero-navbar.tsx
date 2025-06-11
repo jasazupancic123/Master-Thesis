@@ -2,9 +2,7 @@
 
 import {
   LINK_DASHBOARD,
-  LINK_GROUPS,
   LINK_TRAININGS,
-  LINK_USERS,
   LINKS_AUTH,
   LINKS_NAVBAR,
 } from '@/common/constant/navigation.constant';
@@ -34,13 +32,6 @@ export default function HeroNavbar({ showLogin = true }) {
   const toggleDrawer = (newOpen: boolean) => () => setOpen(newOpen);
   const pathname = usePathname();
   const router = useRouter();
-
-  // const mainPageMapper = {
-  //   [UserRole.ATHLETE]: LINK_GROUPS,
-  //   [UserRole.TRAINER]: LINK_GROUPS,
-  //   [UserRole.MANAGER]: LINK_GROUPS,
-  //   [UserRole.ADMIN]: LINK_USERS,
-  // };
 
   const mainPageMapper = {
     [UserRole.ATHLETE]: LINK_TRAININGS,

@@ -3,7 +3,7 @@
 import EditCycleForm from '@/components/edit-cycle-form/edit-cycle-form';
 import FloatingButton from '@/components/floating-button/floating-button';
 import MyModal from '@/components/modal/modal';
-import MultiCycleSlider from '@/components/multi-cycle-slider/multi-cycle-slider';
+import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
 import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
 import { useGroup } from '@/store/group-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
@@ -39,36 +39,6 @@ export default function TrainerYearView() {
     setEditCycle(null);
     setDetectedChanges(true);
   }
-
-  // async function handleSaveGroup() {
-  //   for (const cycle of selectedGroup.cycles) {
-  //     if (cycle.from >= cycle.to) {
-  //       toast.error('Start date must be before end date.');
-  //       return;
-  //     }
-  //   }
-  //   handleApiRequest(
-  //     router,
-  //     () =>
-  //       GroupController.update(token, group.id, {
-  //         cycles: selectedGroup.cycles,
-  //       }),
-  //     (response) => {
-  //       if (cycle) {
-  //         const newCycle = response.cycles.find((c) => c.id === cycle.id);
-  //         setCycle(newCycle);
-  //       }
-
-  //       setGroup(response);
-  //       setSelectedGroup(response);
-  //       setDetectedChanges(false);
-
-  //       toast.success('Group successfully saved');
-  //     },
-  //     undefined,
-  //     'Failed to save group'
-  //   );
-  // }
 
   return (
     <>
@@ -144,7 +114,7 @@ export default function TrainerYearView() {
             },
           }}
         >
-          <MultiCycleSlider
+          <MultiCycleSliderLayout
             selectedGroup={selectedGroup}
             setSelectedGroup={setSelectedGroup}
           />

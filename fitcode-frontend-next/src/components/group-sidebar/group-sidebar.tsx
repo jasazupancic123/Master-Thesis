@@ -25,7 +25,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Logo from '../logo/logo';
-import SelectInputHorizontal from '../select-input-horizontal/select-input-horizontal';
 import { AppBar, Drawer, DrawerHeader } from './style';
 import toast from 'react-hot-toast';
 
