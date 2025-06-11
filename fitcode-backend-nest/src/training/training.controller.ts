@@ -31,6 +31,7 @@ import { FinishComponentDto } from './dto/finish-component.dto';
 import { Workload } from './entity/workload.entity';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { FindWorkloadsByExercises } from './dto/find-workload.dto';
+import { FindByDayDto } from './dto/find-by-day.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -53,6 +54,16 @@ export class TrainingController {
       ...(filter.from && { from: filter.from }),
       ...(filter.to && { to: filter.to }),
     });
+  }
+
+  @Post('/:groupId/day')
+  @Auth()
+  async findByDay(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Body() body: FindByDayDto,
+  ) {
+    return await this.trainingService.findByDay(user, { groupId }, body);
   }
 
   @Get(':trainingId/component/:componentId')

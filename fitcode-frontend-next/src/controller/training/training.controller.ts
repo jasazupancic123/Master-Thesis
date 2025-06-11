@@ -20,11 +20,14 @@ export class TrainingController {
     return api.get<Training[]>('/training', { token, query });
   }
 
+  static async findByDay(token: string, day: Date, groupId: string) {
+    return api.post<Training[]>(`/training/${groupId}/day`, { day }, { token });
+  }
+
   static async findByIdAndPopulateAthleteWorkloads(
     token: string,
     trainingId: string,
-    componentId: string,
-    userId: string
+    componentId: string
   ) {
     return api.get<Training>(
       `/training/${trainingId}/component/${componentId}`,

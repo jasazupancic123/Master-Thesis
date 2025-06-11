@@ -55,8 +55,10 @@ export type GroupContextProps = GroupIdPageProps & {
 export type TrainerDayViewContextProps = {
   members: UserEntity[]; // group members
   training: Training | undefined;
-  exercises: Exercise[];
   setTraining: SetStateNullable<Training>;
+  todaysTrainings: Training[];
+  setTodaysTrainings: SetState<Training[]>;
+  exercises: Exercise[];
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
   selectedAthlete: User | undefined;

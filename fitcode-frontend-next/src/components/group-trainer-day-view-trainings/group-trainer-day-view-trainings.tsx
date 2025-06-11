@@ -7,20 +7,20 @@ import { Day } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React from 'react';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface GroupTrainerDayViewTrainingsProps {
   day: Day;
-  amTraining: Training | undefined;
-  pmTraining: Training | undefined;
   loading: boolean;
 }
 
 export default function GroupTrainerDayViewTrainings(
   props: GroupTrainerDayViewTrainingsProps
 ) {
-  const { day, amTraining, pmTraining, loading } = props;
+  const { day, loading } = props;
 
   const { cycle } = useGroup();
+  const { todaysTrainings } = useTrainerDayViewContext();
 
   return !cycle ? (
     <Box
@@ -51,7 +51,7 @@ export default function GroupTrainerDayViewTrainings(
       }}
     >
       {/* Training set groups with set exercises */}
-      {!loading && !amTraining && !pmTraining ? (
+      {!loading && !todaysTrainings.length ? (
         <Box
           display="flex"
           bgcolor={'background.paper'}
@@ -68,7 +68,11 @@ export default function GroupTrainerDayViewTrainings(
           </Typography>
         </Box>
       ) : (
-        <>
+        todaysTrainings.map((training) => {
+          const period = dayjs(training.from).hour() < 12 ? 'AM' : 'PM';
+          return <TrainingCard day={day} training={training} period={period} />;
+        })
+        /*
           {amTraining && (
             <TrainingCard day={day} training={amTraining} period="AM" />
           )}
@@ -76,7 +80,7 @@ export default function GroupTrainerDayViewTrainings(
           {pmTraining && (
             <TrainingCard day={day} training={pmTraining} period="PM" />
           )}
-        </>
+            */
       )}
     </Box>
   );

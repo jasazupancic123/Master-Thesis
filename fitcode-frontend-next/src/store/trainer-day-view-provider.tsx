@@ -48,9 +48,10 @@ export function TrainerDayViewProvider(
     total: 0,
   });
 
-  const [members, setMembers] = useState<UserEntity[]>([]);
-  const [component, setComponent] = useState<TrainingComponent | undefined>();
+  const [todaysTrainings, setTodaysTrainings] = useState<Training[]>([]);
   const [training, setTraining] = useState<Training | undefined>();
+  const [component, setComponent] = useState<TrainingComponent | undefined>();
+  const [members, setMembers] = useState<UserEntity[]>([]);
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
   const [selectedSubgroup, setSelectedSubgroup] = useState<{
     subgroup: Subgroup | null;
@@ -126,11 +127,13 @@ export function TrainerDayViewProvider(
     exercises: exercises.map((e) => {
       return ExerciseService.mapComponents(e, components);
     }),
-    members,
-    component,
-    setComponent,
     training,
     setTraining,
+    todaysTrainings,
+    setTodaysTrainings,
+    component,
+    setComponent,
+    members,
     selectedSubgroup,
     setSelectedSubgroup,
     selectedAthlete,
