@@ -20,7 +20,6 @@ import SelectAttribute from '../select-attribute/select-attribute';
 import SelectComponent from '../select-component/select-component';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
 
 interface Props {
   data: Partial<Exercise>;

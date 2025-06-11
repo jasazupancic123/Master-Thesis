@@ -8,7 +8,7 @@ import { CommonService } from '@/common/service/common.service';
 import { Pagination } from '@/common/type/paginate.type';
 import { Component } from '@/controller/component/type/component.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { DEFAULT_EXERCISE } from '../../sites/exercises.page';
+import { DEFAULT_EXERCISE } from '../../../sites/exercises.page';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
 

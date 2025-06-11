@@ -10,13 +10,17 @@ import {
 import { useAuth } from './auth-provider';
 import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { SetState } from '@/common/type/state.type';
+import {
+  ExerciseOrTraining,
+  ExerciseTrainingView,
+} from '@/common/type/exercise-or-training.type';
 
 interface TrainingContextType {
   clearTrainingState: () => void;
   trainingInProgress: AthleteTrainingInProgress | null;
   setTrainingInProgress: SetState<AthleteTrainingInProgress | null>;
-  view: 'exercises' | 'training';
-  setView: (view: 'exercises' | 'training') => void;
+  view: ExerciseOrTraining;
+  setView: SetState<ExerciseOrTraining>;
   isLoaded: boolean;
 }
 
@@ -29,7 +33,9 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
   const [trainingInProgress, setTrainingInProgress] =
     useState<AthleteTrainingInProgress | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [view, setView] = useState<'exercises' | 'training'>('exercises');
+  const [view, setView] = useState<ExerciseOrTraining>(
+    ExerciseTrainingView.ExerciseView
+  );
 
   const { user } = useAuth();
 
@@ -65,7 +71,7 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
 
   const clearTrainingState = () => {
     setTrainingInProgress(null);
-    setView('exercises');
+    setView(ExerciseTrainingView.ExerciseView);
     localStorage.removeItem(STORED_TRAINING_IN_PROGRESS);
   };
 

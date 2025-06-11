@@ -5,7 +5,6 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 export function SetExerciseAttribute(props: SetExerciseAttributeProps) {
-  const screenSize = useScreenSize();
   const { options, state, onChange, expandedView } = props;
 
   return (

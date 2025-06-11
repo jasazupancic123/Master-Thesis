@@ -1,5 +1,5 @@
 import { useScreenSize } from '@/store/screen-size-provider';
-import { Box, FormControl, InputAdornment } from '@mui/material';
+import { FormControl, InputAdornment } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import React, { ReactNode } from 'react';

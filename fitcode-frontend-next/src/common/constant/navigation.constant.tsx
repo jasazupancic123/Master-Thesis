@@ -16,6 +16,7 @@ import { GroupDateFilter } from '../type/filter.type';
 import { Dashboard, Groups, PersonAddAlt1 } from '@mui/icons-material';
 import {
   DASHBOARD_ADD_INSTITUTION,
+  DASHBOARD_EXERCISES,
   DASHBOARD_GROUPS,
   DASHBOARD_MAIN,
   DASHBOARD_REGISTER_USERS,
@@ -82,11 +83,6 @@ export const LINK_GROUP_DATE_RANGE_VIEW = (
 export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
   home: link('Home', `/groups/${groupId}`, <HomeIcon />),
   dashboard: link('Dashboard', `/dashboard`, <Dashboard />),
-  exercises: link(
-    'Exercises',
-    `/groups/${groupId}/exercises`,
-    <FitnessCenterIcon />
-  ),
 });
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
@@ -96,6 +92,7 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: string) => ({
   home: link('Home', DASHBOARD_MAIN, <HomeIcon />),
   athletes: link('Groups', DASHBOARD_GROUPS, <Groups />),
+  exercises: link('Exercises', DASHBOARD_EXERCISES, <FitnessCenterIcon />),
   addInstitution:
     role === UserRole.ADMIN
       ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)

@@ -3,7 +3,6 @@ import {
   Avatar,
   Box,
   Grid2,
-  IconButton,
   Stack,
   TextField,
   Tooltip,
@@ -17,15 +16,15 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useTheme } from '@mui/material';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { Add, ConstructionOutlined, Remove } from '@mui/icons-material';
+import { Add } from '@mui/icons-material';
 import MyModal from '../modal/modal';
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
-import { Institution } from '@/controller/institution/type/institution.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { useRouter } from 'next/navigation';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import toast from 'react-hot-toast';
+import DashboardAthlete from '../dashboard-athlete/dashboard-athlete';
 
 export default function AthletesView() {
   const screenSize = useScreenSize();
@@ -38,7 +37,6 @@ export default function AthletesView() {
     profile,
     selectedGroup,
     selectedInstitution,
-    setSelectedGroup,
     setSelectedInstitution,
   } = useDashboard();
 
@@ -79,25 +77,6 @@ export default function AthletesView() {
       },
       undefined,
       'Failed to add athletes'
-    );
-  };
-
-  const handleRemoveAthleteFromInstitution = (athleteId: string) => {
-    if (!selectedInstitution) return;
-
-    handleApiRequest(
-      router,
-      () =>
-        InstitutionController.removeAthletes(token, selectedInstitution.id, {
-          athleteIds: [athleteId],
-        }),
-      (institution) => {
-        institution = InstitutionService.mapAllUsers([institution], users)[0];
-        setSelectedInstitution(institution);
-        toast.success('Athlete removed successfully');
-      },
-      undefined,
-      'Failed to remove athlete'
     );
   };
 
@@ -149,62 +128,12 @@ export default function AthletesView() {
         </Tooltip>
         {selectedInstitution?.athletes &&
           selectedInstitution.athletes.map((a) => (
-            <Tooltip key={a.uid} title={a.displayName || a.email}>
-              <Box
-                key={a.uid}
-                sx={{
-                  position: 'relative',
-                  display: 'inline-block',
-                  margin: '0 5px',
-                  '&:hover .remove-icon': {
-                    opacity: 1,
-                  },
-                }}
-              >
-                <Avatar
-                  src={'/user_avatar.png'}
-                  sx={{
-                    width: 50,
-                    height: 50,
-                    border:
-                      selectedUser?.uid === a.uid
-                        ? `2px solid ${COLOR[0]}`
-                        : '',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => {
-                    if (
-                      !selectedGroup ||
-                      !selectedGroup.membersIds.includes(a.uid)
-                    ) {
-                      const group = selectedInstitution.groups.find((group) =>
-                        group.membersIds.includes(a.uid)
-                      );
-                      if (group) setSelectedGroup(group);
-                    }
-                    setSelectedUser(a);
-                  }}
-                />
-                <IconButton
-                  className="remove-icon"
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveAthleteFromInstitution(a.uid);
-                  }}
-                  sx={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    opacity: selectedUser?.uid === a.uid ? 1 : 0,
-                    backgroundColor: theme.palette.error.main,
-                    zIndex: 1,
-                  }}
-                >
-                  <Remove sx={{ fontSize: 10 }} />
-                </IconButton>
-              </Box>
-            </Tooltip>
+            <DashboardAthlete
+              key={a.uid}
+              athlete={a}
+              selectedUser={selectedUser}
+              setSelectedUser={setSelectedUser}
+            />
           ))}
       </Stack>
       <Grid2

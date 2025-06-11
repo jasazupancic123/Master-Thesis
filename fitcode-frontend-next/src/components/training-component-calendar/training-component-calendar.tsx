@@ -16,11 +16,7 @@ interface TrainingComponentCalendarProps {
   training: Training;
   setOpenOverwriteModal: SetState<boolean>;
   setTrainingInPeriodForModal: SetState<Training | null>;
-  handleCopyComponentApiRequest: (
-    trainingInPeriod: Training,
-    component: TrainingComponent,
-    overwrite?: boolean
-  ) => Promise<void>;
+  copyComponent: boolean;
 }
 
 export default function TrainingComponentCalendar(
@@ -31,7 +27,7 @@ export default function TrainingComponentCalendar(
     training,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
-    handleCopyComponentApiRequest,
+    copyComponent,
   } = props;
 
   const { cycle, setDateFrom, setDateTo } = useGroup();
@@ -106,7 +102,7 @@ export default function TrainingComponentCalendar(
                   training={training}
                   setOpenOverwriteModal={setOpenOverwriteModal}
                   setTrainingInPeriodForModal={setTrainingInPeriodForModal}
-                  handleCopyComponentApiRequest={handleCopyComponentApiRequest}
+                  copyComponent={copyComponent}
                 />
               </Fragment>
             ))}

@@ -1,9 +1,7 @@
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
 import { handleApiRequest } from '@/common/type/state.type';
-import Circles from '@/components/circles/circles';
 import FloatingButton from '@/components/floating-button/floating-button';
-import TrainingCard from '@/components/training-card/training-card';
 import TrainingMembers from '@/components/training-members/training-members';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
@@ -12,8 +10,7 @@ import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
 import { Save } from '@mui/icons-material';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { IconButton, MenuItem, Select, Stack, Typography } from '@mui/material';
+import { IconButton } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -23,6 +20,8 @@ import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
+import GroupTrainerDayViewHeader from '../group-trainer-day-view-header/group-trainer-day-view-header';
+import GroupTrainerDayViewTrainings from '../group-trainer-day-view-trainings/group-trainer-day-view-trainings';
 
 dayjs.extend(weekOfYear);
 
@@ -31,6 +30,8 @@ const commonService = CommonService.instance;
 export default function TrainerDayView() {
   const theme = useTheme();
   const screenSize = useScreenSize();
+  const router = useRouter();
+
   const {
     token,
     group,
@@ -40,12 +41,9 @@ export default function TrainerDayView() {
     trainings,
     setTrainings,
     setFilteredTrainings,
-    filteredTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
-    setCycle,
-    detectedChanges,
     methods,
   } = useGroup();
 
@@ -55,15 +53,12 @@ export default function TrainerDayView() {
     component,
     setSelectedSubgroup,
     selectedAthlete,
-    selectedSubgroup,
-    selectedAthleteWorkloads,
     setSelectedAthleteWorkloads,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
   } = useTrainerDayViewContext();
 
-  const router = useRouter();
   const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
@@ -210,8 +205,6 @@ export default function TrainerDayView() {
     setPmTraining(todaysTrainings.find((t) => dayjs(t.from).hour() >= 12));
   }, [trainings]);
 
-  useEffect(() => {}, [selectedSubgroup]);
-
   useEffect(() => {
     const fetchWorkloads = async () => {
       if (!selectedAthlete) return;
@@ -266,11 +259,11 @@ export default function TrainerDayView() {
 
   return (
     <>
+      {/* Save button */}
       {!screenSize.isSmallerThanLaptop ? (
         <Box position="absolute" top="50%" right={0}>
           <FloatingButton
             label="Save trainings"
-            //onClick={handleUpdateTraining}
             onClick={handleUpdateMultipleTrainings}
           />
         </Box>
@@ -309,271 +302,14 @@ export default function TrainerDayView() {
         }}
         justifyContent="space-evenly"
       >
-        <Stack
-          direction="row"
-          width="100%"
-          p={2}
-          pb={0}
-          justifyContent={
-            screenSize.isSmallerThanLaptop ? 'center' : 'space-between'
-          }
-        >
-          <Box
-            display={screenSize.isSmallerThanLaptop ? 'none' : 'flex'}
-            justifyContent="center"
-            flex={1}
-          >
-            <Box
-              width="45%"
-              bgcolor={theme.palette.background.light}
-              p={!screenSize.isDesktop ? 0 : 1}
-              px={!screenSize.isDesktop ? 1 : 3}
-              sx={{
-                borderTopLeftRadius: 10,
-                borderBottomLeftRadius: 10,
-              }}
-              display="flex"
-              alignItems="center"
-            >
-              <Typography
-                width="100%"
-                variant="body1"
-                textAlign="center"
-                sx={{
-                  px: 0,
-                  pr: !screenSize.isDesktop ? 1 : 4,
-                  fontSize: !screenSize.isDesktop ? 15 : 20,
-                }}
-              >
-                {selectedAthlete?.displayName ||
-                  selectedSubgroup?.subgroup?.name ||
-                  group.name}
-              </Typography>
-            </Box>
-            <Box
-              bgcolor={theme.palette.background.light}
-              p={1}
-              px={3}
-              ml={0.5}
-              sx={{
-                borderTopRightRadius: 10,
-                borderBottomRightRadius: 10,
-              }}
-              display="flex"
-              alignItems="center"
-            >
-              <Typography
-                variant="body1"
-                textAlign="center"
-                sx={{
-                  px: 0,
-                  pr: !screenSize.isDesktop ? 1 : 4,
-                  fontSize: !screenSize.isDesktop ? 15 : 20,
-                }}
-              >
-                {dayjs(day.date).format('DD-MMM-YY')}
-              </Typography>
-              <CalendarMonthIcon />
-            </Box>
-          </Box>
-
-          <Box
-            display="flex"
-            flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-            gap={screenSize.isSmallerThanLaptop ? 2 : 0}
-            justifyContent="center"
-            alignItems={screenSize.isSmallerThanLaptop ? 'center' : undefined}
-          >
-            <Box
-              display={screenSize.isSmallerThanLaptop ? 'flex' : 'none'}
-              justifyContent="center"
-              flex={1}
-            >
-              <Box
-                bgcolor={theme.palette.background.light}
-                p={!screenSize.isDesktop ? 0 : 1}
-                px={!screenSize.isDesktop ? 1 : 3}
-                sx={{
-                  borderTopLeftRadius: 10,
-                  borderBottomLeftRadius: 10,
-                }}
-                display="flex"
-                alignItems="center"
-              >
-                <Typography
-                  variant="body1"
-                  textAlign="center"
-                  sx={{
-                    px: 0,
-                    pr: !screenSize.isDesktop ? 1 : 4,
-                    fontSize: !screenSize.isDesktop ? 15 : 20,
-                  }}
-                >
-                  {selectedAthlete?.displayName ||
-                    selectedSubgroup?.subgroup?.name ||
-                    group.name}
-                </Typography>
-              </Box>
-              <Box
-                bgcolor={theme.palette.background.light}
-                p={1}
-                px={3}
-                ml={0.5}
-                sx={{
-                  borderTopRightRadius: 10,
-                  borderBottomRightRadius: 10,
-                }}
-                display="flex"
-                alignItems="center"
-              >
-                <Select
-                  value={cycle?.name || ''}
-                  onChange={(e) =>
-                    setCycle(
-                      group.cycles.find((c) => c.name === e.target.value)
-                    )
-                  }
-                  renderValue={(value) => value || 'Select cycle'}
-                  displayEmpty
-                  sx={{
-                    color: 'white',
-                    fontSize: screenSize.isDesktop ? 20 : undefined,
-                    bgcolor: 'transparent',
-                    border: 'none',
-                    pl: 1,
-                    '&:before, &:after': { borderBottom: 'none !important' },
-                  }}
-                  variant="standard"
-                >
-                  <MenuItem value="" disabled>
-                    Select cycle
-                  </MenuItem>
-
-                  {group.cycles.map((cycle) => (
-                    <MenuItem key={cycle.name} value={cycle.name}>
-                      {cycle.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
-            </Box>
-            <Circles
-              items={days}
-              value={day.date.toString()}
-              setValue={(value) => {
-                setDay({ label: '', date: dayjs(value) });
-                setDateFrom(dayjs(value).startOf('day'));
-                setDateTo(dayjs(value).endOf('day'));
-              }}
-              getBackgroundColor={(value, itemValue) =>
-                commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
-                  ? theme.palette.primary.main
-                  : 'rgba(255, 255, 255, 0.1)'
-              }
-              sx={{
-                borderBottomRightRadius: 0,
-                borderBottomLeftRadius: 0,
-              }}
-              arrows
-              onArrowClick={(direction) => {
-                const newDay =
-                  direction === 'left'
-                    ? day.date.subtract(1, 'week')
-                    : day.date.add(1, 'week');
-
-                setDay({ label: '', date: newDay });
-                setDateFrom(newDay.startOf('day'));
-                setDateTo(newDay.endOf('day'));
-                setDays(
-                  commonService.date
-                    .getWeekDays(newDay)
-                    .map(({ label, date }) => ({
-                      label: label[0],
-                      value: date.toString(),
-                      // sublabel: screenSize.isSmallerThanLaptop
-                      //   ? commonService.date.format(date, {
-                      //       withYear: false,
-                      //     })
-                      //   : undefined,
-                      sublabel: commonService.date.format(date, {
-                        withYear: false,
-                      }),
-                    }))
-                );
-              }}
-            />
-          </Box>
-
-          <Box
-            display={screenSize.isSmallerThanLaptop ? 'none' : 'flex'}
-            justifyContent="center"
-            flex={1}
-          >
-            <Box
-              bgcolor={theme.palette.background.light}
-              p={!screenSize.isDesktop ? 0 : 1}
-              px={!screenSize.isDesktop ? 1 : 3}
-              sx={{
-                borderTopLeftRadius: 10,
-                borderBottomLeftRadius: 10,
-              }}
-              display="flex"
-              alignItems="center"
-            >
-              <Typography
-                variant="body1"
-                textAlign="center"
-                sx={{
-                  px: 3,
-                  fontSize: !screenSize.isDesktop ? 15 : 20,
-                }}
-              >
-                Week {week}
-              </Typography>
-            </Box>
-            <Box
-              bgcolor={theme.palette.background.light}
-              p={1}
-              px={3}
-              ml={0.5}
-              sx={{
-                borderTopRightRadius: 10,
-                borderBottomRightRadius: 10,
-              }}
-              display="flex"
-              alignItems="center"
-            >
-              <Select
-                value={cycle?.name || ''}
-                onChange={(e) =>
-                  setCycle(group.cycles.find((c) => c.name === e.target.value))
-                }
-                renderValue={(value) => value || 'Select cycle'}
-                displayEmpty
-                sx={{
-                  color: 'white',
-                  fontSize: screenSize.isDesktop ? 20 : undefined,
-                  bgcolor: 'transparent',
-                  border: 'none',
-                  pl: 1,
-                  '&:before, &:after': { borderBottom: 'none !important' },
-                }}
-                variant="standard"
-              >
-                <MenuItem value="" disabled>
-                  Select cycle
-                </MenuItem>
-
-                {group.cycles.map((cycle) => (
-                  <MenuItem key={cycle.name} value={cycle.name}>
-                    {cycle.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
-          </Box>
-        </Stack>
-
+        {/* Header with day and week selection */}
+        <GroupTrainerDayViewHeader
+          day={day}
+          setDay={setDay}
+          days={days}
+          setDays={setDays}
+          week={week}
+        />
         <Box
           display="flex"
           flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
@@ -582,69 +318,18 @@ export default function TrainerDayView() {
           alignItems="center"
           sx={{ p: isSticky ? 0 : undefined, pt: 0, pb: component ? 0 : 2 }}
         >
+          {/* Training members */}
           <TrainingMembers isSticky={isSticky} />
         </Box>
-        {/* <Subgroups showSubgroups={showSubgroups} /> */}
       </Box>
 
-      {!cycle ? (
-        <Box
-          display="flex"
-          bgcolor={'background.paper'}
-          width="100%"
-          p={2}
-          justifyContent="center"
-          sx={{
-            borderBottomRightRadius: 10,
-            borderBottomLeftRadius: 10,
-          }}
-        >
-          <Typography variant="h6" mb={2}>
-            Select a cycle
-          </Typography>
-        </Box>
-      ) : (
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          width="100%"
-          pb={15}
-          sx={{
-            borderBottomRightRadius: 10,
-            borderBottomLeftRadius: 10,
-          }}
-        >
-          {/* Training set groups with set exercises */}
-          {!loading && !amTraining && !pmTraining ? (
-            <Box
-              display="flex"
-              bgcolor={'background.paper'}
-              width="100%"
-              p={2}
-              justifyContent="center"
-              sx={{
-                borderBottomRightRadius: 10,
-                borderBottomLeftRadius: 10,
-              }}
-            >
-              <Typography variant="h6" mb={2}>
-                No session for current date
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              {amTraining && (
-                <TrainingCard day={day} training={amTraining} period="AM" />
-              )}
-
-              {pmTraining && (
-                <TrainingCard day={day} training={pmTraining} period="PM" />
-              )}
-            </>
-          )}
-        </Box>
-      )}
+      {/* Trainings for the day */}
+      <GroupTrainerDayViewTrainings
+        day={day}
+        amTraining={amTraining}
+        pmTraining={pmTraining}
+        loading={loading}
+      />
     </>
   );
 }

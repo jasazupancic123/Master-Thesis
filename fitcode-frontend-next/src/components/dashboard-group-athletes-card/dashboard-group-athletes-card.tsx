@@ -8,12 +8,10 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useDashboard } from '@/store/dashboard-provider';
-import { Institution } from '@/controller/institution/type/institution.type';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 interface GroupAthletesCardProps {
   group: Group;

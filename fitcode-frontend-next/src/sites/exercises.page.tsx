@@ -26,7 +26,7 @@ import {
   handleDeleteExercise,
   handlePaginateExercises,
   handleUpdateExercise,
-} from '../app/exercises/state';
+} from '../app/dashboard/exercises/state';
 import FileUpload from '@/components/file-upload/file-upload';
 import { useExerciseContext } from '@/store/exercises-provider';
 import { Publish } from '@mui/icons-material';

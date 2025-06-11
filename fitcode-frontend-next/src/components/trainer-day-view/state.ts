@@ -102,7 +102,7 @@ export async function handleCopyTraining(
         copiedTraining,
         components,
         exercises,
-        methods,
+        methods
       );
 
       setTrainings((prev) =>
@@ -1107,6 +1107,7 @@ export function prepareGroupAvgWorkloadsForChart(
   setRange: SetState<number[]>
 ) {
   const completedWorkloadsData = [];
+
   for (const t of trainings) {
     const foundExerciseEntry = t.avgCompletedWorkloadValues.find(
       (w) => w.exerciseId === exerciseId
@@ -1131,6 +1132,7 @@ export function prepareGroupAvgWorkloadsForChart(
   const futureWorkloadsData = [];
   for (const t of trainings) {
     if (completedWorkloadsData.find((w) => w.trainingId === t.id)) continue; // skip if already in completed workloads
+
     if (!t.avgFutureWorkloadValues.find((w) => w.exerciseId === exerciseId))
       continue; // skip if no future workloads for the selected exercise on this training
 

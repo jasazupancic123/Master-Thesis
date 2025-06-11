@@ -27,7 +27,7 @@ export class TrainingController {
     userId: string
   ) {
     return api.get<Training>(
-      `/training/${trainingId}/athlete/${userId}/component/${componentId}`,
+      `/training/${trainingId}/component/${componentId}`,
       {
         token,
       }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Menu, MenuItem, Popover, TextField, Box } from '@mui/material';
 import { Component } from '@/controller/component/type/component.type';
 import { useTheme } from '@mui/material';
-import { Clear, Remove } from '@mui/icons-material';
+import { Clear } from '@mui/icons-material';
 
 interface CycleComponentsSelectProps {
   label: string;

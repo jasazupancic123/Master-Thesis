@@ -7,7 +7,6 @@ import Stack from '@mui/material/Stack';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/X';
 import Copyright from '@/components/copyright/copyright';
-import Image from 'next/image';
 import { SITE_MAIL } from '@/common/constant/browser.constant';
 import Logo from '../logo/logo';
 
