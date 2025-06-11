@@ -22,6 +22,7 @@ import { User } from '../../common/type/firebase-auth.type';
 import {
   ComponentRef,
   CycleRef,
+  GroupRef,
   TrainingComponentRef,
   TrainingRef,
   UserRef,
@@ -56,6 +57,7 @@ import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { PeriodizationService } from './periodization.service';
 import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 import { MethodService } from 'src/method/service/method.service';
+import { FindByDayDto } from '../dto/find-by-day.dto';
 
 dayjs.extend(isoWeek);
 
@@ -152,6 +154,34 @@ export class TrainingService {
       trainings = trainings.filter((t) =>
         this.commonService.date.isBetween(t.from, from, to),
       );
+
+    return trainings;
+  }
+
+  async findByDay(
+    user: User,
+    ref: GroupRef,
+    input: FindByDayDto,
+  ): Promise<Training[]> {
+    this.logger.log(
+      `User ${user.uid} is getting trainings for day: ${JSON.stringify(input)}`,
+    );
+
+    const { groupId } = ref;
+    const { day } = input;
+    const startOfDayDate = startOfDay(day);
+    const endOfDayDate = endOfDay(day);
+
+    // validate group
+    await this.groupService.findByIdOrFail(user, { groupId });
+
+    // find trainings
+    const trainings = await this.trainingRepository.getDocs((q) => {
+      q = q.where('groupId', '==', groupId);
+      q = q.where('from', '>=', startOfDayDate);
+      q = q.where('to', '<=', endOfDayDate);
+      return q;
+    });
 
     return trainings;
   }

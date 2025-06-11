@@ -9,6 +9,7 @@ import { GroupDateFilter } from '@/common/type/filter.type';
 import { ChildrenProps } from '@/common/type/props.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
+import { Training } from '@/controller/training/type/training.type';
 import dayjs from 'dayjs';
 import { createContext, useContext, useEffect, useState } from 'react';
 

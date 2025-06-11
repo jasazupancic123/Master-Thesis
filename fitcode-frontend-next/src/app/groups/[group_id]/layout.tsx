@@ -12,14 +12,7 @@ import { notFound } from 'next/navigation';
 import { GroupIdPageProps } from './props';
 import { AttributeController } from '@/controller/attribute/attribute.controller';
 import { MethodController } from '@/controller/method/method.controller';
-import { ChildrenProps } from '@/common/type/props.type';
 import { ReactNode } from 'react';
-
-interface GroupIdPageParams {
-  params: {
-    group_id: string;
-  };
-}
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,10 +21,7 @@ interface LayoutProps {
   }>;
 }
 
-export default async function Layout({
-  children,
-  params,
-}: LayoutProps) {
+export default async function Layout({ children, params }: LayoutProps) {
   const cookieStore = await cookies(); // ✅ no await
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
   if (!token) return <div>Unauthorized</div>;

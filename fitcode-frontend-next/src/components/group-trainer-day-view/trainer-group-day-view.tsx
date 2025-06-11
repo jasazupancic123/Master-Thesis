@@ -50,6 +50,8 @@ export default function TrainerDayView() {
   const {
     training,
     setTraining,
+    todaysTrainings,
+    setTodaysTrainings,
     component,
     setSelectedSubgroup,
     selectedAthlete,
@@ -78,7 +80,7 @@ export default function TrainerDayView() {
   const [loading, setLoading] = useState(true);
 
   async function handleUpdateMultipleTrainings() {
-    const todaysTrainings = [amTraining, pmTraining].filter(
+    const todaysTrainingsFiltered = [amTraining, pmTraining].filter(
       (t) => t !== undefined
     );
 
@@ -88,7 +90,7 @@ export default function TrainerDayView() {
         TrainingController.batchUpdate(
           token,
           { groupId: group.id, cycleId: cycle!.id },
-          todaysTrainings,
+          todaysTrainingsFiltered,
           customAthleteWorkloads
         ),
       (newTrainings) => {
@@ -166,17 +168,31 @@ export default function TrainerDayView() {
   }, [component]);
 
   const [amTraining, setAmTraining] = useState<Training | undefined>(
-    trainings
-      .filter((t) => commonService.date.isSameDay(day.date, dayjs(t.from)))
-      .find((t) => dayjs(t.from).hour() < 12)
+    todaysTrainings.find((t) => dayjs(t.from).hour() < 12)
   );
   const [pmTraining, setPmTraining] = useState<Training | undefined>(
-    trainings
-      .filter((t) => commonService.date.isSameDay(day.date, dayjs(t.from)))
-      .find((t) => dayjs(t.from).hour() >= 12)
+    todaysTrainings.find((t) => dayjs(t.from).hour() >= 12)
   );
 
   useEffect(() => {
+    handleApiRequest(
+      router,
+      () => TrainingController.findByDay(token, day.date.toDate(), group.id),
+      (response) => {
+        const mapped = response.map((t) =>
+          TrainingService.mapComponentsExercisesMethods(
+            t,
+            components,
+            exercises,
+            methods
+          )
+        );
+        setTodaysTrainings(mapped);
+      },
+      undefined,
+      undefined
+    );
+
     const newTodaysTrainings = trainings.filter((t) =>
       commonService.date.isSameDay(day.date, dayjs(t.from))
     );
@@ -324,12 +340,7 @@ export default function TrainerDayView() {
       </Box>
 
       {/* Trainings for the day */}
-      <GroupTrainerDayViewTrainings
-        day={day}
-        amTraining={amTraining}
-        pmTraining={pmTraining}
-        loading={loading}
-      />
+      <GroupTrainerDayViewTrainings day={day} loading={loading} />
     </>
   );
 }

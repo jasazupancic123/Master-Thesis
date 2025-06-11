@@ -102,8 +102,7 @@ export default function AthleteTrainingExerciseCard(
               TrainingController.findByIdAndPopulateAthleteWorkloads(
                 token,
                 trainingInProgress.training.id,
-                trainingInProgress.selectedComponent.id,
-                profile.uid
+                trainingInProgress.selectedComponent.id
               ),
             (training) => {
               const selectedComponent = [

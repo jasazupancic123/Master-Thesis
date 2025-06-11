@@ -43,7 +43,7 @@ export default function TrainerGroupPage() {
       width="100%"
     >
       <GroupSidebar groups={groups} group={group} />
-      
+
       <Box
         sx={{
           backgroundColor: theme.palette.background.paper,
