@@ -173,6 +173,16 @@ export async function handleClickDateCell(
             }
           );
 
+          if (day?.date.isSame(newTraining.from, 'day') && setTodaysTrainings) {
+            setTodaysTrainings((prev) =>
+              [...prev, newTraining].sort((a, b) => {
+                const aDate = new Date(a.from);
+                const bDate = new Date(b.from);
+                return aDate.getTime() - bDate.getTime();
+              })
+            );
+          }
+
           setTrainings(sortedTrainings);
           toast.success('Training with current component created successfully');
         },

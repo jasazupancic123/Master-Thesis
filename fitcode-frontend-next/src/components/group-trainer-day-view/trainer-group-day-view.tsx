@@ -57,6 +57,8 @@ export default function TrainerDayView() {
     isSettingAthleteWorkloads,
   } = useTrainerDayViewContext();
 
+  console.log('todaysTrainings:', todaysTrainings);
+
   const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
