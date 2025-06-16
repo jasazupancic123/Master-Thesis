@@ -13,6 +13,7 @@ export class CopyComponentDto extends PickType(DateRangeDto, [
   copyFromTrainingId: string;
 
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   @Expose()
   @ApiPropertyOptional()
