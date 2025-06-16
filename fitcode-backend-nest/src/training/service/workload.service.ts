@@ -133,7 +133,7 @@ export class WorkloadService {
       query = query.where(
         'exerciseId',
         'in',
-        ref.exerciseId,
+        ref.exerciseIds,
       ) as CollectionGroup;
     else if (ref.exerciseId)
       query = query.where(

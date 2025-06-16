@@ -5,6 +5,7 @@ export class CreateTrainingDto extends PickType(Training, [
   'groupId',
   'cycleId',
   'components',
+  'membersIds',
   'copiedFromId',
   'stats',
   'futureStats',

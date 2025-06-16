@@ -62,7 +62,7 @@ export class TrainingController {
     );
   }
 
-  @Post(':groupId/athlete/:athleteId/workloads')
+  @Post('group/:groupId/athlete/:athleteId/workloads')
   @Auth()
   async findAthleteGroupWorkloads(
     @RequestUser() user: User,
@@ -98,7 +98,7 @@ export class TrainingController {
     return await this.trainingService.update(user, ref, body);
   }
 
-  @Patch('batch/:groupId/:cycleId')
+  @Patch('batch/group/:groupId/cycle/:cycleId')
   @Auth()
   async batchUpdate(
     @RequestUser() user: User,

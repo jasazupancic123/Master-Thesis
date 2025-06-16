@@ -1,8 +1,8 @@
-import { IdEntity, TimestampEntity } from '@/common/type/entity.type';
+import { BaseEntity } from '@/common/type/entity.type';
 import { Group } from '@/controller/group/type/group.type';
 import { User } from '@/controller/user/type/user.type';
 
-export interface Institution extends IdEntity, TimestampEntity {
+export interface Institution extends BaseEntity {
   name: string;
   ownerId: string; // creator of the institution
   trainerIds: string[]; // all managers and trainers

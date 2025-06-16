@@ -39,14 +39,15 @@ describe('Update Training (e2e)', () => {
     const from = data?.from || getTime(addDays(new Date(), 2), 8, 0); // defaults to 8:00 two days ahead
     const to = data?.to || addMinutes(from, 60); // defaults to 9:00 two days ahead
 
-    return await trainingService.create(trainer, {
-      training: generateTrainingStub({
+    return await trainingService.create(
+      trainer,
+      generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [generateTrainingComponent({ id: component.id, from, to })],
         ...(data ? data : {}),
       }),
-    });
+    );
   }
 
   beforeAll(async () => {

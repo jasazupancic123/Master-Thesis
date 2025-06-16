@@ -72,7 +72,7 @@ export default function AthletesView() {
           athleteIds,
         }),
       (institution) => {
-        institution = InstitutionService.mapAllUsers([institution], users)[0];
+        institution = InstitutionService.mapUsers([institution], users)[0];
         setSelectedInstitution(institution);
         setModal((prev) => ({ ...prev, add_athlete: false }));
         toast.success('Athletes added successfully');
@@ -92,7 +92,7 @@ export default function AthletesView() {
           athleteIds: [athleteId],
         }),
       (institution) => {
-        institution = InstitutionService.mapAllUsers([institution], users)[0];
+        institution = InstitutionService.mapUsers([institution], users)[0];
         setSelectedInstitution(institution);
         toast.success('Athlete removed successfully');
       },

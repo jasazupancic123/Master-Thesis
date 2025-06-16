@@ -3,7 +3,6 @@ import { GroupService } from '../../src/group/group.service';
 import { addWeeks, addDays, subDays, setMinutes, setHours } from 'date-fns';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { TestUser } from '../type/auth.type';
-import dayjs from 'dayjs';
 
 /**
  * Creates a group and 3 cycles, one for the past week, one for the current week
