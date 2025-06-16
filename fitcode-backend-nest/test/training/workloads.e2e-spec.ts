@@ -29,7 +29,7 @@ import {
   ParamType,
   VolType,
 } from '../../src/component/enum/param.enum';
-import { UserWorkloadService } from '../../src/training/service/user-workload.service';
+import { WorkloadService } from '../../src/training/service/workload.service';
 import { createAthleteUserAndToken } from '../utils/auth.util';
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
@@ -42,7 +42,7 @@ describe('Training Workloads (e2e)', () => {
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
-  let workloadService: UserWorkloadService;
+  let workloadService: WorkloadService;
 
   let group: Group;
   let component: Component;
@@ -60,7 +60,7 @@ describe('Training Workloads (e2e)', () => {
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
-    workloadService = moduleFixture.get(UserWorkloadService);
+    workloadService = moduleFixture.get(WorkloadService);
 
     component = await componentService.create(
       generateComponentStub({ params: { [DEFAULT_PARAMS_KEY]: [] } }),
@@ -119,7 +119,7 @@ describe('Training Workloads (e2e)', () => {
         ],
       });
 
-      const response = await trainingService.create(trainer, { training });
+      const response = await trainingService.create(trainer, training);
       const trainingExercises = response.components.flatMap((c) =>
         c.supersets.flatMap((s) => s.exercises),
       );
@@ -185,7 +185,7 @@ describe('Training Workloads (e2e)', () => {
         ],
       });
 
-      const response = await trainingService.create(trainer, { training });
+      const response = await trainingService.create(trainer, training);
       const trainingExercises = response.components.flatMap((c) =>
         c.supersets.flatMap((s) => s.exercises),
       );
@@ -272,7 +272,7 @@ describe('Training Workloads (e2e)', () => {
         ],
       });
 
-      const response = await trainingService.create(trainer, { training });
+      const response = await trainingService.create(trainer, training);
       const trainingExercises = response.components.flatMap((c) =>
         c.supersets.flatMap((s) => s.exercises),
       );
@@ -386,7 +386,7 @@ describe('Training Workloads (e2e)', () => {
           ],
         });
 
-        const response = await trainingService.create(trainer, { training });
+        const response = await trainingService.create(trainer, training);
         const workloads = await workloadService.findAllByTraining(response.id);
 
         expect(workloads).toHaveLength(9); // 3 members * 1 exercise * 3 sets
@@ -454,7 +454,7 @@ describe('Training Workloads (e2e)', () => {
         .spyOn(workloadService, 'findAllByMembers')
         .mockImplementationOnce(async (_membersIds: string[]) => mockWorkloads);
 
-      const response = await trainingService.create(trainer, { training });
+      const response = await trainingService.create(trainer, training);
       const workloads = await workloadService.findAllByTraining(response.id);
       expect(workloads).toHaveLength(9); // 3 members * 1 exercise * 3 sets
 
@@ -485,8 +485,9 @@ describe('Training Workloads (e2e)', () => {
         generateExerciseStub({ componentIds: [component.id] }),
       );
 
-      const response = await trainingService.create(trainer, {
-        training: generateTrainingStub({
+      const response = await trainingService.create(
+        trainer,
+        generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -500,7 +501,7 @@ describe('Training Workloads (e2e)', () => {
             }),
           ],
         }),
-      });
+      );
 
       const workloads = await workloadService.findAllByTraining(response.id);
     });

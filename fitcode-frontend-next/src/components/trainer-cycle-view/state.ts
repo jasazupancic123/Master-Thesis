@@ -78,11 +78,12 @@ export async function handleCreateTraining(
     router,
     () =>
       TrainingController.create(token, {
-        training: {
-          groupId: group.id,
-          cycleId: cycle.id,
-          components: selectedComponents,
-        },
+        groupId: group.id,
+        cycleId: cycle.id,
+        components: selectedComponents,
+        membersIds: [],
+        stats: [],
+        futureStats: [],
       }),
     (training) => {
       const mapped = TrainingService.mapComponentsExercisesMethods(

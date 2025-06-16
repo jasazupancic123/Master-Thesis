@@ -11,7 +11,7 @@ export class UpdateTrainingDto extends PickType(Training, [
   'membersIds',
   'warmup',
   'cooldown',
-  'avgFutureWorkloadValues',
+  'futureStats',
 ]) {}
 
 export class UpdateTrainingDtoWithId extends PickType(Training, [
@@ -20,7 +20,7 @@ export class UpdateTrainingDtoWithId extends PickType(Training, [
   'membersIds',
   'warmup',
   'cooldown',
-  'avgFutureWorkloadValues',
+  'futureStats',
 ]) {}
 
 export class UpdateSingleTrainingDto extends PickType(Training, [
@@ -38,19 +38,12 @@ export class BatchUpdateTrainingsDto {
   @ValidateNested({ each: true })
   @Type(() => BatchUpdateTrainingDto)
   @ApiProperty()
-  trainings: BatchUpdateTrainingDto[];
-}
-
-export class BatchUpdateTrainingsWithCustomAthleteWorkloadsDto {
-  @ValidateNested({ each: true })
-  @Type(() => BatchUpdateTrainingDto)
-  @ApiProperty()
   @Expose()
-  trainings: BatchUpdateTrainingDto[];
+  trainings: BatchUpdateTrainingDto[]; // for 2 trainings in day view on frontend
 
   @ValidateNested({ each: true })
   @Type(() => Workload)
   @ApiProperty()
   @Expose()
-  customAthleteWorkloads: Workload[];
+  customAthleteWorkloads: Workload[]; // for custom workloads
 }

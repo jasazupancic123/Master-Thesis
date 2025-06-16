@@ -1,8 +1,7 @@
-import { IntensityVolumeValues } from './intensity-volume-values.type';
-
-export type AverageWorkloadValues = {
+export type GroupWorkloadStats = {
   exerciseId: string;
   rootComponentId: string; // strength, speed, ...
   numMembers: number;
-  avgWorkloadValue: IntensityVolumeValues; // make sure to avg workload values based on setNumber
+  intensity: number;
+  volume: number;
 };

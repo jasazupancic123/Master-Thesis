@@ -1,9 +1,23 @@
-import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Transform, Type } from 'class-transformer';
+import { IsOptional } from 'class-validator';
 
 export class DateRangeDto {
-  @Type(() => Date)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  @Transform(({ value }) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date;
+  })
   from: Date;
 
-  @Type(() => Date)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  @Transform(({ value }) => {
+    const date = new Date(value);
+    return isNaN(date.getTime()) ? undefined : date;
+  })
   to: Date;
 }

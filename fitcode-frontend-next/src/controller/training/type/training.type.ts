@@ -4,7 +4,7 @@ import { Wellness } from '@/controller/user/type/wellness.type';
 import { User } from '@/controller/user/type/user.type';
 import { SetStatus } from '../enum/set-status.enum';
 import { TrainingComponent } from './training-plan.type';
-import { AverageWorkloadValues } from './average-workload-values.type';
+import { GroupWorkloadStats } from './average-workload-values.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
@@ -16,8 +16,8 @@ export type Training = BaseEntity &
     warmup: TrainingComponent;
     cooldown: TrainingComponent;
     components: TrainingComponent[];
-    avgCompletedWorkloadValues: AverageWorkloadValues[];
-    avgFutureWorkloadValues: AverageWorkloadValues[];
+    stats: GroupWorkloadStats[];
+    futureStats: GroupWorkloadStats[];
     wellness: Wellness[];
 
     // mapped properties

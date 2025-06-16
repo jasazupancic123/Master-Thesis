@@ -22,7 +22,10 @@ import { InstitutionService } from '../../institution/service/institution.servic
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
   private readonly userService: UserService;
+
   private admin: User;
+  private manager: User;
+  private trainer: User;
 
   constructor(app: INestApplication) {
     super(app);
@@ -45,6 +48,20 @@ export class DataSetup extends BaseSetup {
       password: this.configService.getOrThrow('FIREBASE_ADMIN_PASSWORD'),
       displayName: 'Admin',
       customClaims: { role: [UserRole.ADMIN] },
+    });
+
+    this.manager = await this.userService.upsert({
+      email: 'manager@mail.com',
+      password: 'password',
+      displayName: 'Manager',
+      customClaims: { role: [UserRole.MANAGER] },
+    });
+
+    this.trainer = await this.userService.upsert({
+      email: 'trainer@mail.com',
+      password: 'password',
+      displayName: 'Trainer',
+      customClaims: { role: [UserRole.TRAINER] },
     });
 
     await this.clearData();
@@ -172,45 +189,45 @@ export class DataSetup extends BaseSetup {
       emails: data.map((u) => u.email),
     });
 
-    const trainer = users.find((u) => u.email === 'trainer@mail.com');
     const athletes = users.filter((u) =>
-      u.customClaims.role?.includes(UserRole.ATHLETE),
+      u.customClaims?.role?.includes(UserRole.ATHLETE),
     );
 
     const institution = await institutionService.create(this.admin, {
       name: 'Nk Maribor',
-      ownerId: users[0].uid,
-      trainerIds: trainer ? [trainer.uid] : users.map((u) => u.uid),
+      ownerId: this.manager.uid,
       athleteIds: athletes.map((u) => u.uid),
+      trainerIds: [this.trainer.uid],
       imageUrl: 'https://img.sofascore.com/api/v1/team/2420/image',
     });
 
     // import groups
     const groupIds = [];
-    for (const trainer of users) {
-      const groups = data.find((u) => u.email === trainer.email)?.groups;
-      for (const { name, membersIds: emails } of groups) {
-        const members = await this.userService.findAll({ emails });
-        const membersIds = members.map((m) => m.uid);
-        const group = await groupService.create(trainer, {
-          name,
-          membersIds,
-          institutionId: institution.id,
-        });
-        groupIds.push(group.id);
+    const groups = data.find((u) => u.email === this.trainer.email)?.groups;
 
-        for (const member of members)
-          await this.userService.addTrainer({ uid: member.uid }, trainer.uid);
-      }
+    for (const { name, membersIds: emails } of groups) {
+      const members = await this.userService.findAll({ emails });
+      const membersIds = members.map((m) => m.uid);
+      const group = await groupService.create(this.trainer, {
+        name,
+        membersIds,
+        institutionId: institution.id,
+      });
+
+      groupIds.push(group.id);
+
+      for (const member of members)
+        await this.userService.addTrainer(
+          { uid: member.uid },
+          this.trainer.uid,
+        );
     }
 
     institution.groupIds = groupIds;
     await institutionService.update(
-      trainer,
+      this.trainer,
       { institutionId: institution.id },
-      {
-        groupIds: institution.groupIds,
-      },
+      { groupIds: institution.groupIds },
     );
   }
 

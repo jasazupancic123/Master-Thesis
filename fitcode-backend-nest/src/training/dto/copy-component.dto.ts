@@ -1,8 +1,11 @@
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { DateRangeDto } from 'src/common/dto/date-range.dto';
 
-export class CopyComponentDto {
+export class CopyComponentDto extends PickType(DateRangeDto, [
+  'from',
+] as const) {
   @IsString()
   @IsNotEmpty()
   @Expose()
@@ -12,18 +15,12 @@ export class CopyComponentDto {
   @IsString()
   @IsNotEmpty()
   @Expose()
-  @ApiProperty()
-  copyToTrainingId: string;
+  @ApiPropertyOptional()
+  copyToTrainingId?: string;
 
   @IsString()
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
   componentId: string;
-
-  @IsBoolean()
-  @IsOptional()
-  @Expose()
-  @ApiProperty()
-  override?: boolean = false;
 }

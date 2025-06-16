@@ -3,7 +3,6 @@ import { GroupService } from '../../src/group/group.service';
 import { addWeeks, addDays, subDays, setMinutes, setHours } from 'date-fns';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { TestUser } from '../type/auth.type';
-import dayjs from 'dayjs';
 import { InstitutionService } from 'src/institution/service/institution.service';
 import { Institution } from 'src/institution/entity/institution.entity';
 
@@ -59,7 +58,7 @@ export function createInstitution(
 ) {
   return institutionService.create(global.admin, {
     name: input.name || 'Nk Maribor',
-    ownerId: input.ownerId || global.trainer.uid,
+    ownerId: input.ownerId || global.manager.uid,
     trainerIds: input.trainerIds || [global.trainer.uid],
     athleteIds: input.athleteIds || [],
     imageUrl: input.imageUrl || '',

@@ -10,6 +10,7 @@ import {
   addMinutes,
   endOfDay,
   isBefore,
+  isThursday,
   startOfDay,
   startOfHour,
   subMinutes,
@@ -26,7 +27,6 @@ import {
   TrainingComponentRef,
   TrainingRef,
   UserRef,
-  WorkloadRef,
 } from '../../common/type/firestore.type';
 import { Filter } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
@@ -39,30 +39,27 @@ import { TrainingComponent } from '../entity/training-component.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingRepository } from '../repository/training.repository';
 import { TrainingPlanService } from './training-plan.service';
-import { UserWorkloadService } from './user-workload.service';
+import { WorkloadService } from './workload.service';
 import { Workload } from '../entity/workload.entity';
-import { CreateWorkload } from '../dto/create-workload.dto';
+import { SetStatus } from '../enum/set-status.enum';
+import { ParamType } from '../../component/enum/param.enum';
+import { FinishComponentDto } from '../dto/finish-component.dto';
+import { CreateTrainingDto } from '../dto/create-training.dto';
+import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
+import { PeriodizationService } from './periodization.service';
+import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { FindByDayDto } from '../dto/find-by-day.dto';
+import { plainToInstance } from 'class-transformer';
+import { CopyComponentDto } from '../dto/copy-component.dto';
+import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
+import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
+import { CopyTrainingDto } from '../dto/copy-training.dto';
+
 // import * as dayjs from 'dayjs'; // use for tests
 // import * as isoWeek from 'dayjs/plugin/isoWeek'; // use for tests
 import dayjs from 'dayjs'; // use for prod
 import isoWeek from 'dayjs/plugin/isoWeek'; // use for prod
-import { SetStatus } from '../enum/set-status.enum';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import { ParamType } from '../../component/enum/param.enum';
-import { FinishComponentDto } from '../dto/finish-component.dto';
-import { AverageWorkloadValues } from '../entity/average-workload-values.entity';
-import { CreateTrainingDto } from '../dto/create-training.dto';
-import { BatchUpdateTrainingsWithCustomAthleteWorkloadsDto } from '../dto/update-training.dto';
-import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { PeriodizationService } from './periodization.service';
-import { PeriodizationType } from '../../group/enum/periodization-type.enum';
-import { MethodService } from 'src/method/service/method.service';
-import { FindByDayDto } from '../dto/find-by-day.dto';
-import { TrainingMinimal } from '../entity/training-minimal.entity';
-import { plainToInstance } from 'class-transformer';
-import { TrainingComponentMinimal } from '../entity/training-component-minimal.entity';
-import { SubgroupMinimal } from '../entity/subgroup-minimal.entity';
-import { CopyComponentDto } from '../dto/copy-component.dto';
+import { TrainingInfoDto } from '../dto/training-info.dto';
 
 dayjs.extend(isoWeek);
 
@@ -76,7 +73,7 @@ export class TrainingService {
     private readonly commonService: CommonService,
     private readonly trainingRepository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
-    private readonly workloadService: UserWorkloadService,
+    private readonly workloadService: WorkloadService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
     @Inject(forwardRef(() => UserService))
@@ -126,7 +123,7 @@ export class TrainingService {
     user: User,
     filter?: Filter<Training>,
     minimal: boolean = false,
-  ): Promise<Training[] | TrainingMinimal[]> {
+  ): Promise<Training[]> {
     const dbUser = await this.userService.findOne(user.uid);
 
     const from = filter?.from ? filter.from : undefined;
@@ -163,65 +160,6 @@ export class TrainingService {
       trainings = trainings.filter((t) =>
         this.commonService.date.isBetween(t.from, from, to),
       );
-
-    if (minimal) {
-      return trainings.map((t) =>
-        plainToInstance(TrainingMinimal, {
-          id: t.id,
-          groupId: t.groupId,
-          cycleId: t.cycleId,
-          copiedFromId: t.copiedFromId,
-          avgCompletedWorkloadValues: t.avgCompletedWorkloadValues,
-          avgFutureWorkloadValues: t.avgFutureWorkloadValues,
-          from: t.from,
-          to: t.to,
-          warmup: plainToInstance(TrainingComponentMinimal, {
-            id: t.warmup.id,
-            from: t.warmup.from,
-            to: t.warmup.to,
-            target: t.warmup.target,
-            methodId: t.warmup.methodId,
-            copiedFrom: t.warmup.copiedFrom,
-            subgroups: t.warmup.subgroups.map((s) =>
-              plainToInstance(SubgroupMinimal, {
-                id: s.id,
-                avgFutureWorkloadValues: s.avgFutureWorkloadValues,
-              }),
-            ),
-          }),
-          cooldown: plainToInstance(TrainingComponentMinimal, {
-            id: t.cooldown.id,
-            from: t.cooldown.from,
-            to: t.cooldown.to,
-            target: t.cooldown.target,
-            methodId: t.cooldown.methodId,
-            copiedFrom: t.cooldown.copiedFrom,
-            subgroups: t.cooldown.subgroups.map((s) =>
-              plainToInstance(SubgroupMinimal, {
-                id: s.id,
-                avgFutureWorkloadValues: s.avgFutureWorkloadValues,
-              }),
-            ),
-          }),
-          components: t.components.map((c) =>
-            plainToInstance(TrainingComponentMinimal, {
-              id: c.id,
-              from: c.from,
-              to: c.to,
-              target: c.target,
-              methodId: c.methodId,
-              copiedFrom: c.copiedFrom,
-              subgroups: c.subgroups.map((s) =>
-                plainToInstance(SubgroupMinimal, {
-                  id: s.id,
-                  avgFutureWorkloadValues: s.avgFutureWorkloadValues,
-                }),
-              ),
-            }),
-          ),
-        }),
-      );
-    }
 
     return trainings;
   }
@@ -355,37 +293,25 @@ export class TrainingService {
     }
   }
 
-  async getUserWorkloadsByGroupIdAndExerciseIds(
+  async findAthleteGroupWorkloads(
     user: User,
-    input: {
-      groupId: string;
-      body: { exerciseIds: string[]; athleteId?: string };
-    },
+    ref: GroupRef & UserRef,
+    input: FindAthleteGroupWorkloads,
   ): Promise<{ completedWorkloads: Workload[]; futureWorkloads: Workload[] }> {
-    const { groupId, body } = input;
-    const { exerciseIds, athleteId } = body;
-
     this.logger.log(
-      `User ${user.uid} is getting workloads for athlete ${athleteId}`,
+      `User ${user.uid} is getting workloads for athlete ${ref.uid}`,
     );
 
-    const workloads =
-      await this.workloadService.findAllByAthleteGroupExerciseIds(
-        athleteId,
-        groupId,
-        exerciseIds,
-      );
+    const workloads = await this.workloadService.findAllByRef({
+      userId: ref.uid,
+      groupId: ref.groupId,
+      exerciseIds: input.exerciseIds,
+    });
 
-    const { completedWorkloads, futureWorkloads } =
-      this.getCompletedAndFutureWorkloads(workloads);
-
-    return { completedWorkloads, futureWorkloads };
-  }
-
-  private getCompletedAndFutureWorkloads(workloads: Workload[]) {
     const completedWorkloads = workloads.filter(
       (w) => w.status !== SetStatus.NOT_STARTED,
     );
+
     const futureWorkloads = workloads.filter(
       (w) => w.status === SetStatus.NOT_STARTED,
     );
@@ -417,18 +343,17 @@ export class TrainingService {
   }
 
   async create(user: User, input: CreateTrainingDto): Promise<Training> {
-    const { training: propsTraining, copyFromTrainingId, date } = input;
-    const { groupId, cycleId } = propsTraining;
     this.logger.log(
       `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
     );
 
+    // const { training: input, copyFromTrainingId, date } = input;
+    const { groupId, cycleId } = input;
+
     // validate parent references
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    const { from, to } = date
-      ? date
-      : this.getFromAndToDates(propsTraining.components);
+    const { from, to } = this.getFromAndToDates(input.components);
 
     this.validateOwner(user.uid, group);
     this.checkTrainingIsInCycle(from, cycle);
@@ -440,29 +365,29 @@ export class TrainingService {
       this.trainingPlanService.createWarmupAndCooldown(
         from,
         to,
-        propsTraining.components,
+        input.components,
       );
 
     // validate components & exercises
     const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
+    const methods = await this.cacheManagerService.getMethods();
     const exercises = await this.trainingPlanService.findAllTrainingExercises(
       user,
-      propsTraining.components,
+      input.components,
     );
-    const methods = await this.cacheManagerService.getMethods();
 
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       group.membersIds,
-      [warmup, ...propsTraining.components, cooldown],
+      [warmup, ...input.components, cooldown],
       components,
       methods,
     );
 
     // populate exercise params from components
     this.trainingPlanService.populateTrainingExerciseParams(
-      propsTraining.components,
+      input.components,
       components,
       exercises,
       attributes,
@@ -470,98 +395,36 @@ export class TrainingService {
 
     // create training
     const wellness = await this.userService.getRecentWellness(group.membersIds);
-    const workloads = await this.workloadService.findAllByMembers(
-      group.membersIds,
-    );
-
-    // create by copying a component from another training section
-    let copyFromTraining: Training | undefined,
-      trainingComponent: TrainingComponent | undefined,
-      avgCompletedWorkloadValues: AverageWorkloadValues[] | undefined,
-      avgFutureWorkloadValues: AverageWorkloadValues[] | undefined;
-
-    if (copyFromTrainingId) {
-      copyFromTraining = await this.findOneOrFail(user, {
-        trainingId: copyFromTrainingId,
-      });
-
-      // frontend needs to pass only the copied component
-      if (propsTraining.components.length !== 1) {
-        throw new BadRequestException(
-          'You can only copy a training with one component',
-        );
-      }
-
-      trainingComponent = propsTraining.components[0];
-
-      if (!trainingComponent) {
-        throw new BadRequestException(
-          'You must provide a training component to copy',
-        );
-      }
-
-      // keep avg workload values for exercises of only the copied component
-      const exerciseIdsToKeep = trainingComponent.supersets
-        .map((superset) => superset.exercises.map((e) => e.id))
-        .flat();
-      avgCompletedWorkloadValues =
-        copyFromTraining.avgCompletedWorkloadValues.filter((w) =>
-          exerciseIdsToKeep.includes(w.exerciseId),
-        );
-      avgFutureWorkloadValues = copyFromTraining.avgFutureWorkloadValues.filter(
-        (w) => exerciseIdsToKeep.includes(w.exerciseId),
-      );
-    }
+    const workloads = await this.workloadService.findAllByRef({
+      memberIds: group.membersIds,
+    });
 
     const data: Create<Training> = {
       id: null,
       groupId: group.id,
-      cycleId: propsTraining.cycleId,
+      cycleId: input.cycleId,
       ownerId: user.uid,
-      copiedFromId: null,
+      copiedFromId: input.copiedFromId || null,
       from,
       to,
       membersIds: group.membersIds,
       wellness,
       completedMembersIds: [],
-      avgCompletedWorkloadValues: avgCompletedWorkloadValues || [],
-      avgFutureWorkloadValues: avgFutureWorkloadValues || [],
+      stats: input.stats || [],
+      futureStats: input.futureStats || [],
       warmup,
       cooldown,
-      components:
-        // copy with component
-        trainingComponent && copyFromTrainingId
-          ? [
-              {
-                id: trainingComponent.id,
-                from,
-                to: dayjs(from).add(30, 'minute').toDate(),
-                color: trainingComponent.color,
-                subgroups: trainingComponent.subgroups || [],
-                supersets: trainingComponent.supersets || [],
-                copiedFrom: {
-                  lastCopiedFromTrainingId: copyFromTrainingId,
-                  rootCopiedFromTrainingId: trainingComponent.copiedFrom
-                    ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
-                    : copyFromTrainingId,
-                },
-                target: trainingComponent.target || null,
-                methodId: trainingComponent.methodId || null,
-                completedMembersIds: [],
-              },
-            ]
-          : // normal create training
-            propsTraining.components.map((c) => ({
-              id: c.id,
-              from: c.from,
-              to: c.to,
-              color: c.color,
-              subgroups: c.subgroups || [],
-              supersets: c.supersets || [],
-              target: c.target || null,
-              methodId: c.methodId || null,
-              completedMembersIds: [],
-            })),
+      components: input.components.map((c) => ({
+        id: c.id,
+        from: c.from,
+        to: c.to,
+        color: c.color,
+        subgroups: c.subgroups || [],
+        supersets: c.supersets || [],
+        target: c.target || null,
+        methodId: c.methodId || null,
+        completedMembersIds: [],
+      })),
     };
 
     const trainingDocRef = this.trainingRepository.collection().doc();
@@ -588,7 +451,7 @@ export class TrainingService {
       });
     }
 
-    await this.workloadService.createForTraining(batch, training, workloads);
+    this.workloadService.createForTraining(batch, training, workloads);
     await batch.commit();
 
     return training;
@@ -607,33 +470,27 @@ export class TrainingService {
       `User ${user.uid} is periodizing trainings: ${JSON.stringify(excludedTrainingIds)}`,
     );
 
-    if (periodizationType === PeriodizationType.DUP_TABLE_BASED)
-      throw new BadRequestException(
-        'Dup Table Based periodization is not supported yet',
-      );
+    this.trainingPlanService.checkPeriodizationType(periodizationType);
 
     const baseTraining = await this.findOneOrFail(user, {
       trainingId: baseTrainingId,
     });
 
-    const baseComponent = baseTraining.components.find(
-      (c) => c.id === componentId,
+    const baseComponent = this.trainingPlanService.findComponentOrFail(
+      baseTraining,
+      componentId,
     );
-    if (!baseComponent)
-      throw new BadRequestException(
-        'Base component not found in base training',
-      );
 
     const mainTarget = baseComponent.target;
     if (!mainTarget)
       throw new BadRequestException('Target not found in base training');
 
-    let possibleTrainings = await this.findAll(user, {
+    const possibleTrainings = await this.findAll(user, {
       groupId: baseTraining.groupId,
       cycleId: baseTraining.cycleId,
     });
 
-    possibleTrainings = possibleTrainings.filter(
+    const filteredTrainings = possibleTrainings.filter(
       (t) =>
         t.components.some(
           (c) =>
@@ -641,46 +498,19 @@ export class TrainingService {
         ) && !excludedTrainingIds.includes(t.id),
     );
 
-    const trainingIds = possibleTrainings.map((t) => t.id);
+    const lastTraining = filteredTrainings.reduce((prev, curr) =>
+      this.commonService.date.isAfter(prev.from, curr.from) ? prev : curr,
+    );
 
-    const trainings = await this.trainingRepository.getDocs((q) => {
-      q = q.where('id', 'in', trainingIds);
-      return q;
-    });
-
-    if (!trainings.length)
-      throw new BadRequestException('No trainings found for periodization');
-
-    const lastTraining = trainings.reduce((prev, curr) => {
-      const prevFrom = dayjs(prev.from);
-      const currFrom = dayjs(curr.from);
-      return prevFrom.isAfter(currFrom) ? prev : curr;
-    });
-
-    const startWeek = dayjs(baseTraining.from).isoWeek();
-    const lastWeek = dayjs(lastTraining.from).isoWeek();
-
-    const numWeeks = lastWeek - startWeek + 1;
-
-    const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
-
-    // fill the trainings in weeks
-    for (const training of trainings) {
-      const weekIndex = dayjs(training.from).isoWeek() - startWeek;
-      if (weekIndex < weeks.length) weeks[weekIndex].push(training);
-    }
-
-    // sort trainings in week by date
-    for (const week of weeks)
-      week.sort((a, b) => dayjs(a.from).diff(dayjs(b.from)));
-
-    const numTrainingInWeeks = weeks.flat().length;
-    if (trainings.length !== numTrainingInWeeks)
-      throw new BadRequestException('Some trainings are missing or not found');
+    const weeks = this.trainingPlanService.getSpacedTrainingsByWeek(
+      baseTraining,
+      lastTraining,
+      filteredTrainings,
+    );
 
     const periodizedTrainings = PeriodizationService.periodize(
       baseTraining,
-      trainings,
+      filteredTrainings,
       weeks,
       componentId,
       exerciseIds,
@@ -690,17 +520,31 @@ export class TrainingService {
     const batch = this.firebaseService.firestore.batch();
 
     // calculate new avg future workload values
-    for (const training of trainings) {
-      const component = training.components.find((c) => c.id === componentId);
+    for (const t of filteredTrainings) {
+      const workloads = await this.workloadService.findAllByMembers(
+        t.membersIds,
+      );
+
+      const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
 
       const exercises = component.supersets.flatMap((s) => s.exercises);
-      for (const exercise of exercises) {
-        const avgFutureWorkloadValue = training.avgFutureWorkloadValues.find(
+      const stats = this.trainingPlanService.calculateTrainingStats(
+        t.futureStats,
+        exercises,
+        componentId,
+      );
+
+      t.futureStats.map(
+        (fs) => stats.find((s) => s.exerciseId === fs.exerciseId) || fs,
+      );
+
+      /*for (const exercise of exercises) {
+        const avgFutureStats = training.futureStats.find(
           (avg) => avg.exerciseId === exercise.id,
         );
 
-        if (!avgFutureWorkloadValue) continue;
+        if (!avgFutureStats) continue;
 
         const intensitiesL = exercise.sets
           .flatMap((set) => set.paramValuesL)
@@ -730,20 +574,16 @@ export class TrainingService {
               volumesR.length) /
           2;
 
-        avgFutureWorkloadValue.avgWorkloadValue.intensity = avgIntensity;
-        avgFutureWorkloadValue.avgWorkloadValue.volume = avgVolume;
-      }
+        avgFutureStats.intensity = avgIntensity;
+        avgFutureStats.volume = avgVolume;
+      }*/
 
       const updateTrainingQuery =
-        this.firebaseService.buildUpdateQuery<Training>({ ...training });
+        this.firebaseService.buildUpdateQuery<Training>({ ...t });
 
-      const trainingDocRef = this.trainingRepository.doc(training.id);
+      const trainingDocRef = this.trainingRepository.doc(t.id);
+      this.workloadService.createForTraining(batch, t, workloads);
       batch.update(trainingDocRef, updateTrainingQuery);
-
-      const workloads = await this.workloadService.findAllByMembers(
-        training.membersIds,
-      );
-      await this.workloadService.createForTraining(batch, training, workloads);
     }
 
     await batch.commit();
@@ -751,151 +591,6 @@ export class TrainingService {
     return periodizedTrainings.sort(
       (a, b) => a.from.getTime() - b.from.getTime(),
     );
-  }
-
-  // old, not used anymore
-  async createWithTrainingComponent(
-    user: User,
-    ref: TrainingRef,
-    input: {
-      trainingComponent: TrainingComponent;
-      date: { from: Date; to: Date };
-    },
-  ): Promise<Training> {
-    const { trainingComponent, date } = input;
-    this.logger.log(
-      `User ${user.uid} is creating training with training component: ${JSON.stringify(input)}`,
-    );
-
-    const copyFromTraining = await this.findOneOrFail(user, ref);
-    const cycleId = copyFromTraining.cycleId;
-    const groupId = copyFromTraining.groupId;
-
-    // validate parent references
-    const group = await this.groupService.findByIdOrFail(user, { groupId });
-    const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    const from = date.from;
-    const to = date.to;
-
-    this.validateOwner(user.uid, group);
-    this.checkTrainingIsInCycle(from, cycle);
-    this.validateIsTrainingInFuture(from);
-    await this.validateOverlap(from, to, group.id, cycle.id);
-
-    // warmup and cooldown components
-    const { warmup, cooldown } =
-      this.trainingPlanService.createWarmupAndCooldown(from, to, [
-        trainingComponent,
-      ]);
-
-    // validate components & exercises
-    const attributes = await this.cacheManagerService.getAttributes();
-    const components = await this.cacheManagerService.getComponents();
-    const exercises = await this.trainingPlanService.findAllTrainingExercises(
-      user,
-      [trainingComponent],
-    );
-    const methods = await this.cacheManagerService.getMethods();
-
-    this.trainingPlanService.validateTrainingComponents(
-      exercises,
-      group.membersIds,
-      [warmup, trainingComponent, cooldown],
-      components,
-      methods,
-    );
-
-    // populate exercise params from components
-    this.trainingPlanService.populateTrainingExerciseParams(
-      [trainingComponent],
-      components,
-      exercises,
-      attributes,
-    );
-
-    // create training
-    const wellness = await this.userService.getRecentWellness(group.membersIds);
-    const workloads = await this.workloadService.findAllByMembers(
-      group.membersIds,
-    );
-
-    // keep avg workload values for exercises of only the copied component
-    const exerciseIdsToKeep = trainingComponent.supersets
-      .map((superset) => superset.exercises.map((e) => e.id))
-      .flat();
-    const avgCompletedWorkloadValues =
-      copyFromTraining.avgCompletedWorkloadValues.filter((w) =>
-        exerciseIdsToKeep.includes(w.exerciseId),
-      );
-    const avgFutureWorkloadValues =
-      copyFromTraining.avgFutureWorkloadValues.filter((w) =>
-        exerciseIdsToKeep.includes(w.exerciseId),
-      );
-
-    const data: Create<Training> = {
-      id: null,
-      groupId: group.id,
-      cycleId,
-      ownerId: user.uid,
-      copiedFromId: null,
-      from,
-      to,
-      membersIds: group.membersIds,
-      wellness,
-      completedMembersIds: [],
-      avgCompletedWorkloadValues: avgCompletedWorkloadValues,
-      avgFutureWorkloadValues: avgFutureWorkloadValues,
-      warmup,
-      cooldown,
-      components: [
-        {
-          id: trainingComponent.id,
-          from,
-          to: dayjs(from).add(30, 'minute').toDate(),
-          color: trainingComponent.color,
-          subgroups: trainingComponent.subgroups || [],
-          supersets: trainingComponent.supersets || [],
-          copiedFrom: {
-            lastCopiedFromTrainingId: ref.trainingId,
-            rootCopiedFromTrainingId: trainingComponent.copiedFrom
-              ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
-              : ref.trainingId,
-          },
-          target: trainingComponent.target || null,
-          methodId: trainingComponent.methodId || null,
-          completedMembersIds: [],
-        },
-      ],
-    };
-
-    const trainingDocRef = this.trainingRepository.collection().doc();
-    const training: Training = {
-      ...data,
-      id: trainingDocRef.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const createTrainingQuery = this.firebaseService.buildCreateQuery<Training>(
-      { ...data, id: training.id },
-      { timestamps: true },
-    );
-
-    // create training, add trainer to users, create workloads
-    const batch = this.firebaseService.firestore.batch();
-    batch.set(trainingDocRef, createTrainingQuery);
-
-    for (const userId of group.membersIds) {
-      const docRef = this.userService.getDoc(userId);
-      batch.update(docRef, {
-        trainersIds: FieldValue.arrayUnion(user.uid),
-      });
-    }
-
-    await this.workloadService.createForTraining(batch, training, workloads);
-    await batch.commit();
-
-    return training;
   }
 
   async update(
@@ -979,7 +674,7 @@ export class TrainingService {
 
     const batch = this.firebaseService.firestore.batch();
     batch.update(trainingDocRef, updateTrainingQuery);
-    await this.workloadService.createForTraining(batch, updated, workloads);
+    this.workloadService.createForTraining(batch, updated, workloads);
     await batch.commit();
 
     return updated;
@@ -988,7 +683,7 @@ export class TrainingService {
   async batchUpdate(
     user: User,
     ref: CycleRef,
-    body: BatchUpdateTrainingsWithCustomAthleteWorkloadsDto,
+    body: BatchUpdateTrainingsDto,
   ): Promise<Training[]> {
     const { trainings: input, customAthleteWorkloads } = body;
     this.logger.log(
@@ -1078,7 +773,7 @@ export class TrainingService {
           ),
       );
 
-      await this.workloadService.createForTraining(
+      this.workloadService.createForTraining(
         batch,
         updatedTraining,
         filteredWorkloads,
@@ -1109,9 +804,7 @@ export class TrainingService {
   async copy(
     user: User,
     ref: TrainingRef,
-    input: Partial<
-      Pick<Training, 'groupId' | 'cycleId' | 'membersIds' | 'from'>
-    >,
+    input: CopyTrainingDto,
   ): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
@@ -1122,13 +815,46 @@ export class TrainingService {
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
 
-    const membersIds = input.membersIds || training.membersIds;
+    const wellness = await this.userService.getRecentWellness(
+      training.membersIds,
+    );
 
-    const wellness = await this.userService.getRecentWellness(membersIds);
     const trainingTo = addMinutes(
       startOfHour(input.from),
       training.components.length * 30,
     );
+
+    // create by copying a component from another training section
+    /* let copyFromTraining: Training,
+      trainingComponent: TrainingComponent,
+      avgCompletedWorkloadValues: GroupWorkloadStats[],
+      avgFutureWorkloadValues: GroupWorkloadStats[];
+
+    if (copyFromTrainingId) {
+      copyFromTraining = await this.findOneOrFail(user, {
+        trainingId: copyFromTrainingId,
+      });
+
+      // frontend needs to pass only the copied component
+      trainingComponent = input.components[0];
+      if (input.components.length !== 1)
+        throw new BadRequestException(
+          'You can only copy a training with one component',
+        );
+
+      // keep avg workload values for exercises of only the copied component
+      const exerciseIdsToKeep = trainingComponent.supersets
+        .map((superset) => superset.exercises.map((e) => e.id))
+        .flat();
+
+      avgCompletedWorkloadValues = copyFromTraining.stats.filter((w) =>
+        exerciseIdsToKeep.includes(w.exerciseId),
+      );
+
+      avgFutureWorkloadValues = copyFromTraining.futureStats.filter((w) =>
+        exerciseIdsToKeep.includes(w.exerciseId),
+      );
+    } */
 
     const data: Create<Training> = {
       id: null,
@@ -1141,8 +867,8 @@ export class TrainingService {
       membersIds: training.membersIds,
       wellness,
       completedMembersIds: [],
-      avgCompletedWorkloadValues: training.avgCompletedWorkloadValues || [],
-      avgFutureWorkloadValues: training.avgFutureWorkloadValues || [],
+      stats: training.stats || [],
+      futureStats: training.futureStats || [],
       components: training.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
@@ -1197,6 +923,9 @@ export class TrainingService {
     );
     const methods = await this.cacheManagerService.getMethods();
 
+    const membersIds =
+      input.membersIds?.length > 0 ? input.membersIds : training.membersIds;
+
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
@@ -1220,27 +949,22 @@ export class TrainingService {
     const batch = this.firebaseService.firestore.batch();
     batch.set(trainingDocRef, copyTrainingQuery);
 
-    for (const userId of group.membersIds) {
+    for (const userId of membersIds) {
       const docRef = this.userService.getDoc(userId);
       batch.update(docRef, {
         trainersIds: FieldValue.arrayUnion(user.uid),
       });
     }
 
-    await this.workloadService.createForTraining(
-      batch,
-      copiedTraining,
-      workloads,
-    );
+    this.workloadService.createForTraining(batch, copiedTraining, workloads);
     await batch.commit();
 
     return copiedTraining;
   }
 
-  // old, not used anymore
   async copyComponent(user: User, input: CopyComponentDto): Promise<Training> {
-    const { copyFromTrainingId, copyToTrainingId, componentId, override } =
-      input;
+    const { copyFromTrainingId, copyToTrainingId, componentId } = input;
+
     this.logger.log(
       `User ${user.uid} is copying component ${componentId} from training ${copyFromTrainingId} to training ${copyToTrainingId}`,
     );
@@ -1249,18 +973,40 @@ export class TrainingService {
     const copyToRef: TrainingRef = { trainingId: copyToTrainingId };
 
     const trainingFrom = await this.findOneOrFail(user, copyFromRef);
-    const trainingTo = await this.findOneOrFail(user, copyToRef);
-    this.validateOwner(user.uid, trainingFrom);
-    this.validateOwner(user.uid, trainingTo);
 
     const trainingComponent = trainingFrom.components.find(
       (c) => c.id === componentId,
     );
+
     if (!trainingComponent)
       throw new BadRequestException('Component not found in training');
 
+    const trainingTo = await this.findOne(user, copyToRef);
+    if (!trainingTo) {
+      // create a new training if it does not exist with the copied component
+      // calculate new future stats
+      const futureStats = trainingTo.futureStats.filter(
+        (fs) => fs.rootComponentId === componentId,
+      );
+
+      return await this.create(user, {
+        ...trainingFrom,
+        futureStats,
+        components: [
+          {
+            ...trainingComponent,
+            from: input.from,
+            to: addMinutes(input.from, 30),
+            completedMembersIds: [],
+          },
+        ],
+      });
+    }
+
+    // copy component to existing training
     let from = trainingTo.from;
     let to = trainingTo.to;
+
     if (trainingTo.components.length) {
       const lastTrainingComponentInTraining = trainingTo.components
         .map((c) => c.to)
@@ -1290,50 +1036,20 @@ export class TrainingService {
       },
     } as TrainingComponent;
 
-    let newComponents: TrainingComponent[];
-    if (override) {
-      newComponents = trainingTo.components.map((c) => {
-        if (c.id === trainingComponent.id) return newComponent;
-        return c;
-      });
-    } else newComponents = [...trainingTo.components, newComponent];
-
-    const components = await this.cacheManagerService.getComponents();
-    const exercises = await this.trainingPlanService.findAllTrainingExercises(
-      user,
-      newComponents,
-    );
-    const methods = await this.cacheManagerService.getMethods();
-
-    this.trainingPlanService.updateWarmupAndCooldownTimes(
-      trainingTo.warmup,
-      trainingTo.cooldown,
-      newComponents,
+    const foundTrainingComponent = trainingTo.components.find(
+      (c) => c.id === trainingComponent.id,
     );
 
-    this.trainingPlanService.validateTrainingComponents(
-      exercises,
-      [],
-      [trainingTo.warmup, ...newComponents, trainingTo.cooldown],
-      components,
-      methods,
-    );
+    const newComponents = !foundTrainingComponent
+      ? [...trainingTo.components, newComponent] // if not found, add new component
+      : // else, update existing component
+        trainingTo.components.map((c) =>
+          c.id === foundTrainingComponent.id
+            ? { ...newComponent, from: c.from, to: c.to }
+            : c,
+        );
 
-    const updated = {
-      ...trainingTo,
-      components: newComponents,
-    };
-
-    const trainingDocRef = this.trainingRepository.doc(copyToRef.trainingId);
-    const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
-      { ...updated },
-    );
-
-    const batch = this.firebaseService.firestore.batch();
-    batch.update(trainingDocRef, updateTrainingQuery);
-    await batch.commit();
-
-    return updated;
+    return await this.update(user, copyToRef, { components: newComponents });
   }
 
   async remove(user: User, ref: TrainingRef): Promise<void> {
@@ -1354,189 +1070,88 @@ export class TrainingService {
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  async updateWorkloads(
-    user: User,
-    ref: Omit<WorkloadRef, 'exerciseId' | 'setNumber'>,
-    input: CreateWorkload[],
-  ) {
-    this.logger.log(
-      `User ${user.uid} is creating workloads for component ${ref.componentId} for training ${ref.trainingId}: ${JSON.stringify(input)}`,
-    );
-
-    if (user.uid !== ref.userId) throw new UnauthorizedException();
-    // TODO - trainer can also create workloads for his athletes
-
-    const workloads: Workload[] = (
-      await this.workloadService.findAllByTraining(ref.trainingId)
-    )
-      .filter((w) => w.userId === ref.userId)
-      .map((w) => {
-        const provided = input.find(
-          (workload) =>
-            workload.exerciseId === w.exerciseId &&
-            workload.setNumber === w.setNumber,
-        );
-
-        if (!provided) return null;
-        return { ...w, ...provided };
-      })
-      .filter((w) => w);
-
-    const batch = this.firebaseService.firestore.batch();
-    await this.workloadService.updateByTrainingComponent(batch, ref, workloads);
-    await batch.commit();
-  }
-
   async finishComponent(
     user: User,
     ref: TrainingRef & ComponentRef,
     input: FinishComponentDto,
   ): Promise<Training> {
-    const { trainingId, componentId } = ref;
-    const { userId, rootComponentId, supersets } = input;
     this.logger.log(
-      `User ${user.uid} is finishing component ${componentId} for user ${input.userId} for training ${trainingId}`,
+      `User ${user.uid} is finishing component ${ref.componentId} for training ${ref.trainingId}`,
     );
 
-    if (user.uid !== userId)
-      throw new UnauthorizedException(
-        'You are not allowed to perform this action',
-      );
+    // find refs
+    const { trainingId, componentId } = ref;
+    const training = await this.findOneOrFail(user, ref);
+    const workloads = await this.workloadService.findAllByRef({
+      userId: user.uid,
+      trainingId,
+      componentId,
+    });
 
-    const workloads = await this.workloadService.findAllByTrainingUserComponent(
-      {
-        trainingId: ref.trainingId,
-        userId,
-        componentId,
-      },
+    // validation
+    const exercises = input.supersets.flatMap((s) => s.exercises); // completed exercises
+    const allComponents =
+      this.trainingPlanService.getTrainingComponents(training);
+
+    // mark user as completed (for component and training)
+    const component = allComponents.find((c) => c.id === componentId);
+    if (!component) throw new BadRequestException('Component not found');
+
+    component.completedMembersIds.push(user.uid);
+    if (this.trainingPlanService.isTrainingCompleted(user.uid, allComponents))
+      training.completedMembersIds.push(user.uid);
+
+    // update stats
+    const stats = this.trainingPlanService.calculateTrainingStats(
+      training.stats,
+      exercises,
+      input.rootComponentId,
     );
-
-    const batch = this.firebaseService.firestore.batch();
-
-    const completedExercises = supersets
-      .map((superset) => superset.exercises.map((exercise) => exercise))
-      .flat();
 
     // update workloads
-    for (const workload of workloads) {
-      const docRef = this.workloadService.getDoc(workload);
-      const completedExercise = completedExercises.find(
-        (e) => e.id === workload.exerciseId,
-      );
-      const correctSet = completedExercise.sets.find(
-        (s) => s.setNumber === workload.setNumber,
+    const batch = this.firebaseService.firestore.batch();
+    for (const w of workloads) {
+      const exercise = exercises.find((e) => e.id === w.exerciseId);
+      const set = exercise.sets.find((s) => s.setNumber === w.setNumber);
+
+      const paramValuesL = this.workloadService.parseActualParamValues(
+        set.paramValuesL,
       );
 
-      const {
-        volWork1Value,
-        volWork2Value,
-        volRecValue,
-        intWork1Value,
-        intWork2Value,
-        intRecValue,
-      } = this.getWorkloadValues(correctSet, workload);
+      const paramValuesR = this.workloadService.parseActualParamValues(
+        set.paramValuesR,
+      );
 
-      batch.update(docRef, {
+      const query = this.firebaseService.buildUpdateQuery<Workload>({
         status: SetStatus.COMPLETED,
-        finishedAt: new Date(),
-        volWork1Value: volWork1Value,
-        volWork2Value: volWork2Value,
-        volRecValue: volRecValue,
-        intWork1Value: intWork1Value,
-        intWork2Value: intWork2Value,
-        intRecValue: intRecValue,
+        volWork1ValueL: paramValuesL.volWork1Value,
+        volWork1ValueR: paramValuesR.volWork1Value,
+        volWork2ValueL: paramValuesL.volWork2Value,
+        volWork2ValueR: paramValuesR.volWork2Value,
+        volRecValueL: paramValuesL.volRecValue,
+        volRecValueR: paramValuesR.volRecValue,
+        intWork1ValueL: paramValuesL.intWork1Value,
+        intWork1ValueR: paramValuesR.intWork1Value,
+        intWork2ValueL: paramValuesL.intWork2Value,
+        intWork2ValueR: paramValuesR.intWork2Value,
+        intRecValueL: paramValuesL.intRecValue,
+        intRecValueR: paramValuesR.intRecValue,
       });
+
+      const docRef = this.workloadService.getDoc(w);
+      batch.update(docRef, query);
     }
 
-    const training = await this.findOneOrFail(user, ref);
-
-    // update avg completed workload values
-    for (const completedExercise of completedExercises) {
-      let avgIntensity = 0;
-      let avgVolume = 0;
-
-      const workload = workloads.find(
-        (w) => w.exerciseId === completedExercise.id,
-      );
-
-      for (const set of completedExercise.sets) {
-        const { volWork1Value, intWork1Value } = this.getWorkloadValues(
-          set,
-          workload,
-        );
-
-        if (intWork1Value && volWork1Value) {
-          avgIntensity += parseFloat(intWork1Value);
-          avgVolume += parseFloat(volWork1Value);
-        }
-      }
-
-      if (avgIntensity === 0 || avgVolume === 0) continue;
-
-      avgIntensity = avgIntensity / completedExercise.sets.length;
-      avgVolume = avgVolume / completedExercise.sets.length;
-
-      const foundAvgCompletedWorkload =
-        training.avgCompletedWorkloadValues.find(
-          (w) => w.exerciseId === completedExercise.id,
-        );
-
-      if (!foundAvgCompletedWorkload) {
-        training.avgCompletedWorkloadValues.push({
-          exerciseId: completedExercise.id,
-          rootComponentId,
-          numMembers: 1,
-          avgWorkloadValue: {
-            intensity: avgIntensity,
-            volume: avgVolume,
-          },
-        });
-
-        // we can optimize the training object here by removing the entry with the same exerciseId from avgFutureWorkloadValues if needed
-      } else {
-        foundAvgCompletedWorkload.numMembers++;
-        foundAvgCompletedWorkload.avgWorkloadValue.intensity =
-          (foundAvgCompletedWorkload.avgWorkloadValue.intensity *
-            (foundAvgCompletedWorkload.numMembers - 1) +
-            avgIntensity) /
-          foundAvgCompletedWorkload.numMembers;
-        foundAvgCompletedWorkload.avgWorkloadValue.volume =
-          (foundAvgCompletedWorkload.avgWorkloadValue.volume *
-            (foundAvgCompletedWorkload.numMembers - 1) +
-            avgVolume) /
-          foundAvgCompletedWorkload.numMembers;
-      }
-    }
-
-    const component = [
-      training.warmup,
-      ...training.components,
-      training.cooldown,
-    ].find((c) => c.id === componentId);
-    if (!component) throw new BadRequestException('Component not found');
-    component.completedMembersIds.push(userId);
-
-    const hasCompletedTraining = [
-      training.warmup,
-      ...training.components,
-      training.cooldown,
-    ].every((c) => c.completedMembersIds.includes(userId));
-    if (hasCompletedTraining) {
-      training.completedMembersIds.push(userId);
-    }
-
-    const trainingDocRef = this.trainingRepository.doc(trainingId);
+    const docRef = this.trainingRepository.doc(trainingId);
     const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
       {
         components: training.components,
         completedMembersIds: training.completedMembersIds,
-        avgCompletedWorkloadValues: training.avgCompletedWorkloadValues,
-        warmup: training.warmup,
-        cooldown: training.cooldown,
+        stats: [...(training.stats || []), ...stats],
       },
     );
 
-    batch.update(trainingDocRef, updateTrainingQuery);
+    batch.update(docRef, updateTrainingQuery);
     await batch.commit();
 
     return training;
@@ -1634,36 +1249,6 @@ export class TrainingService {
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 
     return updatedTraining;
-  }
-
-  private getWorkloadValues(set: ExerciseSet, workload: Workload) {
-    const volWork1Value = set.paramValuesL.find(
-      (p) => p.field === ParamType.VolWork1,
-    )?.value;
-    const volWork2Value = set.paramValuesL.find(
-      (p) => p.field === ParamType.VolWork2,
-    )?.value;
-    const volRecValue = set.paramValuesL.find(
-      (p) => p.field === ParamType.VolRec1,
-    )?.value;
-    const intWork1Value = set.paramValuesL.find(
-      (p) => p.field === ParamType.IntWork1,
-    )?.value;
-    const intWork2Value = set.paramValuesL.find(
-      (p) => p.field === ParamType.IntWork2,
-    )?.value;
-    const intRecValue = set.paramValuesL.find(
-      (p) => p.field === ParamType.IntRec1,
-    )?.value;
-
-    return {
-      volWork1Value,
-      volWork2Value,
-      volRecValue,
-      intWork1Value,
-      intWork2Value,
-      intRecValue,
-    };
   }
 
   private async validateOverlap(
