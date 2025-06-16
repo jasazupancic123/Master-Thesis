@@ -3,7 +3,7 @@ import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import {
   TrainingComponent,
-  TrainingComponentMinimal,
+  TrainingComponentInfo,
 } from '@/controller/training/type/training-plan.type';
 import { CopiedFrom } from '@/controller/component/type/copied-from.type';
 import { TrainingService } from '@/controller/training/training.service';
@@ -15,12 +15,12 @@ import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Day } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export async function handleCopyComponentApiRequest(
   input: {
     training: Training;
-    trainingInPeriod: TrainingMinimal;
+    trainingInPeriod: TrainingInfo;
     component: TrainingComponent;
     override?: boolean;
   },
@@ -30,7 +30,7 @@ export async function handleCopyComponentApiRequest(
     allComponents: Component[];
     allExercises: Exercise[];
     allMethods: Method[];
-    setTrainings: SetState<TrainingMinimal[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     setTodaysTrainings: SetState<Training[]>;
     day: Day;
   }
@@ -52,7 +52,7 @@ export async function handleCopyComponentApiRequest(
   const componentInTraining = trainingInPeriod.components.find(
     (c) => c.id === component.id || c.component?.id === component.component?.id
   );
-  let newComponents = [] as TrainingComponentMinimal[];
+  let newComponents = [] as TrainingComponentInfo[];
   if (componentInTraining) {
     // replace the component in the training
     newComponents = [...trainingInPeriod.components].map((c) => {

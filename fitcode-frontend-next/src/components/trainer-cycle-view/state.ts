@@ -18,7 +18,7 @@ import { TrainingComponent } from '@/controller/training/type/training-plan.type
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Method } from '@/controller/method/type/method.type';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export async function handleCreateTraining(
   token: string,
@@ -31,8 +31,8 @@ export async function handleCreateTraining(
   },
   state: {
     router: AppRouterInstance;
-    trainings: TrainingMinimal[];
-    setTrainings: SetState<TrainingMinimal[]>;
+    trainings: TrainingInfo[];
+    setTrainings: SetState<TrainingInfo[]>;
     setCycle: SetStateNullable<Cycle>;
     components: Component[];
     exercises: Exercise[];
@@ -105,7 +105,7 @@ export async function handleAddTrainingComponents(
   input: AddTrainingComponents & { trainingId: string },
   state: {
     router: AppRouterInstance;
-    setTrainings: SetState<TrainingMinimal[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     components: Component[];
     exercises: Exercise[];
     methods: Method[];
@@ -176,7 +176,7 @@ export async function handleDeleteTrainingComponent(
   },
   state: {
     router: AppRouterInstance;
-    setTrainings: SetState<TrainingMinimal[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     components: Component[];
     exercises: Exercise[];
     methods: Method[];

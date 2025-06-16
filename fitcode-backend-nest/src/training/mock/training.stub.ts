@@ -66,7 +66,7 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     name: data?.name || generateRandomName(),
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
-    stats: data?.stats || [],
+    futureStats: data?.futureStats || [],
   };
 }
 

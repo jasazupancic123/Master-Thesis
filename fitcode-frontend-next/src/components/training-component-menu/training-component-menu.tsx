@@ -197,10 +197,9 @@ export default function TrainingComponentMenu(
                 newTraining.components = newTraining.components.filter(
                   (c) => c.id !== trainingComponent.id
                 );
-                newTraining.avgFutureWorkloadValues =
-                  newTraining.avgFutureWorkloadValues.filter(
-                    (c) => c.rootComponentId !== trainingComponent.component?.id
-                  );
+                newTraining.futureStats = newTraining.futureStats.filter(
+                  (c) => c.rootComponentId !== trainingComponent.component?.id
+                );
                 setTraining(newTraining);
                 setTodaysTrainings((prev) =>
                   prev.map((t) => (t.id === training.id ? newTraining : t))

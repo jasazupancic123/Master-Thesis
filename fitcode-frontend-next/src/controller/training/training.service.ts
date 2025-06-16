@@ -9,25 +9,25 @@ import { Training } from './type/training.type';
 import {
   ExerciseSet,
   TrainingComponent,
-  TrainingComponentMinimal,
+  TrainingComponentInfo,
 } from './type/training-plan.type';
 import { IntensityVolumeValues } from './type/intensity-volume-values.type';
 import { Target } from '../target/type/target.type';
 import { Method } from '../method/type/method.type';
-import { TrainingMinimal } from './type/training-minimal.type';
+import { TrainingInfo } from './type/training-info.type';
 import { Subgroup } from './type/subgroup.type';
-import { SubgroupMinimal } from './type/subggroup-minimal.type';
+import { SubgroupInfo } from './type/subggroup-minimal.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training;
   static mapComponents(
-    item: TrainingMinimal,
+    item: TrainingInfo,
     components: Component[]
-  ): TrainingMinimal;
+  ): TrainingInfo;
   static mapComponents(
-    item: Training | TrainingMinimal,
+    item: Training | TrainingInfo,
     components: Component[]
-  ): Training | TrainingMinimal {
+  ): Training | TrainingInfo {
     for (const tc of item.components)
       tc.component = components.find((c) => c.id === tc.id);
 
@@ -38,20 +38,17 @@ export class TrainingService {
   }
 
   private static isTrainingComponent(
-    item: TrainingComponent | TrainingComponentMinimal
+    item: TrainingComponent | TrainingComponentInfo
   ): item is TrainingComponent {
     return 'supersets' in item;
   }
 
   static mapExercises(item: Training, exercises: Exercise[]): Training;
+  static mapExercises(item: TrainingInfo, exercises: Exercise[]): TrainingInfo;
   static mapExercises(
-    item: TrainingMinimal,
+    item: Training | TrainingInfo,
     exercises: Exercise[]
-  ): TrainingMinimal;
-  static mapExercises(
-    item: Training | TrainingMinimal,
-    exercises: Exercise[]
-  ): Training | TrainingMinimal {
+  ): Training | TrainingInfo {
     for (const tc of item.components) {
       if (!this.isTrainingComponent(tc)) continue;
 
@@ -73,11 +70,11 @@ export class TrainingService {
   }
 
   static mapMethods(item: Training, methods: Method[]): Training;
-  static mapMethods(item: TrainingMinimal, methods: Method[]): TrainingMinimal;
+  static mapMethods(item: TrainingInfo, methods: Method[]): TrainingInfo;
   static mapMethods(
-    item: Training | TrainingMinimal,
+    item: Training | TrainingInfo,
     methods: Method[]
-  ): Training | TrainingMinimal {
+  ): Training | TrainingInfo {
     for (const tc of item.components)
       tc.method = methods.find((m) => m.id === tc.methodId);
 
@@ -91,17 +88,17 @@ export class TrainingService {
     methods: Method[]
   ): Training;
   static mapComponentsExercisesMethods(
-    training: TrainingMinimal,
+    training: TrainingInfo,
     components: Component[],
     exercises: Exercise[],
     methods: Method[]
-  ): TrainingMinimal;
+  ): TrainingInfo;
   static mapComponentsExercisesMethods(
-    training: Training | TrainingMinimal,
+    training: Training | TrainingInfo,
     components: Component[],
     exercises: Exercise[],
     methods: Method[]
-  ): Training | TrainingMinimal {
+  ): Training | TrainingInfo {
     return this.mapExercises(
       this.mapComponents(this.mapMethods(training, methods), components),
       exercises
@@ -160,7 +157,7 @@ export class TrainingService {
 
   static convertFromTrainingToTrainingMinimal(
     training: Training
-  ): TrainingMinimal {
+  ): TrainingInfo {
     return {
       id: training.id,
       from: training.from,
@@ -177,8 +174,8 @@ export class TrainingService {
       components: training.components.map((component) =>
         this.convertFromTrainingComponentToTrainingComponentMinimal(component)
       ),
-      avgCompletedWorkloadValues: training.avgCompletedWorkloadValues,
-      avgFutureWorkloadValues: training.avgFutureWorkloadValues,
+      stats: training.stats,
+      futureStats: training.futureStats,
       createdAt: training.createdAt,
       updatedAt: training.updatedAt,
     };
@@ -186,7 +183,7 @@ export class TrainingService {
 
   static convertFromTrainingComponentToTrainingComponentMinimal(
     component: TrainingComponent
-  ): TrainingComponentMinimal {
+  ): TrainingComponentInfo {
     return {
       id: component.id,
       color: component.color,
@@ -205,10 +202,10 @@ export class TrainingService {
 
   static convertFromSubgroupToSubgroupMinimal(
     subgroup: Subgroup
-  ): SubgroupMinimal {
+  ): SubgroupInfo {
     return {
       id: subgroup.id,
-      avgFutureWorkloadValues: subgroup.avgFutureWorkloadValues,
+      futureStats: subgroup.futureStats,
     };
   }
 }

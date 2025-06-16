@@ -16,7 +16,7 @@ import { handleCopyComponentApiRequest } from './state';
 import TrainingComponentCard from '../training-component-card/training-component-card';
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';
 import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
@@ -46,7 +46,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const [heatmapView, setHeatmapView] = useState(false);
   const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
   const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
-    useState<TrainingMinimal | null>(null);
+    useState<TrainingInfo | null>(null);
 
   return (
     <Box my={1} p={0} px={0}>

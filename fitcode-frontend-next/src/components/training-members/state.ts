@@ -46,12 +46,10 @@ export async function handleAddMembersSubgroup(
     const newSubgroup = {
       ...sameSubgroup,
       membersIds: [...sameSubgroup.membersIds, member.uid],
-      avgFutureWorkloadValues: [...sameSubgroup.avgFutureWorkloadValues].map(
-        (value) => ({
-          ...value,
-          numMembers: value.numMembers + 1,
-        })
-      ),
+      futureStats: [...sameSubgroup.futureStats].map((value) => ({
+        ...value,
+        numMembers: value.numMembers + 1,
+      })),
     };
 
     let newSubgroups = [...component.subgroups].map((subgroup) =>
@@ -59,12 +57,10 @@ export async function handleAddMembersSubgroup(
         ? {
             ...subgroup,
             membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-            avgFutureWorkloadValues: [...subgroup.avgFutureWorkloadValues].map(
-              (value) => ({
-                ...value,
-                numMembers: value.numMembers - 1,
-              })
-            ),
+            futureStats: [...subgroup.futureStats].map((value) => ({
+              ...value,
+              numMembers: value.numMembers - 1,
+            })),
           }
         : subgroup
     );
@@ -98,12 +94,10 @@ export async function handleAddMembersSubgroup(
         ? {
             ...subgroup,
             membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-            avgFutureWorkloadValues: [...subgroup.avgFutureWorkloadValues].map(
-              (value) => ({
-                ...value,
-                numMembers: value.numMembers - 1,
-              })
-            ),
+            futureStats: [...subgroup.futureStats].map((value) => ({
+              ...value,
+              numMembers: value.numMembers - 1,
+            })),
           }
         : subgroup
     );
