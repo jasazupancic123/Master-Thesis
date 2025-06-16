@@ -62,8 +62,8 @@ export class TrainingRepository
         to: addMinutes(startOfHour(input.from), input.components.length * 30),
         membersIds: input.membersIds || [],
         copiedFromId: input.copiedFromId || null,
-        avgCompletedWorkloadValues: input.avgCompletedWorkloadValues || [],
-        avgFutureWorkloadValues: input.avgFutureWorkloadValues || [],
+        stats: input.stats || [],
+        futureStats: input.futureStats || [],
         wellness: input.wellness || [],
         completedMembersIds: input.completedMembersIds || [],
         warmup: {
@@ -114,7 +114,7 @@ export class TrainingRepository
           id: s.id,
           name: s.name,
           membersIds: s.membersIds,
-          avgFutureWorkloadValues: s.avgFutureWorkloadValues || [],
+          stats: s.stats || [],
           supersets: s.supersets.map((s) => ({
             color: s.color,
             exercises: s.exercises.map((e) => ({
@@ -122,7 +122,6 @@ export class TrainingRepository
               color: e.color,
               params: { ...e.params },
               sets: e.sets.map((s) => ({ ...s })),
-              periodized: e.periodized,
             })),
           })),
         })),
@@ -133,7 +132,6 @@ export class TrainingRepository
             color: e.color,
             params: { ...e.params },
             sets: e.sets.map((s) => ({ ...s })),
-            periodized: e.periodized,
           })),
         })),
       })),

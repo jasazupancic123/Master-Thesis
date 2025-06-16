@@ -1,10 +1,12 @@
 import { PartialType, PickType } from '@nestjs/mapped-types';
 import { Group } from '../entity/group.entity';
-
-export class UpdateGroupDtoWithId extends PartialType(
-  PickType(Group, ['id', 'name', 'membersIds', 'cycles'] as const),
-) {}
+import { IntersectionType } from '@nestjs/swagger';
 
 export class UpdateGroupDto extends PartialType(
   PickType(Group, ['name', 'membersIds', 'cycles'] as const),
+) {}
+
+export class UpdateGroupDtoWithId extends IntersectionType(
+  PickType(Group, ['id'] as const),
+  UpdateGroupDto,
 ) {}

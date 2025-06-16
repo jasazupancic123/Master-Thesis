@@ -29,7 +29,7 @@ import {
 } from '../../src/component/constant/param.constant';
 import { ParamType, VolType } from '../../src/component/enum/param.enum';
 import { TrainingComponent } from '../../src/training/entity/training-component.entity';
-import { UserWorkloadService } from '../../src/training/service/user-workload.service';
+import { WorkloadService } from '../../src/training/service/workload.service';
 import { SetStatus } from '../../src/training/enum/set-status.enum';
 
 describe('Create Training (e2e)', () => {
@@ -40,7 +40,7 @@ describe('Create Training (e2e)', () => {
   let trainingService: TrainingService;
   let groupService: GroupService;
   let userService: UserService;
-  let workloadService: UserWorkloadService;
+  let workloadService: WorkloadService;
 
   let group: Group;
   let component: Component;
@@ -59,7 +59,7 @@ describe('Create Training (e2e)', () => {
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     userService = moduleFixture.get(UserService);
-    workloadService = moduleFixture.get(UserWorkloadService);
+    workloadService = moduleFixture.get(WorkloadService);
 
     component = await componentService.create(generateComponentStub());
     group = await createGroupWithCycles(groupService, {
@@ -214,7 +214,7 @@ describe('Create Training (e2e)', () => {
       ];
 
       await Promise.all(
-        trainings.map((t) => trainingService.create(trainer, { training: t })),
+        trainings.map((t) => trainingService.create(trainer, t)),
       );
 
       const training = generateTrainingStub({
@@ -259,7 +259,7 @@ describe('Create Training (e2e)', () => {
       ];
 
       await Promise.all(
-        trainings.map((t) => trainingService.create(trainer, { training: t })),
+        trainings.map((t) => trainingService.create(trainer, t)),
       );
 
       const training = generateTrainingStub({
@@ -618,15 +618,16 @@ describe('Create Training (e2e)', () => {
       );
 
       const from = addDays(new Date(), 1);
-      await trainingService.create(trainer, {
-        training: generateTrainingStub({
+      await trainingService.create(
+        trainer,
+        generateTrainingStub({
           groupId: otherGroup.id,
           cycleId: otherGroup.cycles[1].id,
           components: [generateTrainingComponent({ id: component.id })],
           from,
           to: addHours(from, 1),
         }),
-      });
+      );
 
       const exercises = await exerciseService.createMany(trainer, [
         generateExerciseStub({ componentIds: [component.id] }),
@@ -915,8 +916,9 @@ describe('Create Training (e2e)', () => {
     });
 
     it('should fail to add components if user is not owner of the training', async () => {
-      const training = await trainingService.create(trainer, {
-        training: generateTrainingStub({
+      const training = await trainingService.create(
+        trainer,
+        generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
@@ -926,7 +928,7 @@ describe('Create Training (e2e)', () => {
             }),
           ],
         }),
-      });
+      );
 
       const response = await request(app.getHttpServer())
         .post(`/training/${training.id}/component`)
@@ -976,8 +978,9 @@ describe('Create Training (e2e)', () => {
 
   it('should successfully add training components', async () => {
     const newComponent = await componentService.create(generateComponentStub());
-    const training = await trainingService.create(trainer, {
-      training: generateTrainingStub({
+    const training = await trainingService.create(
+      trainer,
+      generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -987,7 +990,7 @@ describe('Create Training (e2e)', () => {
           }),
         ],
       }),
-    });
+    );
 
     const response = await request(app.getHttpServer())
       .post(`/training/${training.id}/component`)
@@ -1003,8 +1006,9 @@ describe('Create Training (e2e)', () => {
 
   it('should successfully delete training component', async () => {
     const newComponent = await componentService.create(generateComponentStub());
-    const training = await trainingService.create(trainer, {
-      training: generateTrainingStub({
+    const training = await trainingService.create(
+      trainer,
+      generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -1022,7 +1026,7 @@ describe('Create Training (e2e)', () => {
           }),
         ],
       }),
-    });
+    );
 
     const response = await request(app.getHttpServer())
       .delete(`/training/${training.id}/component/${newComponent.id}`)
@@ -1034,8 +1038,9 @@ describe('Create Training (e2e)', () => {
   });
 
   it('should delete training when training has no more components', async () => {
-    const training = await trainingService.create(trainer, {
-      training: generateTrainingStub({
+    const training = await trainingService.create(
+      trainer,
+      generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
@@ -1045,7 +1050,7 @@ describe('Create Training (e2e)', () => {
           }),
         ],
       }),
-    });
+    );
 
     const response = await request(app.getHttpServer())
       .delete(`/training/${training.id}/component/${component.id}`)

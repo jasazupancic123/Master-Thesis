@@ -1,25 +1,15 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Superset } from '../entity/superset.entity';
-import { Type, Expose } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { Expose } from 'class-transformer';
+import { PickType } from '@nestjs/mapped-types';
+import { TrainingComponent } from '../entity/training-component.entity';
 
-export class FinishComponentDto {
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  @ApiProperty()
-  userId: string;
-
+export class FinishComponentDto extends PickType(TrainingComponent, [
+  'supersets',
+] as const) {
   @IsString()
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
   rootComponentId: string;
-
-  @ValidateNested({ each: true })
-  @Type(() => Superset)
-  @Expose()
-  @ApiProperty()
-  supersets: Superset[];
 }

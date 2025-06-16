@@ -541,8 +541,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                           newTraining.components.filter(
                                             (c) => c.id !== trainingComponent.id
                                           );
-                                        newTraining.avgFutureWorkloadValues =
-                                          newTraining.avgFutureWorkloadValues.filter(
+                                        newTraining.futureStats =
+                                          newTraining.futureStats.filter(
                                             (c) =>
                                               c.rootComponentId !==
                                               trainingComponent.component?.id
@@ -749,8 +749,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                                   newTraining.components.filter(
                                     (c) => c.id !== trainingComponent.id
                                   );
-                                newTraining.avgFutureWorkloadValues =
-                                  newTraining.avgFutureWorkloadValues.filter(
+                                newTraining.futureStats =
+                                  newTraining.futureStats.filter(
                                     (c) =>
                                       c.rootComponentId !==
                                       trainingComponent.component?.id

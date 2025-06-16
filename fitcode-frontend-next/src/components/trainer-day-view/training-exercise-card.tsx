@@ -143,9 +143,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         // set new avg future workload values
         let newAvgFutureWorkloadValues = undefined;
         if (intensityVolumeValue) {
-          newAvgFutureWorkloadValues = [
-            ...selectedSubgroup.subgroup.avgFutureWorkloadValues,
-          ];
+          newAvgFutureWorkloadValues = [...selectedSubgroup.subgroup.stats];
           const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
             (aw) => aw.exerciseId === exercise.id
           );
@@ -154,12 +152,13 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               exerciseId: exercise.id,
               rootComponentId: component.component?.id || '',
               numMembers: selectedSubgroup.subgroup.membersIds.length,
-              avgWorkloadValue: intensityVolumeValue!,
+              ...intensityVolumeValue!,
             });
           } else {
             foundAvgWorkloadValue.numMembers =
               selectedSubgroup.subgroup.membersIds.length;
-            foundAvgWorkloadValue.avgWorkloadValue = intensityVolumeValue!;
+            foundAvgWorkloadValue.intensity = intensityVolumeValue!.intensity;
+            foundAvgWorkloadValue.volume = intensityVolumeValue!.volume;
           }
         }
 
@@ -167,7 +166,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           ? {
               ...selectedSubgroup.subgroup,
               supersets: newSupersets,
-              avgFutureWorkloadValues: newAvgFutureWorkloadValues,
+              stats: newAvgFutureWorkloadValues,
             }
           : {
               ...selectedSubgroup.subgroup,
@@ -219,7 +218,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         // set new avg future workload values
         let newAvgFutureWorkloadValues = undefined;
         if (intensityVolumeValue) {
-          newAvgFutureWorkloadValues = [...training.avgFutureWorkloadValues];
+          newAvgFutureWorkloadValues = [...training.futureStats];
           const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
             (aw) => aw.exerciseId === exercise.id
           );
@@ -239,11 +238,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               exerciseId: exercise.id,
               rootComponentId: component.component?.id || '',
               numMembers: numberOfMainGroupMembers,
-              avgWorkloadValue: intensityVolumeValue!,
+              ...intensityVolumeValue!,
             });
           } else {
             foundAvgWorkloadValue.numMembers = numberOfMainGroupMembers;
-            foundAvgWorkloadValue.avgWorkloadValue = intensityVolumeValue!;
+            foundAvgWorkloadValue.intensity = intensityVolumeValue!.intensity;
+            foundAvgWorkloadValue.volume = intensityVolumeValue!.volume;
           }
         }
 
@@ -251,7 +251,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           ? {
               ...training,
               components: updatedComponents,
-              avgFutureWorkloadValues: newAvgFutureWorkloadValues,
+              futereStats: newAvgFutureWorkloadValues,
             }
           : { ...training, components: updatedComponents };
         setTraining(newTraining);

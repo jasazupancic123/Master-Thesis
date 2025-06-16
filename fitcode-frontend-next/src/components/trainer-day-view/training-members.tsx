@@ -128,7 +128,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     );
 
     setSubgroups([
-      DEFAULT_SUBGROUP(availableMembers, training.avgFutureWorkloadValues),
+      DEFAULT_SUBGROUP(availableMembers, training.futureStats),
       ...subgroups,
     ]);
   }, [training, component]);
@@ -153,15 +153,13 @@ export default function TrainingMembers(props: TrainingMembersProps) {
       return toast.error('Subgroup for this member already exists');
     else if (sameSubgroup && !sameSubgroup.membersIds.includes(member.uid)) {
       // subgroup already exists, add the member to it
-      const newSubgroup = {
+      const newSubgroup: Subgroup = {
         ...sameSubgroup,
         membersIds: [...sameSubgroup.membersIds, member.uid],
-        avgFutureWorkloadValues: [...sameSubgroup.avgFutureWorkloadValues].map(
-          (value) => ({
-            ...value,
-            numMembers: value.numMembers + 1,
-          })
-        ),
+        stats: [...sameSubgroup.stats].map((value) => ({
+          ...value,
+          numMembers: value.numMembers + 1,
+        })),
       };
 
       let newSubgroups = [...component.subgroups].map((subgroup) =>
@@ -169,9 +167,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           ? {
               ...subgroup,
               membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-              avgFutureWorkloadValues: [
-                ...subgroup.avgFutureWorkloadValues,
-              ].map((value) => ({
+              stats: [...subgroup.stats].map((value) => ({
                 ...value,
                 numMembers: value.numMembers - 1,
               })),
@@ -208,9 +204,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           ? {
               ...subgroup,
               membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-              avgFutureWorkloadValues: [
-                ...subgroup.avgFutureWorkloadValues,
-              ].map((value) => ({
+              stats: [...subgroup.stats].map((value) => ({
                 ...value,
                 numMembers: value.numMembers - 1,
               })),

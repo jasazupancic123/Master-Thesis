@@ -46,7 +46,7 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { TrainingService } from '@/controller/training/training.service';
-import { AverageWorkloadValues } from '@/controller/training/type/average-workload-values.type';
+import { GroupWorkloadStats } from '@/controller/training/type/average-workload-values.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 
 export default function Supersets(props: SupersetsProps) {
@@ -809,25 +809,23 @@ export default function Supersets(props: SupersetsProps) {
               );
 
             // insert future workload data
-            const avgFutureWorkloadValues = [
-              ...training.avgFutureWorkloadValues,
-            ];
+            const futureStats = [...training.futureStats];
             supersets.map((s) =>
               s.exercises.map((e) => {
                 const { intensity, volume } =
                   TrainingService.getIntensityVolumeValues(e.sets);
-                const found = avgFutureWorkloadValues.find(
-                  (v) => v.exerciseId === e.id
-                );
+                const found = futureStats.find((v) => v.exerciseId === e.id);
                 if (found) {
                   found.numMembers = numberOfAvailableMembers;
-                  found.avgWorkloadValue = { intensity, volume };
+                  found.intensity = intensity;
+                  found.volume = volume;
                 } else {
-                  avgFutureWorkloadValues.push({
+                  futureStats.push({
                     exerciseId: e.id,
                     rootComponentId: component.component?.id || '',
                     numMembers: numberOfAvailableMembers,
-                    avgWorkloadValue: { intensity, volume },
+                    intensity,
+                    volume,
                   });
                 }
               })
@@ -839,7 +837,7 @@ export default function Supersets(props: SupersetsProps) {
             const newTraining = {
               ...training,
               components: updatedComponents,
-              avgFutureWorkloadValues,
+              futureStats,
             };
             setTraining(newTraining);
             const newFilteredTrainings = [...filteredTrainings].map((t) =>
@@ -849,26 +847,24 @@ export default function Supersets(props: SupersetsProps) {
             setOpenAddExerciseModal(false);
           } else {
             // update subgroup's future workload values
-            const avgFutureWorkloadValues = [
-              ...selectedSubgroup.subgroup.avgFutureWorkloadValues,
-            ];
+            const stats = [...selectedSubgroup.subgroup.stats];
             supersets.map((s) =>
               s.exercises.map((e) => {
                 const { intensity, volume } =
                   TrainingService.getIntensityVolumeValues(e.sets);
-                const found = avgFutureWorkloadValues.find(
-                  (v) => v.exerciseId === e.id
-                );
+                const found = stats.find((v) => v.exerciseId === e.id);
                 if (found) {
                   found.numMembers =
                     selectedSubgroup.subgroup!.membersIds.length;
-                  found.avgWorkloadValue = { intensity, volume };
+                  found.intensity = intensity;
+                  found.volume = volume;
                 } else {
-                  avgFutureWorkloadValues.push({
+                  stats.push({
                     exerciseId: e.id,
                     rootComponentId: component.component?.id || '',
                     numMembers: selectedSubgroup.subgroup!.membersIds.length,
-                    avgWorkloadValue: { intensity, volume },
+                    intensity,
+                    volume,
                   });
                 }
               })
@@ -878,7 +874,7 @@ export default function Supersets(props: SupersetsProps) {
             const updatedSubgroup = {
               ...selectedSubgroup.subgroup,
               supersets: [...supersets],
-              avgFutureWorkloadValues,
+              stats,
             };
 
             const updatedSubgroups = [...component.subgroups];

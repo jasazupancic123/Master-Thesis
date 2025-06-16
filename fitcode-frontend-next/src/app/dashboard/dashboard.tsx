@@ -33,7 +33,7 @@ export default function Dashboard() {
     // fetch groups when selected institution changes
     if (!selectedInstitution || selectedInstitution.groups) return;
     const fetchGroups = async () => {
-      const groups = await GroupController.findByInstitutionId(
+      const groups = await GroupController.findAllByInstitution(
         token,
         selectedInstitution.id
       );

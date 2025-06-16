@@ -20,8 +20,8 @@ export default async function Page() {
   const role = profile.customClaims.role[0];
   const users = await UserController.findAll(token);
 
-  const institutions = InstitutionService.mapAllUsers(
-    await InstitutionController.findAllByUser(token),
+  const institutions = InstitutionService.mapUsers(
+    await InstitutionController.findAll(token),
     users
   );
 
@@ -41,10 +41,11 @@ export default async function Page() {
   }
 
   const selectedInstitution = institutions[0];
-  const groups = await GroupController.findByInstitutionId(
+  const groups = await GroupController.findAllByInstitution(
     token,
     selectedInstitution.id
   );
+
   selectedInstitution.groups = groups;
 
   return (

@@ -13,6 +13,9 @@ import { RequestUser } from '../common/decorator/request-user.decorator';
 import { Auth } from '../common/decorator/auth.decorator';
 import { InstitutionService } from './service/institution.service';
 import { CreateInstitutionDto } from './dto/create-insitution.dto';
+import { UserRole } from '../user/enum/user-role.enum';
+import { AddAthletesDto } from './dto/add-athletes.dto';
+import { AddTrainersDto } from './dto/add-trainers.dto';
 
 @Controller('institution')
 export class InstitutionController {
@@ -24,45 +27,60 @@ export class InstitutionController {
     return this.institutionService.findAll(user);
   }
 
-  @Get('/user')
-  @Auth()
-  async findAllByUser(@RequestUser() user: User) {
-    return this.institutionService.findAllByUser(user);
-  }
-
   @Get(':institutionId')
-  @Auth()
-  async findById(
-    @RequestUser() user: User,
-    @Param('institutionId') institutionId: string,
-  ) {
-    return this.institutionService.findOneOrFail(user, { institutionId });
+  @Auth([UserRole.ADMIN])
+  async findById(@Param('institutionId') institutionId: string) {
+    return this.institutionService.findOneOrFail({ institutionId });
   }
 
   @Post()
-  @Auth()
+  @Auth([UserRole.ADMIN])
   async create(@RequestUser() user: User, @Body() body: CreateInstitutionDto) {
     return this.institutionService.create(user, body);
   }
 
   @Post(':institutionId/athletes')
-  @Auth()
+  @Auth([UserRole.TRAINER])
   async addAthletes(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: { athleteIds: string[] },
+    @Body() body: AddAthletesDto,
   ) {
     return this.institutionService.addAthletes(user, { institutionId }, body);
   }
 
-  @Post(':institutionId/remove/athletes')
-  @Auth()
+  @Post(':institutionId/athletes/delete')
+  @Auth([UserRole.TRAINER])
   async removeAthletes(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
-    @Body() body: { athleteIds: string[] },
+    @Body() body: AddAthletesDto,
   ) {
     return this.institutionService.removeAthletes(
+      user,
+      { institutionId },
+      body,
+    );
+  }
+
+  @Post(':institutionId/trainers')
+  @Auth([UserRole.MANAGER])
+  async addTrainers(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Body() body: AddTrainersDto,
+  ) {
+    return this.institutionService.addTrainers(user, { institutionId }, body);
+  }
+
+  @Post(':institutionId/trainers/delete')
+  @Auth([UserRole.MANAGER])
+  async removeTrainers(
+    @RequestUser() user: User,
+    @Param('institutionId') institutionId: string,
+    @Body() body: AddTrainersDto,
+  ) {
+    return this.institutionService.removeTrainers(
       user,
       { institutionId },
       body,
