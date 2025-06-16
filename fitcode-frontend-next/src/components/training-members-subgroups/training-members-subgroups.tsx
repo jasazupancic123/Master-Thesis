@@ -40,8 +40,8 @@ export default function TrainingMembersSubgroup(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
-    useGroup();
+  const { setDetectedChanges } = useGroup();
+  const { setTodaysTrainings } = useTrainerDayViewContext();
 
   const {
     members: groupMembers,
@@ -157,10 +157,9 @@ export default function TrainingMembersSubgroup(
                         {
                           training,
                           setTraining,
+                          setTodaysTrainings,
                           component,
                           setComponent,
-                          filteredTrainings,
-                          setFilteredTrainings,
                           setDetectedChanges,
                         }
                       );

@@ -19,6 +19,7 @@ export interface TrainingCardProps {
 export interface TrainingComponentProps {
   training: Training;
   trainingComponent: TrainingComponent;
+  day: Day;
 }
 
 export interface AddExerciseFormProps {
@@ -35,8 +36,6 @@ export interface TrainingExerciseCardProps {
   chartView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
-  supersets: Superset[],
-  setSupersetsWithAdd: Dispatch<SetStateAction<Superset[]>>;
 }
 
 export interface SubgroupProps {

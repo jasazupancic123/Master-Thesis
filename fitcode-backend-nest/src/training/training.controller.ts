@@ -32,6 +32,7 @@ import { Workload } from './entity/workload.entity';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { FindWorkloadsByExercises } from './dto/find-workload.dto';
 import { FindByDayDto } from './dto/find-by-day.dto';
+import { CopyComponentDto } from './dto/copy-component.dto';
 
 @Controller('training')
 export class TrainingController {
@@ -48,12 +49,16 @@ export class TrainingController {
   ) {
     filter = this.commonService.object.clean(filter);
 
-    return this.trainingService.findAll(user, {
-      groupId: filter.groupId,
-      cycleId: filter.cycleId,
-      ...(filter.from && { from: filter.from }),
-      ...(filter.to && { to: filter.to }),
-    });
+    return this.trainingService.findAll(
+      user,
+      {
+        groupId: filter.groupId,
+        cycleId: filter.cycleId,
+        ...(filter.from && { from: filter.from }),
+        ...(filter.to && { to: filter.to }),
+      },
+      filter.minimal,
+    );
   }
 
   @Post('/:groupId/day')
@@ -105,6 +110,15 @@ export class TrainingController {
     body: CreateTrainingDto,
   ) {
     return await this.trainingService.create(user, body);
+  }
+
+  @Post('/copy/component')
+  async copyComponent(
+    @RequestUser() user: User,
+    @Body()
+    body: CopyComponentDto,
+  ) {
+    return await this.trainingService.copyComponent(user, body);
   }
 
   @Post('/periodize/trainings')

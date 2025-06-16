@@ -21,6 +21,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import FloatingButton from '@/components/floating-button/floating-button';
 import { handleSaveGroup } from '../../app/groups/[group_id]/state';
 import { Target } from '@/controller/target/type/target.type';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 export default function TrainerCycleView() {
   const {
@@ -32,7 +33,6 @@ export default function TrainerCycleView() {
     cycle,
     setCycle,
     setTrainings,
-    setFilteredTrainings,
     setDateFrom,
     setDateTo,
     setGroup,
@@ -202,7 +202,6 @@ export default function TrainerCycleView() {
                           router,
                           components,
                           setTrainings,
-                          setFilteredTrainings,
                           exercises: allExercises,
                           selectedTargets,
                           methods,
@@ -216,7 +215,6 @@ export default function TrainerCycleView() {
                         {
                           router,
                           setTrainings,
-                          setFilteredTrainings,
                           components,
                           exercises: allExercises,
                           methods,

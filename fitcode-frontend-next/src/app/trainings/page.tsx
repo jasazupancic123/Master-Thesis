@@ -9,6 +9,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import TrainingPage from '../../sites/training.page';
 import { MethodController } from '@/controller/method/method.controller';
+import { Training } from '@/controller/training/type/training.type';
 
 export default async function Page() {
   // fetch data
@@ -29,7 +30,7 @@ export default async function Page() {
 
   if ([UserRole.ADMIN, UserRole.MANAGER].includes(role)) return notFound();
 
-  const mappedTrainings = trainings.map((t) => {
+  const mappedTrainings = (trainings as Training[]).map((t) => {
     t = TrainingService.mapComponentsExercisesMethods(
       t,
       components,

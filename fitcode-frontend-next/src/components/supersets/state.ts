@@ -28,9 +28,7 @@ export function handleAddExerciseToSupersetComponent(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
-    setTrainings: SetState<Training[]>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
+    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: {
@@ -42,8 +40,8 @@ export function handleAddExerciseToSupersetComponent(
       index: number;
     } | null>;
     setSearch: SetState<string>;
-    supersetsWithAdd: Superset[];
-    setSupersetsWithAdd: SetState<Superset[]>;
+    supersets: Superset[];
+    setSupersets: SetState<Superset[]>;
     setOpenAddExerciseModal: SetState<boolean>;
     setDetectedChanges: SetState<boolean>;
   }
@@ -53,15 +51,13 @@ export function handleAddExerciseToSupersetComponent(
   const {
     training,
     setTraining,
-    setTrainings,
-    filteredTrainings,
-    setFilteredTrainings,
+    setTodaysTrainings,
     component,
     setComponent,
     selectedSubgroup,
     setSearch,
-    supersetsWithAdd,
-    setSupersetsWithAdd,
+    supersets: supersetsState,
+    setSupersets: setSupersetsState,
     setOpenAddExerciseModal,
     setDetectedChanges,
     setSelectedSubgroup,
@@ -70,10 +66,10 @@ export function handleAddExerciseToSupersetComponent(
   setSearch('');
   // get only new exercises
   const exercisesIdsToAdd =
-    supersetsWithAdd && supersetsWithAdd.length
+    supersetsState && supersetsState.length
       ? [...selectedExercisesIds].filter(
           (id) =>
-            !supersetsWithAdd
+            !supersetsState
               .map((s) => s.exercises.map((e) => e.id))
               .flat()
               .includes(id)
@@ -165,28 +161,16 @@ export function handleAddExerciseToSupersetComponent(
         supersets: [...supersets],
       };
 
-      let updatedTraining = { ...training };
+      let updatedTraining =
+        component.id === WARMUP_ID
+          ? { ...training, warmup: updatedWOrC }
+          : { ...training, cooldown: updatedWOrC };
 
-      if (component.id === WARMUP_ID) {
-        updatedTraining = {
-          ...updatedTraining,
-          warmup: updatedWOrC,
-        };
-      } else {
-        updatedTraining = {
-          ...updatedTraining,
-          cooldown: updatedWOrC,
-        };
-      }
-
-      const newFilteredTrainings = [...filteredTrainings].map((t) =>
-        t.id === updatedTraining.id ? updatedTraining : t
-      );
+      setComponent(updatedWOrC);
       setTraining(updatedTraining);
-      setTrainings((prev) =>
+      setTodaysTrainings((prev) =>
         prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
       );
-      setFilteredTrainings(newFilteredTrainings);
       setOpenAddExerciseModal(false);
       setDetectedChanges(true);
     } else {
@@ -203,26 +187,16 @@ export function handleAddExerciseToSupersetComponent(
         subgroups: updatedSubgroups,
       };
 
-      let updatedTraining = { ...training };
-      if (component.id === WARMUP_ID) {
-        updatedTraining = {
-          ...updatedTraining,
-          warmup: updatedWOrC,
-        };
-      } else {
-        updatedTraining = {
-          ...updatedTraining,
-          cooldown: updatedWOrC,
-        };
-      }
+      let updatedTraining =
+        component.id === WARMUP_ID
+          ? { ...training, warmup: updatedWOrC }
+          : { ...training, cooldown: updatedWOrC };
+
+      setComponent(updatedWOrC);
       setTraining(updatedTraining);
-      const newFilteredTrainings = [...filteredTrainings].map((t) =>
-        t.id === updatedTraining.id ? updatedTraining : t
-      );
-      setTrainings((prev) =>
+      setTodaysTrainings((prev) =>
         prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
       );
-      setFilteredTrainings(newFilteredTrainings);
       setOpenAddExerciseModal(false);
       setDetectedChanges(true);
     }
@@ -291,11 +265,6 @@ export function handleAddExerciseToSupersetComponent(
       supersets: [...supersets],
     };
 
-    const updatedComponent = {
-      ...component,
-      supersets: [...supersets],
-    };
-
     const numberOfAvailableMembers =
       training.membersIds.length -
       component.subgroups.reduce(
@@ -328,22 +297,15 @@ export function handleAddExerciseToSupersetComponent(
     );
 
     setDetectedChanges(true);
-    setSupersetsWithAdd([...supersets]);
-    setComponent({ ...updatedComponent });
     const newTraining = {
       ...training,
       components: updatedComponents,
       avgFutureWorkloadValues,
     };
 
-    setTraining(newTraining);
-    const newFilteredTrainings = [...filteredTrainings].map((t) =>
-      t.id === newTraining.id ? newTraining : t
-    );
-    setTrainings((prev) =>
+    setTodaysTrainings((prev) =>
       prev.map((t) => (t.id === newTraining.id ? newTraining : t))
     );
-    setFilteredTrainings(newFilteredTrainings);
     setOpenAddExerciseModal(false);
   } else {
     // update subgroup's future workload values
@@ -390,8 +352,6 @@ export function handleAddExerciseToSupersetComponent(
 
     setDetectedChanges(true);
     setOpenAddExerciseModal(false);
-    setComponent({ ...component, subgroups: updatedSubgroups });
-    setTraining({ ...training, components: updatedComponents });
     setSelectedSubgroup({
       index: selectedSubgroup.index,
       subgroup: updatedSubgroup,

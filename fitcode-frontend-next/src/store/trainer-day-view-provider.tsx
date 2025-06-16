@@ -10,7 +10,10 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import {
+  Superset,
+  TrainingComponent,
+} from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
@@ -66,9 +69,18 @@ export function TrainerDayViewProvider(
   const [customAthleteWorkloads, setCustomAthleteWorkloads] = useState<
     Workload[]
   >([]);
+  const [supersets, setSupersets] = useState<Superset[]>([]);
 
   const isSettingAthleteWorkloads = useRef(false);
   const previousSelectedAthlete = useRef<User | undefined>(undefined);
+
+  useEffect(() => {
+    if (selectedSubgroup?.subgroup)
+      setSupersets(selectedSubgroup.subgroup.supersets);
+    else if (component) {
+      setSupersets(component.supersets);
+    } else setSupersets([]);
+  }, [selectedSubgroup, selectedSubgroup?.subgroup, component]);
 
   useEffect(() => {
     if (selectedAthlete) {
@@ -133,6 +145,8 @@ export function TrainerDayViewProvider(
     setTodaysTrainings,
     component,
     setComponent,
+    supersets,
+    setSupersets,
     members,
     selectedSubgroup,
     setSelectedSubgroup,

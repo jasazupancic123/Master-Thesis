@@ -30,12 +30,10 @@ import TrainingComponentLayout from '../training-component-layout/training-compo
 const commonService = CommonService.instance;
 
 export default function TrainingCard(props: TrainingCardProps) {
-  const { training, period } = props;
   const {
     token,
     trainings,
     cycle,
-    setFilteredTrainings,
     setTrainings,
     components,
     exercises,
@@ -44,12 +42,15 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   const {
     training: selectedTraining,
+    setTodaysTrainings,
     selectedSubgroup,
     setSelectedSubgroup,
     component,
     selectedAthlete,
     setSelectedAthlete,
   } = useTrainerDayViewContext();
+
+  const { training, period, day } = props;
 
   const screenSize = useScreenSize();
   const router = useRouter();
@@ -167,18 +168,21 @@ export default function TrainingCard(props: TrainingCardProps) {
               key={0}
               training={training}
               trainingComponent={training.warmup}
+              day={day}
             />
             {training.components.map((trainingComponent, i) => (
               <TrainingComponentLayout
                 key={i + 1}
                 training={training}
                 trainingComponent={trainingComponent}
+                day={day}
               />
             ))}
             <TrainingComponentLayout
               key={training.components.length + 1}
               training={training}
               trainingComponent={training.cooldown}
+              day={day}
             />
           </>
         )}
@@ -224,7 +228,8 @@ export default function TrainingCard(props: TrainingCardProps) {
                       training,
                       cycle: cycle!,
                       setTrainings,
-                      setFilteredTrainings,
+                      setTodaysTrainings,
+                      day,
                       components,
                       exercises,
                       methods,
@@ -273,7 +278,8 @@ export default function TrainingCard(props: TrainingCardProps) {
                       training,
                       cycle: cycle!,
                       setTrainings,
-                      setFilteredTrainings,
+                      setTodaysTrainings,
+                      day,
                       components,
                       exercises,
                       methods,

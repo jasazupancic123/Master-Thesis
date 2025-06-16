@@ -16,6 +16,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
 import { addMinutes } from 'date-fns';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 const commonService = CommonService.instance;
 
@@ -27,9 +28,8 @@ export default function TrainerWeekView() {
     exercises,
     methods,
     cycle,
-    filteredTrainings,
+    trainings,
     setTrainings,
-    setFilteredTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
@@ -104,7 +104,7 @@ export default function TrainerWeekView() {
         >
           {weeks[index].map(({ date }, i) => {
             const day = dayjs(date);
-            const filtered = filteredTrainings.filter((t) =>
+            const filtered = trainings.filter((t) =>
               commonService.date.isBetween(day, dayjs(t.from), dayjs(t.to))
             );
 
@@ -161,12 +161,6 @@ export default function TrainerWeekView() {
                                   exercises,
                                   methods
                                 );
-
-                              setFilteredTrainings((prev) =>
-                                prev.map((t) =>
-                                  t.id === training.id ? mapped : t
-                                )
-                              );
 
                               setTrainings((prev) =>
                                 prev.map((t) =>

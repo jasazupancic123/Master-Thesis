@@ -30,8 +30,6 @@ interface SupersetExerciseProps {
   k: number;
   selectedExercise: TrainingExercise | null;
   setSelectedExercise: SetState<TrainingExercise | null>;
-  supersetsWithAdd: Superset[];
-  setSupersetsWithAdd: SetState<Superset[]>;
   menuExercise: TrainingExercise | null;
   setMenuExercise: SetState<TrainingExercise | null>;
   anchorEl: HTMLElement | null;
@@ -49,8 +47,6 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     k,
     selectedExercise,
     setSelectedExercise,
-    supersetsWithAdd,
-    setSupersetsWithAdd,
     menuExercise,
     setMenuExercise,
     anchorEl,
@@ -62,8 +58,8 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
-    useGroup();
+  const { setDetectedChanges } = useGroup();
+  const { supersets, setTodaysTrainings } = useTrainerDayViewContext();
 
   const {
     training,
@@ -181,14 +177,12 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                       {
                         training,
                         setTraining,
+                        setTodaysTrainings,
+                        supersets,
                         component,
                         setComponent,
                         selectedSubgroup,
                         setSelectedSubgroup,
-                        supersetsWithAdd,
-                        setSupersetsWithAdd,
-                        filteredTrainings,
-                        setFilteredTrainings,
                         setDetectedChanges,
                       }
                     );
@@ -215,8 +209,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
               exercise={exercise}
               selectedExercise={selectedExercise}
               setSelectedExercise={setSelectedExercise}
-              supersets={supersetsWithAdd}
-              setSupersetsWithAdd={setSupersetsWithAdd}
+              supersets={supersets}
               superior={{
                 row: i === 0,
                 column: k === 0,

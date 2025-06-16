@@ -16,24 +16,28 @@ import { handleCopyComponentApiRequest } from './state';
 import TrainingComponentCard from '../training-component-card/training-component-card';
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';
 import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { training, trainingComponent } = props;
+  const { training, trainingComponent, day } = props;
 
   const {
     token,
     filter,
     setTrainings,
-    setFilteredTrainings,
     components: allComponents,
     exercises: allExercises,
     methods: allMethods,
   } = useGroup();
 
-  const { training: selectedTraining, component } = useTrainerDayViewContext();
+  const {
+    training: selectedTraining,
+    component,
+    setTodaysTrainings,
+  } = useTrainerDayViewContext();
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
@@ -42,7 +46,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const [heatmapView, setHeatmapView] = useState(false);
   const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
   const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
-    useState<Training | null>(null);
+    useState<TrainingMinimal | null>(null);
 
   return (
     <Box my={1} p={0} px={0}>
@@ -99,6 +103,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               >
                 {trainingComponent &&
                   component &&
+                  selectedTraining?.id === training.id &&
                   trainingComponent.id === component.id && (
                     <TrainingComponentExpanded
                       training={training}
@@ -169,6 +174,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           setOpenOverwriteModal={setOpenOverwriteModal}
           setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           copyComponent={true}
+          day={day}
         />
       </MyModal>
 
@@ -214,6 +220,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               training,
               trainingInPeriod: trainingInPeriodForModal,
               component: trainingComponent,
+              override: true,
             },
             {
               token,
@@ -222,7 +229,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               allExercises,
               allMethods,
               setTrainings,
-              setFilteredTrainings,
+              setTodaysTrainings,
+              day,
             }
           );
           setTrainingInPeriodForModal(null);

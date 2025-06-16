@@ -5,7 +5,6 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import {
   ExerciseSet,
-  Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
@@ -26,8 +25,6 @@ interface TrainingExerciseCardCollapsedSetsProps {
   setExercise: SetState<TrainingExercise>;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
-  supersets: Superset[];
-  setSupersetsWithAdd: SetState<Superset[]>;
   setsNumber: number;
   setSetsNumber: SetState<number>;
   i: number | undefined;
@@ -44,8 +41,6 @@ export default function TrainingExerciseCardCollapsedSets(
     setExercise,
     expandedSetsView,
     setExpandedSetsView,
-    supersets,
-    setSupersetsWithAdd,
     setsNumber,
     setSetsNumber,
     i,
@@ -57,16 +52,14 @@ export default function TrainingExerciseCardCollapsedSets(
     component,
     selectedSubgroup,
     setSelectedSubgroup,
-    setComponent,
-    setTraining,
     selectedAthlete,
     selectedAthleteWorkloads,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
   } = useTrainerDayViewContext();
 
-  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
-    useGroup();
+  const { setDetectedChanges } = useGroup();
+  const { supersets, setTodaysTrainings } = useTrainerDayViewContext();
 
   if (!training || !component) return null;
 
@@ -113,6 +106,7 @@ export default function TrainingExerciseCardCollapsedSets(
 
       <Grid2 size={10}>
         <Box
+          key={exercise.id}
           display="flex"
           width="100%"
           justifyContent="center"
@@ -120,65 +114,66 @@ export default function TrainingExerciseCardCollapsedSets(
           gap={1}
         >
           <Box
+            key="exercise-title"
             display="flex"
             flexDirection="column"
             gap={1}
             justifyContent="end"
             height={80}
           >
-            <LeftRightExerciseText title="L" />
-            <LeftRightExerciseText title="R" />
+            <LeftRightExerciseText key="L" title="L" />
+            <LeftRightExerciseText key="R" title="R" />
           </Box>
-          {exercise.params.map((param, i) => {
-            /* find the custom workload for the selected athlete if selected, otherwise
+          {Array.isArray(exercise.params) &&
+            exercise.params.map((param, i) => {
+              /* find the custom workload for the selected athlete if selected, otherwise
                 get the value from the exercise sets */
 
-            const { valueL, valueR } = getLAndRValues(
-              {
-                set: exercise.sets[0],
-                param,
-                setIndex: 0,
-                paramIndex: i - 1,
-              },
-              {
-                training,
-                exercise,
-                selectedAthleteWorkloads,
-                customAthleteWorkloads,
-                selectedAthlete,
-              }
-            );
-
-            if (!valueL || !valueR) {
-              toast.error(`Invalid parameter field: ${param.field}`);
-              return null;
-            }
-
-            let min, max;
-            const attributeRange = exercise.attributeRanges.find(
-              (ar) => ar.field === param.field
-            );
-            if (attributeRange) {
-              const foundInOptions = attributeRange.options?.find(
-                (option) => option.field === valueL.selected
-              );
-              if (foundInOptions) {
-                if (foundInOptions.field === VolWorkSetType.Set) {
-                  if (foundInOptions.min && setsNumber < foundInOptions.min)
-                    setSetsNumber(foundInOptions.min);
-                  if (foundInOptions.max && setsNumber > foundInOptions.max)
-                    setSetsNumber(foundInOptions.max);
+              const { valueL, valueR } = getLAndRValues(
+                {
+                  set: exercise.sets[0],
+                  param,
+                  setIndex: 0,
+                  paramIndex: i - 1,
+                },
+                {
+                  training,
+                  exercise,
+                  selectedAthleteWorkloads,
+                  customAthleteWorkloads,
+                  selectedAthlete,
                 }
-                min = foundInOptions.min;
-                max = foundInOptions.max;
-              } else {
-                min = attributeRange.min;
-                max = attributeRange.max;
-              }
-            }
+              );
 
-            return (
-              <>
+              if (!valueL || !valueR) {
+                toast.error(`Invalid parameter field: ${param.field}`);
+                return null;
+              }
+
+              let min, max;
+              const attributeRange = exercise.attributeRanges.find(
+                (ar) => ar.field === param.field
+              );
+              if (attributeRange) {
+                const foundInOptions = attributeRange.options?.find(
+                  (option) => option.field === valueL.selected
+                );
+                if (foundInOptions) {
+                  if (foundInOptions.field === VolWorkSetType.Set) {
+                    if (foundInOptions.min && setsNumber < foundInOptions.min)
+                      setSetsNumber(foundInOptions.min);
+                    if (foundInOptions.max && setsNumber > foundInOptions.max)
+                      setSetsNumber(foundInOptions.max);
+                  }
+                  min = foundInOptions.min;
+                  max = foundInOptions.max;
+                } else {
+                  min = attributeRange.min;
+                  max = attributeRange.max;
+                }
+              }
+
+              return (
                 <Box
                   key={param.field}
                   flexBasis={(100 / exercise.params.length).toString() + '%'}
@@ -284,12 +279,8 @@ export default function TrainingExerciseCardCollapsedSets(
                         {
                           training,
                           component,
-                          setTraining,
-                          setComponent,
+                          setTodaysTrainings,
                           supersets,
-                          setSupersetsWithAdd,
-                          filteredTrainings,
-                          setFilteredTrainings,
                           setDetectedChanges,
                           selectedSubgroup,
                           setSelectedSubgroup,
@@ -400,12 +391,8 @@ export default function TrainingExerciseCardCollapsedSets(
                         {
                           training,
                           component,
-                          setTraining,
-                          setComponent,
+                          setTodaysTrainings,
                           supersets,
-                          setSupersetsWithAdd,
-                          filteredTrainings,
-                          setFilteredTrainings,
                           setDetectedChanges,
                           selectedSubgroup,
                           setSelectedSubgroup,
@@ -415,9 +402,8 @@ export default function TrainingExerciseCardCollapsedSets(
                     }}
                   />
                 </Box>
-              </>
-            );
-          })}
+              );
+            })}
         </Box>
       </Grid2>
     </Grid2>

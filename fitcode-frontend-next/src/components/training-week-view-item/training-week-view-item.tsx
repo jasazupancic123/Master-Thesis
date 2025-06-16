@@ -14,8 +14,7 @@ import {
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
   const { training, updateTraining } = props;
-  const theme = useTheme();
-  const { setFilteredTrainings } = useGroup();
+  const { trainings, setTrainings } = useGroup();
 
   const [isChanged, setIsChanged] = useState(false);
   const [updatedComponents, setUpdatedComponents] = useState(
@@ -25,7 +24,7 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
   useEffect(() => {
     // only update current filtered trainings (in week view, max 7 of them are in array)
     // and update all trainings and current training after training is saved
-    setFilteredTrainings((prev) =>
+    setTrainings((prev) =>
       prev.map((t) =>
         t.id === training.id
           ? { ...training, components: updatedComponents }

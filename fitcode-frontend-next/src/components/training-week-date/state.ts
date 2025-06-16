@@ -21,6 +21,8 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Method } from '@/controller/method/type/method.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Component } from '@/controller/component/type/component.type';
+import { Day } from '@/common/service/util/date.util';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
 
 export async function handleClickDateCell(
   input: {
@@ -37,7 +39,7 @@ export async function handleClickDateCell(
     copyComponent?: boolean;
     trainingComponent?: TrainingComponent;
     training?: Training;
-    trainings: Training[];
+    trainings: TrainingMinimal[];
     components: Component[];
     allExercises: Exercise[];
     methods: Method[];
@@ -46,12 +48,12 @@ export async function handleClickDateCell(
       componentId: string;
       target: Target;
     }[];
-    filteredTrainings: Training[];
-    setTrainings: SetState<Training[]>;
-    setFilteredTrainings: SetState<Training[]>;
+    day?: Day;
+    setTrainings: SetState<TrainingMinimal[]>;
+    setTodaysTrainings?: SetState<Training[]>;
     setCycle: SetStateNullable<Cycle>;
     setOpenOverwriteModal?: SetState<boolean>;
-    setTrainingInPeriodForModal?: SetState<Training | null>;
+    setTrainingInPeriodForModal?: SetState<TrainingMinimal | null>;
   }
 ) {
   const { date, period } = input;
@@ -71,9 +73,9 @@ export async function handleClickDateCell(
     methods,
     selected,
     selectedTargets,
-    filteredTrainings,
+    day,
     setTrainings,
-    setFilteredTrainings,
+    setTodaysTrainings,
     setCycle,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
@@ -92,7 +94,7 @@ export async function handleClickDateCell(
 
     if (trainingInPeriod && !trainingInPeriodIncludesComponent) {
       // ADD THE SELECTED TRAINING COMPONENT TO THE TRAINING
-      if (copyComponent && training) {
+      if (copyComponent && training && day && setTodaysTrainings) {
         handleCopyComponentApiRequest(
           {
             training,
@@ -106,7 +108,8 @@ export async function handleClickDateCell(
             allExercises,
             allMethods: methods,
             setTrainings,
-            setFilteredTrainings,
+            setTodaysTrainings,
+            day,
           }
         );
       }
@@ -156,22 +159,25 @@ export async function handleClickDateCell(
             date: { from, to },
           }),
         (training_) => {
-          training_ = TrainingService.mapComponentsExercisesMethods(
+          const newTraining = TrainingService.mapComponentsExercisesMethods(
             training_,
             components,
             allExercises,
             methods
           );
 
-          const sortedTrainings = [...trainings, training_].sort((a, b) => {
-            const aDate = new Date(a.from);
-            const bDate = new Date(b.from);
-            return aDate.getTime() - bDate.getTime();
-          });
+          const minimalTraining =
+            TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+
+          const sortedTrainings = [...trainings, minimalTraining].sort(
+            (a, b) => {
+              const aDate = new Date(a.from);
+              const bDate = new Date(b.from);
+              return aDate.getTime() - bDate.getTime();
+            }
+          );
 
           setTrainings(sortedTrainings);
-          setFilteredTrainings((prev) => [...prev, training_]);
-
           toast.success('Training with current component created successfully');
         },
         undefined,
@@ -198,8 +204,7 @@ export async function handleClickDateCell(
         selectedTargets,
         router,
         setCycle,
-        filteredTrainings,
-        setFilteredTrainings,
+        trainings,
         setTrainings,
         components,
         allExercises: allExercises,
@@ -214,8 +219,8 @@ export function getFilteredTrainings(
   state: {
     periodizationView?: boolean;
     trainingComponent?: TrainingComponent;
-    filteredTrainings: Training[];
-    selectedTrainings?: Training[];
+    trainings: TrainingMinimal[];
+    selectedTrainings?: TrainingMinimal[];
     date: Dayjs;
     selected?: Component[];
     period: string;
@@ -225,7 +230,7 @@ export function getFilteredTrainings(
   const {
     periodizationView,
     trainingComponent,
-    filteredTrainings,
+    trainings,
     selectedTrainings,
     date: inputDate,
     selected,
@@ -233,7 +238,7 @@ export function getFilteredTrainings(
   } = state;
 
   if (periodizationView && selectedTrainings) {
-    return filteredTrainings.filter((training_) => {
+    return trainings.filter((training_) => {
       const trainingDate = dayjs(training_.from);
       const start = trainingDate.startOf('day');
       const end = dayjs(training_.to).endOf('day');
@@ -255,10 +260,10 @@ export function getFilteredTrainings(
   const newFilteredTrainings = [];
   let colorIndex = 0;
   const evaluatedTrainingIds: { trainingId: string; colorIndex: number }[] = [];
-  for (const ft of filteredTrainings) {
+  for (const ft of trainings) {
     for (const tc of ft.components) {
       if (!tc.copiedFrom) continue;
-      const copiedFromTraining = filteredTrainings.find(
+      const copiedFromTraining = trainings.find(
         (t) => t.id === tc.copiedFrom?.rootCopiedFromTrainingId
       );
 
@@ -322,9 +327,8 @@ function handleAddTraining(
     }[];
     router: AppRouterInstance;
     setCycle: SetStateNullable<Cycle>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
-    setTrainings: SetState<Training[]>;
+    trainings: TrainingMinimal[];
+    setTrainings: SetState<TrainingMinimal[]>;
     components: Component[];
     allExercises: Exercise[];
     methods: Method[];
@@ -339,8 +343,7 @@ function handleAddTraining(
     selectedTargets,
     router,
     setCycle,
-    filteredTrainings,
-    setFilteredTrainings,
+    trainings,
     setTrainings,
     components,
     allExercises,
@@ -374,8 +377,7 @@ function handleAddTraining(
     {
       router,
       setCycle,
-      filteredTrainings,
-      setFilteredTrainings,
+      trainings,
       setTrainings,
       components,
       exercises: allExercises,

@@ -1,5 +1,8 @@
 import { Stack, FormControl, Select, MenuItem, TextField } from '@mui/material';
-import { disableBorder, exerciseCardSetAttributeSx } from '../trainer-day-view/style';
+import {
+  disableBorder,
+  exerciseCardSetAttributeSx,
+} from '../trainer-day-view/style';
 import { SetState } from '@/common/type/state.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
@@ -17,6 +20,7 @@ interface Props {
   exercise?: TrainingExercise;
   setsNumber?: number;
   setSetsNumber?: SetState<number>;
+  handleSetNumberChange?: (value: number) => void;
   min?: number;
   max?: number;
 }

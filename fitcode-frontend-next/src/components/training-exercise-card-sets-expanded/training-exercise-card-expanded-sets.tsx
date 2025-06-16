@@ -5,7 +5,6 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import {
   ExerciseSet,
-  Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
@@ -24,8 +23,6 @@ interface TrainingExerciseCarExpandedSetsProps {
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
-  supersets: Superset[];
-  setSupersetsWithAdd: SetState<Superset[]>;
   supersetIndex: number;
 }
 
@@ -37,27 +34,20 @@ export default function TrainingExerciseCardExpandedSets(
   const {
     training,
     component,
+    supersets,
     selectedSubgroup,
     setSelectedSubgroup,
-    setComponent,
-    setTraining,
     selectedAthlete,
     selectedAthleteWorkloads,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
   } = useTrainerDayViewContext();
 
-  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
-    useGroup();
+  const { setDetectedChanges } = useGroup();
+  const { setTodaysTrainings } = useTrainerDayViewContext();
 
-  const {
-    exercise,
-    expandedSetsView,
-    setExpandedSetsView,
-    supersets,
-    setSupersetsWithAdd,
-    supersetIndex,
-  } = props;
+  const { exercise, expandedSetsView, setExpandedSetsView, supersetIndex } =
+    props;
 
   if (!training || !component) return null;
 
@@ -255,12 +245,8 @@ export default function TrainingExerciseCardExpandedSets(
                             {
                               training,
                               component,
-                              setTraining,
-                              setComponent,
+                              setTodaysTrainings,
                               supersets,
-                              setSupersetsWithAdd,
-                              filteredTrainings,
-                              setFilteredTrainings,
                               setDetectedChanges,
                               selectedSubgroup,
                               setSelectedSubgroup,
@@ -352,12 +338,8 @@ export default function TrainingExerciseCardExpandedSets(
                             {
                               training,
                               component,
-                              setTraining,
-                              setComponent,
+                              setTodaysTrainings,
                               supersets,
-                              setSupersetsWithAdd,
-                              filteredTrainings,
-                              setFilteredTrainings,
                               setDetectedChanges,
                               selectedSubgroup,
                               setSelectedSubgroup,
