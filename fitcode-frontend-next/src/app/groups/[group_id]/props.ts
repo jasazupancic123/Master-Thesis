@@ -17,7 +17,7 @@ import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -30,7 +30,7 @@ export interface GroupIdPageProps {
   attributes: Attribute[];
   exercises: Exercise[];
   groups: Group[];
-  trainings: TrainingMinimal[];
+  trainings: TrainingInfo[];
   methods: Method[];
 }
 
@@ -46,8 +46,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;
   setDateTo: SetState<Dayjs>;
-  trainings: TrainingMinimal[];
-  setTrainings: SetState<TrainingMinimal[]>;
+  trainings: TrainingInfo[];
+  setTrainings: SetState<TrainingInfo[]>;
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
   detectedChanges: boolean;

@@ -215,9 +215,7 @@ export function updateTraining(
       // set new avg future workload values
       let newAvgFutureWorkloadValues = undefined;
       if (intensityVolumeValue) {
-        newAvgFutureWorkloadValues = [
-          ...selectedSubgroup.subgroup.avgFutureWorkloadValues,
-        ];
+        newAvgFutureWorkloadValues = [...selectedSubgroup.subgroup.futureStats];
         const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
           (aw) => aw.exerciseId === exercise.id
         );
@@ -226,12 +224,13 @@ export function updateTraining(
             exerciseId: exercise.id,
             rootComponentId: component.component?.id || '',
             numMembers: selectedSubgroup.subgroup.membersIds.length,
-            avgWorkloadValue: intensityVolumeValue!,
+            ...intensityVolumeValue!,
           });
         } else {
           foundAvgWorkloadValue.numMembers =
             selectedSubgroup.subgroup.membersIds.length;
-          foundAvgWorkloadValue.avgWorkloadValue = intensityVolumeValue!;
+          foundAvgWorkloadValue.intensity = intensityVolumeValue!.intensity;
+          foundAvgWorkloadValue.volume = intensityVolumeValue!.volume;
         }
       }
 
@@ -239,7 +238,7 @@ export function updateTraining(
         ? {
             ...selectedSubgroup.subgroup,
             supersets: newSupersets,
-            avgFutureWorkloadValues: newAvgFutureWorkloadValues,
+            futureStats: newAvgFutureWorkloadValues,
           }
         : {
             ...selectedSubgroup.subgroup,
@@ -282,7 +281,7 @@ export function updateTraining(
       // set new avg future workload values
       let newAvgFutureWorkloadValues = undefined;
       if (intensityVolumeValue) {
-        newAvgFutureWorkloadValues = [...training.avgFutureWorkloadValues];
+        newAvgFutureWorkloadValues = [...training.futureStats];
         const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
           (aw) => aw.exerciseId === exercise.id
         );
@@ -302,19 +301,20 @@ export function updateTraining(
             exerciseId: exercise.id,
             rootComponentId: component.component?.id || '',
             numMembers: numberOfMainGroupMembers,
-            avgWorkloadValue: intensityVolumeValue!,
+            ...intensityVolumeValue!,
           });
         } else {
           foundAvgWorkloadValue.numMembers = numberOfMainGroupMembers;
-          foundAvgWorkloadValue.avgWorkloadValue = intensityVolumeValue!;
+          foundAvgWorkloadValue.intensity = intensityVolumeValue!.intensity;
+          foundAvgWorkloadValue.volume = intensityVolumeValue!.volume;
         }
       }
 
-      const newTraining = newAvgFutureWorkloadValues
+      const newTraining: Training = newAvgFutureWorkloadValues
         ? {
             ...training,
             components: updatedComponents,
-            avgFutureWorkloadValues: newAvgFutureWorkloadValues,
+            futureStats: newAvgFutureWorkloadValues,
           }
         : { ...training, components: updatedComponents };
 

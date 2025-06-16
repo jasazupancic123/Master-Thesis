@@ -8,6 +8,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class TrainingComponentInfoDto extends PickType(TrainingComponent, [
   'id',
+  'color',
   'from',
   'to',
   'target',
@@ -23,7 +24,7 @@ export class TrainingComponentInfoDto extends PickType(TrainingComponent, [
 
 export class SubgroupInfoDto extends PickType(Subgroup, [
   'id',
-  'stats',
+  'futureStats',
 ] as const) {}
 
 export class TrainingInfoDto extends PickType(Training, [

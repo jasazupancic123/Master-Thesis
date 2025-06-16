@@ -10,7 +10,7 @@ import MyModal from '../modal/modal';
 import { Training } from '@/controller/training/type/training.type';
 import { useTheme } from '@mui/material';
 import TrainingWeekDates from '../training-week-date/training-week-date';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const theme = useTheme();
@@ -40,8 +40,9 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   } = props;
 
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
-  const [selectedTraining, setSelectedTraining] =
-    useState<TrainingMinimal | null>(null);
+  const [selectedTraining, setSelectedTraining] = useState<TrainingInfo | null>(
+    null
+  );
 
   return (
     <Box>

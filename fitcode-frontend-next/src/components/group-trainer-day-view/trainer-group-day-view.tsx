@@ -222,7 +222,7 @@ export default function TrainerDayView() {
       handleApiRequest(
         router,
         () =>
-          TrainingController.getUserWorkloadsByGroupIdAndExerciseIds(
+          TrainingController.findAthleteGroupWorkloads(
             token,
             group.id,
             uniqueExerciseIds,

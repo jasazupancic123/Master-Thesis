@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
 import {
   TrainingComponent,
-  TrainingComponentMinimal,
+  TrainingComponentInfo,
 } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
 import toast from 'react-hot-toast';
@@ -35,7 +35,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWrapped, setIsWrapped] = useState(false);
-  const [components, setComponents] = useState<TrainingComponentMinimal[]>(
+  const [components, setComponents] = useState<TrainingComponentInfo[]>(
     (componentCalendarView || periodizationView) &&
       trainingComponent &&
       trainingComponent.component
@@ -48,7 +48,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
               return c;
             else return null;
           })
-          .filter((c) => c !== null) as TrainingComponentMinimal[])
+          .filter((c) => c !== null) as TrainingComponentInfo[])
       : training.components
   );
 

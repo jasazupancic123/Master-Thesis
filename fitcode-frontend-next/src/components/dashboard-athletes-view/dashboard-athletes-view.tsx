@@ -80,8 +80,6 @@ export default function AthletesView() {
     );
   };
 
-<<<<<<< HEAD:fitcode-frontend-next/src/components/dashboard-athletes-view/dashboard-athletes-view.tsx
-=======
   const handleRemoveAthleteFromInstitution = (athleteId: string) => {
     if (!selectedInstitution) return;
 
@@ -101,7 +99,6 @@ export default function AthletesView() {
     );
   };
 
->>>>>>> main:fitcode-frontend-next/src/components/dashboard/athletes-view.tsx
   useEffect(() => {
     if (
       selectedGroup &&

@@ -10,7 +10,7 @@ import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useState } from 'react';
 import InfoIcon from '@mui/icons-material/Info';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { Day } from '@/common/service/util/date.util';
 
@@ -18,7 +18,7 @@ interface TrainingComponentCalendarProps {
   trainingComponent: TrainingComponent;
   training: Training;
   setOpenOverwriteModal: SetState<boolean>;
-  setTrainingInPeriodForModal: SetState<TrainingMinimal | null>;
+  setTrainingInPeriodForModal: SetState<TrainingInfo | null>;
   copyComponent: boolean;
   day: Day;
 }

@@ -22,7 +22,7 @@ import { Method } from '@/controller/method/type/method.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Component } from '@/controller/component/type/component.type';
 import { Day } from '@/common/service/util/date.util';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export async function handleClickDateCell(
   input: {
@@ -39,7 +39,7 @@ export async function handleClickDateCell(
     copyComponent?: boolean;
     trainingComponent?: TrainingComponent;
     training?: Training;
-    trainings: TrainingMinimal[];
+    trainings: TrainingInfo[];
     components: Component[];
     allExercises: Exercise[];
     methods: Method[];
@@ -49,11 +49,11 @@ export async function handleClickDateCell(
       target: Target;
     }[];
     day?: Day;
-    setTrainings: SetState<TrainingMinimal[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     setTodaysTrainings?: SetState<Training[]>;
     setCycle: SetStateNullable<Cycle>;
     setOpenOverwriteModal?: SetState<boolean>;
-    setTrainingInPeriodForModal?: SetState<TrainingMinimal | null>;
+    setTrainingInPeriodForModal?: SetState<TrainingInfo | null>;
   }
 ) {
   const { date, period } = input;
@@ -149,14 +149,10 @@ export async function handleClickDateCell(
       handleApiRequest(
         router,
         () =>
-          TrainingController.create(token, {
-            training: {
-              groupId: group.id,
-              cycleId: cycle.id,
-              components: [{ ...newTrainingComponent }],
-            },
+          TrainingController.copyComponent(token, {
             copyFromTrainingId: training.id,
-            date: { from, to },
+            componentId: newTrainingComponent.id,
+            from,
           }),
         (training_) => {
           const newTraining = TrainingService.mapComponentsExercisesMethods(
@@ -219,8 +215,8 @@ export function getFilteredTrainings(
   state: {
     periodizationView?: boolean;
     trainingComponent?: TrainingComponent;
-    trainings: TrainingMinimal[];
-    selectedTrainings?: TrainingMinimal[];
+    trainings: TrainingInfo[];
+    selectedTrainings?: TrainingInfo[];
     date: Dayjs;
     selected?: Component[];
     period: string;
@@ -327,8 +323,8 @@ function handleAddTraining(
     }[];
     router: AppRouterInstance;
     setCycle: SetStateNullable<Cycle>;
-    trainings: TrainingMinimal[];
-    setTrainings: SetState<TrainingMinimal[]>;
+    trainings: TrainingInfo[];
+    setTrainings: SetState<TrainingInfo[]>;
     components: Component[];
     allExercises: Exercise[];
     methods: Method[];
