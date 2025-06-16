@@ -4,7 +4,7 @@ import { Superset, TrainingComponent } from './type/training-plan.type';
 import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
-import { AverageWorkloadValues } from './type/average-workload-values.type';
+import { GroupWorkloadStats } from './type/average-workload-values.type';
 
 const api = CommonService.instance.api;
 
@@ -27,37 +27,33 @@ export class TrainingController {
   ) {
     return api.get<Training>(
       `/training/${trainingId}/component/${componentId}`,
-      {
-        token,
-      }
+      { token }
     );
   }
 
-  static async getUserWorkloadsByGroupIdAndExerciseIds(
+  static async findAthleteGroupWorkloads(
     token: string,
     groupId: string,
     exerciseIds: string[],
     userId: string
   ) {
     return api.post<CompletedFutureWorkloads>(
-      `/training/${groupId}/${userId}/workloads`,
+      `/training/group/${groupId}/athlete/${userId}/workloads`,
       { exerciseIds },
-      {
-        token,
-      }
+      { token }
     );
   }
 
   static async create(
     token: string,
     body: {
-      training: {
-        groupId: string;
-        cycleId: string;
-        components: TrainingComponent[];
-      };
-      copyFromTrainingId?: string;
-      date?: { from: Date; to: Date };
+      groupId: string;
+      cycleId: string;
+      components: TrainingComponent[];
+      membersIds: string[];
+      copiedFromId?: string;
+      stats: GroupWorkloadStats[];
+      futureStats: GroupWorkloadStats[];
     }
   ) {
     return api.post<Training>('/training', body, { token });
@@ -84,13 +80,16 @@ export class TrainingController {
       id: string;
       components: TrainingComponent[];
       membersIds: string[];
-      avgFutureWorkloadValues: AverageWorkloadValues[];
+      warmup: TrainingComponent;
+      cooldown: TrainingComponent;
+      futureStats: GroupWorkloadStats[];
     }[],
     customAthleteWorkloads: Workload[]
   ) {
+    console.log('body:', body);
     const { groupId, cycleId } = params;
     return api.patch<Training[]>(
-      `/training/batch/${groupId}/${cycleId}`,
+      `/training/batch/group/${groupId}/cycle/${cycleId}`,
       { trainings: body, customAthleteWorkloads },
       { token }
     );
@@ -99,7 +98,7 @@ export class TrainingController {
   static async copy(
     token: string,
     trainingId: string,
-    body: { from: string; to: string }
+    body: { from: string; to: string; membersIds?: string[] }
   ) {
     return api.post<Training>(`/training/${trainingId}/copy`, body, { token });
   }

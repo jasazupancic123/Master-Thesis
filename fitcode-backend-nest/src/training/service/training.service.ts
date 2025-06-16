@@ -359,7 +359,7 @@ export class TrainingService {
       groupId: group.id,
       cycleId: input.cycleId,
       ownerId: user.uid,
-      copiedFromId: null,
+      copiedFromId: input.copiedFromId || null,
       from,
       to,
       membersIds: group.membersIds,
@@ -616,9 +616,10 @@ export class TrainingService {
     const group = await this.groupService.findByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
 
-    const membersIds = input.training.membersIds || training.membersIds;
+    const wellness = await this.userService.getRecentWellness(
+      training.membersIds,
+    );
 
-    const wellness = await this.userService.getRecentWellness(membersIds);
     const trainingTo = addMinutes(
       startOfHour(input.from),
       training.components.length * 30,
@@ -662,7 +663,7 @@ export class TrainingService {
       cycleId: training.cycleId,
       ownerId: user.uid,
       copiedFromId: training.id,
-      from: input.date?.from,
+      from: input.from,
       to: trainingTo,
       membersIds: training.membersIds,
       wellness,
@@ -686,7 +687,7 @@ export class TrainingService {
       warmup: {
         ...training.warmup,
         from: subMinutes(input.from, 5),
-        to: input.training.from,
+        to: input.from,
       },
       cooldown: {
         ...training.cooldown,
@@ -720,6 +721,9 @@ export class TrainingService {
       copiedTraining.components,
     );
 
+    const membersIds =
+      input.membersIds?.length > 0 ? input.membersIds : training.membersIds;
+
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       membersIds,
@@ -742,7 +746,7 @@ export class TrainingService {
     const batch = this.firebaseService.firestore.batch();
     batch.set(trainingDocRef, copyTrainingQuery);
 
-    for (const userId of group.membersIds) {
+    for (const userId of membersIds) {
       const docRef = this.userService.getDoc(userId);
       batch.update(docRef, {
         trainersIds: FieldValue.arrayUnion(user.uid),

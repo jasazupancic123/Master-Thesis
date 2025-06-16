@@ -13,6 +13,7 @@ import { User } from '../common/type/firebase-auth.type';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto, UpdateGroupDtoWithId } from './dto/update-group.dto';
 import { GroupService } from './group.service';
+import { UserRole } from '../user/enum/user-role.enum';
 
 @Controller('group')
 export class GroupController {
@@ -40,12 +41,14 @@ export class GroupController {
   }
 
   @Get('institution/:institutionId')
-  @Auth()
-  async findByInstitutionId(
+  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  async findAllByInstitution(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
   ) {
-    return await this.groupService.findByInstitutionId(user, { institutionId });
+    return await this.groupService.findAllByInstitution(user, {
+      institutionId,
+    });
   }
 
   @Post()
@@ -64,7 +67,7 @@ export class GroupController {
     return await this.groupService.update(user, { groupId }, body);
   }
 
-  @Patch('/update/multiple')
+  @Patch('/batch')
   @Auth()
   async updateMultiple(
     @RequestUser() user: User,
