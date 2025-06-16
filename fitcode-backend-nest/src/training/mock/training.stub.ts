@@ -23,8 +23,8 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
     cycleId: data?.cycleId,
     ownerId: data?.ownerId || global.trainer.uid,
     membersIds: data?.membersIds || [global.athlete.uid],
-    avgCompletedWorkloadValues: data?.avgCompletedWorkloadValues || [],
-    avgFutureWorkloadValues: data?.avgFutureWorkloadValues || [],
+    stats: data?.stats || [],
+    futureStats: data?.futureStats || [],
     copiedFromId: null,
     from: data?.from || addDays(new Date(), 1),
     to: data?.to || addHours(addDays(new Date(), 1), 2),
@@ -63,7 +63,7 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     name: data?.name || generateRandomName(),
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
-    avgFutureWorkloadValues: data?.avgFutureWorkloadValues || [],
+    stats: data?.stats || [],
   };
 }
 
@@ -74,7 +74,6 @@ export function generateTrainingExercise(
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     params: data?.params || [],
-    periodized: data?.periodized || false,
     sets: data?.sets || [],
   };
 }

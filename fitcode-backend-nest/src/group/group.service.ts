@@ -109,15 +109,20 @@ export class GroupService {
     );
   }
 
-  async findByInstitutionId(
+  async findAllByInstitution(
     user: User,
     ref: InstitutionRef,
-  ): Promise<Group[] | null> {
-    const institution = await this.institutionService.findOneOrFail(user, ref);
-    if (!institution) return null;
+  ): Promise<Group[]> {
+    const institution = await this.institutionService.findOneOrFail(ref);
+    if (!institution) return [];
+
+    if (
+      institution.ownerId !== user.uid &&
+      !institution.trainerIds.includes(user.uid)
+    )
+      throw new UnauthorizedException();
 
     const groupIds = institution.groupIds;
-
     if (!groupIds || !groupIds.length) return [];
 
     const groups = await this.groupRepository.getDocs((q) =>
@@ -140,7 +145,7 @@ export class GroupService {
     await this.validateMembers(membersIds);
     await this.checkLimit(user.uid);
 
-    const institution = await this.institutionService.findOneOrFail(user, {
+    const institution = await this.institutionService.findOneOrFail({
       institutionId,
     });
 

@@ -75,7 +75,7 @@ export default function AddInstitutionDashboardView() {
       router,
       () => InstitutionController.create(token, input),
       (institution) => {
-        institution = InstitutionService.mapAllUsers([institution], users)[0];
+        institution = InstitutionService.mapUsers([institution], users)[0];
         setInstitutions((prev) => {
           const newInstitutions = [...prev, institution];
           return newInstitutions;

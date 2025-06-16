@@ -94,7 +94,7 @@ export default function TrainerDayView() {
         TrainingController.batchUpdate(
           token,
           { groupId: group.id, cycleId: cycle!.id },
-          filteredTrainings,
+          filteredTrainings.map((t) => ({ ...t, futureStats: [] })),
           customAthleteWorkloads
         ),
       (newTrainings) => {
@@ -226,7 +226,7 @@ export default function TrainerDayView() {
       handleApiRequest(
         router,
         () =>
-          TrainingController.getUserWorkloadsByGroupIdAndExerciseIds(
+          TrainingController.findAthleteGroupWorkloads(
             token,
             group.id,
             uniqueExerciseIds,

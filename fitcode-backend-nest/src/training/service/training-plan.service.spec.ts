@@ -39,6 +39,7 @@ import {
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
 import { addMinutes, subMinutes } from 'date-fns';
+import { WorkloadService } from './workload.service';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
@@ -68,6 +69,10 @@ describe('TrainingPlanService (unit)', () => {
         {
           provide: ExerciseAttributeValueRepository,
           useValue: createMock<ExerciseAttributeValueRepository>(),
+        },
+        {
+          provide: WorkloadService,
+          useValue: createMock<WorkloadService>(),
         },
         TrainingPlanService,
       ],

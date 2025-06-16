@@ -299,13 +299,13 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                             router,
                             () =>
                               TrainingController.create(token, {
-                                training: {
-                                  groupId: group.id,
-                                  cycleId: cycle.id,
-                                  components: [trainingComponent],
-                                },
-                                copyFromTrainingId: training.id,
-                                date: { from, to },
+                                groupId: group.id,
+                                cycleId: cycle.id,
+                                components: [trainingComponent],
+                                membersIds: [],
+                                copiedFromId: training.id,
+                                stats: [],
+                                futureStats: [],
                               }),
                             (training) => {
                               training = TrainingService.mapComponents(
