@@ -14,12 +14,12 @@ export class GroupController {
     return api.get<Group>(`/group/${groupId}`, { token });
   }
 
-  static async findByInstitutionId(token: string, institutionId: string) {
-    return api.get<Group[]>(`/group/institution/${institutionId}`, { token });
-  }
-
   static async findMembers(token: string, groupId: string) {
     return api.get<UserEntity[]>(`/group/${groupId}/members`, { token });
+  }
+
+  static async findAllByInstitution(token: string, institutionId: string) {
+    return api.get<Group[]>(`/group/institution/${institutionId}`, { token });
   }
 
   static async create(
@@ -46,7 +46,7 @@ export class GroupController {
       cycles?: Cycle[];
     }[]
   ) {
-    return api.patch<Group[]>(`/group/update/multiple`, body, { token });
+    return api.patch<Group[]>(`/group/batch`, body, { token });
   }
 
   static async delete(token: string, groupId: string) {

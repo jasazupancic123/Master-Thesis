@@ -105,7 +105,6 @@ export async function handleCopyComponentApiRequest(
         copyFromTrainingId: training.id,
         copyToTrainingId: trainingInPeriod.id,
         componentId: component.id,
-        override,
       }),
     (training) => {
       const mapped = TrainingService.mapComponentsExercisesMethods(

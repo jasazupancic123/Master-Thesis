@@ -34,14 +34,12 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
-import { SetOrRep } from '../enum/set-or-rep-enum';
-import {
-  MAX_REP_VALUE,
-  MAX_SET_VALUE,
-  MIN_REP_VALUE,
-  MIN_SET_VALUE,
-} from '../constant/min-max-set-rep-values.constant';
 import { Method } from 'src/method/entity/method.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { WorkloadService } from './workload.service';
+import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
+import { PeriodizationType } from 'src/group/enum/periodization-type.enum';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class TrainingPlanService {
@@ -53,7 +51,13 @@ export class TrainingPlanService {
     private readonly exerciseService: Wrapper<ExerciseService>,
     @Inject(forwardRef(() => ExerciseAttributeValueRepository))
     private readonly exerciseAttributeValueRepository: Wrapper<ExerciseAttributeValueRepository>,
+    @Inject(forwardRef(() => WorkloadService))
+    private readonly workloadService: Wrapper<WorkloadService>,
   ) {}
+
+  getTrainingComponents(training: Training) {
+    return [training.warmup, ...training.components, training.cooldown];
+  }
 
   getAddComponentsQuery(
     training: Training,
@@ -119,6 +123,87 @@ export class TrainingPlanService {
             exerciseId: e.id,
           }),
       })),
+    );
+  }
+
+  findComponentOrFail(
+    training: Training,
+    componentId: string,
+  ): TrainingComponent {
+    const foundComponent = training.components.find(
+      (c) => c.id === componentId,
+    );
+
+    if (!foundComponent)
+      throw new NotFoundException(`Component with id ${componentId} not found`);
+
+    return foundComponent;
+  }
+
+  /**
+   * @param training - Existing training in database
+   * @param exercises - New completed exercises values from athlete
+   * @param rootComponentId - Root component ID for exercises
+   */
+  calculateTrainingStats(
+    trainingStats: GroupWorkloadStats[],
+    exercises: TrainingExercise[],
+    rootComponentId: string,
+  ) {
+    const finalStats: GroupWorkloadStats[] = [];
+
+    for (const e of exercises) {
+      // completed exercises
+      let volume = 0;
+      let intensity = 0;
+
+      for (const set of e.sets) {
+        // currently stats only for left side
+        const { volWork1Value, intWork1Value } =
+          this.workloadService.parseActualParamValues(set.paramValuesL);
+
+        if (volWork1Value && intWork1Value) {
+          volume += volWork1Value;
+          intensity += intWork1Value;
+        }
+      }
+
+      if (intensity === 0 || volume === 0) continue;
+
+      volume = volume / e.sets.length;
+      intensity = intensity / e.sets.length;
+
+      let stats = trainingStats.find((w) => w.exerciseId === e.id);
+
+      if (!stats) {
+        stats = {
+          exerciseId: e.id,
+          rootComponentId,
+          numMembers: 1,
+          volume,
+          intensity,
+        };
+
+        // we can optimize the training object here by removing the entry with the same exerciseId from avgFutureWorkloadValues if needed
+      } else {
+        stats.numMembers++;
+        stats.volume =
+          (stats.volume * (stats.numMembers - 1) + volume) / stats.numMembers;
+
+        stats.intensity =
+          (stats.intensity * (stats.numMembers - 1) + intensity) /
+          stats.numMembers;
+      }
+
+      finalStats.push(stats);
+    }
+
+    return finalStats;
+  }
+
+  isTrainingCompleted(userId: string, trainingComponents: TrainingComponent[]) {
+    return trainingComponents.every((c) =>
+      c.completedMembersIds.includes(userId),
     );
   }
 
@@ -199,6 +284,73 @@ export class TrainingPlanService {
         this.validateParamValues(method, set.paramValuesR);
       }
     }
+  }
+
+  /**
+   * Generates weeks between first and last training and fills in all
+   * of the trainings. For example, we have 3 trainings, 2 in first
+   * week and one in the second week. Returns array of 2 elements,
+   * first containing the first 2 trainings and the second containing
+   * the last training.
+   *
+   * @example
+   * ```ts
+   * const trainings = [
+   *  { from: '2025-10-01' },
+   *  { from: '2025-14-01' },
+   *  { from: '2025-21-01' },
+   * ]
+   *
+   * const firstTraining = trainings[0];
+   * const lastTraining = trainings[trainings.length - 1];
+   *
+   * const result = getSpacedTrainingsByWeek(
+   *  firstTraining,
+   *  lastTraining,
+   *  trainings,
+   * ); // => [
+   * // [
+   * //  { from: '2025-10-01' },
+   * //  { from: '2025-14-01' },
+   * // ],
+   * // [
+   * //  { from: '2025-21-01' },
+   * // ]
+   * //]
+   * ```
+   */
+  getSpacedTrainingsByWeek(
+    firstTraining: Training,
+    lastTraining: Training,
+    trainings: Training[],
+  ): Training[][] {
+    const startWeek = dayjs(firstTraining.from).isoWeek();
+    const lastWeek = dayjs(lastTraining.from).isoWeek();
+    const numWeeks = lastWeek - startWeek + 1;
+    const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
+
+    // fill the trainings in weeks
+    for (const training of trainings) {
+      const weekIndex = dayjs(training.from).isoWeek() - startWeek;
+      if (weekIndex < weeks.length) weeks[weekIndex].push(training);
+    }
+
+    // sort trainings in week by date
+    for (const week of weeks)
+      week.sort((a, b) => dayjs(a.from).diff(dayjs(b.from)));
+
+    const numTrainingInWeeks = weeks.flat().length;
+    if (trainings.length !== numTrainingInWeeks)
+      throw new BadRequestException('Some trainings are missing or not found');
+
+    return weeks;
+  }
+
+  checkPeriodizationType(type: PeriodizationType) {
+    if (type === PeriodizationType.DUP_TABLE_BASED)
+      throw new BadRequestException(
+        'Dup Table Based periodization is not supported yet',
+      );
   }
 
   private validateParamValues(method: Method, paramValues: AttributeValue[]) {

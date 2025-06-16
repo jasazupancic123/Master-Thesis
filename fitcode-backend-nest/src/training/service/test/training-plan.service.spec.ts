@@ -29,6 +29,9 @@ import { AttributeService } from '../../../attribute/service/attribute.service';
 import { ExerciseService } from '../../../exercise/service/exercise.service';
 import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
 import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
+import { WorkloadService } from '../workload.service';
+import { WorkloadRepository } from 'src/training/repository/workload.repository';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
@@ -42,6 +45,10 @@ describe('TrainingPlanService (unit)', () => {
         CommonModule,
       ],
       providers: [
+        {
+          provide: FirebaseService,
+          useValue: createMock<FirebaseService>(),
+        },
         {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
@@ -58,6 +65,14 @@ describe('TrainingPlanService (unit)', () => {
         {
           provide: ExerciseAttributeValueRepository,
           useValue: createMock<ExerciseAttributeValueRepository>(),
+        },
+        {
+          provide: WorkloadRepository,
+          useValue: createMock<WorkloadRepository>(),
+        },
+        {
+          provide: WorkloadService,
+          useValue: createMock<WorkloadService>(),
         },
         TrainingPlanService,
       ],

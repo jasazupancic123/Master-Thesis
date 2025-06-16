@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { WriteBatch } from 'firebase-admin/firestore';
+import { CollectionGroup, WriteBatch } from 'firebase-admin/firestore';
 import { FirestoreEntity } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import {
   ExerciseRef,
+  GroupRef,
   TrainingComponentRef,
+  UserRef,
   WorkloadRef,
 } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -19,7 +21,7 @@ import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { TimestampEntity } from '../../common/entity/timestamp.entity';
 
 @Injectable()
-export class UserWorkloadService {
+export class WorkloadService {
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
@@ -94,17 +96,57 @@ export class UserWorkloadService {
       );
   }
 
-  async findAllByTrainingUserComponent(ref: {
-    trainingId: string;
-    userId: string;
-    componentId: string;
-  }) {
-    const { trainingId, userId, componentId } = ref;
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('trainingId', '==', trainingId)
-      .where('userId', '==', userId)
-      .where('componentId', '==', componentId)
+  /**
+   * Fetch all workloads by provided refs. For example, if only groupId is provided, then it will
+   * fetch all workloads for a specific group (for all trainings, users, ...). If groupId and
+   * userId is provided, then workloads for only one user for the whole group will be fetched and
+   * so on.
+   */
+  async findAllByRef(
+    ref: Partial<
+      WorkloadRef & GroupRef & { memberIds: string[]; exerciseIds: string[] }
+    >,
+  ) {
+    let query = this.firebaseService.firestore.collectionGroup(
+      FirestoreCollection.TRAINING_WORKLOAD,
+    );
+
+    if (ref.groupId)
+      query = query.where('groupId', '==', ref.groupId) as CollectionGroup;
+
+    if (ref.trainingId)
+      query = query.where(
+        'trainingId',
+        '==',
+        ref.trainingId,
+      ) as CollectionGroup;
+
+    if (ref.memberIds)
+      query = query.where('userId', 'in', ref.memberIds) as CollectionGroup;
+    else if (ref.userId)
+      query = query.where('userId', '==', ref.userId) as CollectionGroup;
+
+    if (ref.componentId)
+      query = query.where(
+        'componentId',
+        '==',
+        ref.componentId,
+      ) as CollectionGroup;
+
+    if (ref.exerciseIds)
+      query = query.where(
+        'exerciseId',
+        'in',
+        ref.exerciseIds,
+      ) as CollectionGroup;
+    else if (ref.exerciseId)
+      query = query.where(
+        'exerciseId',
+        '==',
+        ref.exerciseId,
+      ) as CollectionGroup;
+
+    return query
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -149,26 +191,6 @@ export class UserWorkloadService {
       );
   }
 
-  async findAllByAthleteGroupExerciseIds(
-    athleteId: string,
-    groupId: string,
-    exerciseIds: string[],
-  ): Promise<Workload[]> {
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', '==', athleteId)
-      .where('groupId', '==', groupId)
-      .where('exerciseId', 'in', exerciseIds)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload & TimestampEntity>,
-          ),
-        ),
-      );
-  }
-
   async findAllByUserTrainingComponentId(
     athleteId: string,
     trainingId: string,
@@ -189,22 +211,12 @@ export class UserWorkloadService {
       );
   }
 
-  getTrainingStatus(ref: TrainingComponentRef, workloads: Workload[]) {
-    const users: Record<string, any> = {};
-
-    for (const workload of workloads) {
-      if (workload.status === SetStatus.NOT_STARTED) {
-        users[workload.userId];
-      }
-    }
-  }
-
   /**
    * Creates training workload data for group members. It takes exercise
    * meta, calculates individual values for each member and saves them to the
    * correct training component exercise user data document.
    */
-  async createForTraining(
+  createForTraining(
     batch: WriteBatch,
     training: Training,
     workloads: Workload[], // to calculate RMs
@@ -219,7 +231,7 @@ export class UserWorkloadService {
 
     for (const userId of training.membersIds)
       membersMap[userId] = {
-        exercises: [],
+        exercises: [], // populated in the next loop
         bodyweight:
           training.wellness.find((m) => m.userId === userId)?.weight ?? 0,
         history: workloads.filter((w) => w.userId === userId),
@@ -255,16 +267,16 @@ export class UserWorkloadService {
           .filter((e) => e.exerciseId === exercise.id);
 
         for (const { setNumber, paramValuesL: paramValues } of exercise.sets) {
-          const foundWorkload = await this.findOne(
-            training.id,
-            exercise.componentId,
-            exercise.id,
-            setNumber,
-            userId,
+          // skip if workload is already personalized
+          const existing = workloads.find(
+            (w) =>
+              w.trainingId === training.id &&
+              w.exerciseId === exercise.id &&
+              w.setNumber === setNumber &&
+              w.userId === userId,
           );
 
-          // skip if workload is already personalized
-          if (foundWorkload && foundWorkload.isPersonalized) continue;
+          if (existing?.isPersonalized) continue;
 
           const docRef = this.workloadRepository
             .collection({ trainingId: training.id })
@@ -291,7 +303,7 @@ export class UserWorkloadService {
               plannedAt: training.from,
               notes: null,
               isPersonalized: false,
-              ...this.parseParamValues(paramValues),
+              ...this.parsePrescribedParamValues(paramValues),
               ...this.calculateIntValues(paramValues, bodyweight, workloads),
             },
             { timestamps: true },
@@ -486,9 +498,11 @@ export class UserWorkloadService {
   ): SetStatus {
     if (prescribedValue === undefined || prescribedValue === null)
       return SetStatus.IGNORED; // field not prescribed, ignore
+
     if (performedValue === undefined || performedValue === null)
       return SetStatus.NOT_STARTED; // field prescribed, but not performed
 
+    // TODO - currently, this is comparing STRING values, not numbers, so it will be wrong
     if (performedValue < prescribedValue) return SetStatus.PARTIAL; // partial set
     if (performedValue === prescribedValue) return SetStatus.COMPLETED; // completed set
     if (performedValue > prescribedValue) return SetStatus.OVER; // over-completed set
@@ -522,7 +536,29 @@ export class UserWorkloadService {
     return this.commonService.number.rm(weight, reps <= 0 ? 1 : reps)(n);
   }
 
-  private parseParamValues(
+  /**
+   * Parses values that athlete completed, so it's assumed that `paramValues`
+   * are populated with correct values
+   */
+  parseActualParamValues(paramValues: AttributeValue[]) {
+    const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
+    const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
+    const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
+    const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
+    const intWork2 = paramValues.find((p) => p.field === ParamType.IntWork2);
+    const intRec = paramValues.find((p) => p.field === ParamType.IntRec1);
+
+    return {
+      volWork1Value: this.parseValue(volWork1),
+      volWork2Value: this.parseValue(volWork2),
+      volRecValue: this.parseValue(volRec),
+      intWork1Value: this.parseValue(intWork1),
+      intWork2Value: this.parseValue(intWork2),
+      intRecValue: this.parseValue(intRec),
+    };
+  }
+
+  private parsePrescribedParamValues(
     paramValues: AttributeValue[],
   ): Pick<
     Workload,

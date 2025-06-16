@@ -37,9 +37,6 @@ export class InstitutionRepository
   }
 
   async addDoc(input: Create<Institution>): Promise<string> {
-    if (!input.name)
-      throw new BadRequestException('Institution must have a name');
-
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Institution>({
       id,
