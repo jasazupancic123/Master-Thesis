@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import { UpdateTrainingInput } from '../trainer-week-view/type';
 import { useGroup } from '@/store/group-provider';
 import { SetState } from '@/common/type/state.type';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainerWeekComponentItemProps {
   component: TrainingComponent;
@@ -28,7 +29,7 @@ export default function TrainerWeekComponentItem(
     warmupOrCooldown,
   } = props;
 
-  const { filteredTrainings, setFilteredTrainings, setTrainings } = useGroup();
+  const { setTrainings } = useGroup();
   return (
     <Stack key={c.id}>
       <Typography
@@ -72,12 +73,6 @@ export default function TrainerWeekComponentItem(
               setTrainings((prev) =>
                 prev.map((t) => (t.id === newTraining.id ? newTraining : t))
               );
-
-              const updatedTrainings = [...filteredTrainings].map((t) =>
-                t.id === training.id ? newTraining : t
-              );
-
-              setFilteredTrainings(updatedTrainings);
               return;
             }
 

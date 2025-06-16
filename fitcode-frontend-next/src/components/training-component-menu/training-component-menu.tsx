@@ -45,18 +45,14 @@ export default function TrainingComponentMenu(
     setOpenCalendarModal,
   } = props;
 
-  const {
-    detectedChanges,
-    setDetectedChanges,
-    setFilteredTrainings,
-    setTrainings,
-  } = useGroup();
+  const { detectedChanges, setDetectedChanges } = useGroup();
 
   const {
     training: selectedTraining,
     setTraining,
     component,
     setComponent,
+    setTodaysTrainings,
   } = useTrainerDayViewContext();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -98,7 +94,7 @@ export default function TrainingComponentMenu(
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={handleToggleVisibility}>
+        <MenuItem onClick={() => handleToggleVisibility}>
           {trainingComponent &&
           component &&
           training.id === selectedTraining?.id &&
@@ -206,10 +202,7 @@ export default function TrainingComponentMenu(
                     (c) => c.rootComponentId !== trainingComponent.component?.id
                   );
                 setTraining(newTraining);
-                setTrainings((prev) =>
-                  prev.map((t) => (t.id === training.id ? newTraining : t))
-                );
-                setFilteredTrainings((prev) =>
+                setTodaysTrainings((prev) =>
                   prev.map((t) => (t.id === training.id ? newTraining : t))
                 );
                 setDetectedChanges(true);

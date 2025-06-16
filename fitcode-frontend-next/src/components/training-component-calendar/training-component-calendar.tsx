@@ -10,13 +10,17 @@ import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useState } from 'react';
 import InfoIcon from '@mui/icons-material/Info';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { Day } from '@/common/service/util/date.util';
 
 interface TrainingComponentCalendarProps {
   trainingComponent: TrainingComponent;
   training: Training;
   setOpenOverwriteModal: SetState<boolean>;
-  setTrainingInPeriodForModal: SetState<Training | null>;
+  setTrainingInPeriodForModal: SetState<TrainingMinimal | null>;
   copyComponent: boolean;
+  day: Day;
 }
 
 export default function TrainingComponentCalendar(
@@ -28,9 +32,11 @@ export default function TrainingComponentCalendar(
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
     copyComponent,
+    day,
   } = props;
 
   const { cycle, setDateFrom, setDateTo } = useGroup();
+  const { setTodaysTrainings } = useTrainerDayViewContext();
 
   const theme = useTheme();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
@@ -103,6 +109,8 @@ export default function TrainingComponentCalendar(
                   setOpenOverwriteModal={setOpenOverwriteModal}
                   setTrainingInPeriodForModal={setTrainingInPeriodForModal}
                   copyComponent={copyComponent}
+                  setTodaysTrainings={setTodaysTrainings}
+                  day={day}
                 />
               </Fragment>
             ))}

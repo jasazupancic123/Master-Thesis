@@ -20,6 +20,8 @@ import toast from 'react-hot-toast';
 import { TrainingService } from '@/controller/training/training.service';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { Target } from '@/controller/target/type/target.type';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
 
 interface ComponentPeriodizationProps {
   selectedComponent: TrainingComponent;
@@ -40,13 +42,14 @@ export default function ComponentPeriodization(
     cycle,
     trainings,
     setDateFrom,
-    setDateTo,
     setTrainings,
-    setFilteredTrainings,
+    setDateTo,
     components,
     exercises,
     methods,
   } = useGroup();
+
+  const { setTodaysTrainings } = useTrainerDayViewContext();
 
   const [selectedPeriodizationType, setSelectedPeriodizationType] =
     useState<PeriodizationType>(PeriodizationType.NONE);
@@ -58,10 +61,12 @@ export default function ComponentPeriodization(
   );
   const [expandExerciseView, setExpandExerciseView] = useState(false);
 
-  const [allPossibleTrainings, setAllPossibleTrainings] = useState<Training[]>(
+  const [allPossibleTrainings, setAllPossibleTrainings] = useState<
+    TrainingMinimal[]
+  >([]);
+  const [selectedTrainings, setSelectedTrainings] = useState<TrainingMinimal[]>(
     []
   );
-  const [selectedTrainings, setSelectedTrainings] = useState<Training[]>([]);
 
   const [selectedTarget, setSelectedTarget] = useState(
     selectedComponent.target
@@ -151,7 +156,11 @@ export default function ComponentPeriodization(
           )
         );
 
-        setFilteredTrainings((prev) =>
+        const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>
+          TrainingService.convertFromTrainingToTrainingMinimal(t)
+        );
+
+        setTodaysTrainings((prev) =>
           prev.map((t) => {
             const newTraining = periodizedTrainings.find(
               (nt) => nt.id === t.id
@@ -162,7 +171,7 @@ export default function ComponentPeriodization(
 
         setTrainings((prev) =>
           prev.map((t) => {
-            const newTraining = periodizedTrainings.find(
+            const newTraining = minimalPeriodizedTrainings.find(
               (nt) => nt.id === t.id
             );
             return newTraining ? newTraining : t;

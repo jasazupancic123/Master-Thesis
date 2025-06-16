@@ -58,6 +58,11 @@ import { PeriodizationService } from './periodization.service';
 import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 import { MethodService } from 'src/method/service/method.service';
 import { FindByDayDto } from '../dto/find-by-day.dto';
+import { TrainingMinimal } from '../entity/training-minimal.entity';
+import { plainToInstance } from 'class-transformer';
+import { TrainingComponentMinimal } from '../entity/training-component-minimal.entity';
+import { SubgroupMinimal } from '../entity/subgroup-minimal.entity';
+import { CopyComponentDto } from '../dto/copy-component.dto';
 
 dayjs.extend(isoWeek);
 
@@ -117,7 +122,11 @@ export class TrainingService {
     return training;
   }
 
-  async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
+  async findAll(
+    user: User,
+    filter?: Filter<Training>,
+    minimal: boolean = false,
+  ): Promise<Training[] | TrainingMinimal[]> {
     const dbUser = await this.userService.findOne(user.uid);
 
     const from = filter?.from ? filter.from : undefined;
@@ -154,6 +163,65 @@ export class TrainingService {
       trainings = trainings.filter((t) =>
         this.commonService.date.isBetween(t.from, from, to),
       );
+
+    if (minimal) {
+      return trainings.map((t) =>
+        plainToInstance(TrainingMinimal, {
+          id: t.id,
+          groupId: t.groupId,
+          cycleId: t.cycleId,
+          copiedFromId: t.copiedFromId,
+          avgCompletedWorkloadValues: t.avgCompletedWorkloadValues,
+          avgFutureWorkloadValues: t.avgFutureWorkloadValues,
+          from: t.from,
+          to: t.to,
+          warmup: plainToInstance(TrainingComponentMinimal, {
+            id: t.warmup.id,
+            from: t.warmup.from,
+            to: t.warmup.to,
+            target: t.warmup.target,
+            methodId: t.warmup.methodId,
+            copiedFrom: t.warmup.copiedFrom,
+            subgroups: t.warmup.subgroups.map((s) =>
+              plainToInstance(SubgroupMinimal, {
+                id: s.id,
+                avgFutureWorkloadValues: s.avgFutureWorkloadValues,
+              }),
+            ),
+          }),
+          cooldown: plainToInstance(TrainingComponentMinimal, {
+            id: t.cooldown.id,
+            from: t.cooldown.from,
+            to: t.cooldown.to,
+            target: t.cooldown.target,
+            methodId: t.cooldown.methodId,
+            copiedFrom: t.cooldown.copiedFrom,
+            subgroups: t.cooldown.subgroups.map((s) =>
+              plainToInstance(SubgroupMinimal, {
+                id: s.id,
+                avgFutureWorkloadValues: s.avgFutureWorkloadValues,
+              }),
+            ),
+          }),
+          components: t.components.map((c) =>
+            plainToInstance(TrainingComponentMinimal, {
+              id: c.id,
+              from: c.from,
+              to: c.to,
+              target: c.target,
+              methodId: c.methodId,
+              copiedFrom: c.copiedFrom,
+              subgroups: c.subgroups.map((s) =>
+                plainToInstance(SubgroupMinimal, {
+                  id: s.id,
+                  avgFutureWorkloadValues: s.avgFutureWorkloadValues,
+                }),
+              ),
+            }),
+          ),
+        }),
+      );
+    }
 
     return trainings;
   }
@@ -1170,36 +1238,40 @@ export class TrainingService {
   }
 
   // old, not used anymore
-  async copyComponent(
-    user: User,
-    ref: TrainingRef,
-    input: {
-      trainingComponent: TrainingComponent;
-      copiedFromTrainingId: string;
-      overwrite?: boolean;
-    },
-  ): Promise<Training> {
-    const { trainingComponent, copiedFromTrainingId, overwrite } = input;
+  async copyComponent(user: User, input: CopyComponentDto): Promise<Training> {
+    const { copyFromTrainingId, copyToTrainingId, componentId, override } =
+      input;
     this.logger.log(
-      `User ${user.uid} is copying component ${trainingComponent.id} to ${ref.trainingId}`,
+      `User ${user.uid} is copying component ${componentId} from training ${copyFromTrainingId} to training ${copyToTrainingId}`,
     );
 
-    const training = await this.findOneOrFail(user, ref);
-    this.validateOwner(user.uid, training);
+    const copyFromRef: TrainingRef = { trainingId: copyFromTrainingId };
+    const copyToRef: TrainingRef = { trainingId: copyToTrainingId };
 
-    let from = training.from;
-    let to = training.to;
-    if (training.components.length) {
-      const lastTrainingComponentInTraining = training.components
+    const trainingFrom = await this.findOneOrFail(user, copyFromRef);
+    const trainingTo = await this.findOneOrFail(user, copyToRef);
+    this.validateOwner(user.uid, trainingFrom);
+    this.validateOwner(user.uid, trainingTo);
+
+    const trainingComponent = trainingFrom.components.find(
+      (c) => c.id === componentId,
+    );
+    if (!trainingComponent)
+      throw new BadRequestException('Component not found in training');
+
+    let from = trainingTo.from;
+    let to = trainingTo.to;
+    if (trainingTo.components.length) {
+      const lastTrainingComponentInTraining = trainingTo.components
         .map((c) => c.to)
         .sort((a: Date, b: Date) => {
           return new Date(b).getTime() - new Date(a).getTime();
         })[0];
       from = lastTrainingComponentInTraining
-        ? addMinutes(lastTrainingComponentInTraining, 30)
-        : training.from;
+        ? lastTrainingComponentInTraining
+        : trainingTo.from;
       to = lastTrainingComponentInTraining
-        ? addMinutes(lastTrainingComponentInTraining, 60)
+        ? addMinutes(lastTrainingComponentInTraining, 30)
         : trainingComponent.to;
     }
 
@@ -1211,22 +1283,20 @@ export class TrainingService {
       subgroups: trainingComponent.subgroups || [],
       supersets: trainingComponent.supersets || [],
       copiedFrom: {
-        lastCopiedFromTrainingId: copiedFromTrainingId,
+        lastCopiedFromTrainingId: trainingFrom.id,
         rootCopiedFromTrainingId: trainingComponent.copiedFrom
           ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
-          : copiedFromTrainingId,
+          : trainingFrom.id,
       },
     } as TrainingComponent;
 
     let newComponents: TrainingComponent[];
-    if (overwrite) {
-      newComponents = training.components.map((c) => {
+    if (override) {
+      newComponents = trainingTo.components.map((c) => {
         if (c.id === trainingComponent.id) return newComponent;
         return c;
       });
-    } else {
-      newComponents = [...training.components, newComponent];
-    }
+    } else newComponents = [...trainingTo.components, newComponent];
 
     const components = await this.cacheManagerService.getComponents();
     const exercises = await this.trainingPlanService.findAllTrainingExercises(
@@ -1235,20 +1305,26 @@ export class TrainingService {
     );
     const methods = await this.cacheManagerService.getMethods();
 
+    this.trainingPlanService.updateWarmupAndCooldownTimes(
+      trainingTo.warmup,
+      trainingTo.cooldown,
+      newComponents,
+    );
+
     this.trainingPlanService.validateTrainingComponents(
       exercises,
       [],
-      [training.warmup, ...newComponents, training.cooldown],
+      [trainingTo.warmup, ...newComponents, trainingTo.cooldown],
       components,
       methods,
     );
 
     const updated = {
-      ...training,
+      ...trainingTo,
       components: newComponents,
     };
 
-    const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
+    const trainingDocRef = this.trainingRepository.doc(copyToRef.trainingId);
     const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
       { ...updated },
     );
@@ -1481,6 +1557,7 @@ export class TrainingService {
     this.validateIsTrainingInFuture(training.from);
 
     // validate components & exercises
+    const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
     const methods = await this.cacheManagerService.getMethods();
     const trainingComponents = [...training.components, ...input];

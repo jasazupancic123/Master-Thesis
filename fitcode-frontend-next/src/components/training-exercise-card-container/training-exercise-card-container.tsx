@@ -26,7 +26,6 @@ interface TrainingExerciseCardContainerProps {
   superior?: { row: boolean; column: boolean; all: boolean };
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
   supersets: Superset[];
-  setSupersetsWithAdd: Dispatch<SetStateAction<Superset[]>>;
 }
 
 export default function TrainingExerciseCardContainer(
@@ -44,7 +43,6 @@ export default function TrainingExerciseCardContainer(
     superior,
     setOpenVideoPlayerModal,
     supersets,
-    setSupersetsWithAdd,
     onAthleteView,
   } = props;
 
@@ -155,7 +153,6 @@ export default function TrainingExerciseCardContainer(
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
       supersets={supersets}
-      setSupersetsWithAdd={setSupersetsWithAdd}
       range={range}
       setRange={setRange}
       setOpenVideoPlayerModal={setOpenVideoPlayerModal}
@@ -173,8 +170,6 @@ export default function TrainingExerciseCardContainer(
       selectedExercise={selectedExercise}
       setSelectedExercise={setSelectedExercise}
       superior={superior}
-      supersets={supersets}
-      setSupersetsWithAdd={setSupersetsWithAdd}
       setOpenVideoPlayerModal={setOpenVideoPlayerModal}
     />
   );

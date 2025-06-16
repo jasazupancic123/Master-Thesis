@@ -50,19 +50,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   // state for arrays
   const [users, setUsers] = useState(allUsers);
   const [trainings, setTrainings] = useState(allTrainings);
-  const [filteredTrainings, setFilteredTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
-
-  // filter trainings every time date changes
-  useEffect(() => {
-    setFilteredTrainings(
-      trainings.filter(
-        (t) =>
-          dateService.isBetween(t.from, dateFrom, dateTo) &&
-          (cycle ? t.cycleId === cycle.id : true)
-      )
-    );
-  }, [cycle, dateFrom, dateTo]);
 
   const value: GroupContextProps = {
     token,
@@ -86,8 +74,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     setDateTo,
     trainings,
     setTrainings,
-    filteredTrainings,
-    setFilteredTrainings,
     filteredUsers,
     setFilteredUsers,
     detectedChanges,

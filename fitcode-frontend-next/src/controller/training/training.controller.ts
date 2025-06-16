@@ -6,6 +6,7 @@ import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import { AverageWorkloadValues } from './type/average-workload-values.type';
 import { PeriodizationType } from '../group/enum/periodization-type.enum';
+import { TrainingMinimal } from './type/training-minimal.type';
 
 const api = CommonService.instance.api;
 
@@ -15,9 +16,13 @@ export class TrainingController {
     query?: DateRange & {
       groupId?: string;
       cycleId?: string;
+      minimal?: number; // cannot be boolean, so just use number
     }
   ) {
-    return api.get<Training[]>('/training', { token, query });
+    return api.get<Training[] | TrainingMinimal[]>('/training', {
+      token,
+      query,
+    });
   }
 
   static async findByDay(token: string, day: Date, groupId: string) {
@@ -65,6 +70,18 @@ export class TrainingController {
     }
   ): Promise<Training> {
     return api.post<Training>('/training', body, { token });
+  }
+
+  static async copyComponent(
+    token: string,
+    body: {
+      copyFromTrainingId: string;
+      copyToTrainingId: string;
+      componentId: string;
+      override?: boolean;
+    }
+  ) {
+    return api.post<Training>('/training/copy/component', body, { token });
   }
 
   static async periodizeTrainings(
@@ -121,20 +138,6 @@ export class TrainingController {
     body: { from: string; to: string }
   ) {
     return api.post<Training>(`/training/${trainingId}/copy`, body, { token });
-  }
-
-  static async copyComponent(
-    token: string,
-    trainingId: string,
-    body: {
-      trainingComponent: TrainingComponent;
-      copiedFromTrainingId: string;
-      overwrite?: boolean;
-    }
-  ) {
-    return api.patch<Training>(`/training/${trainingId}/component/copy`, body, {
-      token,
-    });
   }
 
   static async createWithTrainingComponent(

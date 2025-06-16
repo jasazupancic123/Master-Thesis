@@ -1,14 +1,11 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { ChildrenProps } from '@/common/type/props.type';
 import SidebarAthlete from '@/components/sidebar-athlete/sidebar-athlete';
-import { GroupController } from '@/controller/group/group.controller';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import { cookies } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
-import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 
 export default async function Layout({ children }: ChildrenProps) {
   // fetch data

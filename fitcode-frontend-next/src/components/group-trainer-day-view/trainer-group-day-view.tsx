@@ -40,7 +40,6 @@ export default function TrainerDayView() {
     exercises,
     trainings,
     setTrainings,
-    setFilteredTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
@@ -80,7 +79,7 @@ export default function TrainerDayView() {
   const [loading, setLoading] = useState(true);
 
   async function handleUpdateMultipleTrainings() {
-    const todaysTrainingsFiltered = [amTraining, pmTraining].filter(
+    const todaysTrainingsFiltered = todaysTrainings.filter(
       (t) => t !== undefined
     );
 
@@ -104,17 +103,21 @@ export default function TrainerDayView() {
           return mapped;
         });
 
+        const minimalTrainings = mappedTrainings.map((t) =>
+          TrainingService.convertFromTrainingToTrainingMinimal(t)
+        );
+
         const current = mappedTrainings.find((t) => t.id === training?.id);
         if (current) setTraining(current);
 
         setTrainings((prev) =>
           prev.map((t) => {
-            const newTraining = mappedTrainings.find((nt) => nt.id === t.id);
+            const newTraining = minimalTrainings.find((nt) => nt.id === t.id);
             return newTraining ? newTraining : t;
           })
         );
 
-        setFilteredTrainings((prev) =>
+        setTodaysTrainings((prev) =>
           prev.map((t) => {
             const newTraining = mappedTrainings.find((nt) => nt.id === t.id);
             return newTraining ? newTraining : t;
@@ -167,13 +170,6 @@ export default function TrainerDayView() {
     if (!component) setSelectedSubgroup(null);
   }, [component]);
 
-  const [amTraining, setAmTraining] = useState<Training | undefined>(
-    todaysTrainings.find((t) => dayjs(t.from).hour() < 12)
-  );
-  const [pmTraining, setPmTraining] = useState<Training | undefined>(
-    todaysTrainings.find((t) => dayjs(t.from).hour() >= 12)
-  );
-
   useEffect(() => {
     handleApiRequest(
       router,
@@ -192,42 +188,19 @@ export default function TrainerDayView() {
       undefined,
       undefined
     );
-
-    const newTodaysTrainings = trainings.filter((t) =>
-      commonService.date.isSameDay(day.date, dayjs(t.from))
-    );
-    setAmTraining(newTodaysTrainings.find((t) => dayjs(t.from).hour() < 12));
-    setPmTraining(newTodaysTrainings.find((t) => dayjs(t.from).hour() >= 12));
   }, [day]);
 
   useEffect(() => {
     setLoading(false);
-  }, [amTraining, pmTraining]);
-
-  useEffect(() => {
-    if (!trainings || !trainings.length) return;
-
-    const todaysTrainings = trainings.filter((t) =>
-      commonService.date.isSameDay(day.date, dayjs(t.from))
-    );
-
-    if (todaysTrainings.length === 0) {
-      setAmTraining(undefined);
-      setPmTraining(undefined);
-      return;
-    }
-
-    setAmTraining(todaysTrainings.find((t) => dayjs(t.from).hour() < 12));
-    setPmTraining(todaysTrainings.find((t) => dayjs(t.from).hour() >= 12));
-  }, [trainings]);
+  }, [todaysTrainings]);
 
   useEffect(() => {
     const fetchWorkloads = async () => {
       if (!selectedAthlete) return;
 
-      const combinedComponents = [] as TrainingComponent[];
-      if (amTraining) combinedComponents.push(...amTraining.components);
-      if (pmTraining) combinedComponents.push(...pmTraining.components);
+      const combinedComponents = todaysTrainings
+        .map((t) => t.components)
+        .flat();
 
       if (!combinedComponents || !combinedComponents.length) {
         setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
@@ -310,10 +283,8 @@ export default function TrainerDayView() {
         width="100%"
         minHeight={195}
         sx={{
-          borderBottomRightRadius:
-            (!amTraining && !pmTraining) || !cycle ? 0 : 10,
-          borderBottomLeftRadius:
-            (!amTraining && !pmTraining) || !cycle ? 0 : 10,
+          borderBottomRightRadius: !todaysTrainings.length || !cycle ? 0 : 10,
+          borderBottomLeftRadius: !todaysTrainings.length || !cycle ? 0 : 10,
           bgcolor: 'background.paper',
         }}
         justifyContent="space-evenly"

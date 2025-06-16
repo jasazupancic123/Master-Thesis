@@ -9,11 +9,15 @@ import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import {
+  Superset,
+  TrainingComponent,
+} from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -26,7 +30,7 @@ export interface GroupIdPageProps {
   attributes: Attribute[];
   exercises: Exercise[];
   groups: Group[];
-  trainings: Training[];
+  trainings: TrainingMinimal[];
   methods: Method[];
 }
 
@@ -42,10 +46,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setDateFrom: SetState<Dayjs>;
   dateTo: Dayjs;
   setDateTo: SetState<Dayjs>;
-  trainings: Training[];
-  setTrainings: SetState<Training[]>;
-  filteredTrainings: Training[];
-  setFilteredTrainings: SetState<Training[]>; // filter by from & to & cycle
+  trainings: TrainingMinimal[];
+  setTrainings: SetState<TrainingMinimal[]>;
   filteredUsers: User[];
   setFilteredUsers: SetState<User[]>;
   detectedChanges: boolean;
@@ -61,6 +63,8 @@ export type TrainerDayViewContextProps = {
   exercises: Exercise[];
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
+  supersets: Superset[]; // supersets of the selected component
+  setSupersets: SetState<Superset[]>;
   selectedAthlete: User | undefined;
   setSelectedAthlete: SetStateNullable<User>;
   selectedSubgroup: {

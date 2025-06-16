@@ -10,6 +10,7 @@ import MyModal from '../modal/modal';
 import { Training } from '@/controller/training/type/training.type';
 import { useTheme } from '@mui/material';
 import TrainingWeekDates from '../training-week-date/training-week-date';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const theme = useTheme();
@@ -32,14 +33,15 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     selectedTargets,
     selectedTarget,
     copyComponent,
+    day,
     addTrainingComponent,
     deleteTrainingComponent,
+    setTodaysTrainings,
   } = props;
 
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
-  const [selectedTraining, setSelectedTraining] = useState<Training | null>(
-    null
-  );
+  const [selectedTraining, setSelectedTraining] =
+    useState<TrainingMinimal | null>(null);
 
   return (
     <Box>
@@ -88,12 +90,14 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
             selected={selected}
             selectedTarget={selectedTarget}
             selectedTargets={selectedTargets}
+            setTodaysTrainings={setTodaysTrainings}
             setOpenAreYouSureModal={setOpenAreYouSureModal}
             setSelectedTraining={setSelectedTraining}
             setOpenOverwriteModal={setOpenOverwriteModal}
             setTrainingInPeriodForModal={setTrainingInPeriodForModal}
             addTrainingComponent={addTrainingComponent}
             deleteTrainingComponent={deleteTrainingComponent}
+            day={day}
           />
         </Stack>
       </Box>

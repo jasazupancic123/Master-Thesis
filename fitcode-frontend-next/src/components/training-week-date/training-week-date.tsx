@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Training } from '@/controller/training/type/training.type';
 import { addMinutes } from 'date-fns';
 import { SetState } from '@/common/type/state.type';
@@ -16,6 +16,8 @@ import { getFilteredTrainings, handleClickDateCell } from './state';
 import { Target } from '@/controller/target/type/target.type';
 import { Component } from '@/controller/component/type/component.type';
 import { AddTrainingComponents } from '../trainer-cycle-view/type';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { Day } from '@/common/service/util/date.util';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];
@@ -25,18 +27,19 @@ interface TrainingWeekDatesProps {
   copyComponent?: boolean;
   trainingComponent?: TrainingComponent;
   training?: Training;
-  selectedTrainings?: Training[];
-  setSelectedTrainings?: SetState<Training[]>;
+  selectedTrainings?: TrainingMinimal[];
+  setSelectedTrainings?: SetState<TrainingMinimal[]>;
   selected?: Component[];
   selectedTarget?: Target;
   selectedTargets?: {
     componentId: string;
     target: Target;
   }[];
+  day?: Day;
   setOpenAreYouSureModal: SetState<boolean>;
-  setSelectedTraining: SetState<Training | null>;
+  setSelectedTraining: SetState<TrainingMinimal | null>;
   setOpenOverwriteModal?: SetState<boolean>;
-  setTrainingInPeriodForModal?: SetState<Training | null>;
+  setTrainingInPeriodForModal?: SetState<TrainingMinimal | null>;
   addTrainingComponent: (
     trainingId: string,
     data: AddTrainingComponents
@@ -45,6 +48,7 @@ interface TrainingWeekDatesProps {
     trainingId: string,
     componentId: string
   ) => Promise<void>;
+  setTodaysTrainings?: SetState<Training[]>;
 }
 
 export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
@@ -57,8 +61,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
     trainings,
     components,
     setCycle,
-    setFilteredTrainings,
-    filteredTrainings,
     setTrainings,
     exercises: allExercises,
     methods,
@@ -77,6 +79,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
     selected,
     selectedTarget,
     selectedTargets,
+    day,
+    setTodaysTrainings,
     setOpenAreYouSureModal,
     setSelectedTraining,
     setOpenOverwriteModal,
@@ -157,9 +161,9 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                   methods,
                   selected,
                   selectedTargets,
-                  filteredTrainings,
+                  day,
+                  setTodaysTrainings,
                   setTrainings,
-                  setFilteredTrainings,
                   setCycle,
                   setOpenOverwriteModal,
                   setTrainingInPeriodForModal,
@@ -187,7 +191,7 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
               {
                 periodizationView,
                 trainingComponent,
-                filteredTrainings,
+                trainings,
                 selectedTrainings,
                 date,
                 selected,

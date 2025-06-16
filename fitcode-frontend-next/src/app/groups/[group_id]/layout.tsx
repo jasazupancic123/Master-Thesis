@@ -34,6 +34,7 @@ export default async function Layout({ children, params }: LayoutProps) {
     return <div>Unauthorized</div>;
   }
 
+  const minimal = 1; // fetch minimal trainings if defined
   const groupId = (await params).group_id;
   const group = await GroupController.findById(token, groupId);
   if (!group) return notFound();
@@ -47,7 +48,7 @@ export default async function Layout({ children, params }: LayoutProps) {
       ExerciseController.findAll(token),
       AttributeController.findAll(),
       ComponentController.findAll(),
-      TrainingController.findAll(token, { groupId }),
+      TrainingController.findAll(token, { groupId, minimal }),
       MethodController.findAll(token),
     ]);
 

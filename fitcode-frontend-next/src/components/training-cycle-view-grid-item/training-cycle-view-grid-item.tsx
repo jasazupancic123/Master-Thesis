@@ -5,11 +5,13 @@ import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import React, { useEffect, useRef, useState } from 'react';
 import { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
-import { COLORS } from '@/common/constant/color.constant';
-import { preconnect } from 'react-dom';
+import {
+  TrainingComponent,
+  TrainingComponentMinimal,
+} from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
 import toast from 'react-hot-toast';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 const commonService = CommonService.instance;
 
@@ -33,7 +35,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWrapped, setIsWrapped] = useState(false);
-  const [components, setComponents] = useState<TrainingComponent[]>(
+  const [components, setComponents] = useState<TrainingComponentMinimal[]>(
     (componentCalendarView || periodizationView) &&
       trainingComponent &&
       trainingComponent.component
@@ -46,7 +48,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
               return c;
             else return null;
           })
-          .filter((c) => c !== null) as TrainingComponent[])
+          .filter((c) => c !== null) as TrainingComponentMinimal[])
       : training.components
   );
 

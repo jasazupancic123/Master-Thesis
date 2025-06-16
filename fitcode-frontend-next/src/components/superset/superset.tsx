@@ -20,8 +20,6 @@ interface SupersetComponentProps {
   i: number;
   selectedExercise: TrainingExercise | null;
   setSelectedExercise: SetState<TrainingExercise | null>;
-  supersetsWithAdd: SupersetClass[];
-  setSupersetsWithAdd: SetState<SupersetClass[]>;
   menuExercise: TrainingExercise | null;
   setMenuExercise: SetState<TrainingExercise | null>;
   anchorEl: HTMLElement | null;
@@ -37,8 +35,6 @@ export default function Superset(props: SupersetComponentProps) {
     i,
     selectedExercise,
     setSelectedExercise,
-    supersetsWithAdd,
-    setSupersetsWithAdd,
     menuExercise,
     setMenuExercise,
     anchorEl,
@@ -50,16 +46,16 @@ export default function Superset(props: SupersetComponentProps) {
 
   const screenSize = useScreenSize();
 
-  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
-    useGroup();
-
+  const { setDetectedChanges } = useGroup();
   const {
     training,
     setTraining,
     component,
     setComponent,
+    supersets,
     selectedSubgroup,
     setSelectedSubgroup,
+    setTodaysTrainings,
   } = useTrainerDayViewContext();
 
   if (!component || !training) return null;
@@ -116,14 +112,12 @@ export default function Superset(props: SupersetComponentProps) {
                   {
                     training,
                     setTraining,
+                    supersets,
+                    setTodaysTrainings,
                     component,
                     setComponent,
                     selectedSubgroup,
                     setSelectedSubgroup,
-                    supersetsWithAdd,
-                    setSupersetsWithAdd,
-                    filteredTrainings,
-                    setFilteredTrainings,
                     setDetectedChanges,
                   }
                 )
@@ -137,8 +131,7 @@ export default function Superset(props: SupersetComponentProps) {
             </Box>
 
             <Grid2 container gap={0.5}>
-              {supersetsWithAdd.length === 1 &&
-              superset.exercises.length === 0 ? (
+              {supersets.length === 1 && superset.exercises.length === 0 ? (
                 <Box
                   border="1px dashed #B2B3B7"
                   borderRadius={2}
@@ -164,8 +157,6 @@ export default function Superset(props: SupersetComponentProps) {
                     k={k}
                     selectedExercise={selectedExercise}
                     setSelectedExercise={setSelectedExercise}
-                    supersetsWithAdd={supersetsWithAdd}
-                    setSupersetsWithAdd={setSupersetsWithAdd}
                     menuExercise={menuExercise}
                     setMenuExercise={setMenuExercise}
                     anchorEl={anchorEl}
@@ -191,14 +182,12 @@ export default function Superset(props: SupersetComponentProps) {
                   {
                     training,
                     setTraining,
+                    supersets,
+                    setTodaysTrainings,
                     component,
                     setComponent,
                     selectedSubgroup,
                     setSelectedSubgroup,
-                    supersetsWithAdd,
-                    setSupersetsWithAdd,
-                    filteredTrainings,
-                    setFilteredTrainings,
                     setDetectedChanges,
                   }
                 )

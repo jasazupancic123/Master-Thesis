@@ -34,13 +34,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const {
-    group,
-    users,
-    filteredTrainings,
-    setFilteredTrainings,
-    setDetectedChanges,
-  } = useGroup();
+  const { group, users, setDetectedChanges } = useGroup();
 
   const {
     members: groupMembers,
@@ -48,6 +42,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setComponent,
     training,
     setTraining,
+    setTodaysTrainings,
     setSelectedSubgroup,
     selectedSubgroup,
     selectedAthlete,
@@ -125,10 +120,9 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         {
           training,
           setTraining,
+          setTodaysTrainings,
           component,
           setComponent,
-          filteredTrainings,
-          setFilteredTrainings,
           setDetectedChanges,
         }
       );
@@ -144,7 +138,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         component,
         training,
         setTraining,
-        setFilteredTrainings,
+        setTodaysTrainings,
       });
     }
   };

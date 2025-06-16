@@ -30,7 +30,6 @@ interface TrainignExerciseSelectedProps {
   selectedExercise: TrainingExercise | null;
   setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
   supersets: Superset[];
-  setSupersetsWithAdd: Dispatch<SetStateAction<Superset[]>>;
   range: number[];
   setRange: SetState<number[]>;
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
@@ -59,7 +58,6 @@ export default function TrainignExerciseSelected(
     superior,
     setOpenVideoPlayerModal,
     supersets,
-    setSupersetsWithAdd,
     range,
     setRange,
     max,
@@ -94,8 +92,6 @@ export default function TrainignExerciseSelected(
           setSelectedExercise={setSelectedExercise}
           chartView={true}
           superior={superior}
-          supersets={supersets}
-          setSupersetsWithAdd={setSupersetsWithAdd}
           setOpenVideoPlayerModal={setOpenVideoPlayerModal}
         />
       </Grid2>

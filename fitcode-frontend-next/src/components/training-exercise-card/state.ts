@@ -169,12 +169,8 @@ export function updateTraining(
   state: {
     training: Training;
     component: TrainingComponent | null;
-    setTraining: SetStateNullable<Training>;
-    setComponent: SetStateNullable<TrainingComponent>;
+    setTodaysTrainings: SetState<Training[]>;
     supersets: Superset[];
-    setSupersetsWithAdd: SetState<Superset[]>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
     setDetectedChanges: SetState<boolean>;
     selectedSubgroup: {
       subgroup: Subgroup | null;
@@ -191,12 +187,8 @@ export function updateTraining(
   const {
     training,
     component,
-    setTraining,
-    setComponent,
+    setTodaysTrainings,
     supersets,
-    setSupersetsWithAdd,
-    filteredTrainings,
-    setFilteredTrainings,
     setDetectedChanges,
     selectedSubgroup,
     supersetIndex,
@@ -217,7 +209,7 @@ export function updateTraining(
   if (supersetIndex !== -1) newSupersets[supersetIndex] = newSuperset;
 
   ReactDOM.unstable_batchedUpdates(() => {
-    setSupersetsWithAdd(newSupersets);
+    setDetectedChanges(true);
 
     if (selectedSubgroup?.subgroup) {
       // set new avg future workload values
@@ -265,33 +257,24 @@ export function updateTraining(
         index: selectedSubgroup.index,
       });
 
-      setComponent(updatedComponent);
       const updatedComponents = [...training.components].map((c) =>
         c.id === component.id ? updatedComponent : c
       );
 
       const newTraining = { ...training, components: updatedComponents };
-      setTraining(newTraining);
 
-      const updatedTrainings = [...filteredTrainings].map(
-        (filteredTraining) => {
-          if (filteredTraining.id === training.id) {
-            return newTraining;
-          }
-          return filteredTraining;
-        }
+      setTodaysTrainings((prev) =>
+        prev.map((t) => {
+          if (t.id !== newTraining.id) return newTraining;
+          return t;
+        })
       );
-
-      setFilteredTrainings(updatedTrainings);
     } else {
       const updatedComponent = {
         ...component,
         supersets: newSupersets,
       };
 
-      setDetectedChanges(true);
-
-      setComponent(updatedComponent);
       const updatedComponents = [...training.components].map((c) =>
         c.id === component.id ? updatedComponent : c
       );
@@ -335,19 +318,13 @@ export function updateTraining(
           }
         : { ...training, components: updatedComponents };
 
-      setTraining(newTraining);
-
-      const updatedTrainings = filteredTrainings.map((filteredTraining) => {
-        if (filteredTraining.id === training.id) {
-          return newTraining;
-        }
-        return filteredTraining;
-      });
-
-      setFilteredTrainings(updatedTrainings);
+      setTodaysTrainings((prev) =>
+        prev.map((t) => {
+          if (t.id === newTraining.id) return newTraining;
+          return t;
+        })
+      );
     }
-
-    setDetectedChanges(true);
   });
 }
 
@@ -423,7 +400,7 @@ export const getLAndRValues = (
     customAthleteWorkloads,
     selectedAthlete,
   } = state;
-  
+
   let valueL, valueR;
 
   // find the custom workload for the selected athlete

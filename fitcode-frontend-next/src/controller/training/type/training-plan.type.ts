@@ -9,6 +9,7 @@ import { CopiedFrom } from '@/controller/component/type/copied-from.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Method } from '@/controller/method/type/method.type';
 import { AttributeRange } from '@/controller/attribute/type/attribute-range.entity';
+import { SubgroupMinimal } from './subggroup-minimal.type';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
@@ -19,6 +20,19 @@ export type TrainingComponent = IdEntity &
 
     // mapped properties
     completedMembersIds: string[]; // members who completed the component
+    method?: Method;
+    target?: Target; // selected target
+    component?: Component;
+    copiedFrom?: CopiedFrom; // used for copying components from other trainings
+  };
+
+export type TrainingComponentMinimal = IdEntity &
+  ColorEntity &
+  Required<DateRange> & {
+    subgroups: SubgroupMinimal[];
+    methodId?: string;
+
+    // mapped properties
     method?: Method;
     target?: Target; // selected target
     component?: Component;

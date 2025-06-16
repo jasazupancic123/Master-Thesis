@@ -19,27 +19,21 @@ export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
   const screenSize = useScreenSize();
 
-  const {
-    exercises: allExercises,
-    filteredTrainings,
-    setFilteredTrainings,
-    setTrainings,
-    setDetectedChanges,
-  } = useGroup();
+  const { exercises: allExercises, setDetectedChanges } = useGroup();
 
   const {
     training,
     setTraining,
+    setTodaysTrainings,
     component,
     setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
     setSearch,
+    supersets,
+    setSupersets,
   } = useTrainerDayViewContext();
 
-  const supersets =
-    selectedSubgroup?.subgroup?.supersets || component?.supersets || [];
-  const [supersetsWithAdd, setSupersetsWithAdd] = useState(supersets);
   const [selectedExercisesIds, setSelectedExercisesIds] = useState(
     supersets && supersets.length
       ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
@@ -69,15 +63,9 @@ export default function Supersets(props: SupersetsProps) {
   }, [supersets, supersets.length]);
 
   useEffect(() => {
-    if (selectedSubgroup?.subgroup?.supersets) {
-      setSupersetsWithAdd(selectedSubgroup.subgroup.supersets);
-    } else {
-      if (!component) setSelectedExercisesIds([]);
-      else if (component.supersets) setSupersetsWithAdd(component.supersets);
-    }
+    if (!selectedSubgroup?.subgroup?.supersets && !component)
+      setSelectedExercisesIds([]);
   }, [component, selectedSubgroup]);
-
-  useEffect(() => {}, [selectedExercise]);
 
   if (!component || !training) return null;
 
@@ -92,27 +80,22 @@ export default function Supersets(props: SupersetsProps) {
           selectedSubgroup,
           setSelectedSubgroup,
           supersets,
-          supersetsWithAdd,
-          setSupersetsWithAdd,
-          filteredTrainings,
-          setFilteredTrainings,
+          setSupersets,
+          setTodaysTrainings,
           setDetectedChanges,
         })
       }
     >
       <Grid2 container rowSpacing={2}>
         {/* Supersets */}
-        {supersetsWithAdd &&
-          supersetsWithAdd.length > 0 &&
-          supersetsWithAdd.map((superset, i) => (
+        {supersets &&
+          supersets.map((superset, i) => (
             <Superset
               key={i}
               superset={superset}
               i={i}
               selectedExercise={selectedExercise}
               setSelectedExercise={setSelectedExercise}
-              supersetsWithAdd={supersetsWithAdd}
-              setSupersetsWithAdd={setSupersetsWithAdd}
               menuExercise={menuExercise}
               setMenuExercise={setMenuExercise}
               anchorEl={anchorEl}
@@ -124,7 +107,7 @@ export default function Supersets(props: SupersetsProps) {
           ))}
 
         {/* Add new superset field */}
-        {supersetsWithAdd.length < NUM_MAX_SUPERSETS && (
+        {supersets.length < NUM_MAX_SUPERSETS && (
           <Grid2
             size={{ xs: 12, sm: screenSize.isLandscapeMobile ? 4 : 6, md: 3 }}
           >
@@ -161,7 +144,7 @@ export default function Supersets(props: SupersetsProps) {
         cancelText="Close"
         onCancel={() => {
           const oldExercises = selectedExercisesIds.filter((id) =>
-            supersetsWithAdd
+            supersets
               .map((s) => s.exercises.map((e) => e.id))
               .flat()
               .includes(id)
@@ -182,13 +165,11 @@ export default function Supersets(props: SupersetsProps) {
             {
               training,
               setTraining,
-              setTrainings,
-              filteredTrainings,
-              setFilteredTrainings,
+              setTodaysTrainings,
               component,
               setComponent,
-              supersetsWithAdd,
-              setSupersetsWithAdd,
+              supersets,
+              setSupersets,
               setOpenAddExerciseModal,
               setDetectedChanges,
               setSearch,

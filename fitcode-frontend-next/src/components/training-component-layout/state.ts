@@ -1,7 +1,10 @@
 import toast from 'react-hot-toast';
 import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import {
+  TrainingComponent,
+  TrainingComponentMinimal,
+} from '@/controller/training/type/training-plan.type';
 import { CopiedFrom } from '@/controller/component/type/copied-from.type';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
@@ -10,12 +13,16 @@ import { Method } from '@/controller/method/type/method.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Day } from '@/common/service/util/date.util';
+import dayjs from 'dayjs';
+import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
 
 export async function handleCopyComponentApiRequest(
   input: {
     training: Training;
-    trainingInPeriod: Training;
+    trainingInPeriod: TrainingMinimal;
     component: TrainingComponent;
+    override?: boolean;
   },
   state: {
     token: string;
@@ -23,11 +30,12 @@ export async function handleCopyComponentApiRequest(
     allComponents: Component[];
     allExercises: Exercise[];
     allMethods: Method[];
-    setTrainings: SetState<Training[]>;
-    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<TrainingMinimal[]>;
+    setTodaysTrainings: SetState<Training[]>;
+    day: Day;
   }
 ) {
-  const { training, trainingInPeriod, component } = input;
+  const { training, trainingInPeriod, component, override } = input;
 
   const {
     router,
@@ -36,14 +44,15 @@ export async function handleCopyComponentApiRequest(
     allExercises,
     allMethods,
     setTrainings,
-    setFilteredTrainings,
+    setTodaysTrainings,
+    day,
   } = state;
 
   let from;
   const componentInTraining = trainingInPeriod.components.find(
     (c) => c.id === component.id || c.component?.id === component.component?.id
   );
-  let newComponents = [] as TrainingComponent[];
+  let newComponents = [] as TrainingComponentMinimal[];
   if (componentInTraining) {
     // replace the component in the training
     newComponents = [...trainingInPeriod.components].map((c) => {
@@ -92,25 +101,39 @@ export async function handleCopyComponentApiRequest(
   handleApiRequest(
     router,
     () =>
-      TrainingController.update(token, trainingInPeriod.id, {
-        components: newComponents,
-        warmup: trainingInPeriod.warmup,
-        cooldown: trainingInPeriod.cooldown,
+      TrainingController.copyComponent(token, {
+        copyFromTrainingId: training.id,
+        copyToTrainingId: trainingInPeriod.id,
+        componentId: component.id,
+        override,
       }),
     (training) => {
-      training = TrainingService.mapComponentsExercisesMethods(
+      const mapped = TrainingService.mapComponentsExercisesMethods(
         training,
         allComponents,
         allExercises,
         allMethods
       );
 
+      const minimalTraining =
+        TrainingService.convertFromTrainingToTrainingMinimal(mapped);
+
       setTrainings((prev) =>
-        prev.map((t) => (t.id === training.id ? training : t))
+        prev.map((t) => {
+          if (t.id === minimalTraining.id) return minimalTraining;
+          return t;
+        })
       );
-      setFilteredTrainings((prev) =>
-        prev.map((t) => (t.id === training.id ? training : t))
-      );
+
+      if (dayjs(trainingInPeriod.from).isSame(day.date, 'day')) {
+        setTodaysTrainings((prev) =>
+          prev.map((t) => {
+            if (t.id === mapped.id) return mapped;
+            return t;
+          })
+        );
+      }
+
       toast.success('Component copied successfully');
     },
     undefined,

@@ -1,11 +1,9 @@
 import TrainingCard from '@/components/training-card/training-card';
-import { Training } from '@/controller/training/type/training.type';
 import { useGroup } from '@/store/group-provider';
 import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import { Day } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
-import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React from 'react';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
@@ -70,17 +68,15 @@ export default function GroupTrainerDayViewTrainings(
       ) : (
         todaysTrainings.map((training) => {
           const period = dayjs(training.from).hour() < 12 ? 'AM' : 'PM';
-          return <TrainingCard day={day} training={training} period={period} />;
+          return (
+            <TrainingCard
+              key={training.id}
+              day={day}
+              training={training}
+              period={period}
+            />
+          );
         })
-        /*
-          {amTraining && (
-            <TrainingCard day={day} training={amTraining} period="AM" />
-          )}
-
-          {pmTraining && (
-            <TrainingCard day={day} training={pmTraining} period="PM" />
-          )}
-            */
       )}
     </Box>
   );

@@ -12,10 +12,9 @@ export async function handleAddMembersSubgroup(
   state: {
     training: Training | undefined;
     setTraining: SetStateNullable<Training>;
+    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent | undefined;
     setComponent: SetState<TrainingComponent | undefined>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -23,10 +22,9 @@ export async function handleAddMembersSubgroup(
   const {
     training,
     setTraining,
+    setTodaysTrainings,
     component,
     setComponent,
-    filteredTrainings,
-    setFilteredTrainings,
     setDetectedChanges,
   } = state;
 
@@ -124,12 +122,11 @@ export async function handleAddMembersSubgroup(
     await handleAddSubgroup({
       training,
       setTraining,
+      setTodaysTrainings,
       component: newComponent!,
       setComponent,
       createSubgroup,
       setCreateSubgroup: undefined,
-      filteredTrainings,
-      setFilteredTrainings,
       setDetectedChanges,
     });
 
@@ -139,12 +136,11 @@ export async function handleAddMembersSubgroup(
   await handleAddSubgroup({
     training,
     setTraining,
+    setTodaysTrainings,
     component: component!,
     setComponent,
     createSubgroup,
     setCreateSubgroup: undefined,
-    filteredTrainings,
-    setFilteredTrainings,
     setDetectedChanges,
     updateTrainingsAvgFutureWorkload: true,
   });

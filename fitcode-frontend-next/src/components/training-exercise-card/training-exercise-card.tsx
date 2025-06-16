@@ -2,42 +2,36 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { Box, Tooltip } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TrainingExerciseCardProps } from '../trainer-day-view/props';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useGroup } from '@/store/group-provider';
 import { updateTraining } from './state';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
 
-  const {
-    training,
-    component,
-    selectedSubgroup,
-    setSelectedSubgroup,
-    setComponent,
-    setTraining,
-  } = useTrainerDayViewContext();
+  const { training, component, selectedSubgroup, setSelectedSubgroup } =
+    useTrainerDayViewContext();
 
-  const { filteredTrainings, setFilteredTrainings, setDetectedChanges } =
-    useGroup();
+  const { setDetectedChanges } = useGroup();
+  const { supersets, setTodaysTrainings } = useTrainerDayViewContext();
 
   const {
     supersetIndex,
     setSelectedExercise,
     chartView,
     setOpenVideoPlayerModal,
-    supersets,
-    setSupersetsWithAdd,
     exercise: propsExercise,
   } = props;
 
   const [exercise, setExercise] = useState(propsExercise);
   const [expandedSetsView, setExpandedSetsView] = useState(false);
   const [setsNumber, setSetsNumber] = useState(props.exercise.sets.length);
+  const isSetNumberInitedRef = useRef(false);
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
   const selectedTrainingOrSubgroup =
@@ -50,9 +44,13 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     selectedTrainingOrSubgroup?.supersets?.[supersetIndex!]?.exercises?.[k!];
 
   const params =
-    currentExercise?.sets?.[0]?.paramValuesL
-      ?.map((pv) => exercise?.params?.find((p) => p.field === pv.field)!)
-      ?.filter((p) => p) || [];
+    currentExercise?.sets?.[0]?.paramValuesL?.map((pv) =>
+      Array.isArray(exercise.params)
+        ? exercise?.params?.find((p) => p.field === pv.field)
+        : Object.values(exercise.params).find((p: any) => p.field === pv.field)
+    ) ||
+    []?.filter((p) => p) ||
+    [];
 
   if (!training || !component || !params) return null;
 
@@ -64,6 +62,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   }, [propsExercise]);
 
   useEffect(() => {
+    if (!isSetNumberInitedRef.current) {
+      isSetNumberInitedRef.current = true;
+      return;
+    }
     const newSets = setsNumber;
     if (newSets > 16 || newSets < 1) return;
 
@@ -101,12 +103,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       {
         training,
         component,
-        setTraining,
-        setComponent,
+        setTodaysTrainings,
         supersets,
-        setSupersetsWithAdd,
-        filteredTrainings,
-        setFilteredTrainings,
         setDetectedChanges,
         selectedSubgroup,
         setSelectedSubgroup,
@@ -192,8 +190,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setExercise={setExercise}
           expandedSetsView={expandedSetsView}
           setExpandedSetsView={setExpandedSetsView}
-          supersets={supersets}
-          setSupersetsWithAdd={setSupersetsWithAdd}
           setsNumber={setsNumber}
           setSetsNumber={setSetsNumber}
           i={i}
@@ -204,8 +200,6 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           exercise={exercise}
           expandedSetsView={expandedSetsView}
           setExpandedSetsView={setExpandedSetsView}
-          supersets={supersets}
-          setSupersetsWithAdd={setSupersetsWithAdd}
           supersetIndex={supersetIndex}
         />
       )}

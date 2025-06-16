@@ -23,19 +23,14 @@ interface TrainingComponentExpandedProps {
 export default function TrainingComponentExpanded(
   props: TrainingComponentExpandedProps
 ) {
-  const { training, trainingComponent } = props;
+  const { training } = props;
 
   const screenSize = useScreenSize();
 
-  const {
-    setDetectedChanges,
-    setTrainings,
-    setFilteredTrainings,
-    trainings,
-    methods: allMethods,
-  } = useGroup();
+  const { setDetectedChanges, trainings, methods: allMethods } = useGroup();
 
-  const { component, setComponent } = useTrainerDayViewContext();
+  const { component, setComponent, setTodaysTrainings } =
+    useTrainerDayViewContext();
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
   const [afterSet, setAfterSet] = useState<AfterSet | null>();
@@ -84,27 +79,20 @@ export default function TrainingComponentExpanded(
         }}
       />
 
-      <Tooltip
-        title={
-          trainingComponent.target ? trainingComponent.target.name : 'No target'
-        }
-      >
+      <Tooltip title={component.target ? component.target.name : 'No target'}>
         <SelectInput<Method>
           label={'Method'}
-          value={trainingComponent.method?.id || ''}
+          value={component.method?.id || ''}
           icon={null}
           items={allMethods}
           itemKey="id"
           itemName="name"
-          disabled={[WARMUP_ID, COOLDOWN_ID].includes(trainingComponent.id)}
+          disabled={[WARMUP_ID, COOLDOWN_ID].includes(component.id)}
           sx={{
             maxWidth: 75,
           }}
           setValue={(methodId) => {
             const method = allMethods.find((m) => m.id === methodId);
-
-            const foundTraining = trainings.find((t) => t.id === training.id);
-            if (!foundTraining) return;
 
             const updatedComponent = {
               ...component,
@@ -196,10 +184,10 @@ export default function TrainingComponentExpanded(
 
             setComponent(updatedComponent);
 
-            const updatedComponents = foundTraining.components.map((c) => {
+            const updatedComponents = training.components.map((c) => {
               if (
-                c.id === trainingComponent.id ||
-                c.component?.id === trainingComponent.component?.id
+                c.id === component.id ||
+                c.component?.id === component.component?.id
               ) {
                 return {
                   ...updatedComponent,
@@ -208,17 +196,7 @@ export default function TrainingComponentExpanded(
               return c;
             });
 
-            setTrainings((prev) =>
-              prev.map((t) => {
-                if (t.id !== training.id) return t;
-                return {
-                  ...t,
-                  components: updatedComponents,
-                };
-              })
-            );
-
-            setFilteredTrainings((prev) =>
+            setTodaysTrainings((prev) =>
               prev.map((t) => {
                 if (t.id !== training.id) return t;
                 return {
