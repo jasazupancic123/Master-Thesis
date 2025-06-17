@@ -10,7 +10,6 @@ import {
   addMinutes,
   endOfDay,
   isBefore,
-  isThursday,
   startOfDay,
   startOfHour,
   subMinutes,
@@ -47,21 +46,11 @@ import { FinishComponentDto } from '../dto/finish-component.dto';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { PeriodizationService } from './periodization.service';
-import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 import { FindByDayDto } from '../dto/find-by-day.dto';
-import { plainToInstance } from 'class-transformer';
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
-
-// import * as dayjs from 'dayjs'; // use for tests
-// import * as isoWeek from 'dayjs/plugin/isoWeek'; // use for tests
-import dayjs from 'dayjs'; // use for prod
-import isoWeek from 'dayjs/plugin/isoWeek'; // use for prod
-import { TrainingInfoDto } from '../dto/training-info.dto';
-
-dayjs.extend(isoWeek);
 
 @Injectable()
 export class TrainingService {
@@ -71,6 +60,7 @@ export class TrainingService {
     private readonly firebaseService: FirebaseService,
     private readonly cacheManagerService: CacheManagerService,
     private readonly commonService: CommonService,
+    private readonly periodizationService: PeriodizationService,
     private readonly trainingRepository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadService: WorkloadService,
@@ -508,7 +498,7 @@ export class TrainingService {
       filteredTrainings,
     );
 
-    const periodizedTrainings = PeriodizationService.periodize(
+    const periodizedTrainings = this.periodizationService.periodize(
       baseTraining,
       filteredTrainings,
       weeks,

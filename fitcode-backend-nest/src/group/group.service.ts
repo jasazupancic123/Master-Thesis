@@ -143,7 +143,7 @@ export class GroupService {
 
     // validate
     await this.validateMembers(membersIds);
-    await this.checkLimit(user.uid);
+    // await this.checkLimit(user.uid);
 
     const institution = await this.institutionService.findOneOrFail({
       institutionId,

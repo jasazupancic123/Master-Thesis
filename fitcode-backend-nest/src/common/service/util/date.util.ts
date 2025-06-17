@@ -1,5 +1,4 @@
 import { addDays, isAfter, isBefore, isEqual, startOfWeek } from 'date-fns';
-import dayjs from 'dayjs';
 import { Week } from '../../../group/entity/cycle.entity';
 
 export class DateUtil {
@@ -21,6 +20,24 @@ export class DateUtil {
 
   isEqual(date: Date, compare: Date): boolean {
     return isEqual(date, compare);
+  }
+
+  getIsoWeek(date: Date): number {
+    const target = new Date(date.valueOf());
+
+    // Set to nearest Thursday: ISO week starts on Monday, week 1 is the week with the first Thursday
+    const day = target.getUTCDay(); // Sunday is 0, Monday is 1, ..., Saturday is 6
+    const diff = day === 0 ? -3 : 4 - day; // Move to Thursday
+    target.setUTCDate(target.getUTCDate() + diff);
+
+    // Get first day of the year
+    const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+    const daysDiff = Math.floor(
+      (target.getTime() - yearStart.getTime()) / 86400000,
+    );
+
+    // Calculate ISO week number
+    return Math.floor(daysDiff / 7) + 1;
   }
 
   doRangesOverlap(
@@ -58,9 +75,5 @@ export class DateUtil {
     }
 
     return weeksArray;
-  }
-
-  pretty(date: Date): string {
-    return dayjs(date).format('DD MMM YYYY');
   }
 }

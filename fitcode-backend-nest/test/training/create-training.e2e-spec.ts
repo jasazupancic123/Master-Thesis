@@ -31,6 +31,10 @@ import { ParamType, VolType } from '../../src/component/enum/param.enum';
 import { TrainingComponent } from '../../src/training/entity/training-component.entity';
 import { WorkloadService } from '../../src/training/service/workload.service';
 import { SetStatus } from '../../src/training/enum/set-status.enum';
+import { Workload } from '../../src/training/entity/workload.entity';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
+import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
@@ -42,6 +46,7 @@ describe('Create Training (e2e)', () => {
   let userService: UserService;
   let workloadService: WorkloadService;
 
+  let institution: Institution;
   let group: Group;
   let component: Component;
 
@@ -61,8 +66,15 @@ describe('Create Training (e2e)', () => {
     userService = moduleFixture.get(UserService);
     workloadService = moduleFixture.get(WorkloadService);
 
+    const institutionService = moduleFixture.get(InstitutionService);
+    institution = await institutionService.create(
+      global.admin,
+      generateInstitutionStub(),
+    );
+
     component = await componentService.create(generateComponentStub());
     group = await createGroupWithCycles(groupService, {
+      institutionId: institution.id,
       owner: trainer,
       membersIds: [athlete.uid],
     });
@@ -599,6 +611,7 @@ describe('Create Training (e2e)', () => {
     it('should successfully create training', async () => {
       // create overlapping training in another group to ensure no error is thrown
       const otherGroup = await createGroupWithCycles(groupService, {
+        institutionId: institution.id,
         owner: trainer,
         membersIds: [athlete.uid],
       });
@@ -737,170 +750,37 @@ describe('Create Training (e2e)', () => {
 
       // 1 group member x 2 exercises x 3 sets each (default) = 6 workloads
       expect(workloads).toHaveLength(6);
-      expect(workloads).toEqual([
-        {
-          userId: athlete.uid,
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          plannedAt: expect.anything(),
-          trainingId: response.body.id,
-          componentId: component.id,
-          exerciseId: exercises[0].id,
-          setNumber: 1,
-          notes: null,
-          volWork1Type: VolType.Rep,
-          prescribedVolWork1ValueL: 12,
-          prescribedVolWork1ValueR: 12,
-          volWork1ValueL: null,
-          volWork1ValueR: null,
-          volWork2ValueL: null,
-          volWork2ValueR: null,
-          intRecValueL: null,
-          intRecValueR: null,
-          volRecValueL: null,
-          volRecValueR: null,
-          intWork1ValueL: null,
-          intWork1ValueR: null,
-          intWork2ValueL: null,
-          intWork2ValueR: null,
-          status: SetStatus.NOT_STARTED,
-        },
-        {
-          userId: athlete.uid,
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          plannedAt: expect.anything(),
-          trainingId: response.body.id,
-          componentId: component.id,
-          exerciseId: exercises[0].id,
-          setNumber: 2,
-          notes: null,
-          volWork1Type: VolType.Rep,
-          prescribedVolWork1ValueL: 12,
-          prescribedVolWork1ValueR: 12,
-          volWork1ValueL: null,
-          volWork1ValueR: null,
-          volWork2ValueL: null,
-          volWork2ValueR: null,
-          intRecValueL: null,
-          intRecValueR: null,
-          volRecValueL: null,
-          volRecValueR: null,
-          intWork1ValueL: null,
-          intWork1ValueR: null,
-          intWork2ValueL: null,
-          intWork2ValueR: null,
-          status: SetStatus.NOT_STARTED,
-        },
-        {
-          userId: athlete.uid,
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          plannedAt: expect.anything(),
-          trainingId: response.body.id,
-          componentId: component.id,
-          exerciseId: exercises[0].id,
-          setNumber: 3,
-          notes: null,
-          volWork1Type: VolType.Rep,
-          prescribedVolWork1ValueL: 12,
-          prescribedVolWork1ValueR: 12,
-          volWork1ValueL: null,
-          volWork1ValueR: null,
-          volWork2ValueL: null,
-          volWork2ValueR: null,
-          intRecValueL: null,
-          intRecValueR: null,
-          volRecValueL: null,
-          volRecValueR: null,
-          intWork1ValueL: null,
-          intWork1ValueR: null,
-          intWork2ValueL: null,
-          intWork2ValueR: null,
-          status: SetStatus.NOT_STARTED,
-        },
-        {
-          userId: athlete.uid,
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          plannedAt: expect.anything(),
-          trainingId: response.body.id,
-          componentId: component.id,
-          exerciseId: exercises[1].id,
-          setNumber: 1,
-          notes: null,
-          volWork1Type: VolType.Rep,
-          prescribedVolWork1ValueL: 12,
-          prescribedVolWork1ValueR: 12,
-          volWork1ValueL: null,
-          volWork1ValueR: null,
-          volWork2ValueL: null,
-          volWork2ValueR: null,
-          intRecValueL: null,
-          intRecValueR: null,
-          volRecValueL: null,
-          volRecValueR: null,
-          intWork1ValueL: null,
-          intWork1ValueR: null,
-          intWork2ValueL: null,
-          intWork2ValueR: null,
-          status: SetStatus.NOT_STARTED,
-        },
-        {
-          userId: athlete.uid,
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          plannedAt: expect.anything(),
-          trainingId: response.body.id,
-          componentId: component.id,
-          exerciseId: exercises[1].id,
-          setNumber: 2,
-          notes: null,
-          volWork1Type: VolType.Rep,
-          prescribedVolWork1ValueL: 12,
-          prescribedVolWork1ValueR: 12,
-          volWork1ValueL: null,
-          volWork1ValueR: null,
-          volWork2ValueL: null,
-          volWork2ValueR: null,
-          intRecValueL: null,
-          intRecValueR: null,
-          volRecValueL: null,
-          volRecValueR: null,
-          intWork1ValueL: null,
-          intWork1ValueR: null,
-          intWork2ValueL: null,
-          intWork2ValueR: null,
-          status: SetStatus.NOT_STARTED,
-        },
-        {
-          userId: athlete.uid,
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          plannedAt: expect.anything(),
-          trainingId: response.body.id,
-          componentId: component.id,
-          exerciseId: exercises[1].id,
-          setNumber: 3,
-          notes: null,
-          volWork1Type: VolType.Rep,
-          prescribedVolWork1ValueL: 12,
-          prescribedVolWork1ValueR: 12,
-          volWork1ValueL: null,
-          volWork1ValueR: null,
-          volWork2ValueL: null,
-          volWork2ValueR: null,
-          intRecValueL: null,
-          intRecValueR: null,
-          volRecValueL: null,
-          volRecValueR: null,
-          intWork1ValueL: null,
-          intWork1ValueR: null,
-          intWork2ValueL: null,
-          intWork2ValueR: null,
-          status: SetStatus.NOT_STARTED,
-        },
-      ]);
+      expect(workloads[0]).toEqual({
+        userId: athlete.uid,
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        plannedAt: expect.anything(),
+        trainingId: response.body.id,
+        componentId: component.id,
+        exerciseId: exercises[0].id,
+        setNumber: 1,
+        notes: null,
+        isPersonalized: false,
+        deletedAt: null,
+        createdAt: expect.anything(),
+        updatedAt: expect.anything(),
+        volWork1Type: VolType.Rep,
+        prescribedVolWork1ValueL: 12,
+        prescribedVolWork1ValueR: 12,
+        volWork1ValueL: null,
+        volWork1ValueR: null,
+        volWork2ValueL: null,
+        volWork2ValueR: null,
+        intRecValueL: null,
+        intRecValueR: null,
+        volRecValueL: null,
+        volRecValueR: null,
+        intWork1ValueL: null,
+        intWork1ValueR: null,
+        intWork2ValueL: null,
+        intWork2ValueR: null,
+        status: SetStatus.NOT_STARTED,
+      } as Workload);
     });
   });
 

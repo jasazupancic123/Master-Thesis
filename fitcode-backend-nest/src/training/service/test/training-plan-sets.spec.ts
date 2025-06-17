@@ -16,6 +16,9 @@ import { AttributeService } from '../../../attribute/service/attribute.service';
 import { ExerciseService } from '../../../exercise/service/exercise.service';
 import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
 import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
+import { FirebaseService } from '../../../firebase/firebase.service';
+import { WorkloadRepository } from '../../../training/repository/workload.repository';
+import { WorkloadService } from '../workload.service';
 
 describe('getSetData', () => {
   let service: TrainingPlanService;
@@ -29,6 +32,10 @@ describe('getSetData', () => {
         CommonModule,
       ],
       providers: [
+        {
+          provide: FirebaseService,
+          useValue: createMock<FirebaseService>(),
+        },
         {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
@@ -46,6 +53,14 @@ describe('getSetData', () => {
           provide: ExerciseAttributeValueRepository,
           useValue: createMock<ExerciseAttributeValueRepository>(),
         },
+        {
+          provide: WorkloadRepository,
+          useValue: createMock<WorkloadRepository>(),
+        },
+        {
+          provide: WorkloadService,
+          useValue: createMock<WorkloadService>(),
+        },
         TrainingPlanService,
       ],
     }).compile();
@@ -54,6 +69,7 @@ describe('getSetData', () => {
     componentService = moduleRef.get(ComponentService);
     exerciseService = moduleRef.get(ExerciseService);
   });
+
   it('should create correct number of sets based on VolWorkSets parameter', () => {
     const componentParams: ComponentParam[] = [
       {

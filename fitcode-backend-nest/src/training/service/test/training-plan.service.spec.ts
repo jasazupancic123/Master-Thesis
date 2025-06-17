@@ -30,8 +30,8 @@ import { ExerciseService } from '../../../exercise/service/exercise.service';
 import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
 import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
 import { WorkloadService } from '../workload.service';
-import { WorkloadRepository } from 'src/training/repository/workload.repository';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { WorkloadRepository } from '../../../training/repository/workload.repository';
+import { FirebaseService } from '../../../firebase/firebase.service';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;

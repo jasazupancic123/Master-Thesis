@@ -20,6 +20,8 @@ import {
 import { createGroupWithCycles, getTime } from '../utils/data.util';
 import { Training } from '../../src/training/entity/training.entity';
 import { addDays, addMinutes, subDays } from 'date-fns';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
@@ -67,7 +69,16 @@ describe('Update Training (e2e)', () => {
     userService = moduleFixture.get(UserService);
 
     component = await componentService.create(generateComponentStub());
+
+    const institutionService = moduleFixture.get(InstitutionService);
+    const institution = await institutionService.create(
+      global.admin,
+      generateInstitutionStub(),
+    );
+
+    component = await componentService.create(generateComponentStub());
     group = await createGroupWithCycles(groupService, {
+      institutionId: institution.id,
       owner: trainer,
       membersIds: [athlete.uid],
     });
