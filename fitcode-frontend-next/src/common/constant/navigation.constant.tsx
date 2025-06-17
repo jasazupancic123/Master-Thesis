@@ -144,7 +144,7 @@ export const LINKS_SIDEBAR = {
   [UserRole.ADMIN]: {
     users: LINK_USERS,
     components: LINK_COMPONENTS,
-    exercises: LINK_EXERCISES,
+    exercises: DASHBOARD_EXERCISES,
     dashboard: LINK_DASHBOARD,
   },
 };

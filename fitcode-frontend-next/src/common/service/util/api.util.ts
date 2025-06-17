@@ -28,7 +28,14 @@ export class ApiUtil {
   }
 
   async fetch<T>(url: string, options?: FetchOptions): Promise<T> {
-    const { method = 'GET', token, body, query, formData } = options || {};
+    const {
+      method = 'GET',
+      token,
+      body,
+      query,
+      formData,
+      cacheTimeInMs,
+    } = options || {};
 
     const res = await fetch(
       `${BACKEND_API_BASE_URL}${url}${this.query(query)}`,
@@ -40,6 +47,7 @@ export class ApiUtil {
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
         ...(formData ? { body: formData } : {}),
+        ...(cacheTimeInMs ? { next: { revalidate: cacheTimeInMs } } : {}),
       }
     );
 
@@ -59,7 +67,7 @@ export class ApiUtil {
 
   async get<T>(
     url: string,
-    options?: Pick<FetchOptions, 'token' | 'query'>
+    options?: Pick<FetchOptions, 'token' | 'query' | 'cacheTimeInMs'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'GET' });
   }
