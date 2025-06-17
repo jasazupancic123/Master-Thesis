@@ -24,6 +24,9 @@ import {
   WARMUP_COMPONENT_ID,
 } from '../../../component/constant/warmup-cooldown.constant';
 import { addMinutes, subMinutes } from 'date-fns';
+import { FirebaseService } from '../../../firebase/firebase.service';
+import { WorkloadRepository } from '../../../training/repository/workload.repository';
+import { WorkloadService } from '../workload.service';
 
 describe('validateTrainingComponents', () => {
   let service: TrainingPlanService;
@@ -36,6 +39,10 @@ describe('validateTrainingComponents', () => {
         CommonModule,
       ],
       providers: [
+        {
+          provide: FirebaseService,
+          useValue: createMock<FirebaseService>(),
+        },
         {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
@@ -53,6 +60,14 @@ describe('validateTrainingComponents', () => {
           provide: ExerciseAttributeValueRepository,
           useValue: createMock<ExerciseAttributeValueRepository>(),
         },
+        {
+          provide: WorkloadRepository,
+          useValue: createMock<WorkloadRepository>(),
+        },
+        {
+          provide: WorkloadService,
+          useValue: createMock<WorkloadService>(),
+        },
         TrainingPlanService,
       ],
     }).compile();
@@ -60,6 +75,7 @@ describe('validateTrainingComponents', () => {
     service = moduleRef.get(TrainingPlanService);
     componentService = moduleRef.get(ComponentService);
   });
+
   const components = [
     WARMUP_COMPONENT,
     generateComponentStub({ id: 'c1', name: 'Component 1' }),

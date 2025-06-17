@@ -15,7 +15,10 @@ import { AttributeService } from '../../../attribute/service/attribute.service';
 import { ExerciseService } from '../../../exercise/service/exercise.service';
 import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
 import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
-import { Method } from 'src/method/entity/method.entity';
+import { Method } from '../../../method/entity/method.entity';
+import { FirebaseService } from '../../../firebase/firebase.service';
+import { WorkloadRepository } from '../../../training/repository/workload.repository';
+import { WorkloadService } from '../workload.service';
 
 describe('validateTrainingExerciseValues', () => {
   let service: TrainingPlanService;
@@ -29,6 +32,10 @@ describe('validateTrainingExerciseValues', () => {
         CommonModule,
       ],
       providers: [
+        {
+          provide: FirebaseService,
+          useValue: createMock<FirebaseService>(),
+        },
         {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
@@ -45,6 +52,14 @@ describe('validateTrainingExerciseValues', () => {
         {
           provide: ExerciseAttributeValueRepository,
           useValue: createMock<ExerciseAttributeValueRepository>(),
+        },
+        {
+          provide: WorkloadRepository,
+          useValue: createMock<WorkloadRepository>(),
+        },
+        {
+          provide: WorkloadService,
+          useValue: createMock<WorkloadService>(),
         },
         TrainingPlanService,
       ],
@@ -120,12 +135,16 @@ describe('validateTrainingExerciseValues', () => {
         {
           field: 'vol1',
           defaultValue: 'rep',
-          options: [{ field: 'rep', defaultValue: '12', min: MIN_REP, max: MAX_REP }],
+          options: [
+            { field: 'rep', defaultValue: '12', min: MIN_REP, max: MAX_REP },
+          ],
         },
         {
           field: 'volWorkSets',
           defaultValue: 'set',
-          options: [{ field: 'set', defaultValue: 5, min: MIN_SET, max: MAX_SET }],
+          options: [
+            { field: 'set', defaultValue: 5, min: MIN_SET, max: MAX_SET },
+          ],
         },
       ],
       intensity: '100%',

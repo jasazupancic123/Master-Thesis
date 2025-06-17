@@ -34,6 +34,8 @@ import { createAthleteUserAndToken } from '../utils/auth.util';
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
 import { generateCompletedRepWorkloadsStub } from '../../src/training/mock/workload.stub';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 
 describe('Training Workloads (e2e)', () => {
   let app: INestApplication;
@@ -71,7 +73,14 @@ describe('Training Workloads (e2e)', () => {
       createAthleteUserAndToken(firebaseService),
     ]);
 
+    const institutionService = moduleFixture.get(InstitutionService);
+    const institution = await institutionService.create(
+      global.admin,
+      generateInstitutionStub(),
+    );
+
     group = await createGroupWithCycles(groupService, {
+      institutionId: institution.id,
       owner: trainer,
       membersIds: [athlete.uid, athlete2.uid, athlete3.uid],
     });
@@ -451,8 +460,8 @@ describe('Training Workloads (e2e)', () => {
       );
 
       jest
-        .spyOn(workloadService, 'findAllByMembers')
-        .mockImplementationOnce(async (_membersIds: string[]) => mockWorkloads);
+        .spyOn(workloadService, 'findAllByRef')
+        .mockImplementationOnce(async () => mockWorkloads);
 
       const response = await trainingService.create(trainer, training);
       const workloads = await workloadService.findAllByTraining(response.id);
