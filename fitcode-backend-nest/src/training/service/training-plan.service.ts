@@ -34,16 +34,17 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
-import { Method } from 'src/method/entity/method.entity';
+import { Method } from '../../method/entity/method.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { WorkloadService } from './workload.service';
 import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
-import { PeriodizationType } from 'src/group/enum/periodization-type.enum';
-import dayjs from 'dayjs';
+import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
 export class TrainingPlanService {
   constructor(
+    private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
@@ -324,20 +325,22 @@ export class TrainingPlanService {
     lastTraining: Training,
     trainings: Training[],
   ): Training[][] {
-    const startWeek = dayjs(firstTraining.from).isoWeek();
-    const lastWeek = dayjs(lastTraining.from).isoWeek();
+    const startWeek = this.commonService.date.getIsoWeek(firstTraining.from);
+    const lastWeek = this.commonService.date.getIsoWeek(lastTraining.from);
     const numWeeks = lastWeek - startWeek + 1;
     const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
 
     // fill the trainings in weeks
     for (const training of trainings) {
-      const weekIndex = dayjs(training.from).isoWeek() - startWeek;
+      const weekIndex =
+        this.commonService.date.getIsoWeek(training.from) - startWeek;
+
       if (weekIndex < weeks.length) weeks[weekIndex].push(training);
     }
 
     // sort trainings in week by date
     for (const week of weeks)
-      week.sort((a, b) => dayjs(a.from).diff(dayjs(b.from)));
+      week.sort((a, b) => a.from.getTime() - b.from.getTime());
 
     const numTrainingInWeeks = weeks.flat().length;
     if (trainings.length !== numTrainingInWeeks)

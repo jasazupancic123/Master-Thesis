@@ -10,6 +10,7 @@ import { TrainingService } from './service/training.service';
 import { WorkloadService } from './service/workload.service';
 import { TrainingController } from './training.controller';
 import { AttributeModule } from '../attribute/attribute.module';
+import { PeriodizationService } from './service/periodization.service';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AttributeModule } from '../attribute/attribute.module';
     forwardRef(() => GroupModule),
   ],
   providers: [
+    PeriodizationService,
     WorkloadRepository,
     TrainingService,
     TrainingRepository,

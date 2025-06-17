@@ -39,10 +39,14 @@ export function generateCompletedRepWorkloadsStub(
         setNumber: i + 1,
         volWork1Type: VolType.Rep,
         prescribedVolWork1ValueL: reps,
+        prescribedVolWork1ValueR: reps,
         volWork1ValueL: reps,
+        volWork1ValueR: reps,
         intWork1Type: intType,
         prescribedIntWork1ValueL: int,
+        prescribedIntWork1ValueR: int,
         intWork1ValueL: int,
+        intWork1ValueR: int,
       }),
     );
 

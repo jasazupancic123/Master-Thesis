@@ -13,8 +13,8 @@ import { User } from '../../common/type/firebase-auth.type';
 import { Method } from '../entity/method.entity';
 import { MethodRef } from '../../common/type/firestore.type';
 import { Create } from '../../common/type/entity.type';
-import { CacheManagerService } from 'src/cache-manager/cache-manager.service';
-import { Wrapper } from 'src/common/type/wrapper.type';
+import { CacheManagerService } from '../../cache-manager/cache-manager.service';
+import { Wrapper } from '../../common/type/wrapper.type';
 
 @Injectable()
 export class MethodService {
