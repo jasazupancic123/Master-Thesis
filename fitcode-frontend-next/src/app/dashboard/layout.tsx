@@ -11,6 +11,7 @@ import { ChildrenProps } from '@/common/type/props.type';
 
 export default async function Layout({ children }: ChildrenProps) {
   const cookieStore = await cookies();
+
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
   if (!token) return <div>Unauthorized</div>;
 
@@ -20,15 +21,15 @@ export default async function Layout({ children }: ChildrenProps) {
   const role = profile.customClaims.role[0];
   const users = await UserController.findAll(token);
 
-  const institutions = InstitutionService.mapAllUsers(
-    await InstitutionController.findAllByUser(token),
+  const institutions = InstitutionService.mapUsers(
+    await InstitutionController.findAll(token),
     users
   );
 
   const selectedInstitution = institutions?.[0] ?? null;
 
   if (selectedInstitution) {
-    const groups = await GroupController.findByInstitutionId(
+    const groups = await GroupController.findAllByInstitution(
       token,
       selectedInstitution.id
     );

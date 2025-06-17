@@ -8,7 +8,6 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { Training } from '@/controller/training/type/training.type';
 import { Save } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -18,7 +17,6 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
 import GroupTrainerDayViewHeader from '../group-trainer-day-view-header/group-trainer-day-view-header';
 import GroupTrainerDayViewTrainings from '../group-trainer-day-view-trainings/group-trainer-day-view-trainings';
@@ -38,7 +36,6 @@ export default function TrainerDayView() {
     cycle,
     components,
     exercises,
-    trainings,
     setTrainings,
     setDateFrom,
     setDateTo,
@@ -225,7 +222,7 @@ export default function TrainerDayView() {
       handleApiRequest(
         router,
         () =>
-          TrainingController.getUserWorkloadsByGroupIdAndExerciseIds(
+          TrainingController.findAthleteGroupWorkloads(
             token,
             group.id,
             uniqueExerciseIds,

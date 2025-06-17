@@ -8,7 +8,7 @@ export type Subgroup = IdEntity &
     name: string;
     membersIds: string[];
     supersets: Superset[];
-    stats: GroupWorkloadStats[]; // completed is stored on training only
+    futureStats: GroupWorkloadStats[]; // completed is stored on training only
 
     // mapped properties
     members?: User[];

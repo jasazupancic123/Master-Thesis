@@ -101,7 +101,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     );
 
     setSubgroups([
-      DEFAULT_SUBGROUP(availableMembers, training.avgFutureWorkloadValues),
+      DEFAULT_SUBGROUP(availableMembers, training.futureStats),
       ...subgroups,
     ]);
   }, [training, component]);

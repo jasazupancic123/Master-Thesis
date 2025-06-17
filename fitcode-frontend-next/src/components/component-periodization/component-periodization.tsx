@@ -21,7 +21,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { Target } from '@/controller/target/type/target.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 interface ComponentPeriodizationProps {
   selectedComponent: TrainingComponent;
@@ -62,9 +62,9 @@ export default function ComponentPeriodization(
   const [expandExerciseView, setExpandExerciseView] = useState(false);
 
   const [allPossibleTrainings, setAllPossibleTrainings] = useState<
-    TrainingMinimal[]
+    TrainingInfo[]
   >([]);
-  const [selectedTrainings, setSelectedTrainings] = useState<TrainingMinimal[]>(
+  const [selectedTrainings, setSelectedTrainings] = useState<TrainingInfo[]>(
     []
   );
 

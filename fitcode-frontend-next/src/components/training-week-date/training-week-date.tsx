@@ -16,7 +16,7 @@ import { getFilteredTrainings, handleClickDateCell } from './state';
 import { Target } from '@/controller/target/type/target.type';
 import { Component } from '@/controller/component/type/component.type';
 import { AddTrainingComponents } from '../trainer-cycle-view/type';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 import { Day } from '@/common/service/util/date.util';
 
 interface TrainingWeekDatesProps {
@@ -27,8 +27,8 @@ interface TrainingWeekDatesProps {
   copyComponent?: boolean;
   trainingComponent?: TrainingComponent;
   training?: Training;
-  selectedTrainings?: TrainingMinimal[];
-  setSelectedTrainings?: SetState<TrainingMinimal[]>;
+  selectedTrainings?: TrainingInfo[];
+  setSelectedTrainings?: SetState<TrainingInfo[]>;
   selected?: Component[];
   selectedTarget?: Target;
   selectedTargets?: {
@@ -37,9 +37,9 @@ interface TrainingWeekDatesProps {
   }[];
   day?: Day;
   setOpenAreYouSureModal: SetState<boolean>;
-  setSelectedTraining: SetState<TrainingMinimal | null>;
+  setSelectedTraining: SetState<TrainingInfo | null>;
   setOpenOverwriteModal?: SetState<boolean>;
-  setTrainingInPeriodForModal?: SetState<TrainingMinimal | null>;
+  setTrainingInPeriodForModal?: SetState<TrainingInfo | null>;
   addTrainingComponent: (
     trainingId: string,
     data: AddTrainingComponents

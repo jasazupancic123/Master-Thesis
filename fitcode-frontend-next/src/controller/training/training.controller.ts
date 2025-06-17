@@ -5,7 +5,7 @@ import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import { PeriodizationType } from '../group/enum/periodization-type.enum';
-import { TrainingMinimal } from './type/training-minimal.type';
+import { TrainingInfo } from './type/training-info.type';
 import { GroupWorkloadStats } from './type/average-workload-values.type';
 
 const api = CommonService.instance.api;
@@ -19,7 +19,7 @@ export class TrainingController {
       minimal?: number; // cannot be boolean, so just use number
     }
   ) {
-    return api.get<Training[] | TrainingMinimal[]>('/training', {
+    return api.get<Training[] | TrainingInfo[]>('/training', {
       token,
       query,
     });
@@ -70,9 +70,9 @@ export class TrainingController {
 
   static async copyComponent(
     token: string,
-    body: {
+    body: Pick<DateRange, 'from'> & {
       copyFromTrainingId: string;
-      copyToTrainingId: string;
+      copyToTrainingId?: string;
       componentId: string;
     }
   ) {

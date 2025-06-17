@@ -4,6 +4,7 @@ export type FetchOptions = {
   body?: object;
   query?: Query;
   formData?: FormData;
+  cacheTimeInMs?: number; // in seconds
 };
 
 export type Query = Record<
