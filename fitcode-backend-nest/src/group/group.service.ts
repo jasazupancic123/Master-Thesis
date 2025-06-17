@@ -25,6 +25,7 @@ import { GroupRepository } from './repository/group.repository';
 import { UserEntity } from '../user/entity/user.entity';
 import { InstitutionService } from '../institution/service/institution.service';
 import { Institution } from '../institution/entity/institution.entity';
+import { UserRole } from 'src/user/enum/user-role.enum';
 
 @Injectable()
 export class GroupService {
@@ -118,9 +119,12 @@ export class GroupService {
 
     if (
       institution.ownerId !== user.uid &&
-      !institution.trainerIds.includes(user.uid)
+      !institution.trainerIds.includes(user.uid) &&
+      !user.customClaims.role.includes(UserRole.ADMIN)
     )
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'You are not authorized to view groups of this institution',
+      );
 
     const groupIds = institution.groupIds;
     if (!groupIds || !groupIds.length) return [];

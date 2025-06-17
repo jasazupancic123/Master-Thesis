@@ -11,6 +11,7 @@ import { ChildrenProps } from '@/common/type/props.type';
 
 export default async function Layout({ children }: ChildrenProps) {
   const cookieStore = await cookies();
+
   const token = cookieStore.get(FIREBASE_COOKIE_NAME)?.value;
   if (!token) return <div>Unauthorized</div>;
 

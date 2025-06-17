@@ -41,7 +41,7 @@ export class GroupController {
   }
 
   @Get('institution/:institutionId')
-  @Auth([UserRole.MANAGER, UserRole.TRAINER])
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ADMIN])
   async findAllByInstitution(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
