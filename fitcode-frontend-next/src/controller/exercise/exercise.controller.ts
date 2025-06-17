@@ -1,11 +1,16 @@
 import { CommonService } from '@/common/service/common.service';
 import { Exercise } from './type/exercise.type';
+import { ONE_HOUR_IN_MS } from '@/common/constant/time.constant';
 
 const api = CommonService.instance.api;
 
 export class ExerciseController {
   static async findAll(token: string, query?: Record<string, string>) {
-    return api.get<Exercise[]>('/exercise', { token, query });
+    return api.get<Exercise[]>('/exercise', {
+      token,
+      query,
+      cacheTimeInMs: ONE_HOUR_IN_MS,
+    });
   }
 
   static async findById(token: string, exerciseId: string) {

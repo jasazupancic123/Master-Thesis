@@ -118,7 +118,7 @@ export class TrainingRepository
           id: s.id,
           name: s.name,
           membersIds: s.membersIds,
-          stats: s.stats || [],
+          futureStats: s.futureStats || [],
           supersets: s.supersets.map((s) => ({
             color: s.color,
             exercises: s.exercises.map((e) => ({

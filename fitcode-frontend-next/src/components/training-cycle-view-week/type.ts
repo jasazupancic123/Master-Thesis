@@ -5,7 +5,7 @@ import { Dayjs } from 'dayjs';
 import { AddTrainingComponents } from '../trainer-cycle-view/type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Target } from '@/controller/target/type/target.type';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 import { Day } from '@/common/service/util/date.util';
 
 export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
@@ -19,14 +19,14 @@ export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
   trainingComponent?: TrainingComponent;
   training?: Training;
   setOpenOverwriteModal?: SetState<boolean>;
-  setTrainingInPeriodForModal?: SetState<TrainingMinimal | null>;
+  setTrainingInPeriodForModal?: SetState<TrainingInfo | null>;
   handleCopyComponentApiRequest?: (
     trainingInPeriod: Training,
     component: TrainingComponent,
     overwrite?: boolean
   ) => Promise<void>;
-  selectedTrainings?: TrainingMinimal[];
-  setSelectedTrainings?: SetState<TrainingMinimal[]>;
+  selectedTrainings?: TrainingInfo[];
+  setSelectedTrainings?: SetState<TrainingInfo[]>;
   selectedTargets?: { componentId: string; target: Target }[];
   selectedTarget?: Target;
   copyComponent?: boolean;
@@ -36,15 +36,15 @@ export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
 
 export type TrainingCycleViewGridItemProps = TrainingCycleViewCommonProps & {
   order: number;
-  training: TrainingMinimal;
+  training: TrainingInfo;
   trainingComponent?: TrainingComponent;
   componentCalendarView?: boolean;
   periodizationView?: boolean;
   cycleView?: boolean;
   isSameDayAsSelectedComponent?: boolean;
   selected?: boolean;
-  selectedTrainings?: TrainingMinimal[];
-  setSelectedTrainings?: SetState<TrainingMinimal[]>;
+  selectedTrainings?: TrainingInfo[];
+  setSelectedTrainings?: SetState<TrainingInfo[]>;
   basePeriodizationTraining?: Training;
   selectedTarget?: Target;
 };

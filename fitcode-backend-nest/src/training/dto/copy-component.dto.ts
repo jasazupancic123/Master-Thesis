@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { DateRangeDto } from '../../common/dto/date-range.dto';
@@ -13,6 +13,7 @@ export class CopyComponentDto extends PickType(DateRangeDto, [
   copyFromTrainingId: string;
 
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   @Expose()
   @ApiPropertyOptional()

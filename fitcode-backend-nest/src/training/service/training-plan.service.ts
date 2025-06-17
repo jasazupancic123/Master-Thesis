@@ -335,7 +335,8 @@ export class TrainingPlanService {
       const weekIndex =
         this.commonService.date.getIsoWeek(training.from) - startWeek;
 
-      if (weekIndex < weeks.length) weeks[weekIndex].push(training);
+      if (weekIndex >= 0 && weekIndex < weeks.length)
+        weeks[weekIndex].push(training);
     }
 
     // sort trainings in week by date

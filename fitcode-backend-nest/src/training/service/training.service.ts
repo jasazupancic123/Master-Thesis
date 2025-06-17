@@ -414,6 +414,7 @@ export class TrainingService {
         target: c.target || null,
         methodId: c.methodId || null,
         completedMembersIds: [],
+        copiedFrom: c.copiedFrom || null,
       })),
     };
 
@@ -625,6 +626,9 @@ export class TrainingService {
       user,
       input.components,
     );
+
+    if (!input.warmup) input.warmup = training.warmup;
+    if (!input.cooldown) input.cooldown = training.cooldown;
 
     this.trainingPlanService.updateWarmupAndCooldownTimes(
       input.warmup,
@@ -971,11 +975,13 @@ export class TrainingService {
     if (!trainingComponent)
       throw new BadRequestException('Component not found in training');
 
-    const trainingTo = await this.findOne(user, copyToRef);
+    const trainingTo = copyToRef.trainingId
+      ? await this.findOne(user, copyToRef)
+      : undefined;
     if (!trainingTo) {
       // create a new training if it does not exist with the copied component
       // calculate new future stats
-      const futureStats = trainingTo.futureStats.filter(
+      const futureStats = trainingFrom.futureStats.filter(
         (fs) => fs.rootComponentId === componentId,
       );
 
@@ -987,6 +993,12 @@ export class TrainingService {
             ...trainingComponent,
             from: input.from,
             to: addMinutes(input.from, 30),
+            copiedFrom: {
+              lastCopiedFromTrainingId: trainingFrom.id,
+              rootCopiedFromTrainingId: trainingComponent.copiedFrom
+                ? trainingComponent.copiedFrom.rootCopiedFromTrainingId
+                : trainingFrom.id,
+            },
             completedMembersIds: [],
           },
         ],

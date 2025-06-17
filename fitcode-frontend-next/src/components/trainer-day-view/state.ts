@@ -25,16 +25,13 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { Workload } from '@/controller/training/type/workload.type';
-<<<<<<< HEAD
-=======
 import { GroupWorkloadStats } from '@/controller/training/type/average-workload-values.type';
->>>>>>> main
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { isBefore } from 'date-fns';
 import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import { Method } from '@/controller/method/type/method.type';
 import { Day } from '@/common/service/util/date.util';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export async function handleCopyTraining(
   token: string,
@@ -47,7 +44,7 @@ export async function handleCopyTraining(
     training: Training;
     cycle: Cycle;
     day: Day;
-    setTrainings: SetState<TrainingMinimal[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     setTodaysTrainings: SetState<Training[]>;
     components: Component[];
     exercises: Exercise[];
@@ -178,7 +175,7 @@ export function onDragEndSubgroup(
   const newTraining = { ...training };
 
   if (fromSubgroup && fromSubgroup.id !== DEFAULT_SUBGROUP([], []).id) {
-    fromSubgroup.stats = fromSubgroup.stats.map((avg) => {
+    fromSubgroup.futureStats = fromSubgroup.futureStats.map((avg) => {
       avg.numMembers -= 1;
       return avg;
     });
@@ -222,7 +219,7 @@ export function onDragEndSubgroup(
 
     if (targetSubgroup) {
       targetSubgroup.membersIds.push(draggableId);
-      targetSubgroup.stats = targetSubgroup.stats.map((avg) => {
+      targetSubgroup.futureStats = targetSubgroup.futureStats.map((avg) => {
         avg.numMembers += 1;
         return avg;
       });
@@ -370,7 +367,7 @@ export async function handleAddSubgroup(state: {
         ...exercise,
       })),
     })),
-    stats,
+    futureStats: stats,
     membersIds: createSubgroup.membersIds || [],
   };
 
@@ -383,7 +380,7 @@ export async function handleAddSubgroup(state: {
 
   // update training's avg future workload values's numMembers
   if (updateTrainingsAvgFutureWorkload) {
-    // member was not in a subgroup before, therfore update numMembers for avgFutureWorkloadValues
+    // member was not in a subgroup before, therfore update numMembers for futureStats
     training.futureStats = training.futureStats.map((avg) => {
       if (avg.rootComponentId === component.component?.id) {
         avg.numMembers -= newSubgroup.membersIds.length;
@@ -809,13 +806,13 @@ export function handleDeleteExercise(
 
   if (selectedSubgroup?.subgroup) {
     // update selected subgroup's supersets
-    const newAvgFutureWorkloadValues = selectedSubgroup.subgroup.stats.filter(
+    const newAvgFutureWorkloadValues = selectedSubgroup.subgroup.futureStats.filter(
       (avg) => avg.exerciseId !== exerciseId
     );
     const updatedSubgroup: Subgroup = {
       ...selectedSubgroup.subgroup,
       supersets: updatedSupersets,
-      stats: newAvgFutureWorkloadValues,
+      futureStats: newAvgFutureWorkloadValues,
     };
 
     const updatedComponent = {
@@ -1067,7 +1064,7 @@ const getFormatedDate = (from: Date) => {
 };
 
 export function prepareGroupAvgWorkloadsForChart(
-  trainings: TrainingMinimal[],
+  trainings: TrainingInfo[],
   exerciseId: string,
   setData: SetState<ChartWorkloadData[]>,
   setMax: SetState<number>,
@@ -1095,13 +1092,7 @@ export function prepareGroupAvgWorkloadsForChart(
   const futureWorkloadsData = [];
   for (const t of trainings) {
     if (completedWorkloadsData.find((w) => w.trainingId === t.id)) continue; // skip if already in completed workloads
-<<<<<<< HEAD
-
-    if (!t.avgFutureWorkloadValues.find((w) => w.exerciseId === exerciseId))
-      continue; // skip if no future workloads for the selected exercise on this training
-=======
     if (!t.futureStats.find((w) => w.exerciseId === exerciseId)) continue; // skip if no future workloads for the selected exercise on this training
->>>>>>> main
 
     let totalNumMembers = 0;
     const futureData = [];
@@ -1117,7 +1108,7 @@ export function prepareGroupAvgWorkloadsForChart(
     // add future workloads of all subgroups
     t.components.forEach((c) => {
       c.subgroups.forEach((sg) => {
-        const futureWorkload = sg.stats.find(
+        const futureWorkload = sg.futureStats.find(
           (w) => w.exerciseId === exerciseId
         );
         if (futureWorkload && futureWorkload.numMembers > 0) {

@@ -10,7 +10,7 @@ import {
   ExerciseTrainingView,
 } from '@/common/type/exercise-or-training.type';
 import { User } from '@firebase/auth';
-import { TrainingMinimal } from '@/controller/training/type/training-minimal.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export const handleFinishTraining = async (state: {
   trainingInProgress: AthleteTrainingInProgress | null;
