@@ -21,11 +21,13 @@ import {
   generateExerciseSet,
 } from '../../src/training/mock/training.stub';
 import { Training } from '../../src/training/entity/training.entity';
-import { addDays, addMinutes, subMinutes } from 'date-fns';
+import { addDays, addMinutes } from 'date-fns';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { PeriodizationType } from '../../src/group/enum/periodization-type.enum';
 import { ParamType } from '../../src/component/enum/param.enum';
 import { ExerciseSet } from '../../src/training/entity/exercise-set.entity';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;
@@ -82,7 +84,14 @@ describe('Periodization functions (e2e)', () => {
       }),
     );
 
+    const institutionService = moduleFixture.get(InstitutionService);
+    const institution = await institutionService.create(
+      global.admin,
+      generateInstitutionStub(),
+    );
+
     group = await createGroupWithCycles(groupService, {
+      institutionId: institution.id,
       owner: trainer,
       membersIds: [athlete.uid],
       cycleLengthInWeeks: 60,
@@ -101,8 +110,9 @@ describe('Periodization functions (e2e)', () => {
 
     const from = new Date(2026, 5, 17); // change this after this date is passed to a WEDNESDAY in future
     const to = addMinutes(from, 30);
-    baseTraining = await trainingService.create(trainer, {
-      training: generateTrainingStub({
+    baseTraining = await trainingService.create(
+      trainer,
+      generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[0].id,
         from,
@@ -154,8 +164,7 @@ describe('Periodization functions (e2e)', () => {
           }),
         ],
       }),
-      date: { from, to },
-    });
+    );
 
     const differentTargetTraining = {
       ...baseTraining,
@@ -261,14 +270,7 @@ describe('Periodization functions (e2e)', () => {
       differentTargetTraining,
     ];
 
-    await Promise.all(
-      trainings.map((t) =>
-        trainingService.create(trainer, {
-          training: t,
-          date: { from: t.from, to: t.to },
-        }),
-      ),
-    );
+    await Promise.all(trainings.map((t) => trainingService.create(trainer, t)));
   });
 
   afterAll(async () => {
@@ -288,146 +290,56 @@ describe('Periodization functions (e2e)', () => {
       {
         type: PeriodizationType.LINEAR,
         expected: [
-          {
-            int: 20,
-            vol: 12,
-          },
-          {
-            int: 22,
-            vol: 11,
-          },
-          {
-            int: 24,
-            vol: 10,
-          },
-          {
-            int: 26,
-            vol: 9,
-          },
-          {
-            int: 28,
-            vol: 8,
-          },
-          {
-            int: 30,
-            vol: 7,
-          },
+          { int: 20, vol: 12 },
+          { int: 22, vol: 11 },
+          { int: 24, vol: 10 },
+          { int: 26, vol: 9 },
+          { int: 28, vol: 8 },
+          { int: 30, vol: 7 },
         ],
       },
       {
         type: PeriodizationType.WEEK_UNDULATING,
         expected: [
-          {
-            int: 20,
-            vol: 12,
-          },
-          {
-            int: 20,
-            vol: 12,
-          },
-          {
-            int: 20,
-            vol: 12,
-          },
-          {
-            int: 22,
-            vol: 11,
-          },
-          {
-            int: 18,
-            vol: 13,
-          },
-          {
-            int: 16,
-            vol: 14,
-          },
+          { int: 20, vol: 12 },
+          { int: 20, vol: 12 },
+          { int: 20, vol: 12 },
+          { int: 22, vol: 11 },
+          { int: 18, vol: 13 },
+          { int: 16, vol: 14 },
         ],
       },
       {
         type: PeriodizationType.DAY_UNDULATING,
         expected: [
-          {
-            int: 20,
-            vol: 12,
-          },
-          {
-            int: 22,
-            vol: 11,
-          },
-          {
-            int: 18,
-            vol: 13,
-          },
-          {
-            int: 20,
-            vol: 12,
-          },
-          {
-            int: 20,
-            vol: 12,
-          },
-          {
-            int: 20,
-            vol: 12,
-          },
+          { int: 20, vol: 12 },
+          { int: 22, vol: 11 },
+          { int: 18, vol: 13 },
+          { int: 20, vol: 12 },
+          { int: 20, vol: 12 },
+          { int: 20, vol: 12 },
         ],
       },
       {
         type: PeriodizationType.BLOCK,
         expected: [
-          {
-            int: 14,
-            vol: 8,
-          },
-          {
-            int: 14,
-            vol: 8,
-          },
-          {
-            int: 14,
-            vol: 8,
-          },
-          {
-            int: 14,
-            vol: 8,
-          },
-          {
-            int: 16,
-            vol: 5,
-          },
-          {
-            int: 18,
-            vol: 3,
-          },
+          { int: 14, vol: 8 },
+          { int: 14, vol: 8 },
+          { int: 14, vol: 8 },
+          { int: 14, vol: 8 },
+          { int: 16, vol: 5 },
+          { int: 18, vol: 3 },
         ],
       },
       {
         type: PeriodizationType.WAVE,
         expected: [
-          {
-            int: 11,
-            vol: 5,
-          },
-          {
-            int: 11,
-            vol: 5,
-          },
-          {
-            int: 11,
-            vol: 5,
-          },
-          {
-            int: 12,
-            vol: 3,
-          },
-          {
-            int: 11,
-            vol: 5,
-          },
-          {
-            int: 11,
-            vol: 5,
-          },
+          { int: 11, vol: 5 },
+          { int: 11, vol: 5 },
+          { int: 11, vol: 5 },
+          { int: 12, vol: 3 },
+          { int: 11, vol: 5 },
+          { int: 11, vol: 5 },
         ],
       },
       {
@@ -436,7 +348,6 @@ describe('Periodization functions (e2e)', () => {
       },
     ];
 
-    // remember to set the dayjs import in training.service to the one for testing!
     it.each(values)(
       'should successfully use all the periodization functions for the trainings with the same target',
       async ({ type, expected }) => {
@@ -456,6 +367,7 @@ describe('Periodization functions (e2e)', () => {
           expect(response.body.message).toBe(
             `Dup Table Based periodization is not supported yet`,
           );
+
           return;
         }
 
@@ -478,13 +390,9 @@ describe('Periodization functions (e2e)', () => {
           for (const exercise of periodizedTraining.components[0].supersets[0]
             .exercises) {
             for (const set of exercise.sets) {
-              const { intL, volL, intR, volR } =
-                getBaseIntVolValuesFromSet(set);
-
-              expect(parseFloat(intL.value)).toBe(expected[trainingIndex].int);
-              expect(parseFloat(volL.value)).toBe(expected[trainingIndex].vol);
-              expect(parseFloat(intR.value)).toBe(expected[trainingIndex].int);
-              expect(parseFloat(volR.value)).toBe(expected[trainingIndex].vol);
+              const { int, vol } = getBaseIntVolValuesFromSet(set);
+              expect(parseFloat(int.value)).toBe(expected[trainingIndex].int);
+              expect(parseFloat(vol.value)).toBe(expected[trainingIndex].vol);
             }
           }
         }
@@ -494,13 +402,7 @@ describe('Periodization functions (e2e)', () => {
 });
 
 function getBaseIntVolValuesFromSet(set: ExerciseSet) {
-  const intL = set.paramValuesL.find((p) => p.field === ParamType.IntWork1);
-  const volL = set.paramValuesL.find((p) => p.field === ParamType.VolWork1);
-  if (!intL || !volL) throw new Error('IntWork1 and VolWork1 must be defined');
-
-  const intR = set.paramValuesR.find((p) => p.field === ParamType.IntWork1);
-  const volR = set.paramValuesR.find((p) => p.field === ParamType.VolWork1);
-  if (!intR || !volR) throw new Error('IntWork1 and VolWork1 must be defined');
-
-  return { intL, volL, intR, volR };
+  const int = set.paramValuesL.find((p) => p.field === ParamType.IntWork1);
+  const vol = set.paramValuesL.find((p) => p.field === ParamType.VolWork1);
+  return { int, vol };
 }

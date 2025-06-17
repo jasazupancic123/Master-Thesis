@@ -105,11 +105,13 @@ export default function RegisterUsersDashboard() {
             onChange={handleChange}
             fullWidth
           >
-            {[UserRole.ATHLETE, UserRole.TRAINER].map((role) => (
-              <MenuItem key={role} value={role}>
-                {role.charAt(0).toUpperCase() + role.slice(1)}
-              </MenuItem>
-            ))}
+            {[UserRole.ATHLETE, UserRole.TRAINER, UserRole.MANAGER].map(
+              (role) => (
+                <MenuItem key={role} value={role}>
+                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                </MenuItem>
+              )
+            )}
           </TextField>
           <TextField
             label="Password"

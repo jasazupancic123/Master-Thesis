@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { User } from 'src/common/type/firebase-auth.type';
+import { User } from '../common/type/firebase-auth.type';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { Auth } from '../common/decorator/auth.decorator';
 import { MethodService } from './service/method.service';
-import { Create } from 'src/common/type/entity.type';
+import { Create } from '../common/type/entity.type';
 import { Method } from './entity/method.entity';
 
 @Controller('method')

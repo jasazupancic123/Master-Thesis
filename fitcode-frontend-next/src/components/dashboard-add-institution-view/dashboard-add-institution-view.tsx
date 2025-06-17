@@ -27,6 +27,9 @@ export default function AddInstitutionDashboard() {
   const [allTrainers, setAllTrainers] = useState(
     users.filter((user) => user.customClaims?.role.includes(UserRole.TRAINER))
   );
+  const [allManagers, setAllManagers] = useState(
+    users.filter((user) => user.customClaims?.role.includes(UserRole.MANAGER))
+  );
   const [allAthletes, setAllAthletes] = useState(
     users.filter((user) => user.customClaims?.role.includes(UserRole.ATHLETE))
   );
@@ -50,11 +53,6 @@ export default function AddInstitutionDashboard() {
 
     if (!owner) {
       toast.error('Owner is required');
-      return;
-    }
-
-    if (!trainers.find((t) => t.uid === owner.uid)) {
-      toast.error('Owner must be a trainer');
       return;
     }
 
@@ -219,7 +217,7 @@ export default function AddInstitutionDashboard() {
         cancelText="Close"
       >
         <AddMembersModal
-          users={allTrainers}
+          users={allManagers}
           members={[]}
           setMembers={() => {}}
           addUserToEnd={true}

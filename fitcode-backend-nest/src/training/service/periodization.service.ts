@@ -1,9 +1,11 @@
 import { ParamType } from '../../component/enum/param.enum';
 import { Training } from '../entity/training.entity';
 import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { BadRequestException } from '@nestjs/common';
+import { DUP_SCHEDULE } from '../constant/periodization.constant';
 
 export class PeriodizationService {
-  static periodize(
+  periodize(
     baseTraining: Training,
     trainings: Training[],
     weeks: Training[][],
@@ -11,149 +13,87 @@ export class PeriodizationService {
     exerciseIds: string[],
     periodizationType: PeriodizationType,
   ) {
-    let startIntensities = [] as {
-      exerciseId: string;
-      leftOrRight: 'L' | 'R';
-      value: number;
-    }[];
-    let startVolumes = [] as {
-      exerciseId: string;
-      leftOrRight: 'L' | 'R';
-      value: number;
-    }[];
+    const baseExercises = this.getExercisesOrFail(baseTraining, componentId);
 
-    const baseComponent = baseTraining.components.find(
-      (c) => c.id === componentId,
-    );
-    if (!baseComponent) throw new Error('Base component not found');
-
-    const baseExercises = baseComponent.supersets.flatMap((s) => s.exercises);
-    if (baseExercises.length === 0)
-      throw new Error('No exercises found in the base component');
+    let startInts: { exerciseId: string; value: number }[] = [];
+    let startVols: { exerciseId: string; value: number }[] = [];
 
     for (const exerciseId of exerciseIds) {
-      let prevIntensityL = 0;
-      let prevVolumeL = 0;
-
-      let prevIntensityR = 0;
-      let prevVolumeR = 0;
+      let prevInt = 0;
+      let prevVol = 0;
 
       for (const week of weeks) {
         for (const training of week) {
           const component = training.components.find(
             (c) => c.id === componentId,
           );
+
           if (!component) continue;
 
-          const exercises = component.supersets.flatMap((s) => s.exercises);
+          // get exercises to periodize
+          const exercises = component.supersets
+            .flatMap((s) => s.exercises)
+            .find((e) => e.id === exerciseId);
 
-          const exerciseToPeriodize = exercises.find(
-            (e) => e.id === exerciseId,
-          );
-          if (!exerciseToPeriodize) continue;
+          if (!exercises) continue;
 
-          const baseExercise = baseExercises.find((e) => e.id === exerciseId);
-          if (!baseExercise) continue;
+          const exercise = baseExercises.find((e) => e.id === exerciseId);
+          if (!exercise) continue;
 
           const readinessFactor = Math.random() * 0.2 + 0.9; // Simulate readiness factor between 0.9 and 1.1
-          for (const set of baseExercise.sets) {
-            for (const paramValues of [set.paramValuesL, set.paramValuesR]) {
-              let leftOrRight =
-                paramValues === set.paramValuesL ? 'L' : ('R' as 'L' | 'R');
+          for (const set of exercise.sets) {
+            const baseInt = set.paramValuesL.find(
+              (p) => p.field === ParamType.IntWork1,
+            );
 
-              const baseIntensity =
-                paramValues === set.paramValuesL
-                  ? set.paramValuesL.find((p) => p.field === ParamType.IntWork1)
-                  : set.paramValuesR.find(
-                      (p) => p.field === ParamType.IntWork1,
-                    );
+            const baseVol = set.paramValuesL.find(
+              (p) => p.field === ParamType.VolWork1,
+            );
 
-              const baseVolume =
-                paramValues === set.paramValuesL
-                  ? set.paramValuesL.find((p) => p.field === ParamType.VolWork1)
-                  : set.paramValuesR.find(
-                      (p) => p.field === ParamType.VolWork1,
-                    );
+            if (!baseInt || !baseVol) continue;
 
-              if (!baseIntensity || !baseVolume) continue;
+            let startInt = startInts.find((e) => e.exerciseId === exerciseId);
+            let startVol = startVols.find((e) => e.exerciseId === exerciseId);
 
-              let startIntensity = startIntensities.find(
-                (e) =>
-                  e.exerciseId === exerciseId && e.leftOrRight === leftOrRight,
+            if (!startInt) {
+              startInt = { exerciseId, value: parseFloat(baseInt.value) };
+              startInts.push(startInt);
+            }
+
+            if (!startVol) {
+              startVol = { exerciseId, value: parseFloat(baseVol.value) };
+              startVols.push(startVol);
+            }
+
+            const periodizedInt = exercises.sets[
+              exercise.sets.indexOf(set)
+            ].paramValuesL.find((p) => p.field === ParamType.IntWork1);
+
+            const periodizedVol = exercises.sets[
+              exercise.sets.indexOf(set)
+            ].paramValuesL.find((p) => p.field === ParamType.VolWork1);
+
+            if (!periodizedInt || !periodizedVol) continue;
+            const { periodizedIntensityValue, periodizedVolumeValue } =
+              this.getPeriodizedIntVolValue(
+                periodizationType,
+                parseFloat(baseInt.value),
+                weeks.indexOf(week),
+                week.indexOf(training),
+                startInt.value,
+                startVol.value,
+                prevInt,
+                prevVol,
+                weeks.length,
+                readinessFactor,
               );
 
-              let startVolume = startVolumes.find(
-                (e) =>
-                  e.exerciseId === exerciseId && e.leftOrRight === leftOrRight,
-              );
+            periodizedInt.value = periodizedIntensityValue;
+            periodizedVol.value = periodizedVolumeValue;
 
-              if (!startIntensity) {
-                startIntensity = {
-                  exerciseId,
-                  value: parseFloat(baseIntensity.value),
-                  leftOrRight,
-                };
-                startIntensities.push(startIntensity);
-              }
-
-              if (!startVolume) {
-                startVolume = {
-                  exerciseId,
-                  value: parseFloat(baseVolume.value),
-                  leftOrRight,
-                };
-                startVolumes.push(startVolume);
-              }
-
-              const periodizedIntesity =
-                paramValues === set.paramValuesL
-                  ? exerciseToPeriodize.sets[
-                      baseExercise.sets.indexOf(set)
-                    ].paramValuesL.find((p) => p.field === ParamType.IntWork1)
-                  : exerciseToPeriodize.sets[
-                      baseExercise.sets.indexOf(set)
-                    ].paramValuesR.find((p) => p.field === ParamType.IntWork1);
-
-              const periodizedVolume =
-                paramValues === set.paramValuesL
-                  ? exerciseToPeriodize.sets[
-                      baseExercise.sets.indexOf(set)
-                    ].paramValuesL.find((p) => p.field === ParamType.VolWork1)
-                  : exerciseToPeriodize.sets[
-                      baseExercise.sets.indexOf(set)
-                    ].paramValuesR.find((p) => p.field === ParamType.VolWork1);
-
-              if (!periodizedIntesity || !periodizedVolume) continue;
-
-              const { periodizedIntensityValue, periodizedVolumeValue } =
-                this.getPeriodizedIntVolValue(
-                  periodizationType,
-                  parseFloat(baseIntensity.value),
-                  weeks.indexOf(week),
-                  week.indexOf(training),
-                  startIntensity.value,
-                  startVolume.value,
-                  leftOrRight === 'L' ? prevIntensityL : prevIntensityR,
-                  leftOrRight === 'L' ? prevVolumeL : prevVolumeR,
-                  weeks.length,
-                  readinessFactor,
-                );
-
-              periodizedIntesity.value = periodizedIntensityValue;
-              periodizedVolume.value = periodizedVolumeValue;
-
-              if (
-                baseExercise.sets.indexOf(set) ===
-                baseExercise.sets.length - 1
-              ) {
-                if (leftOrRight === 'L') {
-                  prevIntensityL = parseFloat(periodizedIntensityValue);
-                  prevVolumeL = parseFloat(periodizedVolumeValue);
-                } else if (leftOrRight === 'R') {
-                  prevIntensityR = parseFloat(periodizedIntensityValue);
-                  prevVolumeR = parseFloat(periodizedVolumeValue);
-                }
-              }
+            if (exercise.sets.indexOf(set) === exercise.sets.length - 1) {
+              prevInt = parseFloat(periodizedIntensityValue);
+              prevVol = parseFloat(periodizedVolumeValue);
             }
           }
         }
@@ -163,34 +103,18 @@ export class PeriodizationService {
     return trainings;
   }
 
-  static dupSchedule = {
-    1: {
-      // Week 1
-      1: { sets: 4, rep_range: '10-12', int_low: 0.67, int_high: 0.75 },
-      2: { sets: 4, rep_range: '8-10', int_low: 0.75, int_high: 0.8 },
-      3: { sets: 4, rep_range: '6-8', int_low: 0.8, int_high: 0.85 },
-    },
-    2: {
-      // Week 2
-      1: { sets: 4, rep_range: '10-12', int_low: 0.75, int_high: 0.8 },
-      2: { sets: 4, rep_range: '8-10', int_low: 0.8, int_high: 0.85 },
-      3: { sets: 4, rep_range: '4-6', int_low: 0.85, int_high: 0.9 },
-    },
-    3: {
-      // Week 3
-      1: { sets: 4, rep_range: '10-12', int_low: 0.8, int_high: 0.85 },
-      2: { sets: 4, rep_range: '6-8', int_low: 0.85, int_high: 0.9 },
-      3: { sets: 4, rep_range: '4-6', int_low: 0.9, int_high: 0.95 },
-    },
-    4: {
-      // Week 4
-      1: { sets: 4, rep_range: '2-4', int_low: 0.9, int_high: 0.95 },
-      2: { sets: 4, rep_range: '4-6', int_low: 0.8, int_high: 0.85 },
-      3: { sets: 4, rep_range: '6-8', int_low: 0.65, int_high: 0.67 },
-    },
-  };
+  private getExercisesOrFail(training: Training, componentId: string) {
+    const component = training.components.find((c) => c.id === componentId);
+    if (!component) throw new BadRequestException('Base component not found');
 
-  private static getPeriodizedIntVolValue(
+    const exercises = component.supersets.flatMap((s) => s.exercises);
+    if (exercises.length === 0)
+      throw new Error('No exercises found in the base component');
+
+    return exercises;
+  }
+
+  private getPeriodizedIntVolValue(
     type: PeriodizationType,
     baseValue: number,
     weekIndex: number,
@@ -254,7 +178,7 @@ export class PeriodizationService {
     }
   }
 
-  private static linear(
+  private linear(
     startIntensityValue: number,
     startVolumeValue: number,
     weekIndex: number,
@@ -292,7 +216,7 @@ export class PeriodizationService {
     };
   }
 
-  private static weekUndulating(
+  private weekUndulating(
     startIntensityValue: number,
     startVolumeValue: number,
     weekIndex: number,
@@ -330,7 +254,7 @@ export class PeriodizationService {
     }
   }
 
-  private static dayUndulating(
+  private dayUndulating(
     startIntensityValue: number,
     startVolumeValue: number,
     weekIndex: number,
@@ -369,7 +293,7 @@ export class PeriodizationService {
     }
   }
 
-  private static block(
+  private block(
     startIntensityValue: number,
     weekIndex: number,
     weeksLength: number,
@@ -398,7 +322,7 @@ export class PeriodizationService {
     return { periodizedIntensityValue, periodizedVolumeValue };
   }
 
-  private static wave(startIntensityValue: number, weekIndex: number) {
+  private wave(startIntensityValue: number, weekIndex: number) {
     const wavePattern = [0.75, 0.85, 0.8, 0.9];
     const fraction = wavePattern[weekIndex % 4];
 
@@ -412,7 +336,7 @@ export class PeriodizationService {
     return { periodizedIntensityValue, periodizedVolumeValue };
   }
 
-  private static autoregulatory(
+  private autoregulatory(
     startIntensityValue: number,
     startVolumeValue: number,
     weekIndex: number,
@@ -440,15 +364,14 @@ export class PeriodizationService {
     return { periodizedIntensityValue, periodizedVolumeValue };
   }
 
-  private static dupTableBased(
+  private dupTableBased(
     startIntensityValue: number,
     weekIndex: number,
     dayIndex: number,
   ) {
     const weekMod = (weekIndex % 4) + 1;
     const dayMod = Math.min(dayIndex + 1, 3);
-
-    const dayInfo = this.dupSchedule[weekMod][dayMod];
+    const dayInfo = DUP_SCHEDULE[weekMod][dayMod];
 
     const intLow = dayInfo.int_low;
     const intHigh = dayInfo.int_high;
@@ -460,11 +383,10 @@ export class PeriodizationService {
     ).toString();
 
     const periodizedVolumeValue = dayInfo.rep_range;
-
     return { periodizedIntensityValue, periodizedVolumeValue };
   }
 
-  private static customRoundIntensity(weight: number, baseline: number) {
+  private customRoundIntensity(weight: number, baseline: number) {
     /*
     Rounds the 'weight' according to these rules:
     

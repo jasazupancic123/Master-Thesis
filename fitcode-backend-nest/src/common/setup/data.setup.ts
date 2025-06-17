@@ -15,8 +15,8 @@ import { User } from '../type/firebase-auth.type';
 import { BaseSetup } from './base.setup';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
-import { MethodService } from 'src/method/service/method.service';
-import { Method } from 'src/method/entity/method.entity';
+import { MethodService } from '../../method/service/method.service';
+import { Method } from '../../method/entity/method.entity';
 import { InstitutionService } from '../../institution/service/institution.service';
 
 export class DataSetup extends BaseSetup {

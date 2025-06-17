@@ -10,8 +10,8 @@ import { ComponentService } from '../component/component.service';
 import { Component } from '../component/entity/component.entity';
 import { Attribute } from '../attribute/entity/attribute.entity';
 import { AttributeService } from '../attribute/service/attribute.service';
-import { MethodService } from 'src/method/service/method.service';
-import { Method } from 'src/method/entity/method.entity';
+import { MethodService } from '../method/service/method.service';
+import { Method } from '../method/entity/method.entity';
 
 @Injectable()
 export class CacheManagerService {

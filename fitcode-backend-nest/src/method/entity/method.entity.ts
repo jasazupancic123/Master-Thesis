@@ -1,4 +1,4 @@
-import { IdEntity } from 'src/common/entity/id.entity';
+import { IdEntity } from '../../common/entity/id.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
@@ -7,7 +7,7 @@ import {
   IsOptional,
   ValidateNested,
 } from 'class-validator';
-import { AttributeRange } from 'src/attribute/entity/attribute-range.entity';
+import { AttributeRange } from '../../attribute/entity/attribute-range.entity';
 
 export class Method extends IdEntity {
   @IsString()

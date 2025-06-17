@@ -21,6 +21,9 @@ import {
   COOLDOWN_COMPONENT,
   WARMUP_COMPONENT,
 } from '../../../component/constant/warmup-cooldown.constant';
+import { FirebaseService } from '../../../firebase/firebase.service';
+import { WorkloadRepository } from '../../../training/repository/workload.repository';
+import { WorkloadService } from '../workload.service';
 
 describe('validateSupersets', () => {
   let service: TrainingPlanService;
@@ -33,6 +36,10 @@ describe('validateSupersets', () => {
         CommonModule,
       ],
       providers: [
+        {
+          provide: FirebaseService,
+          useValue: createMock<FirebaseService>(),
+        },
         {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
@@ -49,6 +56,14 @@ describe('validateSupersets', () => {
         {
           provide: ExerciseAttributeValueRepository,
           useValue: createMock<ExerciseAttributeValueRepository>(),
+        },
+        {
+          provide: WorkloadRepository,
+          useValue: createMock<WorkloadRepository>(),
+        },
+        {
+          provide: WorkloadService,
+          useValue: createMock<WorkloadService>(),
         },
         TrainingPlanService,
       ],

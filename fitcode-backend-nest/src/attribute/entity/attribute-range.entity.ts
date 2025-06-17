@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Attribute } from './attribute.entity';
-import { AttributeType } from 'src/common/enum/attribute-type.enum';
+import { AttributeType } from '../../common/enum/attribute-type.enum';
 
 export class AttributeRange extends PickType(Attribute, [
   'field',

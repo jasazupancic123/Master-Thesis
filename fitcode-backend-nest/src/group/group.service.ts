@@ -25,7 +25,7 @@ import { GroupRepository } from './repository/group.repository';
 import { UserEntity } from '../user/entity/user.entity';
 import { InstitutionService } from '../institution/service/institution.service';
 import { Institution } from '../institution/entity/institution.entity';
-import { UserRole } from 'src/user/enum/user-role.enum';
+import { UserRole } from '../user/enum/user-role.enum';
 
 @Injectable()
 export class GroupService {
@@ -147,7 +147,7 @@ export class GroupService {
 
     // validate
     await this.validateMembers(membersIds);
-    await this.checkLimit(user.uid);
+    // await this.checkLimit(user.uid);
 
     const institution = await this.institutionService.findOneOrFail({
       institutionId,
