@@ -1,0 +1,28 @@
+Clear local firebase data
+
+- Admin
+    - Exercises
+        ~ Import exercises
+        ~ Filters for exercises
+        ~ Search bar
+        ~ Create exercise (video, image, fill out all attributes)
+        ~ Pagination
+    - Dashboard
+        ~ Switch between institutions
+        ~ Register new athlete (later referenced as Athlete)
+        ~ Register new trainer (later referenced as Trainer)
+        ~ Register new manager (later referenced as Manager)
+        ~ Add new institution with owner Manager, trainer Trainer and
+            Athlete and 3 other athletes (later referenced as Institution)
+
+
+
+- Manager
+
+
+
+- Trainer
+
+
+
+- Athlete

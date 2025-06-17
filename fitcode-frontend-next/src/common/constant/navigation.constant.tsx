@@ -48,6 +48,10 @@ export const LINK_SIGN_IN = link('Sign In', '/sign-in');
 export const LINK_SIGN_UP = link('Sign Up', '/sign-up');
 export const LINK_PROFILE = link('Profile', '/profile', <PersonIcon />);
 export const LINK_USERS = link('Users', '/users');
+export const LINK_EXERCISES_DASHBOARD = link(
+  'Exercises',
+  '/dashboard/exercises'
+);
 export const LINK_COMPONENTS = link('Components', '/components');
 export const LINK_EXERCISES = link('Exercises', '/exercises');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
@@ -144,7 +148,7 @@ export const LINKS_SIDEBAR = {
   [UserRole.ADMIN]: {
     users: LINK_USERS,
     components: LINK_COMPONENTS,
-    exercises: DASHBOARD_EXERCISES,
+    exercises: LINK_EXERCISES_DASHBOARD,
     dashboard: LINK_DASHBOARD,
   },
 };
