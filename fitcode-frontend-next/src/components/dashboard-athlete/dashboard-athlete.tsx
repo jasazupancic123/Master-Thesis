@@ -45,7 +45,10 @@ export default function DashboardAthlete(props: DashboardAthleteProps) {
           athleteIds: [athleteId],
         }),
       (institution) => {
-        institution = InstitutionService.mapUsers([institution], users)[0];
+        institution = InstitutionService.mapUsers(
+          [institution],
+          users || []
+        )[0];
         setSelectedInstitution(institution);
         toast.success('Athlete removed successfully');
       },

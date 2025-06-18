@@ -111,7 +111,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     checkWrapping();
     window.addEventListener('resize', checkWrapping);
     return () => window.removeEventListener('resize', checkWrapping);
-  }, [training.components]);
+  }, [training.components, components, components.length]);
 
   let fontSize = undefined;
   if (screenSize.isMobile) fontSize = '125%';
