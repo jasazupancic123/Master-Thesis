@@ -1,7 +1,6 @@
 'use client';
 
 import { useScreenSize } from '@/store/screen-size-provider';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { Groups, PersonAddAlt } from '@mui/icons-material';
 import {
   Avatar,

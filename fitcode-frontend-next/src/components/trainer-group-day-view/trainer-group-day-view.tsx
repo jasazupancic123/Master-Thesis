@@ -18,8 +18,8 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
-import GroupTrainerDayViewHeader from '../group-trainer-day-view-header/group-trainer-day-view-header';
-import GroupTrainerDayViewTrainings from '../group-trainer-day-view-trainings/group-trainer-day-view-trainings';
+import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
+import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
 
 dayjs.extend(weekOfYear);
 
@@ -40,6 +40,7 @@ export default function TrainerDayView() {
     setDateFrom,
     setDateTo,
     setDetectedChanges,
+    setCycle,
     methods,
   } = useGroup();
 
@@ -51,6 +52,7 @@ export default function TrainerDayView() {
     component,
     setSelectedSubgroup,
     selectedAthlete,
+    setSelectedAthlete,
     setSelectedAthleteWorkloads,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
@@ -71,6 +73,13 @@ export default function TrainerDayView() {
       }),
     }))
   );
+
+  useEffect(() => {
+    const cycleInDate = group.cycles.find((c) =>
+      commonService.date.isBetween(day.date, c.from, c.to)
+    );
+    if (cycleInDate) setCycle(cycleInDate);
+  }, [day]);
 
   const [isSticky, setIsSticky] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -120,6 +129,8 @@ export default function TrainerDayView() {
             return newTraining ? newTraining : t;
           })
         );
+
+        setSelectedAthlete(undefined);
 
         setCustomAthleteWorkloads([]);
 

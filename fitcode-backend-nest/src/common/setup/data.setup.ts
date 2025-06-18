@@ -208,8 +208,9 @@ export class DataSetup extends BaseSetup {
     for (const { name, membersIds: emails } of groups) {
       const members = await this.userService.findAll({ emails });
       const membersIds = members.map((m) => m.uid);
-      const group = await groupService.create(this.trainer, {
+      const group = await groupService.create(this.manager, {
         name,
+        ownerId: this.trainer.uid,
         membersIds,
         institutionId: institution.id,
       });
@@ -225,7 +226,7 @@ export class DataSetup extends BaseSetup {
 
     institution.groupIds = groupIds;
     await institutionService.update(
-      this.trainer,
+      this.manager,
       { institutionId: institution.id },
       { groupIds: institution.groupIds },
     );

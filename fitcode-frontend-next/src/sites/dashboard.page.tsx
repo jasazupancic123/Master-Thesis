@@ -27,7 +27,7 @@ import {
 } from '@/common/constant/dashboard-views-constant';
 import { Institution } from '@/controller/institution/type/institution.type';
 import DashboardStaffGroupsCycles from '@/components/dashboard-staff-groups-cycles/dashboard-staff-groups-cycles';
-import { isTrainer } from '@/common/service/util/firebase-auth.util';
+import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
 import { useAuth } from '@/store/auth-provider';
 
 interface DashboardPageProps {
@@ -55,6 +55,7 @@ export default function DashboardPage(props: DashboardPageProps) {
 
   const [modal, setModal] = useState({ add_trainer: false, add_group: false });
   const [groupName, setGroupName] = useState('');
+  const [owner, setOwner] = useState<User | null>(null);
 
   const role = profile.customClaims.role || [];
 
@@ -172,7 +173,7 @@ export default function DashboardPage(props: DashboardPageProps) {
           }}
           gap={1}
         >
-          {detectedChanges && (
+          {detectedChanges && isManager(role) && (
             <Tooltip title="Save changes" placement="top">
               <Fab color="primary" aria-label="save" onClick={handleSaveGroups}>
                 <Save />
@@ -315,11 +316,18 @@ export default function DashboardPage(props: DashboardPageProps) {
         }}
         cancelText="Close"
         onConfirm={async () => {
+          if (!owner) {
+            toast.error('Please select an owner for the group.');
+            return;
+          }
+
           const input = {
             name: groupName,
             membersIds: [],
+            ownerId: owner.uid,
             institutionId: selectedInstitution.id,
           };
+
           handleApiRequest(
             router,
             () => GroupController.create(token, input),
@@ -338,7 +346,12 @@ export default function DashboardPage(props: DashboardPageProps) {
           );
         }}
       >
-        <AddGroupModal groupName={groupName} setGroupName={setGroupName} />
+        <AddGroupModal
+          groupName={groupName}
+          setGroupName={setGroupName}
+          owner={owner}
+          setOwner={setOwner}
+        />
       </MyModal>
     </>
   );

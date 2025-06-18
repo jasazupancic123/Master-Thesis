@@ -5,7 +5,7 @@ import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { MenuItem, Select, Stack, Typography } from '@mui/material';
+import { MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -32,7 +32,7 @@ export default function GroupTrainerDayViewHeader(
 
   const { day, setDay, days, setDays, week } = props;
 
-  const { group, cycle, setDateFrom, setDateTo, setCycle } = useGroup();
+  const { group, cycle, setDateFrom, setDateTo } = useGroup();
 
   const { selectedAthlete, selectedSubgroup } = useTrainerDayViewContext();
   return (
@@ -155,9 +155,7 @@ export default function GroupTrainerDayViewHeader(
           >
             <Select
               value={cycle?.name || ''}
-              onChange={(e) =>
-                setCycle(group.cycles.find((c) => c.name === e.target.value))
-              }
+              disabled
               renderValue={(value) => value || 'Select cycle'}
               displayEmpty
               sx={{
@@ -167,19 +165,16 @@ export default function GroupTrainerDayViewHeader(
                 border: 'none',
                 pl: 1,
                 '&:before, &:after': { borderBottom: 'none !important' },
+                '& .MuiInputBase-input.Mui-disabled': {
+                  color: 'white !important',
+                  WebkitTextFillColor: 'white !important', // For Safari
+                },
+                '& .MuiSelect-icon': {
+                  display: 'none', // Hide the dropdown icon
+                },
               }}
               variant="standard"
-            >
-              <MenuItem value="" disabled>
-                Select cycle
-              </MenuItem>
-
-              {group.cycles.map((cycle) => (
-                <MenuItem key={cycle.name} value={cycle.name}>
-                  {cycle.name}
-                </MenuItem>
-              ))}
-            </Select>
+            />
           </Box>
         </Box>
         <Circles
@@ -268,9 +263,7 @@ export default function GroupTrainerDayViewHeader(
         >
           <Select
             value={cycle?.name || ''}
-            onChange={(e) =>
-              setCycle(group.cycles.find((c) => c.name === e.target.value))
-            }
+            disabled
             renderValue={(value) => value || 'Select cycle'}
             displayEmpty
             sx={{
@@ -280,19 +273,16 @@ export default function GroupTrainerDayViewHeader(
               border: 'none',
               pl: 1,
               '&:before, &:after': { borderBottom: 'none !important' },
+              '& .MuiInputBase-input.Mui-disabled': {
+                color: 'white !important',
+                WebkitTextFillColor: 'white !important', // For Safari
+              },
+              '& .MuiSelect-icon': {
+                display: 'none', // Hide the dropdown icon
+              },
             }}
             variant="standard"
-          >
-            <MenuItem value="" disabled>
-              Select cycle
-            </MenuItem>
-
-            {group.cycles.map((cycle) => (
-              <MenuItem key={cycle.name} value={cycle.name}>
-                {cycle.name}
-              </MenuItem>
-            ))}
-          </Select>
+          />
         </Box>
       </Box>
     </Stack>

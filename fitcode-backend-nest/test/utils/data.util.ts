@@ -28,8 +28,9 @@ export async function createGroupWithCycles(
   } = input || {};
 
   const groupStub = generateGroupStub({ membersIds });
-  let group = await groupService.create(owner, {
+  let group = await groupService.create(global.manager, {
     name: groupStub.name,
+    ownerId: owner.uid,
     membersIds: groupStub.membersIds,
     institutionId,
   });
