@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { User } from '../common/type/firebase-auth.type';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { Auth } from '../common/decorator/auth.decorator';

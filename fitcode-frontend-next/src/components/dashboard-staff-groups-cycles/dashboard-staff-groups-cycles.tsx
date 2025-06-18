@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { useDashboard } from '@/store/dashboard-provider';
 import { SetState } from '@/common/type/state.type';
+import { isManager } from '@/common/service/util/firebase-auth.util';
 
 const AVATAR_SIZE = 45;
 
@@ -41,6 +42,8 @@ export default function DashboardStaffGroupsCycles(
 
   if (!selectedInstitution) return null;
 
+  const role = profile.customClaims.role || [];
+
   return (
     <Grid2
       container
@@ -50,7 +53,7 @@ export default function DashboardStaffGroupsCycles(
       direction={screenSize.isMobile ? 'column' : 'row'}
     >
       <Grid2 size={screenSize.isMobile ? 12 : 6} sx={{ position: 'relative' }}>
-        {profile.customClaims.role.includes(UserRole.ADMIN) && (
+        {isManager(role) && (
           <Tooltip title="Add trainer" placement="top">
             <IconButton
               onClick={() => setModal({ add_trainer: true, add_group: false })}
@@ -167,25 +170,26 @@ export default function DashboardStaffGroupsCycles(
           gap={1}
           sx={{ position: 'relative' }}
         >
-          {/* {profile.customClaims.role.includes(UserRole.MANAGER) ||
-                (profile.customClaims.role.includes(UserRole.ADMIN) && ( */}
-          <Tooltip title="Add group" placement="top">
-            <IconButton
-              disableRipple
-              onClick={() => setModal({ add_trainer: false, add_group: true })}
-              sx={{
-                p: 0,
-                m: 0,
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                zIndex: 100,
-              }}
-            >
-              <Groups />
-            </IconButton>
-          </Tooltip>
-          {/* ))} */}
+          {isManager(role) && (
+            <Tooltip title="Add group" placement="top">
+              <IconButton
+                disableRipple
+                onClick={() =>
+                  setModal({ add_trainer: false, add_group: true })
+                }
+                sx={{
+                  p: 0,
+                  m: 0,
+                  position: 'absolute',
+                  top: 10,
+                  right: 10,
+                  zIndex: 100,
+                }}
+              >
+                <Groups />
+              </IconButton>
+            </Tooltip>
+          )}
 
           <Grid2
             size={6}

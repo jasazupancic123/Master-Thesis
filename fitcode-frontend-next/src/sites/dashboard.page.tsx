@@ -27,6 +27,8 @@ import {
 } from '@/common/constant/dashboard-views-constant';
 import { Institution } from '@/controller/institution/type/institution.type';
 import DashboardStaffGroupsCycles from '@/components/dashboard-staff-groups-cycles/dashboard-staff-groups-cycles';
+import { isTrainer } from '@/common/service/util/firebase-auth.util';
+import { useAuth } from '@/store/auth-provider';
 
 interface DashboardPageProps {
   view: string;
@@ -53,6 +55,8 @@ export default function DashboardPage(props: DashboardPageProps) {
 
   const [modal, setModal] = useState({ add_trainer: false, add_group: false });
   const [groupName, setGroupName] = useState('');
+
+  const role = profile.customClaims.role || [];
 
   useEffect(() => {
     // fetch groups when selected institution changes
@@ -176,29 +180,31 @@ export default function DashboardPage(props: DashboardPageProps) {
             </Tooltip>
           )}
 
-          <Tooltip title="Go to group" placement="top">
-            <Fab
-              color="primary"
-              aria-label="go"
-              onClick={() => {
-                if (selectedGroup) {
-                  if (detectedChanges) {
-                    toast.error('Unsaved changes will be lost', {
-                      icon: '⚠️',
-                      duration: 1000,
-                    });
-                    setDetectedChanges(false);
-                  } else
-                    redirect(
-                      LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
-                        .home.href
-                    );
-                }
-              }}
-            >
-              <ArrowForward />
-            </Fab>
-          </Tooltip>
+          {isTrainer(role) && (
+            <Tooltip title="Go to group" placement="top">
+              <Fab
+                color="primary"
+                aria-label="go"
+                onClick={() => {
+                  if (selectedGroup) {
+                    if (detectedChanges) {
+                      toast.error('Unsaved changes will be lost', {
+                        icon: '⚠️',
+                        duration: 1000,
+                      });
+                      setDetectedChanges(false);
+                    } else
+                      redirect(
+                        LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS(selectedGroup.id)
+                          .home.href
+                      );
+                  }
+                }}
+              >
+                <ArrowForward />
+              </Fab>
+            </Tooltip>
+          )}
         </Box>
 
         <DashboardStaffGroupsCycles setModal={setModal} />
