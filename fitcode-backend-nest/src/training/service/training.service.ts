@@ -51,6 +51,7 @@ import { CopyComponentDto } from '../dto/copy-component.dto';
 import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
+import { InstitutionService } from 'src/institution/service/institution.service';
 
 @Injectable()
 export class TrainingService {
@@ -1147,6 +1148,8 @@ export class TrainingService {
     const docRef = this.trainingRepository.doc(trainingId);
     const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
       {
+        warmup: training.warmup,
+        cooldown: training.cooldown,
         components: training.components,
         completedMembersIds: training.completedMembersIds,
         stats: [...(training.stats || []), ...stats],

@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FieldValue, Query, Transaction } from 'firebase-admin/firestore';
@@ -184,6 +185,22 @@ export class UserService {
       displayName,
       password,
     });
+
+    // admin can only register managers
+    if (
+      user.customClaims.role.includes(UserRole.ADMIN) &&
+      role !== UserRole.MANAGER
+    )
+      throw new BadRequestException('Only managers can be registered by admin');
+      
+    // manager can register athletes and trainers
+    else if (
+      user.customClaims.role.includes(UserRole.MANAGER) &&
+      ![UserRole.ATHLETE, UserRole.TRAINER].includes(role as UserRole)
+    )
+      throw new BadRequestException(
+        'Only athletes and trainers can be registered by manager',
+      );
 
     const createdUser = await this.upsert({
       email,

@@ -17,7 +17,7 @@ interface Props {
   setDisabled: SetState<boolean>;
 }
 
-export default function UserWellnessFrm(props: Props) {
+export default function UserWellnessForm(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const [state, setState] = useState<Wellness>(() => {

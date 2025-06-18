@@ -15,15 +15,18 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { useRouter } from 'next/navigation';
 import { UserController } from '@/controller/user/user.controller';
 import { useDashboard } from '@/store/dashboard-provider';
+import { isAdmin, isManager } from '@/common/service/util/firebase-auth.util';
 
 export default function RegisterUsersDashboard() {
   const router = useRouter();
-  const { setUsers, token } = useDashboard();
+  const { setUsers, token, profile } = useDashboard();
+
+  const role = profile?.customClaims?.role || [];
 
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
-    role: UserRole.ATHLETE,
+    role: role.includes(UserRole.ADMIN) ? UserRole.MANAGER : UserRole.ATHLETE,
     password: '',
     confirmPassword: '',
   });
@@ -105,13 +108,16 @@ export default function RegisterUsersDashboard() {
             onChange={handleChange}
             fullWidth
           >
-            {[UserRole.ATHLETE, UserRole.TRAINER, UserRole.MANAGER].map(
-              (role) => (
-                <MenuItem key={role} value={role}>
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
-                </MenuItem>
-              )
-            )}
+            {(isAdmin(role)
+              ? [UserRole.MANAGER]
+              : isManager(role)
+                ? [UserRole.ATHLETE, UserRole.TRAINER]
+                : []
+            ).map((role_) => (
+              <MenuItem key={role_} value={role_}>
+                {role_.charAt(0).toUpperCase() + role_.slice(1)}
+              </MenuItem>
+            ))}
           </TextField>
           <TextField
             label="Password"

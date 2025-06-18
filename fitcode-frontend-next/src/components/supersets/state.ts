@@ -19,6 +19,7 @@ import { Training } from '@/controller/training/type/training.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Pagination } from '@/common/type/paginate.type';
 
 export function handleAddExerciseToSupersetComponent(
   input: {
@@ -44,6 +45,7 @@ export function handleAddExerciseToSupersetComponent(
     setSupersets: SetState<Superset[]>;
     setOpenAddExerciseModal: SetState<boolean>;
     setDetectedChanges: SetState<boolean>;
+    setPagination: SetState<Pagination>;
   }
 ) {
   const { selectedExercisesIds, allExercises } = input;
@@ -61,9 +63,14 @@ export function handleAddExerciseToSupersetComponent(
     setOpenAddExerciseModal,
     setDetectedChanges,
     setSelectedSubgroup,
+    setPagination,
   } = state;
 
   setSearch('');
+  setPagination((prev) => ({
+    ...prev,
+    page: 1,
+  }));
   // get only new exercises
   const exercisesIdsToAdd =
     supersetsState && supersetsState.length

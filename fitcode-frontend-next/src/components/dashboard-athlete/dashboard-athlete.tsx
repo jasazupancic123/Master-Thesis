@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import toast from 'react-hot-toast';
+import { isManager } from '@/common/service/util/firebase-auth.util';
 
 interface DashboardAthleteProps {
   athlete: User;
@@ -31,6 +32,8 @@ export default function DashboardAthlete(props: DashboardAthleteProps) {
     selectedGroup,
     setSelectedGroup,
   } = useDashboard();
+
+  const role = profile?.customClaims?.role || [];
 
   const handleRemoveAthleteFromInstitution = (athleteId: string) => {
     if (!selectedInstitution) return;
@@ -85,27 +88,35 @@ export default function DashboardAthlete(props: DashboardAthleteProps) {
               );
               if (group) setSelectedGroup(group);
             }
+
+            if (selectedUser?.uid === athlete.uid) {
+              setSelectedUser(null);
+              return;
+            }
+
             setSelectedUser(athlete);
           }}
         />
-        <IconButton
-          className="remove-icon"
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRemoveAthleteFromInstitution(athlete.uid);
-          }}
-          sx={{
-            position: 'absolute',
-            top: -8,
-            right: -8,
-            opacity: selectedUser?.uid === athlete.uid ? 1 : 0,
-            backgroundColor: theme.palette.error.main,
-            zIndex: 1,
-          }}
-        >
-          <Remove sx={{ fontSize: 10 }} />
-        </IconButton>
+        {isManager(role) && (
+          <IconButton
+            className="remove-icon"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveAthleteFromInstitution(athlete.uid);
+            }}
+            sx={{
+              position: 'absolute',
+              top: -8,
+              right: -8,
+              opacity: selectedUser?.uid === athlete.uid ? 1 : 0,
+              backgroundColor: theme.palette.error.main,
+              zIndex: 1,
+            }}
+          >
+            <Remove sx={{ fontSize: 10 }} />
+          </IconButton>
+        )}
       </Box>
     </Tooltip>
   );

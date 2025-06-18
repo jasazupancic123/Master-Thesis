@@ -136,6 +136,7 @@ export default function AddInstitutionDashboard() {
           </Button>
         </Box>
 
+        {/*}
         <Grid2
           width="100%"
           container
@@ -176,6 +177,7 @@ export default function AddInstitutionDashboard() {
             />
           </Grid2>
         </Grid2>
+        */}
 
         <Box
           display="flex"

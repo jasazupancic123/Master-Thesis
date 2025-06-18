@@ -94,7 +94,7 @@ export default function TrainingComponentMenu(
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => handleToggleVisibility}>
+        <MenuItem onClick={() => handleToggleVisibility()}>
           {trainingComponent &&
           component &&
           training.id === selectedTraining?.id &&

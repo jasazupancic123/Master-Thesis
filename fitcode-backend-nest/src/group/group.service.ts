@@ -138,9 +138,9 @@ export class GroupService {
 
   async create(
     user: User,
-    input: Create<Group, 'name' | 'membersIds' | 'institutionId'>,
+    input: Create<Group, 'name' | 'membersIds' | 'institutionId' | 'ownerId'>,
   ): Promise<Group> {
-    const { name, membersIds, institutionId } = input;
+    const { name, membersIds, institutionId, ownerId } = input;
     this.logger.log(
       `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
     );
@@ -163,7 +163,7 @@ export class GroupService {
         {
           id: groupId,
           name: name,
-          ownerId: user.uid,
+          ownerId: ownerId || user.uid,
           membersIds: membersIds,
           institutionId: institutionId,
           cycles: [],
@@ -269,7 +269,7 @@ export class GroupService {
     return updatedGroup as Group;
   }
 
-  async updateMultiple(
+  async batchUpdate(
     user: User,
     input: Update<Group, 'id' | 'name' | 'membersIds' | 'cycles'>[],
   ): Promise<Group[]> {
@@ -279,6 +279,7 @@ export class GroupService {
 
     const updatedGroups: Group[] = [];
     let updateInstitution = false;
+
     for (const i of input) {
       const ref: GroupRef = { groupId: i.id };
       const group = await this.findByIdOrFail(user, ref);
@@ -307,7 +308,7 @@ export class GroupService {
       });
 
       // validate
-      this.validateOwner(user, group);
+      this.validateManager(user, group);
       if (i.membersIds) await this.validateMembers(i.membersIds as string[]);
       if (i.cycles) this.checkCycleOverlap(i.cycles);
 
@@ -379,7 +380,7 @@ export class GroupService {
     this.logger.log(`User ${user.uid} is removing group ${ref.groupId}`);
 
     const group = await this.findByIdOrFail(user, ref);
-    this.validateOwner(user, group);
+    this.validateManager(user, group);
 
     // remove group from institution
     const institutions = await this.institutionService
@@ -444,6 +445,13 @@ export class GroupService {
 
   private validateOwner(user: User, groupOrTraining: Group | Training) {
     if (!this.isOwner(user.uid, groupOrTraining))
+      throw new UnauthorizedException(
+        'You are not authorized to perform this action',
+      );
+  }
+
+  private validateManager(user: User, group: Group) {
+    if (!this.firebaseService.isManager(user))
       throw new UnauthorizedException(
         'You are not authorized to perform this action',
       );

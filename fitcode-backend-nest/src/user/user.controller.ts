@@ -94,7 +94,7 @@ export class UserController {
   }
 
   @Post('add/register')
-  @Auth([UserRole.ADMIN])
+  @Auth([UserRole.ADMIN, UserRole.MANAGER])
   async registerUser(
     @RequestUser() user: User,
     @Body() body: RegisterUserDto,

@@ -1,9 +1,9 @@
 'use client';
 
-import TrainerCycleView from '@/components/group-trainer-cycle-view/trainer-group-cycle-view';
-import TrainerDayView from '@/components/group-trainer-day-view/trainer-group-day-view';
-import TrainerWeekView from '@/components/group-trainer-week-view/trainer-group-week-view';
-import TrainerYearView from '@/components/group-trainer-year-view/trainer-group-year-view';
+import TrainerCycleView from '@/components/trainer-group-cycle-view/trainer-group-cycle-view';
+import TrainerDayView from '@/components/trainer-group-day-view/trainer-group-day-view';
+import TrainerWeekView from '@/components/trainer-group-week-view/trainer-group-week-view';
+import TrainerYearView from '@/components/trainer-group-year-view/trainer-group-year-view';
 import { GroupDateFilter } from '@/common/type/filter.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';

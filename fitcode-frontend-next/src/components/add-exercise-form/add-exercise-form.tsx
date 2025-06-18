@@ -196,6 +196,10 @@ export default function AddExerciseForm(props: AddExerciseFormProps) {
                             ...prev,
                             exercise.id,
                           ]);
+                        } else {
+                          setSelectedExercisesIds((prev) =>
+                            prev.filter((id) => id !== exercise.id)
+                          );
                         }
                       }}
                     >

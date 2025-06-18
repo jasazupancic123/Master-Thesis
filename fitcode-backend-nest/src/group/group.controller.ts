@@ -52,7 +52,7 @@ export class GroupController {
   }
 
   @Post()
-  @Auth()
+  @Auth([UserRole.MANAGER])
   async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {
     return await this.groupService.create(user, body);
   }
@@ -67,17 +67,17 @@ export class GroupController {
     return await this.groupService.update(user, { groupId }, body);
   }
 
-  @Patch('/batch')
+  @Patch('update/batch')
   @Auth()
   async updateMultiple(
     @RequestUser() user: User,
     @Body() body: UpdateGroupDtoWithId[],
   ) {
-    return await this.groupService.updateMultiple(user, body);
+    return await this.groupService.batchUpdate(user, body);
   }
 
   @Delete(':groupId')
-  @Auth()
+  @Auth([UserRole.MANAGER])
   async delete(@RequestUser() user: User, @Param('groupId') groupId: string) {
     await this.groupService.delete(user, { groupId });
     return {};

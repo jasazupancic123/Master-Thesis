@@ -32,6 +32,7 @@ export default function Supersets(props: SupersetsProps) {
     setSearch,
     supersets,
     setSupersets,
+    setPagination,
   } = useTrainerDayViewContext();
 
   const [selectedExercisesIds, setSelectedExercisesIds] = useState(
@@ -150,6 +151,10 @@ export default function Supersets(props: SupersetsProps) {
               .includes(id)
           );
 
+          setPagination((prev) => ({
+            ...prev,
+            page: 1,
+          }));
           setSelectedExercisesIds(oldExercises);
           setOpenAddExerciseModal(false);
           setSearch('');
@@ -175,6 +180,7 @@ export default function Supersets(props: SupersetsProps) {
               setSearch,
               selectedSubgroup,
               setSelectedSubgroup,
+              setPagination,
             }
           );
         }}

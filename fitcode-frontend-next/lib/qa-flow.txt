@@ -9,12 +9,9 @@ Clear local firebase data
         ~ Pagination
     - Dashboard
         - Register Users:
-            ~ Register new athlete (later referenced as Athlete)
-            ~ Register new trainer (later referenced as Trainer)
             ~ Register new manager (later referenced as Manager)
         - Add Institution Page:
-            ~ Add new institution with owner Manager, trainer Trainer and
-                Athlete and 3 other athletes (later referenced as Institution)
+            ~ Add new institution with owner Manager
         - Exercises (test route only):
         - Home Page:
             ~ Switch between institutions (on end switch to Institution)
@@ -31,6 +28,9 @@ Clear local firebase data
             ~ Add trainer@mail.com to institution
             ~ Add a new group with owner Trainer
             ~ Remove a trainer from institution
+        - Register Users:
+            ~ Register new athlete (later referenced as Athlete)
+            ~ Register new trainer (later referenced as Trainer)
         - Groups/Members:
             ~ Add a new athlete to institution
             ~ Add Athlete and 5 other athletes to new group
@@ -159,13 +159,4 @@ Clear local firebase data
 
 
 BUGFIXES:
-- add dashboard role checks to BE and FE
-- when closing/confirming add exercise modal, reset pagination!
-- add exercise modal cannot deselect exercise
-- Remove dropdown from cycle view on day, update on date change
-- onSaveTraining -> set selectedAthlete to null
-- hide component
-- athlete view: when finishing warmup/cooldown and then finishing another components, 
-  the warmup/cooldown should get unfinished (test with multiple components)
-- invalid wellness values get submited, once submited, the user can't update the values again
 - unnanamed exercise

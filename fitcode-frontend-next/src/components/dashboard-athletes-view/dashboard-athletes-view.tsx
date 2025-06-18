@@ -128,27 +128,29 @@ export default function AthletesView() {
           overflowX: 'auto',
         }}
       >
-        {isManager(role)}
-        <Tooltip title="Add athlete">
-          <Avatar
-            key={'add'}
-            sx={{
-              width: 30,
-              height: 30,
-              marginY: 'auto',
-              cursor: 'pointer',
-              backgroundColor: theme.palette.primary.main,
-            }}
-            onClick={() => {
-              setModal((prev) => ({
-                ...prev,
-                add_athlete: true,
-              }));
-            }}
-          >
-            <Add />
-          </Avatar>
-        </Tooltip>
+        {isManager(role) && (
+          <Tooltip title="Add athlete">
+            <Avatar
+              key={'add'}
+              sx={{
+                width: 30,
+                height: 30,
+                marginY: 'auto',
+                cursor: 'pointer',
+                backgroundColor: theme.palette.primary.main,
+              }}
+              onClick={() => {
+                setModal((prev) => ({
+                  ...prev,
+                  add_athlete: true,
+                }));
+              }}
+            >
+              <Add />
+            </Avatar>
+          </Tooltip>
+        )}
+
         {selectedInstitution?.athletes &&
           selectedInstitution.athletes.map((a) => (
             <DashboardAthlete

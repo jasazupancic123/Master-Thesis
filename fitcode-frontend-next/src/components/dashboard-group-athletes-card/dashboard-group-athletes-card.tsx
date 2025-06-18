@@ -12,6 +12,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { isManager } from '@/common/service/util/firebase-auth.util';
 
 interface GroupAthletesCardProps {
   group: Group;
@@ -26,13 +27,15 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
   const router = useRouter();
   const {
     token,
-    setDetectedChanges,
+    profile,
     selectedGroup,
     setSelectedGroup,
     selectedInstitution,
     setSelectedInstitution,
     users,
   } = useDashboard();
+
+  const role = profile?.customClaims?.role || [];
 
   const [groupMembers, setGroupMembers] = useState<User[]>(
     users
@@ -106,36 +109,43 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
         }}
         onClick={() => setSelectedGroup(group)}
       >
-        <Tooltip title="Remove group" placement="top">
-          <IconButton
-            onClick={() =>
-              setModal((prev) => ({ ...prev, remove_group: true }))
-            }
-            sx={{
-              m: 0,
-              p: 0,
-              position: 'absolute',
-              top: 10,
-              left: screenSize.isTablet ? 5 : 10,
-            }}
-          >
-            <Remove />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Add athlete" placement="top">
-          <IconButton
-            onClick={() => setModal((prev) => ({ ...prev, add_member: true }))}
-            sx={{
-              m: 0,
-              p: 0,
-              position: 'absolute',
-              top: 10,
-              right: screenSize.isTablet ? 5 : 10,
-            }}
-          >
-            <PersonAddAlt />
-          </IconButton>
-        </Tooltip>
+        {isManager(role) && (
+          <Tooltip title="Remove group" placement="top">
+            <IconButton
+              onClick={() =>
+                setModal((prev) => ({ ...prev, remove_group: true }))
+              }
+              sx={{
+                m: 0,
+                p: 0,
+                position: 'absolute',
+                top: 10,
+                left: screenSize.isTablet ? 5 : 10,
+              }}
+            >
+              <Remove />
+            </IconButton>
+          </Tooltip>
+        )}
+        {isManager(role) && (
+          <Tooltip title="Add athlete" placement="top">
+            <IconButton
+              onClick={() =>
+                setModal((prev) => ({ ...prev, add_member: true }))
+              }
+              sx={{
+                m: 0,
+                p: 0,
+                position: 'absolute',
+                top: 10,
+                right: screenSize.isTablet ? 5 : 10,
+              }}
+            >
+              <PersonAddAlt />
+            </IconButton>
+          </Tooltip>
+        )}
+
         <Typography
           variant="h6"
           sx={{ fontSize: 18, maxWidth: screenSize.isTablet ? '50%' : '75%' }}
@@ -148,7 +158,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
           key={member.uid}
           variant="body1"
           onClick={() => {
-            if (selectedUser === member) {
+            if (selectedUser?.uid === member.uid) {
               setSelectedUser(null);
               return;
             }
