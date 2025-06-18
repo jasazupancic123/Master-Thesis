@@ -99,6 +99,7 @@ Clear local firebase data
             ~ In some exercises expand, give different values for different sets and L/R, save
         - Method:
             ~ Set Method to strength component, validate param limits, save
+            - Set Method to strength component in subgroups
         - 3 Dots:
             - Hide component
                 ~ Show component
