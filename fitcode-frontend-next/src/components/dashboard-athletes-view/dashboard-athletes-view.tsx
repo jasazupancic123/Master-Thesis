@@ -73,7 +73,10 @@ export default function AthletesView() {
           athleteIds,
         }),
       (institution) => {
-        institution = InstitutionService.mapUsers([institution], users)[0];
+        institution = InstitutionService.mapUsers(
+          [institution],
+          users || []
+        )[0];
         setSelectedInstitution(institution);
         setModal((prev) => ({ ...prev, add_athlete: false }));
         toast.success('Athletes added successfully');
@@ -93,7 +96,10 @@ export default function AthletesView() {
           athleteIds: [athleteId],
         }),
       (institution) => {
-        institution = InstitutionService.mapUsers([institution], users)[0];
+        institution = InstitutionService.mapUsers(
+          [institution],
+          users || []
+        )[0];
         setSelectedInstitution(institution);
         toast.success('Athlete removed successfully');
       },
@@ -128,29 +134,6 @@ export default function AthletesView() {
           overflowX: 'auto',
         }}
       >
-        {isManager(role) && (
-          <Tooltip title="Add athlete">
-            <Avatar
-              key={'add'}
-              sx={{
-                width: 30,
-                height: 30,
-                marginY: 'auto',
-                cursor: 'pointer',
-                backgroundColor: theme.palette.primary.main,
-              }}
-              onClick={() => {
-                setModal((prev) => ({
-                  ...prev,
-                  add_athlete: true,
-                }));
-              }}
-            >
-              <Add />
-            </Avatar>
-          </Tooltip>
-        )}
-
         {selectedInstitution?.athletes &&
           selectedInstitution.athletes.map((a) => (
             <DashboardAthlete
@@ -300,7 +283,7 @@ export default function AthletesView() {
         onCancel={() => setModal((prev) => ({ ...prev, add_athlete: false }))}
       >
         <AddMembersModal
-          users={users.filter((u) =>
+          users={(users || []).filter((u) =>
             u.customClaims.role.includes(UserRole.ATHLETE)
           )}
           members={addedAthletes}

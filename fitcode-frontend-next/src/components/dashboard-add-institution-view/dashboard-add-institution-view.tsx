@@ -25,13 +25,19 @@ export default function AddInstitutionDashboard() {
   const { token, setInstitutions } = useDashboard();
 
   const [allTrainers, setAllTrainers] = useState(
-    users.filter((user) => user.customClaims?.role.includes(UserRole.TRAINER))
+    (users || []).filter((user) =>
+      user.customClaims?.role.includes(UserRole.TRAINER)
+    )
   );
   const [allManagers, setAllManagers] = useState(
-    users.filter((user) => user.customClaims?.role.includes(UserRole.MANAGER))
+    (users || []).filter((user) =>
+      user.customClaims?.role.includes(UserRole.MANAGER)
+    )
   );
   const [allAthletes, setAllAthletes] = useState(
-    users.filter((user) => user.customClaims?.role.includes(UserRole.ATHLETE))
+    (users || []).filter((user) =>
+      user.customClaims?.role.includes(UserRole.ATHLETE)
+    )
   );
 
   const [modal, setModal] = useState({
@@ -73,7 +79,10 @@ export default function AddInstitutionDashboard() {
       router,
       () => InstitutionController.create(token, input),
       (institution) => {
-        institution = InstitutionService.mapUsers([institution], users)[0];
+        institution = InstitutionService.mapUsers(
+          [institution],
+          users || []
+        )[0];
         setInstitutions((prev) => {
           const newInstitutions = [...prev, institution];
           return newInstitutions;

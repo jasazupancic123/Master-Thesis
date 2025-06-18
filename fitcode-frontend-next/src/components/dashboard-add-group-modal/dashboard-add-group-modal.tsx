@@ -20,7 +20,9 @@ export default function AddGroupModal(props: AddGroupModalProps) {
   const { owner, setOwner, groupName, setGroupName } = props;
   const [openModal, setOpenModal] = useState(false);
   const [allTrainers, setAllTrainers] = useState(
-    users.filter((user) => selectedInstitution?.trainerIds.includes(user.uid))
+    (users || []).filter((user) =>
+      selectedInstitution?.trainerIds.includes(user.uid)
+    )
   );
 
   return (

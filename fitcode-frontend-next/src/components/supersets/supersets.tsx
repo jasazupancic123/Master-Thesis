@@ -162,6 +162,10 @@ export default function Supersets(props: SupersetsProps) {
         width={500}
         dialogueContentSx={{ px: screenSize.isMobile ? 0 : undefined }}
         onConfirm={() => {
+          if (selectedExercisesIds.length === 0) {
+            setOpenAddExerciseModal(false);
+            return;
+          }
           handleAddExerciseToSupersetComponent(
             {
               selectedExercisesIds,
