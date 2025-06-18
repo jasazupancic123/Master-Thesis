@@ -1,6 +1,6 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { ChildrenProps } from '@/common/type/props.type';
-import SidebarAthlete from '@/components/sidebar-athlete';
+import SidebarAthlete from '@/components/sidebar-athlete/sidebar-athlete';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import Box from '@mui/material/Box';

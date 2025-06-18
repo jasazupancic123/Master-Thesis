@@ -7,9 +7,9 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import TrainingPage from './training-page';
-import { AthleteProvider } from '@/context/athlete-provider';
-import { TrainingProvider } from '@/context/training-provider';
+import TrainingPage from '../../sites/training.page';
+import { MethodController } from '@/controller/method/method.controller';
+import { Training } from '@/controller/training/type/training.type';
 
 export default async function Page() {
   // fetch data
@@ -21,17 +21,22 @@ export default async function Page() {
   if (!profile) return <div>Unauthorized</div>;
 
   const role = profile.customClaims.role[0];
-  const [trainings, exercises, components] = await Promise.all([
+  const [trainings, exercises, components, methods] = await Promise.all([
     TrainingController.findAll(token),
     ExerciseController.findAll(token),
     ComponentController.findAll(),
+    MethodController.findAll(token),
   ]);
 
   if ([UserRole.ADMIN, UserRole.MANAGER].includes(role)) return notFound();
 
-  const mappedTrainings = trainings.map((t) => {
-    t = TrainingService.mapComponents(t, components);
-    t = TrainingService.mapExercises(t, exercises);
+  const mappedTrainings = (trainings as Training[]).map((t) => {
+    t = TrainingService.mapComponentsExercisesMethods(
+      t,
+      components,
+      exercises,
+      methods
+    );
     return t;
   });
 

@@ -15,11 +15,12 @@ import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
 import { Dashboard, Groups, PersonAddAlt1 } from '@mui/icons-material';
 import {
-  DASHBOARD_ADD_INSTITUTION_VIEW,
-  DASHBOARD_GROUPS_VIEW,
-  DASHBOARD_MAIN_VIEW,
-  DASHBOARD_REGISTER_USERS_VIEW,
-} from '@/components/dashboard/constant/dashboard-views-constant';
+  DASHBOARD_ADD_INSTITUTION,
+  DASHBOARD_EXERCISES,
+  DASHBOARD_GROUPS,
+  DASHBOARD_MAIN,
+  DASHBOARD_REGISTER_USERS,
+} from '@/common/constant/dashboard-views-constant';
 
 export function link(
   label: string,
@@ -47,6 +48,10 @@ export const LINK_SIGN_IN = link('Sign In', '/sign-in');
 export const LINK_SIGN_UP = link('Sign Up', '/sign-up');
 export const LINK_PROFILE = link('Profile', '/profile', <PersonIcon />);
 export const LINK_USERS = link('Users', '/users');
+export const LINK_EXERCISES_DASHBOARD = link(
+  'Exercises',
+  '/dashboard/exercises'
+);
 export const LINK_COMPONENTS = link('Components', '/components');
 export const LINK_EXERCISES = link('Exercises', '/exercises');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
@@ -82,18 +87,6 @@ export const LINK_GROUP_DATE_RANGE_VIEW = (
 export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
   home: link('Home', `/groups/${groupId}`, <HomeIcon />),
   dashboard: link('Dashboard', `/dashboard`, <Dashboard />),
-  exercises: link(
-    'Exercises',
-    `/groups/${groupId}/exercises`,
-    <FitnessCenterIcon />
-  ),
-  members: link('Members', `/groups/${groupId}/members`, <PeopleIcon />),
-  createGroup: link(
-    'Create group',
-    `/groups/${groupId}/add-group`,
-    <AddIcon />
-  ),
-  settings: link('Settings', `/groups/${groupId}/settings`, <SettingsIcon />),
 });
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
@@ -101,15 +94,16 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
 };
 
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: string) => ({
-  home: link('Home', DASHBOARD_MAIN_VIEW, <HomeIcon />),
-  athletes: link('Groups', DASHBOARD_GROUPS_VIEW, <Groups />),
+  home: link('Home', DASHBOARD_MAIN, <HomeIcon />),
+  athletes: link('Groups', DASHBOARD_GROUPS, <Groups />),
+  exercises: link('Exercises', DASHBOARD_EXERCISES, <FitnessCenterIcon />),
   addInstitution:
     role === UserRole.ADMIN
-      ? link('Add Institution', DASHBOARD_ADD_INSTITUTION_VIEW, <AddIcon />)
+      ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)
       : undefined,
   register:
-    role === UserRole.ADMIN
-      ? link('Register Users', DASHBOARD_REGISTER_USERS_VIEW, <PersonAddAlt1 />)
+    role === UserRole.ADMIN || role === UserRole.MANAGER
+      ? link('Register Users', DASHBOARD_REGISTER_USERS, <PersonAddAlt1 />)
       : undefined,
 });
 
@@ -154,7 +148,7 @@ export const LINKS_SIDEBAR = {
   [UserRole.ADMIN]: {
     users: LINK_USERS,
     components: LINK_COMPONENTS,
-    exercises: LINK_EXERCISES,
+    exercises: LINK_EXERCISES_DASHBOARD,
     dashboard: LINK_DASHBOARD,
   },
 };

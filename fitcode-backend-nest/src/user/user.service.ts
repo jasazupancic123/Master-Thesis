@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FieldValue, Query, Transaction } from 'firebase-admin/firestore';
@@ -170,31 +171,6 @@ export class UserService {
       displayName,
       password,
     });
-  }
-
-  async registerUser(user: User, input: RegisterUserDto) {
-    const { email, displayName, password, role } = input;
-
-    this.logger.log(
-      `User ${user.uid} is registering new user: ${JSON.stringify(input)})`,
-    );
-
-    const firebaseUser = await this.firebaseService.auth.createUser({
-      email,
-      displayName,
-      password,
-    });
-
-    const createdUser = await this.upsert({
-      email,
-      displayName,
-      password,
-      customClaims: { role: [role as UserRole] },
-    });
-
-    if (!createdUser) throw new BadRequestException('User not created');
-
-    return createdUser;
   }
 
   addGroup(transaction: Transaction, userId: string, groupId: string) {

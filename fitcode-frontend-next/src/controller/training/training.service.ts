@@ -6,11 +6,28 @@ import { Component } from '../component/type/component.type';
 import { Exercise } from '../exercise/type/exercise.type';
 import { User } from '../user/type/user.type';
 import { Training } from './type/training.type';
-import { ExerciseSet } from './type/training-plan.type';
+import {
+  ExerciseSet,
+  TrainingComponent,
+  TrainingComponentInfo,
+} from './type/training-plan.type';
 import { IntensityVolumeValues } from './type/intensity-volume-values.type';
+import { Target } from '../target/type/target.type';
+import { Method } from '../method/type/method.type';
+import { TrainingInfo } from './type/training-info.type';
+import { Subgroup } from './type/subgroup.type';
+import { SubgroupInfo } from './type/subggroup-minimal.type';
 
 export class TrainingService {
-  static mapComponents(item: Training, components: Component[]): Training {
+  static mapComponents(item: Training, components: Component[]): Training;
+  static mapComponents(
+    item: TrainingInfo,
+    components: Component[]
+  ): TrainingInfo;
+  static mapComponents(
+    item: Training | TrainingInfo,
+    components: Component[]
+  ): Training | TrainingInfo {
     for (const tc of item.components)
       tc.component = components.find((c) => c.id === tc.id);
 
@@ -20,19 +37,72 @@ export class TrainingService {
     return item;
   }
 
-  static mapExercises(item: Training, exercises: Exercise[]): Training {
+  private static isTrainingComponent(
+    item: TrainingComponent | TrainingComponentInfo
+  ): item is TrainingComponent {
+    return 'supersets' in item;
+  }
+
+  static mapExercises(item: Training, exercises: Exercise[]): Training;
+  static mapExercises(item: TrainingInfo, exercises: Exercise[]): TrainingInfo;
+  static mapExercises(
+    item: Training | TrainingInfo,
+    exercises: Exercise[]
+  ): Training | TrainingInfo {
     for (const tc of item.components) {
+      if (!this.isTrainingComponent(tc)) continue;
+
       for (const s of tc.supersets)
-        for (const e of s.exercises)
+        for (const e of s.exercises) {
           e.exercise = exercises.find(({ id }) => id === e.id);
+          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+        }
 
       for (const subgroup of tc.subgroups)
         for (const s of subgroup.supersets)
-          for (const e of s.exercises)
+          for (const e of s.exercises) {
             e.exercise = exercises.find(({ id }) => id === e.id);
+            if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+          }
     }
 
     return item;
+  }
+
+  static mapMethods(item: Training, methods: Method[]): Training;
+  static mapMethods(item: TrainingInfo, methods: Method[]): TrainingInfo;
+  static mapMethods(
+    item: Training | TrainingInfo,
+    methods: Method[]
+  ): Training | TrainingInfo {
+    for (const tc of item.components)
+      tc.method = methods.find((m) => m.id === tc.methodId);
+
+    return item;
+  }
+
+  static mapComponentsExercisesMethods(
+    training: Training,
+    components: Component[],
+    exercises: Exercise[],
+    methods: Method[]
+  ): Training;
+  static mapComponentsExercisesMethods(
+    training: TrainingInfo,
+    components: Component[],
+    exercises: Exercise[],
+    methods: Method[]
+  ): TrainingInfo;
+  static mapComponentsExercisesMethods(
+    training: Training | TrainingInfo,
+    components: Component[],
+    exercises: Exercise[],
+    methods: Method[]
+  ): Training | TrainingInfo {
+    return this.mapExercises(
+      this.mapComponents(this.mapMethods(training, methods), components),
+      exercises
+    );
   }
 
   static mapMembers(item: Training, users: User[]): Training {
@@ -82,6 +152,60 @@ export class TrainingService {
     return {
       intensity: avgIntensity,
       volume: avgVolume,
+    };
+  }
+
+  static convertFromTrainingToTrainingMinimal(
+    training: Training
+  ): TrainingInfo {
+    return {
+      id: training.id,
+      from: training.from,
+      to: training.to,
+      groupId: training.groupId,
+      cycleId: training.cycleId,
+      copiedFromId: training.copiedFromId,
+      warmup: this.convertFromTrainingComponentToTrainingComponentMinimal(
+        training.warmup
+      ),
+      cooldown: this.convertFromTrainingComponentToTrainingComponentMinimal(
+        training.cooldown
+      ),
+      components: training.components.map((component) =>
+        this.convertFromTrainingComponentToTrainingComponentMinimal(component)
+      ),
+      stats: training.stats,
+      futureStats: training.futureStats,
+      createdAt: training.createdAt,
+      updatedAt: training.updatedAt,
+    };
+  }
+
+  static convertFromTrainingComponentToTrainingComponentMinimal(
+    component: TrainingComponent
+  ): TrainingComponentInfo {
+    return {
+      id: component.id,
+      color: component.color,
+      from: component.from,
+      to: component.to,
+      subgroups: component.subgroups.map((subgroup) =>
+        this.convertFromSubgroupToSubgroupMinimal(subgroup)
+      ),
+      methodId: component.methodId,
+      method: component.method,
+      target: component.target,
+      component: component.component,
+      copiedFrom: component.copiedFrom,
+    };
+  }
+
+  static convertFromSubgroupToSubgroupMinimal(
+    subgroup: Subgroup
+  ): SubgroupInfo {
+    return {
+      id: subgroup.id,
+      futureStats: subgroup.futureStats,
     };
   }
 }

@@ -24,7 +24,7 @@ export class GroupController {
 
   static async create(
     token: string,
-    body: { name: string; membersIds: string[]; institutionId: string }
+    body: { name: string; ownerId: string, membersIds: string[]; institutionId: string }
   ) {
     return api.post<Group>('/group', body, { token });
   }
@@ -46,7 +46,7 @@ export class GroupController {
       cycles?: Cycle[];
     }[]
   ) {
-    return api.patch<Group[]>(`/group/batch`, body, { token });
+    return api.patch<Group[]>(`/group/update/batch`, body, { token });
   }
 
   static async delete(token: string, groupId: string) {

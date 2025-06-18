@@ -15,6 +15,8 @@ import { User } from '../type/firebase-auth.type';
 import { BaseSetup } from './base.setup';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeService } from '../../attribute/service/attribute.service';
+import { MethodService } from '../../method/service/method.service';
+import { Method } from '../../method/entity/method.entity';
 import { InstitutionService } from '../../institution/service/institution.service';
 
 export class DataSetup extends BaseSetup {
@@ -69,6 +71,7 @@ export class DataSetup extends BaseSetup {
       await this.importAttributes('data/attributes.json');
       await this.importComponents('data/components.json');
       await this.importExercises('data/exercises.json');
+      await this.importMethods('data/methods.json');
 
       this.logger.debug(
         `Data setup took ${(performance.now() - time) / 1000}s`,
@@ -87,6 +90,7 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
     await this.firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
     await this.firebaseService.deleteCollection(FirestoreCollection.USER);
+    await this.firebaseService.deleteCollection(FirestoreCollection.METHOD);
   }
 
   private async importAttributes(filename: string) {
@@ -107,6 +111,15 @@ export class DataSetup extends BaseSetup {
     })[] = JSON.parse(file);
 
     for (const c of data) await componentService.createFromTree(c);
+  }
+
+  private async importMethods(filename: string) {
+    const methodsService = this.app.get(MethodService);
+
+    const file = await readFile(filename, 'utf-8');
+    const data: Method[] = JSON.parse(file);
+
+    for (const m of data) await methodsService.create(this.admin, m);
   }
 
   private async importExercises(filename: string) {
@@ -195,8 +208,9 @@ export class DataSetup extends BaseSetup {
     for (const { name, membersIds: emails } of groups) {
       const members = await this.userService.findAll({ emails });
       const membersIds = members.map((m) => m.uid);
-      const group = await groupService.create(this.trainer, {
+      const group = await groupService.create(this.manager, {
         name,
+        ownerId: this.trainer.uid,
         membersIds,
         institutionId: institution.id,
       });
@@ -212,7 +226,7 @@ export class DataSetup extends BaseSetup {
 
     institution.groupIds = groupIds;
     await institutionService.update(
-      this.trainer,
+      this.manager,
       { institutionId: institution.id },
       { groupIds: institution.groupIds },
     );

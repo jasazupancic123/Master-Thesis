@@ -21,9 +21,10 @@ export class Wellness {
   @Expose()
   date: Date;
 
+  @IsOptional()
   @IsNumber()
-  @ApiProperty()
   @Expose()
+  @ApiPropertyOptional()
   weight?: number;
 
   @IsOptional()

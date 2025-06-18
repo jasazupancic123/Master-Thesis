@@ -1,7 +1,7 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { UserController } from '@/controller/user/user.controller';
 import { cookies } from 'next/headers';
-import { CalendarPage } from './calendar-page';
+import CalendarPage from '../../sites/calendar.page';
 
 export default async function Page() {
   // fetch data

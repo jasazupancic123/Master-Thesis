@@ -34,12 +34,17 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
+import { Method } from '../../method/entity/method.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { WorkloadService } from './workload.service';
+import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
+import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
 export class TrainingPlanService {
   constructor(
+    private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
@@ -70,8 +75,10 @@ export class TrainingPlanService {
           from: c.from ? c.from : addMinutes(lastComponent.from, 30),
           to: c.to ? c.to : addMinutes(lastComponent.from, 60),
           completedMembersIds: [],
+          target: c.target,
+          methodId: c.methodId,
           subgroups: [],
-          supersets: [{ exercises: [] }],
+          supersets: [],
         })),
       ],
     };
@@ -120,16 +127,32 @@ export class TrainingPlanService {
     );
   }
 
+  findComponentOrFail(
+    training: Training,
+    componentId: string,
+  ): TrainingComponent {
+    const foundComponent = training.components.find(
+      (c) => c.id === componentId,
+    );
+
+    if (!foundComponent)
+      throw new NotFoundException(`Component with id ${componentId} not found`);
+
+    return foundComponent;
+  }
+
   /**
    * @param training - Existing training in database
    * @param exercises - New completed exercises values from athlete
    * @param rootComponentId - Root component ID for exercises
    */
   calculateTrainingStats(
-    training: Training,
+    trainingStats: GroupWorkloadStats[],
     exercises: TrainingExercise[],
     rootComponentId: string,
   ) {
+    const finalStats: GroupWorkloadStats[] = [];
+
     for (const e of exercises) {
       // completed exercises
       let volume = 0;
@@ -151,7 +174,7 @@ export class TrainingPlanService {
       volume = volume / e.sets.length;
       intensity = intensity / e.sets.length;
 
-      let stats = training.stats.find((w) => w.exerciseId === e.id);
+      let stats = trainingStats.find((w) => w.exerciseId === e.id);
 
       if (!stats) {
         stats = {
@@ -173,8 +196,10 @@ export class TrainingPlanService {
           stats.numMembers;
       }
 
-      return stats;
+      finalStats.push(stats);
     }
+
+    return finalStats;
   }
 
   isTrainingCompleted(userId: string, trainingComponents: TrainingComponent[]) {
@@ -188,6 +213,7 @@ export class TrainingPlanService {
     trainingMemberIds: string[],
     trainingComponents: TrainingComponent[],
     allComponents: Component[],
+    allMethods: Method[],
   ) {
     if (!trainingComponents.map((tc) => tc.id).includes(WARMUP_COMPONENT_ID))
       throw new BadRequestException('Training must have warmup component');
@@ -226,6 +252,7 @@ export class TrainingPlanService {
       // validate supersets and subgroups
       this.validateSupersets(curr, exercises, allComponents);
       this.validateSubgroups(trainingMemberIds, curr, exercises, allComponents);
+      this.validateTrainingExerciseValues(curr, allMethods);
     }
 
     if (
@@ -236,6 +263,127 @@ export class TrainingPlanService {
       throw new ConflictException(
         'You can only have up to 5 components per training',
       );
+  }
+
+  validateTrainingExerciseValues(
+    trainingComponent: TrainingComponent,
+    methods: Method[],
+  ) {
+    if (!trainingComponent.methodId) return; // no method to validate
+
+    const method = methods.find((m) => m.id === trainingComponent.methodId);
+    if (!method)
+      throw new NotFoundException('Method not found for training component');
+
+    if (!method.attributeRanges.length) return; // no values to validate
+
+    const exercises = trainingComponent.supersets.flatMap((s) => s.exercises);
+
+    for (const exercise of exercises) {
+      for (const set of exercise.sets) {
+        this.validateParamValues(method, set.paramValuesL);
+        this.validateParamValues(method, set.paramValuesR);
+      }
+    }
+  }
+
+  /**
+   * Generates weeks between first and last training and fills in all
+   * of the trainings. For example, we have 3 trainings, 2 in first
+   * week and one in the second week. Returns array of 2 elements,
+   * first containing the first 2 trainings and the second containing
+   * the last training.
+   *
+   * @example
+   * ```ts
+   * const trainings = [
+   *  { from: '2025-10-01' },
+   *  { from: '2025-14-01' },
+   *  { from: '2025-21-01' },
+   * ]
+   *
+   * const firstTraining = trainings[0];
+   * const lastTraining = trainings[trainings.length - 1];
+   *
+   * const result = getSpacedTrainingsByWeek(
+   *  firstTraining,
+   *  lastTraining,
+   *  trainings,
+   * ); // => [
+   * // [
+   * //  { from: '2025-10-01' },
+   * //  { from: '2025-14-01' },
+   * // ],
+   * // [
+   * //  { from: '2025-21-01' },
+   * // ]
+   * //]
+   * ```
+   */
+  getSpacedTrainingsByWeek(
+    firstTraining: Training,
+    lastTraining: Training,
+    trainings: Training[],
+  ): Training[][] {
+    const startWeek = this.commonService.date.getIsoWeek(firstTraining.from);
+    const lastWeek = this.commonService.date.getIsoWeek(lastTraining.from);
+    const numWeeks = lastWeek - startWeek + 1;
+    const weeks = Array.from({ length: numWeeks }, () => [] as Training[]);
+
+    // fill the trainings in weeks
+    for (const training of trainings) {
+      const weekIndex =
+        this.commonService.date.getIsoWeek(training.from) - startWeek;
+
+      if (weekIndex >= 0 && weekIndex < weeks.length)
+        weeks[weekIndex].push(training);
+    }
+
+    // sort trainings in week by date
+    for (const week of weeks)
+      week.sort((a, b) => a.from.getTime() - b.from.getTime());
+
+    const numTrainingInWeeks = weeks.flat().length;
+    if (trainings.length !== numTrainingInWeeks)
+      throw new BadRequestException('Some trainings are missing or not found');
+
+    return weeks;
+  }
+
+  checkPeriodizationType(type: PeriodizationType) {
+    if (type === PeriodizationType.DUP_TABLE_BASED)
+      throw new BadRequestException(
+        'Dup Table Based periodization is not supported yet',
+      );
+  }
+
+  private validateParamValues(method: Method, paramValues: AttributeValue[]) {
+    for (const paramValue of paramValues) {
+      let attributeRange = method.attributeRanges.find(
+        (ar) => ar.field === paramValue.field,
+      );
+      if (!attributeRange) continue;
+
+      const foundInOptions = attributeRange.options.find(
+        (o) => o.field === paramValue.selected,
+      );
+      if (foundInOptions) attributeRange = foundInOptions;
+
+      if (attributeRange.min !== undefined) {
+        if (parseFloat(paramValue.value) < attributeRange.min) {
+          throw new BadRequestException(
+            `Value for ${paramValue.field} cannot be less than ${attributeRange.min}`,
+          );
+        }
+      }
+      if (attributeRange.max !== undefined) {
+        if (parseFloat(paramValue.value) > attributeRange.max) {
+          throw new BadRequestException(
+            `Value for ${paramValue.field} cannot be greater than ${attributeRange.max}`,
+          );
+        }
+      }
+    }
   }
 
   populateTrainingExerciseParams(
@@ -298,7 +446,12 @@ export class TrainingPlanService {
         'You can only have up to 8 supersets per training component',
       );
 
-    for (const superset of component.supersets) {
+    const supersets = [
+      ...component.supersets,
+      ...component.subgroups.flatMap((s) => s.supersets),
+    ];
+
+    for (const superset of supersets) {
       if (superset.exercises.length > 4)
         throw new ConflictException(
           'You can only have up to 4 exercises per superset',
@@ -341,7 +494,7 @@ export class TrainingPlanService {
     const trainingMemberIdsSet = new Set(trainingMemberIds);
     const membersIdsSet = new Set<string>();
 
-    for (const subgroup of component.subgroups) {
+    for (const subgroup of component.subgroups)
       for (const userId of subgroup.membersIds) {
         if (!trainingMemberIdsSet.has(userId))
           throw new ConflictException('Invalid member');
@@ -353,9 +506,6 @@ export class TrainingPlanService {
 
         membersIdsSet.add(userId);
       }
-
-      this.validateSupersets(component, exercises, allComponents);
-    }
   }
 
   getSetData(

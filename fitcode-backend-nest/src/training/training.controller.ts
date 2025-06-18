@@ -23,6 +23,11 @@ import {
 import { TrainingService } from './service/training.service';
 import { FinishComponentDto } from './dto/finish-component.dto';
 import { Workload } from './entity/workload.entity';
+import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
+import { FindByDayDto } from './dto/find-by-day.dto';
+import { CopyComponentDto } from './dto/copy-component.dto';
+import { plainToInstance } from 'class-transformer';
+import { TrainingInfoDto } from './dto/training-info.dto';
 import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
 
 @Controller('training')
@@ -40,12 +45,26 @@ export class TrainingController {
   ) {
     filter = this.commonService.object.clean(filter);
 
-    return this.trainingService.findAll(user, {
+    const trainings = await this.trainingService.findAll(user, {
       groupId: filter.groupId,
       cycleId: filter.cycleId,
       ...(filter.from && { from: filter.from }),
       ...(filter.to && { to: filter.to }),
     });
+
+    return filter.minimal
+      ? plainToInstance(TrainingInfoDto, trainings)
+      : trainings;
+  }
+
+  @Post('/:groupId/day')
+  @Auth()
+  async findByDay(
+    @RequestUser() user: User,
+    @Param('groupId') groupId: string,
+    @Body() body: FindByDayDto,
+  ) {
+    return await this.trainingService.findByDay(user, { groupId }, body);
   }
 
   @Get(':trainingId/component/:componentId')
@@ -86,6 +105,42 @@ export class TrainingController {
   ) {
     return await this.trainingService.create(user, body);
   }
+
+  @Post('/copy/component')
+  async copyComponent(
+    @RequestUser() user: User,
+    @Body()
+    body: CopyComponentDto,
+  ) {
+    return await this.trainingService.copyComponent(user, body);
+  }
+
+  @Post('/periodize/trainings')
+  async periodizeTrainings(
+    @RequestUser() user: User,
+    @Body() body: PeriodizeTrainingsDto,
+  ) {
+    return await this.trainingService.periodizeTrainings(user, body);
+  }
+
+  // @Post(':trainingId/withComponent')
+  // @Auth()
+  // async createWithTrainingComponent(
+  //   @RequestUser() user: User,
+  //   @Param('trainingId') trainingId: string,
+  //   @Body()
+  //   body: {
+  //     trainingComponent: TrainingComponent;
+  //     date: { from: Date; to: Date };
+  //   },
+  // ) {
+  //   const ref = { trainingId };
+  //   return await this.trainingService.createWithTrainingComponent(
+  //     user,
+  //     ref,
+  //     body,
+  //   );
+  // }
 
   @Patch(':trainingId')
   @Auth()

@@ -11,7 +11,7 @@ import {
   Grid,
   Paper,
 } from '@mui/material';
-import Footer from '@/components/footer';
+import Footer from '@/components/footer/footer';
 import {
   features,
   highlights,
@@ -26,10 +26,16 @@ import React, { ReactNode } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Link from '@mui/material/Link';
 import { LINKS_NAVBAR } from '@/common/constant/navigation.constant';
-import HeroNavbar from '@/components/hero-navbar';
+import HeroNavbar from '@/components/hero-navbar/hero-navbar';
 import { buttonStyle, theme, titleStyle } from '@/app/style';
-import { AppPageProps } from './type';
 import { useTheme } from '@mui/material';
+import { ChildrenProps } from '@/common/type/props.type';
+
+export type AppPageProps = ChildrenProps & {
+  title: string;
+  description: string;
+  id: string;
+};
 
 function Section(props: AppPageProps) {
   const theme = useTheme();

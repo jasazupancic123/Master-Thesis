@@ -17,6 +17,8 @@ import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { addWeeks, endOfWeek, startOfWeek } from 'date-fns';
 import { generateTrainingStub } from '../../src/training/mock/training.stub';
 import { UserService } from '../../src/user/user.service';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 
 describe('Get Trainings (e2e)', () => {
   let app: INestApplication;
@@ -47,10 +49,20 @@ describe('Get Trainings (e2e)', () => {
     groupService = moduleFixture.get(GroupService);
     userService = moduleFixture.get(UserService);
 
+    const institutionService = moduleFixture.get(InstitutionService);
+    const institution = await institutionService.create(
+      global.admin,
+      generateInstitutionStub(),
+    );
+
     component = await componentService.create(generateComponentStub());
     group = await groupService.create(
-      trainer,
-      generateGroupStub({ membersIds: [athlete.uid] }),
+      manager,
+      generateGroupStub({
+        membersIds: [athlete.uid],
+        ownerId: trainer.uid,
+        institutionId: institution.id,
+      }),
     );
 
     const cycles = [
