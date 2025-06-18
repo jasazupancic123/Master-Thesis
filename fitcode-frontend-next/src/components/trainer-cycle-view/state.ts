@@ -15,6 +15,10 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import toast from 'react-hot-toast';
 import { AddTrainingComponents } from './type';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Target } from '@/controller/target/type/target.type';
+import { Method } from '@/controller/method/type/method.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export async function handleCreateTraining(
   token: string,
@@ -27,21 +31,17 @@ export async function handleCreateTraining(
   },
   state: {
     router: AppRouterInstance;
-    setTrainings: SetState<Training[]>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
+    trainings: TrainingInfo[];
+    setTrainings: SetState<TrainingInfo[]>;
     setCycle: SetStateNullable<Cycle>;
     components: Component[];
+    exercises: Exercise[];
+    methods: Method[];
   }
 ) {
   const { group, cycle, date, period, selectedComponents } = input;
-  const {
-    router,
-    filteredTrainings,
-    setTrainings,
-    setFilteredTrainings,
-    components,
-  } = state;
+  const { router, trainings, setTrainings, components, exercises, methods } =
+    state;
 
   if (!selectedComponents.length) return; // toast.error('Select at least one component to add');
 
@@ -55,7 +55,7 @@ export async function handleCreateTraining(
     return toast.error('Selected date is not within the cycle');
 
   // get number of trainings in the selected period
-  const periodTrainings = filteredTrainings.filter((training) => {
+  const periodTrainings = trainings.filter((training) => {
     const trainingDate = dayjs(training.from);
     const start = trainingDate.startOf('day');
     const end = dayjs(training.to).endOf('day');
@@ -86,9 +86,13 @@ export async function handleCreateTraining(
         futureStats: [],
       }),
     (training) => {
-      const mapped = TrainingService.mapComponents(training, components);
+      const mapped = TrainingService.mapComponentsExercisesMethods(
+        training,
+        components,
+        exercises,
+        methods
+      );
       setTrainings((prev) => [...prev, mapped]);
-      setFilteredTrainings((prev) => [...prev, mapped]);
       toast.success('Training created successfully');
     },
     undefined,
@@ -101,13 +105,29 @@ export async function handleAddTrainingComponents(
   input: AddTrainingComponents & { trainingId: string },
   state: {
     router: AppRouterInstance;
-    setTrainings: SetState<Training[]>;
-    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     components: Component[];
+    exercises: Exercise[];
+    methods: Method[];
+    selectedTargets: { componentId: string; target: Target }[];
   }
 ) {
   const { trainingId, ...restInput } = input;
-  const { router, setFilteredTrainings, setTrainings, components } = state;
+  const {
+    router,
+    setTrainings,
+    components,
+    exercises,
+    methods,
+    selectedTargets,
+  } = state;
+
+  restInput.components.forEach((component) => {
+    const selectedTarget = selectedTargets.find(
+      (m) => m.componentId === component.id
+    );
+    if (selectedTarget) component.target = selectedTarget.target;
+  });
 
   handleApiRequest(
     router,
@@ -121,18 +141,26 @@ export async function handleAddTrainingComponents(
       if (!training) {
         // training was deleted
         setTrainings((prev) => prev.filter((t) => t.id !== trainingId));
-        setFilteredTrainings((prev) => prev.filter((t) => t.id !== trainingId));
+        toast.success('Training deleted successfully');
         return;
       }
 
       // add components to training
-      const mapped = TrainingService.mapComponents(training, components);
-      setTrainings((prev) =>
-        prev.map((t) => (t.id === trainingId ? mapped : t))
+      const mapped = TrainingService.mapComponentsExercisesMethods(
+        training,
+        components,
+        exercises,
+        methods
       );
 
-      setFilteredTrainings((prev) =>
-        prev.map((t) => (t.id === trainingId ? mapped : t))
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === mapped.id ? mapped : t))
+      );
+
+      toast.success(
+        restInput.components.length > 1
+          ? 'Training components added successfully'
+          : 'Training component added successfully'
       );
     },
     undefined,
@@ -148,32 +176,31 @@ export async function handleDeleteTrainingComponent(
   },
   state: {
     router: AppRouterInstance;
-    setTrainings: SetState<Training[]>;
-    setFilteredTrainings: SetState<Training[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     components: Component[];
+    exercises: Exercise[];
+    methods: Method[];
   }
 ) {
   const { trainingId, componentId } = input;
-  const { router, setTrainings, setFilteredTrainings, components } = state;
+  const { router, setTrainings, components, exercises, methods } = state;
 
   handleApiRequest(
     router,
     () => TrainingController.deleteComponent(token, trainingId, componentId),
     (training) => {
-      const mapped = TrainingService.mapComponents(training, components);
+      const mapped = TrainingService.mapComponentsExercisesMethods(
+        training,
+        components,
+        exercises,
+        methods
+      );
 
       if (mapped.components.length === 0) {
         // traning was deleted
         setTrainings((prev) => prev.filter((t) => t.id !== training.id));
-        setFilteredTrainings((prev) =>
-          prev.filter((t) => t.id !== training.id)
-        );
       } else {
         setTrainings((prev) =>
-          prev.map((t) => (t.id === trainingId ? mapped : t))
-        );
-
-        setFilteredTrainings((prev) =>
           prev.map((t) => (t.id === trainingId ? mapped : t))
         );
       }

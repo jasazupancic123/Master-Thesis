@@ -4,6 +4,8 @@ import { Superset, TrainingComponent } from './type/training-plan.type';
 import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
+import { PeriodizationType } from '../group/enum/periodization-type.enum';
+import { TrainingInfo } from './type/training-info.type';
 import { GroupWorkloadStats } from './type/average-workload-values.type';
 
 const api = CommonService.instance.api;
@@ -14,16 +16,23 @@ export class TrainingController {
     query?: DateRange & {
       groupId?: string;
       cycleId?: string;
+      minimal?: number; // cannot be boolean, so just use number
     }
   ) {
-    return api.get<Training[]>('/training', { token, query });
+    return api.get<Training[] | TrainingInfo[]>('/training', {
+      token,
+      query,
+    });
+  }
+
+  static async findByDay(token: string, day: Date, groupId: string) {
+    return api.post<Training[]>(`/training/${groupId}/day`, { day }, { token });
   }
 
   static async findByIdAndPopulateAthleteWorkloads(
     token: string,
     trainingId: string,
-    componentId: string,
-    userId: string
+    componentId: string
   ) {
     return api.get<Training>(
       `/training/${trainingId}/component/${componentId}`,
@@ -55,8 +64,34 @@ export class TrainingController {
       stats: GroupWorkloadStats[];
       futureStats: GroupWorkloadStats[];
     }
-  ) {
+  ): Promise<Training> {
     return api.post<Training>('/training', body, { token });
+  }
+
+  static async copyComponent(
+    token: string,
+    body: Pick<DateRange, 'from'> & {
+      copyFromTrainingId: string;
+      copyToTrainingId?: string;
+      componentId: string;
+    }
+  ) {
+    return api.post<Training>('/training/copy/component', body, { token });
+  }
+
+  static async periodizeTrainings(
+    token: string,
+    body: {
+      baseTrainingId: string;
+      excludedTrainingIds: string[];
+      componentId: string;
+      exerciseIds: string[];
+      periodizationType: PeriodizationType;
+    }
+  ) {
+    return api.post<Training[]>('/training/periodize/trainings', body, {
+      token,
+    });
   }
 
   static async update(
@@ -101,20 +136,6 @@ export class TrainingController {
     body: { from: string; to: string; membersIds?: string[] }
   ) {
     return api.post<Training>(`/training/${trainingId}/copy`, body, { token });
-  }
-
-  static async copyComponent(
-    token: string,
-    trainingId: string,
-    body: {
-      trainingComponent: TrainingComponent;
-      copiedFromTrainingId: string;
-      overwrite?: boolean;
-    }
-  ) {
-    return api.patch<Training>(`/training/${trainingId}/component/copy`, body, {
-      token,
-    });
   }
 
   static async createWithTrainingComponent(

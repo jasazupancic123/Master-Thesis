@@ -24,14 +24,14 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
-import { avgPool, train } from '@tensorflow/tfjs';
 import { Workload } from '@/controller/training/type/workload.type';
 import { GroupWorkloadStats } from '@/controller/training/type/average-workload-values.type';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { isBefore } from 'date-fns';
 import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
-import { Dispatch } from 'react';
+import { Method } from '@/controller/method/type/method.type';
+import { Day } from '@/common/service/util/date.util';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export async function handleCopyTraining(
   token: string,
@@ -43,10 +43,12 @@ export async function handleCopyTraining(
     router: AppRouterInstance;
     training: Training;
     cycle: Cycle;
-    setTrainings: SetState<Training[]>;
-    setFilteredTrainings: SetState<Training[]>;
+    day: Day;
+    setTrainings: SetState<TrainingInfo[]>;
+    setTodaysTrainings: SetState<Training[]>;
     components: Component[];
     exercises: Exercise[];
+    methods: Method[];
   }
 ) {
   const { newDate, period } = input;
@@ -55,9 +57,11 @@ export async function handleCopyTraining(
     training,
     cycle,
     setTrainings,
-    setFilteredTrainings,
+    day,
+    setTodaysTrainings,
     components,
     exercises,
+    methods,
   } = state;
 
   if (
@@ -96,23 +100,28 @@ export async function handleCopyTraining(
     router,
     () => TrainingController.copy(token, training.id, { from, to }),
     (copiedTraining) => {
-      copiedTraining = TrainingService.mapExercises(copiedTraining, exercises);
-      copiedTraining = TrainingService.mapComponents(
-        copiedTraining,
-        components
-      );
+      const mappedCopiedTraining =
+        TrainingService.mapComponentsExercisesMethods(
+          copiedTraining,
+          components,
+          exercises,
+          methods
+        );
 
       setTrainings((prev) =>
-        [...prev, copiedTraining].sort(
+        [...prev, mappedCopiedTraining].sort(
           (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
         )
       );
 
-      setFilteredTrainings((prev) =>
-        [...prev, copiedTraining].sort(
-          (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
-        )
-      );
+      // update todays trainings if on same day
+      if (dayjs(mappedCopiedTraining.from).isSame(day.date, 'day')) {
+        setTodaysTrainings((prev) =>
+          [...prev, mappedCopiedTraining as Training].sort(
+            (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+          )
+        );
+      }
 
       toast.success('Successfully copied training');
     },
@@ -134,7 +143,7 @@ export function onDragEndSubgroup(
     component: TrainingComponent | undefined;
     training: Training | undefined;
     setTraining: SetStateNullable<Training>;
-    setFilteredTrainings: SetState<Training[]>;
+    setTodaysTrainings: SetState<Training[]>;
   }
 ) {
   const {
@@ -148,7 +157,7 @@ export function onDragEndSubgroup(
     component,
     training,
     setTraining,
-    setFilteredTrainings,
+    setTodaysTrainings,
   } = state;
 
   if (!destination || !training || !component) return;
@@ -166,7 +175,7 @@ export function onDragEndSubgroup(
   const newTraining = { ...training };
 
   if (fromSubgroup && fromSubgroup.id !== DEFAULT_SUBGROUP([], []).id) {
-    fromSubgroup.stats = fromSubgroup.stats.map((avg) => {
+    fromSubgroup.futureStats = fromSubgroup.futureStats.map((avg) => {
       avg.numMembers -= 1;
       return avg;
     });
@@ -210,7 +219,7 @@ export function onDragEndSubgroup(
 
     if (targetSubgroup) {
       targetSubgroup.membersIds.push(draggableId);
-      targetSubgroup.stats = targetSubgroup.stats.map((avg) => {
+      targetSubgroup.futureStats = targetSubgroup.futureStats.map((avg) => {
         avg.numMembers += 1;
         return avg;
       });
@@ -232,7 +241,7 @@ export function onDragEndSubgroup(
     };
   });
 
-  setFilteredTrainings((prev) =>
+  setTodaysTrainings((prev) =>
     prev.map((t) => {
       if (t.id === training.id) {
         return {
@@ -257,8 +266,7 @@ export function handleRightClickSubgroup(
     setSubgroups: SetState<Subgroup[]>;
     training: Training;
     setTraining: SetStateNullable<Training>;
-    setTrainings: SetState<Training[]>;
-    setFilteredTrainings: SetState<Training[]>;
+    setTodaysTrainings: SetState<Training[]>;
     setAvailableMembers: SetState<User[]>;
     component: TrainingComponent | undefined;
     setComponent: SetStateNullable<TrainingComponent>;
@@ -271,8 +279,7 @@ export function handleRightClickSubgroup(
     setSubgroups,
     training,
     setTraining,
-    setTrainings,
-    setFilteredTrainings,
+    setTodaysTrainings,
     setAvailableMembers,
     component,
     setComponent,
@@ -301,13 +308,7 @@ export function handleRightClickSubgroup(
     users.find((user) => user.uid === memberId)!,
   ]);
 
-  setTrainings((prev) =>
-    prev.map((t) =>
-      t.id === training?.id ? { ...t, subgroups: updatedSubgroups } : t
-    )
-  );
-
-  setFilteredTrainings((prev) =>
+  setTodaysTrainings((prev) =>
     prev.map((t) =>
       t.id === training?.id ? { ...t, subgroups: updatedSubgroups } : t
     )
@@ -317,14 +318,13 @@ export function handleRightClickSubgroup(
 export async function handleAddSubgroup(state: {
   training: Training;
   setTraining: SetStateNullable<Training>;
+  setTodaysTrainings: SetState<Training[]>;
   component: TrainingComponent;
   setComponent: SetStateNullable<TrainingComponent>;
   createSubgroup: { name: string; membersIds: string[] };
   setCreateSubgroup:
     | SetState<{ name: string; membersIds: string[] }>
     | undefined;
-  filteredTrainings: Training[];
-  setFilteredTrainings: SetState<Training[]>;
   setDetectedChanges: SetState<boolean>;
   updateTrainingsAvgFutureWorkload?: boolean;
 }) {
@@ -335,8 +335,7 @@ export async function handleAddSubgroup(state: {
     setComponent,
     createSubgroup,
     setCreateSubgroup,
-    filteredTrainings,
-    setFilteredTrainings,
+    setTodaysTrainings,
     setDetectedChanges,
     updateTrainingsAvgFutureWorkload,
   } = state;
@@ -368,7 +367,7 @@ export async function handleAddSubgroup(state: {
         ...exercise,
       })),
     })),
-    stats,
+    futureStats: stats,
     membersIds: createSubgroup.membersIds || [],
   };
 
@@ -381,7 +380,7 @@ export async function handleAddSubgroup(state: {
 
   // update training's avg future workload values's numMembers
   if (updateTrainingsAvgFutureWorkload) {
-    // member was not in a subgroup before, therfore update numMembers for avgFutureWorkloadValues
+    // member was not in a subgroup before, therfore update numMembers for futureStats
     training.futureStats = training.futureStats.map((avg) => {
       if (avg.rootComponentId === component.component?.id) {
         avg.numMembers -= newSubgroup.membersIds.length;
@@ -394,9 +393,8 @@ export async function handleAddSubgroup(state: {
     training,
     component,
     newComponent,
-    filteredTrainings,
     setTraining,
-    setFilteredTrainings,
+    setTodaysTrainings,
     component.id === WARMUP_ID || component.id === COOLDOWN_ID
   );
 
@@ -409,10 +407,9 @@ export function handleDeleteSubgroup(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
+    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -420,10 +417,9 @@ export function handleDeleteSubgroup(
   const {
     training,
     setTraining,
+    setTodaysTrainings,
     component,
     setComponent,
-    filteredTrainings,
-    setFilteredTrainings,
     setDetectedChanges,
   } = state;
   if (!training || !component) return;
@@ -468,14 +464,12 @@ export function handleDeleteSubgroup(
   };
   setTraining(newTraining);
 
-  const updatedTrainings = filteredTrainings.map((filteredTraining) => {
-    if (filteredTraining.id === training.id) {
-      return newTraining;
-    }
-    return filteredTraining;
-  });
-
-  setFilteredTrainings(updatedTrainings);
+  setTodaysTrainings((prev) =>
+    prev.map((t) => {
+      if (t.id === newTraining.id) return newTraining;
+      return t;
+    })
+  );
 }
 
 export async function onDragEnd(
@@ -483,6 +477,7 @@ export async function onDragEnd(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
+    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
@@ -491,10 +486,7 @@ export async function onDragEnd(
       index: number;
     } | null>;
     supersets: Superset[];
-    supersetsWithAdd: Superset[];
-    setSupersetsWithAdd: SetState<Superset[]>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
+    setSupersets: SetState<Superset[]>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -502,15 +494,13 @@ export async function onDragEnd(
   const {
     training,
     setTraining,
+    setTodaysTrainings,
     component,
     setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
     supersets,
-    supersetsWithAdd,
-    setSupersetsWithAdd,
-    filteredTrainings,
-    setFilteredTrainings,
+    setSupersets,
     setDetectedChanges,
   } = state;
 
@@ -522,7 +512,7 @@ export async function onDragEnd(
         `You can only have ${NUM_MAX_SUPERSETS} supersets per component`
       );
 
-    const supersetsCopy = [...supersetsWithAdd];
+    const supersetsCopy = [...supersets];
     const supersetWithExercise = supersetsCopy.find((s) =>
       s.exercises.find((e) => e.id === draggableId)
     );
@@ -541,7 +531,7 @@ export async function onDragEnd(
 
     setDetectedChanges(true);
 
-    setSupersetsWithAdd([...newSupersets]);
+    setSupersets([...newSupersets]);
     if (selectedSubgroup?.subgroup) {
       const updatedSubgroup = {
         ...selectedSubgroup.subgroup,
@@ -563,9 +553,8 @@ export async function onDragEnd(
         training,
         component,
         updatedComponent,
-        filteredTrainings,
         setTraining,
-        setFilteredTrainings,
+        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
     } else {
@@ -582,9 +571,8 @@ export async function onDragEnd(
         training,
         component,
         updatedComponent,
-        filteredTrainings,
         setTraining,
-        setFilteredTrainings,
+        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
     }
@@ -592,8 +580,8 @@ export async function onDragEnd(
   }
 
   const supersetIndex = parseInt(destination.droppableId.split('-')[1]);
-  const supersetWithNewExercise = supersetsWithAdd[supersetIndex];
-  const supersetsCopy = [...supersetsWithAdd];
+  const supersetWithNewExercise = supersets[supersetIndex];
+  const supersetsCopy = [...supersets];
   const supersetWithExercise = supersetsCopy.find((superset) =>
     superset.exercises.find((e) => e.id === draggableId)
   );
@@ -644,13 +632,12 @@ export async function onDragEnd(
         training,
         component,
         updatedComponent,
-        filteredTrainings,
         setTraining,
-        setFilteredTrainings,
+        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
 
-      setSupersetsWithAdd(
+      setSupersets(
         supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
       );
     } else {
@@ -669,13 +656,12 @@ export async function onDragEnd(
         training,
         component,
         updatedComponent,
-        filteredTrainings,
         setTraining,
-        setFilteredTrainings,
+        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
 
-      setSupersetsWithAdd(
+      setSupersets(
         supersets.map((s) => (s === supersetWithExercise ? newSuperset : s))
       );
     }
@@ -727,7 +713,7 @@ export async function onDragEnd(
 
   setDetectedChanges(true);
 
-  setSupersetsWithAdd(finalSupersetsCopy);
+  setSupersets(finalSupersetsCopy);
   if (selectedSubgroup?.subgroup) {
     const updatedSubgroup = {
       ...selectedSubgroup.subgroup,
@@ -746,9 +732,8 @@ export async function onDragEnd(
       training,
       component,
       updatedComponent,
-      filteredTrainings,
       setTraining,
-      setFilteredTrainings,
+      setTodaysTrainings,
       component.id === WARMUP_ID || component.id === COOLDOWN_ID
     );
 
@@ -767,9 +752,8 @@ export async function onDragEnd(
       training,
       component,
       updatedComponent,
-      filteredTrainings,
       setTraining,
-      setFilteredTrainings,
+      setTodaysTrainings,
       component.id === WARMUP_ID || component.id === COOLDOWN_ID
     );
   }
@@ -781,17 +765,15 @@ export function handleDeleteExercise(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
+    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
+    supersets: Superset[];
     setSelectedSubgroup: SetState<{
       subgroup: Subgroup | null;
       index: number;
     } | null>;
-    supersetsWithAdd: Superset[];
-    setSupersetsWithAdd: SetState<Superset[]>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -799,26 +781,20 @@ export function handleDeleteExercise(
   const {
     training,
     setTraining,
+    setTodaysTrainings,
     component,
     setComponent,
+    supersets,
     selectedSubgroup,
     setSelectedSubgroup,
-    supersetsWithAdd,
-    setSupersetsWithAdd,
-    filteredTrainings,
-    setFilteredTrainings,
     setDetectedChanges,
   } = state;
 
   if (!component || !training) return;
 
-  const exerciseToDelete = supersetsWithAdd.find((superset) =>
-    superset.exercises.find((e) => e.id === exerciseId)
-  );
-
   setDetectedChanges(true);
 
-  let updatedSupersets = supersetsWithAdd.map((superset) => ({
+  let updatedSupersets = supersets.map((superset) => ({
     ...superset,
     exercises: superset.exercises.filter((e) => e.id !== exerciseId),
   }));
@@ -830,13 +806,13 @@ export function handleDeleteExercise(
 
   if (selectedSubgroup?.subgroup) {
     // update selected subgroup's supersets
-    const newAvgFutureWorkloadValues = selectedSubgroup.subgroup.stats.filter(
+    const newAvgFutureWorkloadValues = selectedSubgroup.subgroup.futureStats.filter(
       (avg) => avg.exerciseId !== exerciseId
     );
     const updatedSubgroup: Subgroup = {
       ...selectedSubgroup.subgroup,
       supersets: updatedSupersets,
-      stats: newAvgFutureWorkloadValues,
+      futureStats: newAvgFutureWorkloadValues,
     };
 
     const updatedComponent = {
@@ -859,21 +835,18 @@ export function handleDeleteExercise(
     const newTraining = { ...training, components: updatedComponents };
     setTraining(newTraining);
 
-    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
-      if (filteredTraining.id === training.id) {
-        return newTraining;
-      }
-      return filteredTraining;
-    });
-
-    setFilteredTrainings(updatedTrainings);
+    setTodaysTrainings((prev) =>
+      prev.map((t) => {
+        if (t.id === newTraining.id) return newTraining;
+        return t;
+      })
+    );
   } else {
     const updatedComponent = {
       ...component,
       supersets: updatedSupersets,
     };
 
-    setSupersetsWithAdd(updatedSupersets);
     setComponent(updatedComponent);
     const updatedComponents = [...training.components].map((c) =>
       c.id === component.id ? updatedComponent : c
@@ -890,14 +863,12 @@ export function handleDeleteExercise(
     };
     setTraining(newTraining);
 
-    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
-      if (filteredTraining.id === training.id) {
-        return newTraining;
-      }
-      return filteredTraining;
-    });
-
-    setFilteredTrainings(updatedTrainings);
+    setTodaysTrainings((prev) =>
+      prev.map((t) => {
+        if (t.id === newTraining.id) return newTraining;
+        return t;
+      })
+    );
   }
 }
 
@@ -906,6 +877,8 @@ export function handleDeleteSuperset(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
+    supersets: Superset[];
+    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
@@ -913,10 +886,6 @@ export function handleDeleteSuperset(
       subgroup: Subgroup | null;
       index: number;
     } | null>;
-    supersetsWithAdd: Superset[];
-    setSupersetsWithAdd: SetState<Superset[]>;
-    filteredTrainings: Training[];
-    setFilteredTrainings: SetState<Training[]>;
     setDetectedChanges: SetState<boolean>;
   }
 ) {
@@ -924,14 +893,12 @@ export function handleDeleteSuperset(
   const {
     training,
     setTraining,
+    supersets,
+    setTodaysTrainings,
     component,
     setComponent,
     selectedSubgroup,
     setSelectedSubgroup,
-    supersetsWithAdd,
-    setSupersetsWithAdd,
-    filteredTrainings,
-    setFilteredTrainings,
     setDetectedChanges,
   } = state;
 
@@ -939,75 +906,88 @@ export function handleDeleteSuperset(
 
   setDetectedChanges(true);
 
-  if (selectedSubgroup?.subgroup) {
-    // update selected subgroup's supersets
-    const updatedSupersets = [...selectedSubgroup.subgroup.supersets].filter(
-      (_, i) => i !== index
-    );
-
-    const updatedSubgroup = {
-      ...selectedSubgroup.subgroup,
-      supersets: updatedSupersets,
-    };
+  if (component.id === WARMUP_ID || component.id === COOLDOWN_ID) {
+    const updatedSupersets = [...supersets].filter((_, i) => i !== index);
 
     const updatedComponent = {
       ...component,
-      subgroups: component.subgroups.map((s, i) =>
-        i === selectedSubgroup.index ? updatedSubgroup : s
-      ),
+      supersets: updatedSupersets,
     };
 
-    setSelectedSubgroup({
-      subgroup: updatedSubgroup,
-      index: selectedSubgroup.index,
-    });
+    const newTraining =
+      component.id === WARMUP_ID
+        ? { ...training, warmup: updatedComponent }
+        : { ...training, cooldown: updatedComponent };
 
     setComponent(updatedComponent);
-    const updatedComponents = [...training.components].map((c) =>
-      c.id === component.id ? updatedComponent : c
-    );
-
-    const newTraining = { ...training, components: updatedComponents };
     setTraining(newTraining);
-
-    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
-      if (filteredTraining.id === training.id) {
-        return newTraining;
-      }
-      return filteredTraining;
-    });
-
-    setFilteredTrainings(updatedTrainings);
-
-    setSupersetsWithAdd([...updatedSupersets]);
+    setTodaysTrainings((prev) =>
+      prev.map((t) => {
+        if (t.id === newTraining.id) return newTraining;
+        return t;
+      })
+    );
   } else {
-    // update component's supersets
-    const updatedSupersets = [...supersetsWithAdd].filter(
-      (_, i) => i !== index
-    );
+    if (selectedSubgroup?.subgroup) {
+      // update selected subgroup's supersets
+      const updatedSupersets = [...selectedSubgroup.subgroup.supersets].filter(
+        (_, i) => i !== index
+      );
 
-    const updatedComponent = {
-      ...component,
-      supersets: updatedSupersets,
-    };
+      const updatedSubgroup = {
+        ...selectedSubgroup.subgroup,
+        supersets: updatedSupersets,
+      };
 
-    setSupersetsWithAdd([...updatedSupersets]);
-    setComponent(updatedComponent);
-    const updatedComponents = [...training.components].map((c) =>
-      c.id === component.id ? updatedComponent : c
-    );
+      const updatedComponent = {
+        ...component,
+        subgroups: component.subgroups.map((s, i) =>
+          i === selectedSubgroup.index ? updatedSubgroup : s
+        ),
+      };
 
-    const newTraining = { ...training, components: updatedComponents };
-    setTraining(newTraining);
+      setSelectedSubgroup({
+        subgroup: updatedSubgroup,
+        index: selectedSubgroup.index,
+      });
 
-    const updatedTrainings = filteredTrainings.map((filteredTraining) => {
-      if (filteredTraining.id === training.id) {
-        return newTraining;
-      }
-      return filteredTraining;
-    });
+      setComponent(updatedComponent);
+      const updatedComponents = [...training.components].map((c) =>
+        c.id === component.id ? updatedComponent : c
+      );
 
-    setFilteredTrainings(updatedTrainings);
+      const newTraining = { ...training, components: updatedComponents };
+      setTraining(newTraining);
+
+      setTodaysTrainings((prev) =>
+        prev.map((t) => {
+          if (t.id === newTraining.id) return newTraining;
+          return t;
+        })
+      );
+    } else {
+      // update component's supersets
+      const updatedSupersets = [...supersets].filter((_, i) => i !== index);
+
+      const updatedComponent = {
+        ...component,
+        supersets: updatedSupersets,
+      };
+
+      setComponent(updatedComponent);
+      const updatedComponents = [...training.components].map((c) =>
+        c.id === component.id ? updatedComponent : c
+      );
+
+      const newTraining = { ...training, components: updatedComponents };
+      setTraining(newTraining);
+      setTodaysTrainings((prev) =>
+        prev.map((t) => {
+          if (t.id === newTraining.id) return newTraining;
+          return t;
+        })
+      );
+    }
   }
 }
 
@@ -1015,26 +995,23 @@ function updateGlobalStates(
   training: Training,
   component: TrainingComponent,
   updatedComponent: TrainingComponent,
-  filteredTrainings: Training[],
   setTraining: SetState<Training | undefined>,
-  setFilteredTrainings: SetState<Training[]>,
+  setTodaysTrainings: SetState<Training[]>,
   warmupOrCooldown: boolean
 ) {
   if (warmupOrCooldown) {
-    let newTraining = { ...training };
+    const newTraining = { ...training };
     if (component.id === WARMUP_ID) newTraining.warmup = updatedComponent;
     else newTraining.cooldown = updatedComponent;
 
     setTraining(newTraining);
 
-    const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
-      if (filteredTraining.id === training.id) {
-        return newTraining;
-      }
-      return filteredTraining;
-    });
-
-    setFilteredTrainings(updatedTrainings);
+    setTodaysTrainings((prev) =>
+      prev.map((t) => {
+        if (t.id === newTraining.id) return newTraining;
+        return t;
+      })
+    );
   } else {
     const updatedComponents = [...training.components].map((c) =>
       c.id === component.id ? updatedComponent : c
@@ -1043,14 +1020,12 @@ function updateGlobalStates(
     const newTraining = { ...training, components: updatedComponents };
     setTraining(newTraining);
 
-    const updatedTrainings = [...filteredTrainings].map((filteredTraining) => {
-      if (filteredTraining.id === training.id) {
-        return newTraining;
-      }
-      return filteredTraining;
-    });
-
-    setFilteredTrainings(updatedTrainings);
+    setTodaysTrainings((prev) =>
+      prev.map((t) => {
+        if (t.id === newTraining.id) return newTraining;
+        return t;
+      })
+    );
   }
 }
 
@@ -1089,13 +1064,14 @@ const getFormatedDate = (from: Date) => {
 };
 
 export function prepareGroupAvgWorkloadsForChart(
-  trainings: Training[],
+  trainings: TrainingInfo[],
   exerciseId: string,
   setData: SetState<ChartWorkloadData[]>,
   setMax: SetState<number>,
   setRange: SetState<number[]>
 ) {
   const completedWorkloadsData = [];
+
   for (const t of trainings) {
     const foundExerciseEntry = t.stats.find((w) => w.exerciseId === exerciseId);
     if (!foundExerciseEntry) continue; // skip if no completed workloads for the selected exercise on this training
@@ -1132,7 +1108,7 @@ export function prepareGroupAvgWorkloadsForChart(
     // add future workloads of all subgroups
     t.components.forEach((c) => {
       c.subgroups.forEach((sg) => {
-        const futureWorkload = sg.stats.find(
+        const futureWorkload = sg.futureStats.find(
           (w) => w.exerciseId === exerciseId
         );
         if (futureWorkload && futureWorkload.numMembers > 0) {

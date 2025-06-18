@@ -5,6 +5,7 @@ export const exerciseCardSetAttributeSx = {
     '&:before': { borderBottom: 'none' },
     '&:after': { borderBottom: 'none' },
     '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+    backgroundColor: 'transparent',
   },
   '& .MuiSelect-select': {
     padding: '2px',

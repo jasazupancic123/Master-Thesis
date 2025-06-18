@@ -8,6 +8,7 @@ export const WARMUP_COMPONENT: Component = {
   name: 'Warmup',
   parentId: null,
   slug: 'warmup',
+  targets: [],
   attributes: [
     'pattern',
     'loadingSide',
@@ -25,6 +26,7 @@ export const COOLDOWN_COMPONENT: Component = {
   name: 'Cooldown',
   parentId: null,
   slug: 'Cooldown',
+  targets: [],
   attributes: [
     'pattern',
     'loadingSide',

@@ -1,6 +1,7 @@
 import { getApps, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectStorageEmulator, getStorage } from '@firebase/storage';
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
 const config = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,14 +13,20 @@ const config = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+const isDev = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true';
 const app = getApps().length ? getApps()[0] : initializeApp(config);
 
 const auth = getAuth(app);
-if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true')
-  connectAuthEmulator(getAuth(), 'http://localhost:9099');
+if (isDev) connectAuthEmulator(getAuth(), 'http://localhost:9099');
 
-const storage = getStorage(app, process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
-if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true')
-  connectStorageEmulator(storage, 'localhost', 9199);
+const storage = getStorage(
+  app,
+  process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+);
 
-export { auth, storage };
+if (isDev) connectStorageEmulator(storage, 'localhost', 9199);
+
+const functions = getFunctions(app);
+if (isDev) connectFunctionsEmulator(functions, 'localhost', 5001);
+
+export { auth, storage, functions };

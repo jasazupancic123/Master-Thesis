@@ -8,6 +8,7 @@ import { IdEntity } from '../../common/entity/id.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
 import { CopiedFrom } from './copied-from.entity';
+import { Target } from '../../target/entity/target.entity';
 
 export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsDate()
@@ -21,6 +22,20 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @Expose()
   @Transform(({ value }) => new Date(value))
   to: Date;
+
+  @Type(() => Target)
+  @ValidateNested()
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  target?: Target; // selected target id which the component uses
+
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  methodId?: string; // method id which the component uses  
 
   @ValidateNested({ each: true })
   @Type(() => Superset)

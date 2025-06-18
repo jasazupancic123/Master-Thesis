@@ -30,5 +30,5 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @Type(() => GroupWorkloadStats)
   @ApiProperty()
   @Expose()
-  stats: GroupWorkloadStats[]; // average future workload stats
+  futureStats: GroupWorkloadStats[]; // average future workload stats
 }

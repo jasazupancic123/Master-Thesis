@@ -1,6 +1,5 @@
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
-import { Method } from '@/controller/component/type/method.type';
 import { GroupWorkloadStats } from '@/controller/training/type/average-workload-values.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
@@ -23,16 +22,6 @@ export const AFTER_SETS: AfterSet[] = [
   { id: '6', name: 'Issometric' },
 ];
 
-export const METHODS: Method[] = [
-  { id: '1', name: 'Dynamic Stretching' },
-  { id: '2', name: 'Static Stretching' },
-  { id: '3', name: 'Joint Circles and Mobility Drills' },
-  { id: '4', name: 'Active Isolated Stretching' },
-  { id: '5', name: 'Yoga' },
-  { id: '6', name: 'PNF Stretching' },
-  { id: '7', name: 'Foam Rolling' },
-];
-
 export const DEFAULT_SUBGROUP = (
   availableMembers: User[],
   stats: GroupWorkloadStats[]
@@ -41,7 +30,7 @@ export const DEFAULT_SUBGROUP = (
   name: 'Main Group',
   color: '#9e9e9e',
   membersIds: availableMembers.map((user) => user.uid),
-  stats,
+  futureStats: stats,
   supersets: [],
 });
 
@@ -49,7 +38,7 @@ export const ABSENT_SUBGRUP = (): Subgroup => ({
   id: 'absent',
   name: 'Absent',
   color: '#454545',
-  stats: [],
+  futureStats: [],
   membersIds: [],
   supersets: [],
 });

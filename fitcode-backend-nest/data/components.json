@@ -2,14 +2,32 @@
   {
     "name": "Strength",
     "slug": "strength",
+    "targets": [
+      {
+        "id": "strength",
+        "name": "Strength",
+        "componentId": "strength",
+        "color": "#201f97"
+      },
+      {
+        "id": "power",
+        "name": "Power",
+        "componentId": "strength",
+        "color": "#eb6683"
+      },
+      {
+        "id": "plyometric",
+        "name": "Plyometric",
+        "componentId": "strength",
+        "color": "#619eae"
+      }
+    ],
     "params": {
       "default": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [
-            { "field": "set", "defaultValue": 3 }
-          ]
+          "options": [{ "field": "set", "defaultValue": 3 }]
         },
         {
           "field": "vol1",
@@ -40,20 +58,16 @@
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" }
-          ]
+          "options": [{ "field": "time", "defaultValue": "60" }]
         }
       ],
       "equipment:!": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [
-            { "field": "set", "defaultValue": 3 }
-          ]
+          "options": [{ "field": "set", "defaultValue": 3 }]
         },
-        { 
+        {
           "field": "vol1",
           "defaultValue": "rep",
           "options": [
@@ -73,9 +87,7 @@
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" }
-          ]
+          "options": [{ "field": "time", "defaultValue": "60" }]
         }
       ]
     },
@@ -237,16 +249,46 @@
   {
     "name": "Speed",
     "slug": "speed",
+    "targets": [
+      {
+        "id": "cod",
+        "name": "COD",
+        "componentId": "speed",
+        "color": "#e5576b"
+      },
+      {
+        "id": "peak-speed",
+        "name": "Peak Speed",
+        "componentId": "speed",
+        "color": "#20d34d"
+      },
+      {
+        "id": "agility",
+        "name": "Agility",
+        "componentId": "speed",
+        "color": "#2c54f2"
+      },
+      {
+        "id": "acceleration",
+        "name": "Acceleration",
+        "componentId": "speed",
+        "color": "#951fe9"
+      },
+      {
+        "id": "deceleration",
+        "name": "Deceleration",
+        "componentId": "speed",
+        "color": "#f25a1f"
+      }
+    ],
     "params": {
       "default": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [
-            { "field": "set", "defaultValue": 3 }
-          ]
+          "options": [{ "field": "set", "defaultValue": 3 }]
         },
-        { 
+        {
           "field": "vol1",
           "defaultValue": "dist",
           "options": [
@@ -258,16 +300,12 @@
         {
           "field": "int1",
           "defaultValue": "eff",
-          "options": [
-            { "field": "eff", "defaultValue": "mod" }
-          ]
+          "options": [{ "field": "eff", "defaultValue": "mod" }]
         },
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" }
-          ]
+          "options": [{ "field": "time", "defaultValue": "60" }]
         }
       ]
     },
@@ -482,9 +520,47 @@
   {
     "name": "Endurance",
     "slug": "endurance",
+    "targets": [
+      {
+        "id": "aerobic-power",
+        "name": "Aerobic Power",
+        "componentId": "endurance",
+        "color": "#9a73e0"
+      },
+      {
+        "id": "anaerobic-power",
+        "name": "Anaerobic Power",
+        "componentId": "endurance",
+        "color": "#4a78cc"
+      },
+      {
+        "id": "aerobic-capacity",
+        "name": "Aerobic Capacity",
+        "componentId": "endurance",
+        "color": "#bb9d4e"
+      },
+      {
+        "id": "anaerobic-capacity",
+        "name": "Anaerobic Capacity",
+        "componentId": "endurance",
+        "color": "#1136cf"
+      },
+      {
+        "id": "lactic-anaerobic",
+        "name": "Lactic Anaerobic",
+        "componentId": "endurance",
+        "color": "#f5a4c3"
+      },
+      {
+        "id": "alactic-anaerobic",
+        "name": "Alactic Anaerobic",
+        "componentId": "endurance",
+        "color": "#2b1af9"
+      }
+    ],
     "params": {
       "default": [
-        { 
+        {
           "field": "vol1",
           "defaultValue": "time",
           "options": [
@@ -506,11 +582,9 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [
-            { "field": "set", "defaultValue": 3 }
-          ]
+          "options": [{ "field": "set", "defaultValue": 3 }]
         },
-        { 
+        {
           "field": "vol1",
           "defaultValue": "time",
           "options": [
@@ -549,11 +623,9 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [
-            { "field": "set", "defaultValue": 3 }
-          ]
+          "options": [{ "field": "set", "defaultValue": 3 }]
         },
-        { 
+        {
           "field": "vol1",
           "defaultValue": "time",
           "options": [
@@ -561,7 +633,7 @@
             { "field": "dist", "defaultValue": "50" }
           ]
         },
-        { 
+        {
           "field": "vol2",
           "defaultValue": "time",
           "options": [
@@ -609,18 +681,14 @@
         {
           "field": "volWorkSets",
           "defaultValue": "set",
-          "options": [
-            { "field": "set", "defaultValue": 3 }
-          ]
+          "options": [{ "field": "set", "defaultValue": 3 }]
         },
-        { 
+        {
           "field": "vol1",
           "defaultValue": "rep",
-          "options": [
-            { "field": "rep", "defaultValue": "12" }
-          ]
+          "options": [{ "field": "rep", "defaultValue": "12" }]
         },
-        { 
+        {
           "field": "vol2",
           "defaultValue": "time",
           "options": [
@@ -660,45 +728,25 @@
       {
         "name": "Aerobic Capacity",
         "slug": "aerobic-capacity",
-        "attributes": [
-          "pattern",
-          "coeff",
-          "method",
-          "sportTask"
-        ],
+        "attributes": ["pattern", "coeff", "method", "sportTask"],
         "children": []
       },
       {
         "name": "Aerobic Power",
         "slug": "aerobic-power",
-        "attributes": [
-          "pattern",
-          "coeff",
-          "method",
-          "sportTask"
-        ],
+        "attributes": ["pattern", "coeff", "method", "sportTask"],
         "children": []
       },
       {
         "name": "Anaerobic Capacity",
         "slug": "anaerobic-capacity",
-        "attributes": [
-          "pattern",
-          "coeff",
-          "method",
-          "sportTask"
-        ],
+        "attributes": ["pattern", "coeff", "method", "sportTask"],
         "children": []
       },
       {
         "name": "Anaerobic Power",
         "slug": "anaerobic-power",
-        "attributes": [
-          "pattern",
-          "coeff",
-          "method",
-          "sportTask"
-        ],
+        "attributes": ["pattern", "coeff", "method", "sportTask"],
         "children": []
       }
     ]
@@ -759,9 +807,23 @@
   {
     "name": "ROM",
     "slug": "rom",
+    "targets": [
+      {
+        "id": "flexibility",
+        "name": "Flexibility",
+        "componentId": "rom",
+        "color": "#d2ee2d"
+      },
+      {
+        "id": "mobility",
+        "name": "Mobility",
+        "componentId": "rom",
+        "color": "#d87d40"
+      }
+    ],
     "params": {
       "default": [
-        { 
+        {
           "field": "vol",
           "defaultValue": "rep",
           "options": [
@@ -772,9 +834,7 @@
         {
           "field": "volRec",
           "defaultValue": "time",
-          "options": [
-            { "field": "time", "defaultValue": "60" }
-          ]
+          "options": [{ "field": "time", "defaultValue": "60" }]
         }
       ]
     },

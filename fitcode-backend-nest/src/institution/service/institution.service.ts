@@ -117,14 +117,14 @@ export class InstitutionService {
     );
 
     const institution = await this.findOneOrFail({ institutionId });
-    this.validateTrainer(user, institution);
+    this.validateManager(user, institution);
 
     const athletes = await this.findMembers(input.athleteIds, UserRole.ATHLETE);
     const newAthleteIds = athletes.map((athlete) => athlete.uid);
 
     const docRef = this.institutionRepository.collection().doc(institution.id);
     await docRef.update({
-      athleteIds: FieldValue.arrayUnion(newAthleteIds),
+      athleteIds: FieldValue.arrayUnion(...newAthleteIds),
     });
 
     return {
@@ -146,14 +146,14 @@ export class InstitutionService {
     );
 
     const institution = await this.findOneOrFail({ institutionId });
-    this.validateTrainer(user, institution);
+    this.validateManager(user, institution);
 
     const athletes = await this.findMembers(input.athleteIds, UserRole.ATHLETE);
     const athleteIdsToRemove = athletes.map((athlete) => athlete.uid);
 
     const docRef = this.institutionRepository.collection().doc(institution.id);
     await docRef.update({
-      athleteIds: FieldValue.arrayRemove(athleteIdsToRemove),
+      athleteIds: FieldValue.arrayRemove(...athleteIdsToRemove),
     });
 
     return {
@@ -234,7 +234,7 @@ export class InstitutionService {
     );
 
     const institution = await this.findOneOrFail(ref);
-    this.validateTrainer(user, institution);
+    this.validateManager(user, institution);
 
     // if (input.groupIds) await this.validateGroups(input.groupIds);
     // if (input.athleteIds) await this.findMembers(input.athleteIds, UserRole.ATHLETE)

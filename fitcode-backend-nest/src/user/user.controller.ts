@@ -92,13 +92,4 @@ export class UserController {
   async addAthlete(@RequestUser() user: User, @Body() body: AddAthleteDto) {
     return await this.userService.addAthlete(user, body);
   }
-
-  @Post('add/register')
-  @Auth([UserRole.ADMIN])
-  async registerUser(
-    @RequestUser() user: User,
-    @Body() body: RegisterUserDto,
-  ) {
-    return await this.userService.registerUser(user, body);
-  }
 }

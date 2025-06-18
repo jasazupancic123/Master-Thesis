@@ -78,10 +78,14 @@ export class WorkloadService {
       });
   }
 
-  async findAllByTraining(trainingId: string) {
-    return await this.firebaseService.firestore
+  async findAllByTraining(trainingId: string, status?: SetStatus) {
+    const query = this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('trainingId', '==', trainingId)
+      .where('trainingId', '==', trainingId);
+
+    const finalQuery = status ? query.where('status', '==', status) : query;
+    
+    return await finalQuery
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -311,7 +315,11 @@ export class WorkloadService {
     }
   }
 
-  createForCustomAthleteWorkloads(batch: WriteBatch, workloads: Workload[]) {
+  createForCustomAthleteWorkloads(
+    batch: WriteBatch,
+    workloads: Workload[],
+    trainings: Training[],
+  ) {
     for (const workload of workloads) {
       const docRef = this.workloadRepository
         .collection({ trainingId: workload.trainingId })
@@ -325,6 +333,9 @@ export class WorkloadService {
           }),
         );
 
+      const training = trainings.find((t) => t.id === workload.trainingId);
+      if (!training) continue;
+
       const query = this.firebaseService.buildCreateQuery<Workload>(
         {
           groupId: workload.groupId,
@@ -335,7 +346,7 @@ export class WorkloadService {
           exerciseId: workload.exerciseId,
           setNumber: workload.setNumber,
           status: SetStatus.NOT_STARTED,
-          plannedAt: new Date(),
+          plannedAt: training.from,
           notes: null,
           isPersonalized: true,
           prescribedIntRecValueL: workload.prescribedIntRecValueL,
@@ -395,6 +406,18 @@ export class WorkloadService {
 
       batch.set(docRef, query);
     }
+  }
+
+  async deleteWorkloads(workloads: Workload[]): Promise<void> {
+    const refs = workloads.map((w) => ({
+      trainingId: w.trainingId,
+      componentId: w.componentId,
+      exerciseId: w.exerciseId,
+      setNumber: w.setNumber,
+      userId: w.userId,
+    }));
+
+    this.workloadRepository.deleteDocs(refs);
   }
 
   getStatus(workload: Workload): SetStatus {
