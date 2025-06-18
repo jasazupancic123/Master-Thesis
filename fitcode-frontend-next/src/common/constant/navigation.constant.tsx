@@ -54,10 +54,6 @@ export const LINK_EXERCISES_DASHBOARD = link(
 );
 export const LINK_COMPONENTS = link('Components', '/components');
 export const LINK_EXERCISES = link('Exercises', '/exercises');
-export const LINK_EXERCISES_DASHBOARD = link(
-  'Exercises',
-  '/dashboard/exercises'
-);
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
 export const LINK_DASHBOARD = link('Dashboard', '/dashboard', <HomeIcon />);
 export const LINK_TRAININGS = link(
