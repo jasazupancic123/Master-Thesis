@@ -13,12 +13,15 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import toast from 'react-hot-toast';
 import { handleApiRequest } from '@/common/type/state.type';
 import { useRouter } from 'next/navigation';
-import { UserController } from '@/controller/user/user.controller';
 import { useDashboard } from '@/store/dashboard-provider';
+import { CommonService } from '@/common/service/common.service';
+
+const commonService = CommonService.instance;
+const firebaseService = commonService.firebase;
 
 export default function RegisterUsersDashboard() {
   const router = useRouter();
-  const { setUsers, token } = useDashboard();
+  const { setSelectedInstitution } = useDashboard();
 
   const [formData, setFormData] = useState({
     displayName: '',
@@ -50,9 +53,8 @@ export default function RegisterUsersDashboard() {
 
     handleApiRequest(
       router,
-      () => UserController.registerUser(token, input),
-      (user) => {
-        setUsers((prev) => [...prev, user]);
+      () => firebaseService.functions.createUserWithRole(input),
+      () => {
         setFormData({
           displayName: '',
           email: '',
@@ -60,6 +62,7 @@ export default function RegisterUsersDashboard() {
           password: '',
           confirmPassword: '',
         });
+
         toast.success('Successfully registered user');
       },
       undefined,
