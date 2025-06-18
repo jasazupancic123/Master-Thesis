@@ -45,16 +45,12 @@ export class TrainingController {
   ) {
     filter = this.commonService.object.clean(filter);
 
-    const trainings = await this.trainingService.findAll(
-      user,
-      {
-        groupId: filter.groupId,
-        cycleId: filter.cycleId,
-        ...(filter.from && { from: filter.from }),
-        ...(filter.to && { to: filter.to }),
-      },
-      filter.minimal,
-    );
+    const trainings = await this.trainingService.findAll(user, {
+      groupId: filter.groupId,
+      cycleId: filter.cycleId,
+      ...(filter.from && { from: filter.from }),
+      ...(filter.to && { to: filter.to }),
+    });
 
     return filter.minimal
       ? plainToInstance(TrainingInfoDto, trainings)

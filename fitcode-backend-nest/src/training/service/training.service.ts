@@ -110,11 +110,7 @@ export class TrainingService {
     return training;
   }
 
-  async findAll(
-    user: User,
-    filter?: Filter<Training>,
-    minimal: boolean = false,
-  ): Promise<Training[]> {
+  async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
     const dbUser = await this.userService.findOne(user.uid);
 
     const from = filter?.from ? filter.from : undefined;
@@ -696,6 +692,15 @@ export class TrainingService {
     for (const data of input) {
       // validate training
       const training = await this.findOneOrFail(user, { trainingId: data.id });
+      const flatTrainingIds = customAthleteWorkloads.flatMap(
+        (cw) => cw.trainingId,
+      );
+
+      const trainings = flatTrainingIds.length
+        ? await this.trainingRepository.getDocs((q) =>
+            q.where('id', 'in', flatTrainingIds),
+          )
+        : [];
 
       const { from, to } = this.getFromAndToDates(data.components);
       this.checkTrainingIsInCycle(from, cycle);
@@ -773,16 +778,6 @@ export class TrainingService {
         updatedTraining,
         filteredWorkloads,
       );
-
-      const flatTrainingIds = customAthleteWorkloads.flatMap(
-        (cw) => cw.trainingId,
-      );
-
-      const trainings = flatTrainingIds.length
-        ? await this.trainingRepository.getDocs((q) =>
-            q.where('id', 'in', flatTrainingIds),
-          )
-        : [];
 
       this.workloadService.createForCustomAthleteWorkloads(
         batch,
