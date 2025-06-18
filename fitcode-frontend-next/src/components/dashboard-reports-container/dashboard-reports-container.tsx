@@ -28,7 +28,7 @@ export default function ReportsContainer(props: ReportsContainerProps) {
 
         switch (reportType) {
           case DashboardReportType.ATTENDANCE: {
-            const first7Users = users.slice(0, 7);
+            const first7Users = (users || []).slice(0, 7);
             const attendanceValues = [
               {
                 value: 23,
@@ -66,7 +66,7 @@ export default function ReportsContainer(props: ReportsContainerProps) {
             break;
           }
           case DashboardReportType.CYCLE_PROGRESS: {
-            const first7Users = users.slice(0, 7);
+            const first7Users = (users || []).slice(0, 7);
             const progressValues = [
               {
                 value: 23,
@@ -104,7 +104,7 @@ export default function ReportsContainer(props: ReportsContainerProps) {
             break;
           }
           case DashboardReportType.FLAGGED_ATHLETES: {
-            const first2Users = users.slice(0, 2);
+            const first2Users = (users || []).slice(0, 2);
             data = first2Users.map((user, index) => ({
               ...user,
               info: index === 0 ? 'Sleep, Quad DOMS' : 'Injury',

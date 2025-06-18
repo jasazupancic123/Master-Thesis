@@ -206,14 +206,14 @@ export class InstitutionService {
     );
 
     const institution = await this.findOneOrFail({ institutionId });
-    this.validateTrainer(user, institution);
+    this.validateManager(user, institution);
 
     const trainers = await this.findMembers(input.trainerIds, UserRole.TRAINER);
     const trainerIdsToRemove = trainers.map((trainer) => trainer.uid);
 
     const docRef = this.institutionRepository.collection().doc(institution.id);
     await docRef.update({
-      trainerIds: FieldValue.arrayRemove(trainerIdsToRemove),
+      trainerIds: FieldValue.arrayRemove(...trainerIdsToRemove),
     });
 
     return {

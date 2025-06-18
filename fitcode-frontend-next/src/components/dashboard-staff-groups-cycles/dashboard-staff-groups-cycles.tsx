@@ -1,7 +1,7 @@
 'use client';
 
 import { useScreenSize } from '@/store/screen-size-provider';
-import { Groups, PersonAddAlt } from '@mui/icons-material';
+import { Groups, PersonAddAlt, Remove } from '@mui/icons-material';
 import {
   Avatar,
   Grid2,
@@ -12,11 +12,15 @@ import {
   useTheme,
 } from '@mui/material';
 import { Box } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { useDashboard } from '@/store/dashboard-provider';
-import { SetState } from '@/common/type/state.type';
+import { useRouter } from 'next/navigation';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { isManager } from '@/common/service/util/firebase-auth.util';
+import { InstitutionController } from '@/controller/institution/institution.controller';
+import { InstitutionService } from '@/controller/institution/institution.service';
+import toast from 'react-hot-toast';
 
 const AVATAR_SIZE = 45;
 
@@ -29,9 +33,17 @@ export default function DashboardStaffGroupsCycles(
 ) {
   const screenSize = useScreenSize();
   const theme = useTheme();
+  const router = useRouter();
 
-  const { profile, selectedInstitution, selectedGroup, setSelectedGroup } =
-    useDashboard();
+  const {
+    token,
+    users,
+    profile,
+    selectedInstitution,
+    setSelectedInstitution,
+    selectedGroup,
+    setSelectedGroup,
+  } = useDashboard();
 
   const { setModal } = props;
 
@@ -42,6 +54,40 @@ export default function DashboardStaffGroupsCycles(
   if (!selectedInstitution) return null;
 
   const role = profile.customClaims.role || [];
+
+  useEffect(() => {
+    if (
+      !selectedInstitution.groups ||
+      !selectedInstitution.groups.length ||
+      (selectedGroup &&
+        !selectedInstitution.groupIds.includes(selectedGroup?.id))
+    ) {
+      setSelectedGroup(null);
+      setSelectedCycle(null);
+    }
+  }, [selectedInstitution]);
+
+  const handleRemoveTrainerFromInstitution = (trainerId: string) => {
+    if (!selectedInstitution) return;
+
+    handleApiRequest(
+      router,
+      () =>
+        InstitutionController.removeTrainers(token, selectedInstitution.id, {
+          trainerIds: [trainerId],
+        }),
+      (institution) => {
+        institution = InstitutionService.mapUsers(
+          [institution],
+          users || []
+        )[0];
+        setSelectedInstitution(institution);
+        toast.success('Trainer removed successfully');
+      },
+      undefined,
+      'Failed to remove trainer'
+    );
+  };
 
   return (
     <Grid2
@@ -145,14 +191,46 @@ export default function DashboardStaffGroupsCycles(
                       py={2}
                     >
                       <Tooltip title={trainer.displayName} placement="top">
-                        <Avatar
-                          className="avatar-border"
-                          src="/user_avatar.png"
+                        <Box
+                          key={trainer.uid}
                           sx={{
-                            width: 42,
-                            height: 42,
+                            position: 'relative',
+                            display: 'inline-block',
+                            margin: '0 5px',
+                            '&:hover .remove-icon': {
+                              opacity: 1,
+                            },
                           }}
-                        />
+                        >
+                          <Avatar
+                            className="avatar-border"
+                            src="/user_avatar.png"
+                            sx={{
+                              width: 42,
+                              height: 42,
+                            }}
+                          />
+                          {isManager(role) && (
+                            <IconButton
+                              className="remove-icon"
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveTrainerFromInstitution(trainer.uid);
+                              }}
+                              sx={{
+                                position: 'absolute',
+                                top: -8,
+                                right: -8,
+                                opacity: 0, // hidden by default
+                                backgroundColor: theme.palette.error.main,
+                                zIndex: 1,
+                              }}
+                            >
+                              <Remove sx={{ fontSize: 10 }} />
+                            </IconButton>
+                          )}
+                        </Box>
                       </Tooltip>
                     </Box>
                   ))}
@@ -321,7 +399,7 @@ export default function DashboardStaffGroupsCycles(
               },
             }}
           >
-            {!selectedGroup?.cycles.length ? (
+            {!selectedGroup || !selectedGroup?.cycles.length ? (
               <Box
                 display="flex"
                 justifyContent="center"
