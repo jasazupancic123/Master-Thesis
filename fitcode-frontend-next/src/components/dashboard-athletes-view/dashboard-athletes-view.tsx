@@ -25,6 +25,7 @@ import { InstitutionController } from '@/controller/institution/institution.cont
 import { InstitutionService } from '@/controller/institution/institution.service';
 import toast from 'react-hot-toast';
 import DashboardAthlete from '../dashboard-athlete/dashboard-athlete';
+import { isManager } from '@/common/service/util/firebase-auth.util';
 
 export default function AthletesView() {
   const screenSize = useScreenSize();
@@ -39,6 +40,8 @@ export default function AthletesView() {
     selectedInstitution,
     setSelectedInstitution,
   } = useDashboard();
+
+  const role = profile?.customClaims?.role || [];
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modal, setModal] = useState({
@@ -125,6 +128,7 @@ export default function AthletesView() {
           overflowX: 'auto',
         }}
       >
+        {isManager(role)}
         <Tooltip title="Add athlete">
           <Avatar
             key={'add'}
