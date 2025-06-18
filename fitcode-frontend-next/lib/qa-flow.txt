@@ -1,5 +1,4 @@
 Clear local firebase data
-Add dashboard role checks to BE and FE
 
 - Admin
     - Exercises
@@ -121,17 +120,52 @@ Add dashboard role checks to BE and FE
 
 
 - Athlete
-    Todo
-
-
-
-
-
+    ~ As trainer add multiple trainings in at least 2 different cycles with various components 
+        to different days
+    ~ As trainer update an athlete's custom workloads
+    ~ Login as this athlete
+    ~ Switch to mobile layout
+    - Training View:
+        ~ Validate correct training days and components
+        ~ Pick a training and click expand all supersets, validate exercises and their values 
+        ~ Start a component
+        ~ Validate correct supersets
+        ~ Validate correct exercises
+        ~ Validate correct param values
+        ~ Change some param values, refresh page, should remain the same
+        ~ Go to the last superset, click cancel training
+        ~ Go into the same component, the param values should not be updated
+        ~ Change some intensity and volume values
+        ~ Finish component
+        ~ As trainer refresh page, go to one of the exercises which had param values changed,
+          validate that the exercise is complete (dark background) on the training the athlete 
+          just finished and correct values are on the graph
+        ~ As athlete, finish all components on the training, training should be finished
+        ~ Switch between days, validate correct finished trainings
+    - Calendar View:
+        ~ Validate correct training days and times
+        ~ Press next/back to validate different months
+    - Chart View:
+        Todo when implemented
+    - Wellness View:
+        ~ Submit a wellness with different values than default ones
+        ~ In firestore -> user -> user-meta validate that the wellness is saved correctly
+        ~ Submit a different wellness, values should update
+    - Profile View:
+        ~ Validate correct profile data
+        ~ Update all fields, save
+        ~ Validate changes, also on trainer page (mainly the image)
+    - Sign out
 
 
 BUGFIXES:
+- add dashboard role checks to BE and FE
 - when closing/confirming add exercise modal, reset pagination!
 - add exercise modal cannot deselect exercise
 - Remove dropdown from cycle view on day, update on date change
 - onSaveTraining -> set selectedAthlete to null
 - hide component
+- athlete view: when finishing warmup/cooldown and then finishing another components, 
+  the warmup/cooldown should get unfinished (test with multiple components)
+- invalid wellness values get submited, once submited, the user can't update the values again
+- unnanamed exercise
