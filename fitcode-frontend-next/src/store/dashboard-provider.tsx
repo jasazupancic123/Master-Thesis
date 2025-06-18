@@ -1,10 +1,13 @@
 'use client';
 
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
+import { useFetch } from '@/common/hooks/use-fetch.hook';
 import { ChildrenProps } from '@/common/type/props.type';
 import { SetState } from '@/common/type/state.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Institution } from '@/controller/institution/type/institution.type';
 import { User } from '@/controller/user/type/user.type';
+import { url } from 'inspector';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 interface DashboardContextProps {
@@ -17,10 +20,11 @@ interface DashboardContextProps {
   setSelectedInstitution: SetState<Institution | null>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
-  users: User[];
-  setUsers: SetState<User[]>;
+  users: User[] | null;
+  setUsers: SetState<User[] | null>;
   selectedGroup: Group | null;
   setSelectedGroup: (group: Group | null) => void;
+  refetchUsers: () => void;
 }
 
 export interface DashboardPageProps {
@@ -47,7 +51,8 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     children,
   } = props;
 
-  const [users, setUsers] = useState<User[]>(propsUsers);
+  // const [users, setUsers] = useState<User[]>(propsUsers);
+
   const [institutions, setInstitutions] =
     useState<Institution[]>(propsInstitutions);
   const [selectedInstitution, setSelectedInstitution] =
@@ -59,10 +64,22 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
       : null
   );
 
+  const {
+    data: users,
+    refetch,
+    setData: setUsers,
+  } = useFetch<User[]>(`${BACKEND_API_BASE_URL}/user`, {
+    method: 'GET',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
   const value: DashboardContextProps = {
     role,
     token,
     profile,
+    refetchUsers: refetch,
     users,
     setUsers,
     institutions,

@@ -28,7 +28,6 @@ import {
 import { Institution } from '@/controller/institution/type/institution.type';
 import DashboardStaffGroupsCycles from '@/components/dashboard-staff-groups-cycles/dashboard-staff-groups-cycles';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
-import { useAuth } from '@/store/auth-provider';
 
 interface DashboardPageProps {
   view: string;
@@ -296,7 +295,7 @@ export default function DashboardPage(props: DashboardPageProps) {
         <AddMembersModal
           title="Add Trainer"
           placeholder="Search trainers"
-          users={users.filter((user) =>
+          users={(users || []).filter((user) =>
             user.customClaims.role.includes(UserRole.TRAINER)
           )}
           members={selectedInstitution.trainers || []}
