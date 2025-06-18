@@ -1110,8 +1110,9 @@ export class TrainingService {
     const batch = this.firebaseService.firestore.batch();
     for (const w of workloads) {
       const exercise = exercises.find((e) => e.id === w.exerciseId);
-      const set = exercise.sets.find((s) => s.setNumber === w.setNumber);
+      if (!exercise) continue;
 
+      const set = exercise.sets.find((s) => s.setNumber === w.setNumber);
       const paramValuesL = this.workloadService.parseActualParamValues(
         set.paramValuesL,
       );

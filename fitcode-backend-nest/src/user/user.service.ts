@@ -173,47 +173,6 @@ export class UserService {
     });
   }
 
-  async registerUser(user: User, input: RegisterUserDto) {
-    const { email, displayName, password, role } = input;
-
-    this.logger.log(
-      `User ${user.uid} is registering new user: ${JSON.stringify(input)})`,
-    );
-
-    const firebaseUser = await this.firebaseService.auth.createUser({
-      email,
-      displayName,
-      password,
-    });
-
-    // admin can only register managers
-    if (
-      user.customClaims.role.includes(UserRole.ADMIN) &&
-      role !== UserRole.MANAGER
-    )
-      throw new BadRequestException('Only managers can be registered by admin');
-      
-    // manager can register athletes and trainers
-    else if (
-      user.customClaims.role.includes(UserRole.MANAGER) &&
-      ![UserRole.ATHLETE, UserRole.TRAINER].includes(role as UserRole)
-    )
-      throw new BadRequestException(
-        'Only athletes and trainers can be registered by manager',
-      );
-
-    const createdUser = await this.upsert({
-      email,
-      displayName,
-      password,
-      customClaims: { role: [role as UserRole] },
-    });
-
-    if (!createdUser) throw new BadRequestException('User not created');
-
-    return createdUser;
-  }
-
   addGroup(transaction: Transaction, userId: string, groupId: string) {
     const docRef = this.userRepository.doc(userId);
     transaction.update(docRef, { groupsIds: FieldValue.arrayUnion(groupId) });

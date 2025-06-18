@@ -446,7 +446,12 @@ export class TrainingPlanService {
         'You can only have up to 8 supersets per training component',
       );
 
-    for (const superset of component.supersets) {
+    const supersets = [
+      ...component.supersets,
+      ...component.subgroups.flatMap((s) => s.supersets),
+    ];
+
+    for (const superset of supersets) {
       if (superset.exercises.length > 4)
         throw new ConflictException(
           'You can only have up to 4 exercises per superset',
@@ -489,7 +494,7 @@ export class TrainingPlanService {
     const trainingMemberIdsSet = new Set(trainingMemberIds);
     const membersIdsSet = new Set<string>();
 
-    for (const subgroup of component.subgroups) {
+    for (const subgroup of component.subgroups)
       for (const userId of subgroup.membersIds) {
         if (!trainingMemberIdsSet.has(userId))
           throw new ConflictException('Invalid member');
@@ -501,9 +506,6 @@ export class TrainingPlanService {
 
         membersIdsSet.add(userId);
       }
-
-      this.validateSupersets(component, exercises, allComponents);
-    }
   }
 
   getSetData(
