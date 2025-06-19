@@ -145,7 +145,7 @@ export class TrainingPlanService {
    * @param futureStats - FutureStats of existing training in database
    * @param exercises - New completed exercises values from athlete
    */
-  calculateTrainingStats(futureStats: GroupWorkloadStats[], exercises: TrainingExercise[]) {
+  calculateFutureTrainingStats(futureStats: GroupWorkloadStats[], exercises: TrainingExercise[]) {
     for (const exercise of exercises) {
       const avgFutureStats = futureStats.find(
         (avg) => avg.exerciseId === exercise.id,

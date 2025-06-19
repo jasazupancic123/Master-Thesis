@@ -621,7 +621,7 @@ export class ExerciseService {
   }
 
   private validateOwner(user: User, exercise: Exercise) {
-    if (user.uid !== exercise.ownerId && !user.customClaims?.role.includes(UserRole.ADMIN))
+    if (user.uid !== exercise.ownerId && !this.firebaseService.isAdmin(user))
       throw new UnauthorizedException("You don't have access to this exercise");
   }
 
