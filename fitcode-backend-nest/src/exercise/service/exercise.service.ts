@@ -30,6 +30,7 @@ import { Component } from '../../component/entity/component.entity';
 import { FieldPath, Query } from 'firebase-admin/firestore';
 import { TrainingPlanService } from '../../training/service/training-plan.service';
 import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
+import { UserRole } from '../../user/enum/user-role.enum';
 
 @Injectable()
 export class ExerciseService {
@@ -620,7 +621,7 @@ export class ExerciseService {
   }
 
   private validateOwner(user: User, exercise: Exercise) {
-    if (user.uid !== exercise.ownerId)
+    if (user.uid !== exercise.ownerId && !user.customClaims?.role.includes(UserRole.ADMIN))
       throw new UnauthorizedException("You don't have access to this exercise");
   }
 

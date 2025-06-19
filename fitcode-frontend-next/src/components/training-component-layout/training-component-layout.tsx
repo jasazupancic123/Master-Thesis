@@ -17,6 +17,7 @@ import TrainingComponentCard from '../training-component-card/training-component
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';
 import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import ComponentActionsModal from '../component-actions-modal/component-actions-modal';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
@@ -168,14 +169,21 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
         }}
         componentCalendarView
       >
-        <TrainingComponentCalendar
+        <ComponentActionsModal
+          trainingComponent={trainingComponent}
+          training={training}
+          setOpenOverwriteModal={setOpenOverwriteModal}
+          setTrainingInPeriodForModal={setTrainingInPeriodForModal}
+          day={day}
+        />
+        {/* <TrainingComponentCalendar
           trainingComponent={trainingComponent}
           training={training}
           setOpenOverwriteModal={setOpenOverwriteModal}
           setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           copyComponent={true}
           day={day}
-        />
+        /> */}
       </MyModal>
 
       {/* Periodization Modal */}

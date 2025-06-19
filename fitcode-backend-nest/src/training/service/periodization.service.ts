@@ -15,12 +15,12 @@ export class PeriodizationService {
   ) {
     const baseExercises = this.getExercisesOrFail(baseTraining, componentId);
 
-    let startInts: { exerciseId: string; value: number }[] = [];
-    let startVols: { exerciseId: string; value: number }[] = [];
-
     for (const exerciseId of exerciseIds) {
-      let prevInt = 0;
-      let prevVol = 0;
+      let prevIntL = [] as { setIndex: number; value: number }[];
+      let prevVolL = [] as { setIndex: number; value: number }[];
+
+      let prevIntR = [] as { setIndex: number; value: number }[];
+      let prevVolR = [] as { setIndex: number; value: number }[];
 
       for (const week of weeks) {
         for (const training of week) {
@@ -31,69 +31,223 @@ export class PeriodizationService {
           if (!component) continue;
 
           // get exercises to periodize
-          const exercises = component.supersets
+          const exerciseToPeriodize = component.supersets
             .flatMap((s) => s.exercises)
             .find((e) => e.id === exerciseId);
 
-          if (!exercises) continue;
+          if (!exerciseToPeriodize) continue;
 
-          const exercise = baseExercises.find((e) => e.id === exerciseId);
-          if (!exercise) continue;
+          const baseExercise = baseExercises.find((e) => e.id === exerciseId);
+          if (!baseExercise) continue;
+
+          // if (
+          //   baseExercise.sets.length > 0 &&
+          //   !prevIntL.length &&
+          //   !prevIntR.length &&
+          //   !prevVolL.length &&
+          //   !prevVolR.length
+          // ) {
+          //   prevIntL.push({
+          //     setIndex: 0,
+          //     value: parseFloat(
+          //       baseExercise.sets[0].paramValuesL.find(
+          //         (p) => p.field === ParamType.IntWork1,
+          //       )?.value || '0',
+          //     ),
+          //   });
+          //   prevVolL.push({
+          //     setIndex: 0,
+          //     value: parseFloat(
+          //       baseExercise.sets[0].paramValuesL.find(
+          //         (p) => p.field === ParamType.VolWork1,
+          //       )?.value || '0',
+          //     ),
+          //   });
+          //   prevIntR.push({
+          //     setIndex: 0,
+          //     value: parseFloat(
+          //       baseExercise.sets[0].paramValuesR.find(
+          //         (p) => p.field === ParamType.IntWork1,
+          //       )?.value || '0',
+          //     ),
+          //   });
+          //   prevVolR.push({
+          //     setIndex: 0,
+          //     value: parseFloat(
+          //       baseExercise.sets[0].paramValuesR.find(
+          //         (p) => p.field === ParamType.VolWork1,
+          //       )?.value || '0',
+          //     ),
+          //   });
+          // }
+
+          let startInts: {
+            exerciseId: string;
+            leftOrRight: 'L' | 'R';
+            value: number;
+          }[] = [];
+          let startVols: {
+            exerciseId: string;
+            leftOrRight: 'L' | 'R';
+            value: number;
+          }[] = [];
 
           const readinessFactor = Math.random() * 0.2 + 0.9; // Simulate readiness factor between 0.9 and 1.1
-          for (const set of exercise.sets) {
-            const baseInt = set.paramValuesL.find(
-              (p) => p.field === ParamType.IntWork1,
-            );
+          for (const set of baseExercise.sets) {
+            for (const paramValues of [set.paramValuesL, set.paramValuesR]) {
+              let leftOrRight =
+                paramValues === set.paramValuesL ? 'L' : ('R' as 'L' | 'R');
 
-            const baseVol = set.paramValuesL.find(
-              (p) => p.field === ParamType.VolWork1,
-            );
+              const baseInt =
+                paramValues === set.paramValuesL
+                  ? set.paramValuesL.find((p) => p.field === ParamType.IntWork1)
+                  : set.paramValuesR.find(
+                      (p) => p.field === ParamType.IntWork1,
+                    );
 
-            if (!baseInt || !baseVol) continue;
+              const baseVol =
+                paramValues === set.paramValuesL
+                  ? set.paramValuesL.find((p) => p.field === ParamType.VolWork1)
+                  : set.paramValuesR.find(
+                      (p) => p.field === ParamType.VolWork1,
+                    );
 
-            let startInt = startInts.find((e) => e.exerciseId === exerciseId);
-            let startVol = startVols.find((e) => e.exerciseId === exerciseId);
+              if (!baseInt || !baseVol) continue;
 
-            if (!startInt) {
-              startInt = { exerciseId, value: parseFloat(baseInt.value) };
-              startInts.push(startInt);
-            }
-
-            if (!startVol) {
-              startVol = { exerciseId, value: parseFloat(baseVol.value) };
-              startVols.push(startVol);
-            }
-
-            const periodizedInt = exercises.sets[
-              exercise.sets.indexOf(set)
-            ].paramValuesL.find((p) => p.field === ParamType.IntWork1);
-
-            const periodizedVol = exercises.sets[
-              exercise.sets.indexOf(set)
-            ].paramValuesL.find((p) => p.field === ParamType.VolWork1);
-
-            if (!periodizedInt || !periodizedVol) continue;
-            const { periodizedIntensityValue, periodizedVolumeValue } =
-              this.getPeriodizedIntVolValue(
-                periodizationType,
-                parseFloat(baseInt.value),
-                weeks.indexOf(week),
-                week.indexOf(training),
-                startInt.value,
-                startVol.value,
-                prevInt,
-                prevVol,
-                weeks.length,
-                readinessFactor,
+              let startInt = startInts.find(
+                (e) =>
+                  e.exerciseId === exerciseId && e.leftOrRight === leftOrRight,
               );
 
-            periodizedInt.value = periodizedIntensityValue;
-            periodizedVol.value = periodizedVolumeValue;
+              let startVol = startVols.find(
+                (e) =>
+                  e.exerciseId === exerciseId && e.leftOrRight === leftOrRight,
+              );
 
-            if (exercise.sets.indexOf(set) === exercise.sets.length - 1) {
-              prevInt = parseFloat(periodizedIntensityValue);
-              prevVol = parseFloat(periodizedVolumeValue);
+              if (!startInt) {
+                startInt = {
+                  exerciseId,
+                  value: parseFloat(baseInt.value),
+                  leftOrRight,
+                };
+                startInts.push(startInt);
+              } else if (startInt.value !== parseFloat(baseInt.value))
+                startInt.value = parseFloat(baseInt.value);
+
+              if (!startVol) {
+                startVol = {
+                  exerciseId,
+                  value: parseFloat(baseVol.value),
+                  leftOrRight,
+                };
+                startVols.push(startVol);
+              } else if (startVol.value !== parseFloat(baseVol.value))
+                startVol.value = parseFloat(baseVol.value);
+
+              const periodizedInt =
+                paramValues === set.paramValuesL
+                  ? exerciseToPeriodize.sets[
+                      baseExercise.sets.indexOf(set)
+                    ].paramValuesL.find((p) => p.field === ParamType.IntWork1)
+                  : exerciseToPeriodize.sets[
+                      baseExercise.sets.indexOf(set)
+                    ].paramValuesR.find((p) => p.field === ParamType.IntWork1);
+
+              const periodizedVol =
+                paramValues === set.paramValuesL
+                  ? exerciseToPeriodize.sets[
+                      baseExercise.sets.indexOf(set)
+                    ].paramValuesL.find((p) => p.field === ParamType.VolWork1)
+                  : exerciseToPeriodize.sets[
+                      baseExercise.sets.indexOf(set)
+                    ].paramValuesR.find((p) => p.field === ParamType.VolWork1);
+
+              if (!periodizedInt || !periodizedVol) continue;
+
+              const prevInt =
+                leftOrRight === 'L'
+                  ? prevIntL.find(
+                      (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                    )?.value
+                  : prevIntR.find(
+                      (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                    )?.value;
+
+              const prevVol =
+                leftOrRight === 'L'
+                  ? prevVolL.find(
+                      (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                    )?.value
+                  : prevVolR.find(
+                      (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                    )?.value;
+
+              const { periodizedIntensityValue, periodizedVolumeValue } =
+                this.getPeriodizedIntVolValue(
+                  periodizationType,
+                  parseFloat(baseInt.value),
+                  weeks.indexOf(week),
+                  week.indexOf(training),
+                  startInt.value,
+                  startVol.value,
+                  prevInt,
+                  prevVol,
+                  weeks.length,
+                  readinessFactor,
+                );
+
+              periodizedInt.value = periodizedIntensityValue;
+              periodizedVol.value = periodizedVolumeValue;
+
+              if (leftOrRight === 'L') {
+                const foundPrevIntL = prevIntL.find(
+                  (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                );
+                if (foundPrevIntL)
+                  foundPrevIntL.value = parseFloat(periodizedIntensityValue);
+                else {
+                  prevIntL.push({
+                    setIndex: baseExercise.sets.indexOf(set),
+                    value: parseFloat(periodizedIntensityValue),
+                  });
+                }
+
+                const foundPrevVolL = prevVolL.find(
+                  (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                );
+                if (foundPrevVolL)
+                  foundPrevVolL.value = parseFloat(periodizedVolumeValue);
+                else {
+                  prevVolL.push({
+                    setIndex: baseExercise.sets.indexOf(set),
+                    value: parseFloat(periodizedVolumeValue),
+                  });
+                }
+              } else if (leftOrRight === 'R') {
+                const foundPrevIntR = prevIntR.find(
+                  (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                );
+                if (foundPrevIntR)
+                  foundPrevIntR.value = parseFloat(periodizedIntensityValue);
+                else {
+                  prevIntR.push({
+                    setIndex: baseExercise.sets.indexOf(set),
+                    value: parseFloat(periodizedIntensityValue),
+                  });
+                }
+
+                const foundPrevVolR = prevVolR.find(
+                  (e) => e.setIndex === baseExercise.sets.indexOf(set),
+                );
+                if (foundPrevVolR)
+                  foundPrevVolR.value = parseFloat(periodizedVolumeValue);
+                else {
+                  prevVolR.push({
+                    setIndex: baseExercise.sets.indexOf(set),
+                    value: parseFloat(periodizedVolumeValue),
+                  });
+                }
+              }
             }
           }
         }
@@ -109,7 +263,7 @@ export class PeriodizationService {
 
     const exercises = component.supersets.flatMap((s) => s.exercises);
     if (exercises.length === 0)
-      throw new Error('No exercises found in the base component');
+      throw new BadRequestException('No exercises found in the base component');
 
     return exercises;
   }
@@ -121,8 +275,8 @@ export class PeriodizationService {
     dayIndex: number,
     startIntensityValue: number,
     startVolumeValue: number,
-    prevIntensityValue: number,
-    prevVolumeValue: number,
+    prevInt: number,
+    prevVol: number,
     weeksLength: number,
     readinessFactor: number,
   ) {
@@ -133,8 +287,8 @@ export class PeriodizationService {
           startVolumeValue,
           weekIndex,
           dayIndex,
-          prevIntensityValue,
-          prevVolumeValue,
+          prevInt,
+          prevVol,
         );
       }
       case PeriodizationType.WEEK_UNDULATING: {
@@ -165,8 +319,8 @@ export class PeriodizationService {
           weekIndex,
           dayIndex,
           readinessFactor,
-          prevIntensityValue,
-          prevVolumeValue,
+          prevInt,
+          prevVol,
         );
       }
       case PeriodizationType.DUP_TABLE_BASED: {

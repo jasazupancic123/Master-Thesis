@@ -98,22 +98,6 @@ export default function DashboardStaffGroupsCycles(
       direction={screenSize.isMobile ? 'column' : 'row'}
     >
       <Grid2 size={screenSize.isMobile ? 12 : 6} sx={{ position: 'relative' }}>
-        {isManager(role) && (
-          <Tooltip title="Add trainer" placement="top">
-            <IconButton
-              onClick={() => setModal({ add_trainer: true, add_group: false })}
-              sx={{
-                m: 0,
-                p: 0,
-                position: 'absolute',
-                top: 10,
-                right: 20,
-              }}
-            >
-              <PersonAddAlt />
-            </IconButton>
-          </Tooltip>
-        )}
         <Grid2
           container
           size={12}

@@ -16,7 +16,6 @@ import { useRouter } from 'next/navigation';
 import { useDashboard } from '@/store/dashboard-provider';
 import { CommonService } from '@/common/service/common.service';
 import { isAdmin, isManager } from '@/common/service/util/firebase-auth.util';
-import { ref } from '@firebase/storage';
 
 const commonService = CommonService.instance;
 const firebaseService = commonService.firebase;
