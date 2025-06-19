@@ -30,6 +30,8 @@ import {
 import FileUpload from '@/components/file-upload/file-upload';
 import { useExerciseContext } from '@/store/exercises-provider';
 import { Publish } from '@mui/icons-material';
+import { useAuth } from '@/store/auth-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -43,11 +45,14 @@ export default function ExercisesPage() {
     components,
     attributes,
     exercises: allExercises,
+    profile,
   } = useExerciseContext();
 
   const router = useRouter();
   const theme = useTheme();
   const screenSize = useScreenSize();
+
+  const roles = profile?.customClaims?.role || [];
 
   // filter exercises
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(
@@ -259,11 +264,12 @@ export default function ExercisesPage() {
           isOpen={modal.edit}
           setIsOpen={(isOpen) => setModal({ ...modal, edit: isOpen })}
           title={
-            exercise.ownerId === 'global'
+            exercise.ownerId === 'global' && !roles.includes(UserRole.ADMIN)
               ? 'Exercise Details'
               : 'Update Exercise'
           }
-          {...(exercise.ownerId !== 'global' && {
+          {...((exercise.ownerId !== 'global' ||
+            roles.includes(UserRole.ADMIN)) && {
             onConfirm: async (attributes) => {
               handleUpdateExercise(token, exercise!.id!, exercise, {
                 router,

@@ -7,11 +7,11 @@ export class FirebaseFunctionsUtil {
     email: string;
     password: string;
     role: UserRole;
+    displayName: string;
   }) {
     try {
       await httpsCallable(functions, 'createUserWithRole')(input);
     } catch (e: any) {
-      console.log(JSON.stringify(e));
       if (e.code) {
         const authCode = (e.details as { originalCode: string })?.originalCode;
         switch (authCode) {

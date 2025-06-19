@@ -27,6 +27,7 @@ export default async function Layout({ children }: ChildrenProps) {
     exercises,
     attributes,
     components,
+    profile,
   };
 
   return <ExerciseProvider {...pageProps}>{children}</ExerciseProvider>;
