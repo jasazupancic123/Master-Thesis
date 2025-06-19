@@ -22,9 +22,6 @@ export default function AddInstitutionDashboard() {
 
   const { token, setInstitutions, refetchUsers } = useDashboard();
 
-  const [input, setInput] = useState<
-    { name: string; imageUrl: string; email: string } | undefined
-  >(undefined);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,9 +29,9 @@ export default function AddInstitutionDashboard() {
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!input || !input?.name || !input.imageUrl || !input.email) return;
+    if (!name || !imageUrl || !email) return;
 
-    const owner = users?.find((user) => user.email === input.email);
+    const owner = users?.find((user) => user.email === email);
 
     if (!owner) {
       toast.error('Institution not registered correctly');
@@ -45,8 +42,8 @@ export default function AddInstitutionDashboard() {
       router,
       () =>
         InstitutionController.create(token, {
-          name: input.name,
-          imageUrl: input.imageUrl,
+          name,
+          imageUrl,
           ownerId: owner.uid,
           athleteIds: [],
           trainerIds: [],
@@ -60,7 +57,6 @@ export default function AddInstitutionDashboard() {
           const newInstitutions = [...prev, institution];
           return newInstitutions;
         });
-        setInput(undefined);
         setName('');
         setEmail('');
         setPassword('');
@@ -101,24 +97,16 @@ export default function AddInstitutionDashboard() {
       role: UserRole.MANAGER,
     };
 
+    toast.error('Creating institution...', {
+      icon: '⚠️',
+      duration: 3000,
+    });
+
     handleApiRequest(
       router,
       () => firebaseService.functions.createUserWithRole(userInput),
       () => {
-        toast.error('Wait 7 seconds to register institution...', {
-          icon: '⚠️',
-          duration: 7000,
-        });
-
-        setInput({
-          name,
-          imageUrl,
-          email,
-        });
-
-        setTimeout(() => {
-          refetchUsers();
-        }, 7000);
+        refetchUsers();
       },
       undefined,
       'Failed to register user'
