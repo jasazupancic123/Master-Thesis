@@ -1,12 +1,6 @@
 import { useDashboard } from '@/store/dashboard-provider';
-import { User } from '@/controller/user/type/user.type';
-import { Box, Button, Grid2, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
-import { useTheme } from '@mui/material';
-import MyModal from '@/components/modal/modal';
-import { AddMembersModal } from '@/components/add-members-modal/add-members-modal';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import UsersSelectList from '../dashboard-users-select-list/dashboard-users-select-list';
+import { Box, Button, FormControl, TextField } from '@mui/material';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import FileUpload from '../file-upload/file-upload';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
@@ -15,69 +9,48 @@ import { useRouter } from 'next/navigation';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { CommonService } from '@/common/service/common.service';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+
+const commonService = CommonService.instance;
+const firebaseService = commonService.firebase;
 
 export default function AddInstitutionDashboard() {
   const { users } = useDashboard();
-  const theme = useTheme();
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const { token, setInstitutions } = useDashboard();
+  const { token, setInstitutions, refetchUsers } = useDashboard();
 
-  const [allTrainers, setAllTrainers] = useState(
-    (users || []).filter((user) =>
-      user.customClaims?.role.includes(UserRole.TRAINER)
-    )
-  );
-  const [allManagers, setAllManagers] = useState(
-    (users || []).filter((user) =>
-      user.customClaims?.role.includes(UserRole.MANAGER)
-    )
-  );
-  const [allAthletes, setAllAthletes] = useState(
-    (users || []).filter((user) =>
-      user.customClaims?.role.includes(UserRole.ATHLETE)
-    )
-  );
-
-  const [modal, setModal] = useState({
-    add_owner: false,
-    add_trainers: false,
-    add_athletes: false,
-  });
+  const [input, setInput] = useState<
+    { name: string; imageUrl: string; email: string } | undefined
+  >(undefined);
   const [name, setName] = useState('');
-  const [owner, setOwner] = useState<User | null>(null);
-  const [trainers, setTrainers] = useState<User[]>([]);
-  const [athletes, setAthletes] = useState<User[]>([]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
-  const handleAddInstitution = () => {
-    if (name.trim().length < 3) {
-      toast.error('Institution name must be at least 3 characters long');
-      return;
-    }
+  useEffect(() => {
+    if (!input || !input?.name || !input.imageUrl || !input.email) return;
+
+    const owner = users?.find((user) => user.email === input.email);
 
     if (!owner) {
-      toast.error('Owner is required');
+      toast.error('Institution not registered correctly');
       return;
     }
-
-    if (!imageUrl) {
-      toast.error('Image is required');
-      return;
-    }
-
-    const input = {
-      name,
-      imageUrl,
-      ownerId: owner.uid,
-      trainerIds: trainers.map((t) => t.uid),
-      athleteIds: athletes.map((a) => a.uid),
-    };
 
     handleApiRequest(
       router,
-      () => InstitutionController.create(token, input),
+      () =>
+        InstitutionController.create(token, {
+          name: input.name,
+          imageUrl: input.imageUrl,
+          ownerId: owner.uid,
+          athleteIds: [],
+          trainerIds: [],
+        }),
       (institution) => {
         institution = InstitutionService.mapUsers(
           [institution],
@@ -87,20 +60,68 @@ export default function AddInstitutionDashboard() {
           const newInstitutions = [...prev, institution];
           return newInstitutions;
         });
+        setInput(undefined);
         setName('');
-        setImageUrl(undefined);
-        setOwner(null);
-        setTrainers([]);
-        setAthletes([]);
-        setModal({
-          add_owner: false,
-          add_trainers: false,
-          add_athletes: false,
-        });
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setImageUrl('');
         toast.success('Successfully created institution!');
       },
       undefined,
       'Failed to create institution'
+    );
+  }, [users]);
+
+  const handleAddInstitution = () => {
+    if (name.trim().length < 3) {
+      toast.error('Institution name must be at least 3 characters long');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (!imageUrl) {
+      toast.error('Image is required');
+      return;
+    }
+
+    const userInput = {
+      displayName: name,
+      email,
+      password,
+      role: UserRole.MANAGER,
+    };
+
+    handleApiRequest(
+      router,
+      () => firebaseService.functions.createUserWithRole(userInput),
+      () => {
+        toast.error('Wait 7 seconds to register institution...', {
+          icon: '⚠️',
+          duration: 7000,
+        });
+
+        setInput({
+          name,
+          imageUrl,
+          email,
+        });
+
+        setTimeout(() => {
+          refetchUsers();
+        }, 7000);
+      },
+      undefined,
+      'Failed to register user'
     );
   };
 
@@ -113,80 +134,50 @@ export default function AddInstitutionDashboard() {
         justifyContent="center"
         marginX="auto"
         gap={1}
+        mt={1}
       >
-        <TextField
-          value={name}
-          label="Institution Name"
-          variant="outlined"
-          fullWidth
-          margin="normal"
-          onChange={(e) => setName(e.target.value)}
-          sx={{
-            width: '50%',
-            marginX: 'auto',
-          }}
-        />
+        <FormControl fullWidth sx={{ width: '50%', marginX: 'auto' }}>
+          <TextField
+            value={name}
+            label="Institution Name"
+            variant="outlined"
+            fullWidth
+            onChange={(e) => setName(e.target.value)}
+          />
+        </FormControl>
 
-        <Box
-          display="flex"
-          justifyContent="center"
-          flexDirection={'column'}
-          alignItems="center"
-          gap={0.5}
-        >
-          <Typography variant="h6" sx={{ textAlign: 'center' }}>
-            Owner{owner ? `: ${owner.displayName}` : ''}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => setModal((prev) => ({ ...prev, add_owner: true }))}
-          >
-            {!owner ? 'Add owner' : 'Change owner'}
-          </Button>
-        </Box>
+        <FormControl fullWidth sx={{ width: '50%', marginX: 'auto' }}>
+          <TextField
+            value={email}
+            label="Email"
+            variant="outlined"
+            type="email"
+            fullWidth
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </FormControl>
 
-        {/*}
-        <Grid2
-          width="100%"
-          container
-          size={12}
-          gap={1}
-          display="flex"
-          justifyContent="space-evenly"
-          alignItems="flex-start"
-        >
-          <Grid2
-            size={5.5}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            gap={0.5}
-          >
-            <UsersSelectList
-              allUsers={allTrainers}
-              selectedUsers={trainers}
-              setSelectedUsers={setTrainers}
-              title="Trainers"
-              addUsersTitle="Add Trainers"
-            />
-          </Grid2>
-          <Grid2
-            size={5.5}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            gap={0.5}
-          >
-            <UsersSelectList
-              allUsers={allAthletes}
-              selectedUsers={athletes}
-              setSelectedUsers={setAthletes}
-              title="Athletes"
-              addUsersTitle="Add Athletes"
-            />
-          </Grid2>
-        </Grid2>
-        */}
+        <FormControl fullWidth sx={{ width: '50%', marginX: 'auto' }}>
+          <TextField
+            label="Password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </FormControl>
+
+        <FormControl fullWidth sx={{ width: '50%', marginX: 'auto' }}>
+          <TextField
+            label="Confirm Password"
+            type="password"
+            variant="outlined"
+            fullWidth
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+        </FormControl>
 
         <Box
           display="flex"
@@ -194,6 +185,7 @@ export default function AddInstitutionDashboard() {
           width="50%"
           sx={{
             marginX: 'auto',
+            mt: 2,
           }}
         >
           <FileUpload
@@ -214,28 +206,17 @@ export default function AddInstitutionDashboard() {
           flexDirection={'column'}
           alignItems="center"
         >
-          <Button variant="contained" onClick={handleAddInstitution}>
+          <Button
+            variant="contained"
+            onClick={handleAddInstitution}
+            sx={{
+              mt: 2,
+            }}
+          >
             Add Institution
           </Button>
         </Box>
       </Box>
-
-      <MyModal
-        isOpen={modal.add_owner}
-        setIsOpen={(open) => setModal((prev) => ({ ...prev, add_owner: open }))}
-        onCancel={() => setModal((prev) => ({ ...prev, add_owner: false }))}
-        onConfirm={() => setModal((prev) => ({ ...prev, add_owner: false }))}
-        cancelText="Close"
-      >
-        <AddMembersModal
-          users={allManagers}
-          members={[]}
-          setMembers={() => {}}
-          addUserToEnd={true}
-          setSingleMember={setOwner}
-          singleMember={owner}
-        />
-      </MyModal>
     </>
   );
 }

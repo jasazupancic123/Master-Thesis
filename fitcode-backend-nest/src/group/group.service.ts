@@ -105,6 +105,8 @@ export class GroupService {
     const group = await this.findByIdOrFail(user, ref);
     this.validateOwner(user, group);
 
+    if(!group.membersIds.length) return [];
+
     return await this.userService.getDocs((q) =>
       q.where('id', 'in', group.membersIds),
     );

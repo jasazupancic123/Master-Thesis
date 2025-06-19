@@ -111,7 +111,7 @@ export default function TrainingComponentMenu(
 
         {!isWarmupOrCooldown(trainingComponent) && (
           <Box>
-            <MenuItem
+            {/* <MenuItem
               onClick={() => {
                 if (detectedChanges) {
                   toast.error('Save training before periodization', {
@@ -146,6 +146,28 @@ export default function TrainingComponentMenu(
               }}
             >
               <CalendarIcon sx={{ mr: 1 }} /> Component Calendar
+            </MenuItem> */}
+
+            <MenuItem
+              onClick={() => {
+                if (detectedChanges) {
+                  toast.error('Save training before copying', {
+                    icon: '⚠️',
+                    duration: 1000,
+                  });
+                  return;
+                }
+
+                if (!component || trainingComponent.id !== component.id) {
+                  setTraining(training);
+                  setComponent(trainingComponent);
+                }
+
+                setOpenCalendarModal(true);
+                handleMenuClose();
+              }}
+            >
+              <CalendarIcon sx={{ mr: 1 }} /> Component Actions
             </MenuItem>
 
             <MenuItem
