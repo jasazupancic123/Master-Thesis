@@ -517,54 +517,11 @@ export class TrainingService {
       if (!component) continue;
 
       const exercises = component.supersets.flatMap((s) => s.exercises);
-      const stats = this.trainingPlanService.calculateTrainingStats(
+
+      this.trainingPlanService.calculateFutureTrainingStats(
         t.futureStats,
         exercises,
-        componentId,
       );
-
-      t.futureStats.map(
-        (fs) => stats.find((s) => s.exerciseId === fs.exerciseId) || fs,
-      );
-
-      /*for (const exercise of exercises) {
-        const avgFutureStats = training.futureStats.find(
-          (avg) => avg.exerciseId === exercise.id,
-        );
-
-        if (!avgFutureStats) continue;
-
-        const intensitiesL = exercise.sets
-          .flatMap((set) => set.paramValuesL)
-          .filter((p) => p.field === ParamType.IntWork1);
-        const intensitiesR = exercise.sets
-          .flatMap((set) => set.paramValuesR)
-          .filter((p) => p.field === ParamType.IntWork1);
-
-        const avgIntensity =
-          (intensitiesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-            intensitiesL.length +
-            intensitiesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-              intensitiesR.length) /
-          2;
-
-        const volumesL = exercise.sets
-          .flatMap((set) => set.paramValuesL)
-          .filter((p) => p.field === ParamType.VolWork1);
-        const volumesR = exercise.sets
-          .flatMap((set) => set.paramValuesR)
-          .filter((p) => p.field === ParamType.VolWork1);
-
-        const avgVolume =
-          (volumesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-            volumesL.length +
-            volumesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-              volumesR.length) /
-          2;
-
-        avgFutureStats.intensity = avgIntensity;
-        avgFutureStats.volume = avgVolume;
-      }*/
 
       const updateTrainingQuery =
         this.firebaseService.buildUpdateQuery<Training>({ ...t });
@@ -1100,10 +1057,9 @@ export class TrainingService {
       training.completedMembersIds.push(user.uid);
 
     // update stats
-    const stats = this.trainingPlanService.calculateTrainingStats(
+    const stats = this.trainingPlanService.calculateFutureTrainingStats(
       training.stats,
       exercises,
-      input.rootComponentId,
     );
 
     // update workloads
@@ -1289,7 +1245,7 @@ export class TrainingService {
 
   private async validateTrainingMembers(membersIds: string[]) {
     const users = await this.firebaseService.authUsers({ ids: membersIds });
-    if (users.length !== membersIds.length)
+    if (membersIds.length && users.length !== membersIds.length)
       throw new BadRequestException('Some members do not exist');
   }
 
@@ -1314,7 +1270,7 @@ export class TrainingService {
   }
 
   private isInPast(date: Date, relativeDate = new Date()) {
-    return isBefore(date, relativeDate);
+    return isBefore(date, relativeDate.setHours(0, 0, 0, 0));
   }
 
   private validateIsTrainingInFuture(from: Date, relativeDate = new Date()) {

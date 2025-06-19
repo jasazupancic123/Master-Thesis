@@ -32,6 +32,7 @@ import { ChartWorkloadData } from '@/controller/training/type/chart-workload-dat
 import { Method } from '@/controller/method/type/method.type';
 import { Day } from '@/common/service/util/date.util';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { totalmem } from 'os';
 
 export async function handleCopyTraining(
   token: string,
@@ -806,9 +807,10 @@ export function handleDeleteExercise(
 
   if (selectedSubgroup?.subgroup) {
     // update selected subgroup's supersets
-    const newAvgFutureWorkloadValues = selectedSubgroup.subgroup.futureStats.filter(
-      (avg) => avg.exerciseId !== exerciseId
-    );
+    const newAvgFutureWorkloadValues =
+      selectedSubgroup.subgroup.futureStats.filter(
+        (avg) => avg.exerciseId !== exerciseId
+      );
     const updatedSubgroup: Subgroup = {
       ...selectedSubgroup.subgroup,
       supersets: updatedSupersets,
@@ -1102,6 +1104,9 @@ export function prepareGroupAvgWorkloadsForChart(
       if (w.exerciseId === exerciseId && w.numMembers > 0) {
         totalNumMembers += w.numMembers;
         for (let j = 0; j < w.numMembers; j++) futureData.push(w);
+      } else if (w.numMembers === 0 && futureData.length === 0) {
+        futureData.push(w);
+        continue;
       }
     }
 
@@ -1118,6 +1123,8 @@ export function prepareGroupAvgWorkloadsForChart(
         }
       });
     });
+
+    if (totalNumMembers === 0) totalNumMembers = 1;
 
     const avgIntensity =
       futureData.reduce((acc, val) => acc + val.intensity, 0) / totalNumMembers;

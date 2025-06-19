@@ -218,6 +218,8 @@ export class UserService {
   }
 
   async getRecentWellness(userIds: string[]): Promise<Wellness[]> {
+    if(!userIds.length) return [];
+    
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.USER_META)
       .where('userId', 'in', userIds)

@@ -142,64 +142,50 @@ export class TrainingPlanService {
   }
 
   /**
-   * @param training - Existing training in database
+   * @param futureStats - FutureStats of existing training in database
    * @param exercises - New completed exercises values from athlete
-   * @param rootComponentId - Root component ID for exercises
    */
-  calculateTrainingStats(
-    trainingStats: GroupWorkloadStats[],
-    exercises: TrainingExercise[],
-    rootComponentId: string,
-  ) {
-    const finalStats: GroupWorkloadStats[] = [];
+  calculateFutureTrainingStats(futureStats: GroupWorkloadStats[], exercises: TrainingExercise[]) {
+    for (const exercise of exercises) {
+      const avgFutureStats = futureStats.find(
+        (avg) => avg.exerciseId === exercise.id,
+      );
 
-    for (const e of exercises) {
-      // completed exercises
-      let volume = 0;
-      let intensity = 0;
+      if (!avgFutureStats) continue;
 
-      for (const set of e.sets) {
-        // currently stats only for left side
-        const { volWork1Value, intWork1Value } =
-          this.workloadService.parseActualParamValues(set.paramValuesL);
+      const intensitiesL = exercise.sets
+        .flatMap((set) => set.paramValuesL)
+        .filter((p) => p.field === ParamType.IntWork1);
+      const intensitiesR = exercise.sets
+        .flatMap((set) => set.paramValuesR)
+        .filter((p) => p.field === ParamType.IntWork1);
 
-        if (volWork1Value && intWork1Value) {
-          volume += volWork1Value;
-          intensity += intWork1Value;
-        }
-      }
+      const avgIntensity =
+        (intensitiesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+          intensitiesL.length +
+          intensitiesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+            intensitiesR.length) /
+        2;
 
-      if (intensity === 0 || volume === 0) continue;
+      const volumesL = exercise.sets
+        .flatMap((set) => set.paramValuesL)
+        .filter((p) => p.field === ParamType.VolWork1);
+      const volumesR = exercise.sets
+        .flatMap((set) => set.paramValuesR)
+        .filter((p) => p.field === ParamType.VolWork1);
 
-      volume = volume / e.sets.length;
-      intensity = intensity / e.sets.length;
+      const avgVolume =
+        (volumesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+          volumesL.length +
+          volumesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
+            volumesR.length) /
+        2;
 
-      let stats = trainingStats.find((w) => w.exerciseId === e.id);
-
-      if (!stats) {
-        stats = {
-          exerciseId: e.id,
-          rootComponentId,
-          numMembers: 1,
-          volume,
-          intensity,
-        };
-
-        // we can optimize the training object here by removing the entry with the same exerciseId from avgFutureWorkloadValues if needed
-      } else {
-        stats.numMembers++;
-        stats.volume =
-          (stats.volume * (stats.numMembers - 1) + volume) / stats.numMembers;
-
-        stats.intensity =
-          (stats.intensity * (stats.numMembers - 1) + intensity) /
-          stats.numMembers;
-      }
-
-      finalStats.push(stats);
+      avgFutureStats.intensity = avgIntensity;
+      avgFutureStats.volume = avgVolume;
     }
 
-    return finalStats;
+    return futureStats;
   }
 
   isTrainingCompleted(userId: string, trainingComponents: TrainingComponent[]) {
