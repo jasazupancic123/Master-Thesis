@@ -5,6 +5,7 @@ import { useMediaQuery } from '@mui/material';
 import React, { createContext, useContext } from 'react';
 
 interface ScreenSizeContextType {
+  isGigaSmall: boolean;
   isUltraSmall: boolean;
   isReallySmall: boolean;
   isMobile: boolean;
@@ -21,6 +22,7 @@ const ScreenSizeContext = createContext<ScreenSizeContextType | undefined>(
 );
 
 export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
+  const isGigaSmall = useMediaQuery('(max-width:275px)');
   const isUltraSmall = useMediaQuery('(max-width:330px)');
   const isReallySmall = useMediaQuery('(max-width:360px)');
   const isSmallHeight = useMediaQuery('(max-height:600px)');
@@ -41,6 +43,7 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
   return (
     <ScreenSizeContext.Provider
       value={{
+        isGigaSmall,
         isUltraSmall,
         isReallySmall,
         isMobile,
