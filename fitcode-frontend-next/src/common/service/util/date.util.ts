@@ -1,4 +1,6 @@
 import dayjs, { Dayjs } from 'dayjs';
+import { Day as DayDateFns, startOfWeek } from 'date-fns';
+import { getWeekStartByLocale } from 'weekstart';
 
 export type Day = {
   label: string;
@@ -36,8 +38,17 @@ export class DateUtil {
 
   getWeekDays(day = dayjs()): Day[] {
     // start from monday
-    let start = day.startOf('week').add(1, 'day');
-    let end = day.endOf('week').add(1, 'day');
+    const weekStart = startOfWeek(day.toDate(), {
+      weekStartsOn: this.getWeekStartsOn(),
+    });
+    const weekEnd = startOfWeek(day.toDate(), {
+      weekStartsOn: this.getWeekEndsOn(),
+    });
+
+    let start = dayjs(weekStart);
+    let end = dayjs(weekEnd).isSame(this.getWeekEndDate(dayjs()), 'day')
+      ? dayjs(weekEnd).endOf('day')
+      : dayjs(weekEnd).add(7, 'day').endOf('day');
 
     // if today is sunday, subtract 6 days
     if (day.day() === 0) {
@@ -47,6 +58,7 @@ export class DateUtil {
 
     const days: Day[] = [];
     let date = start;
+
     while (date.isBefore(end)) {
       days.push({ label: date.format('ddd'), date });
       date = date.add(1, 'day');
@@ -60,5 +72,30 @@ export class DateUtil {
       label: dayjs().format('ddd'),
       date: dayjs(),
     };
+  }
+
+  getWeekStartsOn(): DayDateFns {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+
+    const weekStart = getWeekStartByLocale(locale);
+    return weekStart;
+  }
+
+  getWeekEndsOn(): DayDateFns {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+
+    const weekStart = getWeekStartByLocale(locale);
+    return weekStart === 0 ? 6 : ((weekStart - 1) as DayDateFns); // If week starts on Sunday, end on Saturday, otherwise end on the day before the start
+  }
+
+  private getWeekEndDate(date: Dayjs): Dayjs {
+    const weekEnd = this.getWeekEndsOn();
+    const dayOfWeek = date.day();
+
+    // Calculate the difference to the end of the week
+    const diff = (weekEnd - dayOfWeek + 7) % 7;
+
+    // Add the difference to the current date
+    return date.add(diff, 'day').endOf('day');
   }
 }
