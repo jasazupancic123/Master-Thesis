@@ -14,6 +14,9 @@ import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { createTrainerUserAndToken } from '../utils/auth.util';
 import { generateAttributeStub } from '../../src/attribute/mock/attribute.stub';
 import { Attribute } from '../../src/attribute/entity/attribute.entity';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { createInstitution } from '../utils/data.util';
+import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Update Exercise (e2e)', () => {
   let app: INestApplication;
@@ -25,6 +28,7 @@ describe('Update Exercise (e2e)', () => {
   let attribute: Attribute;
   let exercise: Exercise;
   let component: Component;
+  let institution: Institution;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -39,13 +43,16 @@ describe('Update Exercise (e2e)', () => {
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
 
+    const institutionService = moduleFixture.get(InstitutionService);
+    institution = await createInstitution(institutionService);
+
     attribute = await attributeService.create(generateAttributeStub());
     component = await componentService.create(
       generateComponentStub({ attributes: [attribute.field] }),
     );
 
     exercise = await exerciseService.create(
-      trainer,
+      global.manager,
       generateExerciseStub({ componentIds: [component.id] }),
     );
   });
@@ -56,7 +63,7 @@ describe('Update Exercise (e2e)', () => {
   });
 
   describe('Update Exercise', () => {
-    it('should update an exercise successfully', async () => {
+    it('should update an exercise successfully if user is owner', async () => {
       const updateData = {
         name: 'Updated Exercise Name',
         attributeValues: [{ field: attribute.field, value: 'test' }],
@@ -64,7 +71,7 @@ describe('Update Exercise (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
         .send(updateData);
 
       expect(response.status).toBe(200);
@@ -74,7 +81,30 @@ describe('Update Exercise (e2e)', () => {
           field: attribute.field,
           value: 'test',
           exerciseId: exercise.id,
-          ownerId: trainer.uid,
+          ownerId: institution.id,
+        },
+      ]);
+    });
+
+    it('should update an exercise successfully if user is trainer in the same institution', async () => {
+      const updateData = {
+        name: 'Updated Exercise Name',
+        attributeValues: [{ field: attribute.field, value: 'test' }],
+      };
+
+      const response = await request(app.getHttpServer())
+        .patch(`/exercise/${exercise.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send(updateData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.name).toBe(updateData.name);
+      expect(response.body.attributeValues).toEqual([
+        {
+          field: attribute.field,
+          value: 'test',
+          exerciseId: exercise.id,
+          ownerId: institution.id,
         },
       ]);
     });
@@ -84,7 +114,7 @@ describe('Update Exercise (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
         .send(updateData);
 
       expect(response.status).toBe(400);
@@ -110,7 +140,7 @@ describe('Update Exercise (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .patch('/exercise/non-existent-id')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
         .send(updateData);
 
       expect(response.status).toBe(404);
@@ -121,7 +151,7 @@ describe('Update Exercise (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.manager.token}`)
         .send({ attributeValues: invalidAttributes });
 
       expect(response.status).toBe(200);
@@ -140,7 +170,7 @@ describe('Update Exercise (e2e)', () => {
     it('should delete an exercise successfully', async () => {
       const response = await request(app.getHttpServer())
         .delete(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`);
+        .set('Authorization', `Bearer ${global.manager.token}`);
 
       expect(response.status).toBe(200);
     });
@@ -157,7 +187,7 @@ describe('Update Exercise (e2e)', () => {
     it('should fail if exercise does not exist', async () => {
       const response = await request(app.getHttpServer())
         .delete('/exercise/non-existent-id')
-        .set('Authorization', `Bearer ${trainer.token}`);
+        .set('Authorization', `Bearer ${global.manager.token}`);
 
       expect(response.status).toBe(404);
     });

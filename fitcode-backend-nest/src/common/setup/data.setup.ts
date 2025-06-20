@@ -18,6 +18,7 @@ import { AttributeService } from '../../attribute/service/attribute.service';
 import { MethodService } from '../../method/service/method.service';
 import { Method } from '../../method/entity/method.entity';
 import { InstitutionService } from '../../institution/service/institution.service';
+import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
@@ -54,7 +55,7 @@ export class DataSetup extends BaseSetup {
       email: 'manager@mail.com',
       password: 'password',
       displayName: 'Manager',
-      customClaims: { role: [UserRole.MANAGER] },
+      customClaims: { role: [UserRole.INSTITUTION] },
     });
 
     this.trainer = await this.userService.upsert({
@@ -91,6 +92,10 @@ export class DataSetup extends BaseSetup {
     await this.firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
     await this.firebaseService.deleteCollection(FirestoreCollection.USER);
     await this.firebaseService.deleteCollection(FirestoreCollection.METHOD);
+    await this.firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+    await this.firebaseService.deleteCollection(
+      FirestoreCollection.INSTITUTION,
+    );
   }
 
   private async importAttributes(filename: string) {
@@ -129,7 +134,10 @@ export class DataSetup extends BaseSetup {
     const data: Omit<Exercise, 'id' | 'ownerId' | 'attributes'>[] =
       JSON.parse(file);
 
-    await exerciseService.createMany(this.admin, data);
+    await exerciseService.createMany(
+      this.admin,
+      data.map((d) => ({ ...d, ownerId: GLOBAL_EXERCISE_OWNER })),
+    );
   }
 
   private async importUsers(filename: string) {
@@ -196,10 +204,28 @@ export class DataSetup extends BaseSetup {
     const institution = await institutionService.create(this.admin, {
       name: 'Nk Maribor',
       ownerId: this.manager.uid,
-      athleteIds: athletes.map((u) => u.uid),
-      trainerIds: [this.trainer.uid],
       imageUrl: 'https://img.sofascore.com/api/v1/team/2420/image',
     });
+
+    await institutionService.updateMembers(
+      this.admin,
+      { institutionId: institution.id },
+      {
+        add: true,
+        memberIds: athletes.map((u) => u.uid),
+        trainers: false,
+      },
+    );
+
+    await institutionService.updateMembers(
+      this.admin,
+      { institutionId: institution.id },
+      {
+        add: true,
+        memberIds: [this.trainer.uid],
+        trainers: true,
+      },
+    );
 
     // import groups
     const groupIds = [];
@@ -223,13 +249,6 @@ export class DataSetup extends BaseSetup {
           this.trainer.uid,
         );
     }
-
-    institution.groupIds = groupIds;
-    await institutionService.update(
-      this.manager,
-      { institutionId: institution.id },
-      { groupIds: institution.groupIds },
-    );
   }
 
   private async isInit() {

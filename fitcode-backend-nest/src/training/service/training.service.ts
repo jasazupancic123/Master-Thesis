@@ -51,89 +51,77 @@ import { CopyComponentDto } from '../dto/copy-component.dto';
 import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
-import { InstitutionService } from 'src/institution/service/institution.service';
+import { Permission } from '../../common/interface/permission.interface';
+import { Institution } from '../../institution/entity/institution.entity';
+import { InstitutionService } from '../../institution/service/institution.service';
 
 @Injectable()
-export class TrainingService {
+export class TrainingService implements Permission<Training, Institution> {
   private logger = new Logger(TrainingService.name);
 
   constructor(
     private readonly firebaseService: FirebaseService,
     private readonly cacheManagerService: CacheManagerService,
     private readonly commonService: CommonService,
+    private readonly userService: UserService,
     private readonly periodizationService: PeriodizationService,
     private readonly trainingRepository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
     private readonly workloadService: WorkloadService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: Wrapper<UserService>,
+    @Inject(forwardRef(() => InstitutionService))
+    private readonly institutionService: Wrapper<InstitutionService>,
   ) {}
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
     return query(this.trainingRepository.collection()).get();
   }
 
-  async getDocsByGroup(groupId: string): Promise<Training[]> {
+  async getDocsByGroup(groupId: string) {
     return this.trainingRepository
       .collection()
       .where('groupId', '==', groupId)
       .orderBy('from', 'asc')
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Training>,
-          ),
-        ),
-      );
+      .get();
   }
 
-  async findOne(user: User, ref: TrainingRef): Promise<Training | null> {
+  async findOneById(user: User, ref: TrainingRef): Promise<Training | null> {
     // find training
     const training = await this.trainingRepository.getDoc(ref.trainingId);
     if (!training || training.deletedAt) return null;
 
-    // authorize user
-    if (!this.isAuthorized(user, training))
-      throw new UnauthorizedException(
-        'You are not authorized to view this training',
-      );
+    const institution = await this.institutionService.getDoc({
+      institutionId: training.institutionId,
+    });
 
+    this.validateCanView(user, training, institution);
     return training;
   }
 
-  async findOneOrFail(user: User, ref: TrainingRef): Promise<Training> {
-    const training = await this.findOne(user, ref);
+  async findOneByIdOrFail(user: User, ref: TrainingRef): Promise<Training> {
+    const training = await this.findOneById(user, ref);
     if (!training) throw new BadRequestException('Training not found');
     return training;
   }
 
   async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
-    const dbUser = await this.userService.findOne(user.uid);
-
     const from = filter?.from ? filter.from : undefined;
     const to = filter?.to ? filter.to : undefined;
 
     let trainings = await this.trainingRepository.getDocs((q) => {
       // filter by date
       // TODO - does not work yet
-      // if (from && to) q.where('from', '>=', from).where('from', '<', to);
+      if (from && to) q = q.where('from', '>=', from).where('from', '<', to);
 
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
-        this.firebaseService.isManager(user)
+        this.firebaseService.isInstitution(user)
       )
         q = q.where('ownerId', '==', user.uid);
-      else if (this.firebaseService.isAthlete(user)) {
-        if (dbUser?.groupsIds?.length === 0) return q;
-        else
-          q = q
-            .where('groupId', 'in', dbUser.groupsIds)
-            .where('membersIds', 'array-contains', user.uid);
-      }
+      else if (this.firebaseService.isAthlete(user))
+        q = q.where('membersIds', 'array-contains', user.uid);
 
       // filter by other params
       if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
@@ -143,10 +131,10 @@ export class TrainingService {
       return q;
     });
 
-    if (from && to)
+    /* if (from && to)
       trainings = trainings.filter((t) =>
         this.commonService.date.isBetween(t.from, from, to),
-      );
+      ); */
 
     return trainings;
   }
@@ -166,7 +154,7 @@ export class TrainingService {
     const endOfDayDate = endOfDay(day);
 
     // validate group
-    await this.groupService.findByIdOrFail(user, { groupId });
+    await this.groupService.findOneByIdOrFail(user, ref);
 
     // find trainings
     const trainings = await this.trainingRepository.getDocs((q) => {
@@ -186,7 +174,7 @@ export class TrainingService {
     const { trainingId, componentId } = ref;
     this.logger.log(`User ${user.uid} is getting training ${trainingId}`);
 
-    const training = await this.findOneOrFail(user, { trainingId });
+    const training = await this.findOneByIdOrFail(user, { trainingId });
 
     const component = [
       training.warmup,
@@ -336,15 +324,18 @@ export class TrainingService {
 
     // const { training: input, copyFromTrainingId, date } = input;
     const { groupId, cycleId } = input;
-
-    // validate parent references
-    const group = await this.groupService.findByIdOrFail(user, { groupId });
-    const cycle = this.groupService.findCycleOrFail(cycleId, group);
     const { from, to } = this.getFromAndToDates(input.components);
 
-    this.validateOwner(user.uid, group);
-    this.checkTrainingIsInCycle(from, cycle);
-    this.validateIsTrainingInFuture(from);
+    // validate parent references
+    const group = await this.groupService.findOneByIdOrFail(user, { groupId });
+    const cycle = this.groupService.findCycleOrFail(cycleId, group);
+    const institution = await this.institutionService.getDoc({
+      institutionId: group.institutionId,
+    });
+
+    this.validateCanAdd(user, institution);
+    this.validateIsDateInCycle(from, cycle);
+    this.validateIsDateInFuture(from);
     await this.validateOverlap(from, to, group.id, cycle.id);
 
     // warmup and cooldown components
@@ -460,7 +451,7 @@ export class TrainingService {
 
     this.trainingPlanService.checkPeriodizationType(periodizationType);
 
-    const baseTraining = await this.findOneOrFail(user, {
+    const baseTraining = await this.findOneByIdOrFail(user, {
       trainingId: baseTrainingId,
     });
 
@@ -591,12 +582,16 @@ export class TrainingService {
     );
 
     // validate training
-    const training = await this.findOneOrFail(user, ref);
-    const { groupId, cycleId } = training;
+    const training = await this.findOneByIdOrFail(user, ref);
+    const { groupId, cycleId, institutionId } = training;
 
-    const group = await this.groupService.findByIdOrFail(user, { groupId });
+    const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    this.validateOwner(user.uid, training);
+    const institution = await this.institutionService.getDoc({
+      institutionId,
+    });
+
+    this.validateCanEdit(user, training, institution);
 
     // if no components, delete training
     if (input.components.length === 0) {
@@ -608,8 +603,8 @@ export class TrainingService {
     }
 
     const { from, to } = this.getFromAndToDates(input.components);
-    this.checkTrainingIsInCycle(from, cycle);
-    this.validateIsTrainingInFuture(from);
+    this.validateIsDateInCycle(from, cycle);
+    this.validateIsDateInFuture(from);
     await this.validateOverlap(from, to, groupId, cycleId, training.id);
 
     // validate components & exercises
@@ -617,7 +612,7 @@ export class TrainingService {
     const components = await this.cacheManagerService.getComponents();
     const methods = await this.cacheManagerService.getMethods();
     const membersIds = input.membersIds || training.membersIds;
-    await this.validateTrainingMembers(membersIds);
+    await this.userService.findAllOrFail({ ids: membersIds });
 
     const exercises = await this.trainingPlanService.findAllTrainingExercises(
       user,
@@ -682,16 +677,22 @@ export class TrainingService {
     );
 
     const { groupId, cycleId } = ref;
-    const group = await this.groupService.findByIdOrFail(user, { groupId });
+    const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    this.validateOwner(user.uid, group);
+    const institution = await this.institutionService.getDoc({
+      institutionId: group.institutionId,
+    });
 
+    this.validateCanEdit(user, { ownerId: user.uid } as Training, institution);
     const methods = await this.cacheManagerService.getMethods();
-
     const updated = [] as Training[];
+
     for (const data of input) {
       // validate training
-      const training = await this.findOneOrFail(user, { trainingId: data.id });
+      const training = await this.findOneByIdOrFail(user, {
+        trainingId: data.id,
+      });
+
       const flatTrainingIds = customAthleteWorkloads.flatMap(
         (cw) => cw.trainingId,
       );
@@ -703,15 +704,15 @@ export class TrainingService {
         : [];
 
       const { from, to } = this.getFromAndToDates(data.components);
-      this.checkTrainingIsInCycle(from, cycle);
-      this.validateIsTrainingInFuture(from);
+      this.validateIsDateInCycle(from, cycle);
+      this.validateIsDateInFuture(from);
       await this.validateOverlap(from, to, groupId, cycleId, training.id);
 
       // validate components & exercises
       const attributes = await this.cacheManagerService.getAttributes();
       const components = await this.cacheManagerService.getComponents();
       const membersIds = data.membersIds || training.membersIds;
-      await this.validateTrainingMembers(membersIds);
+      await this.userService.findAllOrFail({ ids: membersIds });
 
       const exercises = await this.trainingPlanService.findAllTrainingExercises(
         user,
@@ -800,9 +801,9 @@ export class TrainingService {
       `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
-    const training = await this.findOneOrFail(user, ref);
+    const training = await this.findOneByIdOrFail(user, ref);
     const { groupId, cycleId } = training;
-    const group = await this.groupService.findByIdOrFail(user, { groupId });
+    const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
 
     const wellness = await this.userService.getRecentWellness(
@@ -896,8 +897,8 @@ export class TrainingService {
     };
 
     // for future trainings, update latest meta and calculate workloads
-    this.checkTrainingIsInCycle(input.from, cycle);
-    this.validateIsTrainingInFuture(input.from);
+    this.validateIsDateInCycle(input.from, cycle);
+    this.validateIsDateInFuture(input.from);
     await this.validateOverlap(
       copiedTraining.from,
       copiedTraining.components[copiedTraining.components.length - 1].from,
@@ -962,7 +963,7 @@ export class TrainingService {
     const copyFromRef: TrainingRef = { trainingId: copyFromTrainingId };
     const copyToRef: TrainingRef = { trainingId: copyToTrainingId };
 
-    const trainingFrom = await this.findOneOrFail(user, copyFromRef);
+    const trainingFrom = await this.findOneByIdOrFail(user, copyFromRef);
 
     const trainingComponent = trainingFrom.components.find(
       (c) => c.id === componentId,
@@ -972,7 +973,7 @@ export class TrainingService {
       throw new BadRequestException('Component not found in training');
 
     const trainingTo = copyToRef.trainingId
-      ? await this.findOne(user, copyToRef)
+      ? await this.findOneById(user, copyToRef)
       : undefined;
     if (!trainingTo) {
       // create a new training if it does not exist with the copied component
@@ -1053,9 +1054,13 @@ export class TrainingService {
   async remove(user: User, ref: TrainingRef): Promise<void> {
     this.logger.log(`User ${user.uid} is removing training ${ref.trainingId}`);
 
-    const training = await this.findOneOrFail(user, ref);
-    this.validateOwner(user.uid, training);
-    this.validateIsTrainingInFuture(training.from);
+    const training = await this.findOneByIdOrFail(user, ref);
+    const institution = await this.institutionService.getDoc({
+      institutionId: training.institutionId,
+    });
+
+    this.validateCanEdit(user, training, institution);
+    this.validateIsDateInFuture(training.from);
 
     const notStartedWorkloads = await this.workloadService.findAllByTraining(
       ref.trainingId,
@@ -1064,7 +1069,6 @@ export class TrainingService {
 
     // delete non started workloads
     await this.workloadService.deleteWorkloads(notStartedWorkloads);
-
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
@@ -1079,7 +1083,7 @@ export class TrainingService {
 
     // find refs
     const { trainingId, componentId } = ref;
-    const training = await this.findOneOrFail(user, ref);
+    const training = await this.findOneByIdOrFail(user, ref);
     const workloads = await this.workloadService.findAllByRef({
       userId: user.uid,
       trainingId,
@@ -1168,12 +1172,15 @@ export class TrainingService {
     );
 
     // validate ownership
-    const training = await this.findOneOrFail(user, ref);
-    this.validateOwner(user.uid, training);
-    this.validateIsTrainingInFuture(training.from);
+    const training = await this.findOneByIdOrFail(user, ref);
+    const institution = await this.institutionService.getDoc({
+      institutionId: training.institutionId,
+    });
+
+    this.validateCanEdit(user, training, institution);
+    this.validateIsDateInFuture(training.from);
 
     // validate components & exercises
-    const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
     const methods = await this.cacheManagerService.getMethods();
     const trainingComponents = [...training.components, ...input];
@@ -1215,13 +1222,18 @@ export class TrainingService {
     );
 
     // validate ownership
-    const training = await this.findOneOrFail(user, ref);
-    this.validateOwner(user.uid, training);
-    this.validateIsTrainingInFuture(training.from);
+    const training = await this.findOneByIdOrFail(user, ref);
+    const institution = await this.institutionService.getDoc({
+      institutionId: training.institutionId,
+    });
+
+    this.validateCanEdit(user, training, institution);
+    this.validateIsDateInFuture(training.from);
 
     const filtered = training.components.filter(
       (c) => c.id !== ref.componentId,
     );
+
     if (filtered.length > 0)
       this.trainingPlanService.updateWarmupAndCooldownTimes(
         training.warmup,
@@ -1287,40 +1299,93 @@ export class TrainingService {
       throw new BadRequestException('Training overlaps with other training');
   }
 
-  private async validateTrainingMembers(membersIds: string[]) {
-    const users = await this.firebaseService.authUsers({ ids: membersIds });
-    if (users.length !== membersIds.length)
-      throw new BadRequestException('Some members do not exist');
-  }
-
-  private isAuthorized(user: User, training: Training): boolean {
-    return (
-      training.ownerId === user.uid || training.membersIds.includes(user.uid)
-    );
-  }
-
-  private checkTrainingIsInCycle(from: Date, cycle: Cycle) {
+  private validateIsDateInCycle(from: Date, cycle: Cycle) {
     if (!this.commonService.date.isBetween(from, cycle.from, cycle.to))
       throw new BadRequestException(
         'Training falls outside of the selected cycle',
       );
   }
 
-  private validateOwner(userId: string, groupOrTraining: Group | Training) {
-    if (!this.groupService.isOwner(userId, groupOrTraining))
-      throw new UnauthorizedException(
-        'You are not authorized to perform this action',
-      );
-  }
-
-  private isInPast(date: Date, relativeDate = new Date()) {
-    return isBefore(date, relativeDate);
-  }
-
-  private validateIsTrainingInFuture(from: Date, relativeDate = new Date()) {
+  private validateIsDateInFuture(
+    from: Date,
+    relativeDate = startOfDay(new Date()),
+  ) {
     if (this.isInPast(from, relativeDate))
       throw new BadRequestException(
         'You cannot add or update trainings in the past',
       );
+  }
+
+  private isInPast(date: Date, relativeDate = startOfDay(new Date())) {
+    return isBefore(date, relativeDate);
+  }
+
+  validateCanView(user: User, training: Training, institution?: Institution) {
+    if (!this.canView(user, training, institution))
+      throw new UnauthorizedException('You cannot view this training');
+  }
+
+  validateCanEdit(user: User, training: Training, institution?: Institution) {
+    if (!this.canEdit(user, training, institution))
+      throw new UnauthorizedException('You cannot edit this training');
+  }
+
+  validateCanAdd(user: User, institution?: Institution) {
+    if (!this.canAdd(user, institution))
+      throw new UnauthorizedException('You cannot add training');
+  }
+
+  canView(user: User, training: Training, institution?: Institution) {
+    if (training.ownerId === user.uid) return true;
+    if (training.membersIds.includes(user.uid)) return true;
+
+    if (institution) {
+      if (institution.ownerId === user.uid) return true;
+      if (institution.trainerIds.includes(user.uid)) return true;
+      if (institution.athleteIds.includes(user.uid)) return true;
+    }
+
+    return false;
+  }
+
+  canEdit(user: User, training: Training, institution?: Institution) {
+    if (this.firebaseService.isTrainer(user) && training.ownerId === user.uid)
+      return true;
+
+    if (institution) {
+      if (
+        this.firebaseService.isInstitution(user) &&
+        institution.ownerId === user.uid
+      )
+        return true;
+
+      if (
+        this.firebaseService.isTrainer(user) &&
+        institution.trainerIds.includes(user.uid)
+      )
+        return true;
+    }
+
+    return false;
+  }
+
+  canAdd(user: User, institution?: Institution) {
+    if (this.firebaseService.isTrainer(user)) return true;
+
+    if (institution) {
+      if (
+        this.firebaseService.isInstitution(user) &&
+        institution.ownerId === user.uid
+      )
+        return true;
+
+      if (
+        this.firebaseService.isTrainer(user) &&
+        institution.trainerIds.includes(user.uid)
+      )
+        return true;
+    }
+
+    return false;
   }
 }

@@ -57,7 +57,7 @@ describe('Get Trainings (e2e)', () => {
 
     component = await componentService.create(generateComponentStub());
     group = await groupService.create(
-      manager,
+      global.manager,
       generateGroupStub({
         membersIds: [athlete.uid],
         ownerId: trainer.uid,

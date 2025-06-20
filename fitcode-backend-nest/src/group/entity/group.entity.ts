@@ -11,26 +11,26 @@ import { Cycle } from './cycle.entity';
 
 export class Group extends BaseEntity {
   @IsString()
+  @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  name: string;
+  institutionId: string; // institution id
 
   @IsString()
   @ApiProperty()
   @Expose()
-  ownerId: string; // owner of the group
+  ownerId: string; // owner of the group (trainer, added by manager)
+
+  @IsString()
+  @ApiProperty()
+  @Expose()
+  name: string;
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @ApiProperty()
   @Expose()
-  membersIds: string[]; // all members of the group 
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  institutionId: string; // institution id
+  membersIds: string[]; // all members of the group
 
   @ValidateNested({ each: true })
   @Type(() => Cycle)

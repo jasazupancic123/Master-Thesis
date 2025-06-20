@@ -37,21 +37,6 @@ describe('Update Training (e2e)', () => {
   let component: Component;
   let training: Training;
 
-  async function createTraining(data?: Partial<Training>) {
-    const from = data?.from || getTime(addDays(new Date(), 2), 8, 0); // defaults to 8:00 two days ahead
-    const to = data?.to || addMinutes(from, 60); // defaults to 9:00 two days ahead
-
-    return await trainingService.create(
-      trainer,
-      generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [generateTrainingComponent({ id: component.id, from, to })],
-        ...(data ? data : {}),
-      }),
-    );
-  }
-
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -92,6 +77,21 @@ describe('Update Training (e2e)', () => {
     await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     await app.close();
   });
+
+  async function createTraining(data?: Partial<Training>) {
+    const from = data?.from || getTime(addDays(new Date(), 2), 8, 0); // defaults to 8:00 two days ahead
+    const to = data?.to || addMinutes(from, 60); // defaults to 9:00 two days ahead
+
+    return await trainingService.create(
+      trainer,
+      generateTrainingStub({
+        groupId: group.id,
+        cycleId: group.cycles[1].id,
+        components: [generateTrainingComponent({ id: component.id, from, to })],
+        ...(data ? data : {}),
+      }),
+    );
+  }
 
   describe('Update training', () => {
     it('should fail to update training if training id not found', async () => {

@@ -25,11 +25,11 @@ import { MethodModule } from './method/method.module';
     AttributeModule,
     UserModule,
     ComponentModule,
+    MethodModule,
+    InstitutionModule,
     ExerciseModule,
     GroupModule,
     TrainingModule,
-    InstitutionModule,
-    MethodModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -38,7 +38,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(FirebaseMiddleware)
-      .exclude('/', '/component', '/attribute')
+      .exclude('/', '/component', '/attribute', '/clear-cache')
       .forRoutes('*');
   }
 }

@@ -7,13 +7,10 @@ import { TestUser } from './type/auth.type';
 import {
   createAdminUserAndToken,
   createAthleteUserAndToken,
-  createManagerUserAndToken,
+  createInstitutionUserAndToken,
   createTrainerUserAndToken,
 } from './utils/auth.util';
 import { config } from 'dotenv';
-import { UserService } from '../src/user/user.service';
-import { UserRepository } from '../src/user/repository/user.repository';
-import { WellnessRepository } from '../src/user/repository/user-meta.repository';
 
 declare global {
   var athlete: TestUser;
@@ -36,16 +33,8 @@ export default async function () {
     firebaseAdminClient,
   );
 
-  const userRepository = new UserRepository(commonService, firebaseService);
-  const userService = new UserService(
-    configService,
-    firebaseService,
-    userRepository,
-    new WellnessRepository(commonService, userRepository),
-  );
-
   global.athlete = await createAthleteUserAndToken(firebaseService);
   global.trainer = await createTrainerUserAndToken(firebaseService);
-  global.manager = await createManagerUserAndToken(firebaseService);
+  global.manager = await createInstitutionUserAndToken(firebaseService);
   global.admin = await createAdminUserAndToken(firebaseService);
 }

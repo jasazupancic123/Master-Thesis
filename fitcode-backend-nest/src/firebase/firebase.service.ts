@@ -116,8 +116,8 @@ export class FirebaseService implements OnApplicationBootstrap {
     return this.checkRole(user, UserRole.ADMIN);
   }
 
-  isManager(user: User | DecodedUser): boolean {
-    return this.checkRole(user, UserRole.MANAGER);
+  isInstitution(user: User | DecodedUser): boolean {
+    return this.checkRole(user, UserRole.INSTITUTION);
   }
 
   isTrainer(user: User | DecodedUser): boolean {
@@ -174,9 +174,9 @@ export class FirebaseService implements OnApplicationBootstrap {
     );
   }
 
-  private checkRole(user: User | DecodedUser, role: UserRole): boolean {
-    if (isUser(user)) return user.customClaims.role.includes(role);
-    return user.role.includes(role);
+  checkRole(user: User | DecodedUser, role: UserRole): boolean {
+    if (isUser(user)) return user?.customClaims?.role?.includes(role);
+    return user?.role?.includes(role);
   }
 
   private cleanUser(user: User): Partial<User> {

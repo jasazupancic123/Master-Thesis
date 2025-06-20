@@ -888,17 +888,17 @@
         {
           "field":"end-opt-2",
           "name":"Option 2",
-          "type":"value"
+          "type":"boolean"
         },
         {
           "field":"end-opt-3",
           "name":"Option 3",
-          "type":"value"
+          "type":"boolean"
         },
         {
           "field":"end-opt-4",
           "name":"Option 4",
-          "type":"value"
+          "type":"boolean"
         }
       ]
     }

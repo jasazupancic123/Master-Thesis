@@ -3,9 +3,10 @@ import { GroupService } from '../../src/group/group.service';
 import { addWeeks, addDays, subDays, setMinutes, setHours } from 'date-fns';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { TestUser } from '../type/auth.type';
-import { InstitutionService } from '../../src/institution/service/institution.service';
 import { Institution } from '../../src/institution/entity/institution.entity';
-import { generateRandomName } from './random.util';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { User } from '../../src/common/type/firebase-auth.type';
+import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 
 /**
  * Creates a group and 3 cycles, one for the past week, one for the current week
@@ -60,17 +61,33 @@ export async function createGroupWithCycles(
   return group;
 }
 
-export function createInstitution(
+export async function createInstitution(
   institutionService: InstitutionService,
-  input: Partial<Institution>,
-) {
-  return institutionService.create(global.admin, {
-    name: input.name || generateRandomName(),
-    ownerId: input.ownerId || global.manager.uid,
-    trainerIds: input.trainerIds || [global.trainer.uid],
-    athleteIds: input.athleteIds || [global.athlete.uid],
-    imageUrl: input.imageUrl || null,
-  });
+  input?: Partial<Institution> & { owner: TestUser },
+): Promise<Institution> {
+  const owner = input?.owner || global.manager;
+  const ownerId = input?.ownerId || owner?.uid;
+  const athleteIds = input?.athleteIds || [global.athlete.uid];
+  const trainerIds = input?.trainerIds || [global.trainer.uid];
+
+  const institution = await institutionService.create(
+    global.admin,
+    generateInstitutionStub({ ...input, ownerId }),
+  );
+
+  await institutionService.updateMembers(
+    owner,
+    { institutionId: institution.id },
+    { add: true, trainers: false, memberIds: athleteIds },
+  );
+
+  await institutionService.updateMembers(
+    owner,
+    { institutionId: institution.id },
+    { add: true, trainers: true, memberIds: trainerIds },
+  );
+
+  return await institutionService.getDoc({ institutionId: institution.id })!;
 }
 
 export function getTime(date: Date, hours: number, minutes = 0) {

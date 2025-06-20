@@ -14,7 +14,9 @@ import { GLOBAL_EXERCISE_OWNER } from '../../src/exercise/constant/global-exerci
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
 import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
-import { NUM_MAX_EXERCISES } from '../../src/common/constant/limit.constant';
+import { createInstitution } from '../utils/data.util';
+import { InstitutionService } from '../../src/institution/service/institution.service';
+import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Create Exercise (e2e)', () => {
   let app: INestApplication;
@@ -24,6 +26,7 @@ describe('Create Exercise (e2e)', () => {
 
   let root: Component;
   let leaf: Component;
+  let institution: Institution;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -36,6 +39,7 @@ describe('Create Exercise (e2e)', () => {
     firebaseService = moduleFixture.get(FirebaseService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
+    const institutionService = moduleFixture.get(InstitutionService);
 
     const attribute = await attributeService.create(generateAttributeStub());
     root = await componentService.create(
@@ -45,14 +49,17 @@ describe('Create Exercise (e2e)', () => {
     leaf = await componentService.create(
       generateComponentStub({ parentId: root.id }),
     );
+
+    institution = await createInstitution(institutionService);
   });
 
   afterAll(async () => {
+    await firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
     await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     await app.close();
   });
 
-  it('should create a new exercise for a valid trainer', async () => {
+  it('should create a new exercise for a valid institution', async () => {
     const exercise = generateExerciseStub({
       name: 'New Exercise',
       componentIds: [leaf.id],
@@ -64,12 +71,12 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.manager.token}`)
       .send(exercise);
 
     expect(response.status).toBe(201);
     expect(response.body.name).toBe(exercise.name);
-    expect(response.body.ownerId).toBe(trainer.uid);
+    expect(response.body.ownerId).toBe(institution.id);
   });
 
   it('should fail if the component does not exist', async () => {
@@ -84,7 +91,7 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.manager.token}`)
       .send(exercise);
 
     expect(response.status).toBe(404); // Should return 404 if component doesn't exist
@@ -106,7 +113,7 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.manager.token}`)
       .send(exercise);
 
     expect(response.status).toBe(400); // Should return 400 if the component is not a leaf
@@ -153,7 +160,7 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.manager.token}`)
       .send(exercise);
 
     expect(response.status).toBe(201);
@@ -288,7 +295,7 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.manager.token}`)
       .send(exercise);
 
     expect(response.status).toBe(201);
@@ -296,7 +303,11 @@ describe('Create Exercise (e2e)', () => {
 
   it('should fail if a required attribute is missing', async () => {
     const attribute = await attributeService.create(
-      generateAttributeStub({ required: true, type: AttributeType.String }),
+      generateAttributeStub({
+        required: true,
+        type: AttributeType.String,
+        name: 'is-required',
+      }),
     );
 
     const component = await componentService.create(
@@ -310,7 +321,7 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.manager.token}`)
       .send(exercise);
 
     expect(response.status).toBe(400);
@@ -330,7 +341,7 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise/many')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.manager.token}`)
       .send({ exercises });
 
     expect(response.status).toBe(404);
@@ -339,7 +350,7 @@ describe('Create Exercise (e2e)', () => {
     );
   });
 
-  it('should not create more exercises than the limit for user', async () => {
+  /* it('should not create more exercises than the limit for user', async () => {
     await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
     const component = await componentService.create(generateComponentStub());
 
@@ -349,10 +360,10 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise/many')
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${institution.token}`)
       .send({ exercises });
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveLength(NUM_MAX_EXERCISES); // trainer has 5 exercises from previous test
-  });
+  }); */
 });

@@ -87,11 +87,16 @@ export class UserService {
   }
 
   async findAllOrFail(filter?: FilterUserQueryDto): Promise<User[]> {
-    const users = await this.findAll(filter);
+    let users = await this.findAll(filter);
     if (filter) {
       const length = filter.ids?.length || 0 + filter.emails?.length || 0;
       if (users.length !== length)
-        throw new BadRequestException('Some users not found');
+        throw new BadRequestException('Invalid members provided');
+
+      if (filter.role)
+        users = users.filter((u) =>
+          this.firebaseService.checkRole(u, filter.role),
+        );
     }
 
     return users;
@@ -111,13 +116,7 @@ export class UserService {
       if (user?.uid) await auth.setCustomUserClaims(user.uid, customClaims);
     }
 
-    await this.userRepository.addDoc({
-      id: user.uid,
-      groupsIds: [],
-      trainersIds: [],
-      institutionIds: [],
-    });
-
+    await this.userRepository.addDoc({ id: user.uid });
     return user?.uid ? ((await auth.getUser(user.uid)) as User) : null;
   }
 
@@ -171,16 +170,6 @@ export class UserService {
       displayName,
       password,
     });
-  }
-
-  addGroup(transaction: Transaction, userId: string, groupId: string) {
-    const docRef = this.userRepository.doc(userId);
-    transaction.update(docRef, { groupsIds: FieldValue.arrayUnion(groupId) });
-  }
-
-  removeGroup(transaction: Transaction, userId: string, groupId: string) {
-    const docRef = this.userRepository.doc(userId);
-    transaction.update(docRef, { groupsIds: FieldValue.arrayRemove(groupId) });
   }
 
   async getMeta(ref: WellnessRef): Promise<Wellness> {

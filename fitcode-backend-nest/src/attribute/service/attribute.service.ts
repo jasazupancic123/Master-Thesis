@@ -1,19 +1,32 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { AttributeRepository } from '../repository/attribute.repository';
 import { Attribute } from '../entity/attribute.entity';
 import { Create } from '../../common/type/entity.type';
 import { AttributeValue } from '../entity/attribute-value.entity';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
+import { CacheManagerService } from '../../cache-manager/cache-manager.service';
+import { Wrapper } from 'src/common/type/wrapper.type';
 
 @Injectable()
 export class AttributeService {
   private logger = new Logger(AttributeService.name);
 
-  constructor(private readonly repository: AttributeRepository) {}
+  constructor(
+    private readonly repository: AttributeRepository,
+    @Inject(forwardRef(() => CacheManagerService))
+    private readonly cacheManagerService: Wrapper<CacheManagerService>,
+  ) {}
 
   async create(data: Create<Attribute>): Promise<Attribute> {
     this.logger.debug(`Creating attribute with data ${JSON.stringify(data)}`);
     await this.repository.addDoc(data);
+    await this.cacheManagerService.clearAttributes();
     return data;
   }
 

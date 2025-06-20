@@ -14,7 +14,6 @@ export function generateInstitutionStub(
     ownerId: data?.ownerId || global.manager.uid,
     trainerIds: data?.trainerIds || [global.trainer.uid],
     athleteIds: data?.athleteIds || [global.athlete.uid],
-    groupIds: data?.groupIds || [],
     imageUrl: data?.imageUrl || null,
   };
 }

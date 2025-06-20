@@ -25,6 +25,14 @@ export class CacheManagerService {
     private readonly methodService: Wrapper<MethodService>,
   ) {}
 
+  async clear() {
+    await Promise.all([
+      this.clearAttributes(),
+      this.clearComponents(),
+      this.clearMethods(),
+    ]);
+  }
+
   async getComponents(): Promise<Component[]> {
     const cached = await this.cacheManager.get(CACHE_KEY_FLAT_COMPONENTS);
     if (!cached) {

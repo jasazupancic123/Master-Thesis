@@ -728,25 +728,25 @@
       {
         "name": "Aerobic Capacity",
         "slug": "aerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       },
       {
         "name": "Aerobic Power",
         "slug": "aerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       },
       {
         "name": "Anaerobic Capacity",
         "slug": "anaerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       },
       {
         "name": "Anaerobic Power",
         "slug": "anaerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       }
     ]

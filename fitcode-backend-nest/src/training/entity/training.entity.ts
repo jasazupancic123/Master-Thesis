@@ -15,15 +15,24 @@ import { GroupWorkloadStats } from './average-workload-values.entity';
 export class Training extends BaseEntity {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  groupId: string;
+  institutionId?: string;
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  cycleId: string;
+  groupId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  cycleId?: string;
 
   @IsString()
   @IsNotEmpty()

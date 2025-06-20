@@ -1,5 +1,6 @@
-import { PickType } from '@nestjs/mapped-types';
+import { IntersectionType, PickType } from '@nestjs/mapped-types';
 import { Method } from '../entity/method.entity';
+import { IdEntity } from 'src/common/entity/id.entity';
 
 export class CreateMethodDto extends PickType(Method, [
   'name',
@@ -12,14 +13,7 @@ export class CreateMethodDto extends PickType(Method, [
   'recovery',
 ]) {}
 
-export class CreateMethodWithIdDto extends PickType(Method, [
-  'id',
-  'name',
-  'targetId',
-  'ability',
-  'repetition',
-  'intensity',
-  'set',
-  'tempo',
-  'recovery',
-]) {}
+export class CreateMethodWithIdDto extends IntersectionType(
+  IdEntity,
+  CreateMethodDto,
+) {}
