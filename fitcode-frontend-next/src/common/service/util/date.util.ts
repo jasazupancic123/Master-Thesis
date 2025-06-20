@@ -50,6 +50,9 @@ export class DateUtil {
       ? dayjs(weekEnd).endOf('day')
       : dayjs(weekEnd).add(7, 'day').endOf('day');
 
+    if(end.isBefore(start))
+      end = end.add(7, 'day');
+
     // if today is sunday, subtract 6 days
     if (day.day() === 0) {
       start = start.subtract(7, 'day');
