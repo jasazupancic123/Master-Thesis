@@ -177,12 +177,6 @@ export default function GroupTrainerDayViewHeader(
             />
           </Box>
         </Box>
-        <Typography>
-          Selected day: {dayjs(day.date).format('DD-MMM-YY')}
-        </Typography>
-        <Typography>
-          Selected day to date: {dayjs(day.date.toDate()).format('DD-MMM-YY')}
-        </Typography>
 
         <Circles
           items={days}

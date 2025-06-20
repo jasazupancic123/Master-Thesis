@@ -1,6 +1,7 @@
 import dayjs, { Dayjs } from 'dayjs';
 import { Day as DayDateFns, startOfWeek } from 'date-fns';
 import { getWeekStartByLocale } from 'weekstart';
+import { toZonedTime } from 'date-fns-tz';
 
 export type Day = {
   label: string;
@@ -50,8 +51,7 @@ export class DateUtil {
       ? dayjs(weekEnd).endOf('day')
       : dayjs(weekEnd).add(7, 'day').endOf('day');
 
-    if(end.isBefore(start))
-      end = end.add(7, 'day');
+    if (end.isBefore(start)) end = end.add(7, 'day');
 
     // if today is sunday, subtract 6 days
     if (day.day() === 0) {
@@ -60,7 +60,7 @@ export class DateUtil {
     }
 
     const days: Day[] = [];
-    let date = start;
+    let date = dayjs(toZonedTime(start.toDate(), 'UTC').setHours(12));
 
     while (date.isBefore(end)) {
       days.push({ label: date.format('ddd'), date });
