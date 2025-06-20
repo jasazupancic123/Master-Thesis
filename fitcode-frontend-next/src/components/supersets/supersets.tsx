@@ -14,10 +14,12 @@ import { SupersetsProps } from '../trainer-day-view/props';
 import { onDragEnd } from '../trainer-day-view/state';
 import Superset from '../superset/superset';
 import { handleAddExerciseToSupersetComponent } from './state';
+import { useTheme } from '@mui/material';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
   const screenSize = useScreenSize();
+  const theme = useTheme();
 
   const { exercises: allExercises, setDetectedChanges } = useGroup();
 
@@ -123,8 +125,12 @@ export default function Supersets(props: SupersetsProps) {
                   {...provided.droppableProps}
                   border="1px dashed #B2B3B7"
                   borderRadius={2}
-                  sx={{ cursor: 'pointer' }}
+                  sx={{
+                    cursor: 'pointer',
+                    backgroundColor: theme.palette.background.default,
+                  }}
                   p={1}
+                  py={7.5}
                   mx={1}
                   onClick={() => setOpenAddExerciseModal(true)}
                 >

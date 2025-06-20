@@ -827,6 +827,7 @@ export class TrainingService {
           color: c.color,
           subgroups: c.subgroups || [],
           supersets: c.supersets || [],
+          periodizationType: c.periodizationType || null,
           target: c.target || null,
           methodId: c.methodId || null,
           completedMembersIds: [],

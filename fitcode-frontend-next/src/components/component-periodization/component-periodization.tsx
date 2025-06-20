@@ -51,8 +51,6 @@ export default function ComponentPeriodization(
 
   const { setTodaysTrainings } = useTrainerDayViewContext();
 
-  const [selectedPeriodizationType, setSelectedPeriodizationType] =
-    useState<PeriodizationType>(PeriodizationType.NONE);
   const [selectedExercises, setSelectedExercises] = useState<
     TrainingExercise[]
   >(selectedComponent.supersets.map((s) => s.exercises.map((e) => e)).flat());
@@ -119,14 +117,16 @@ export default function ComponentPeriodization(
 
   const handlePeriodize = () => {
     if (
-      !selectedPeriodizationType ||
-      selectedPeriodizationType === PeriodizationType.NONE
+      !selectedComponent.periodizationType ||
+      selectedComponent.periodizationType === PeriodizationType.NONE
     ) {
       toast.error('Please select a periodization type.');
       return;
     }
 
-    if (selectedPeriodizationType === PeriodizationType.DUP_TABLE_BASED) {
+    if (
+      selectedComponent.periodizationType === PeriodizationType.DUP_TABLE_BASED
+    ) {
       toast.error('DUP table based periodization is not supported yet.');
       return;
     }
@@ -144,7 +144,8 @@ export default function ComponentPeriodization(
           excludedTrainingIds,
           componentId: selectedComponent.id,
           exerciseIds,
-          periodizationType: selectedPeriodizationType,
+          periodizationType:
+            selectedComponent.periodizationType as PeriodizationType,
         }),
       (periodizedTrainings) => {
         periodizedTrainings = periodizedTrainings.map((t) =>
@@ -206,150 +207,177 @@ export default function ComponentPeriodization(
             flexDirection="column"
             gap={1}
           >
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              width="100%"
-              textAlign="center"
-              flexDirection={screenSize.isMobile ? 'column' : 'row'}
-              gap={1}
-            >
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                display="flex"
-                alignItems="center"
-              >
-                Periodization base is the outlined component, periodization
-                type:
-              </Typography>
+            {selectedComponent.periodizationType ? (
+              <>
+                {' '}
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  width="100%"
+                  textAlign="center"
+                  flexDirection={screenSize.isMobile ? 'column' : 'row'}
+                  gap={1}
+                >
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    display="flex"
+                    alignItems="center"
+                  >
+                    Periodization base is the outlined component, periodization
+                    type:
+                  </Typography>
 
-              <SelectInput<PeriodizationType>
-                label=""
-                icon={<Redo />}
-                value={selectedPeriodizationType || ''}
-                items={Object.values(PeriodizationType).filter(
-                  (p) => p !== PeriodizationType.NONE
-                )}
-                itemKey={undefined}
-                itemName={undefined}
-                setValue={(value) => {
-                  setSelectedPeriodizationType(value as PeriodizationType);
-                }}
-                selectPadding={'0'}
-              />
-            </Box>
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              width="100%"
-              textAlign="center"
-              flexDirection={screenSize.isMobile ? 'column' : 'row'}
-              gap={!selectedTarget ? 1 : screenSize.isMobile ? 1.5 : 0}
-            >
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                display="flex"
-                alignItems="center"
-              >
-                Training target to periodize:
-              </Typography>
+                  <SelectInput<PeriodizationType>
+                    disabled
+                    label=""
+                    icon={<Redo />}
+                    value={
+                      selectedComponent.periodizationType ||
+                      'No Periodization Selected'
+                    }
+                    items={Object.values(PeriodizationType).filter(
+                      (p) => p !== PeriodizationType.NONE
+                    )}
+                    itemKey={undefined}
+                    itemName={undefined}
+                    setValue={(value) => {}}
+                    selectPadding={'0'}
+                  />
+                </Box>
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  width="100%"
+                  textAlign="center"
+                  flexDirection={screenSize.isMobile ? 'column' : 'row'}
+                  gap={!selectedTarget ? 1 : screenSize.isMobile ? 1.5 : 0}
+                >
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    display="flex"
+                    alignItems="center"
+                  >
+                    Training target to periodize:
+                  </Typography>
 
-              {selectedTarget ? (
-                <SelectInput<Target>
-                  label=""
-                  icon={<></>}
-                  value={selectedTarget?.id || ''}
-                  items={[selectedTarget]}
-                  itemKey={'id'}
-                  itemName={'name'}
-                  setValue={(value) => {}}
-                  disabled
-                  selectPadding={'0'}
-                />
-              ) : (
+                  {selectedTarget ? (
+                    <SelectInput<Target>
+                      label=""
+                      icon={<></>}
+                      value={selectedTarget?.id || ''}
+                      items={[selectedTarget]}
+                      itemKey={'id'}
+                      itemName={'name'}
+                      setValue={(value) => {}}
+                      disabled
+                      selectPadding={'0'}
+                    />
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      display="flex"
+                      alignItems="center"
+                    >
+                      No target selected
+                    </Typography>
+                  )}
+                </Box>
                 <Typography
                   variant="body2"
                   color="text.secondary"
                   display="flex"
                   alignItems="center"
+                  textAlign="center"
                 >
-                  No target selected
+                  Periodizing colored components, click components to select or
+                  deselect them.
                 </Typography>
-              )}
-            </Box>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              display="flex"
-              alignItems="center"
-              textAlign="center"
-            >
-              Periodizing colored components, click components to select or
-              deselect them.
-            </Typography>
-          </Box>
-          <Typography
-            variant="body1"
-            mt={1}
-            onClick={() => setExpandExerciseView((prev) => !prev)}
-            textAlign="center"
-            sx={{
-              cursor: 'pointer',
-            }}
-          >
-            Exercises to periodize ({selectedExercises.length}/
-            {allExercises.length})
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpandExerciseView(!expandExerciseView);
-              }}
-            >
-              {!expandExerciseView ? <ArrowDropDown /> : <ArrowDropUp />}
-            </IconButton>
-          </Typography>
-          <Box
-            display="flex"
-            flexWrap="wrap"
-            flexDirection="column"
-            gap={1}
-            mt={1}
-          >
-            {expandExerciseView &&
-              allExercises.map((exercise) => (
-                <Box
-                  key={exercise.id}
-                  onClick={() => {
-                    setSelectedExercises((prev) =>
-                      prev.includes(exercise)
-                        ? prev.filter((e) => e.id !== exercise.id)
-                        : [...prev, exercise]
-                    );
-                  }}
+                <Typography
+                  variant="body1"
+                  mt={1}
+                  onClick={() => setExpandExerciseView((prev) => !prev)}
+                  textAlign="center"
                   sx={{
                     cursor: 'pointer',
-                    padding: '4px 8px',
-                    borderRadius: 1,
-                    backgroundColor: selectedExercises.includes(exercise)
-                      ? theme.palette.primary.main
-                      : theme.palette.background.dark,
-                    color: '#fff',
-                    textAlign: 'center',
                   }}
                 >
-                  {exercise.exercise
-                    ? exercise.exercise.name[0].toUpperCase() +
-                      exercise.exercise.name.slice(1)
-                    : ''}
+                  Exercises to periodize ({selectedExercises.length}/
+                  {allExercises.length})
+                  <IconButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandExerciseView(!expandExerciseView);
+                    }}
+                  >
+                    {!expandExerciseView ? <ArrowDropDown /> : <ArrowDropUp />}
+                  </IconButton>
+                </Typography>
+                <Box
+                  display="flex"
+                  flexWrap="wrap"
+                  flexDirection="column"
+                  gap={1}
+                  mt={1}
+                >
+                  {expandExerciseView &&
+                    allExercises.map((exercise) => (
+                      <Box
+                        key={exercise.id}
+                        onClick={() => {
+                          setSelectedExercises((prev) =>
+                            prev.includes(exercise)
+                              ? prev.filter((e) => e.id !== exercise.id)
+                              : [...prev, exercise]
+                          );
+                        }}
+                        sx={{
+                          cursor: 'pointer',
+                          padding: '4px 8px',
+                          borderRadius: 1,
+                          backgroundColor: selectedExercises.includes(exercise)
+                            ? theme.palette.primary.main
+                            : theme.palette.background.dark,
+                          color: '#fff',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {exercise.exercise
+                          ? exercise.exercise.name[0].toUpperCase() +
+                            exercise.exercise.name.slice(1)
+                          : ''}
+                      </Box>
+                    ))}
                 </Box>
-              ))}
+              </>
+            ) : (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                display="flex"
+                alignItems="center"
+                textAlign="center"
+              >
+                No periodization type selected.
+              </Typography>
+            )}
           </Box>
         </Box>
       )}
+
+      <Box display="flex" justifyContent="center" width="100%" mt={2}>
+        <Button
+          variant="contained"
+          sx={{ marginX: 'auto' }}
+          onClick={handlePeriodize}
+        >
+          Periodize
+        </Button>
+      </Box>
 
       <Box mb={2} />
       {cycle && (
@@ -377,15 +405,6 @@ export default function ComponentPeriodization(
           </Stack>
         </Box>
       )}
-      <Box display="flex" justifyContent="center" width="100%" mt={2}>
-        <Button
-          variant="contained"
-          sx={{ marginX: 'auto' }}
-          onClick={handlePeriodize}
-        >
-          Periodize
-        </Button>
-      </Box>
     </Box>
   );
 }

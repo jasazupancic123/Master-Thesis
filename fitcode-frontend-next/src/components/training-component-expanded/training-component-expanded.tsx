@@ -4,7 +4,7 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
 import { Box, Tooltip } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SelectInput from '../select-input/select-input';
 import { AFTER_SETS, MAIN_SETS } from '../trainer-day-view/constant';
 import { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-plan.type';
@@ -14,6 +14,7 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { Method } from '@/controller/method/type/method.type';
+import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
 
 interface TrainingComponentExpandedProps {
   training: Training;
@@ -23,13 +24,13 @@ interface TrainingComponentExpandedProps {
 export default function TrainingComponentExpanded(
   props: TrainingComponentExpandedProps
 ) {
-  const { training } = props;
+  const { training, trainingComponent } = props;
 
   const screenSize = useScreenSize();
 
   const { setDetectedChanges, trainings, methods: allMethods } = useGroup();
 
-  const { component, setComponent, setTodaysTrainings } =
+  const { component, setComponent, todaysTrainings, setTodaysTrainings } =
     useTrainerDayViewContext();
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
@@ -41,9 +42,11 @@ export default function TrainingComponentExpanded(
     <Box
       width={screenSize.isMobile ? '100%' : undefined}
       display={screenSize.isMobile ? 'flex' : undefined}
-      flexDirection={screenSize.isMobile ? 'column' : undefined}
       alignItems={screenSize.isMobile ? 'center' : undefined}
+      flexDirection={screenSize.isMobile ? 'column' : undefined}
       mt={screenSize.isMobile ? 2.5 : 1.5}
+      flexWrap="nowrap"
+      gap={screenSize.isMobile ? 1 : 0}
     >
       <SelectInput<MainSet>
         label={'Main Set'}
@@ -60,6 +63,9 @@ export default function TrainingComponentExpanded(
 
           setMainSet(mainSet);
         }}
+        selectSize="small"
+        inputLabelSize={13}
+        selectedItemSize={15}
       />
 
       <SelectInput<AfterSet>
@@ -77,7 +83,68 @@ export default function TrainingComponentExpanded(
 
           setAfterSet(afterSet);
         }}
+        selectSize="small"
+        inputLabelSize={13}
+        selectedItemSize={15}
       />
+
+      <Tooltip
+        title={
+          component.periodizationType
+            ? component.periodizationType
+            : 'No Periodization Type'
+        }
+      >
+        <SelectInput<PeriodizationType>
+          label={'Periodization'}
+          value={component.periodizationType || ''}
+          icon={null}
+          items={Object.values(PeriodizationType)}
+          itemKey={undefined}
+          itemName={undefined}
+          disabled={[WARMUP_ID, COOLDOWN_ID].includes(component.id)}
+          sx={{
+            maxWidth: 75,
+          }}
+          inputLabelSize={13}
+          selectedItemSize={15}
+          setValue={(periodizationType) => {
+            const updatedComponent = {
+              ...component,
+              periodizationType: periodizationType
+                ? (periodizationType as PeriodizationType)
+                : undefined,
+            };
+
+            setComponent(updatedComponent);
+
+            const updatedComponents = training.components.map((c) => {
+              if (
+                c.id === component.id ||
+                c.component?.id === component.component?.id
+              ) {
+                return {
+                  ...updatedComponent,
+                };
+              }
+              return c;
+            });
+
+            setTodaysTrainings((prev) =>
+              prev.map((t) => {
+                if (t.id !== training.id) return t;
+                return {
+                  ...t,
+                  components: updatedComponents,
+                };
+              })
+            );
+
+            setDetectedChanges(true);
+          }}
+          selectSize="small"
+        />
+      </Tooltip>
 
       <Tooltip title={component.target ? component.target.name : 'No target'}>
         <SelectInput<Method>
@@ -91,6 +158,9 @@ export default function TrainingComponentExpanded(
           sx={{
             maxWidth: 75,
           }}
+          inputLabelSize={13}
+          selectedItemSize={15}
+          selectSize="small"
           setValue={(methodId) => {
             const method = allMethods.find((m) => m.id === methodId);
 

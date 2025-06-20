@@ -8,6 +8,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useTheme } from '@mui/material';
 import { useGroup } from '@/store/group-provider';
 import toast from 'react-hot-toast';
+import dayjs from 'dayjs';
 
 interface Props {
   items: { label: string; value: string; sublabel?: string }[];
@@ -17,6 +18,7 @@ interface Props {
   onArrowClick?: (direction: 'left' | 'right') => void;
   getBackgroundColor?: (value: string, itemValue: string) => string;
   sx?: SxProps;
+  onlySelectedValueColored?: boolean;
 }
 
 export default function Circles(props: Props) {
@@ -130,7 +132,21 @@ export default function Circles(props: Props) {
               </Tooltip>
 
               {item.sublabel && (
-                <Typography variant="caption">{item.sublabel}</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: props.onlySelectedValueColored
+                      ? !dayjs(new Date(props.value)).isSame(
+                          new Date(item.value),
+                          'day'
+                        )
+                        ? theme.palette.grey[500]
+                        : '#fff'
+                      : undefined,
+                  }}
+                >
+                  {item.sublabel}
+                </Typography>
               )}
             </Box>
           ))}
