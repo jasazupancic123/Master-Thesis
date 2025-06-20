@@ -238,7 +238,8 @@ describe('validateTrainingComponents', () => {
     ).toThrow(`Component Component 1 has to start before Component 2`);
   });
 
-  it('should throw error if wrong exercises is provided', () => {
+  // NOTE - disabled functionality (for now)
+  /* it('should throw error if wrong exercises is provided', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
@@ -277,7 +278,7 @@ describe('validateTrainingComponents', () => {
     ).toThrow(
       `Exercise ${exercise?.name} cannot be part of selected component`,
     );
-  });
+  }); */
 
   it('should throw error if there is an invalid member in subgroup', () => {
     const memberIds = ['m1', 'm2', 'm3'];

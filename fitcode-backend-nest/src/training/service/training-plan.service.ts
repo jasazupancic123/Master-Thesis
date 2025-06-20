@@ -114,7 +114,7 @@ export class TrainingPlanService {
 
     const ids = [...new Set(trainingExercises.map((e) => e.id))];
     const exercises =
-      ids.length > 0 ? await this.exerciseService.findAllByIds(user, ids) : [];
+      ids.length > 0 ? await this.exerciseService.findAllByIds(ids) : [];
 
     return await Promise.all(
       exercises.map(async (e) => ({
@@ -250,8 +250,8 @@ export class TrainingPlanService {
       }
 
       // validate supersets and subgroups
-      this.validateSupersets(curr, exercises, allComponents);
-      this.validateSubgroups(trainingMemberIds, curr, exercises, allComponents);
+      this.validateSupersets(curr, exercises);
+      this.validateSubgroups(trainingMemberIds, curr);
       this.validateTrainingExerciseValues(curr, allMethods);
     }
 
@@ -436,11 +436,7 @@ export class TrainingPlanService {
     }
   }
 
-  validateSupersets(
-    component: TrainingComponent,
-    exercises: Exercise[],
-    allComponents: Component[],
-  ) {
+  validateSupersets(component: TrainingComponent, exercises: Exercise[]) {
     if (component.supersets.length > 8)
       throw new ConflictException(
         'You can only have up to 8 supersets per training component',
@@ -467,7 +463,8 @@ export class TrainingPlanService {
         if (!exercise)
           throw new NotFoundException('Training exercise not found');
 
-        const exerciseComponentLeaf = allComponents.find(
+        // NOTE - currently disabled, as we can add exercises to any component
+        /* const exerciseComponentLeaf = allComponents.find(
           (c) => c.id === exercise.componentIds[0],
         );
 
@@ -479,17 +476,12 @@ export class TrainingPlanService {
         if (exerciseComponentRoot.id !== component.id)
           throw new BadRequestException(
             `Exercise ${exercise.name} cannot be part of selected component`,
-          );
+          ); */
       }
     }
   }
 
-  validateSubgroups(
-    trainingMemberIds: string[],
-    component: TrainingComponent,
-    exercises: Exercise[],
-    allComponents: Component[],
-  ) {
+  validateSubgroups(trainingMemberIds: string[], component: TrainingComponent) {
     // validate all subgroups have unique members (one member cannot be in multiple subgroups)
     const trainingMemberIdsSet = new Set(trainingMemberIds);
     const membersIdsSet = new Set<string>();
@@ -660,8 +652,9 @@ export class TrainingPlanService {
         // default case for boolean or no operator (just check if the field exists)
         default:
           if (
-            attribute.type === AttributeType.Boolean &&
-            attrVal.value === 'true'
+            (attribute.type === AttributeType.Boolean ||
+              attribute.type === AttributeType.Value) &&
+            (attrVal.value === 'true' || !attrVal.value)
           )
             componentParams = params[condition];
       }

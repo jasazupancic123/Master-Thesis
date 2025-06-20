@@ -129,7 +129,7 @@ describe('validateSupersets', () => {
       ),
     });
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).toThrow('You can only have up to 8 supersets per training component');
   });
 
@@ -145,7 +145,7 @@ describe('validateSupersets', () => {
       ],
     });
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).toThrow('You can only have up to 4 exercises per superset');
   });
 
@@ -164,7 +164,7 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).toThrow('Training exercise not found');
   });
 
@@ -200,7 +200,7 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).not.toThrow();
   });
 });

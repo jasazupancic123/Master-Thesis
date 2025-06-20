@@ -25,7 +25,6 @@ export default async function () {
   await firebaseService.deleteCollection(FirestoreCollection.USER);
   await firebaseService.deleteCollection(FirestoreCollection.COMPONENT);
   await firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
-  await firebaseService.deleteCollection(FirestoreCollection.PARAM);
   await firebaseService.deleteCollection(FirestoreCollection.GROUP);
   await firebaseService.deleteCollection(FirestoreCollection.LOCAL_DEV);
   await firebaseService.deleteCollection(FirestoreCollection.TRAINING_STATUS);

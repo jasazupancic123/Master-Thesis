@@ -5,7 +5,9 @@ import { Auth } from '../common/decorator/auth.decorator';
 import { MethodService } from './service/method.service';
 import { Create } from '../common/type/entity.type';
 import { Method } from './entity/method.entity';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Method')
 @Controller('method')
 export class MethodController {
   constructor(private readonly methodService: MethodService) {}

@@ -19,7 +19,7 @@ export async function createTestUserAndToken(
   await firebaseService.auth.setCustomUserClaims(user.uid, customClaims);
 
   const createUserQuery = firebaseService.buildCreateQuery<UserEntity>(
-    { id: user.uid, groupsIds: [], trainersIds: [], institutionIds: [] },
+    { id: user.uid },
     { timestamps: true },
   );
 
@@ -55,10 +55,10 @@ export async function createTrainerUserAndToken(
   return await createTestUserAndToken(firebaseService, UserRole.TRAINER);
 }
 
-export async function createManagerUserAndToken(
+export async function createInstitutionUserAndToken(
   firebaseService: FirebaseService,
 ) {
-  return await createTestUserAndToken(firebaseService, UserRole.MANAGER);
+  return await createTestUserAndToken(firebaseService, UserRole.INSTITUTION);
 }
 
 export async function createAdminUserAndToken(
