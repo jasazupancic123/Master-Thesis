@@ -186,6 +186,7 @@ export default function GroupTrainerDayViewHeader(
             setDateFrom(dayjs(value).startOf('day'));
             setDateTo(dayjs(value).endOf('day'));
           }}
+          onlySelectedValueColored
           getBackgroundColor={(value, itemValue) =>
             commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
               ? theme.palette.primary.main

@@ -2,6 +2,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { Day as DayDateFns, startOfWeek } from 'date-fns';
 import { getWeekStartByLocale } from 'weekstart';
 import { toZonedTime } from 'date-fns-tz';
+import { ConstructionOutlined } from '@mui/icons-material';
 
 export type Day = {
   label: string;
@@ -61,6 +62,7 @@ export class DateUtil {
 
     const days: Day[] = [];
     let date = dayjs(toZonedTime(start.toDate(), 'UTC').setHours(12));
+    date = dayjs(date).set('day', dayjs(start).day());
 
     while (date.isBefore(end)) {
       days.push({ label: date.format('ddd'), date });

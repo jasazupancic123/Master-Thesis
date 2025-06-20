@@ -9,10 +9,11 @@ import { useGroup } from '@/store/group-provider';
 import { updateTraining } from './state';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
+import { useTheme } from '@mui/material';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
+  const theme = useTheme();
 
   const { training, component, selectedSubgroup, setSelectedSubgroup } =
     useTrainerDayViewContext();
@@ -124,13 +125,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         position: 'relative',
         backgroundColor: chartView
           ? 'transparent'
-          : exercise.exercise?.imageUrl
-            ? 'rgba(0, 0, 0, 0.6)'
-            : 'rgba(255, 255, 255, 0.05)',
-        backgroundImage:
-          exercise.exercise?.imageUrl && !expandedSetsView
-            ? `url(${exercise.exercise?.imageUrl})`
-            : undefined,
+          : theme.palette.background.default,
         backgroundPosition: 'center',
         backgroundSize: '100% auto',
         backgroundRepeat: 'no-repeat',
