@@ -1,6 +1,7 @@
 import { useGroup } from '@/store/group-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import {
+  DateRange,
   Delete,
   MonitorHeart,
   MoreVert,
@@ -9,7 +10,6 @@ import {
   VisibilityOff,
 } from '@mui/icons-material';
 import { Box, IconButton, Menu, MenuItem } from '@mui/material';
-import { CalendarIcon } from '@mui/x-date-pickers';
 import { DoNotDisturb } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-plan.type';
@@ -19,6 +19,8 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { SetState } from '@/common/type/state.type';
+import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface TrainingComponentMenuProps {
   trainingComponent: TrainingComponentClass;
@@ -41,10 +43,10 @@ export default function TrainingComponentMenu(
     anchorEl,
     setAnchorEl,
     training,
-    setOpenPeriodizationModal,
     setOpenCalendarModal,
   } = props;
 
+  const screenSize = useScreenSize();
   const { detectedChanges, setDetectedChanges } = useGroup();
 
   const {
@@ -84,9 +86,58 @@ export default function TrainingComponentMenu(
   };
 
   return (
-    <Box position="absolute" right={0} top={10}>
+    <Box display="flex" alignItems="center" position="absolute" right={0}>
+      {!screenSize.isMobile && (
+        <Box
+          display="flex"
+          width={screenSize.isMobile ? '100%' : undefined}
+          p={0}
+          mr={1}
+          alignItems="center"
+          flexDirection={screenSize.isMobile ? 'column' : 'row'}
+        >
+          {trainingComponent &&
+            component &&
+            selectedTraining?.id === training.id &&
+            trainingComponent.id === component.id && (
+              <TrainingComponentExpanded
+                training={training}
+                trainingComponent={trainingComponent}
+              />
+            )}
+        </Box>
+      )}
+
+      {trainingComponent?.component &&
+        ![WARMUP_ID, COOLDOWN_ID].includes(trainingComponent.component.id) && (
+          <IconButton
+            onClick={() => {
+              if (detectedChanges) {
+                toast.error('Save training first', {
+                  icon: '⚠️',
+                  duration: 3000,
+                });
+                return;
+              }
+
+              if (!component || trainingComponent.id !== component.id) {
+                setTraining(training);
+                setComponent(trainingComponent);
+              }
+
+              setOpenCalendarModal(true);
+            }}
+            sx={{
+              p: 0,
+              m: 0,
+            }}
+          >
+            <DateRange fontSize="small" />
+          </IconButton>
+        )}
+
       <IconButton sx={{ p: 0 }} onClick={handleMenuOpen}>
-        <MoreVert />
+        <MoreVert fontSize="small" />
       </IconButton>
 
       <Menu
@@ -111,65 +162,6 @@ export default function TrainingComponentMenu(
 
         {!isWarmupOrCooldown(trainingComponent) && (
           <Box>
-            {/* <MenuItem
-              onClick={() => {
-                if (detectedChanges) {
-                  toast.error('Save training before periodization', {
-                    icon: '⚠️',
-                    duration: 1000,
-                  });
-                  return;
-                }
-                setOpenPeriodizationModal(true);
-                handleMenuClose();
-              }}
-            >
-              <Timeline sx={{ mr: 1 }} /> Periodize
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                if (detectedChanges) {
-                  toast.error('Save training before copying', {
-                    icon: '⚠️',
-                    duration: 1000,
-                  });
-                  return;
-                }
-
-                if (!component || trainingComponent.id !== component.id) {
-                  setTraining(training);
-                  setComponent(trainingComponent);
-                }
-
-                setOpenCalendarModal(true);
-                handleMenuClose();
-              }}
-            >
-              <CalendarIcon sx={{ mr: 1 }} /> Component Calendar
-            </MenuItem> */}
-
-            <MenuItem
-              onClick={() => {
-                if (detectedChanges) {
-                  toast.error('Save training before copying', {
-                    icon: '⚠️',
-                    duration: 1000,
-                  });
-                  return;
-                }
-
-                if (!component || trainingComponent.id !== component.id) {
-                  setTraining(training);
-                  setComponent(trainingComponent);
-                }
-
-                setOpenCalendarModal(true);
-                handleMenuClose();
-              }}
-            >
-              <CalendarIcon sx={{ mr: 1 }} /> Component Actions
-            </MenuItem>
-
             <MenuItem
               onClick={() => {
                 if (

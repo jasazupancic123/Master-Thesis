@@ -1,7 +1,7 @@
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Box, Stack, Collapse } from '@mui/material';
+import { Box, Stack, Collapse, Divider } from '@mui/material';
 import { useState } from 'react';
 import { TrainingComponentProps } from '../trainer-day-view/props';
 import Supersets from '../supersets/supersets';
@@ -9,15 +9,17 @@ import MyModal from '../modal/modal';
 import { useRouter } from 'next/navigation';
 import MuscleHeatmapView from '../muscle-heatmap-view/muscle-heatmap-view';
 import toast from 'react-hot-toast';
-import { Training } from '@/controller/training/type/training.type';
-import TrainingComponentCalendar from '../training-component-calendar/training-component-calendar';
 import ComponentPeriodization from '../component-periodization/component-periodization';
 import { handleCopyComponentApiRequest } from './state';
 import TrainingComponentCard from '../training-component-card/training-component-card';
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';
-import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
 import ComponentActionsModal from '../component-actions-modal/component-actions-modal';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
+import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
@@ -50,7 +52,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
     useState<TrainingInfo | null>(null);
 
   return (
-    <Box my={1} p={0} px={0}>
+    <Box mb={0} py={0.25} px={0}>
       <Box sx={{ bgcolor: 'background.paper', my: 0.5 }}>
         <Box
           sx={{
@@ -58,7 +60,11 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             alignItems: 'center',
             justifyContent: 'space-between',
           }}
+          pt={trainingComponent.id === WARMUP_ID ? 1 : undefined}
+          pb={trainingComponent.id === COOLDOWN_ID ? 1 : undefined}
           position="relative"
+          py={component?.id === trainingComponent.id ? 1 : 0}
+          mb={component?.id === trainingComponent.id ? 1 : 0}
         >
           <TrainingComponentMenu
             trainingComponent={trainingComponent}
@@ -77,7 +83,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                 ? 'column'
                 : 'row'
             }
-            alignItems="center"
             width="100%"
             justifyContent="space-between"
           >
@@ -85,7 +90,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               display="flex"
               p={0}
               justifyContent="space-between"
-              alignItems="center"
+              alignItems={!screenSize.isMobile ? 'center' : undefined}
               flexDirection={screenSize.isMobile ? 'column' : 'row'}
               width="100%"
             >
@@ -93,16 +98,18 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                 trainingComponent={trainingComponent}
                 training={training}
                 setOpenAddExerciseModal={setOpenAddExerciseModal}
+                setOpenCalendarModal={setOpenAddExerciseModal}
               />
               <Box
                 display="flex"
                 width={screenSize.isMobile ? '100%' : undefined}
                 p={0}
                 mr={1}
-                alignItems="center"
+                alignItems={!screenSize.isMobile ? 'center' : undefined}
                 flexDirection={screenSize.isMobile ? 'column' : 'row'}
               >
-                {trainingComponent &&
+                {screenSize.isMobile &&
+                  trainingComponent &&
                   component &&
                   selectedTraining?.id === training.id &&
                   trainingComponent.id === component.id && (
@@ -116,9 +123,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           </Stack>
         </Box>
 
-        {/* {component &&
-            trainingComponent.id === component.id &&
-            training.id === selectedTraining?.id && ( */}
         <Collapse
           in={
             component &&
@@ -151,6 +155,17 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
         </Collapse>
         {/* )} */}
       </Box>
+
+      {trainingComponent.id !== COOLDOWN_ID && (
+        <Divider
+          sx={{
+            width: '100%',
+            color: 'white',
+            p: 0,
+            m: 0,
+          }}
+        />
+      )}
 
       {/* Training Component Calendar Modal */}
       <MyModal

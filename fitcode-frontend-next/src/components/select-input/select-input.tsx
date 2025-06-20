@@ -8,6 +8,7 @@ import {
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import React, { ReactNode } from 'react';
+import { useTheme } from '@mui/material';
 
 interface Props<T> {
   icon: ReactNode;
@@ -25,9 +26,13 @@ interface Props<T> {
   useRenderValue?: boolean;
   displayEmpty?: boolean;
   disabled?: boolean;
+  selectSize?: 'small' | 'medium';
+  inputLabelSize?: number;
+  selectedItemSize?: number;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
+  const theme = useTheme();
   return (
     <FormControl
       sx={
@@ -39,10 +44,19 @@ export default function SelectInput<T>(props: Props<T>) {
       {props.disableInputLabel === true ? (
         <></>
       ) : (
-        <InputLabel id={`${props.label}-label`}>{props.label}</InputLabel>
+        <InputLabel
+          id={`${props.label}-label`}
+          sx={{
+            fontSize: props.inputLabelSize,
+            color: theme.palette.background.dark,
+          }}
+        >
+          {props.label}
+        </InputLabel>
       )}
 
       <Select
+        size={props.selectSize ? props.selectSize : undefined}
         variant="outlined"
         label={props.label}
         value={props.value}
@@ -85,6 +99,7 @@ export default function SelectInput<T>(props: Props<T>) {
           '.MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
+          fontSize: props.selectedItemSize,
         }}
       >
         <MenuItem

@@ -2,7 +2,7 @@
 
 import { useGroup } from '@/store/group-provider';
 import { Save } from '@mui/icons-material';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { TrainingWeekViewItemProps } from '../trainer-week-view/type';
 import { useTheme } from '@mui/material';

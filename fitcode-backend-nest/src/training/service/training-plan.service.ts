@@ -76,6 +76,7 @@ export class TrainingPlanService {
           to: c.to ? c.to : addMinutes(lastComponent.from, 60),
           completedMembersIds: [],
           target: c.target,
+          periodizationType: c.periodizationType,
           methodId: c.methodId,
           subgroups: [],
           supersets: [],
