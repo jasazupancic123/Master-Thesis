@@ -12,7 +12,6 @@ import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
 export const team = [
   { image: '/team/Janez.jpg', name: 'Janez Lovenjak', position: 'Founder' },
   { image: '/team/Tomaz.jpg', name: 'Tomaž Ambrožič', position: 'CEO' },
-  { image: '/team/Mitja.jpg', name: 'Mitja Blagajac', position: 'CMO' },
 ];
 
 export const products = [
