@@ -103,8 +103,7 @@ export class TrainingPlanService {
     return [query, training];
   }
 
-  async findAllTrainingExercises(
-    user: User,
+  async getAllTrainingExercises(
     trainingComponents: TrainingComponent[],
   ): Promise<Exercise[]> {
     const trainingExercises = trainingComponents.flatMap((c) => [

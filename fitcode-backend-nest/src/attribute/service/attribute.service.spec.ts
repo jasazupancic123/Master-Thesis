@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from '../../common/common.module';
 import { validationSchema } from '../../config/environment-validation-schema';
 import { AttributeRepository } from '../repository/attribute.repository';
+import { CacheManagerModule } from '../../cache-manager/cache-manager.module';
 
 describe('AttributeService (unit)', () => {
   let service: AttributeService;
@@ -17,6 +18,7 @@ describe('AttributeService (unit)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, validationSchema }),
+        CacheManagerModule,
         FirebaseModule.forRoot(),
         CommonModule,
       ],

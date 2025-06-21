@@ -1,6 +1,6 @@
 import * as request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { BadRequestException, INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
@@ -11,7 +11,11 @@ import { ComponentService } from '../../src/component/component.service';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { createTrainerUserAndToken } from '../utils/auth.util';
+import {
+  createAthleteUserAndToken,
+  createInstitutionUserAndToken,
+  createTrainerUserAndToken,
+} from '../utils/auth.util';
 import { generateAttributeStub } from '../../src/attribute/mock/attribute.stub';
 import { Attribute } from '../../src/attribute/entity/attribute.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
@@ -24,6 +28,7 @@ describe('Update Exercise (e2e)', () => {
   let attributeService: AttributeService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
+  let institutionService: InstitutionService;
 
   let attribute: Attribute;
   let exercise: Exercise;
@@ -42,10 +47,9 @@ describe('Update Exercise (e2e)', () => {
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
+    institutionService = moduleFixture.get(InstitutionService);
 
-    const institutionService = moduleFixture.get(InstitutionService);
     institution = await createInstitution(institutionService);
-
     attribute = await attributeService.create(generateAttributeStub());
     component = await componentService.create(
       generateComponentStub({ attributes: [attribute.field] }),
@@ -63,50 +67,67 @@ describe('Update Exercise (e2e)', () => {
   });
 
   describe('Update Exercise', () => {
-    it('should update an exercise successfully if user is owner', async () => {
-      const updateData = {
-        name: 'Updated Exercise Name',
-        attributeValues: [{ field: attribute.field, value: 'test' }],
-      };
+    it('should fail if exercise does not exist', async () => {
+      const updateData = { name: 'Non-existent Exercise' };
+
+      const response = await request(app.getHttpServer())
+        .patch('/exercise/non-existent-id')
+        .set('Authorization', `Bearer ${global.manager.token}`)
+        .send(updateData);
+
+      expect(response.status).toBe(404);
+    });
+
+    it('should fail if exercise is institutional and institution does not exist anymore', async () => {
+      await firebaseService.firestore
+        .collection(FirestoreCollection.INSTITUTION)
+        .doc(institution.id)
+        .delete();
 
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
         .set('Authorization', `Bearer ${global.manager.token}`)
-        .send(updateData);
+        .send({ name: 'Unauthorized Update' });
 
-      expect(response.status).toBe(200);
-      expect(response.body.name).toBe(updateData.name);
-      expect(response.body.attributeValues).toEqual([
-        {
-          field: attribute.field,
-          value: 'test',
-          exerciseId: exercise.id,
-          ownerId: institution.id,
-        },
-      ]);
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe(
+        'You are not allowed to view this exercise',
+      );
+
+      institution = await createInstitution(institutionService);
+      exercise = await exerciseService.create(
+        global.manager,
+        generateExerciseStub({ componentIds: [component.id] }),
+      );
     });
 
-    it('should update an exercise successfully if user is trainer in the same institution', async () => {
-      const updateData = {
-        name: 'Updated Exercise Name',
-        attributeValues: [{ field: attribute.field, value: 'test' }],
-      };
-
-      const response = await request(app.getHttpServer())
-        .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(updateData);
-
-      expect(response.status).toBe(200);
-      expect(response.body.name).toBe(updateData.name);
-      expect(response.body.attributeValues).toEqual([
-        {
-          field: attribute.field,
-          value: 'test',
-          exerciseId: exercise.id,
-          ownerId: institution.id,
-        },
+    it('should fail if the user is not one of the following: owner of the institution, trainer in institution', async () => {
+      const [otherManager, otherTrainer, otherAthlete] = await Promise.all([
+        createInstitutionUserAndToken(firebaseService),
+        createTrainerUserAndToken(firebaseService),
+        createAthleteUserAndToken(firebaseService),
       ]);
+
+      async function updateExercise(token: string) {
+        return await request(app.getHttpServer())
+          .patch(`/exercise/${exercise.id}`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ name: 'test' });
+      }
+
+      const responses = await Promise.all([
+        updateExercise(otherManager.token),
+        updateExercise(otherTrainer.token),
+        updateExercise(otherAthlete.token),
+        updateExercise(global.athlete.token),
+      ]);
+
+      for (const response of responses) {
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe(
+          'You are not allowed to edit this exercise',
+        );
+      }
     });
 
     it('should not allow updating componentId', async () => {
@@ -123,29 +144,6 @@ describe('Update Exercise (e2e)', () => {
       );
     });
 
-    it('should fail if the user is not the owner', async () => {
-      const otherUser = await createTrainerUserAndToken(firebaseService);
-      const updateData = { name: 'Unauthorized Update' };
-
-      const response = await request(app.getHttpServer())
-        .patch(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${otherUser.token}`)
-        .send(updateData);
-
-      expect(response.status).toBe(403);
-    });
-
-    it('should fail if exercise does not exist', async () => {
-      const updateData = { name: 'Non-existent Exercise' };
-
-      const response = await request(app.getHttpServer())
-        .patch('/exercise/non-existent-id')
-        .set('Authorization', `Bearer ${global.manager.token}`)
-        .send(updateData);
-
-      expect(response.status).toBe(404);
-    });
-
     it('should validate attribute values before updating', async () => {
       const invalidAttributes = [{ field: 'invalid', value: 'wrong' }];
 
@@ -157,22 +155,46 @@ describe('Update Exercise (e2e)', () => {
       expect(response.status).toBe(200);
       expect(response.body.attributeValues).toEqual([]);
     });
+
+    it('should update an exercise successfully if user is one of the following: admin, institution owner or trainer', async () => {
+      const updateData = {
+        name: 'Updated Exercise Name',
+        attributeValues: [{ field: attribute.field, value: 'test' }],
+      };
+
+      async function updateExercise(token: string) {
+        return await request(app.getHttpServer())
+          .patch(`/exercise/${exercise.id}`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(updateData);
+      }
+
+      const responses = await Promise.all([
+        updateExercise(global.manager.token),
+        updateExercise(global.trainer.token),
+      ]);
+
+      for (const response of responses) {
+        expect(response.status).toBe(200);
+        expect(response.body.name).toBe(updateData.name);
+        expect(response.body.attributeValues).toEqual([
+          {
+            field: attribute.field,
+            value: 'test',
+            exerciseId: exercise.id,
+            ownerId: institution.id,
+          },
+        ]);
+      }
+    });
   });
 
   describe('Delete Exercise', () => {
     afterEach(async () => {
       exercise = await exerciseService.create(
-        trainer,
+        global.manager,
         generateExerciseStub({ componentIds: [component.id] }),
       );
-    });
-
-    it('should delete an exercise successfully', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/exercise/${exercise.id}`)
-        .set('Authorization', `Bearer ${global.manager.token}`);
-
-      expect(response.status).toBe(200);
     });
 
     it('should fail if the user is not the owner', async () => {
@@ -181,7 +203,10 @@ describe('Update Exercise (e2e)', () => {
         .delete(`/exercise/${exercise.id}`)
         .set('Authorization', `Bearer ${otherUser.token}`);
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(401);
+      expect(response.body.message).toBe(
+        'You are not allowed to edit this exercise',
+      );
     });
 
     it('should fail if exercise does not exist', async () => {
@@ -190,6 +215,14 @@ describe('Update Exercise (e2e)', () => {
         .set('Authorization', `Bearer ${global.manager.token}`);
 
       expect(response.status).toBe(404);
+    });
+
+    it('should delete an exercise successfully', async () => {
+      const response = await request(app.getHttpServer())
+        .delete(`/exercise/${exercise.id}`)
+        .set('Authorization', `Bearer ${global.manager.token}`);
+
+      expect(response.status).toBe(200);
     });
   });
 });

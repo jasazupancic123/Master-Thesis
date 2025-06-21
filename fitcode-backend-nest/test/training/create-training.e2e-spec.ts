@@ -121,6 +121,21 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(`Cycle does not exist`);
     });
 
+    it('should fail to create new training if cycle not found', async () => {
+      const training = generateTrainingStub({
+        groupId: group.id,
+        cycleId: 'invalid-cycle-id',
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/training')
+        .set('Authorization', `Bearer ${trainer.token}`)
+        .send(training);
+
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe(`Cycle does not exist`);
+    });
+
     it('should fail to create new training if training does not have atleast one component', async () => {
       const training = generateTrainingStub({
         groupId: group.id,
@@ -129,7 +144,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${athlete.token}`)
+        .set('Authorization', `Bearer ${trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);

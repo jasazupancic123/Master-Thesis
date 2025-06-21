@@ -371,16 +371,13 @@ describe('Periodization functions (e2e)', () => {
           return;
         }
 
-        const periodizedTrainings = await trainingService.periodizeTrainings(
-          trainer,
-          {
-            baseTrainingId: baseTraining.id,
-            excludedTrainingIds: [],
-            componentId: component.id,
-            exerciseIds: exercises.map((e) => e.id),
-            periodizationType: type,
-          },
-        );
+        const periodizedTrainings = await trainingService.periodize(trainer, {
+          baseTrainingId: baseTraining.id,
+          excludedTrainingIds: [],
+          componentId: component.id,
+          exerciseIds: exercises.map((e) => e.id),
+          periodizationType: type,
+        });
 
         expect(periodizedTrainings.length).toBe(6); // base training + 5 periodized trainings, skips the training with different target
 

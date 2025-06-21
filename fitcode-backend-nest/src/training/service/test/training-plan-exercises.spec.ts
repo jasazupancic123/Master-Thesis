@@ -19,6 +19,7 @@ import { Method } from '../../../method/entity/method.entity';
 import { FirebaseService } from '../../../firebase/firebase.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { WorkloadService } from '../workload.service';
+import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
 
 describe('validateTrainingExerciseValues', () => {
   let service: TrainingPlanService;
@@ -35,6 +36,10 @@ describe('validateTrainingExerciseValues', () => {
         {
           provide: FirebaseService,
           useValue: createMock<FirebaseService>(),
+        },
+        {
+          provide: CacheManagerService,
+          useValue: createMock<CacheManagerService>(),
         },
         {
           provide: AttributeRepository,

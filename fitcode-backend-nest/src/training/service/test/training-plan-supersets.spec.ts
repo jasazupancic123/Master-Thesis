@@ -24,6 +24,7 @@ import {
 import { FirebaseService } from '../../../firebase/firebase.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { WorkloadService } from '../workload.service';
+import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
 
 describe('validateSupersets', () => {
   let service: TrainingPlanService;
@@ -39,6 +40,10 @@ describe('validateSupersets', () => {
         {
           provide: FirebaseService,
           useValue: createMock<FirebaseService>(),
+        },
+        {
+          provide: CacheManagerService,
+          useValue: createMock<CacheManagerService>(),
         },
         {
           provide: AttributeRepository,
