@@ -575,8 +575,17 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     this.logger.log(`User ${user.uid} is deleting exercise ${ref.exerciseId}`);
 
     const exercise = await this.findOneByIdOrFail(user, ref);
-    if (!this.canEdit(user, exercise))
-      throw new UnauthorizedException('You are not the owner of this exercise');
+
+    let institution: Institution | null = null;
+    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
+      institution = await this.institutionService.getDocByIdOrFail({
+        institutionId: exercise.ownerId,
+      });
+
+    if (!this.canEdit(user, exercise, institution))
+      throw new UnauthorizedException(
+        'You are not allowed to edit this exercise',
+      );
 
     await this.exerciseRepository.deleteDoc(ref.exerciseId);
   }
@@ -660,13 +669,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return false;
   }
 
-  canEdit(user: User, exercise: Exercise, institution?: Institution) {
+  canEdit(user: User, _exercise: Exercise, institution?: Institution) {
     if (this.firebaseService.isAdmin(user)) return true;
 
     if (institution) {
       if (
         this.firebaseService.isInstitution(user) &&
-        exercise.ownerId === institution.id
+        user.uid === institution.ownerId
       )
         return true;
 

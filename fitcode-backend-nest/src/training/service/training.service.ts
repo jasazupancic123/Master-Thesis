@@ -322,18 +322,23 @@ export class TrainingService implements Permission<Training, Institution> {
       `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
     );
 
-    // const { training: input, copyFromTrainingId, date } = input;
-    const { groupId, cycleId } = input;
-    const { from, to } = this.getFromAndToDates(input.components);
-
     // validate parent references
-    const group = await this.groupService.findOneByIdOrFail(user, { groupId });
-    const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    const institution = await this.institutionService.getDoc({
-      institutionId: group.institutionId,
-    });
+    const { groupId, cycleId } = input;
+    let group: Group | null = null;
+    if (groupId)
+      group = await this.groupService.findOneByIdOrFail(user, { groupId });
+
+    let cycle: Cycle | null = null;
+    if (group && cycleId)
+      cycle = this.groupService.findCycleOrFail(cycleId, group);
+
+    let institution: Institution | null = null;
+    if (group.institutionId)
+      institution = await this.institutionService.getDocByIdOrFail(group);
 
     this.validateCanAdd(user, institution);
+
+    const { from, to } = this.getFromAndToDates(input.components);
     this.validateIsDateInCycle(from, cycle);
     this.validateIsDateInFuture(from);
     await this.validateOverlap(from, to, group.id, cycle.id);
@@ -350,8 +355,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const attributes = await this.cacheManagerService.getAttributes();
     const components = await this.cacheManagerService.getComponents();
     const methods = await this.cacheManagerService.getMethods();
-    const exercises = await this.trainingPlanService.findAllTrainingExercises(
-      user,
+    const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
     );
 
@@ -436,7 +440,7 @@ export class TrainingService implements Permission<Training, Institution> {
     return training;
   }
 
-  async periodizeTrainings(user: User, input: PeriodizeTrainingsDto) {
+  async periodize(user: User, input: PeriodizeTrainingsDto) {
     const {
       baseTrainingId,
       excludedTrainingIds,
@@ -614,8 +618,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const membersIds = input.membersIds || training.membersIds;
     await this.userService.findAllOrFail({ ids: membersIds });
 
-    const exercises = await this.trainingPlanService.findAllTrainingExercises(
-      user,
+    const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
     );
 
@@ -714,8 +717,7 @@ export class TrainingService implements Permission<Training, Institution> {
       const membersIds = data.membersIds || training.membersIds;
       await this.userService.findAllOrFail({ ids: membersIds });
 
-      const exercises = await this.trainingPlanService.findAllTrainingExercises(
-        user,
+      const exercises = await this.trainingPlanService.getAllTrainingExercises(
         data.components,
       );
 
@@ -908,8 +910,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // validate components & exercises in case user cannot view exercises of another user
     const components = await this.cacheManagerService.getComponents();
-    const exercises = await this.trainingPlanService.findAllTrainingExercises(
-      user,
+    const exercises = await this.trainingPlanService.getAllTrainingExercises(
       copiedTraining.components,
     );
     const methods = await this.cacheManagerService.getMethods();
@@ -1184,10 +1185,10 @@ export class TrainingService implements Permission<Training, Institution> {
     const components = await this.cacheManagerService.getComponents();
     const methods = await this.cacheManagerService.getMethods();
     const trainingComponents = [...training.components, ...input];
-    const exercises = await this.trainingPlanService.findAllTrainingExercises(
-      user,
-      trainingComponents,
-    );
+    const exercises =
+      await this.trainingPlanService.getAllTrainingExercises(
+        trainingComponents,
+      );
 
     this.trainingPlanService.updateWarmupAndCooldownTimes(
       training.warmup,
@@ -1316,7 +1317,7 @@ export class TrainingService implements Permission<Training, Institution> {
       );
   }
 
-  private isInPast(date: Date, relativeDate = startOfDay(new Date())) {
+  private isInPast(date: Date, relativeDate = new Date()) {
     return isBefore(date, relativeDate);
   }
 

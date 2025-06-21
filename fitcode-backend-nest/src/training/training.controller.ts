@@ -122,7 +122,7 @@ export class TrainingController {
     @RequestUser() user: User,
     @Body() body: PeriodizeTrainingsDto,
   ) {
-    return await this.trainingService.periodizeTrainings(user, body);
+    return await this.trainingService.periodize(user, body);
   }
 
   @Patch(':trainingId')

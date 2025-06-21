@@ -27,6 +27,8 @@ import { addMinutes, subMinutes } from 'date-fns';
 import { FirebaseService } from '../../../firebase/firebase.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { WorkloadService } from '../workload.service';
+import { CacheManagerModule } from '../../../cache-manager/cache-manager.module';
+import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
 
 describe('validateTrainingComponents', () => {
   let service: TrainingPlanService;
@@ -42,6 +44,10 @@ describe('validateTrainingComponents', () => {
         {
           provide: FirebaseService,
           useValue: createMock<FirebaseService>(),
+        },
+        {
+          provide: CacheManagerService,
+          useValue: createMock<CacheManagerService>(),
         },
         {
           provide: AttributeRepository,
