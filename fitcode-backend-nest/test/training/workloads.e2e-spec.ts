@@ -81,29 +81,30 @@ describe('Training Workloads (e2e)', () => {
 
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      trainer: trainer,
       membersIds: [athlete.uid, athlete2.uid, athlete3.uid],
     });
   });
 
-  beforeEach(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await firebaseService.deleteCollection(
-      FirestoreCollection.TRAINING_WORKLOAD,
-    );
-  });
+  beforeEach(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
+      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
+      firebaseService.deleteCollection(FirestoreCollection.TRAINING_WORKLOAD),
+    ]),
+  );
 
-  afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await firebaseService.deleteCollection(FirestoreCollection.GROUP);
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await app.close();
-  });
+  afterAll(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
+      firebaseService.deleteCollection(FirestoreCollection.GROUP),
+      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
+      await app.close(),
+    ]),
+  );
 
   describe('Create workloads', () => {
     it('should successfully create training workloads for all members for training if only sets are provided', async () => {
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(admin, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
@@ -169,7 +170,7 @@ describe('Training Workloads (e2e)', () => {
     });
 
     it('should successfully create training workloads for all members for training for a single param value', async () => {
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(admin, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
@@ -256,7 +257,7 @@ describe('Training Workloads (e2e)', () => {
         }),
       );
 
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(admin, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
@@ -376,7 +377,7 @@ describe('Training Workloads (e2e)', () => {
         );
 
         const exercise = await exerciseService.create(
-          trainer,
+          admin,
           generateExerciseStub({ componentIds: [component.id] }),
         );
 
@@ -423,7 +424,7 @@ describe('Training Workloads (e2e)', () => {
       );
 
       const exercise = await exerciseService.create(
-        trainer,
+        admin,
         generateExerciseStub({ componentIds: [component.id] }),
       );
 
@@ -490,7 +491,7 @@ describe('Training Workloads (e2e)', () => {
       );
 
       const exercise = await exerciseService.create(
-        trainer,
+        admin,
         generateExerciseStub({ componentIds: [component.id] }),
       );
 
