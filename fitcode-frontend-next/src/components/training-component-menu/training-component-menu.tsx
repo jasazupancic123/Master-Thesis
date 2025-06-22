@@ -1,6 +1,7 @@
 import { useGroup } from '@/store/group-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import {
+  Close,
   DateRange,
   Delete,
   MonitorHeart,
@@ -55,6 +56,10 @@ export default function TrainingComponentMenu(
     component,
     setComponent,
     setTodaysTrainings,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    selectedExercises,
+    setSelectedExercises,
   } = useTrainerDayViewContext();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -77,9 +82,11 @@ export default function TrainingComponentMenu(
     ) {
       setTraining(undefined);
       setComponent(undefined);
+      setSelectedExercises([]);
     } else {
       setTraining(training);
       setComponent(trainingComponent);
+      setSelectedExercises([]);
     }
     setHeatmapView(false);
     handleMenuClose();
@@ -203,6 +210,70 @@ export default function TrainingComponentMenu(
                   <MonitorHeart sx={{ mr: 1 }} /> Workout Heatmap
                 </>
               )}
+            </MenuItem>
+
+            <MenuItem
+              onClick={() => {
+                if (!selectedExercises.length || !component) return;
+
+                const newComponent = { ...component };
+
+                if (selectedSubgroup?.subgroup) {
+                  const newSubgroup = { ...selectedSubgroup.subgroup };
+                  newSubgroup.supersets = (newSubgroup.supersets || []).map(
+                    (s) => ({
+                      ...s,
+                      exercises: s.exercises.filter(
+                        (e) => !selectedExercises.some((se) => se.id === e.id)
+                      ),
+                    })
+                  );
+
+                  newSubgroup.supersets = newSubgroup.supersets.filter(
+                    (s) => s.exercises.length > 0
+                  );
+
+                  setSelectedSubgroup((prev) =>
+                    !prev
+                      ? null
+                      : {
+                          ...prev,
+                          subgroup: newSubgroup,
+                        }
+                  );
+                  newComponent.subgroups = (newComponent.subgroups || []).map(
+                    (sg) =>
+                      sg.id === selectedSubgroup.subgroup?.id ? newSubgroup : sg
+                  );
+                } else {
+                  newComponent.supersets = newComponent.supersets?.map((s) => ({
+                    ...s,
+                    exercises: s.exercises.filter(
+                      (e) => !selectedExercises.some((se) => se.id === e.id)
+                    ),
+                  }));
+
+                  newComponent.supersets = newComponent.supersets?.filter(
+                    (s) => s.exercises.length > 0
+                  );
+                }
+
+                const newTraining = { ...training };
+                newTraining.components = newTraining.components.map((c) =>
+                  c.id === component.id ? newComponent : c
+                );
+
+                setComponent(newComponent);
+                setTraining(newTraining);
+                setTodaysTrainings((prev) =>
+                  prev.map((t) => (t.id === training.id ? newTraining : t))
+                );
+                setSelectedExercises([]);
+                setDetectedChanges(true);
+                handleMenuClose();
+              }}
+            >
+              <Close sx={{ mr: 1 }} /> Delete Selected Exercises
             </MenuItem>
 
             <MenuItem

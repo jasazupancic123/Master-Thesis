@@ -63,8 +63,18 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           pt={trainingComponent.id === WARMUP_ID ? 1 : undefined}
           pb={trainingComponent.id === COOLDOWN_ID ? 1 : undefined}
           position="relative"
-          py={component?.id === trainingComponent.id ? 1 : 0}
-          mb={component?.id === trainingComponent.id ? 1 : 0}
+          py={
+            component?.id === trainingComponent.id &&
+            training.id === selectedTraining?.id
+              ? 1
+              : 0
+          }
+          mb={
+            component?.id === trainingComponent.id &&
+            training.id === selectedTraining?.id
+              ? 1
+              : 0
+          }
         >
           <TrainingComponentMenu
             trainingComponent={trainingComponent}
@@ -190,37 +200,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           setOpenOverwriteModal={setOpenOverwriteModal}
           setTrainingInPeriodForModal={setTrainingInPeriodForModal}
           day={day}
-        />
-        {/* <TrainingComponentCalendar
-          trainingComponent={trainingComponent}
-          training={training}
-          setOpenOverwriteModal={setOpenOverwriteModal}
-          setTrainingInPeriodForModal={setTrainingInPeriodForModal}
-          copyComponent={true}
-          day={day}
-        /> */}
-      </MyModal>
-
-      {/* Periodization Modal */}
-      <MyModal
-        isOpen={openPeriodizationModal}
-        setIsOpen={(open) => setOpenPeriodizationModal(open)}
-        cancelText="Close"
-        onCancel={() => {
-          setOpenPeriodizationModal(false);
-        }}
-        componentCalendarView
-        dialogueContentSx={{
-          minWidth: screenSize.isTablet
-            ? 500
-            : screenSize.isSmallerThanLaptop
-              ? 300
-              : 1000,
-        }}
-      >
-        <ComponentPeriodization
-          selectedComponent={trainingComponent}
-          training={training}
         />
       </MyModal>
 

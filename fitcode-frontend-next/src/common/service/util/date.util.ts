@@ -1,8 +1,9 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { Day as DayDateFns, startOfWeek } from 'date-fns';
+import { Day as DayDateFns, isBefore, startOfWeek } from 'date-fns';
 import { getWeekStartByLocale } from 'weekstart';
 import { toZonedTime } from 'date-fns-tz';
 import { ConstructionOutlined } from '@mui/icons-material';
+import { endOf } from 'date-arithmetic';
 
 export type Day = {
   label: string;
@@ -39,20 +40,18 @@ export class DateUtil {
   }
 
   getWeekDays(day = dayjs()): Day[] {
-    // start from monday
+    // USE THIS FOR CUSTOM WEEK STARTS
+    /*
     const weekStart = startOfWeek(day.toDate(), {
       weekStartsOn: this.getWeekStartsOn(),
     });
     const weekEnd = startOfWeek(day.toDate(), {
       weekStartsOn: this.getWeekEndsOn(),
     });
+    */
 
-    let start = dayjs(weekStart);
-    let end = dayjs(weekEnd).isSame(this.getWeekEndDate(dayjs()), 'day')
-      ? dayjs(weekEnd).endOf('day')
-      : dayjs(weekEnd).add(7, 'day').endOf('day');
-
-    if (end.isBefore(start)) end = end.add(7, 'day');
+    let start = day.startOf('week').add(1, 'day');
+    let end = day.endOf('week').add(1, 'day');
 
     // if today is sunday, subtract 6 days
     if (day.day() === 0) {
@@ -61,9 +60,7 @@ export class DateUtil {
     }
 
     const days: Day[] = [];
-    let date = dayjs(toZonedTime(start.toDate(), 'UTC').setHours(12));
-    date = dayjs(date).set('day', dayjs(start).day());
-
+    let date = start;
     while (date.isBefore(end)) {
       days.push({ label: date.format('ddd'), date });
       date = date.add(1, 'day');

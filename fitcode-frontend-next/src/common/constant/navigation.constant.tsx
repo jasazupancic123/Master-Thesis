@@ -102,7 +102,7 @@ export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: string) => ({
       ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)
       : undefined,
   register:
-    role === UserRole.ADMIN || role === UserRole.MANAGER
+    role === UserRole.MANAGER
       ? link('Register Users', DASHBOARD_REGISTER_USERS, <PersonAddAlt1 />)
       : undefined,
 });

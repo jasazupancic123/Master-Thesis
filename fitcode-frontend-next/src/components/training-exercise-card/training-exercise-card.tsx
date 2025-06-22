@@ -10,6 +10,7 @@ import { updateTraining } from './state';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import { useTheme } from '@mui/material';
+import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -19,19 +20,22 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
-  const { supersets, setTodaysTrainings } = useTrainerDayViewContext();
+  const { supersets, setTodaysTrainings, selectedExercises } =
+    useTrainerDayViewContext();
 
   const {
     supersetIndex,
     setSelectedExercise,
     chartView,
     setOpenVideoPlayerModal,
-    exercise: propsExercise,
+    exercise,
+    setsNumbers,
+    setSetsNumbers,
+    setSupersets,
   } = props;
 
-  const [exercise, setExercise] = useState(propsExercise);
+  // const [exercise, setExercise] = useState(propsExercise);
   const [expandedSetsView, setExpandedSetsView] = useState(false);
-  const [setsNumber, setSetsNumber] = useState(props.exercise.sets.length);
   const isSetNumberInitedRef = useRef(false);
 
   const i = training?.components.findIndex((c) => c.id === component?.id);
@@ -56,70 +60,126 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   if (!training || !component || !params) return null;
 
   useEffect(() => {
-    if (propsExercise !== exercise) {
-      setSetsNumber(propsExercise.sets.length);
-      setExercise(propsExercise);
-    }
-  }, [propsExercise]);
-
-  useEffect(() => {
     if (!isSetNumberInitedRef.current) {
       isSetNumberInitedRef.current = true;
       return;
     }
-    const newSets = setsNumber;
-    if (newSets > 16 || newSets < 1) return;
 
-    const prevSets = exercise.sets.length;
+    if (selectedExercises.length) {
+      const updatedExercises = [] as TrainingExercise[];
+      for (const selectedExercise of selectedExercises) {
+        const newSets = setsNumbers.find(
+          (s) => s.exerciseId === selectedExercise.id
+        )?.setsNumber;
 
-    let newExercise;
-    if (prevSets > newSets) {
-      // remove sets
-      newExercise = {
-        ...exercise,
-        sets: [...exercise.sets].slice(0, newSets),
-        params: [...exercise.params],
-      };
-    } else {
-      // add sets to the end
-      const paramValues = exercise.sets[
-        exercise.sets.length - 1
-      ].paramValuesL.map((pv) => ({ ...pv }));
+        if (newSets === undefined || newSets === null) return;
 
-      newExercise = {
-        ...exercise,
-        sets: [
-          ...exercise.sets,
-          ...Array.from({ length: newSets - prevSets }, (_, i) => ({
-            setNumber: prevSets + i + 1,
-            paramValuesL: paramValues,
-            paramValuesR: paramValues,
-          })),
-        ],
-      };
-    }
+        if (newSets > 16 || newSets < 1) return;
 
-    updateTraining(
-      { exercise: newExercise },
-      {
-        training,
-        component,
-        setTodaysTrainings,
-        supersets,
-        setDetectedChanges,
-        selectedSubgroup,
-        setSelectedSubgroup,
-        supersetIndex,
+        const prevSets = selectedExercise.sets.length;
+
+        let newExercise;
+        if (prevSets > newSets) {
+          // remove sets
+          newExercise = {
+            ...selectedExercise,
+            sets: [...selectedExercise.sets].slice(0, newSets),
+            params: [...selectedExercise.params],
+          };
+        } else {
+          // add sets to the end
+          const paramValues = selectedExercise.sets[
+            selectedExercise.sets.length - 1
+          ].paramValuesL.map((pv) => ({ ...pv }));
+
+          newExercise = {
+            ...selectedExercise,
+            sets: [
+              ...selectedExercise.sets,
+              ...Array.from({ length: newSets - prevSets }, (_, i) => ({
+                setNumber: prevSets + i + 1,
+                paramValuesL: paramValues,
+                paramValuesR: paramValues,
+              })),
+            ],
+          };
+        }
+
+        updatedExercises.push(newExercise);
       }
-    );
-  }, [setsNumber]);
+
+      updateTraining(
+        { exercises: updatedExercises },
+        {
+          training,
+          component,
+          setTodaysTrainings,
+          supersets,
+          setDetectedChanges,
+          selectedSubgroup,
+          setSelectedSubgroup,
+        }
+      );
+    } else {
+      const newSets = setsNumbers.find(
+        (s) => s.exerciseId === exercise.id
+      )?.setsNumber;
+
+      if (newSets === undefined || newSets === null) return;
+
+      if (newSets > 16 || newSets < 1) return;
+
+      const prevSets = exercise.sets.length;
+
+      let newExercise;
+      if (prevSets > newSets) {
+        // remove sets
+        newExercise = {
+          ...exercise,
+          sets: [...exercise.sets].slice(0, newSets),
+          params: [...exercise.params],
+        };
+      } else {
+        // add sets to the end
+        const paramValues = exercise.sets[
+          exercise.sets.length - 1
+        ].paramValuesL.map((pv) => ({ ...pv }));
+
+        newExercise = {
+          ...exercise,
+          sets: [
+            ...exercise.sets,
+            ...Array.from({ length: newSets - prevSets }, (_, i) => ({
+              setNumber: prevSets + i + 1,
+              paramValuesL: paramValues,
+              paramValuesR: paramValues,
+            })),
+          ],
+        };
+      }
+
+      updateTraining(
+        { exercises: [newExercise] },
+        {
+          training,
+          component,
+          setTodaysTrainings,
+          supersets,
+          setDetectedChanges,
+          selectedSubgroup,
+          setSelectedSubgroup,
+          setSupersets,
+        }
+      );
+    }
+  }, [setsNumbers]);
 
   return (
     <Stack
-      spacing={1}
       p={1}
       px={screenSize.isMobile ? 0 : undefined}
       pb={2}
+      gap={1}
       sx={{
         width: '100% !important',
         position: 'relative',
@@ -150,7 +210,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       <Stack
         direction="row"
         justifyContent="center"
-        sx={{ cursor: 'pointer' }}
+        sx={{ cursor: 'pointer', mt: 0 }}
         onClick={() => {
           setSelectedExercise(exercise);
           setOpenVideoPlayerModal(true);
@@ -182,13 +242,12 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       ) : !expandedSetsView ? (
         <TrainingExerciseCardCollapsedSets
           exercise={exercise}
-          setExercise={setExercise}
+          setSupersets={setSupersets}
           expandedSetsView={expandedSetsView}
           setExpandedSetsView={setExpandedSetsView}
-          setsNumber={setsNumber}
-          setSetsNumber={setSetsNumber}
+          setsNumbers={setsNumbers}
+          setSetsNumbers={setSetsNumbers}
           i={i}
-          supersetIndex={supersetIndex}
         />
       ) : (
         <TrainingExerciseCardExpandedSets

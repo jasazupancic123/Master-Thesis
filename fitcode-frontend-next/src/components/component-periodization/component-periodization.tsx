@@ -49,11 +49,9 @@ export default function ComponentPeriodization(
     methods,
   } = useGroup();
 
-  const { setTodaysTrainings } = useTrainerDayViewContext();
+  const { setTodaysTrainings, selectedExercises, setSelectedExercises } =
+    useTrainerDayViewContext();
 
-  const [selectedExercises, setSelectedExercises] = useState<
-    TrainingExercise[]
-  >(selectedComponent.supersets.map((s) => s.exercises.map((e) => e)).flat());
   const [allExercises, setAllExercises] = useState<TrainingExercise[]>(
     selectedComponent.supersets.map((s) => s.exercises.map((e) => e)).flat()
   );
@@ -209,43 +207,6 @@ export default function ComponentPeriodization(
           >
             {selectedComponent.periodizationType ? (
               <>
-                {' '}
-                <Box
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                  width="100%"
-                  textAlign="center"
-                  flexDirection={screenSize.isMobile ? 'column' : 'row'}
-                  gap={1}
-                >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    display="flex"
-                    alignItems="center"
-                  >
-                    Periodization base is the outlined component, periodization
-                    type:
-                  </Typography>
-
-                  <SelectInput<PeriodizationType>
-                    disabled
-                    label=""
-                    icon={<Redo />}
-                    value={
-                      selectedComponent.periodizationType ||
-                      'No Periodization Selected'
-                    }
-                    items={Object.values(PeriodizationType).filter(
-                      (p) => p !== PeriodizationType.NONE
-                    )}
-                    itemKey={undefined}
-                    itemName={undefined}
-                    setValue={(value) => {}}
-                    selectPadding={'0'}
-                  />
-                </Box>
                 <Box
                   display="flex"
                   justifyContent="center"
@@ -297,26 +258,6 @@ export default function ComponentPeriodization(
                   Periodizing colored components, click components to select or
                   deselect them.
                 </Typography>
-                <Typography
-                  variant="body1"
-                  mt={1}
-                  onClick={() => setExpandExerciseView((prev) => !prev)}
-                  textAlign="center"
-                  sx={{
-                    cursor: 'pointer',
-                  }}
-                >
-                  Exercises to periodize ({selectedExercises.length}/
-                  {allExercises.length})
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandExerciseView(!expandExerciseView);
-                    }}
-                  >
-                    {!expandExerciseView ? <ArrowDropDown /> : <ArrowDropUp />}
-                  </IconButton>
-                </Typography>
                 <Box
                   display="flex"
                   flexWrap="wrap"
@@ -328,13 +269,6 @@ export default function ComponentPeriodization(
                     allExercises.map((exercise) => (
                       <Box
                         key={exercise.id}
-                        onClick={() => {
-                          setSelectedExercises((prev) =>
-                            prev.includes(exercise)
-                              ? prev.filter((e) => e.id !== exercise.id)
-                              : [...prev, exercise]
-                          );
-                        }}
                         sx={{
                           cursor: 'pointer',
                           padding: '4px 8px',
@@ -369,7 +303,7 @@ export default function ComponentPeriodization(
         </Box>
       )}
 
-      <Box display="flex" justifyContent="center" width="100%" mt={2}>
+      <Box display="flex" justifyContent="center" width="100%">
         <Button
           variant="contained"
           sx={{ marginX: 'auto' }}

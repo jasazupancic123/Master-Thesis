@@ -8,7 +8,7 @@ import {
 } from '@/controller/training/type/training-plan.type';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect } from 'react';
 import {
   Line,
   LineChart,
@@ -39,6 +39,9 @@ interface TrainignExerciseSelectedProps {
   data: ChartWorkloadData[];
   onAthleteView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
+  setsNumbers: { exerciseId: string; setsNumber: number }[];
+  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
+  setSupersets: SetState<Superset[]>;
 }
 
 export default function TrainignExerciseSelected(
@@ -64,6 +67,9 @@ export default function TrainignExerciseSelected(
     paddingForChartBackground,
     percentageForChartBackground,
     data,
+    setsNumbers,
+    setSetsNumbers,
+    setSupersets,
   } = props;
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
@@ -93,6 +99,9 @@ export default function TrainignExerciseSelected(
           chartView={true}
           superior={superior}
           setOpenVideoPlayerModal={setOpenVideoPlayerModal}
+          setsNumbers={setsNumbers}
+          setSetsNumbers={setSetsNumbers}
+          setSupersets={setSupersets}
         />
       </Grid2>
       <Grid2
