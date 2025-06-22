@@ -16,6 +16,7 @@ import {
 import { isBefore } from 'date-fns';
 import { Dimensions } from '@/common/type/dimensions.type';
 import TrainignExerciseSelected from '../training-exercise-selected/training-exercise-selected';
+import { SetState } from '@/common/type/state.type';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
@@ -26,13 +27,21 @@ interface TrainingExerciseCardContainerProps {
   superior?: { row: boolean; column: boolean; all: boolean };
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
   supersets: Superset[];
+  setSupersets: SetState<Superset[]>;
+  setsNumbers: { exerciseId: string; setsNumber: number }[];
+  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
 }
 
 export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
-  const { training, selectedAthlete, selectedAthleteWorkloads } =
-    useTrainerDayViewContext();
+  const {
+    training,
+    selectedAthlete,
+    selectedAthleteWorkloads,
+    component,
+    selectedSubgroup,
+  } = useTrainerDayViewContext();
   const { trainings } = useGroup();
 
   const {
@@ -43,7 +52,10 @@ export default function TrainingExerciseCardContainer(
     superior,
     setOpenVideoPlayerModal,
     supersets,
+    setSupersets,
     onAthleteView,
+    setsNumbers,
+    setSetsNumbers,
   } = props;
 
   const [data, setData] = useState<ChartWorkloadData[]>([]);
@@ -54,6 +66,35 @@ export default function TrainingExerciseCardContainer(
 
   const [range, setRange] = useState<number[]>([1, 6]); // Example range
   const [max, setMax] = useState<number>(10);
+
+  useEffect(() => {
+    const newSetsNumbers = [] as { exerciseId: string; setsNumber: number }[];
+
+    if (selectedSubgroup?.subgroup) {
+      selectedSubgroup.subgroup.supersets.forEach((superset) => {
+        superset.exercises.forEach((exercise) => {
+          const setsNumber = exercise.sets.length;
+          newSetsNumbers.push({
+            exerciseId: exercise.id,
+            setsNumber: setsNumber,
+          });
+        });
+      });
+    } else {
+      component?.supersets?.forEach((superset) => {
+        superset.exercises.forEach((exercise) => {
+          const setsNumber = exercise.sets.length;
+          newSetsNumbers.push({
+            exerciseId: exercise.id,
+            setsNumber: setsNumber,
+          });
+        });
+      });
+    }
+
+    setSetsNumbers(newSetsNumbers);
+  }, []);
+  // }, [selectedSubgroup?.subgroup, training, component]);
 
   useEffect(() => {
     if (exercise.id !== selectedExercise?.id || !training) return;
@@ -162,6 +203,9 @@ export default function TrainingExerciseCardContainer(
       data={data}
       onAthleteView={onAthleteView}
       superior={superior}
+      setsNumbers={setsNumbers}
+      setSetsNumbers={setSetsNumbers}
+      setSupersets={setSupersets}
     />
   ) : (
     <TrainingExerciseCard
@@ -171,6 +215,9 @@ export default function TrainingExerciseCardContainer(
       setSelectedExercise={setSelectedExercise}
       superior={superior}
       setOpenVideoPlayerModal={setOpenVideoPlayerModal}
+      setsNumbers={setsNumbers}
+      setSetsNumbers={setSetsNumbers}
+      setSupersets={setSupersets}
     />
   );
 }

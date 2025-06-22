@@ -13,6 +13,7 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import {
   Superset,
   TrainingComponent,
+  TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
@@ -54,6 +55,9 @@ export function TrainerDayViewProvider(
   const [todaysTrainings, setTodaysTrainings] = useState<Training[]>([]);
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
+  const [selectedExercises, setSelectedExercises] = useState<
+    TrainingExercise[]
+  >([]);
   const [members, setMembers] = useState<UserEntity[]>([]);
   const [selectedAthlete, setSelectedAthlete] = useState<User | undefined>();
   const [selectedSubgroup, setSelectedSubgroup] = useState<{
@@ -112,6 +116,7 @@ export function TrainerDayViewProvider(
     setSelectedSubgroup(null);
     setComponent(undefined);
     setSelectedAthlete(undefined);
+    setSelectedExercises([]);
   }, [cycle, dateFrom, dateTo]);
 
   /**
@@ -145,6 +150,8 @@ export function TrainerDayViewProvider(
     setTodaysTrainings,
     component,
     setComponent,
+    selectedExercises,
+    setSelectedExercises,
     supersets,
     setSupersets,
     members,

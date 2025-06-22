@@ -20,6 +20,7 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Pagination } from '@/common/type/paginate.type';
+import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export function handleAddExerciseToSupersetComponent(
   input: {
@@ -30,6 +31,7 @@ export function handleAddExerciseToSupersetComponent(
     training: Training;
     setTraining: SetStateNullable<Training>;
     setTodaysTrainings: SetState<Training[]>;
+    setTrainings: SetState<TrainingInfo[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: {
@@ -54,6 +56,7 @@ export function handleAddExerciseToSupersetComponent(
     training,
     setTraining,
     setTodaysTrainings,
+    setTrainings,
     component,
     setComponent,
     selectedSubgroup,
@@ -173,8 +176,14 @@ export function handleAddExerciseToSupersetComponent(
           ? { ...training, warmup: updatedWOrC }
           : { ...training, cooldown: updatedWOrC };
 
+      const minimalTraining =
+        TrainingService.convertFromTrainingToTrainingMinimal(updatedTraining);
+
       setComponent(updatedWOrC);
       setTraining(updatedTraining);
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
+      );
       setTodaysTrainings((prev) =>
         prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
       );
@@ -199,10 +208,16 @@ export function handleAddExerciseToSupersetComponent(
           ? { ...training, warmup: updatedWOrC }
           : { ...training, cooldown: updatedWOrC };
 
+      const minimalTraining =
+        TrainingService.convertFromTrainingToTrainingMinimal(updatedTraining);
+
       setComponent(updatedWOrC);
       setTraining(updatedTraining);
       setTodaysTrainings((prev) =>
         prev.map((t) => (t.id === updatedTraining.id ? updatedTraining : t))
+      );
+      setTrainings((prev) =>
+        prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
       );
       setOpenAddExerciseModal(false);
       setDetectedChanges(true);
@@ -304,14 +319,20 @@ export function handleAddExerciseToSupersetComponent(
     );
 
     setDetectedChanges(true);
-    const newTraining = {
+    const newTraining: Training = {
       ...training,
       components: updatedComponents,
       futureStats,
     };
 
+    const minimalTraining =
+      TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+
     setTodaysTrainings((prev) =>
       prev.map((t) => (t.id === newTraining.id ? newTraining : t))
+    );
+    setTrainings((prev) =>
+      prev.map((t) => (t.id === minimalTraining.id ? minimalTraining : t))
     );
     setOpenAddExerciseModal(false);
   } else {
