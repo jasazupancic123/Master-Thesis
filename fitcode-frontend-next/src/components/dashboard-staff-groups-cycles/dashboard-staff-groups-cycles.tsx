@@ -77,11 +77,13 @@ export default function DashboardStaffGroupsCycles(
           trainerIds: [trainerId],
         }),
       (institution) => {
-        institution = InstitutionService.mapUsers(
-          [institution],
-          users || []
-        )[0];
-        setSelectedInstitution(institution);
+        setSelectedInstitution((prev) => {
+          if (!prev) return null;
+          const updatedTrainers = prev.trainers.filter(
+            (trainer) => trainer.uid !== trainerId
+          );
+          return { ...prev, trainers: updatedTrainers };
+        });
         toast.success('Trainer removed successfully');
       },
       undefined,
@@ -138,14 +140,16 @@ export default function DashboardStaffGroupsCycles(
                   alignItems="center"
                   gap={1}
                 >
-                  <Typography variant="body1">OWNER</Typography>
+                  <Typography variant="body1" textAlign="center">
+                    {selectedInstitution.name.toUpperCase()}
+                  </Typography>
                   <Tooltip
                     title={selectedInstitution.owner?.displayName || ''}
                     placement="top"
                   >
                     <Avatar
                       className="avatar-border"
-                      src={'/user_avatar.png'}
+                      src={selectedInstitution.imageUrl || '/user_avatar.png'}
                       sx={{
                         width: screenSize.isMobile ? 70 : 90,
                         height: screenSize.isMobile ? 70 : 90,
@@ -163,6 +167,25 @@ export default function DashboardStaffGroupsCycles(
                 maxHeight={150}
                 overflow="auto"
               >
+                {isManager(role) && (
+                  <Tooltip title="Add trainer" placement="top">
+                    <IconButton
+                      onClick={() =>
+                        setModal({ add_trainer: true, add_group: false })
+                      }
+                      sx={{
+                        m: 0,
+                        p: 0,
+                        position: 'absolute',
+                        top: 10,
+                        right: 20,
+                      }}
+                    >
+                      <PersonAddAlt />
+                    </IconButton>
+                  </Tooltip>
+                )}
+
                 {selectedInstitution &&
                   selectedInstitution.trainers &&
                   selectedInstitution.trainers.map((trainer) => (
@@ -258,6 +281,7 @@ export default function DashboardStaffGroupsCycles(
             width="100%"
             overflow="auto"
             maxHeight="100% !important"
+            gap={1}
             sx={{
               position: 'relative',
               backgroundColor: theme.palette.background.paper,
@@ -265,7 +289,6 @@ export default function DashboardStaffGroupsCycles(
               py: 0.5,
               borderTopRightRadius: '10px',
               borderTopLeftRadius: '10px',
-
               scrollbarWidth: 'thin',
               scrollbarColor: '#515b68 transparent',
               '&::-webkit-scrollbar': {
@@ -302,7 +325,7 @@ export default function DashboardStaffGroupsCycles(
                 return (
                   <IconButton
                     disableRipple
-                    key={group.id}
+                    key={`${group.id}-button`}
                     onClick={() => {
                       setSelectedGroup(group);
                       if (group.cycles.length === 0) setSelectedCycle(null);
