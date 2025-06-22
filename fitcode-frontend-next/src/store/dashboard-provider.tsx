@@ -6,12 +6,13 @@ import { ChildrenProps } from '@/common/type/props.type';
 import { SetState } from '@/common/type/state.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Institution } from '@/controller/institution/type/institution.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { User } from '@/controller/user/type/user.type';
 import { url } from 'inspector';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 interface DashboardContextProps {
-  role: string;
+  role: UserRole[];
   token: string;
   profile: User;
   institutions: Institution[];
@@ -30,7 +31,7 @@ interface DashboardContextProps {
 export interface DashboardPageProps {
   institutions: Institution[];
   selectedInstitution: Institution | null;
-  role: string;
+  role: UserRole[];
   users: User[];
   token: string;
   profile: User;

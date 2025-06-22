@@ -35,6 +35,7 @@ export default function SelectInputHorizontal<T>(props: Props<T>) {
         startAdornment={
           <InputAdornment position="start">{props.icon}</InputAdornment>
         }
+        native={false}
         displayEmpty
         renderValue={(selected) => {
           if (!selected) return <em>{props.label}</em>;
@@ -51,10 +52,15 @@ export default function SelectInputHorizontal<T>(props: Props<T>) {
         }}
         sx={{
           color: '#fff',
-          '.MuiOutlinedInput-notchedOutline': { border: 'none' },
+          '.MuiOutlinedInput-notchedOutline': { p: 0, border: 'none' },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
           p: screenSize.isMobile ? 0 : undefined,
+
+          // 👇 Hides the internal <input>
+          '.MuiSelect-select': {
+            padding: 0,
+          },
         }}
       >
         {props.items.map((item, i) => (
