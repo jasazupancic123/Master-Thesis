@@ -29,6 +29,7 @@ export type AddMembersModalProps = {
   setSelectedInstitution?: SetState<Institution | null>;
   singleMember?: User | null; // for single member selection
   setSingleMember?: SetState<User | null>; // for single member selection
+  enableFirstShowUsers?: boolean; // to show first 5 users when search is empty
 };
 
 export function AddMembersModal(props: AddMembersModalProps) {
@@ -45,6 +46,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
     setSelectedInstitution,
     singleMember,
     setSingleMember,
+    enableFirstShowUsers,
   } = props;
   const { setDetectedChanges } = useDashboard();
 
@@ -172,7 +174,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
                 <Typography variant="body2">No Users Found</Typography>
               </Box>
             ) : (
-              searchQueryAddPlayer.length > 0 &&
+              (searchQueryAddPlayer.length > 0 || enableFirstShowUsers) &&
               filteredUsers &&
               filteredUsers
                 .filter((user) => user && user.uid) // Ensure valid users

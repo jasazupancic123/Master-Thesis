@@ -180,16 +180,10 @@ export class InstitutionService {
     this.validateManager(user, institution);
 
     const trainers = await this.findMembers(input.trainerIds, UserRole.TRAINER);
-    const newTrainerIds = trainers.map((trainer) => trainer.uid);
-
-    const docRef = this.institutionRepository.collection().doc(institution.id);
-    await docRef.update({
-      athleteIds: FieldValue.arrayUnion(...newTrainerIds),
-    });
 
     return {
       ...institution,
-      trainerIds: [...institution.athleteIds, ...trainers.map((a) => a.uid)],
+      trainerIds: trainers.map((a) => a.uid),
     };
   }
 

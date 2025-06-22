@@ -13,7 +13,13 @@ import SpaIcon from '@mui/icons-material/Spa';
 import { ReactNode } from 'react';
 import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
-import { Dashboard, Groups, PersonAddAlt1 } from '@mui/icons-material';
+import {
+  ChatRounded,
+  Dashboard,
+  Groups,
+  PersonAddAlt1,
+  TrendingUp,
+} from '@mui/icons-material';
 import {
   DASHBOARD_ADD_INSTITUTION,
   DASHBOARD_EXERCISES,
@@ -93,18 +99,13 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
 
-export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: string) => ({
+export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole[]) => ({
   home: link('Home', DASHBOARD_MAIN, <HomeIcon />),
-  athletes: link('Groups', DASHBOARD_GROUPS, <Groups />),
+  athletes: link('Progress', DASHBOARD_GROUPS, <TrendingUp />),
   exercises: link('Exercises', DASHBOARD_EXERCISES, <FitnessCenterIcon />),
-  addInstitution:
-    role === UserRole.ADMIN
-      ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)
-      : undefined,
-  register:
-    role === UserRole.MANAGER
-      ? link('Register Users', DASHBOARD_REGISTER_USERS, <PersonAddAlt1 />)
-      : undefined,
+  addInstitution: role.includes(UserRole.ADMIN)
+    ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)
+    : undefined,
 });
 
 export const LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS = {

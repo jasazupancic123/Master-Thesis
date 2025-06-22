@@ -18,7 +18,7 @@ export default async function Layout({ children }: ChildrenProps) {
   const profile = await UserController.findMe(token);
   if (!profile) return <div>Unauthorized</div>;
 
-  const role = profile.customClaims.role[0];
+  const role = profile.customClaims.role;
   const users = await UserController.findAll(token);
 
   const institutions = InstitutionService.mapUsers(

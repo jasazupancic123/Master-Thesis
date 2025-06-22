@@ -74,7 +74,7 @@ export default function Mediapipe() {
 
   const enableCam = async () => {
     if (!poseLandmarker) {
-      console.log('Wait! poseLandmarker not loaded yet.');
+      toast.error('Wait! poseLandmarker not loaded yet.');
       return;
     }
 
