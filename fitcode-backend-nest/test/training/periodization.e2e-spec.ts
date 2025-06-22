@@ -11,7 +11,7 @@ import { TrainingService } from '../../src/training/service/training.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { GroupService } from '../../src/group/group.service';
 import { Group } from '../../src/group/entity/group.entity';
-import { createGroupWithCycles } from '../utils/data.util';
+import { createGroupWithCycles, createInstitution } from '../utils/data.util';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import {
   generateTrainingStub,
@@ -27,7 +27,6 @@ import { PeriodizationType } from '../../src/group/enum/periodization-type.enum'
 import { ParamType } from '../../src/component/enum/param.enum';
 import { ExerciseSet } from '../../src/training/entity/exercise-set.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;
@@ -85,19 +84,14 @@ describe('Periodization functions (e2e)', () => {
     );
 
     const institutionService = moduleFixture.get(InstitutionService);
-    const institution = await institutionService.create(
-      global.admin,
-      generateInstitutionStub(),
-    );
+    const institution = await createInstitution(institutionService);
 
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      trainer: trainer,
-      membersIds: [athlete.uid],
       cycleLengthInWeeks: 60,
     });
 
-    exercises = await exerciseService.createMany(trainer, [
+    exercises = await exerciseService.createMany(global.admin, [
       generateExerciseStub({ id: 'deadlift', componentIds: [component.id] }),
       generateExerciseStub({ id: 'squat', componentIds: [component.id] }),
       generateExerciseStub({
