@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: ChildrenProps) {
         }}
       >
         <Box mt="48px">
-          <Box mt="16px" display="flex" flexDirection="row" width="100%">
+          <Box mt="10px" display="flex" flexDirection="row" width="100%">
             <DashboardSidebar />
             <Box
               sx={{

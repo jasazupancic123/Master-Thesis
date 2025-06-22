@@ -121,7 +121,6 @@ export class TrainingController {
     }[],
     customAthleteWorkloads: Workload[]
   ) {
-    console.log('body:', body);
     const { groupId, cycleId } = params;
     return api.patch<Training[]>(
       `/training/batch/group/${groupId}/cycle/${cycleId}`,

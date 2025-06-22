@@ -1049,6 +1049,11 @@ export class TrainingService {
     const allComponents =
       this.trainingPlanService.getTrainingComponents(training);
 
+    // FIX:
+    // const allComponents = training.components
+    // allComponents.unshift(training.warmup);
+    // allComponents.push(training.cooldown);
+
     // mark user as completed (for component and training)
     const component = allComponents.find((c) => c.id === componentId);
     if (!component) throw new BadRequestException('Component not found');

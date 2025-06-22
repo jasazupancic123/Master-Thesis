@@ -45,11 +45,13 @@ export default function DashboardAthlete(props: DashboardAthleteProps) {
           athleteIds: [athleteId],
         }),
       (institution) => {
-        institution = InstitutionService.mapUsers(
-          [institution],
-          users || []
-        )[0];
-        setSelectedInstitution(institution);
+        setSelectedInstitution((prev) => {
+          if (!prev) return null;
+          const updatedAthletes = prev.athletes?.filter(
+            (a) => a.uid !== athleteId
+          );
+          return { ...prev, athletes: updatedAthletes };
+        });
         toast.success('Athlete removed successfully');
       },
       undefined,
