@@ -55,8 +55,6 @@ export class TrainingPlanService {
     private readonly exerciseService: Wrapper<ExerciseService>,
     @Inject(forwardRef(() => ExerciseAttributeValueRepository))
     private readonly exerciseAttributeValueRepository: Wrapper<ExerciseAttributeValueRepository>,
-    @Inject(forwardRef(() => WorkloadService))
-    private readonly workloadService: Wrapper<WorkloadService>,
   ) {}
 
   async getInstitution(exercise: Exercise): Promise<Institution | null> {
@@ -164,7 +162,10 @@ export class TrainingPlanService {
    * @param futureStats - FutureStats of existing training in database
    * @param exercises - New completed exercises values from athlete
    */
-  calculateFutureTrainingStats(futureStats: GroupWorkloadStats[], exercises: TrainingExercise[]) {
+  calculateFutureTrainingStats(
+    futureStats: GroupWorkloadStats[],
+    exercises: TrainingExercise[],
+  ) {
     for (const exercise of exercises) {
       const avgFutureStats = futureStats.find(
         (avg) => avg.exerciseId === exercise.id,
