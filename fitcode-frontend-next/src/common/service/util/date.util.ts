@@ -60,7 +60,10 @@ export class DateUtil {
     }
 
     const days: Day[] = [];
-    let date = start;
+    
+    let date = dayjs(toZonedTime(start.toDate(), 'UTC').setHours(12));
+    date = dayjs(date).set('day', dayjs(start).day());
+
     while (date.isBefore(end)) {
       days.push({ label: date.format('ddd'), date });
       date = date.add(1, 'day');
