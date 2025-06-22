@@ -34,7 +34,8 @@ export default function GroupTrainerDayViewHeader(
 
   const { group, cycle, setDateFrom, setDateTo } = useGroup();
 
-  const { selectedAthlete, selectedSubgroup } = useTrainerDayViewContext();
+  const { selectedAthlete, selectedSubgroup, setSelectedExercises } =
+    useTrainerDayViewContext();
   return (
     <Stack
       direction="row"
@@ -185,6 +186,7 @@ export default function GroupTrainerDayViewHeader(
             setDay({ label: '', date: dayjs(value) });
             setDateFrom(dayjs(value).startOf('day'));
             setDateTo(dayjs(value).endOf('day'));
+            setSelectedExercises([]);
           }}
           onlySelectedValueColored
           getBackgroundColor={(value, itemValue) =>

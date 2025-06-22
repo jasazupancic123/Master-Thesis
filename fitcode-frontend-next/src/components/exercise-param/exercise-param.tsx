@@ -18,8 +18,8 @@ interface Props {
   disableSets?: boolean;
   readOnly?: boolean;
   exercise?: TrainingExercise;
-  setsNumber?: number;
-  setSetsNumber?: SetState<number>;
+  setsNumbers?: { exerciseId: string; setsNumber: number }[];
+  setSetsNumbers?: SetState<{ exerciseId: string; setsNumber: number }[]>;
   handleSetNumberChange?: (value: number) => void;
   min?: number;
   max?: number;
@@ -35,8 +35,8 @@ export function ExerciseParam(props: Props) {
     disableOptions = false,
     disableSets = false,
     readOnly = false,
-    setsNumber,
-    setSetsNumber,
+    setsNumbers,
+    setSetsNumbers,
     exercise: propsExercise,
     min,
     max,
@@ -201,13 +201,29 @@ export function ExerciseParam(props: Props) {
             onBlur={(e) => {
               if (
                 value.field === 'volWorkSets' &&
-                setsNumber !== undefined &&
-                setsNumber !== null &&
-                setSetsNumber &&
+                setsNumbers !== undefined &&
+                setsNumbers !== null &&
+                setSetsNumbers &&
                 propsExercise
               ) {
+                const setsNumber = setsNumbers.find(
+                  (s) => s.exerciseId === propsExercise.id
+                )?.setsNumber;
+
+                if (setsNumber === undefined || setsNumber === null) return;
+
                 if (setsNumber !== propsExercise.sets.length) {
-                  setSetsNumber(propsExercise.sets.length);
+                  const newSetsNumber = propsExercise.sets.length;
+                  setSetsNumbers((prev) => {
+                    const newSetsNumbers = prev.filter(
+                      (s) => s.exerciseId !== propsExercise.id
+                    );
+                    newSetsNumbers.push({
+                      exerciseId: propsExercise.id,
+                      setsNumber: newSetsNumber,
+                    });
+                    return newSetsNumbers;
+                  });
                 }
               }
             }}

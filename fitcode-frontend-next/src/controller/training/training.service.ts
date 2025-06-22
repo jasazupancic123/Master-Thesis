@@ -66,6 +66,22 @@ export class TrainingService {
           }
     }
 
+    if (this.isTrainingComponent(item.warmup)) {
+      for (const s of item.warmup.supersets)
+        for (const e of s.exercises) {
+          e.exercise = exercises.find(({ id }) => id === e.id);
+          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+        }
+    }
+
+    if (this.isTrainingComponent(item.cooldown)) {
+      for (const s of item.cooldown.supersets)
+        for (const e of s.exercises) {
+          e.exercise = exercises.find(({ id }) => id === e.id);
+          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+        }
+    }
+
     return item;
   }
 

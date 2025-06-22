@@ -20,7 +20,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
 
   const theme = useTheme();
 
-  const { setTraining, component, setComponent } = useTrainerDayViewContext();
+  const { setTraining, component, setComponent, setSelectedExercises } =
+    useTrainerDayViewContext();
 
   return (
     <Box display="flex" p={0}>
@@ -34,6 +35,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               setTraining(training);
               setComponent(trainingComponent);
             }
+            setSelectedExercises([]);
           }}
         >
           {trainingComponent?.id === component?.id ? (
@@ -97,6 +99,7 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 setTraining(training);
                 setComponent(trainingComponent);
               }
+              setSelectedExercises([]);
             }}
           >
             {trainingComponent.target
