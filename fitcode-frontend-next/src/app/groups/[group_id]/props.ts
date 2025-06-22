@@ -12,6 +12,7 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import {
   Superset,
   TrainingComponent,
+  TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
@@ -63,6 +64,8 @@ export type TrainerDayViewContextProps = {
   exercises: Exercise[];
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
+  selectedExercises: TrainingExercise[]; // selected exercises in the component
+  setSelectedExercises: SetState<TrainingExercise[]>;
   supersets: Superset[]; // supersets of the selected component
   setSupersets: SetState<Superset[]>;
   selectedAthlete: User | undefined;

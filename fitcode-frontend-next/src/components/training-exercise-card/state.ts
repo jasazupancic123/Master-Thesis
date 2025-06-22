@@ -163,8 +163,8 @@ export function handleAthleteWorkloadsChange(
 
 export function updateTraining(
   input: {
-    exercise: TrainingExercise;
-    intensityVolumeValue?: IntensityVolumeValues;
+    exercises: TrainingExercise[];
+    intensityVolumeValues?: IntensityVolumeValues[];
   },
   state: {
     training: Training;
@@ -180,10 +180,10 @@ export function updateTraining(
       subgroup: Subgroup | null;
       index: number;
     } | null>;
-    supersetIndex: number;
+    setSupersets?: SetState<Superset[]>;
   }
 ) {
-  const { exercise, intensityVolumeValue } = input;
+  const { exercises, intensityVolumeValues } = input;
   const {
     training,
     component,
@@ -191,138 +191,140 @@ export function updateTraining(
     supersets,
     setDetectedChanges,
     selectedSubgroup,
-    supersetIndex,
     setSelectedSubgroup,
+    setSupersets,
   } = state;
 
   if (!training || !component) return;
 
-  const newSuperset = { ...supersets[supersetIndex] };
-  const exerciseIndex = newSuperset.exercises.findIndex(
-    (e) => e.id === exercise.id
-  );
+  if (
+    intensityVolumeValues &&
+    exercises.length !== intensityVolumeValues.length
+  ) {
+    toast.error('Errro in exercise selection');
+    return;
+  }
 
-  if (exerciseIndex === -1 || !training || !component) return;
+  let newSupersets = [...supersets];
+  let updatedSubgroup = selectedSubgroup?.subgroup
+    ? { ...selectedSubgroup.subgroup }
+    : undefined;
+  let updatedComponent = { ...component };
+  let newAvgFutureWorkloadValues = selectedSubgroup?.subgroup
+    ? [...selectedSubgroup.subgroup.futureStats]
+    : [...training.futureStats];
+  let detectedChanges = false;
 
-  newSuperset.exercises[exerciseIndex] = { ...exercise };
-  const newSupersets = [...supersets];
-  if (supersetIndex !== -1) newSupersets[supersetIndex] = newSuperset;
+  for (let i = 0; i < exercises.length; i++) {
+    const exercise = exercises[i];
+    const intensityVolumeValue = intensityVolumeValues
+      ? intensityVolumeValues[i]
+      : undefined;
+
+    const supersetIndex = supersets.findIndex((s) =>
+      s.exercises.some((e) => e.id === exercise.id)
+    );
+    if (supersetIndex === -1) continue;
+
+    const newSuperset = { ...newSupersets[supersetIndex] };
+    const exerciseIndex = newSuperset.exercises.findIndex(
+      (e) => e.id === exercise.id
+    );
+    if (exerciseIndex === -1 || !training || !component) continue;
+
+    newSuperset.exercises[exerciseIndex] = { ...exercise };
+    newSupersets[supersetIndex] = newSuperset;
+    detectedChanges = true;
+
+    if (intensityVolumeValue) {
+      const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
+        (aw) => aw.exerciseId === exercise.id
+      );
+
+      const numMembers = selectedSubgroup?.subgroup
+        ? selectedSubgroup.subgroup.membersIds.length
+        : (() => {
+            const subgroupsMembersIds = component.subgroups.reduce(
+              (acc, subgroup) => [...acc, ...subgroup.membersIds],
+              [] as string[]
+            );
+            return training.membersIds.length - subgroupsMembersIds.length;
+          })();
+
+      if (!foundAvgWorkloadValue) {
+        newAvgFutureWorkloadValues.push({
+          exerciseId: exercise.id,
+          rootComponentId: component.component?.id || '',
+          numMembers,
+          ...intensityVolumeValue,
+        });
+      } else {
+        foundAvgWorkloadValue.numMembers = numMembers;
+        foundAvgWorkloadValue.intensity = intensityVolumeValue.intensity;
+        foundAvgWorkloadValue.volume = intensityVolumeValue.volume;
+      }
+    }
+  }
+
+  if (!detectedChanges) return;
 
   ReactDOM.unstable_batchedUpdates(() => {
     setDetectedChanges(true);
 
     if (selectedSubgroup?.subgroup) {
-      // set new avg future workload values
-      let newAvgFutureWorkloadValues = undefined;
-      if (intensityVolumeValue) {
-        newAvgFutureWorkloadValues = [...selectedSubgroup.subgroup.futureStats];
-        const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
-          (aw) => aw.exerciseId === exercise.id
-        );
-        if (!foundAvgWorkloadValue) {
-          newAvgFutureWorkloadValues.push({
-            exerciseId: exercise.id,
-            rootComponentId: component.component?.id || '',
-            numMembers: selectedSubgroup.subgroup.membersIds.length,
-            ...intensityVolumeValue!,
-          });
-        } else {
-          foundAvgWorkloadValue.numMembers =
-            selectedSubgroup.subgroup.membersIds.length;
-          foundAvgWorkloadValue.intensity = intensityVolumeValue!.intensity;
-          foundAvgWorkloadValue.volume = intensityVolumeValue!.volume;
-        }
-      }
+      updatedSubgroup = {
+        ...updatedSubgroup!,
+        supersets: newSupersets,
+        futureStats: newAvgFutureWorkloadValues,
+      };
 
-      const updatedSubgroup = newAvgFutureWorkloadValues
-        ? {
-            ...selectedSubgroup.subgroup,
-            supersets: newSupersets,
-            futureStats: newAvgFutureWorkloadValues,
-          }
-        : {
-            ...selectedSubgroup.subgroup,
-            supersets: newSupersets,
-          };
-
-      const updatedComponent = {
-        ...component,
+      updatedComponent = {
+        ...updatedComponent,
         subgroups: component.subgroups.map((s, i) =>
-          i === selectedSubgroup.index ? updatedSubgroup : s
+          i === selectedSubgroup.index ? updatedSubgroup! : s
         ),
       };
-      setSelectedSubgroup({
-        subgroup: updatedSubgroup,
-        index: selectedSubgroup.index,
-      });
 
-      const updatedComponents = [...training.components].map((c) =>
+      const updatedComponents = training.components.map((c) =>
         c.id === component.id ? updatedComponent : c
       );
 
       const newTraining = { ...training, components: updatedComponents };
 
+      if (setSupersets) {
+        setSupersets(newSupersets);
+      }
+      
+      setSelectedSubgroup({
+        subgroup: updatedSubgroup!,
+        index: selectedSubgroup.index,
+      });
+
       setTodaysTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id !== newTraining.id) return newTraining;
-          return t;
-        })
+        prev.map((t) => (t.id === newTraining.id ? newTraining : t))
       );
     } else {
-      const updatedComponent = {
-        ...component,
+      updatedComponent = {
+        ...updatedComponent,
         supersets: newSupersets,
       };
 
-      const updatedComponents = [...training.components].map((c) =>
+      const updatedComponents = training.components.map((c) =>
         c.id === component.id ? updatedComponent : c
       );
 
-      // set new avg future workload values
-      let newAvgFutureWorkloadValues = undefined;
-      if (intensityVolumeValue) {
-        newAvgFutureWorkloadValues = [...training.futureStats];
-        const foundAvgWorkloadValue = newAvgFutureWorkloadValues.find(
-          (aw) => aw.exerciseId === exercise.id
-        );
+      const newTraining = {
+        ...training,
+        components: updatedComponents,
+        futureStats: newAvgFutureWorkloadValues,
+      };
 
-        // get number of members in main group
-        const subgroupsMembersIds = updatedComponent.subgroups.reduce(
-          (acc, subgroup) => {
-            return [...acc, ...subgroup.membersIds];
-          },
-          [] as string[]
-        );
-        const numberOfMainGroupMembers =
-          training.membersIds.length - subgroupsMembersIds.length;
-
-        if (!foundAvgWorkloadValue) {
-          newAvgFutureWorkloadValues.push({
-            exerciseId: exercise.id,
-            rootComponentId: component.component?.id || '',
-            numMembers: numberOfMainGroupMembers,
-            ...intensityVolumeValue!,
-          });
-        } else {
-          foundAvgWorkloadValue.numMembers = numberOfMainGroupMembers;
-          foundAvgWorkloadValue.intensity = intensityVolumeValue!.intensity;
-          foundAvgWorkloadValue.volume = intensityVolumeValue!.volume;
-        }
+      if (setSupersets) {
+        setSupersets(newSupersets);
       }
 
-      const newTraining: Training = newAvgFutureWorkloadValues
-        ? {
-            ...training,
-            components: updatedComponents,
-            futureStats: newAvgFutureWorkloadValues,
-          }
-        : { ...training, components: updatedComponents };
-
       setTodaysTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === newTraining.id) return newTraining;
-          return t;
-        })
+        prev.map((t) => (t.id === newTraining.id ? newTraining : t))
       );
     }
   });

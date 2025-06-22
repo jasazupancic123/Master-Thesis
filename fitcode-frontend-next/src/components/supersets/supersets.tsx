@@ -37,6 +37,8 @@ export default function Supersets(props: SupersetsProps) {
     setPagination,
   } = useTrainerDayViewContext();
 
+  const { setTrainings } = useGroup();
+
   const [selectedExercisesIds, setSelectedExercisesIds] = useState(
     supersets && supersets.length
       ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
@@ -44,6 +46,13 @@ export default function Supersets(props: SupersetsProps) {
   );
   const [selectedExercise, setSelectedExercise] =
     useState<TrainingExercise | null>(null);
+
+  const [setNumbers, setSetsNumbers] = useState<
+    {
+      exerciseId: string;
+      setsNumber: number;
+    }[]
+  >([]);
 
   const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
 
@@ -106,6 +115,9 @@ export default function Supersets(props: SupersetsProps) {
               setOpenVideoPlayerModal={setOpenVideoPlayerModal}
               setOpenAddExerciseModal={setOpenAddExerciseModal}
               handleMenuClose={handleMenuClose}
+              setSupersets={setSupersets}
+              setsNumbers={setNumbers}
+              setSetsNumbers={setSetsNumbers}
             />
           ))}
 
@@ -181,6 +193,7 @@ export default function Supersets(props: SupersetsProps) {
               training,
               setTraining,
               setTodaysTrainings,
+              setTrainings,
               component,
               setComponent,
               supersets,

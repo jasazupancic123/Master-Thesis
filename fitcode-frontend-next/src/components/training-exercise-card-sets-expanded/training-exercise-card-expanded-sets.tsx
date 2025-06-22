@@ -3,21 +3,16 @@ import { Box, Grid2, IconButton } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
-import {
-  ExerciseSet,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { TrainingService } from '@/controller/training/training.service';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import toast from 'react-hot-toast';
 import {
   getLAndRValues,
   handleAthleteWorkloadsChange,
-  updateTraining,
 } from '../training-exercise-card/state';
 import { SetState } from '@/common/type/state.type';
+import { updateExerciseAttributeValues } from './state';
 
 interface TrainingExerciseCarExpandedSetsProps {
   exercise: TrainingExercise;
@@ -41,6 +36,7 @@ export default function TrainingExerciseCardExpandedSets(
     selectedAthleteWorkloads,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
+    selectedExercises,
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
@@ -64,36 +60,50 @@ export default function TrainingExerciseCardExpandedSets(
             px={screenSize.isSmallerThanLaptop ? 1 : 0}
           >
             <Grid2 size={1}>
-              <IconButton
-                disableRipple
-                sx={{
-                  p: 0,
-                  m: 0,
-                  // mt: 1.66,
-                  pb: 3.66,
-                  height: '100%',
-                  display: i === 0 ? undefined : 'none',
-                }}
-                onClick={() => {
-                  setExpandedSetsView(!expandedSetsView);
-                }}
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                gap={1}
+                mt={i === 0 ? 1.2 : 1}
               >
-                <KeyboardArrowRightIcon
-                  sx={{
-                    transform: expandedSetsView
-                      ? 'rotate(90deg)'
-                      : 'rotate(0deg)',
-                    color: 'white',
-                    fontSize: screenSize.isTablet ? 14 : 16,
-                    ml: screenSize.isUltraSmall
-                      ? 0
-                      : screenSize.isMobile
-                        ? 1
-                        : 0,
-                    transition: 'transform 0.3s ease-in-out',
-                  }}
-                />
-              </IconButton>
+                {i === 0 && (
+                  <IconButton
+                    disableRipple
+                    sx={{
+                      p: 0,
+                      m: 0,
+                    }}
+                    onClick={() => setExpandedSetsView(!expandedSetsView)}
+                  >
+                    <KeyboardArrowRightIcon
+                      sx={{
+                        transform: expandedSetsView
+                          ? 'rotate(90deg)'
+                          : 'rotate(0deg)',
+                        color: 'white',
+                        fontSize: screenSize.isTablet ? 14 : 16,
+                        ml: screenSize.isUltraSmall
+                          ? 0
+                          : screenSize.isMobile
+                            ? 1
+                            : 0,
+                        transition: 'transform 0.3s ease-in-out',
+                      }}
+                    />
+                  </IconButton>
+                )}
+
+                <Box
+                  key="exercise-title"
+                  display="flex"
+                  flexDirection="column"
+                  gap={1.5}
+                >
+                  <LeftRightExerciseText key="L" title="L" />
+                  <LeftRightExerciseText key="R" title="R" />
+                </Box>
+              </Box>
             </Grid2>
 
             <Grid2 size={10}>
@@ -104,16 +114,6 @@ export default function TrainingExerciseCardExpandedSets(
                 alignItems="center"
                 gap={1}
               >
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  gap={1}
-                  justifyContent="end"
-                  height={set.setNumber === 1 ? 80 : 55}
-                >
-                  <LeftRightExerciseText title="L" />
-                  <LeftRightExerciseText title="R" />
-                </Box>
                 {exercise.params.map((param, j) => {
                   /* find the custom workload for the selected athlete if selected, otherwise
                       get the value from the exercise sets */
@@ -138,7 +138,8 @@ export default function TrainingExerciseCardExpandedSets(
                     return null;
                   }
 
-                  let min, max;
+                  let min: number | undefined;
+                  let max: number | undefined;
                   const attributeRange = exercise.attributeRanges.find(
                     (ar) => ar.field === param.field
                   );
@@ -162,192 +163,65 @@ export default function TrainingExerciseCardExpandedSets(
                         (100 / exercise.params.length).toString() + '%'
                       }
                     >
-                      <ExerciseParam
-                        showOptions={set.setNumber === 1}
-                        disableOptions
-                        disableSets
-                        param={param}
-                        value={valueL}
-                        onOptionChange={(newValue) => {}}
-                        min={min}
-                        max={max}
-                        onSubOptionChange={(newValue) => {
-                          if (+newValue < 0) return;
+                      {['L', 'R'].map((lOrR) => (
+                        <ExerciseParam
+                          showOptions={set.setNumber === 1 && lOrR === 'L'}
+                          disableOptions
+                          disableSets
+                          param={param}
+                          value={lOrR === 'L' ? valueL : valueR}
+                          onOptionChange={(newValue) => {}}
+                          min={min}
+                          max={max}
+                          onSubOptionChange={(newValue) => {
+                            if (+newValue < 0) return;
 
-                          // update only selected athletes workloads
-                          if (selectedAthlete) {
-                            handleAthleteWorkloadsChange(
+                            // update only selected athletes workloads
+                            if (selectedAthlete) {
+                              handleAthleteWorkloadsChange(
+                                {
+                                  exercise,
+                                  setNumber: set.setNumber,
+                                  param,
+                                  newValue: newValue as string,
+                                  leftOrRight: lOrR as 'L' | 'R',
+                                },
+                                {
+                                  training,
+                                  selectedAthleteWorkloads,
+                                  setCustomAthleteWorkloads,
+                                  selectedAthlete,
+                                  customAthleteWorkloads,
+                                }
+                              );
+                              return;
+                            }
+
+                            // update only the changed exercise
+                            updateExerciseAttributeValues(
                               {
-                                exercise,
-                                setNumber: set.setNumber,
-                                param,
-                                newValue: newValue as string,
-                                leftOrRight: 'L',
+                                newValue,
+                                i,
+                                set,
+                                lOrR: lOrR as 'L' | 'R',
                               },
                               {
-                                training,
-                                selectedAthleteWorkloads,
-                                setCustomAthleteWorkloads,
-                                selectedAthlete,
-                                customAthleteWorkloads,
-                              }
-                            );
-                            return;
-                          }
-
-                          const paramIndex = exercise.sets[
-                            i
-                          ].paramValuesL.findIndex(
-                            (pv) => pv.field === param.field
-                          );
-
-                          const newExercise = { ...exercise };
-
-                          const setIndex = newExercise.sets.findIndex(
-                            (s) => s.setNumber === set.setNumber
-                          );
-
-                          const updatedSets: ExerciseSet[] =
-                            newExercise.sets.map((set, k) => {
-                              return {
-                                setNumber: set.setNumber,
-                                paramValuesR: set.paramValuesR,
-                                paramValuesL: [...set.paramValuesL].map(
-                                  (param, index) => {
-                                    if (
-                                      index === paramIndex &&
-                                      setIndex === k
-                                    ) {
-                                      return {
-                                        field: param.field,
-                                        selected: param.selected,
-                                        value: newValue as string,
-                                      } as AttributeValue;
-                                    }
-                                    return {
-                                      field: param.field,
-                                      selected: param.selected,
-                                      value: param.value,
-                                    } as AttributeValue;
-                                  }
-                                ),
-                              };
-                            });
-
-                          const intensityVolumeValue =
-                            TrainingService.getIntensityVolumeValues(
-                              updatedSets
-                            );
-
-                          newExercise.sets = [...updatedSets];
-                          updateTraining(
-                            { exercise: newExercise, intensityVolumeValue },
-                            {
-                              training,
-                              component,
-                              setTodaysTrainings,
-                              supersets,
-                              setDetectedChanges,
-                              selectedSubgroup,
-                              setSelectedSubgroup,
-                              supersetIndex,
-                            }
-                          );
-                        }}
-                      />
-
-                      <ExerciseParam
-                        showOptions={false}
-                        disableOptions
-                        disableSets
-                        param={param}
-                        value={valueR}
-                        onOptionChange={(newValue) => {}}
-                        min={min}
-                        max={max}
-                        onSubOptionChange={(newValue) => {
-                          if (+newValue < 0) return;
-
-                          // update only selected athletes workloads
-                          if (selectedAthlete) {
-                            handleAthleteWorkloadsChange(
-                              {
+                                selectedExercises,
                                 exercise,
-                                setNumber: set.setNumber,
                                 param,
-                                newValue: newValue as string,
-                                leftOrRight: 'R',
-                              },
-                              {
                                 training,
-                                selectedAthleteWorkloads,
-                                setCustomAthleteWorkloads,
-                                selectedAthlete,
-                                customAthleteWorkloads,
+                                component,
+                                setTodaysTrainings,
+                                supersets,
+                                setDetectedChanges,
+                                selectedSubgroup,
+                                setSelectedSubgroup,
+                                supersetIndex,
                               }
                             );
-                            return;
-                          }
-
-                          const paramIndex = exercise.sets[
-                            i
-                          ].paramValuesR.findIndex(
-                            (pv) => pv.field === param.field
-                          );
-
-                          const newExercise = { ...exercise };
-                          const setIndex = newExercise.sets.findIndex(
-                            (s) => s.setNumber === set.setNumber
-                          );
-
-                          const updatedSets: ExerciseSet[] =
-                            newExercise.sets.map((set, k) => {
-                              return {
-                                setNumber: set.setNumber,
-                                paramValuesL: set.paramValuesL,
-                                paramValuesR: [...set.paramValuesR].map(
-                                  (param, index) => {
-                                    if (
-                                      index === paramIndex &&
-                                      setIndex === k
-                                    ) {
-                                      return {
-                                        field: param.field,
-                                        selected: param.selected,
-                                        value: newValue as string,
-                                      } as AttributeValue;
-                                    }
-                                    return {
-                                      field: param.field,
-                                      selected: param.selected,
-                                      value: param.value,
-                                    } as AttributeValue;
-                                  }
-                                ),
-                              };
-                            });
-
-                          const intensityVolumeValue =
-                            TrainingService.getIntensityVolumeValues(
-                              updatedSets
-                            );
-
-                          newExercise.sets = [...updatedSets];
-                          updateTraining(
-                            { exercise: newExercise, intensityVolumeValue },
-                            {
-                              training,
-                              component,
-                              setTodaysTrainings,
-                              supersets,
-                              setDetectedChanges,
-                              selectedSubgroup,
-                              setSelectedSubgroup,
-                              supersetIndex,
-                            }
-                          );
-                        }}
-                      />
+                          }}
+                        />
+                      ))}
                     </Box>
                   );
                 })}
