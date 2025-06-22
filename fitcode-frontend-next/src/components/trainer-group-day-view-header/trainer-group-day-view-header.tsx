@@ -34,7 +34,8 @@ export default function GroupTrainerDayViewHeader(
 
   const { group, cycle, setDateFrom, setDateTo } = useGroup();
 
-  const { selectedAthlete, selectedSubgroup } = useTrainerDayViewContext();
+  const { selectedAthlete, selectedSubgroup, setSelectedExercises } =
+    useTrainerDayViewContext();
   return (
     <Stack
       direction="row"
@@ -177,6 +178,7 @@ export default function GroupTrainerDayViewHeader(
             />
           </Box>
         </Box>
+
         <Circles
           items={days}
           value={day.date.toString()}
@@ -184,7 +186,9 @@ export default function GroupTrainerDayViewHeader(
             setDay({ label: '', date: dayjs(value) });
             setDateFrom(dayjs(value).startOf('day'));
             setDateTo(dayjs(value).endOf('day'));
+            setSelectedExercises([]);
           }}
+          onlySelectedValueColored
           getBackgroundColor={(value, itemValue) =>
             commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
               ? theme.palette.primary.main

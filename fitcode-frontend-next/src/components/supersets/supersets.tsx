@@ -14,10 +14,12 @@ import { SupersetsProps } from '../trainer-day-view/props';
 import { onDragEnd } from '../trainer-day-view/state';
 import Superset from '../superset/superset';
 import { handleAddExerciseToSupersetComponent } from './state';
+import { useTheme } from '@mui/material';
 
 export default function Supersets(props: SupersetsProps) {
   const { openAddExerciseModal, setOpenAddExerciseModal } = props;
   const screenSize = useScreenSize();
+  const theme = useTheme();
 
   const { exercises: allExercises, setDetectedChanges } = useGroup();
 
@@ -35,6 +37,8 @@ export default function Supersets(props: SupersetsProps) {
     setPagination,
   } = useTrainerDayViewContext();
 
+  const { setTrainings } = useGroup();
+
   const [selectedExercisesIds, setSelectedExercisesIds] = useState(
     supersets && supersets.length
       ? supersets.flatMap((s) => s.exercises.map((e) => e.id))
@@ -42,6 +46,13 @@ export default function Supersets(props: SupersetsProps) {
   );
   const [selectedExercise, setSelectedExercise] =
     useState<TrainingExercise | null>(null);
+
+  const [setNumbers, setSetsNumbers] = useState<
+    {
+      exerciseId: string;
+      setsNumber: number;
+    }[]
+  >([]);
 
   const [openVideoPlayerModal, setOpenVideoPlayerModal] = useState(false);
 
@@ -104,6 +115,9 @@ export default function Supersets(props: SupersetsProps) {
               setOpenVideoPlayerModal={setOpenVideoPlayerModal}
               setOpenAddExerciseModal={setOpenAddExerciseModal}
               handleMenuClose={handleMenuClose}
+              setSupersets={setSupersets}
+              setsNumbers={setNumbers}
+              setSetsNumbers={setSetsNumbers}
             />
           ))}
 
@@ -123,8 +137,12 @@ export default function Supersets(props: SupersetsProps) {
                   {...provided.droppableProps}
                   border="1px dashed #B2B3B7"
                   borderRadius={2}
-                  sx={{ cursor: 'pointer' }}
+                  sx={{
+                    cursor: 'pointer',
+                    backgroundColor: theme.palette.background.default,
+                  }}
                   p={1}
+                  py={7.5}
                   mx={1}
                   onClick={() => setOpenAddExerciseModal(true)}
                 >
@@ -162,6 +180,10 @@ export default function Supersets(props: SupersetsProps) {
         width={500}
         dialogueContentSx={{ px: screenSize.isMobile ? 0 : undefined }}
         onConfirm={() => {
+          if (selectedExercisesIds.length === 0) {
+            setOpenAddExerciseModal(false);
+            return;
+          }
           handleAddExerciseToSupersetComponent(
             {
               selectedExercisesIds,
@@ -171,6 +193,7 @@ export default function Supersets(props: SupersetsProps) {
               training,
               setTraining,
               setTodaysTrainings,
+              setTrainings,
               component,
               setComponent,
               supersets,

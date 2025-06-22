@@ -1,6 +1,6 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Expose, Transform, Type } from 'class-transformer';
 import { IsDate, ValidateNested } from 'class-validator';
 import { ColorEntity } from '../../common/entity/color.entity';
@@ -9,6 +9,7 @@ import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
 import { CopiedFrom } from './copied-from.entity';
 import { Target } from '../../target/entity/target.entity';
+import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 
 export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsDate()
@@ -30,12 +31,19 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @Expose()
   target?: Target; // selected target id which the component uses
 
+  @ApiProperty({ enum: PeriodizationType, enumName: 'PeriodizationType' })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsEnum(PeriodizationType)
+  @Expose()
+  periodizationType?: PeriodizationType;
+
   @IsString()
   @IsOptional()
   @IsNotEmpty()
   @ApiPropertyOptional()
   @Expose()
-  methodId?: string; // method id which the component uses  
+  methodId?: string; // method id which the component uses
 
   @ValidateNested({ each: true })
   @Type(() => Superset)

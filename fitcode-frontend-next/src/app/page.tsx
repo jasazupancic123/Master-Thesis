@@ -467,7 +467,7 @@ export default function Home() {
               item
               xs={12}
               sm={6}
-              md={4}
+              md={6}
               key={i}
               sx={{ display: 'flex', justifyContent: 'center' }}
             >

@@ -15,6 +15,7 @@ export function ExerciseProvider(props: ExercisePageProps & ChildrenProps) {
     components,
     attributes: allAttributes,
     exercises: allExercises,
+    profile,
   } = props;
 
   const [attributes, setAttributes] = useState(allAttributes);
@@ -27,6 +28,7 @@ export function ExerciseProvider(props: ExercisePageProps & ChildrenProps) {
     setAttributes,
     exercises,
     setExercises,
+    profile,
   };
 
   return (

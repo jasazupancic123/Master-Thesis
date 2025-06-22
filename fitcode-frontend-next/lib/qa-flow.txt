@@ -6,6 +6,7 @@ Clear local firebase data
         ~ Filters for exercises
         ~ Search bar
         ~ Create exercise (video, image, fill out all attributes)
+        ~ Update exercise
         ~ Pagination
     - Dashboard
         - Register Users:

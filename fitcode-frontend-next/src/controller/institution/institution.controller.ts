@@ -16,9 +16,10 @@ export class InstitutionController {
     token: string,
     body: {
       name: string;
-      athleteIds: string[];
       imageUrl: string;
       ownerId: string;
+      trainerIds: [];
+      athleteIds: [];
     }
   ) {
     return api.post<Institution>('/institution', body, { token });

@@ -119,7 +119,7 @@ export class WorkloadService {
         ref.trainingId,
       ) as CollectionGroup;
 
-    if (ref.memberIds)
+    if (ref.memberIds && ref.memberIds.length)
       query = query.where('userId', 'in', ref.memberIds) as CollectionGroup;
     else if (ref.userId)
       query = query.where('userId', '==', ref.userId) as CollectionGroup;
@@ -131,7 +131,7 @@ export class WorkloadService {
         ref.componentId,
       ) as CollectionGroup;
 
-    if (ref.exerciseIds)
+    if (ref.exerciseIds && ref.exerciseIds.length)
       query = query.where(
         'exerciseId',
         'in',
@@ -156,6 +156,8 @@ export class WorkloadService {
   }
 
   async findAllByMembers(membersIds: string[]): Promise<Workload[]> {
+    if(!membersIds.length) return [];
+    
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)

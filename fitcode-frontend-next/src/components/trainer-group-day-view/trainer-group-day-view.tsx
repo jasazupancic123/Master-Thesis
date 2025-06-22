@@ -8,7 +8,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { Save } from '@mui/icons-material';
+import { Delete, Save } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
@@ -265,23 +265,53 @@ export default function TrainerDayView() {
           />
         </Box>
       ) : (
-        <IconButton
-          onClick={() => {
-            handleUpdateMultipleTrainings();
+        <Box
+          display="flex"
+          sx={{
+            p: 0,
+            ml: 2,
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            zIndex: 1000,
           }}
-          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
+          gap={1}
         >
-          <Save
-            sx={{
-              mr: 0,
-              cursor: 'pointer',
-              backgroundColor: theme.palette.primary.main,
-              borderRadius: '50%',
-              p: 1,
-              fontSize: 40,
+          <IconButton
+            onClick={() => {
+              handleUpdateMultipleTrainings();
             }}
-          />
-        </IconButton>
+            sx={{
+              p: 0,
+            }}
+          >
+            <Save
+              sx={{
+                cursor: 'pointer',
+                backgroundColor: theme.palette.primary.main,
+                borderRadius: '50%',
+                p: 1,
+                fontSize: 40,
+              }}
+            />
+          </IconButton>
+          <IconButton
+            sx={{
+              p: 0,
+            }}
+            onClick={() => {}}
+          >
+            <Delete
+              sx={{
+                cursor: 'pointer',
+                backgroundColor: theme.palette.primary.main,
+                borderRadius: '50%',
+                p: 1,
+                fontSize: 40,
+              }}
+            />
+          </IconButton>
+        </Box>
       )}
 
       <Box

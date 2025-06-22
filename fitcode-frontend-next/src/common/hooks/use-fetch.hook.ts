@@ -32,5 +32,5 @@ export function useFetch<T = unknown>(url: string, options?: UseFetchOptions) {
     if (!options?.skip) fetchData();
   }, [fetchData]);
 
-  return { data, error, loading, refetch: fetchData };
+  return { data, setData, error, loading, refetch: fetchData };
 }

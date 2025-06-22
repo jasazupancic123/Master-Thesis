@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   TextField,
   Button,
@@ -22,7 +22,8 @@ const firebaseService = commonService.firebase;
 
 export default function RegisterUsersDashboard() {
   const router = useRouter();
-  const { profile, setSelectedInstitution } = useDashboard();
+  const { profile, users, refetchUsers, setSelectedInstitution } =
+    useDashboard();
 
   const role = profile?.customClaims?.role || [];
 
@@ -33,6 +34,69 @@ export default function RegisterUsersDashboard() {
     password: '',
     confirmPassword: '',
   });
+
+  // refetch users and update institution's athletes or trainers
+  useEffect(() => {
+    if (
+      !formData.displayName ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword ||
+      !formData.role
+    )
+      return;
+
+    const role = formData.role;
+    const user = users?.find((user) => user.email === formData.email);
+
+    setFormData({
+      displayName: '',
+      email: '',
+      role: UserRole.ATHLETE,
+      password: '',
+      confirmPassword: '',
+    });
+
+    if (!user) return;
+
+    if (role === UserRole.ATHLETE) {
+      setSelectedInstitution((prev) => {
+        if (!prev) return prev;
+
+        const updatedAthleteIds = prev.athleteIds
+          ? [...prev.athleteIds, user.uid]
+          : [user.uid];
+
+        const updatedAthletes = prev.athletes
+          ? [...prev.athletes, user]
+          : [user];
+
+        return {
+          ...prev,
+          athletes: updatedAthletes,
+          athleteIds: updatedAthleteIds,
+        };
+      });
+    } else if (role === UserRole.TRAINER) {
+      setSelectedInstitution((prev) => {
+        if (!prev) return prev;
+
+        const updatedTrainerIds = prev.trainerIds
+          ? [...prev.trainerIds, user.uid]
+          : [user.uid];
+
+        const updatedTrainers = prev.trainers
+          ? [...prev.trainers, user]
+          : [user];
+
+        return {
+          ...prev,
+          trainers: updatedTrainers,
+          trainerIds: updatedTrainerIds,
+        };
+      });
+    }
+  }, [users]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,13 +122,7 @@ export default function RegisterUsersDashboard() {
       router,
       () => firebaseService.functions.createUserWithRole(input),
       () => {
-        setFormData({
-          displayName: '',
-          email: '',
-          role: UserRole.ATHLETE,
-          password: '',
-          confirmPassword: '',
-        });
+        refetchUsers();
 
         toast.success('Successfully registered user');
       },

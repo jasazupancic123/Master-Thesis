@@ -4,10 +4,12 @@ import { Cycle, Week } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Periodization } from '@/controller/group/type/periodization.type';
 import dayjs from 'dayjs';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
+// import isoWeek from 'dayjs/plugin/isoWeek';
+
+// dayjs.extend(isoWeek);
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 
@@ -185,7 +187,6 @@ export function handleDragEnd(
       .year(selectedYear) // Set the desired year first
       .dayOfYear(valuesReal[cycleIndex * 2])
       .startOf('week') // Moves to the start of the week (usually Sunday)
-      .add(1, 'day') // Adjusts to Monday
       .toDate();
   } else {
     to = dayjs()
@@ -200,7 +201,7 @@ export function handleDragEnd(
     (_, i) => {
       const startOfWeek = dayjs(from).add(i, 'w').startOf('w');
       return Array.from({ length: 7 }, (_, j) => ({
-        date: startOfWeek.add(j, 'd').toDate(),
+        date: startOfWeek.toDate(),
       }));
     }
   );

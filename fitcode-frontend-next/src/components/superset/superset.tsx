@@ -14,6 +14,7 @@ import { Droppable } from 'react-beautiful-dnd';
 import { handleDeleteSuperset } from '../trainer-day-view/state';
 import { SetState } from '@/common/type/state.type';
 import SupersetExercise from '../superset-exercise/superset-exercise';
+import { useState } from 'react';
 
 interface SupersetComponentProps {
   superset: SupersetClass;
@@ -27,6 +28,9 @@ interface SupersetComponentProps {
   setOpenVideoPlayerModal: SetState<boolean>;
   setOpenAddExerciseModal: SetState<boolean>;
   handleMenuClose: () => void;
+  setSupersets: SetState<SupersetClass[]>;
+  setsNumbers: { exerciseId: string; setsNumber: number }[];
+  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
 }
 
 export default function Superset(props: SupersetComponentProps) {
@@ -42,6 +46,9 @@ export default function Superset(props: SupersetComponentProps) {
     setOpenVideoPlayerModal,
     setOpenAddExerciseModal,
     handleMenuClose,
+    setSupersets,
+    setsNumbers,
+    setSetsNumbers,
   } = props;
 
   const screenSize = useScreenSize();
@@ -82,6 +89,9 @@ export default function Superset(props: SupersetComponentProps) {
               : 3,
       }}
       key={`${component.id}-${i}`}
+      sx={{
+        px: 0.5,
+      }}
     >
       <Droppable
         key={`${component.id}-${i}`}
@@ -104,7 +114,6 @@ export default function Superset(props: SupersetComponentProps) {
             <Box
               sx={{
                 cursor: 'pointer',
-                px: screenSize.isLaptop ? 0.5 : 0,
               }}
               onClick={() =>
                 handleDeleteSuperset(
@@ -164,6 +173,9 @@ export default function Superset(props: SupersetComponentProps) {
                     setOpenVideoPlayerModal={setOpenVideoPlayerModal}
                     setOpenAddExerciseModal={setOpenAddExerciseModal}
                     handleMenuClose={handleMenuClose}
+                    setSupersets={setSupersets}
+                    setsNumbers={setsNumbers}
+                    setSetsNumbers={setSetsNumbers}
                   />
                 ))
               )}
@@ -174,7 +186,6 @@ export default function Superset(props: SupersetComponentProps) {
             <Box
               sx={{
                 cursor: 'pointer',
-                px: screenSize.isLaptop ? 0.5 : 0,
               }}
               onClick={() =>
                 handleDeleteSuperset(
