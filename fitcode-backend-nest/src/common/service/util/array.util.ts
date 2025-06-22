@@ -15,4 +15,21 @@ export class ArrayUtil {
     const removed = array2.filter((value) => !array1.includes(value));
     return { added, removed };
   }
+
+  /**
+   * Returns all duplicate values in an array.
+   *
+   * @example
+   * ArrayUtil.duplicates(['a', 'b', 'a', 'c', 'b']) // returns ['a', 'b']
+   */
+  duplicates<T>(array: T[]): T[] {
+    const seen = new Set<T>();
+    const duplicates = new Set<T>();
+
+    for (const item of array)
+      if (seen.has(item)) duplicates.add(item);
+      else seen.add(item);
+
+    return Array.from(duplicates);
+  }
 }

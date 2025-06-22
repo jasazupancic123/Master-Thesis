@@ -320,6 +320,15 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         'You are not allowed to create exercises',
       );
 
+    const duplicates = this.commonService.array.duplicates<string>(
+      exercises.map((e) => e.name),
+    );
+
+    if (duplicates.length)
+      throw new BadRequestException(
+        `You have a duplicate exercise ${duplicates[0]}`,
+      );
+
     const exercisesToCreate: Create<
       Omit<Exercise, 'id' | 'ownerId' | 'attributes'>
     >[] = [];

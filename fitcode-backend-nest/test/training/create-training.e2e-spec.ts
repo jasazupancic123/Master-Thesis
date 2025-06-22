@@ -73,12 +73,10 @@ describe('Create Training (e2e)', () => {
     workloadService = moduleFixture.get(WorkloadService);
     institutionService = moduleFixture.get(InstitutionService);
 
-    institution = await createInstitution(institutionService);
     component = await componentService.create(generateComponentStub());
+    institution = await createInstitution(institutionService);
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      trainer: trainer,
-      membersIds: [athlete.uid],
     });
   });
 
