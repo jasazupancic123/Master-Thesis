@@ -89,7 +89,7 @@ describe('TrainingPlanService (unit)', () => {
   });
 
   it('should find all training exercises', async () => {
-    exerciseService.findAllByIds = jest
+    exerciseService.getAll = jest
       .fn()
       .mockReturnValueOnce([
         generateExerciseStub({ id: 'e1' }),
@@ -133,10 +133,7 @@ describe('TrainingPlanService (unit)', () => {
       }),
     ];
 
-    const result = await service.getAllTrainingExercises(
-      undefined,
-      trainingComponents,
-    );
+    const result = await service.getAllTrainingExercises(trainingComponents);
 
     expect(result).toHaveLength(5);
     expect(result).toEqual([

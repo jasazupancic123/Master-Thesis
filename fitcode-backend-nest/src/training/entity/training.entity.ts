@@ -11,6 +11,7 @@ import { BaseEntity } from '../../common/entity/base.entity';
 import { TrainingComponent } from './training-component.entity';
 import { Wellness } from '../../user/entity/wellness.entity';
 import { GroupWorkloadStats } from './average-workload-values.entity';
+import { Institution } from '../../institution/entity/institution.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -19,6 +20,7 @@ export class Training extends BaseEntity {
   @IsOptional()
   @Expose()
   institutionId?: string;
+  institution?: Institution | null;
 
   @IsString()
   @IsNotEmpty()

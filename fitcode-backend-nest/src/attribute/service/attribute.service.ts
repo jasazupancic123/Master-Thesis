@@ -1,17 +1,11 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { AttributeRepository } from '../repository/attribute.repository';
 import { Attribute } from '../entity/attribute.entity';
 import { Create } from '../../common/type/entity.type';
 import { AttributeValue } from '../entity/attribute-value.entity';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
-import { Wrapper } from 'src/common/type/wrapper.type';
+import { CACHE_KEY_ATTRIBUTES } from '../constant/cache.constant';
 
 @Injectable()
 export class AttributeService {
@@ -19,14 +13,13 @@ export class AttributeService {
 
   constructor(
     private readonly repository: AttributeRepository,
-    @Inject(forwardRef(() => CacheManagerService))
-    private readonly cacheManagerService: Wrapper<CacheManagerService>,
+    private readonly cacheManagerService: CacheManagerService,
   ) {}
 
   async create(data: Create<Attribute>): Promise<Attribute> {
     this.logger.debug(`Creating attribute with data ${JSON.stringify(data)}`);
     await this.repository.addDoc(data);
-    await this.cacheManagerService.clearAttributes();
+    await this.cacheManagerService.del(CACHE_KEY_ATTRIBUTES);
     return data;
   }
 
@@ -41,7 +34,10 @@ export class AttributeService {
   }
 
   async findAll(): Promise<Attribute[]> {
-    return await this.repository.getDocs();
+    const cached =
+      await this.cacheManagerService.get<Attribute[]>(CACHE_KEY_ATTRIBUTES);
+
+    return cached ? cached : await this.repository.getDocs();
   }
 
   validate(values: AttributeValue[], attributes: Attribute[]) {

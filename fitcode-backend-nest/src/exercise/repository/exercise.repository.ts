@@ -20,7 +20,7 @@ export class ExerciseRepository
     query: (query: Query) => Query = (query) => query,
   ): Promise<Exercise[]> {
     const snapshot = await query(this.collection())
-      .where('deletedAt', '==', null)
+      // .where('deletedAt', '==', null)
       .get();
 
     return snapshot.docs.map((doc) =>

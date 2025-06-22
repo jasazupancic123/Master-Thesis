@@ -46,10 +46,13 @@ describe('Update Group (e2e)', () => {
     });
   });
 
-  afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.GROUP);
-    await app.close();
-  });
+  afterAll(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.GROUP),
+      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
+      app.close(),
+    ]),
+  );
 
   describe('batchUpdate', () => {
     it('should be defined', () => {

@@ -19,7 +19,8 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
-    completedMembersIds: data.completedMembersIds || [],
+    completedMembersIds: data?.completedMembersIds || [],
+    institutionId: data?.institutionId,
     groupId: data?.groupId,
     cycleId: data?.cycleId,
     ownerId: data?.ownerId || global.trainer.uid,
@@ -83,9 +84,7 @@ export function generateTrainingExercise(
   };
 }
 
-export function generateExerciseSet(
-  data?: Partial<ExerciseSet>,
-): ExerciseSet {
+export function generateExerciseSet(data?: Partial<ExerciseSet>): ExerciseSet {
   return {
     setNumber: data?.setNumber || 1,
     paramValuesL: data?.paramValuesL || [

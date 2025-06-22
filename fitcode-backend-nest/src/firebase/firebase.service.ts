@@ -6,7 +6,9 @@ import { Auth, UserIdentifier } from 'firebase-admin/auth';
 import {
   DocumentReference,
   GeoPoint,
+  Query,
   Timestamp,
+  WriteBatch,
 } from 'firebase-admin/firestore';
 import { Storage } from 'firebase-admin/storage';
 import { TimestampEntity } from '../common/entity/timestamp.entity';
@@ -67,6 +69,36 @@ export class FirebaseService implements OnApplicationBootstrap {
       ...cleaned,
       updatedAt: new Date(),
     }) as FirestoreEntity<Partial<T>>;
+  }
+
+  async batchIn<T>(
+    field: keyof T,
+    array: string[],
+    collection:
+      | FirebaseFirestore.CollectionReference
+      | FirebaseFirestore.CollectionGroup,
+    query: (query: Query) => Query = (query) => query,
+  ): Promise<T[]> {
+    if (!array || !array.length || !collection) return [];
+    const copy = [...array];
+
+    const batches = [];
+    while (copy.length) {
+      const batch = copy.splice(0, 30); // firestore limits batches to 30
+
+      batches.push(
+        query(collection.where(field as string, 'in', batch))
+          .get()
+          .then(({ docs }) =>
+            docs.map((doc) =>
+              this.serialize<T>(doc.data() as FirestoreEntity<T>),
+            ),
+          ),
+      );
+    }
+
+    // after all of the data is fetched, return it
+    return Promise.all(batches).then((content) => content.flat());
   }
 
   /**

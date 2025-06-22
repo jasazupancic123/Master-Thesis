@@ -15,7 +15,6 @@ import { Component } from '../../component/entity/component.entity';
 import { Exercise } from '../../exercise/entity/exercise.entity';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ExerciseService } from '../../exercise/service/exercise.service';
-import { User } from '../../common/type/firebase-auth.type';
 import { ComponentService } from '../../component/component.service';
 import {
   DEFAULT_PARAMS_KEY,
@@ -40,14 +39,18 @@ import { WorkloadService } from './workload.service';
 import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
 import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 import { CommonService } from '../../common/service/common.service';
+import { User } from '../../common/type/firebase-auth.type';
+import { InstitutionService } from '../../institution/service/institution.service';
+import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
+import { Institution } from '../..//institution/entity/institution.entity';
 
 @Injectable()
 export class TrainingPlanService {
   constructor(
     private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
-    @Inject(forwardRef(() => ComponentService))
-    private readonly componentService: Wrapper<ComponentService>,
+    private readonly institutionService: InstitutionService,
+    private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
     @Inject(forwardRef(() => ExerciseAttributeValueRepository))
@@ -55,6 +58,23 @@ export class TrainingPlanService {
     @Inject(forwardRef(() => WorkloadService))
     private readonly workloadService: Wrapper<WorkloadService>,
   ) {}
+
+  async getInstitution(exercise: Exercise): Promise<Institution | null> {
+    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
+      return await this.institutionService.getDoc({
+        institutionId: exercise.ownerId,
+      });
+
+    return null;
+  }
+
+  async validateCanViewExercise(user: User, exercise: Exercise) {
+    const institution = await this.getInstitution(exercise);
+    if (!this.exerciseService.canView(user, exercise, institution))
+      throw new BadRequestException(
+        `You cannot view exercise ${exercise.name}`,
+      );
+  }
 
   getTrainingComponents(training: Training) {
     return [training.warmup, ...training.components, training.cooldown];
@@ -112,8 +132,7 @@ export class TrainingPlanService {
     ]);
 
     const ids = [...new Set(trainingExercises.map((e) => e.id))];
-    const exercises =
-      ids.length > 0 ? await this.exerciseService.findAllByIds(ids) : [];
+    const exercises = await this.exerciseService.getAll(ids);
 
     return await Promise.all(
       exercises.map(async (e) => ({

@@ -8,11 +8,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { UserService } from '../../user/user.service';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
 import { User } from '../../common/type/firebase-auth.type';
-import { ExerciseRef, InstitutionRef } from '../../common/type/firestore.type';
+import { ExerciseRef } from '../../common/type/firestore.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ComponentService } from '../../component/component.service';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -23,7 +22,7 @@ import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entit
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { Component } from '../../component/entity/component.entity';
-import { FieldPath, Query } from 'firebase-admin/firestore';
+import { Query } from 'firebase-admin/firestore';
 import { TrainingPlanService } from '../../training/service/training-plan.service';
 import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
 import { Permission } from '../../common/interface/permission.interface';
@@ -32,14 +31,14 @@ import { InstitutionService } from '../../institution/service/institution.servic
 import { CreateExerciseDto } from '../dto/create-exercise.dto';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
 
 @Injectable()
 export class ExerciseService implements Permission<Exercise, Institution> {
   private logger = new Logger(ExerciseService.name);
 
   constructor(
-    @Inject(forwardRef(() => CacheManagerService))
-    private readonly cacheManagerService: Wrapper<CacheManagerService>,
+    private readonly cacheManagerService: CacheManagerService,
     private readonly exerciseRepository: ExerciseRepository,
     private readonly exerciseAttributeValueRepository: ExerciseAttributeValueRepository,
     private readonly commonService: CommonService,
@@ -62,11 +61,66 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return await this.findAllByUser(institutionId, filter);
   }
 
+  async getAll(ids?: string[]): Promise<Exercise[]> {
+    if (ids && !ids.length) return [];
+
+    let exercises =
+      await this.cacheManagerService.get<Exercise[]>(CACHE_KEY_EXERCISES);
+
+    if (!exercises) {
+      exercises = await this.exerciseRepository.getDocs();
+      await this.cacheManagerService.set(CACHE_KEY_EXERCISES, exercises);
+    }
+
+    return ids?.length
+      ? exercises.filter((e) => ids.includes(e.id))
+      : exercises;
+  }
+
+  private async map(exercises: Exercise[]) {
+    let mapped: Exercise[] = exercises;
+
+    // map attributes
+    mapped = await Promise.all(
+      exercises.map(async (e) => ({
+        ...e,
+        attributeValues:
+          await this.exerciseAttributeValueRepository.getAllByExercise({
+            exerciseId: e.id,
+          }),
+      })),
+    );
+
+    const attributes = await this.attributeService.findAll();
+    const components = await this.componentService.findAllFlat();
+
+    // map params
+    return mapped.map((exercise) => {
+      const component = components.find(
+        (c) => c.id === exercise.componentIds[0],
+      )!;
+
+      const root = this.componentService.getRoot(component, components);
+      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
+
+      const params = this.trainingPlanService.getComponentParamAttributes(
+        componentParams,
+        exercise.attributeValues,
+        attributes,
+      );
+
+      exercise.defaultParams =
+        this.trainingPlanService.getParamAttributes(params);
+
+      return exercise;
+    });
+  }
+
   async findAllByUser(
-    userId: string,
+    userId: string, // either global or institution id
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
-    const components = await this.cacheManagerService.getComponents();
+    const components = await this.componentService.findAllFlat();
     let exercises: Exercise[] = [];
 
     if (
@@ -116,97 +170,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
       const exerciseIds = await query
         .get()
-        .then(({ docs }) => docs.map((doc) => doc.data().exerciseId));
+        .then(({ docs }) => docs.map((doc) => doc.data().exerciseId as string));
 
-      if (exerciseIds.length > 0)
-        exercises = await this.exerciseRepository.getDocs((q) =>
-          q.where(FieldPath.documentId(), 'in', exerciseIds),
-        );
+      exercises = await this.getAll(exerciseIds);
     }
 
     // map attributes
-    exercises = await Promise.all(
-      exercises.map(async (e) => ({
-        ...e,
-        attributeValues:
-          await this.exerciseAttributeValueRepository.getAllByExercise({
-            exerciseId: e.id,
-          }),
-      })),
-    );
-
-    const attributes = await this.cacheManagerService.getAttributes();
-
-    // map params
-    const finalExercises = exercises.map((exercise) => {
-      const component = components.find(
-        (c) => c.id === exercise.componentIds[0],
-      )!;
-
-      const root = this.componentService.getRoot(component, components);
-      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
-
-      const params = this.trainingPlanService.getComponentParamAttributes(
-        componentParams,
-        exercise.attributeValues,
-        attributes,
-      );
-
-      exercise.defaultParams =
-        this.trainingPlanService.getParamAttributes(params);
-
-      return exercise;
-    });
-
-    return finalExercises;
-  }
-
-  async findAllByIds(ids: string[]) {
-    let exercises = await this.exerciseRepository
-      .collection()
-      .where(FieldPath.documentId(), 'in', ids)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Exercise>,
-          ),
-        ),
-      );
-
-    // map attributes
-    exercises = await Promise.all(
-      exercises.map(async (e) => ({
-        ...e,
-        attributeValues:
-          await this.exerciseAttributeValueRepository.getAllByExercise({
-            exerciseId: e.id,
-          }),
-      })),
-    );
-
-    const components = await this.cacheManagerService.getComponents();
-    const attributes = await this.cacheManagerService.getAttributes();
-
-    return exercises.map((exercise) => {
-      const component = components.find(
-        (c) => c.id === exercise.componentIds[0],
-      )!;
-
-      const root = this.componentService.getRoot(component, components);
-      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
-
-      const params = this.trainingPlanService.getComponentParamAttributes(
-        componentParams,
-        exercise.attributeValues,
-        attributes,
-      );
-
-      exercise.defaultParams =
-        this.trainingPlanService.getParamAttributes(params);
-
-      return exercise;
-    });
+    return await this.map(exercises);
   }
 
   async findOneById(user: User, ref: ExerciseRef): Promise<Exercise | null> {
@@ -241,8 +211,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       `User ${user.uid} is creating new exercise: ${JSON.stringify(data)}`,
     );
 
-    const components = await this.cacheManagerService.getComponents();
-    const attributes = await this.cacheManagerService.getAttributes();
+    const attributes = await this.attributeService.findAll();
+    const components = await this.componentService.findAllFlat();
 
     const institution = this.firebaseService.isInstitution(user)
       ? await this.institutionService.getDocByOwner(user.uid)
@@ -305,6 +275,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     });
 
     await batch.commit();
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
     return {
       ...data,
@@ -331,8 +302,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     );
 
     // validate components
-    const allComponents = await this.cacheManagerService.getComponents();
-    const allAttributes = await this.cacheManagerService.getAttributes();
+    const allComponents = await this.componentService.findAllFlat();
+    const allAttributes = await this.attributeService.findAll();
 
     const institution = this.firebaseService.isInstitution(user)
       ? await this.institutionService.getDocByOwner(user.uid)
@@ -423,6 +394,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     });
 
     await batch.commit();
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
+
     return result;
   }
 
@@ -512,7 +485,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         );
     }
 
-    const allComponents = await this.cacheManagerService.getComponents();
+    const allComponents = await this.componentService.findAllFlat();
     const allAttributes = await this.attributeService.findAll();
 
     // validate attributes
@@ -559,6 +532,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     });
 
     await batch.commit();
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
     return {
       ...exercise,
@@ -661,7 +635,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     if (exercise.ownerId === user.uid) return true;
 
     if (institution) {
-      if (exercise.ownerId === institution.id) return true;
+      if (user.uid === institution.ownerId) return true;
       if (institution.trainerIds.includes(user.uid)) return true;
       if (institution.athleteIds.includes(user.uid)) return true;
     }

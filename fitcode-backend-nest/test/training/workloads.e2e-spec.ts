@@ -81,7 +81,7 @@ describe('Training Workloads (e2e)', () => {
 
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      owner: trainer,
+      trainer: trainer,
       membersIds: [athlete.uid, athlete2.uid, athlete3.uid],
     });
   });
@@ -460,7 +460,7 @@ describe('Training Workloads (e2e)', () => {
       );
 
       jest
-        .spyOn(workloadService, 'findAllByRef')
+        .spyOn(workloadService, 'findAllByMembers')
         .mockImplementationOnce(async () => mockWorkloads);
 
       const response = await trainingService.create(trainer, training);
