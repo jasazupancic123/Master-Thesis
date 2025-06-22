@@ -20,6 +20,7 @@ import { FirebaseService } from '../../../firebase/firebase.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { WorkloadService } from '../workload.service';
 import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
+import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('getSetData', () => {
   let service: TrainingPlanService;
@@ -49,6 +50,10 @@ describe('getSetData', () => {
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
+        },
+        {
+          provide: InstitutionService,
+          useValue: createMock<InstitutionService>(),
         },
         {
           provide: ExerciseService,

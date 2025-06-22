@@ -11,7 +11,6 @@ import {
 } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
 import toast from 'react-hot-toast';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 const commonService = CommonService.instance;
 
@@ -111,7 +110,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
     checkWrapping();
     window.addEventListener('resize', checkWrapping);
     return () => window.removeEventListener('resize', checkWrapping);
-  }, [training.components]);
+  }, [training.components, components.length]);
 
   let fontSize = undefined;
   if (screenSize.isMobile) fontSize = '125%';

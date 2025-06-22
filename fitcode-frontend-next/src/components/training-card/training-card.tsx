@@ -112,15 +112,16 @@ export default function TrainingCard(props: TrainingCardProps) {
           alignItems="center"
           justifyContent="flex-start"
           sx={{
-            backgroundColor: '#005D57',
             borderTopLeftRadius: 10,
             borderTopRightRadius: 10,
           }}
           p={0}
+          pl={0.9375}
+          pb={1.25}
         >
           <Box
-            p={2}
-            mr={1}
+            width={6}
+            height={10}
             sx={{
               backgroundColor:
                 !selectedSubgroup?.subgroup &&
@@ -130,16 +131,13 @@ export default function TrainingCard(props: TrainingCardProps) {
                       selectedTraining?.id === training.id
                     ? COLORS[selectedSubgroup.index % COLORS.length]
                     : '#005D57',
-              borderTopLeftRadius: 10,
+              borderRadius: 10,
             }}
           />
-          <Typography variant="caption" sx={{ mx: 1 }}>
-            {period}
+          <Typography variant="caption" sx={{ mx: 1, fontSize: 12 }}>
+            {period === 'AM' ? 'Morning' : 'Afternoon'}
           </Typography>
 
-          <Typography variant="caption" sx={{ mx: 1 }}>
-            {commonService.date.formatTime(training.from)}
-          </Typography>
           <Tooltip title="Copy training">
             <IconButton
               sx={{ p: 0, m: 0, pr: 1 }}
@@ -147,7 +145,7 @@ export default function TrainingCard(props: TrainingCardProps) {
                 setShowCopyTrainingModal(true);
               }}
             >
-              <FileCopy sx={{ fontSize: 18 }} />
+              <FileCopy sx={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
         </Box>

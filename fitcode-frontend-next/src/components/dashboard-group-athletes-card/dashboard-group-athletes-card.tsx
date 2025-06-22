@@ -38,7 +38,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
   const role = profile?.customClaims?.role || [];
 
   const [groupMembers, setGroupMembers] = useState<User[]>(
-    users
+    (users || [])
       .filter((user: User) => selectedGroup?.membersIds.includes(user.uid))
       .splice(0, 7) // only show first 7 users
   );
@@ -55,11 +55,13 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
     if (!selectedGroup) return;
     if (selectedGroup.id === group.id) {
       setGroupMembers(
-        users.filter((user) => group.membersIds.includes(user.uid)) // show all users
+        (users || []).filter((user) => group.membersIds.includes(user.uid)) // show all users
       );
     } else {
       setGroupMembers(
-        users.filter((user) => group.membersIds.includes(user.uid)).splice(0, 7) // only show first 7 users
+        (users || [])
+          .filter((user) => group.membersIds.includes(user.uid))
+          .splice(0, 7) // only show first 7 users
       );
     }
   }, [selectedGroup]);

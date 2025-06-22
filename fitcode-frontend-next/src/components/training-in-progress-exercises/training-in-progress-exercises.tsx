@@ -6,6 +6,8 @@ import { Box, Grid2, Typography, IconButton } from '@mui/material';
 import Image from 'next/image';
 import { CameraAlt } from '@mui/icons-material';
 import TrainingInProgressExerciseSet from '../training-in-progress-exercise-set/training-in-progress-exercise-set';
+import { useState } from 'react';
+import MediapipePoseDetection from '../mediapipe-pose-detection/mediapipe-pose-detection';
 
 interface TrainingInProgressExercisesProps {
   selectedSuperset: Superset;
@@ -18,6 +20,7 @@ export default function TrainingInProgressExercises(
   props: TrainingInProgressExercisesProps
 ) {
   const screenSize = useScreenSize();
+  const [openPoseDetection, setOpenPoseDetection] = useState(false);
 
   const { trainingInProgress } = useTraining();
 
@@ -29,6 +32,11 @@ export default function TrainingInProgressExercises(
   } = props;
 
   if (!trainingInProgress) return null;
+
+  if (openPoseDetection)
+    return (
+      <MediapipePoseDetection setOpenPoseDetection={setOpenPoseDetection} />
+    );
 
   return selectedSuperset.exercises.map((exercise, i) => {
     let isBilateral = false;
@@ -55,10 +63,12 @@ export default function TrainingInProgressExercises(
             position: 'absolute',
             top: 0,
             right: 5,
-            display:
-              exercise.exercise?.name.toLowerCase() !== 'deep back squat'
-                ? 'none'
-                : undefined,
+            display: exercise.exercise?.name.includes('squat')
+              ? 'none'
+              : undefined,
+          }}
+          onClick={() => {
+            setOpenPoseDetection(true);
           }}
         >
           <CameraAlt />

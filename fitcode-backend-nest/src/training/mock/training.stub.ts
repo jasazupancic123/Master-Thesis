@@ -46,6 +46,7 @@ export function generateTrainingComponent(
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
     to: data?.to || getTime(addDays(new Date(), 2), 8, 30),
     target: data?.target || null,
+    periodizationType: data?.periodizationType || null,
     methodId: data?.methodId || null,
     completedMembersIds: data?.completedMembersIds || [],
     supersets: data?.supersets || [],

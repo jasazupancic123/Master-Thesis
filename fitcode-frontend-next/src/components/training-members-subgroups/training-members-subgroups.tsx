@@ -41,7 +41,8 @@ export default function TrainingMembersSubgroup(
   const screenSize = useScreenSize();
 
   const { setDetectedChanges } = useGroup();
-  const { setTodaysTrainings } = useTrainerDayViewContext();
+  const { setTodaysTrainings, setSelectedExercises } =
+    useTrainerDayViewContext();
 
   const {
     members: groupMembers,
@@ -87,12 +88,30 @@ export default function TrainingMembersSubgroup(
           ref={provided.innerRef}
           {...provided.droppableProps}
           onClick={(event) => {
-            if (subgroupIndex > 0)
+            if (subgroupIndex > 0) {
               setSelectedSubgroup({
                 subgroup: subgroup || null,
                 index: subgroupIndex - 1,
               });
-            else if (subgroupIndex === 0) setSelectedSubgroup(null);
+
+              const exercisesIds = subgroup.supersets.flatMap((s) =>
+                s.exercises.map((e) => e.id)
+              );
+              setSelectedExercises((prev) =>
+                prev.filter((ex) => exercisesIds.includes(ex.id))
+              );
+            } else if (subgroupIndex === 0) {
+              setSelectedSubgroup(null);
+
+              if (!component) return;
+
+              const exercisesIds = component.supersets.flatMap((s) =>
+                s.exercises.map((e) => e.id)
+              );
+              setSelectedExercises((prev) =>
+                prev.filter((ex) => exercisesIds.includes(ex.id))
+              );
+            }
           }}
           style={{
             minWidth: 95,

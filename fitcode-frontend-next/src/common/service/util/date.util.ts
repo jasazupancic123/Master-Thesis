@@ -1,4 +1,9 @@
 import dayjs, { Dayjs } from 'dayjs';
+import { Day as DayDateFns, isBefore, startOfWeek } from 'date-fns';
+import { getWeekStartByLocale } from 'weekstart';
+import { toZonedTime } from 'date-fns-tz';
+import { ConstructionOutlined } from '@mui/icons-material';
+import { endOf } from 'date-arithmetic';
 
 export type Day = {
   label: string;
@@ -35,7 +40,16 @@ export class DateUtil {
   }
 
   getWeekDays(day = dayjs()): Day[] {
-    // start from monday
+    // USE THIS FOR CUSTOM WEEK STARTS
+    /*
+    const weekStart = startOfWeek(day.toDate(), {
+      weekStartsOn: this.getWeekStartsOn(),
+    });
+    const weekEnd = startOfWeek(day.toDate(), {
+      weekStartsOn: this.getWeekEndsOn(),
+    });
+    */
+
     let start = day.startOf('week').add(1, 'day');
     let end = day.endOf('week').add(1, 'day');
 
@@ -46,7 +60,10 @@ export class DateUtil {
     }
 
     const days: Day[] = [];
-    let date = start;
+    
+    let date = dayjs(toZonedTime(start.toDate(), 'UTC').setHours(12));
+    date = dayjs(date).set('day', dayjs(start).day());
+
     while (date.isBefore(end)) {
       days.push({ label: date.format('ddd'), date });
       date = date.add(1, 'day');
@@ -60,5 +77,30 @@ export class DateUtil {
       label: dayjs().format('ddd'),
       date: dayjs(),
     };
+  }
+
+  getWeekStartsOn(): DayDateFns {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+
+    const weekStart = getWeekStartByLocale(locale);
+    return weekStart;
+  }
+
+  getWeekEndsOn(): DayDateFns {
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+
+    const weekStart = getWeekStartByLocale(locale);
+    return weekStart === 0 ? 6 : ((weekStart - 1) as DayDateFns); // If week starts on Sunday, end on Saturday, otherwise end on the day before the start
+  }
+
+  private getWeekEndDate(date: Dayjs): Dayjs {
+    const weekEnd = this.getWeekEndsOn();
+    const dayOfWeek = date.day();
+
+    // Calculate the difference to the end of the week
+    const diff = (weekEnd - dayOfWeek + 7) % 7;
+
+    // Add the difference to the current date
+    return date.add(diff, 'day').endOf('day');
   }
 }

@@ -157,7 +157,6 @@ export default function UserWellnessForm(props: Props) {
       <Button
         variant="contained"
         onClick={() => {
-          console.log('state:', state);
           props.onSubmit(state);
           props.setDisabled(true);
         }}

@@ -5,6 +5,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import {
   ExerciseSet,
+  Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
@@ -12,23 +13,28 @@ import { AttributeValue } from '@/controller/attribute/type/attribute-value.type
 import { TrainingService } from '@/controller/training/training.service';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import toast from 'react-hot-toast';
-import { VolWorkSetType } from '@/controller/component/enum/param.enum';
+import {
+  ParamType,
+  VolWorkSetType,
+} from '@/controller/component/enum/param.enum';
 import {
   getLAndRValues,
   handleAthleteWorkloadsChange,
   updateTraining,
 } from '../training-exercise-card/state';
 import { SetState } from '@/common/type/state.type';
+import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
+import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
+import { useEffect, useState } from 'react';
 
 interface TrainingExerciseCardCollapsedSetsProps {
   exercise: TrainingExercise;
-  setExercise: SetState<TrainingExercise>;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
-  setsNumber: number;
-  setSetsNumber: SetState<number>;
+  setsNumbers: { exerciseId: string; setsNumber: number }[];
+  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
   i: number | undefined;
-  supersetIndex: number;
+  setSupersets: SetState<Superset[]>;
 }
 
 export default function TrainingExerciseCardCollapsedSets(
@@ -38,13 +44,12 @@ export default function TrainingExerciseCardCollapsedSets(
 
   const {
     exercise,
-    setExercise,
+    setSupersets,
     expandedSetsView,
     setExpandedSetsView,
-    setsNumber,
-    setSetsNumber,
+    setsNumbers,
+    setSetsNumbers,
     i,
-    supersetIndex,
   } = props;
 
   const {
@@ -56,10 +61,22 @@ export default function TrainingExerciseCardCollapsedSets(
     selectedAthleteWorkloads,
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
+    selectedExercises,
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
   const { supersets, setTodaysTrainings } = useTrainerDayViewContext();
+
+  const [setNumber, setSetsNumber] = useState(
+    setsNumbers.find((sn) => sn.exerciseId === exercise.id)?.setsNumber ||
+      undefined
+  );
+
+  useEffect(() => {
+    setSetsNumber(
+      setsNumbers.find((sn) => sn.exerciseId === exercise.id)?.setsNumber
+    );
+  }, [setsNumbers]);
 
   if (!training || !component) return null;
 
@@ -72,36 +89,41 @@ export default function TrainingExerciseCardCollapsedSets(
       px={screenSize.isSmallerThanLaptop ? 1 : 0}
     >
       <Grid2 size={1}>
-        <IconButton
-          disableRipple
-          sx={{
-            p: 0,
-            m: 0,
-            // mt: 1.66,
-            pb: 3.66,
-            height: '100%',
-          }}
-          onClick={() => setExpandedSetsView(!expandedSetsView)}
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          gap={1}
+          mt={1.2}
         >
-          {/* <Circle
-                sx={{
-                  display:
-                    selectedExercise?.id === exercise.id ? 'none' : undefined,
-                  color: 'white !important',
-                  fontSize: screenSize.isTablet ? 14 : 16,
-                  ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
-                }}
-              /> */}
-          <KeyboardArrowRightIcon
+          <IconButton
+            disableRipple
             sx={{
-              transform: expandedSetsView ? 'rotate(90deg)' : 'rotate(0deg)',
-              color: 'white',
-              fontSize: screenSize.isTablet ? 14 : 16,
-              ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
-              transition: 'transform 0.3s ease-in-out',
+              p: 0,
+              m: 0,
             }}
-          />
-        </IconButton>
+            onClick={() => setExpandedSetsView(!expandedSetsView)}
+          >
+            <KeyboardArrowRightIcon
+              sx={{
+                transform: expandedSetsView ? 'rotate(90deg)' : 'rotate(0deg)',
+                color: 'white',
+                fontSize: screenSize.isTablet ? 14 : 16,
+                ml: screenSize.isUltraSmall ? 0 : screenSize.isMobile ? 1 : 0,
+                transition: 'transform 0.3s ease-in-out',
+              }}
+            />
+          </IconButton>
+          <Box
+            key="exercise-title"
+            display="flex"
+            flexDirection="column"
+            gap={1.5}
+          >
+            <LeftRightExerciseText key="L" title="L" />
+            <LeftRightExerciseText key="R" title="R" />
+          </Box>
+        </Box>
       </Grid2>
 
       <Grid2 size={10}>
@@ -113,17 +135,6 @@ export default function TrainingExerciseCardCollapsedSets(
           alignItems="center"
           gap={1}
         >
-          <Box
-            key="exercise-title"
-            display="flex"
-            flexDirection="column"
-            gap={1}
-            justifyContent="end"
-            height={80}
-          >
-            <LeftRightExerciseText key="L" title="L" />
-            <LeftRightExerciseText key="R" title="R" />
-          </Box>
           {Array.isArray(exercise.params) &&
             exercise.params.map((param, i) => {
               /* find the custom workload for the selected athlete if selected, otherwise
@@ -150,7 +161,10 @@ export default function TrainingExerciseCardCollapsedSets(
                 return null;
               }
 
-              let min, max;
+              if (setNumber === undefined || setNumber === null) return null;
+
+              let min: number | undefined;
+              let max: number | undefined;
               const attributeRange = exercise.attributeRanges.find(
                 (ar) => ar.field === param.field
               );
@@ -160,10 +174,94 @@ export default function TrainingExerciseCardCollapsedSets(
                 );
                 if (foundInOptions) {
                   if (foundInOptions.field === VolWorkSetType.Set) {
-                    if (foundInOptions.min && setsNumber < foundInOptions.min)
-                      setSetsNumber(foundInOptions.min);
-                    if (foundInOptions.max && setsNumber > foundInOptions.max)
-                      setSetsNumber(foundInOptions.max);
+                    if (
+                      foundInOptions.min &&
+                      setNumber !== undefined &&
+                      setNumber < foundInOptions.min
+                    ) {
+                      if (selectedExercises.length) {
+                        const updatedSetsNumbers = [...setsNumbers];
+
+                        for (const selectedExercise of selectedExercises) {
+                          const existingIndex = updatedSetsNumbers.findIndex(
+                            (sn) => sn.exerciseId === selectedExercise.id
+                          );
+
+                          const newSetNumber = {
+                            exerciseId: selectedExercise.id,
+                            setsNumber: foundInOptions.min,
+                          };
+
+                          if (existingIndex !== -1) {
+                            updatedSetsNumbers[existingIndex] = newSetNumber;
+                          } else {
+                            updatedSetsNumbers.push(newSetNumber);
+                          }
+                        }
+
+                        setSetsNumbers(updatedSetsNumbers);
+                      } else {
+                        const newSetNumber = {
+                          exerciseId: exercise.id,
+                          setsNumber: foundInOptions.min,
+                        };
+                        setSetsNumbers((prev) => {
+                          const existingIndex = prev.findIndex(
+                            (sn) => sn.exerciseId === exercise.id
+                          );
+                          if (existingIndex !== -1) {
+                            const newSetsNumber = [...prev];
+                            newSetsNumber[existingIndex] = newSetNumber;
+                            return newSetsNumber;
+                          }
+                          return [...prev, newSetNumber];
+                        });
+                      }
+                    }
+                    if (
+                      foundInOptions.max &&
+                      setNumber !== undefined &&
+                      setNumber > foundInOptions.max
+                    ) {
+                      if (selectedExercises.length) {
+                        const updatedSetsNumbers = [...setsNumbers];
+
+                        for (const selectedExercise of selectedExercises) {
+                          const existingIndex = updatedSetsNumbers.findIndex(
+                            (sn) => sn.exerciseId === selectedExercise.id
+                          );
+
+                          const newSetNumber = {
+                            exerciseId: selectedExercise.id,
+                            setsNumber: foundInOptions.max,
+                          };
+
+                          if (existingIndex !== -1) {
+                            updatedSetsNumbers[existingIndex] = newSetNumber;
+                          } else {
+                            updatedSetsNumbers.push(newSetNumber);
+                          }
+                        }
+
+                        setSetsNumbers(updatedSetsNumbers);
+                      } else {
+                        const newSetNumber = {
+                          exerciseId: exercise.id,
+                          setsNumber: foundInOptions.max,
+                        };
+                        setSetsNumbers((prev) => {
+                          const existingIndex = prev.findIndex(
+                            (sn) => sn.exerciseId === exercise.id
+                          );
+                          if (existingIndex !== -1) {
+                            const newSetsNumber = [...prev];
+                            newSetsNumber[existingIndex] = newSetNumber;
+                            return newSetsNumber;
+                          }
+                          return [...prev, newSetNumber];
+                        });
+                      }
+                    }
                   }
                   min = foundInOptions.min;
                   max = foundInOptions.max;
@@ -178,229 +276,307 @@ export default function TrainingExerciseCardCollapsedSets(
                   key={param.field}
                   flexBasis={(100 / exercise.params.length).toString() + '%'}
                 >
-                  <ExerciseParam
-                    param={param}
-                    value={
-                      param.field === 'volWorkSets'
-                        ? ({
-                            field: valueL.field,
-                            selected: valueL.selected,
-                            value: setsNumber.toString(),
-                          } as AttributeValue)
-                        : valueL
-                    }
-                    exercise={exercise}
-                    setsNumber={setsNumber}
-                    setSetsNumber={setSetsNumber}
-                    min={min}
-                    max={max}
-                    onOptionChange={(newValue) => {
-                      const paramIndex =
-                        exercise.sets[0].paramValuesL.findIndex(
-                          (pv) => pv.field === param.field
-                        );
-
-                      const newExercise = { ...exercise };
-                      newExercise.sets.forEach(({ paramValuesL }) => {
-                        if (paramValuesL[paramIndex])
-                          paramValuesL[paramIndex].selected =
-                            newValue as string;
-                      });
-
-                      setExercise(newExercise);
-                    }}
-                    onSubOptionChange={(newValue) => {
-                      if (+newValue < 0) return;
-
-                      if (param.field === 'volWorkSets') {
-                        setSetsNumber(+newValue);
-                        return;
+                  {['L', 'R'].map((lOrR) => (
+                    <ExerciseParam
+                      param={param}
+                      value={
+                        param.field === ParamType.VolWorkSets
+                          ? lOrR === 'L'
+                            ? ({
+                                field: valueL.field,
+                                selected: valueL.selected,
+                                value: setNumber.toString(),
+                              } as AttributeValue)
+                            : ({
+                                field: valueR.field,
+                                selected: valueR.selected,
+                                value: setNumber.toString(),
+                              } as AttributeValue)
+                          : lOrR === 'L'
+                            ? valueL
+                            : valueR
                       }
+                      showOptions={lOrR === 'L'}
+                      exercise={exercise}
+                      setsNumbers={setsNumbers}
+                      setSetsNumbers={setSetsNumbers}
+                      min={min}
+                      max={max}
+                      onOptionChange={(newValue) => {
+                        const paramIndex = (
+                          lOrR === 'L'
+                            ? exercise.sets[0].paramValuesL
+                            : exercise.sets[0].paramValuesR
+                        ).findIndex((pv) => pv.field === param.field);
 
-                      // update only selected athletes workloads
-                      if (selectedAthlete) {
-                        handleAthleteWorkloadsChange(
-                          {
-                            exercise,
-                            setNumber: 1,
-                            param,
-                            newValue: newValue as string,
-                            leftOrRight: 'L',
-                          },
-                          {
-                            training,
-                            selectedAthleteWorkloads,
-                            setCustomAthleteWorkloads,
-                            selectedAthlete,
-                            customAthleteWorkloads,
-                          },
-                          true
-                        );
-                        return;
-                      }
+                        const newExercise = { ...exercise };
+                        if (lOrR === 'L') {
+                          newExercise.sets.forEach(({ paramValuesL }) => {
+                            if (paramValuesL[paramIndex])
+                              paramValuesL[paramIndex].selected =
+                                newValue as string;
+                          });
+                        } else {
+                          newExercise.sets.forEach(({ paramValuesR }) => {
+                            if (paramValuesR[paramIndex])
+                              paramValuesR[paramIndex].selected =
+                                newValue as string;
+                          });
+                        }
 
-                      const paramIndex =
-                        exercise.sets[0].paramValuesL.findIndex(
-                          (pv) => pv.field === param.field
-                        );
+                        setSupersets((prev) => {
+                          const existingIndex = prev.findIndex((s) =>
+                            s.exercises.some((ex) => ex.id === exercise.id)
+                          );
+                          if (existingIndex !== -1) {
+                            const newSupersets = [...prev];
+                            newSupersets[existingIndex].exercises =
+                              newSupersets[existingIndex].exercises.map((ex) =>
+                                ex.id === exercise.id ? newExercise : ex
+                              );
+                            return newSupersets;
+                          }
+                          return prev;
+                        });
 
-                      const newExercise = { ...exercise };
-                      const updatedSets: ExerciseSet[] = newExercise.sets.map(
-                        (set) => {
-                          return {
-                            setNumber: set.setNumber,
-                            paramValuesR: set.paramValuesR,
-                            paramValuesL: [...set.paramValuesL].map(
-                              (param, index) => {
-                                if (index === paramIndex) {
-                                  return {
-                                    field: param.field,
-                                    selected: param.selected,
-                                    value: newValue as string,
-                                  } as AttributeValue;
-                                }
-                                return {
-                                  field: param.field,
-                                  selected: param.selected,
-                                  value: param.value,
-                                } as AttributeValue;
+                        // setExercise(newExercise);
+                      }}
+                      onSubOptionChange={(newValue) => {
+                        if (+newValue < 0) return;
+
+                        if (param.field === 'volWorkSets') {
+                          if (selectedExercises.length) {
+                            const updatedSetsNumbers = [...setsNumbers];
+
+                            for (const selectedExercise of selectedExercises) {
+                              const existingIndex =
+                                updatedSetsNumbers.findIndex(
+                                  (sn) => sn.exerciseId === selectedExercise.id
+                                );
+
+                              const newSetNumber = {
+                                exerciseId: selectedExercise.id,
+                                setsNumber: +newValue,
+                              };
+
+                              if (existingIndex !== -1) {
+                                updatedSetsNumbers[existingIndex] =
+                                  newSetNumber;
+                              } else {
+                                updatedSetsNumbers.push(newSetNumber);
                               }
-                            ),
-                          };
-                        }
-                      );
+                            }
 
-                      const intensityVolumeValue =
-                        TrainingService.getIntensityVolumeValues(updatedSets);
-
-                      newExercise.sets = [...updatedSets];
-                      updateTraining(
-                        { exercise: newExercise, intensityVolumeValue },
-                        {
-                          training,
-                          component,
-                          setTodaysTrainings,
-                          supersets,
-                          setDetectedChanges,
-                          selectedSubgroup,
-                          setSelectedSubgroup,
-                          supersetIndex,
-                        }
-                      );
-                    }}
-                  />
-                  <ExerciseParam
-                    param={param}
-                    showOptions={false}
-                    value={
-                      param.field === 'volWorkSets'
-                        ? ({
-                            field: valueR.field,
-                            selected: valueR.selected,
-                            value: setsNumber.toString(),
-                          } as AttributeValue)
-                        : valueR
-                    }
-                    exercise={exercise}
-                    setsNumber={setsNumber}
-                    setSetsNumber={setSetsNumber}
-                    min={min}
-                    max={max}
-                    onOptionChange={(newValue) => {
-                      const paramIndex =
-                        exercise.sets[0].paramValuesR.findIndex(
-                          (pv) => pv.field === param.field
-                        );
-
-                      const newExercise = { ...exercise };
-                      newExercise.sets.forEach(({ paramValuesR }) => {
-                        if (paramValuesR[paramIndex])
-                          paramValuesR[paramIndex].selected =
-                            newValue as string;
-                      });
-
-                      setExercise(newExercise);
-                    }}
-                    onSubOptionChange={(newValue) => {
-                      if (+newValue < 0) return;
-
-                      if (param.field === 'volWorkSets') {
-                        setSetsNumber(+newValue);
-                        return;
-                      }
-
-                      // update only selected athletes workloads
-                      if (selectedAthlete) {
-                        handleAthleteWorkloadsChange(
-                          {
-                            exercise,
-                            setNumber: 1,
-                            param,
-                            newValue: newValue as string,
-                            leftOrRight: 'R',
-                          },
-                          {
-                            training,
-                            selectedAthleteWorkloads,
-                            setCustomAthleteWorkloads,
-                            selectedAthlete,
-                            customAthleteWorkloads,
-                          },
-                          true
-                        );
-                        return;
-                      }
-
-                      const paramIndex =
-                        exercise.sets[0].paramValuesR.findIndex(
-                          (pv) => pv.field === param.field
-                        );
-
-                      const newExercise = { ...exercise };
-                      const updatedSets: ExerciseSet[] = newExercise.sets.map(
-                        (set) => {
-                          return {
-                            setNumber: set.setNumber,
-                            paramValuesL: set.paramValuesL,
-                            paramValuesR: [...set.paramValuesR].map(
-                              (param, index) => {
-                                if (index === paramIndex) {
-                                  return {
-                                    field: param.field,
-                                    selected: param.selected,
-                                    value: newValue as string,
-                                  } as AttributeValue;
-                                }
-                                return {
-                                  field: param.field,
-                                  selected: param.selected,
-                                  value: param.value,
-                                } as AttributeValue;
+                            setSetsNumbers(updatedSetsNumbers);
+                          } else {
+                            const newSetNumber = {
+                              exerciseId: exercise.id,
+                              setsNumber: +newValue,
+                            };
+                            setSetsNumbers((prev) => {
+                              const existingIndex = prev.findIndex(
+                                (sn) => sn.exerciseId === exercise.id
+                              );
+                              if (existingIndex !== -1) {
+                                const newSetsNumber = [...prev];
+                                newSetsNumber[existingIndex] = newSetNumber;
+                                return newSetsNumber;
                               }
-                            ),
-                          };
+                              return [...prev, newSetNumber];
+                            });
+                          }
+                          return;
                         }
-                      );
 
-                      const intensityVolumeValue =
-                        TrainingService.getIntensityVolumeValues(updatedSets);
-
-                      newExercise.sets = [...updatedSets];
-                      updateTraining(
-                        { exercise: newExercise, intensityVolumeValue },
-                        {
-                          training,
-                          component,
-                          setTodaysTrainings,
-                          supersets,
-                          setDetectedChanges,
-                          selectedSubgroup,
-                          setSelectedSubgroup,
-                          supersetIndex,
+                        // update only selected athletes workloads
+                        if (selectedAthlete) {
+                          handleAthleteWorkloadsChange(
+                            {
+                              exercise,
+                              setNumber: 1,
+                              param,
+                              newValue: newValue as string,
+                              leftOrRight: lOrR as 'L' | 'R',
+                            },
+                            {
+                              training,
+                              selectedAthleteWorkloads,
+                              setCustomAthleteWorkloads,
+                              selectedAthlete,
+                              customAthleteWorkloads,
+                            },
+                            true
+                          );
+                          return;
                         }
-                      );
-                    }}
-                  />
+
+                        if (
+                          !selectedExercises.length ||
+                          !selectedExercises.some((ex) => ex.id === exercise.id)
+                        ) {
+                          const paramIndex = (
+                            lOrR === 'L'
+                              ? exercise.sets[0].paramValuesL
+                              : exercise.sets[0].paramValuesR
+                          ).findIndex((pv) => pv.field === param.field);
+
+                          if (paramIndex === undefined) return;
+
+                          const newExercise = { ...exercise };
+                          const updatedSets: ExerciseSet[] =
+                            newExercise.sets.map((set) => {
+                              return lOrR === 'L'
+                                ? {
+                                    setNumber: set.setNumber,
+                                    paramValuesR: set.paramValuesR,
+                                    paramValuesL: [...set.paramValuesL].map(
+                                      (param, index) => {
+                                        if (index === paramIndex) {
+                                          return {
+                                            field: param.field,
+                                            selected: param.selected,
+                                            value: newValue as string,
+                                          } as AttributeValue;
+                                        }
+                                        return {
+                                          field: param.field,
+                                          selected: param.selected,
+                                          value: param.value,
+                                        } as AttributeValue;
+                                      }
+                                    ),
+                                  }
+                                : {
+                                    setNumber: set.setNumber,
+                                    paramValuesL: set.paramValuesL,
+                                    paramValuesR: [...set.paramValuesR].map(
+                                      (param, index) => {
+                                        if (index === paramIndex) {
+                                          return {
+                                            field: param.field,
+                                            selected: param.selected,
+                                            value: newValue as string,
+                                          } as AttributeValue;
+                                        }
+                                        return {
+                                          field: param.field,
+                                          selected: param.selected,
+                                          value: param.value,
+                                        } as AttributeValue;
+                                      }
+                                    ),
+                                  };
+                            });
+
+                          const intensityVolumeValue =
+                            TrainingService.getIntensityVolumeValues(
+                              updatedSets
+                            );
+
+                          newExercise.sets = [...updatedSets];
+                          updateTraining(
+                            {
+                              exercises: [newExercise],
+                              intensityVolumeValues: [intensityVolumeValue],
+                            },
+                            {
+                              training,
+                              component,
+                              setTodaysTrainings,
+                              supersets,
+                              setDetectedChanges,
+                              selectedSubgroup,
+                              setSelectedSubgroup,
+                            }
+                          );
+                        } else {
+                          const updatedExercises = [] as TrainingExercise[];
+                          const intensityVolumeValues =
+                            [] as IntensityVolumeValues[];
+
+                          for (const selectedExercise of selectedExercises) {
+                            const paramIndex = (
+                              lOrR === 'L'
+                                ? selectedExercise.sets[0].paramValuesL
+                                : selectedExercise.sets[0].paramValuesR
+                            ).findIndex((pv) => pv.field === param.field);
+
+                            if (paramIndex === undefined) continue;
+
+                            const updatedSets: ExerciseSet[] =
+                              selectedExercise.sets.map((set) => {
+                                return lOrR === 'L'
+                                  ? {
+                                      setNumber: set.setNumber,
+                                      paramValuesR: set.paramValuesR,
+                                      paramValuesL: [...set.paramValuesL].map(
+                                        (param, index) => {
+                                          if (index === paramIndex) {
+                                            return {
+                                              field: param.field,
+                                              selected: param.selected,
+                                              value: newValue as string,
+                                            } as AttributeValue;
+                                          }
+                                          return {
+                                            field: param.field,
+                                            selected: param.selected,
+                                            value: param.value,
+                                          } as AttributeValue;
+                                        }
+                                      ),
+                                    }
+                                  : {
+                                      setNumber: set.setNumber,
+                                      paramValuesL: set.paramValuesL,
+                                      paramValuesR: [...set.paramValuesR].map(
+                                        (param, index) => {
+                                          if (index === paramIndex) {
+                                            return {
+                                              field: param.field,
+                                              selected: param.selected,
+                                              value: newValue as string,
+                                            } as AttributeValue;
+                                          }
+                                          return {
+                                            field: param.field,
+                                            selected: param.selected,
+                                            value: param.value,
+                                          } as AttributeValue;
+                                        }
+                                      ),
+                                    };
+                              });
+
+                            const intensityVolumeValue =
+                              TrainingService.getIntensityVolumeValues(
+                                updatedSets
+                              );
+
+                            selectedExercise.sets = [...updatedSets];
+                            updatedExercises.push(selectedExercise);
+                            intensityVolumeValues.push(intensityVolumeValue);
+                          }
+
+                          updateTraining(
+                            {
+                              exercises: updatedExercises,
+                              intensityVolumeValues: intensityVolumeValues,
+                            },
+                            {
+                              training,
+                              component,
+                              setTodaysTrainings,
+                              supersets,
+                              setDetectedChanges,
+                              selectedSubgroup,
+                              setSelectedSubgroup,
+                            }
+                          );
+                        }
+                      }}
+                    />
+                  ))}
                 </Box>
               );
             })}

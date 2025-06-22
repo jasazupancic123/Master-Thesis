@@ -36,6 +36,9 @@ export interface TrainingExerciseCardProps {
   chartView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
   setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
+  setsNumbers: { exerciseId: string; setsNumber: number }[];
+  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
+  setSupersets: SetState<Superset[]>;
 }
 
 export interface SubgroupProps {

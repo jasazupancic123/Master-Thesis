@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { FieldValue, Query } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
-import { FirestoreEntity, Update } from '../common/type/entity.type';
+import { Update } from '../common/type/entity.type';
 import { CustomClaims, User } from '../common/type/firebase-auth.type';
 import { WellnessRef, UserRef } from '../common/type/firestore.type';
 import { Environment } from '../config/environment-validation-schema';

@@ -10,18 +10,20 @@ import { Target } from '@/controller/target/type/target.type';
 import { Method } from '@/controller/method/type/method.type';
 import { AttributeRange } from '@/controller/attribute/type/attribute-range.entity';
 import { SubgroupInfo } from './subggroup-minimal.type';
+import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
   Required<DateRange> & {
     supersets: Superset[];
     subgroups: Subgroup[];
+    completedMembersIds: string[]; // members who completed the component
     methodId?: string;
+    target?: Target; // selected target
+    periodizationType?: PeriodizationType
 
     // mapped properties
-    completedMembersIds: string[]; // members who completed the component
     method?: Method;
-    target?: Target; // selected target
     component?: Component;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
   };

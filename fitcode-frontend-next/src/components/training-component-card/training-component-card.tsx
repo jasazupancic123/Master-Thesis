@@ -1,4 +1,3 @@
-import { CommonService } from '@/common/service/common.service';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
@@ -11,104 +10,104 @@ interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
   training: Training;
   setOpenAddExerciseModal: SetState<boolean>;
+  setOpenCalendarModal: SetState<boolean>;
 }
-
-const commonService = CommonService.instance;
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
   const { trainingComponent, training, setOpenAddExerciseModal } = props;
 
-  const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { setTraining, component, setComponent } = useTrainerDayViewContext();
+  const theme = useTheme();
+
+  const { setTraining, component, setComponent, setSelectedExercises } =
+    useTrainerDayViewContext();
 
   return (
-    <Box display="flex" p={0} py={1}>
-      {trainingComponent.component &&
-        (() => {
-          const IconComponent = commonService.navigation.getComponentIcon(
-            trainingComponent.component.name
-          );
-
-          return (
-            <Box display="flex" alignItems="center">
-              <Box
-                display="flex"
-                alignItems="center"
-                sx={{ cursor: 'pointer', p: 0, m: 0 }}
+    <Box display="flex" p={0}>
+      {trainingComponent.component && (
+        <Box
+          display="flex"
+          alignItems="center"
+          sx={{ cursor: 'pointer', p: 0, m: 0 }}
+          onClick={() => {
+            if (trainingComponent && !component) {
+              setTraining(training);
+              setComponent(trainingComponent);
+            }
+            setSelectedExercises([]);
+          }}
+        >
+          {trainingComponent?.id === component?.id ? (
+            <Tooltip
+              title="Add exercise"
+              sx={{
+                cursor: 'pointer',
+              }}
+            >
+              <IconButton
                 onClick={() => {
-                  if (trainingComponent && !component) {
-                    setTraining(training);
-                    setComponent(trainingComponent);
-                  }
+                  if (
+                    component &&
+                    trainingComponent &&
+                    trainingComponent.id === component.id
+                  )
+                    setOpenAddExerciseModal(true);
                 }}
+                sx={{ p: 0, m: 0 }}
               >
-                {component &&
-                trainingComponent &&
-                trainingComponent.id === component.id ? (
-                  <Tooltip
-                    title="Add exercise"
-                    sx={{
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <IconButton
-                      onClick={() => {
-                        if (
-                          component &&
-                          trainingComponent &&
-                          trainingComponent.id === component.id
-                        )
-                          setOpenAddExerciseModal(true);
-                      }}
-                      sx={{ p: 0, m: 0 }}
-                    >
-                      <IconComponent fontSize="medium" color="primary" />
-                    </IconButton>
-                  </Tooltip>
-                ) : (
-                  <IconComponent fontSize="medium" color="primary" />
-                )}
-                <Typography
-                  variant="h6"
+                <Box
                   sx={{
-                    color: theme.palette.primary.main,
-                    pl: 1,
-                    mb: 0,
-                    textTransform: 'uppercase',
-                    fontWeight: 'bold',
+                    backgroundColor: theme.palette.primary.main,
+                    width: 5,
+                    height: 20,
+                    borderRadius: 5,
                   }}
-                  onClick={() => {
-                    if (
-                      trainingComponent &&
-                      component &&
-                      trainingComponent.id === component.id
-                    ) {
-                      setTraining(undefined);
-                      setComponent(undefined);
-                    } else {
-                      setTraining(training);
-                      setComponent(trainingComponent);
-                    }
-                  }}
-                >
-                  {trainingComponent.component.name}
-                </Typography>{' '}
-              </Box>
-
-              {screenSize.isMobile ? (
-                <Typography variant="caption" ml={2}>
-                  {commonService.date.formatTime(trainingComponent.from)}
-                </Typography>
-              ) : (
-                <Typography variant="caption" ml={2}>
-                  {commonService.date.formatTime(trainingComponent.from)}
-                </Typography>
-              )}
-            </Box>
-          );
-        })()}
+                />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Box
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                width: 5,
+                height: 20,
+                borderRadius: 5,
+              }}
+            />
+          )}
+          <Typography
+            variant="body2"
+            fontSize={15}
+            noWrap
+            sx={{
+              color: theme.palette.primary.main,
+              pl: 1,
+              mb: 0,
+              textTransform: 'uppercase',
+              fontWeight: 350,
+            }}
+            onClick={() => {
+              if (
+                trainingComponent &&
+                component &&
+                trainingComponent.id === component.id
+              ) {
+                setTraining(undefined);
+                setComponent(undefined);
+              } else {
+                setTraining(training);
+                setComponent(trainingComponent);
+              }
+              setSelectedExercises([]);
+            }}
+          >
+            {trainingComponent.target
+              ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
+              : trainingComponent.component.name}
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 }

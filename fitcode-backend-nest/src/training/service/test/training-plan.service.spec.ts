@@ -33,6 +33,7 @@ import { WorkloadService } from '../workload.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { FirebaseService } from '../../../firebase/firebase.service';
 import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
+import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
@@ -62,6 +63,10 @@ describe('TrainingPlanService (unit)', () => {
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
+        },
+        {
+          provide: InstitutionService,
+          useValue: createMock<InstitutionService>(),
         },
         {
           provide: ExerciseService,
