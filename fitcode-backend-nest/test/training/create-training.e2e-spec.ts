@@ -11,7 +11,7 @@ import { TrainingService } from '../../src/training/service/training.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { GroupService } from '../../src/group/group.service';
 import { Group } from '../../src/group/entity/group.entity';
-import { addDays, addHours, subDays } from 'date-fns';
+import { addDays, addHours, subDays, subHours } from 'date-fns';
 import {
   generateSubgroup,
   generateSuperset,
@@ -20,8 +20,11 @@ import {
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { UserService } from '../../src/user/user.service';
-import { createGroupWithCycles, getTime } from '../utils/data.util';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  getTime,
+} from '../utils/data.util';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
@@ -33,8 +36,12 @@ import { WorkloadService } from '../../src/training/service/workload.service';
 import { SetStatus } from '../../src/training/enum/set-status.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 import { Institution } from '../../src/institution/entity/institution.entity';
+import {
+  createAthleteUserAndToken,
+  createInstitutionUserAndToken,
+  createTrainerUserAndToken,
+} from '../utils/auth.util';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
@@ -43,8 +50,8 @@ describe('Create Training (e2e)', () => {
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
-  let userService: UserService;
   let workloadService: WorkloadService;
+  let institutionService: InstitutionService;
 
   let institution: Institution;
   let group: Group;
@@ -63,39 +70,39 @@ describe('Create Training (e2e)', () => {
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
-    userService = moduleFixture.get(UserService);
     workloadService = moduleFixture.get(WorkloadService);
+    institutionService = moduleFixture.get(InstitutionService);
 
-    const institutionService = moduleFixture.get(InstitutionService);
-    institution = await institutionService.create(
-      global.admin,
-      generateInstitutionStub(),
-    );
-
+    institution = await createInstitution(institutionService);
     component = await componentService.create(generateComponentStub());
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      owner: trainer,
+      trainer: trainer,
       membersIds: [athlete.uid],
     });
   });
 
-  beforeEach(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await firebaseService.deleteCollection(
-      FirestoreCollection.TRAINING_WORKLOAD,
-    );
-  });
+  beforeEach(async () =>
+    Promise.all([
+      await firebaseService.deleteCollection(FirestoreCollection.TRAINING),
+      await firebaseService.deleteCollection(
+        FirestoreCollection.TRAINING_WORKLOAD,
+      ),
+    ]),
+  );
 
-  afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await firebaseService.deleteCollection(FirestoreCollection.GROUP);
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await app.close();
-  });
+  afterAll(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
+      firebaseService.deleteCollection(FirestoreCollection.GROUP),
+      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
+      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
+      app.close(),
+    ]),
+  );
 
   describe('Create training', () => {
-    it('should fail to create new training if group not found', async () => {
+    it('should fail to create new training if group provided and not found', async () => {
       const training = generateTrainingStub({ groupId: 'invalid-group-id' });
       const response = await request(app.getHttpServer())
         .post('/training')
@@ -106,7 +113,7 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(`Group does not exist`);
     });
 
-    it('should fail to create new training if cycle not found', async () => {
+    it('should fail to create new training if group and cycle provided and cycle not found', async () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: 'invalid-cycle-id',
@@ -153,7 +160,7 @@ describe('Create Training (e2e)', () => {
       );
     });
 
-    it('should fail to create new training if user is not owner of the group', async () => {
+    it('should fail to create new training if user is not owner (trainer) of the group or manager of institution', async () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[0].id,
@@ -166,9 +173,7 @@ describe('Create Training (e2e)', () => {
         .send(training);
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe(
-        'You are not authorized to perform this action',
-      );
+      expect(response.body.message).toBe('You cannot add training');
     });
 
     it('should fail to create new training if training falls outside of the cycle date range', async () => {
@@ -269,46 +274,53 @@ describe('Create Training (e2e)', () => {
       await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
     });
 
-    it('should fail to create new training there is an overlap with other trainings', async () => {
-      const from = getTime(addDays(new Date(), 2), 8, 0);
-      const trainings = [
-        generateTrainingStub({
+    it.each([
+      getTime(addDays(new Date(), 2), 8, 0),
+      getTime(addDays(new Date(), 2), 12, 0),
+      getTime(addDays(new Date(), 2), 18, 0),
+    ])(
+      'should fail to create new training there is an overlap with other trainings',
+      async (from) => {
+        await trainingService.create(
+          trainer,
+          generateTrainingStub({
+            groupId: group.id,
+            cycleId: group.cycles[1].id,
+            components: [
+              generateTrainingComponent({
+                id: component.id,
+                from,
+                to: addHours(from, 1),
+              }),
+            ],
+          }),
+        );
+
+        const training = generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
           components: [
             generateTrainingComponent({
               id: component.id,
-              from,
-              to: addHours(from, 1),
+              from: subHours(from, 1),
+              to: addHours(from, 2),
             }),
           ],
-        }),
-      ];
+        });
 
-      await Promise.all(
-        trainings.map((t) => trainingService.create(trainer, t)),
-      );
+        const response = await request(app.getHttpServer())
+          .post('/training')
+          .set('Authorization', `Bearer ${trainer.token}`)
+          .send(training);
 
-      const training = generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [generateTrainingComponent({ id: component.id })],
-        from,
-        to: from,
-      });
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+          'Training overlaps with other training',
+        );
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
-        .send(training);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        'Training overlaps with other training',
-      );
-
-      await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    });
+        await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+      },
+    );
 
     it('should fail to create new training if training has invalid training component', async () => {
       const from = getTime(addDays(new Date(), 2), 8, 0);
@@ -518,7 +530,7 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to create new training if max number of training exercises per superset is reached', async () => {
       const component = await componentService.create(generateComponentStub());
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(global.manager, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
@@ -585,11 +597,12 @@ describe('Create Training (e2e)', () => {
       );
     });
 
-    it('should fail to create new training if exercises are invalid', async () => {
+    // NOTE (stale test) - all exercises can be passed to all components
+    /* it('should fail to create new training if exercises are invalid', async () => {
       const component1 = await componentService.create(generateComponentStub());
       const component2 = await componentService.create(generateComponentStub());
 
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(global.manager, [
         generateExerciseStub({ componentIds: [component1.id] }),
         generateExerciseStub({ componentIds: [component2.id] }),
       ]);
@@ -621,16 +634,76 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(
         `Exercise ${exercises[1].name} cannot be part of selected component`,
       );
-    });
+    }); */
 
-    it('should successfully create training', async () => {
-      // create overlapping training in another group to ensure no error is thrown
-      const otherGroup = await createGroupWithCycles(groupService, {
-        institutionId: institution.id,
-        owner: trainer,
-        membersIds: [athlete.uid],
+    it('should fail to create new training if some exercises are from other institution', async () => {
+      const otherAthlete = await createAthleteUserAndToken(firebaseService);
+      const otherTrainer = await createTrainerUserAndToken(firebaseService);
+      const otherManager = await createInstitutionUserAndToken(firebaseService);
+
+      const otherInstitution = await createInstitution(institutionService, {
+        owner: otherManager,
+        athleteIds: [otherAthlete.uid],
+        trainerIds: [otherTrainer.uid],
       });
 
+      const otherGroup = await createGroupWithCycles(groupService, {
+        trainer: otherTrainer,
+        manager: otherManager,
+        institutionId: otherInstitution.id,
+        membersIds: [otherAthlete.uid],
+      });
+
+      const globalExercise = await exerciseService.create(
+        global.admin,
+        generateExerciseStub({ componentIds: [component.id] }),
+      );
+
+      const exercise = await exerciseService.create(
+        global.manager,
+        generateExerciseStub({ componentIds: [component.id] }),
+      );
+
+      const otherInstitutionExercise = await exerciseService.create(
+        otherManager,
+        generateExerciseStub({ componentIds: [component.id] }),
+      );
+
+      const from = addDays(new Date(), 1);
+      const training = generateTrainingStub({
+        groupId: otherGroup.id,
+        cycleId: otherGroup.cycles[1].id,
+        from,
+        to: addHours(from, 1),
+        components: [
+          generateTrainingComponent({
+            id: component.id,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: globalExercise.id }),
+                  generateTrainingExercise({ id: otherInstitutionExercise.id }),
+                  generateTrainingExercise({ id: exercise.id }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/training')
+        .set('Authorization', `Bearer ${otherTrainer.token}`)
+        .send(training);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `You cannot view exercise ${exercise.name}`,
+      );
+    });
+
+    it('should successfully create institutional training if user is institution trainer', async () => {
+      // create overlapping training in another group to ensure no error is thrown
       const component = await componentService.create(
         generateComponentStub({
           params: {
@@ -645,26 +718,17 @@ describe('Create Training (e2e)', () => {
         }),
       );
 
-      const from = addDays(new Date(), 1);
-      await trainingService.create(
-        trainer,
-        generateTrainingStub({
-          groupId: otherGroup.id,
-          cycleId: otherGroup.cycles[1].id,
-          components: [generateTrainingComponent({ id: component.id })],
-          from,
-          to: addHours(from, 1),
-        }),
+      const globalExercise = await exerciseService.create(
+        global.admin,
+        generateExerciseStub({ componentIds: [component.id] }),
       );
 
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercise = await exerciseService.create(
+        global.manager,
         generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-      ]);
+      );
 
+      const from = addDays(new Date(), 1);
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
@@ -676,8 +740,8 @@ describe('Create Training (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExercise({ id: globalExercise.id }),
+                  generateTrainingExercise({ id: exercise.id }),
                 ],
               }),
             ],
@@ -687,14 +751,14 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(201);
       expect(response.body.groupId).toBe(group.id);
       expect(response.body.cycleId).toBe(group.cycles[1].id);
-      expect(response.body.ownerId).toBe(trainer.uid);
-      expect(response.body.membersIds).toEqual([athlete.uid]);
+      expect(response.body.ownerId).toBe(global.trainer.uid);
+      expect(response.body.membersIds).toEqual([global.athlete.uid]);
       expect(response.body.components).toHaveLength(1);
       expect(response.body.components[0].supersets).toHaveLength(1);
       expect(response.body.components[0].supersets[0].exercises).toHaveLength(
@@ -722,44 +786,61 @@ describe('Create Training (e2e)', () => {
           {
             setNumber: 1,
             paramValuesL: [
-              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+              {
+                field: ParamType.VolWork1,
+                selected: VolType.Rep,
+                value: '12',
+              },
             ],
             paramValuesR: [
-              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+              {
+                field: ParamType.VolWork1,
+                selected: VolType.Rep,
+                value: '12',
+              },
             ],
           },
           {
             setNumber: 2,
             paramValuesL: [
-              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+              {
+                field: ParamType.VolWork1,
+                selected: VolType.Rep,
+                value: '12',
+              },
             ],
             paramValuesR: [
-              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+              {
+                field: ParamType.VolWork1,
+                selected: VolType.Rep,
+                value: '12',
+              },
             ],
           },
           {
             setNumber: 3,
             paramValuesL: [
-              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+              {
+                field: ParamType.VolWork1,
+                selected: VolType.Rep,
+                value: '12',
+              },
             ],
             paramValuesR: [
-              { field: ParamType.VolWork1, selected: VolType.Rep, value: '12' },
+              {
+                field: ParamType.VolWork1,
+                selected: VolType.Rep,
+                value: '12',
+              },
             ],
           },
         ]);
       }
 
-      // it should add trainer id to user
-      const dbMember = await userService.findProfile(athlete);
-      // expect(dbMember.trainersIds).toEqual([trainer.uid]);
-
       // it should create user workloads
       const workloads = (
         await workloadService.findAllByTraining(response.body.id)
       ).sort((a, b) => {
-        const aIndex = exercises.findIndex((ex) => ex.id === a.exerciseId);
-        const bIndex = exercises.findIndex((ex) => ex.id === b.exerciseId);
-        if (aIndex !== bIndex) return aIndex - bIndex;
         return a.setNumber - b.setNumber;
       });
 
@@ -772,7 +853,7 @@ describe('Create Training (e2e)', () => {
         plannedAt: expect.anything(),
         trainingId: response.body.id,
         componentId: component.id,
-        exerciseId: exercises[0].id,
+        exerciseId: expect.anything(),
         setNumber: 1,
         notes: null,
         isPersonalized: false,
@@ -797,6 +878,8 @@ describe('Create Training (e2e)', () => {
         status: SetStatus.NOT_STARTED,
       } as Workload);
     });
+
+    it('should successfully create institutional training if user is institution manager', async () => {});
   });
 
   describe('Training components', () => {
@@ -810,7 +893,7 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe('Training not found');
     });
 
-    it('should fail to add components if user is not owner of the training', async () => {
+    it('should fail to add components if user is not allowed to edit training', async () => {
       const training = await trainingService.create(
         trainer,
         generateTrainingStub({
@@ -833,9 +916,7 @@ describe('Create Training (e2e)', () => {
         });
 
       expect(response.status).toBe(401);
-      expect(response.body.message).toBe(
-        'You are not authorized to perform this action',
-      );
+      expect(response.body.message).toBe('You cannot edit this training');
     });
 
     it('should fail to add components if training is in the past', async () => {

@@ -17,7 +17,7 @@ import {
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
+import { Create, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
 import {
   ComponentRef,
@@ -54,6 +54,9 @@ import { CopyTrainingDto } from '../dto/copy-training.dto';
 import { Permission } from '../../common/interface/permission.interface';
 import { Institution } from '../../institution/entity/institution.entity';
 import { InstitutionService } from '../../institution/service/institution.service';
+import { AttributeService } from '../../attribute/service/attribute.service';
+import { ComponentService } from '../../component/component.service';
+import { MethodService } from '../../method/service/method.service';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -63,6 +66,9 @@ export class TrainingService implements Permission<Training, Institution> {
     private readonly firebaseService: FirebaseService,
     private readonly cacheManagerService: CacheManagerService,
     private readonly commonService: CommonService,
+    private readonly attributeService: AttributeService,
+    private readonly componentService: ComponentService,
+    private readonly methodService: MethodService,
     private readonly userService: UserService,
     private readonly periodizationService: PeriodizationService,
     private readonly trainingRepository: TrainingRepository,
@@ -86,21 +92,31 @@ export class TrainingService implements Permission<Training, Institution> {
       .get();
   }
 
-  async findOneById(user: User, ref: TrainingRef): Promise<Training | null> {
+  async findOneById(
+    user: User,
+    ref: TrainingRef,
+    options?: { skipInstitution?: boolean },
+  ): Promise<Training | null> {
     // find training
     const training = await this.trainingRepository.getDoc(ref.trainingId);
     if (!training || training.deletedAt) return null;
 
-    const institution = await this.institutionService.getDoc({
-      institutionId: training.institutionId,
-    });
+    if (!options?.skipInstitution)
+      if (training.institutionId)
+        training.institution = await this.institutionService.getDoc({
+          institutionId: training.institutionId,
+        });
 
-    this.validateCanView(user, training, institution);
+    this.validateCanView(user, training, training.institution);
     return training;
   }
 
-  async findOneByIdOrFail(user: User, ref: TrainingRef): Promise<Training> {
-    const training = await this.findOneById(user, ref);
+  async findOneByIdOrFail(
+    user: User,
+    ref: TrainingRef,
+    options?: { skipInstitution?: boolean },
+  ): Promise<Training> {
+    const training = await this.findOneById(user, ref, options);
     if (!training) throw new BadRequestException('Training not found');
     return training;
   }
@@ -294,29 +310,6 @@ export class TrainingService implements Permission<Training, Institution> {
     return { completedWorkloads, futureWorkloads };
   }
 
-  private getFromAndToDates(components: TrainingComponent[]): {
-    from: Date;
-    to: Date;
-  } {
-    let from: Date;
-    let to: Date;
-
-    if (components.length === 0)
-      throw new BadRequestException('Training must have atleast one component');
-
-    if (components.length === 1) {
-      from = components[0].from;
-      to = components[0].to;
-    }
-
-    if (components.length > 1) {
-      from = components[0].from;
-      to = components[components.length - 1].to;
-    }
-
-    return { from, to };
-  }
-
   async create(user: User, input: CreateTrainingDto): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is creating training: ${JSON.stringify(input)}`,
@@ -328,20 +321,22 @@ export class TrainingService implements Permission<Training, Institution> {
     if (groupId)
       group = await this.groupService.findOneByIdOrFail(user, { groupId });
 
+    this.validateCanAdd(user, group.institution);
+
     let cycle: Cycle | null = null;
     if (group && cycleId)
       cycle = this.groupService.findCycleOrFail(cycleId, group);
 
-    let institution: Institution | null = null;
-    if (group.institutionId)
-      institution = await this.institutionService.getDocByIdOrFail(group);
-
-    this.validateCanAdd(user, institution);
-
     const { from, to } = this.getFromAndToDates(input.components);
     this.validateIsDateInCycle(from, cycle);
     this.validateIsDateInFuture(from);
-    await this.validateOverlap(from, to, group.id, cycle.id);
+    await this.validateOverlap(
+      from,
+      to,
+      group.id,
+      cycle.id,
+      group.institutionId,
+    );
 
     // warmup and cooldown components
     const { warmup, cooldown } =
@@ -352,16 +347,24 @@ export class TrainingService implements Permission<Training, Institution> {
       );
 
     // validate components & exercises
-    const attributes = await this.cacheManagerService.getAttributes();
-    const components = await this.cacheManagerService.getComponents();
-    const methods = await this.cacheManagerService.getMethods();
     const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
     );
 
+    await Promise.all(
+      exercises.map((exercise) =>
+        this.trainingPlanService.validateCanViewExercise(user, exercise),
+      ),
+    );
+
+    const attributes = await this.attributeService.findAll();
+    const components = await this.componentService.findAllFlat();
+    const methods = await this.methodService.findAll();
+    const membersIds = group ? group.membersIds : input.membersIds;
+
     this.trainingPlanService.validateTrainingComponents(
       exercises,
-      group.membersIds,
+      membersIds,
       [warmup, ...input.components, cooldown],
       components,
       methods,
@@ -376,20 +379,19 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // create training
-    const wellness = await this.userService.getRecentWellness(group.membersIds);
-    const workloads = await this.workloadService.findAllByRef({
-      memberIds: group.membersIds,
-    });
+    const wellness = await this.userService.getRecentWellness(membersIds);
+    const workloads = await this.workloadService.findAllByMembers(membersIds);
 
     const data: Create<Training> = {
       id: null,
+      institutionId: group.institutionId,
       groupId: group.id,
       cycleId: input.cycleId,
       ownerId: user.uid,
       copiedFromId: input.copiedFromId || null,
       from,
       to,
-      membersIds: group.membersIds,
+      membersIds,
       wellness,
       completedMembersIds: [],
       stats: input.stats || [],
@@ -423,17 +425,9 @@ export class TrainingService implements Permission<Training, Institution> {
       { timestamps: true },
     );
 
-    // create training, add trainer to users, create workloads
+    // create training, create workloads
     const batch = this.firebaseService.firestore.batch();
     batch.set(trainingDocRef, createTrainingQuery);
-
-    for (const userId of group.membersIds) {
-      const docRef = this.userService.getDoc(userId);
-      batch.update(docRef, {
-        trainersIds: FieldValue.arrayUnion(user.uid),
-      });
-    }
-
     this.workloadService.createForTraining(batch, training, workloads);
     await batch.commit();
 
@@ -587,15 +581,11 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // validate training
     const training = await this.findOneByIdOrFail(user, ref);
-    const { groupId, cycleId, institutionId } = training;
+    const { groupId, cycleId } = training;
 
     const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    const institution = await this.institutionService.getDoc({
-      institutionId,
-    });
-
-    this.validateCanEdit(user, training, institution);
+    this.validateCanEdit(user, training, training.institution);
 
     // if no components, delete training
     if (input.components.length === 0) {
@@ -609,14 +599,23 @@ export class TrainingService implements Permission<Training, Institution> {
     const { from, to } = this.getFromAndToDates(input.components);
     this.validateIsDateInCycle(from, cycle);
     this.validateIsDateInFuture(from);
-    await this.validateOverlap(from, to, groupId, cycleId, training.id);
+    await this.validateOverlap(
+      from,
+      to,
+      groupId,
+      cycleId,
+      training.institutionId,
+      training.id,
+    );
 
     // validate components & exercises
-    const attributes = await this.cacheManagerService.getAttributes();
-    const components = await this.cacheManagerService.getComponents();
-    const methods = await this.cacheManagerService.getMethods();
+    const attributes = await this.attributeService.findAll();
+    const components = await this.componentService.findAllFlat();
+    const methods = await this.methodService.findAll();
+
     const membersIds = input.membersIds || training.membersIds;
-    await this.userService.findAllOrFail({ ids: membersIds });
+    const members = await this.userService.findAllOrFail({ ids: membersIds });
+    this.validateMembersInInstitution(members, training.institution);
 
     const exercises = await this.trainingPlanService.getAllTrainingExercises(
       input.components,
@@ -682,19 +681,24 @@ export class TrainingService implements Permission<Training, Institution> {
     const { groupId, cycleId } = ref;
     const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
-    const institution = await this.institutionService.getDoc({
-      institutionId: group.institutionId,
-    });
+
+    let institution: Institution | null = null;
+    if (group.institutionId)
+      institution = await this.institutionService.getDoc({
+        institutionId: group.institutionId,
+      });
 
     this.validateCanEdit(user, { ownerId: user.uid } as Training, institution);
-    const methods = await this.cacheManagerService.getMethods();
+    const methods = await this.methodService.findAll();
     const updated = [] as Training[];
 
     for (const data of input) {
       // validate training
-      const training = await this.findOneByIdOrFail(user, {
-        trainingId: data.id,
-      });
+      const training = await this.findOneByIdOrFail(
+        user,
+        { trainingId: data.id },
+        { skipInstitution: true },
+      );
 
       const flatTrainingIds = customAthleteWorkloads.flatMap(
         (cw) => cw.trainingId,
@@ -709,11 +713,18 @@ export class TrainingService implements Permission<Training, Institution> {
       const { from, to } = this.getFromAndToDates(data.components);
       this.validateIsDateInCycle(from, cycle);
       this.validateIsDateInFuture(from);
-      await this.validateOverlap(from, to, groupId, cycleId, training.id);
+      await this.validateOverlap(
+        from,
+        to,
+        groupId,
+        cycleId,
+        training.institutionId,
+        training.id,
+      );
 
       // validate components & exercises
-      const attributes = await this.cacheManagerService.getAttributes();
-      const components = await this.cacheManagerService.getComponents();
+      const attributes = await this.attributeService.findAll();
+      const components = await this.componentService.findAllFlat();
       const membersIds = data.membersIds || training.membersIds;
       await this.userService.findAllOrFail({ ids: membersIds });
 
@@ -906,14 +917,16 @@ export class TrainingService implements Permission<Training, Institution> {
       copiedTraining.components[copiedTraining.components.length - 1].from,
       groupId,
       cycleId,
+      training.institutionId,
     );
 
     // validate components & exercises in case user cannot view exercises of another user
-    const components = await this.cacheManagerService.getComponents();
+    const components = await this.componentService.findAllFlat();
+    const methods = await this.methodService.findAll();
+
     const exercises = await this.trainingPlanService.getAllTrainingExercises(
       copiedTraining.components,
     );
-    const methods = await this.cacheManagerService.getMethods();
 
     const membersIds =
       input.membersIds?.length > 0 ? input.membersIds : training.membersIds;
@@ -965,6 +978,9 @@ export class TrainingService implements Permission<Training, Institution> {
     const copyToRef: TrainingRef = { trainingId: copyToTrainingId };
 
     const trainingFrom = await this.findOneByIdOrFail(user, copyFromRef);
+    const trainingTo = copyToRef.trainingId
+      ? await this.findOneById(user, copyToRef)
+      : undefined;
 
     const trainingComponent = trainingFrom.components.find(
       (c) => c.id === componentId,
@@ -973,9 +989,6 @@ export class TrainingService implements Permission<Training, Institution> {
     if (!trainingComponent)
       throw new BadRequestException('Component not found in training');
 
-    const trainingTo = copyToRef.trainingId
-      ? await this.findOneById(user, copyToRef)
-      : undefined;
     if (!trainingTo) {
       // create a new training if it does not exist with the copied component
       // calculate new future stats
@@ -1172,18 +1185,15 @@ export class TrainingService implements Permission<Training, Institution> {
       `User ${user.uid} is adding component to training ${ref.trainingId}: ${JSON.stringify(input)}`,
     );
 
-    // validate ownership
     const training = await this.findOneByIdOrFail(user, ref);
-    const institution = await this.institutionService.getDoc({
-      institutionId: training.institutionId,
-    });
 
-    this.validateCanEdit(user, training, institution);
+    this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
 
     // validate components & exercises
-    const components = await this.cacheManagerService.getComponents();
-    const methods = await this.cacheManagerService.getMethods();
+    const components = await this.componentService.findAllFlat();
+    const methods = await this.methodService.findAll();
+
     const trainingComponents = [...training.components, ...input];
     const exercises =
       await this.trainingPlanService.getAllTrainingExercises(
@@ -1224,11 +1234,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // validate ownership
     const training = await this.findOneByIdOrFail(user, ref);
-    const institution = await this.institutionService.getDoc({
-      institutionId: training.institutionId,
-    });
-
-    this.validateCanEdit(user, training, institution);
+    this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
 
     const filtered = training.components.filter(
@@ -1265,16 +1271,41 @@ export class TrainingService implements Permission<Training, Institution> {
     return updatedTraining;
   }
 
+  private getFromAndToDates(components: TrainingComponent[]): {
+    from: Date;
+    to: Date;
+  } {
+    let from: Date;
+    let to: Date;
+
+    if (components.length === 0)
+      throw new BadRequestException('Training must have atleast one component');
+
+    if (components.length === 1) {
+      from = components[0].from;
+      to = components[0].to;
+    }
+
+    if (components.length > 1) {
+      from = components[0].from;
+      to = components[components.length - 1].to;
+    }
+
+    return { from, to };
+  }
+
   private async validateOverlap(
     from: Date,
     to: Date,
     groupId: string,
     cycleId: string,
+    institutionId?: string,
     trainingId?: string,
   ) {
     const trainings = (
       await this.trainingRepository.getDocs((q) =>
         q
+          .where('institutionId', '==', institutionId)
           .where('groupId', '==', groupId)
           .where('cycleId', '==', cycleId)
           .where('from', '>=', Timestamp.fromDate(startOfDay(from)))
@@ -1319,6 +1350,19 @@ export class TrainingService implements Permission<Training, Institution> {
 
   private isInPast(date: Date, relativeDate = new Date()) {
     return isBefore(date, relativeDate);
+  }
+
+  private validateMembersInInstitution(
+    members: User[],
+    institution?: Institution,
+  ) {
+    if (!institution) return;
+
+    for (const member of members)
+      if (!institution.athleteIds.includes(member.uid))
+        throw new BadRequestException(
+          `User ${member.displayName || member.email} is not part of institution`,
+        );
   }
 
   validateCanView(user: User, training: Training, institution?: Institution) {

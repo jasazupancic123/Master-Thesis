@@ -97,13 +97,13 @@ describe('Get Exercises (e2e)', () => {
     ]);
   });
 
-  afterAll(async () => {
-    await Promise.all([
+  afterAll(async () =>
+    Promise.all([
       firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
       firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
       app.close(),
-    ]);
-  });
+    ]),
+  );
 
   describe('Get Exercises', () => {
     it.each([

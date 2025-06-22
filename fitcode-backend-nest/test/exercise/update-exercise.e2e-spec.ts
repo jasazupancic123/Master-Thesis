@@ -61,10 +61,13 @@ describe('Update Exercise (e2e)', () => {
     );
   });
 
-  afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await app.close();
-  });
+  afterAll(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
+      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
+      app.close(),
+    ]),
+  );
 
   describe('Update Exercise', () => {
     it('should fail if exercise does not exist', async () => {
@@ -101,7 +104,7 @@ describe('Update Exercise (e2e)', () => {
       );
     });
 
-    it('should fail if the user is not one of the following: owner of the institution, trainer in institution', async () => {
+    it('should fail if the user is not in the same institution', async () => {
       const [otherManager, otherTrainer, otherAthlete] = await Promise.all([
         createInstitutionUserAndToken(firebaseService),
         createTrainerUserAndToken(firebaseService),
@@ -119,6 +122,25 @@ describe('Update Exercise (e2e)', () => {
         updateExercise(otherManager.token),
         updateExercise(otherTrainer.token),
         updateExercise(otherAthlete.token),
+      ]);
+
+      for (const response of responses) {
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe(
+          'You are not allowed to view this exercise',
+        );
+      }
+    });
+
+    it('should fail if the user is in the same institution but without permissions', async () => {
+      async function updateExercise(token: string) {
+        return await request(app.getHttpServer())
+          .patch(`/exercise/${exercise.id}`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ name: 'test' });
+      }
+
+      const responses = await Promise.all([
         updateExercise(global.athlete.token),
       ]);
 
@@ -205,7 +227,7 @@ describe('Update Exercise (e2e)', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe(
-        'You are not allowed to edit this exercise',
+        'You are not allowed to view this exercise',
       );
     });
 

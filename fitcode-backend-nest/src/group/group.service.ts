@@ -55,8 +55,8 @@ export class GroupService implements Permission<Group, Institution> {
     if (!group || group.deletedAt) return null;
 
     // authorize
-    const institution = await this.institutionService.getDocByIdOrFail(group);
-    if (!this.canView(user, group, institution))
+    group.institution = await this.institutionService.getDocByIdOrFail(group);
+    if (!this.canView(user, group, group.institution))
       throw new UnauthorizedException('You are not allowed to view this group');
 
     return group;
@@ -253,17 +253,20 @@ export class GroupService implements Permission<Group, Institution> {
     return false;
   }
 
-  canView(user: User, group: Group, institution: Institution) {
+  canView(user: User, group: Group, institution?: Institution) {
     if (group.membersIds.includes(user.uid)) return true; // athlete is member
     if (group.ownerId === user.uid) return true; // trainer is owner
-    if (institution.ownerId === user.uid) return true; // institution owner
 
-    // other institution members can view other groups
-    if (
-      institution.athleteIds.includes(user.uid) ||
-      institution.trainerIds.includes(user.uid)
-    )
-      return true;
+    if (institution) {
+      if (institution.ownerId === user.uid) return true; // institution owner
+
+      // other institution members can view other groups
+      if (
+        institution.athleteIds.includes(user.uid) ||
+        institution.trainerIds.includes(user.uid)
+      )
+        return true;
+    }
 
     return false;
   }

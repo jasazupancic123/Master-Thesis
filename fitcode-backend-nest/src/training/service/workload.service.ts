@@ -6,8 +6,6 @@ import { CommonService } from '../../common/service/common.service';
 import {
   ExerciseRef,
   GroupRef,
-  TrainingComponentRef,
-  UserRef,
   WorkloadRef,
 } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -84,7 +82,7 @@ export class WorkloadService {
       .where('trainingId', '==', trainingId);
 
     const finalQuery = status ? query.where('status', '==', status) : query;
-    
+
     return await finalQuery
       .get()
       .then(({ docs }) =>
@@ -161,26 +159,6 @@ export class WorkloadService {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
-          ),
-        ),
-      );
-  }
-
-  async findAllByMembersGroupExerciseIds(
-    membersIds: string[],
-    groupId: string,
-    exerciseIds: string[],
-  ): Promise<Workload[]> {
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', 'in', membersIds)
-      .where('groupId', '==', groupId)
-      .where('exerciseId', 'in', exerciseIds)
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>

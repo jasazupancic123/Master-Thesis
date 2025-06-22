@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { Cycle } from './cycle.entity';
+import { Institution } from '../../institution/entity/institution.entity';
 
 export class Group extends BaseEntity {
   @IsString()
@@ -15,6 +16,7 @@ export class Group extends BaseEntity {
   @ApiProperty()
   @Expose()
   institutionId: string; // institution id
+  institution?: Institution | null;
 
   @IsString()
   @ApiProperty()

@@ -888,17 +888,39 @@
         {
           "field":"end-opt-2",
           "name":"Option 2",
-          "type":"boolean"
+          "type":"value"
         },
         {
           "field":"end-opt-3",
           "name":"Option 3",
-          "type":"boolean"
+          "type":"value"
         },
         {
           "field":"end-opt-4",
           "name":"Option 4",
-          "type":"boolean"
+          "type":"value"
+        }
+      ]
+    },
+    {
+      "field": "location",
+      "name": "Location",
+      "type": "select",
+      "options": [
+        {
+          "field": "loc-gym",
+          "name": "Gym",
+          "type": "value"
+        },
+        {
+          "field": "loc-pitch",
+          "name": "Pitch",
+          "type": "value"
+        },
+        {
+          "field": "loc-home",
+          "name": "Home",
+          "type": "value"
         }
       ]
     }

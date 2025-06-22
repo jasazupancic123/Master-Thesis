@@ -1,5 +1,5 @@
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Query } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
@@ -17,11 +17,21 @@ import {
   generateTrainingComponent,
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
-import { createGroupWithCycles, getTime } from '../utils/data.util';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  getTime,
+} from '../utils/data.util';
 import { Training } from '../../src/training/entity/training.entity';
 import { addDays, addMinutes, subDays } from 'date-fns';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
+import { Institution } from '../../src/institution/entity/institution.entity';
+import { TestUser } from '../type/auth.type';
+import {
+  createAthleteUserAndToken,
+  createTrainerUserAndToken,
+  createInstitutionUserAndToken,
+} from '../utils/auth.util';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
@@ -31,11 +41,20 @@ describe('Update Training (e2e)', () => {
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
-  let userService: UserService;
+  let institutionService: InstitutionService;
 
-  let group: Group;
   let component: Component;
+
+  // first institution
+  let institution: Institution;
+  let group: Group;
   let training: Training;
+
+  // other institution
+  let otherAthlete: TestUser;
+  let otherTrainer: TestUser;
+  let otherManager: TestUser;
+  let otherInstitution: Institution;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -51,32 +70,43 @@ describe('Update Training (e2e)', () => {
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
-    userService = moduleFixture.get(UserService);
+    institutionService = moduleFixture.get(InstitutionService);
 
     component = await componentService.create(generateComponentStub());
-
-    const institutionService = moduleFixture.get(InstitutionService);
-    const institution = await institutionService.create(
-      global.admin,
-      generateInstitutionStub(),
-    );
-
-    component = await componentService.create(generateComponentStub());
+    institution = await createInstitution(institutionService);
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      owner: trainer,
-      membersIds: [athlete.uid],
     });
 
     training = await createTraining();
+
+    otherAthlete = await createAthleteUserAndToken(firebaseService);
+    otherTrainer = await createTrainerUserAndToken(firebaseService);
+    otherManager = await createInstitutionUserAndToken(firebaseService);
+
+    otherInstitution = await createInstitution(institutionService, {
+      owner: otherManager,
+      athleteIds: [otherAthlete.uid],
+      trainerIds: [otherTrainer.uid],
+    });
+
+    await createGroupWithCycles(groupService, {
+      trainer: otherTrainer,
+      manager: otherManager,
+      institutionId: otherInstitution.id,
+      membersIds: [otherAthlete.uid],
+    });
   });
 
-  afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await firebaseService.deleteCollection(FirestoreCollection.GROUP);
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await app.close();
-  });
+  afterAll(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
+      firebaseService.deleteCollection(FirestoreCollection.GROUP),
+      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
+      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
+      app.close(),
+    ]),
+  );
 
   async function createTraining(data?: Partial<Training>) {
     const from = data?.from || getTime(addDays(new Date(), 2), 8, 0); // defaults to 8:00 two days ahead
@@ -85,6 +115,7 @@ describe('Update Training (e2e)', () => {
     return await trainingService.create(
       trainer,
       generateTrainingStub({
+        institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [generateTrainingComponent({ id: component.id, from, to })],
@@ -104,16 +135,36 @@ describe('Update Training (e2e)', () => {
       expect(response.body.message).toBe(`Training not found`);
     });
 
-    it('should fail to update training if user is not the owner', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${athlete.token}`)
-        .send(training);
-
-      expect(response.status).toBe(401);
-      expect(response.body.message).toBe(
-        'You are not authorized to perform this action',
+    it('should fail to update training if users from same institution without permission try to edit it', async () => {
+      const responses = await Promise.all(
+        [athlete].map((user) =>
+          request(app.getHttpServer())
+            .patch(`/training/${training.id}`)
+            .set('Authorization', `Bearer ${user.token}`)
+            .send(training),
+        ),
       );
+
+      for (const response of responses) {
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe(`You cannot edit this training`);
+      }
+    });
+
+    it('should fail to update training if users from other institution try to edit it', async () => {
+      const responses = await Promise.all(
+        [otherAthlete, otherTrainer, otherManager].map((user) =>
+          request(app.getHttpServer())
+            .patch(`/training/${training.id}`)
+            .set('Authorization', `Bearer ${user.token}`)
+            .send(training),
+        ),
+      );
+
+      for (const response of responses) {
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe(`You cannot view this training`);
+      }
     });
 
     it('should fail to update training if training is not in cycle', async () => {
@@ -198,7 +249,21 @@ describe('Update Training (e2e)', () => {
       training = await createTraining();
     });
 
-    it('should fail to update training if some members are invalid', async () => {});
+    it('should fail to update training if training is in institution and trainer / manager wants to add members outside the institution', async () => {
+      const newAthlete = await createAthleteUserAndToken(firebaseService);
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${trainer.token}`)
+        .send({ ...training, membersIds: [newAthlete.uid] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `User ${newAthlete.displayName || newAthlete.email} is not part of institution`,
+      );
+
+      await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+      training = await createTraining();
+    });
 
     it('should successfully update training and create training workloads', async () => {});
 

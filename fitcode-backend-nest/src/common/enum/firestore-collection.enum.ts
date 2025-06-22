@@ -5,7 +5,7 @@ export enum FirestoreCollection {
   ATTRIBUTE = 'attributes',
   EXERCISE = 'exercises',
   EXERCISE_ATTRIBUTE_VALUES = 'exerciseAttributeValues',
-  USER_META = 'user-meta',
+  WELLNESS = 'wellness',
   GROUP = 'groups',
   SUBGROUP = 'subgroups',
   TRAINING = 'trainings',

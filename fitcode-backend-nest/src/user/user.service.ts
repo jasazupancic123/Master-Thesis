@@ -1,30 +1,19 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FieldValue, Query, Transaction } from 'firebase-admin/firestore';
+import { FieldValue, Query } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
-import { Update } from '../common/type/entity.type';
+import { FirestoreEntity, Update } from '../common/type/entity.type';
 import { CustomClaims, User } from '../common/type/firebase-auth.type';
 import { WellnessRef, UserRef } from '../common/type/firestore.type';
-import { Wrapper } from '../common/type/wrapper.type';
 import { Environment } from '../config/environment-validation-schema';
 import { FirebaseService } from '../firebase/firebase.service';
-import { TrainingService } from '../training/service/training.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
 import { Wellness } from './entity/wellness.entity';
 import { UserEntity } from './entity/user.entity';
 import { WellnessRepository } from './repository/user-meta.repository';
 import { UserRepository } from './repository/user.repository';
-import { RegisterUserDto } from './dto/register-user.dto';
-import { UserRole } from './enum/user-role.enum';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
   password: string;
@@ -39,7 +28,7 @@ export class UserService {
     private readonly configService: ConfigService<Environment>,
     private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
-    private readonly userMetaRepository: WellnessRepository,
+    private readonly wellnessRepository: WellnessRepository,
   ) {}
 
   async findOne(id: string): Promise<UserEntity | null> {
@@ -173,7 +162,7 @@ export class UserService {
   }
 
   async getMeta(ref: WellnessRef): Promise<Wellness> {
-    return await this.userMetaRepository.getDoc(ref);
+    return await this.wellnessRepository.getDoc(ref);
   }
 
   async addOrUpdateWellness(
@@ -184,36 +173,42 @@ export class UserService {
       `User ${ref.uid} is adding / updating wellness: ${JSON.stringify(input)}`,
     );
 
-    const meta = await this.userMetaRepository.getDoc(ref);
-    if (!meta) await this.userMetaRepository.addDoc(ref, input);
-    else await this.userMetaRepository.updateDoc(ref, input);
+    const meta = await this.wellnessRepository.getDoc(ref);
+    if (!meta) await this.wellnessRepository.addDoc(ref, input);
+    else await this.wellnessRepository.updateDoc(ref, input);
 
     return input;
   }
 
   async updateWellness(ref: WellnessRef, input: Wellness): Promise<void> {
-    return await this.userMetaRepository.updateDoc(ref, input);
+    return await this.wellnessRepository.updateDoc(ref, input);
   }
 
   async getLastMeta(ref: UserRef): Promise<Wellness> {
-    const snapshot = await this.userMetaRepository
+    const snapshot = await this.wellnessRepository
       .collection(ref)
       .orderBy('date', 'desc')
       .limit(1)
       .get();
 
     if (snapshot.empty) return null;
-    return this.userMetaRepository.serialize(snapshot.docs[0]);
+    return this.wellnessRepository.serialize(snapshot.docs[0]);
   }
 
   async getRecentWellness(userIds: string[]): Promise<Wellness[]> {
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.USER_META)
-      .where('userId', 'in', userIds)
-      .orderBy('date', 'desc')
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) => this.userMetaRepository.serialize(doc)),
+    try {
+      const collectionGroup = this.firebaseService.firestore.collectionGroup(
+        FirestoreCollection.WELLNESS,
       );
+
+      return await this.firebaseService.batchIn(
+        'userId',
+        userIds,
+        collectionGroup,
+        (q) => q.orderBy('date', 'desc'),
+      );
+    } catch (e: any) {
+      return [];
+    }
   }
 }

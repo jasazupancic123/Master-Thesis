@@ -92,7 +92,7 @@ describe('Periodization functions (e2e)', () => {
 
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      owner: trainer,
+      trainer: trainer,
       membersIds: [athlete.uid],
       cycleLengthInWeeks: 60,
     });
@@ -273,12 +273,14 @@ describe('Periodization functions (e2e)', () => {
     await Promise.all(trainings.map((t) => trainingService.create(trainer, t)));
   });
 
-  afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.INSTITUTION);
-    await firebaseService.deleteCollection(FirestoreCollection.GROUP);
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await app.close();
-  });
+  afterAll(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
+      firebaseService.deleteCollection(FirestoreCollection.GROUP),
+      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
+      app.close(),
+    ]),
+  );
 
   describe('Periodization functions', () => {
     // perscribed values can be set in generateExerciseSet functions on base training,

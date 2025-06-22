@@ -53,11 +53,14 @@ describe('Create Exercise (e2e)', () => {
     institution = await createInstitution(institutionService);
   });
 
-  afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE);
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await app.close();
-  });
+  afterAll(async () =>
+    Promise.all([
+      firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE),
+      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
+      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
+      app.close(),
+    ]),
+  );
 
   it('should create a new exercise for a valid institution', async () => {
     const exercise = generateExerciseStub({

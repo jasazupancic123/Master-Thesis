@@ -8,59 +8,6 @@ import { InstitutionService } from '../../src/institution/service/institution.se
 import { User } from '../../src/common/type/firebase-auth.type';
 import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 
-/**
- * Creates a group and 3 cycles, one for the past week, one for the current week
- * and one for the upcomming week.
- */
-export async function createGroupWithCycles(
-  groupService: GroupService,
-  input?: {
-    institutionId: string;
-    owner?: TestUser;
-    membersIds?: string[];
-    cycleLengthInWeeks?: number;
-  },
-) {
-  const {
-    institutionId,
-    owner = global.trainer,
-    membersIds = [global.athlete.uid],
-    cycleLengthInWeeks = 1,
-  } = input || {};
-
-  const groupStub = generateGroupStub({ membersIds });
-  let group = await groupService.create(global.manager, {
-    name: groupStub.name,
-    ownerId: owner.uid,
-    membersIds: groupStub.membersIds,
-    institutionId,
-  });
-
-  const start = subDays(new Date(), 7);
-  const cycles = [
-    generateCycleStub({
-      from: start,
-      to: addWeeks(start, cycleLengthInWeeks),
-    }),
-    generateCycleStub({
-      from: addDays(addWeeks(start, cycleLengthInWeeks), 1),
-      to: addDays(addWeeks(start, 2 * cycleLengthInWeeks), 1),
-    }),
-    generateCycleStub({
-      from: addDays(addWeeks(start, 2 * cycleLengthInWeeks), 1),
-      to: addDays(addWeeks(start, 3 * cycleLengthInWeeks), 1),
-    }),
-  ];
-
-  group = await groupService.update(
-    global.trainer,
-    { groupId: group.id },
-    { cycles },
-  );
-
-  return group;
-}
-
 export async function createInstitution(
   institutionService: InstitutionService,
   input?: Partial<Institution> & { owner: TestUser },
@@ -88,6 +35,56 @@ export async function createInstitution(
   );
 
   return await institutionService.getDoc({ institutionId: institution.id })!;
+}
+
+/**
+ * Creates a group and 3 cycles, one for the past week, one for the current week
+ * and one for the upcomming week.
+ */
+export async function createGroupWithCycles(
+  groupService: GroupService,
+  input?: {
+    institutionId: string;
+    trainer?: TestUser;
+    manager?: TestUser;
+    membersIds?: string[];
+    cycleLengthInWeeks?: number;
+  },
+) {
+  const {
+    institutionId,
+    trainer = global.trainer,
+    manager = global.manager,
+    membersIds = [global.athlete.uid],
+    cycleLengthInWeeks = 1,
+  } = input || {};
+
+  const groupStub = generateGroupStub({ membersIds });
+  let group = await groupService.create(manager, {
+    name: groupStub.name,
+    ownerId: trainer.uid,
+    membersIds: groupStub.membersIds,
+    institutionId,
+  });
+
+  const start = subDays(new Date(), 7);
+  const cycles = [
+    generateCycleStub({
+      from: start,
+      to: addWeeks(start, cycleLengthInWeeks),
+    }),
+    generateCycleStub({
+      from: addDays(addWeeks(start, cycleLengthInWeeks), 1),
+      to: addDays(addWeeks(start, 2 * cycleLengthInWeeks), 1),
+    }),
+    generateCycleStub({
+      from: addDays(addWeeks(start, 2 * cycleLengthInWeeks), 1),
+      to: addDays(addWeeks(start, 3 * cycleLengthInWeeks), 1),
+    }),
+  ];
+
+  group = await groupService.update(manager, { groupId: group.id }, { cycles });
+  return group;
 }
 
 export function getTime(date: Date, hours: number, minutes = 0) {
