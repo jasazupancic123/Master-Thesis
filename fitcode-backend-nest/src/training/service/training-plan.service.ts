@@ -35,7 +35,6 @@ import {
 } from '../../component/constant/warmup-cooldown.constant';
 import { Method } from '../../method/entity/method.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { WorkloadService } from './workload.service';
 import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
 import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 import { CommonService } from '../../common/service/common.service';
@@ -565,16 +564,14 @@ export class TrainingPlanService {
 
     for (const condition of Object.keys(params)) {
       if (condition === DEFAULT_PARAMS_KEY) continue;
-      const [field, operator, value] = condition.split(':'); // e.g. "field:eq:value"
 
+      const [field, operator, value] = condition.split(':'); // e.g. "field:eq:value"
       const attrVal = attributeValues.find((a) => a.field === field);
       const attribute = attributes.find((a) => a.field === field)!;
 
-      if (attribute && !attrVal && operator === '!') {
+      if (attribute && !attrVal && operator === '!')
         // case for empty value and operator ! (value does not exist)
-        componentParams = params[condition];
-        continue;
-      }
+        return params[condition];
 
       if (!attribute || !attrVal) continue;
 
@@ -585,10 +582,10 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) === parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
           else if (attrVal.value === value)
             // string
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'like': // string inclusion
@@ -597,7 +594,7 @@ export class TrainingPlanService {
             attrVal.value.includes(value)
           )
             // string
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'gt': // greater than
@@ -606,7 +603,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) > parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'lt': // less than
@@ -615,7 +612,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) < parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'gte': // greater than or equal
@@ -624,7 +621,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) >= parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'lte': // Less than or equal
@@ -633,7 +630,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) <= parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'range': // range check
@@ -642,17 +639,34 @@ export class TrainingPlanService {
             const [min, max] = value.split('-').map(parseFloat);
             const numericValue = parseFloat(attrVal.value);
             if (numericValue >= min && numericValue <= max)
-              componentParams = params[condition];
+              return params[condition];
           }
 
           break;
+        case 'selected': // select attribute
+          if (attribute.type !== AttributeType.Select)
+            throw new BadRequestException(
+              'Operator "selected" can only be used with select attribute types',
+            );
+
+          // single select with only values as options
+          const option = (attribute.options || []).find(
+            (o) => o.field === attrVal.value,
+          );
+
+          if (
+            option &&
+            option.type === AttributeType.Value &&
+            value === attrVal.value
+          )
+            return params[condition];
         case '!': // boolean false value
           if (
             attribute.type === AttributeType.Boolean &&
             attrVal.value === 'false'
           )
             // boolean
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         // default case for boolean or no operator (just check if the field exists)
@@ -662,7 +676,7 @@ export class TrainingPlanService {
               attribute.type === AttributeType.Value) &&
             (attrVal.value === 'true' || !attrVal.value)
           )
-            componentParams = params[condition];
+            return params[condition];
       }
     }
 

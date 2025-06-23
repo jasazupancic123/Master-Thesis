@@ -22,17 +22,17 @@ import {
   deleteDocs,
   deleteUsers,
   getTime,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 import { Training } from '../../src/training/entity/training.entity';
 import { addDays, addMinutes, subDays } from 'date-fns';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { Institution } from '../../src/institution/entity/institution.entity';
-import { TestUser } from '../type/auth.type';
+import { TestUser } from '../common/type/auth.type';
 import {
   createAthleteUserAndToken,
   createTrainerUserAndToken,
   createManagerUserAndToken,
-} from '../utils/auth.util';
+} from '../common/utils/auth.util';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;

@@ -3,13 +3,13 @@ import { FirebaseService } from '../src/firebase/firebase.service';
 import { Environment } from '../src/config/environment-validation-schema';
 import { CommonService } from '../src/common/service/common.service';
 import { getFirebaseClient } from '../src/firebase/get-firebase-client';
-import { TestUser } from './type/auth.type';
+import { TestUser } from './common/type/auth.type';
 import {
   createAdminUserAndToken,
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from './utils/auth.util';
+} from './common/utils/auth.util';
 import { config } from 'dotenv';
 
 declare global {

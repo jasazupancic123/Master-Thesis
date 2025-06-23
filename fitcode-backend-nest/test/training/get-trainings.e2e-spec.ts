@@ -3,7 +3,6 @@ import { INestApplication } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { ComponentService } from '../../src/component/component.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
@@ -19,7 +18,7 @@ import {
   createGroupWithCycles,
   createInstitution,
   deleteDoc,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Get Trainings (e2e)', () => {

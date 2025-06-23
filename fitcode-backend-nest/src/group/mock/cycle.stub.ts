@@ -3,7 +3,7 @@ import { Cycle } from '../entity/cycle.entity';
 import {
   generateRandomColor,
   generateRandomName,
-} from '../../../test/utils/random.util';
+} from '../../../test/common/utils/random.util';
 import { endOfMonth, startOfMonth } from 'date-fns';
 
 export function generateCycleStub(data?: Partial<Cycle>): Cycle {

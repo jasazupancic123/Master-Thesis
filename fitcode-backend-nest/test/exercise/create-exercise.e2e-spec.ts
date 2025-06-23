@@ -3,7 +3,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { Component } from '../../src/component/entity/component.entity';
@@ -19,7 +18,7 @@ import {
   deleteCollection,
   deleteDoc,
   deleteDocs,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { Institution } from '../../src/institution/entity/institution.entity';
 

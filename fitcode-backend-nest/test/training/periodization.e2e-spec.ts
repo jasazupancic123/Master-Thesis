@@ -2,7 +2,6 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { ComponentService } from '../../src/component/component.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
@@ -16,8 +15,7 @@ import {
   createInstitution,
   deleteCollection,
   deleteDoc,
-  deleteDocs,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import {
   generateTrainingStub,

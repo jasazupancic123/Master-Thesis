@@ -587,7 +587,7 @@
           ]
         }
       ],
-      "end-opt-2": [
+      "end-opts:selected:end-opt-2": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
@@ -628,7 +628,7 @@
           ]
         }
       ],
-      "end-opt-3": [
+      "end-opts:selected:end-opt-3": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
@@ -686,7 +686,7 @@
           ]
         }
       ],
-      "end-opt-4": [
+      "end-opts:selected:end-opt-4": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",

@@ -4,7 +4,8 @@ import { Environment } from '../src/config/environment-validation-schema';
 import { CommonService } from '../src/common/service/common.service';
 import { getFirebaseClient } from '../src/firebase/get-firebase-client';
 import { config } from 'dotenv';
-import { deleteUsers } from './utils/data.util';
+import { deleteUsers } from './common/utils/data.util';
+import { FirestoreCollection } from '../src/common/enum/firestore-collection.enum';
 
 config();
 
@@ -20,24 +21,21 @@ export default async function () {
     firebaseAdminClient,
   );
 
-  await deleteUsers(firebase, [
-    global.athlete,
-    global.trainer,
-    global.manager,
-    global.admin,
-  ]);
-
   await Promise.all([
-    /* firebase.auth.deleteUsers(users.map((u) => u.uid)),
-    firebaseService.deleteCollection(FirestoreCollection.LOCAL_DEV),
-    firebaseService.deleteCollection(FirestoreCollection.USER),
-    firebaseService.deleteCollection(FirestoreCollection.COMPONENT),
-    firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE),
-    firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-    firebaseService.deleteCollection(FirestoreCollection.WELLNESS),
-    firebaseService.deleteCollection(FirestoreCollection.GROUP),
-    firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-    firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-    firebaseService.deleteCollection(FirestoreCollection.METHOD), */
+    firebase.deleteCollection(FirestoreCollection.LOCAL_DEV),
+    firebase.deleteCollection(FirestoreCollection.ATTRIBUTE),
+    firebase.deleteCollection(FirestoreCollection.COMPONENT),
+    firebase.deleteCollection(FirestoreCollection.METHOD),
+    firebase.deleteCollection(FirestoreCollection.EXERCISE),
+    firebase.deleteCollection(FirestoreCollection.INSTITUTION),
+    firebase.deleteCollection(FirestoreCollection.WELLNESS),
+    firebase.deleteCollection(FirestoreCollection.GROUP),
+    firebase.deleteCollection(FirestoreCollection.TRAINING),
+    deleteUsers(firebase, [
+      global.athlete,
+      global.trainer,
+      global.manager,
+      global.admin,
+    ]),
   ]);
 }
