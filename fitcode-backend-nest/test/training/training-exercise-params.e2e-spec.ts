@@ -88,6 +88,7 @@ describe('Training Exercise Params (e2e)', () => {
 
     await app.close();
   });
+
   async function createExercise(attributeValues: ExerciseAttributeValue[]) {
     return await exerciseService.create(
       admin,

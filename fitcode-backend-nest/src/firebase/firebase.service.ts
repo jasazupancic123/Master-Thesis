@@ -148,7 +148,7 @@ export class FirebaseService implements OnApplicationBootstrap {
     return this.checkRole(user, UserRole.ADMIN);
   }
 
-  isInstitution(user: User | DecodedUser): boolean {
+  isManager(user: User | DecodedUser): boolean {
     return this.checkRole(user, UserRole.MANAGER);
   }
 

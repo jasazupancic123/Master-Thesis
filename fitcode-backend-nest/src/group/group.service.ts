@@ -142,7 +142,7 @@ export class GroupService implements Permission<Group, Institution> {
     // validate owner
     if (input.ownerId)
       if (
-        !this.firebaseService.isInstitution(user) ||
+        !this.firebaseService.isManager(user) ||
         institution.ownerId !== user.uid
       )
         throw new UnauthorizedException('You are not allowed to update owner');
@@ -276,7 +276,7 @@ export class GroupService implements Permission<Group, Institution> {
       return true; // owner of the group (trainer) can edit group
 
     if (
-      this.firebaseService.isInstitution(user) &&
+      this.firebaseService.isManager(user) &&
       institution.ownerId === user.uid
     )
       // manager can edit all groups
