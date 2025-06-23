@@ -732,191 +732,195 @@ describe('Create Training (e2e)', () => {
       ]);
     });
 
-    it('should successfully create institutional training if user is institution trainer', async () => {
-      // create overlapping training in another group to ensure no error is thrown
-      const component = await componentService.create(
-        generateComponentStub({
-          params: {
-            [DEFAULT_PARAMS_KEY]: [
-              { field: ParamType.VolWorkSets },
-              {
-                field: ParamType.VolWork1,
-                options: [{ field: VolType.Rep }, { field: VolType.Dist }],
-              },
-            ],
-          },
-        }),
-      );
-
-      const globalExercise = await exerciseService.create(
-        global.admin,
-        generateExerciseStub({ componentIds: [component.id] }),
-      );
-
-      const exercise = await exerciseService.create(
-        global.manager,
-        generateExerciseStub({ componentIds: [component.id] }),
-      );
-
-      const from = addDays(new Date(), 1);
-      const training = generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        from,
-        to: addHours(from, 1),
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [
-              generateSuperset({
-                exercises: [
-                  generateTrainingExercise({ id: globalExercise.id }),
-                  generateTrainingExercise({ id: exercise.id }),
-                ],
-              }),
-            ],
+    it.each([
+      ['trainer', global.trainer],
+      ['manager', global.manager],
+    ])(
+      'should successfully create institutional training if user is institution %s',
+      async (_, user) => {
+        // create overlapping training in another group to ensure no error is thrown
+        const component = await componentService.create(
+          generateComponentStub({
+            params: {
+              [DEFAULT_PARAMS_KEY]: [
+                { field: ParamType.VolWorkSets },
+                {
+                  field: ParamType.VolWork1,
+                  options: [{ field: VolType.Rep }, { field: VolType.Dist }],
+                },
+              ],
+            },
           }),
-        ],
-      });
+        );
 
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
+        const globalExercise = await exerciseService.create(
+          global.admin,
+          generateExerciseStub({ componentIds: [component.id] }),
+        );
 
-      expect(response.status).toBe(201);
-      expect(response.body.groupId).toBe(group.id);
-      expect(response.body.cycleId).toBe(group.cycles[1].id);
-      expect(response.body.ownerId).toBe(global.trainer.uid);
-      expect(response.body.membersIds).toEqual([global.athlete.uid]);
-      expect(response.body.components).toHaveLength(1);
-      expect(response.body.components[0].supersets).toHaveLength(1);
-      expect(response.body.components[0].supersets[0].exercises).toHaveLength(
-        2,
-      );
+        const exercise = await exerciseService.create(
+          global.manager,
+          generateExerciseStub({ componentIds: [component.id] }),
+        );
 
-      // all training exercises should have correct component params
-      const trainingExercises = (
-        response.body.components as TrainingComponent[]
-      ).flatMap((c) => c.supersets.flatMap((s) => s.exercises));
+        const from = addDays(new Date(), 1);
+        const training = generateTrainingStub({
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          from,
+          to: addHours(from, 1),
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              supersets: [
+                generateSuperset({
+                  exercises: [
+                    generateTrainingExercise({ id: globalExercise.id }),
+                    generateTrainingExercise({ id: exercise.id }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
 
-      for (const e of trainingExercises) {
-        expect(e.params).toEqual([
-          PARAMS.find((p) => p.field === ParamType.VolWorkSets),
-          {
-            ...PARAMS.find((p) => p.field === ParamType.VolWork1),
-            options: [
-              VOL_OPTIONS.find((o) => o.field === VolType.Rep),
-              VOL_OPTIONS.find((o) => o.field === VolType.Dist),
-            ],
-          },
+        const response = await request(app.getHttpServer())
+          .post('/training')
+          .set('Authorization', `Bearer ${user.token}`)
+          .send(training);
+
+        expect(response.status).toBe(201);
+        expect(response.body.groupId).toBe(group.id);
+        expect(response.body.cycleId).toBe(group.cycles[1].id);
+        expect(response.body.ownerId).toBe(user.uid);
+        expect(response.body.membersIds).toEqual([global.athlete.uid]);
+        expect(response.body.components).toHaveLength(1);
+        expect(response.body.components[0].supersets).toHaveLength(1);
+        expect(response.body.components[0].supersets[0].exercises).toHaveLength(
+          2,
+        );
+
+        // all training exercises should have correct component params
+        const trainingExercises = (
+          response.body.components as TrainingComponent[]
+        ).flatMap((c) => c.supersets.flatMap((s) => s.exercises));
+
+        for (const e of trainingExercises) {
+          expect(e.params).toEqual([
+            PARAMS.find((p) => p.field === ParamType.VolWorkSets),
+            {
+              ...PARAMS.find((p) => p.field === ParamType.VolWork1),
+              options: [
+                VOL_OPTIONS.find((o) => o.field === VolType.Rep),
+                VOL_OPTIONS.find((o) => o.field === VolType.Dist),
+              ],
+            },
+          ]);
+
+          expect(e.sets).toEqual([
+            {
+              setNumber: 1,
+              paramValuesL: [
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: '12',
+                },
+              ],
+              paramValuesR: [
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: '12',
+                },
+              ],
+            },
+            {
+              setNumber: 2,
+              paramValuesL: [
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: '12',
+                },
+              ],
+              paramValuesR: [
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: '12',
+                },
+              ],
+            },
+            {
+              setNumber: 3,
+              paramValuesL: [
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: '12',
+                },
+              ],
+              paramValuesR: [
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: '12',
+                },
+              ],
+            },
+          ]);
+        }
+
+        // it should create user workloads
+        const workloads = (
+          await workloadService.findAllByTraining(response.body.id)
+        ).sort((a, b) => {
+          return a.setNumber - b.setNumber;
+        });
+
+        // 1 group member x 2 exercises x 3 sets each (default) = 6 workloads
+        expect(workloads).toHaveLength(6);
+        expect(workloads[0]).toEqual({
+          userId: athlete.uid,
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          plannedAt: expect.anything(),
+          trainingId: response.body.id,
+          componentId: component.id,
+          exerciseId: expect.anything(),
+          setNumber: 1,
+          notes: null,
+          isPersonalized: false,
+          deletedAt: null,
+          createdAt: expect.anything(),
+          updatedAt: expect.anything(),
+          volWork1Type: VolType.Rep,
+          prescribedVolWork1ValueL: 12,
+          prescribedVolWork1ValueR: 12,
+          volWork1ValueL: null,
+          volWork1ValueR: null,
+          volWork2ValueL: null,
+          volWork2ValueR: null,
+          intRecValueL: null,
+          intRecValueR: null,
+          volRecValueL: null,
+          volRecValueR: null,
+          intWork1ValueL: null,
+          intWork1ValueR: null,
+          intWork2ValueL: null,
+          intWork2ValueR: null,
+          status: SetStatus.NOT_STARTED,
+        } as Workload);
+
+        await Promise.all([
+          deleteDocs(firebase, 'EXERCISE', [globalExercise.id, exercise.id]),
+          deleteDoc(firebase, 'COMPONENT', component.id),
+          deleteDoc(firebase, 'TRAINING', response.body.id),
+          deleteCollection(firebase, 'TRAINING_WORKLOAD'),
         ]);
-
-        expect(e.sets).toEqual([
-          {
-            setNumber: 1,
-            paramValuesL: [
-              {
-                field: ParamType.VolWork1,
-                selected: VolType.Rep,
-                value: '12',
-              },
-            ],
-            paramValuesR: [
-              {
-                field: ParamType.VolWork1,
-                selected: VolType.Rep,
-                value: '12',
-              },
-            ],
-          },
-          {
-            setNumber: 2,
-            paramValuesL: [
-              {
-                field: ParamType.VolWork1,
-                selected: VolType.Rep,
-                value: '12',
-              },
-            ],
-            paramValuesR: [
-              {
-                field: ParamType.VolWork1,
-                selected: VolType.Rep,
-                value: '12',
-              },
-            ],
-          },
-          {
-            setNumber: 3,
-            paramValuesL: [
-              {
-                field: ParamType.VolWork1,
-                selected: VolType.Rep,
-                value: '12',
-              },
-            ],
-            paramValuesR: [
-              {
-                field: ParamType.VolWork1,
-                selected: VolType.Rep,
-                value: '12',
-              },
-            ],
-          },
-        ]);
-      }
-
-      // it should create user workloads
-      const workloads = (
-        await workloadService.findAllByTraining(response.body.id)
-      ).sort((a, b) => {
-        return a.setNumber - b.setNumber;
-      });
-
-      // 1 group member x 2 exercises x 3 sets each (default) = 6 workloads
-      expect(workloads).toHaveLength(6);
-      expect(workloads[0]).toEqual({
-        userId: athlete.uid,
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        plannedAt: expect.anything(),
-        trainingId: response.body.id,
-        componentId: component.id,
-        exerciseId: expect.anything(),
-        setNumber: 1,
-        notes: null,
-        isPersonalized: false,
-        deletedAt: null,
-        createdAt: expect.anything(),
-        updatedAt: expect.anything(),
-        volWork1Type: VolType.Rep,
-        prescribedVolWork1ValueL: 12,
-        prescribedVolWork1ValueR: 12,
-        volWork1ValueL: null,
-        volWork1ValueR: null,
-        volWork2ValueL: null,
-        volWork2ValueR: null,
-        intRecValueL: null,
-        intRecValueR: null,
-        volRecValueL: null,
-        volRecValueR: null,
-        intWork1ValueL: null,
-        intWork1ValueR: null,
-        intWork2ValueL: null,
-        intWork2ValueR: null,
-        status: SetStatus.NOT_STARTED,
-      } as Workload);
-
-      await Promise.all([
-        deleteDocs(firebase, 'EXERCISE', [globalExercise.id, exercise.id]),
-        deleteDoc(firebase, 'COMPONENT', component.id),
-        deleteDoc(firebase, 'TRAINING', response.body.id),
-        deleteCollection(firebase, 'TRAINING_WORKLOAD'),
-      ]);
-    });
-
-    it('should successfully create institutional training if user is institution manager', async () => {});
+      },
+    );
   });
 
   describe('Training components', () => {

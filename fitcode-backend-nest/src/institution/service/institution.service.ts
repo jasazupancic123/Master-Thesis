@@ -50,7 +50,7 @@ export class InstitutionService implements Permission<Institution> {
     return await this.repository.getDocs((q) =>
       this.firebaseService.isAdmin(user) // admin sees all institutions
         ? q
-        : this.firebaseService.isInstitution(user) // institution owner
+        : this.firebaseService.isManager(user) // institution owner
           ? q.where('ownerId', '==', user.uid)
           : this.firebaseService.isTrainer(user)
             ? q.where('trainerIds', 'array-contains', user.uid)
@@ -69,7 +69,7 @@ export class InstitutionService implements Permission<Institution> {
         'Owner of the new institution does not exist',
       );
 
-    if (!this.firebaseService.isInstitution(owner))
+    if (!this.firebaseService.isManager(owner))
       throw new BadRequestException(
         'Owner of the institution must be a manager',
       );
@@ -173,7 +173,7 @@ export class InstitutionService implements Permission<Institution> {
 
     // institution owner
     if (
-      this.firebaseService.isInstitution(user) &&
+      this.firebaseService.isManager(user) &&
       institution.ownerId === user.uid
     )
       return true;

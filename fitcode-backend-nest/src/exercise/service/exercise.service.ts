@@ -214,7 +214,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const attributes = await this.attributeService.findAll();
     const components = await this.componentService.findAllFlat();
 
-    const institution = this.firebaseService.isInstitution(user)
+    const institution = this.firebaseService.isManager(user)
       ? await this.institutionService.getDocByOwner(user.uid)
       : null;
 
@@ -305,7 +305,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const allComponents = await this.componentService.findAllFlat();
     const allAttributes = await this.attributeService.findAll();
 
-    const institution = this.firebaseService.isInstitution(user)
+    const institution = this.firebaseService.isManager(user)
       ? await this.institutionService.getDocByOwner(user.uid)
       : null;
 
@@ -657,7 +657,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     if (institution) {
       if (
-        this.firebaseService.isInstitution(user) &&
+        this.firebaseService.isManager(user) &&
         user.uid === institution.ownerId
       )
         return true;
@@ -674,7 +674,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
   canAdd(user: User) {
     if (this.firebaseService.isAdmin(user)) return true;
-    if (this.firebaseService.isInstitution(user)) return true;
+    if (this.firebaseService.isManager(user)) return true;
     return false;
   }
 }

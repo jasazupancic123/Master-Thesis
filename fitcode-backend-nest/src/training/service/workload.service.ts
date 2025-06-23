@@ -156,19 +156,15 @@ export class WorkloadService {
   }
 
   async findAllByMembers(membersIds: string[]): Promise<Workload[]> {
-    if(!membersIds.length) return [];
-    
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', 'in', membersIds)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
-          ),
-        ),
-      );
+    const collection = this.firebaseService.firestore.collectionGroup(
+      FirestoreCollection.TRAINING_WORKLOAD,
+    );
+
+    return await this.firebaseService.batchIn<Workload>(
+      'userId',
+      membersIds,
+      collection,
+    );
   }
 
   async findAllByUserTrainingComponentId(

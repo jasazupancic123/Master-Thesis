@@ -133,7 +133,7 @@ export class TrainingService implements Permission<Training, Institution> {
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
-        this.firebaseService.isInstitution(user)
+        this.firebaseService.isManager(user)
       )
         q = q.where('ownerId', '==', user.uid);
       else if (this.firebaseService.isAthlete(user))
@@ -1356,7 +1356,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (institution) {
       if (
-        this.firebaseService.isInstitution(user) &&
+        this.firebaseService.isManager(user) &&
         institution.ownerId === user.uid
       )
         return true;
@@ -1376,7 +1376,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     if (institution) {
       if (
-        this.firebaseService.isInstitution(user) &&
+        this.firebaseService.isManager(user) &&
         institution.ownerId === user.uid
       )
         return true;

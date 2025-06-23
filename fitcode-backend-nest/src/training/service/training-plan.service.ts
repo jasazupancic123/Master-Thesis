@@ -398,6 +398,9 @@ export class TrainingPlanService {
     attributes: Attribute[],
   ) {
     for (const tComponent of trainingComponents) {
+      if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tComponent.id))
+        continue;
+
       const component = components.find((c) => c.id === tComponent.id)!;
       const root = this.componentService.getRoot(component, components);
       const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
