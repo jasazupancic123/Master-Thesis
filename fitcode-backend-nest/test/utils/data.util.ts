@@ -5,8 +5,9 @@ import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { TestUser } from '../type/auth.type';
 import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { User } from '../../src/common/type/firebase-auth.type';
 import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
+import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
+import { FirebaseService } from '../../src/firebase/firebase.service';
 
 export async function createInstitution(
   institutionService: InstitutionService,
@@ -89,4 +90,49 @@ export async function createGroupWithCycles(
 
 export function getTime(date: Date, hours: number, minutes = 0) {
   return setMinutes(setHours(date, hours), minutes);
+}
+
+export async function deleteDoc(
+  firebase: FirebaseService,
+  path: keyof typeof FirestoreCollection,
+  id: string,
+) {
+  const docRef = firebase.firestore
+    .collection(FirestoreCollection[path])
+    .doc(id);
+
+  await firebase.firestore.recursiveDelete(docRef);
+}
+
+export async function deleteDocs(
+  firebase: FirebaseService,
+  path: keyof typeof FirestoreCollection,
+  ids: string[],
+) {
+  const collection = firebase.firestore.collection(FirestoreCollection[path]);
+  await Promise.all(
+    ids.map((id) => firebase.firestore.recursiveDelete(collection.doc(id))),
+  );
+}
+
+export async function deleteCollection(
+  firebase: FirebaseService,
+  path: keyof typeof FirestoreCollection,
+) {
+  const collection = firebase.firestore.collection(FirestoreCollection[path]);
+  await firebase.firestore.recursiveDelete(collection);
+}
+
+export async function deleteUsers(
+  firebase: FirebaseService,
+  users: TestUser[],
+) {
+  await Promise.all([
+    deleteDocs(
+      firebase,
+      'USER',
+      users.map((u) => u.uid),
+    ),
+    firebase.auth.deleteUsers(users.map((u) => u.uid)),
+  ]);
 }

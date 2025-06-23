@@ -3,7 +3,6 @@ import { INestApplication } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { ComponentService } from '../../src/component/component.service';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
@@ -27,12 +26,7 @@ describe('Create Many Exercises (e2e)', () => {
     componentService = moduleFixture.get(ComponentService);
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => app.close());
 
   it('should not create exercises if duplicates are found', async () => {
     const exercises = [

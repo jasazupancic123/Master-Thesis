@@ -34,7 +34,7 @@ export class GroupController {
   }
 
   @Get('institution/:institutionId')
-  @Auth([UserRole.INSTITUTION, UserRole.TRAINER, UserRole.ADMIN])
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ADMIN])
   async findAllByInstitution(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
@@ -45,7 +45,7 @@ export class GroupController {
   }
 
   @Post()
-  @Auth([UserRole.INSTITUTION])
+  @Auth([UserRole.MANAGER])
   async create(@RequestUser() user: User, @Body() body: CreateGroupDto) {
     return await this.groupService.create(user, body);
   }
@@ -71,7 +71,7 @@ export class GroupController {
   }
 
   @Delete(':groupId')
-  @Auth([UserRole.INSTITUTION])
+  @Auth([UserRole.MANAGER])
   async delete(@RequestUser() user: User, @Param('groupId') groupId: string) {
     await this.groupService.delete(user, { groupId });
     return {};

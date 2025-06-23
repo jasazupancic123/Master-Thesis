@@ -3,7 +3,6 @@ import { INestApplication, Query } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { ComponentService } from '../../src/component/component.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
@@ -12,7 +11,6 @@ import { TrainingService } from '../../src/training/service/training.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { GroupService } from '../../src/group/group.service';
 import { Group } from '../../src/group/entity/group.entity';
-import { UserService } from '../../src/user/user.service';
 import {
   generateTrainingComponent,
   generateTrainingStub,
@@ -20,6 +18,9 @@ import {
 import {
   createGroupWithCycles,
   createInstitution,
+  deleteDoc,
+  deleteDocs,
+  deleteUsers,
   getTime,
 } from '../utils/data.util';
 import { Training } from '../../src/training/entity/training.entity';
@@ -30,12 +31,12 @@ import { TestUser } from '../type/auth.type';
 import {
   createAthleteUserAndToken,
   createTrainerUserAndToken,
-  createInstitutionUserAndToken,
+  createManagerUserAndToken,
 } from '../utils/auth.util';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let attributeService: AttributeService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
@@ -55,6 +56,7 @@ describe('Update Training (e2e)', () => {
   let otherTrainer: TestUser;
   let otherManager: TestUser;
   let otherInstitution: Institution;
+  let otherGroup: Group;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -64,7 +66,7 @@ describe('Update Training (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
@@ -80,9 +82,11 @@ describe('Update Training (e2e)', () => {
 
     training = await createTraining();
 
-    otherAthlete = await createAthleteUserAndToken(firebaseService);
-    otherTrainer = await createTrainerUserAndToken(firebaseService);
-    otherManager = await createInstitutionUserAndToken(firebaseService);
+    [otherAthlete, otherTrainer, otherManager] = await Promise.all([
+      createAthleteUserAndToken(firebase),
+      createTrainerUserAndToken(firebase),
+      createManagerUserAndToken(firebase),
+    ]);
 
     otherInstitution = await createInstitution(institutionService, {
       owner: otherManager,
@@ -90,7 +94,7 @@ describe('Update Training (e2e)', () => {
       trainerIds: [otherTrainer.uid],
     });
 
-    await createGroupWithCycles(groupService, {
+    otherGroup = await createGroupWithCycles(groupService, {
       trainer: otherTrainer,
       manager: otherManager,
       institutionId: otherInstitution.id,
@@ -98,15 +102,20 @@ describe('Update Training (e2e)', () => {
     });
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.GROUP),
-      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteDoc(firebase, 'TRAINING', training.id),
+      deleteDocs(firebase, 'GROUP', [otherGroup.id, group.id]),
+      deleteDocs(firebase, 'INSTITUTION', [
+        otherInstitution.id,
+        institution.id,
+      ]),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteUsers(firebase, [otherAthlete, otherTrainer, otherManager]),
+    ]);
+
+    await app.close();
+  });
 
   async function createTraining(data?: Partial<Training>) {
     const from = data?.from || getTime(addDays(new Date(), 2), 8, 0); // defaults to 8:00 two days ahead
@@ -219,12 +228,14 @@ describe('Update Training (e2e)', () => {
       expect(response.status).toBe(200);
       expect(trainings).toHaveLength(0);
 
-      await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+      await deleteDoc(firebase, 'TRAINING', training.id);
       training = await createTraining();
     });
 
     it('should fail to update training if there is overlap between trainings', async () => {
-      await createTraining({ from: getTime(addDays(new Date(), 2), 9, 30) });
+      const prevTraining = await createTraining({
+        from: getTime(addDays(new Date(), 2), 9, 30),
+      });
 
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
@@ -245,12 +256,12 @@ describe('Update Training (e2e)', () => {
         'Training overlaps with other training',
       );
 
-      await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+      await deleteDocs(firebase, 'TRAINING', [prevTraining.id, training.id]);
       training = await createTraining();
     });
 
     it('should fail to update training if training is in institution and trainer / manager wants to add members outside the institution', async () => {
-      const newAthlete = await createAthleteUserAndToken(firebaseService);
+      const newAthlete = await createAthleteUserAndToken(firebase);
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
         .set('Authorization', `Bearer ${trainer.token}`)
@@ -261,7 +272,11 @@ describe('Update Training (e2e)', () => {
         `User ${newAthlete.displayName || newAthlete.email} is not part of institution`,
       );
 
-      await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+      await Promise.all([
+        deleteUsers(firebase, [newAthlete]),
+        deleteDoc(firebase, 'TRAINING', training.id),
+      ]);
+
       training = await createTraining();
     });
 

@@ -13,18 +13,18 @@ import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import {
   createAthleteUserAndToken,
-  createInstitutionUserAndToken,
+  createManagerUserAndToken,
   createTrainerUserAndToken,
 } from '../utils/auth.util';
 import { generateAttributeStub } from '../../src/attribute/mock/attribute.stub';
 import { Attribute } from '../../src/attribute/entity/attribute.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { createInstitution } from '../utils/data.util';
+import { createInstitution, deleteDoc, deleteUsers } from '../utils/data.util';
 import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Update Exercise (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let attributeService: AttributeService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
@@ -43,7 +43,7 @@ describe('Update Exercise (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
@@ -61,13 +61,16 @@ describe('Update Exercise (e2e)', () => {
     );
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteDoc(firebase, 'EXERCISE', exercise.id),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+    ]);
+
+    await app.close();
+  });
 
   describe('Update Exercise', () => {
     it('should fail if exercise does not exist', async () => {
@@ -82,10 +85,7 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should fail if exercise is institutional and institution does not exist anymore', async () => {
-      await firebaseService.firestore
-        .collection(FirestoreCollection.INSTITUTION)
-        .doc(institution.id)
-        .delete();
+      await deleteDoc(firebase, 'INSTITUTION', institution.id);
 
       const response = await request(app.getHttpServer())
         .patch(`/exercise/${exercise.id}`)
@@ -97,6 +97,7 @@ describe('Update Exercise (e2e)', () => {
         'You are not allowed to view this exercise',
       );
 
+      await deleteDoc(firebase, 'EXERCISE', exercise.id);
       institution = await createInstitution(institutionService);
       exercise = await exerciseService.create(
         global.manager,
@@ -106,9 +107,9 @@ describe('Update Exercise (e2e)', () => {
 
     it('should fail if the user is not in the same institution', async () => {
       const [otherManager, otherTrainer, otherAthlete] = await Promise.all([
-        createInstitutionUserAndToken(firebaseService),
-        createTrainerUserAndToken(firebaseService),
-        createAthleteUserAndToken(firebaseService),
+        createManagerUserAndToken(firebase),
+        createTrainerUserAndToken(firebase),
+        createAthleteUserAndToken(firebase),
       ]);
 
       async function updateExercise(token: string) {
@@ -130,6 +131,8 @@ describe('Update Exercise (e2e)', () => {
           'You are not allowed to view this exercise',
         );
       }
+
+      await deleteUsers(firebase, [otherManager, otherTrainer, otherAthlete]);
     });
 
     it('should fail if the user is in the same institution but without permissions', async () => {
@@ -213,6 +216,7 @@ describe('Update Exercise (e2e)', () => {
 
   describe('Delete Exercise', () => {
     afterEach(async () => {
+      await deleteDoc(firebase, 'EXERCISE', exercise.id);
       exercise = await exerciseService.create(
         global.manager,
         generateExerciseStub({ componentIds: [component.id] }),
@@ -220,7 +224,7 @@ describe('Update Exercise (e2e)', () => {
     });
 
     it('should fail if the user is not the owner', async () => {
-      const otherUser = await createTrainerUserAndToken(firebaseService);
+      const otherUser = await createTrainerUserAndToken(firebase);
       const response = await request(app.getHttpServer())
         .delete(`/exercise/${exercise.id}`)
         .set('Authorization', `Bearer ${otherUser.token}`);
@@ -229,6 +233,8 @@ describe('Update Exercise (e2e)', () => {
       expect(response.body.message).toBe(
         'You are not allowed to view this exercise',
       );
+
+      await deleteUsers(firebase, [otherUser]);
     });
 
     it('should fail if exercise does not exist', async () => {

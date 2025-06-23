@@ -33,7 +33,7 @@ export class InstitutionController {
   }
 
   @Post(':institutionId/athletes')
-  @Auth([UserRole.INSTITUTION])
+  @Auth([UserRole.MANAGER])
   async addAthletes(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
@@ -47,7 +47,7 @@ export class InstitutionController {
   }
 
   @Post(':institutionId/athletes/delete')
-  @Auth([UserRole.INSTITUTION])
+  @Auth([UserRole.MANAGER])
   async removeAthletes(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
@@ -61,7 +61,7 @@ export class InstitutionController {
   }
 
   @Post(':institutionId/trainers')
-  @Auth([UserRole.INSTITUTION])
+  @Auth([UserRole.MANAGER])
   async addTrainers(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,
@@ -75,7 +75,7 @@ export class InstitutionController {
   }
 
   @Post(':institutionId/trainers/delete')
-  @Auth([UserRole.INSTITUTION])
+  @Auth([UserRole.MANAGER])
   async removeTrainers(
     @RequestUser() user: User,
     @Param('institutionId') institutionId: string,

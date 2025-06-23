@@ -17,7 +17,12 @@ import {
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { createGroupWithCycles } from '../utils/data.util';
+import {
+  createGroupWithCycles,
+  deleteDoc,
+  deleteDocs,
+  deleteUsers,
+} from '../utils/data.util';
 import {
   DEFAULT_PARAMS_KEY,
   INT_OPTIONS,
@@ -36,18 +41,24 @@ import { Workload } from '../../src/training/entity/workload.entity';
 import { generateCompletedRepWorkloadsStub } from '../../src/training/mock/workload.stub';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
+import { Institution } from '../../src/institution/entity/institution.entity';
+import { TestUser } from 'test/type/auth.type';
 
 describe('Training Workloads (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
   let workloadService: WorkloadService;
+  let institutionService: InstitutionService;
 
+  let institution: Institution;
   let group: Group;
   let component: Component;
+  let athlete2: TestUser;
+  let athlete3: TestUser;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -57,24 +68,24 @@ describe('Training Workloads (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     workloadService = moduleFixture.get(WorkloadService);
+    institutionService = moduleFixture.get(InstitutionService);
 
     component = await componentService.create(
       generateComponentStub({ params: { [DEFAULT_PARAMS_KEY]: [] } }),
     );
 
-    const [athlete2, athlete3] = await Promise.all([
-      createAthleteUserAndToken(firebaseService),
-      createAthleteUserAndToken(firebaseService),
+    [athlete2, athlete3] = await Promise.all([
+      createAthleteUserAndToken(firebase),
+      createAthleteUserAndToken(firebase),
     ]);
 
-    const institutionService = moduleFixture.get(InstitutionService);
-    const institution = await institutionService.create(
+    institution = await institutionService.create(
       global.admin,
       generateInstitutionStub(),
     );
@@ -85,22 +96,16 @@ describe('Training Workloads (e2e)', () => {
     });
   });
 
-  beforeEach(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-      firebaseService.deleteCollection(FirestoreCollection.TRAINING_WORKLOAD),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteDoc(firebase, 'GROUP', group.id),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteUsers(firebase, [athlete2, athlete3]),
+    ]);
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.GROUP),
-      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-      await app.close(),
-    ]),
-  );
+    await app.close();
+  });
 
   describe('Create workloads', () => {
     it('should successfully create training workloads for all members for training if only sets are provided', async () => {
@@ -167,6 +172,15 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.intRecValueL).toBeNull();
         expect(workload.intRecValueR).toBeNull();
       }
+
+      await Promise.all([
+        deleteDocs(
+          firebase,
+          'EXERCISE',
+          exercises.map((e) => e.id),
+        ),
+        deleteDoc(firebase, 'TRAINING', response.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for a single param value', async () => {
@@ -222,6 +236,15 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.prescribedIntRecValueL).toBeUndefined();
         expect(workload.intRecValueL).toBeNull();
       }
+
+      await Promise.all([
+        deleteDocs(
+          firebase,
+          'EXERCISE',
+          exercises.map((e) => e.id),
+        ),
+        deleteDoc(firebase, 'TRAINING', response.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for multiple param values', async () => {
@@ -357,6 +380,16 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.prescribedIntRecValueL).toBe(1);
         expect(workload.intRecValueL).toBeNull();
       }
+
+      await Promise.all([
+        deleteDocs(
+          firebase,
+          'EXERCISE',
+          exercises.map((e) => e.id),
+        ),
+        deleteDoc(firebase, 'TRAINING', response.id),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+      ]);
     });
 
     it.each([IntType.Hrmax, IntType.Mas])(
@@ -405,6 +438,12 @@ describe('Training Workloads (e2e)', () => {
           expect(workload.prescribedIntWork1ValueL).toBe(0.7);
           expect(workload.intWork1ValueL).toBeNull();
         }
+
+        await Promise.all([
+          deleteDoc(firebase, 'EXERCISE', exercise.id),
+          deleteDoc(firebase, 'TRAINING', response.id),
+          deleteDoc(firebase, 'COMPONENT', component.id),
+        ]);
       },
     );
 
@@ -473,6 +512,12 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.prescribedIntWork1ValueL).toBeGreaterThanOrEqual(113); // epley and brzycki return value 116.1, lander returns 113.5
         expect(workload.intWork1ValueL).toBeNull();
       }
+
+      await Promise.all([
+        deleteDoc(firebase, 'EXERCISE', exercise.id),
+        deleteDoc(firebase, 'TRAINING', response.id),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for bw', async () => {
@@ -514,6 +559,12 @@ describe('Training Workloads (e2e)', () => {
       );
 
       const workloads = await workloadService.findAllByTraining(response.id);
+
+      await Promise.all([
+        deleteDoc(firebase, 'EXERCISE', exercise.id),
+        deleteDoc(firebase, 'TRAINING', response.id),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for exercises that have custom attributes and parameters', async () => {});

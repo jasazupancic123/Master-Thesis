@@ -9,7 +9,7 @@ import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { TestUser } from '../type/auth.type';
 import {
   createAthleteUserAndToken,
-  createInstitutionUserAndToken,
+  createManagerUserAndToken,
   createTrainerUserAndToken,
 } from '../utils/auth.util';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
@@ -25,22 +25,39 @@ import {
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { createInstitution } from '../utils/data.util';
+import {
+  createInstitution,
+  deleteCollection,
+  deleteDoc,
+  deleteDocs,
+  deleteUsers,
+} from '../utils/data.util';
 
 describe('Get Exercises (e2e)', () => {
-  let component: Component;
-  let globalExercises: Exercise[];
-  let manager1: TestUser, manager2: TestUser;
-  let institution1: Institution, institution2: Institution;
-  let trainer1: TestUser, trainer2: TestUser;
-  let athlete1: TestUser, athlete2: TestUser;
-  let institution1Exercises: Exercise[], institution2Exercises: Exercise[];
-
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let exerciseService: ExerciseService;
   let componentService: ComponentService;
   let attributeService: AttributeService;
+  let institutionService: InstitutionService;
+
+  // global
+  let component: Component;
+  let globalExercises: Exercise[];
+
+  // first institution
+  let manager1: TestUser;
+  let institution1: Institution;
+  let trainer1: TestUser;
+  let athlete1: TestUser;
+  let institution1Exercises: Exercise[];
+
+  // second institution
+  let manager2: TestUser;
+  let institution2: Institution;
+  let trainer2: TestUser;
+  let athlete2: TestUser;
+  let institution2Exercises: Exercise[];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -50,20 +67,20 @@ describe('Get Exercises (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     exerciseService = moduleFixture.get(ExerciseService);
     componentService = moduleFixture.get(ComponentService);
     attributeService = moduleFixture.get(AttributeService);
-    const institutionService = moduleFixture.get(InstitutionService);
+    institutionService = moduleFixture.get(InstitutionService);
 
     [athlete1, athlete2, trainer1, trainer2, manager1, manager2] =
       await Promise.all([
-        createAthleteUserAndToken(firebaseService),
-        createAthleteUserAndToken(firebaseService),
-        createTrainerUserAndToken(firebaseService),
-        createTrainerUserAndToken(firebaseService),
-        createInstitutionUserAndToken(firebaseService),
-        createInstitutionUserAndToken(firebaseService),
+        createAthleteUserAndToken(firebase),
+        createAthleteUserAndToken(firebase),
+        createTrainerUserAndToken(firebase),
+        createTrainerUserAndToken(firebase),
+        createManagerUserAndToken(firebase),
+        createManagerUserAndToken(firebase),
       ]);
 
     component = await componentService.create(generateComponentStub());
@@ -97,13 +114,23 @@ describe('Get Exercises (e2e)', () => {
     ]);
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteCollection(firebase, 'EXERCISE'),
+      deleteDocs(firebase, 'INSTITUTION', [institution1.id, institution2.id]),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteUsers(firebase, [
+        athlete1,
+        athlete2,
+        trainer1,
+        trainer2,
+        manager1,
+        manager2,
+      ]),
+    ]);
+
+    await app.close();
+  });
 
   describe('Get Exercises', () => {
     it.each([
@@ -188,7 +215,9 @@ describe('Get Exercises (e2e)', () => {
         generateExerciseStub({ componentIds: [comp2.id] }),
       ];
 
-      await exerciseService.createMany(admin, exercises);
+      const exerciseIds = (
+        await exerciseService.createMany(admin, exercises)
+      ).map((e) => e.id);
 
       const filters: [string, number][] = [
         // array of <filter string, expected returned array length>
@@ -210,6 +239,11 @@ describe('Get Exercises (e2e)', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toHaveLength(filters[i][1]);
       }
+
+      await Promise.all([
+        deleteDocs(firebase, 'COMPONENT', [comp1.id, comp2.id]),
+        deleteDocs(firebase, 'EXERCISE', exerciseIds),
+      ]);
     });
 
     it('should filter exercises by component', async () => {
@@ -224,7 +258,9 @@ describe('Get Exercises (e2e)', () => {
         generateExerciseStub({ componentIds: [comp2.id] }),
       ];
 
-      await exerciseService.createMany(manager1, exercises);
+      const exerciseIds = (
+        await exerciseService.createMany(manager1, exercises)
+      ).map((e) => e.id);
 
       const filters: [string, number][] = [
         // array of <filter string, expected returned array length>
@@ -248,11 +284,14 @@ describe('Get Exercises (e2e)', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toHaveLength(filters[i][1]);
       }
+
+      await Promise.all([
+        deleteDocs(firebase, 'COMPONENT', [comp1.id, comp2.id]),
+        deleteDocs(firebase, 'EXERCISE', exerciseIds),
+      ]);
     });
 
     it('should filter exercises by multiselect attribute', async () => {
-      await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-
       const attribute = await attributeService.create(
         generateMultiselectAttribute(),
       );
@@ -324,7 +363,10 @@ describe('Get Exercises (e2e)', () => {
         }),
       ];
 
-      await exerciseService.createMany(admin, exercises);
+      const exerciseIds = (
+        await exerciseService.createMany(admin, exercises)
+      ).map((e) => e.id);
+
       const attributeValues = (await exerciseService.findAllGlobal()).flatMap(
         (e) => e.attributeValues,
       );
@@ -349,11 +391,15 @@ describe('Get Exercises (e2e)', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toHaveLength(expectedLength);
       }
+
+      await Promise.all([
+        deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+        deleteDocs(firebase, 'EXERCISE', exerciseIds),
+      ]);
     });
 
     it('should filter by combined properties', async () => {
-      await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-
       const attribute = await attributeService.create(
         generateMultiselectAttribute(),
       );
@@ -452,7 +498,9 @@ describe('Get Exercises (e2e)', () => {
         }),
       ];
 
-      await exerciseService.createMany(admin, exercises);
+      const exerciseIds = (
+        await exerciseService.createMany(admin, exercises)
+      ).map((e) => e.id);
 
       const attributeValues = (await exerciseService.findAllGlobal()).flatMap(
         (e) => e.attributeValues,
@@ -488,6 +536,12 @@ describe('Get Exercises (e2e)', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toHaveLength(expectedLength);
       }
+
+      await Promise.all([
+        deleteCollection(firebase, 'ATTRIBUTE'),
+        deleteDocs(firebase, 'COMPONENT', [comp1.id, comp2.id]),
+        deleteDocs(firebase, 'EXERCISE', exerciseIds),
+      ]);
     });
   });
 });

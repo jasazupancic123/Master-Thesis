@@ -10,11 +10,17 @@ import { generateRandomName } from '../utils/random.util';
 import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+} from '../utils/data.util';
 
 describe('Update Group (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let groupService: GroupService;
+  let institutionService: InstitutionService;
 
   let institution: Institution;
   let group: Group;
@@ -27,32 +33,24 @@ describe('Update Group (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     groupService = moduleFixture.get(GroupService);
+    institutionService = moduleFixture.get(InstitutionService);
 
-    const institutionService = moduleFixture.get(InstitutionService);
-    institution = await institutionService.create(
-      global.admin,
-      generateInstitutionStub(),
-    );
-  });
-
-  beforeEach(async () => {
-    group = await groupService.create(global.manager, {
+    institution = await createInstitution(institutionService);
+    group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
-      membersIds: [],
-      name: generateRandomName(),
-      ownerId: global.trainer.uid,
     });
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.GROUP),
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteDoc(firebase, 'GROUP', group.id),
+    ]);
+
+    await app.close();
+  });
 
   describe('batchUpdate', () => {
     it('should be defined', () => {
