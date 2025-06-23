@@ -11,10 +11,12 @@ import { generateExerciseAttributeValueStub } from '../../../attribute/mock/attr
 import {
   IntType,
   ParamType,
+  VolType,
   VolWorkSetType,
 } from '../../../component/enum/param.enum';
 import {
   DEFAULT_PARAMS_KEY,
+  INT_OPTIONS,
   PARAMS,
   VOL_WORK_SET_OPTIONS,
 } from '../../../component/constant/param.constant';
@@ -816,4 +818,129 @@ describe('TrainingPlanService (unit)', () => {
       trainingComponentFalseBoolean.supersets[0].exercises[0].params,
     ).toEqual([PARAMS.find((p) => p.field === ParamType.VolWork1)]);
   });
+
+  it.each([
+    ['opt-1', PARAMS.find((p) => p.field === ParamType.IntRec1)],
+    ['opt-2', PARAMS.find((p) => p.field === ParamType.IntWork2)],
+    ['opt-3', PARAMS.find((p) => p.field === ParamType.VolRec1)],
+  ])(
+    'should correctly populate params based on custom select attribute with a few option values',
+    (option, targetParams) => {
+      const attribute = generateAttributeStub({
+        field: 'opts',
+        type: AttributeType.Select,
+        options: [
+          generateAttributeStub({ field: 'opt-1', type: AttributeType.Value }),
+          generateAttributeStub({ field: 'opt-2', type: AttributeType.Value }),
+          generateAttributeStub({ field: 'opt-3', type: AttributeType.Value }),
+        ],
+      });
+
+      const component = generateComponentStub({
+        params: {
+          [DEFAULT_PARAMS_KEY]: [{ field: ParamType.VolWork1 }],
+          'opts:selected:opt-1': [{ field: ParamType.IntRec1 }],
+          'opts:selected:opt-2': [{ field: ParamType.IntWork2 }],
+          'opts:selected:opt-3': [{ field: ParamType.VolRec1 }],
+        },
+      });
+
+      const exercise = generateExerciseStub({
+        id: 'e1',
+        attributeValues: [
+          generateExerciseAttributeValueStub({
+            field: attribute.field,
+            value: option,
+          }),
+        ],
+      });
+
+      const trainingComponent = generateTrainingComponent({
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
+
+      componentService.getRoot = jest.fn().mockReturnValue(component);
+      service.populateTrainingExerciseParams(
+        [trainingComponent],
+        [component],
+        [exercise],
+        [attribute],
+      );
+
+      expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
+        targetParams,
+      ]);
+    },
+  );
+
+  // NOTE - passing boolean with not condition will match anything, so do not do it!
+  it.each([
+    ['str', 'test123', PARAMS.find((p) => p.field === ParamType.VolWork2)],
+    ['str', 'otherTest', PARAMS.find((p) => p.field === ParamType.IntRec1)],
+    ['str', 'asdf', PARAMS.find((p) => p.field === ParamType.VolWork1)],
+    ['num', '110', PARAMS.find((p) => p.field === ParamType.VolWork1)],
+    ['num', '150', PARAMS.find((p) => p.field === ParamType.IntWork1)],
+    // ['bool', 'true', PARAMS.find((p) => p.field === ParamType.IntWork2)],
+    // ['bool', 'false', PARAMS.find((p) => p.field === ParamType.VolWork1)],
+    ['select', 'opt1', PARAMS.find((p) => p.field === ParamType.VolRec1)],
+    ['select', 'opt2', PARAMS.find((p) => p.field === ParamType.IntRec1)],
+  ])(
+    'should correctly populate params for complex component params for field %s with value %s',
+    (field, value, targetParams) => {
+      const attributes = [
+        generateAttributeStub({ field: 'str', type: AttributeType.String }),
+        generateAttributeStub({ field: 'num', type: AttributeType.Number }),
+        generateAttributeStub({ field: 'bool', type: AttributeType.Boolean }),
+        generateAttributeStub({
+          field: 'select',
+          type: AttributeType.Select,
+          options: [
+            generateAttributeStub({ field: 'opt1', type: AttributeType.Value }),
+            generateAttributeStub({ field: 'opt2', type: AttributeType.Value }),
+          ],
+        }),
+      ];
+
+      const component = generateComponentStub({
+        params: {
+          [DEFAULT_PARAMS_KEY]: [{ field: ParamType.VolWork1 }],
+          'str:eq:test123': [{ field: ParamType.VolWork2 }],
+          'str:eq:otherTest': [{ field: ParamType.IntRec1 }],
+          'num:gt:123': [{ field: ParamType.IntWork1 }],
+          // 'bool:!': [{ field: ParamType.IntWork2 }],
+          'select:selected:opt1': [{ field: ParamType.VolRec1 }],
+          'select:selected:opt2': [{ field: ParamType.IntRec1 }],
+        },
+      });
+
+      const exercise = generateExerciseStub({
+        id: 'e1',
+        attributeValues: [generateExerciseAttributeValueStub({ field, value })],
+      });
+
+      const trainingComponent = generateTrainingComponent({
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: 'e1' })],
+          }),
+        ],
+      });
+
+      componentService.getRoot = jest.fn().mockReturnValue(component);
+      service.populateTrainingExerciseParams(
+        [trainingComponent],
+        [component],
+        [exercise],
+        attributes,
+      );
+
+      expect(trainingComponent.supersets[0].exercises[0].params).toEqual([
+        targetParams,
+      ]);
+    },
+  );
 });

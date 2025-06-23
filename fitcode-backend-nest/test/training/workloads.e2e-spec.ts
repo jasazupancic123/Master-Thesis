@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { ComponentService } from '../../src/component/component.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
@@ -22,7 +21,7 @@ import {
   deleteDoc,
   deleteDocs,
   deleteUsers,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 import {
   DEFAULT_PARAMS_KEY,
   INT_OPTIONS,
@@ -35,14 +34,14 @@ import {
   VolType,
 } from '../../src/component/enum/param.enum';
 import { WorkloadService } from '../../src/training/service/workload.service';
-import { createAthleteUserAndToken } from '../utils/auth.util';
+import { createAthleteUserAndToken } from '../common/utils/auth.util';
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
 import { generateCompletedRepWorkloadsStub } from '../../src/training/mock/workload.stub';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 import { Institution } from '../../src/institution/entity/institution.entity';
-import { TestUser } from 'test/type/auth.type';
+import { TestUser } from '../common/type/auth.type';
 
 describe('Training Workloads (e2e)', () => {
   let app: INestApplication;

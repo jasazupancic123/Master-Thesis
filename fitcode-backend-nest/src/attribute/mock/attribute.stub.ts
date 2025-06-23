@@ -1,7 +1,7 @@
 import {
   generateRandomName,
   generateRandomString,
-} from '../../../test/utils/random.util';
+} from '../../../test/common/utils/random.util';
 import { Attribute } from '../entity/attribute.entity';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
 

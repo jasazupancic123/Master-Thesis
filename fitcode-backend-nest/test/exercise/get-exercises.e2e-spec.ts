@@ -4,14 +4,13 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
-import { TestUser } from '../type/auth.type';
+import { TestUser } from '../common/type/auth.type';
 import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from '../utils/auth.util';
+} from '../common/utils/auth.util';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { Component } from '../../src/component/entity/component.entity';
 import { ComponentService } from '../../src/component/component.service';
@@ -31,7 +30,7 @@ import {
   deleteDoc,
   deleteDocs,
   deleteUsers,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 
 describe('Get Exercises (e2e)', () => {
   let app: INestApplication;

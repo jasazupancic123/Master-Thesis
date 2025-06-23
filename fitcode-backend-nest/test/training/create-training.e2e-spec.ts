@@ -28,7 +28,7 @@ import {
   deleteDocs,
   deleteUsers,
   getTime,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
@@ -45,7 +45,7 @@ import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from '../utils/auth.util';
+} from '../common/utils/auth.util';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;

@@ -1,13 +1,13 @@
-import { generateGroupStub } from '../../src/group/mock/group.stub';
-import { GroupService } from '../../src/group/group.service';
+import { generateGroupStub } from '../../../src/group/mock/group.stub';
+import { GroupService } from '../../../src/group/group.service';
 import { addWeeks, addDays, subDays, setMinutes, setHours } from 'date-fns';
-import { generateCycleStub } from '../../src/group/mock/cycle.stub';
+import { generateCycleStub } from '../../../src/group/mock/cycle.stub';
 import { TestUser } from '../type/auth.type';
-import { Institution } from '../../src/institution/entity/institution.entity';
-import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
-import { FirebaseService } from '../../src/firebase/firebase.service';
+import { Institution } from '../../../src/institution/entity/institution.entity';
+import { InstitutionService } from '../../../src/institution/service/institution.service';
+import { generateInstitutionStub } from '../../../src/institution/mock/institution.mock';
+import { FirestoreCollection } from '../../../src/common/enum/firestore-collection.enum';
+import { FirebaseService } from '../../../src/firebase/firebase.service';
 
 export async function createInstitution(
   institutionService: InstitutionService,

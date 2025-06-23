@@ -1,9 +1,8 @@
 import * as request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, INestApplication } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { Component } from '../../src/component/entity/component.entity';
@@ -15,11 +14,15 @@ import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from '../utils/auth.util';
+} from '../common/utils/auth.util';
 import { generateAttributeStub } from '../../src/attribute/mock/attribute.stub';
 import { Attribute } from '../../src/attribute/entity/attribute.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { createInstitution, deleteDoc, deleteUsers } from '../utils/data.util';
+import {
+  createInstitution,
+  deleteDoc,
+  deleteUsers,
+} from '../common/utils/data.util';
 import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Update Exercise (e2e)', () => {

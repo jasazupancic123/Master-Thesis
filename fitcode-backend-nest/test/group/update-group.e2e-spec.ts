@@ -3,18 +3,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { GroupService } from '../../src/group/group.service';
 import { Group } from '../../src/group/entity/group.entity';
-import { generateRandomName } from '../utils/random.util';
 import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
 import {
   createGroupWithCycles,
   createInstitution,
   deleteDoc,
-} from '../utils/data.util';
+} from '../common/utils/data.util';
 
 describe('Update Group (e2e)', () => {
   let app: INestApplication;
