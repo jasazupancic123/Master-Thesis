@@ -149,7 +149,7 @@ export class FirebaseService implements OnApplicationBootstrap {
   }
 
   isInstitution(user: User | DecodedUser): boolean {
-    return this.checkRole(user, UserRole.INSTITUTION);
+    return this.checkRole(user, UserRole.MANAGER);
   }
 
   isTrainer(user: User | DecodedUser): boolean {

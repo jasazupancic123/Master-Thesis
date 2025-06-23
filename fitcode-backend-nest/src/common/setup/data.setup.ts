@@ -55,7 +55,7 @@ export class DataSetup extends BaseSetup {
       email: 'manager@mail.com',
       password: 'password',
       displayName: 'Manager',
-      customClaims: { role: [UserRole.INSTITUTION] },
+      customClaims: { role: [UserRole.MANAGER] },
     });
 
     this.trainer = await this.userService.upsert({

@@ -23,6 +23,10 @@ import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import {
   createGroupWithCycles,
   createInstitution,
+  deleteCollection,
+  deleteDoc,
+  deleteDocs,
+  deleteUsers,
   getTime,
 } from '../utils/data.util';
 import {
@@ -39,13 +43,13 @@ import { InstitutionService } from '../../src/institution/service/institution.se
 import { Institution } from '../../src/institution/entity/institution.entity';
 import {
   createAthleteUserAndToken,
-  createInstitutionUserAndToken,
+  createManagerUserAndToken,
   createTrainerUserAndToken,
 } from '../utils/auth.util';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
@@ -65,7 +69,7 @@ describe('Create Training (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
@@ -80,24 +84,15 @@ describe('Create Training (e2e)', () => {
     });
   });
 
-  beforeEach(async () =>
-    Promise.all([
-      await firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-      await firebaseService.deleteCollection(
-        FirestoreCollection.TRAINING_WORKLOAD,
-      ),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteDoc(firebase, 'GROUP', group.id),
+    ]);
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.GROUP),
-      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      app.close(),
-    ]),
-  );
+    await app.close();
+  });
 
   describe('Create training', () => {
     it('should fail to create new training if group provided and not found', async () => {
@@ -243,9 +238,11 @@ describe('Create Training (e2e)', () => {
         }),
       ];
 
-      await Promise.all(
-        trainings.map((t) => trainingService.create(trainer, t)),
-      );
+      const trainingIds = (
+        await Promise.all(
+          trainings.map((t) => trainingService.create(trainer, t)),
+        )
+      ).map((t) => t.id);
 
       const training = generateTrainingStub({
         groupId: group.id,
@@ -269,7 +266,7 @@ describe('Create Training (e2e)', () => {
         'Maximum number of trainings per day reached',
       );
 
-      await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+      await deleteDocs(firebase, 'TRAINING', trainingIds);
     });
 
     it.each([
@@ -279,20 +276,22 @@ describe('Create Training (e2e)', () => {
     ])(
       'should fail to create new training there is an overlap with other trainings',
       async (from) => {
-        await trainingService.create(
-          trainer,
-          generateTrainingStub({
-            groupId: group.id,
-            cycleId: group.cycles[1].id,
-            components: [
-              generateTrainingComponent({
-                id: component.id,
-                from,
-                to: addHours(from, 1),
-              }),
-            ],
-          }),
-        );
+        const trainingId = (
+          await trainingService.create(
+            trainer,
+            generateTrainingStub({
+              groupId: group.id,
+              cycleId: group.cycles[1].id,
+              components: [
+                generateTrainingComponent({
+                  id: component.id,
+                  from,
+                  to: addHours(from, 1),
+                }),
+              ],
+            }),
+          )
+        ).id;
 
         const training = generateTrainingStub({
           groupId: group.id,
@@ -316,7 +315,7 @@ describe('Create Training (e2e)', () => {
           'Training overlaps with other training',
         );
 
-        await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+        await deleteDoc(firebase, 'TRAINING', trainingId);
       },
     );
 
@@ -403,6 +402,12 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(
         'You can only have up to 5 components per training',
       );
+
+      await deleteDocs(
+        firebase,
+        'COMPONENT',
+        components.map((c) => c.id),
+      );
     });
 
     it('should fail to create new training if component is not root', async () => {
@@ -426,6 +431,7 @@ describe('Create Training (e2e)', () => {
         `Component ${leaf.name} cannot be selected for training`,
       );
 
+      await deleteDocs(firebase, 'COMPONENT', [component.id, leaf.id]);
       component = await componentService.create(generateComponentStub());
     });
 
@@ -490,6 +496,12 @@ describe('Create Training (e2e)', () => {
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
         `Component ${components[0].name} has to start before ${components[1].name}`,
+      );
+
+      await deleteDocs(
+        firebase,
+        'COMPONENT',
+        components.map((c) => c.id),
       );
     });
 
@@ -566,6 +578,15 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(
         'You can only have up to 4 exercises per superset',
       );
+
+      await Promise.all([
+        deleteDoc(firebase, 'COMPONENT', component.id),
+        deleteDocs(
+          firebase,
+          'EXERCISE',
+          exercises.map((e) => e.id),
+        ),
+      ]);
     });
 
     it('should fail to create new training if user is in multiple subgroups', async () => {
@@ -635,9 +656,9 @@ describe('Create Training (e2e)', () => {
     }); */
 
     it('should fail to create new training if some exercises are from other institution', async () => {
-      const otherAthlete = await createAthleteUserAndToken(firebaseService);
-      const otherTrainer = await createTrainerUserAndToken(firebaseService);
-      const otherManager = await createInstitutionUserAndToken(firebaseService);
+      const otherAthlete = await createAthleteUserAndToken(firebase);
+      const otherTrainer = await createTrainerUserAndToken(firebase);
+      const otherManager = await createManagerUserAndToken(firebase);
 
       const otherInstitution = await createInstitution(institutionService, {
         owner: otherManager,
@@ -698,6 +719,17 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(
         `You cannot view exercise ${exercise.name}`,
       );
+
+      await Promise.all([
+        deleteUsers(firebase, [otherAthlete, otherTrainer, otherManager]),
+        deleteDoc(firebase, 'INSTITUTION', otherInstitution.id),
+        deleteDoc(firebase, 'GROUP', otherGroup.id),
+        deleteDocs(firebase, 'EXERCISE', [
+          globalExercise.id,
+          exercise.id,
+          otherInstitutionExercise.id,
+        ]),
+      ]);
     });
 
     it('should successfully create institutional training if user is institution trainer', async () => {
@@ -875,6 +907,13 @@ describe('Create Training (e2e)', () => {
         intWork2ValueR: null,
         status: SetStatus.NOT_STARTED,
       } as Workload);
+
+      await Promise.all([
+        deleteDocs(firebase, 'EXERCISE', [globalExercise.id, exercise.id]),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+        deleteDoc(firebase, 'TRAINING', response.body.id),
+        deleteCollection(firebase, 'TRAINING_WORKLOAD'),
+      ]);
     });
 
     it('should successfully create institutional training if user is institution manager', async () => {});
@@ -915,13 +954,15 @@ describe('Create Training (e2e)', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.message).toBe('You cannot edit this training');
+
+      await deleteDoc(firebase, 'TRAINING', training.id);
     });
 
     it('should fail to add components if training is in the past', async () => {
-      const training = await firebaseService.firestore
+      const training = await firebase.firestore
         .collection(FirestoreCollection.TRAINING)
         .add(
-          firebaseService.buildCreateQuery(
+          firebase.buildCreateQuery(
             generateTrainingStub({
               groupId: group.id,
               cycleId: group.cycles[0].id,
@@ -947,6 +988,8 @@ describe('Create Training (e2e)', () => {
       expect(response.body.message).toBe(
         'You cannot add or update trainings in the past',
       );
+
+      await deleteDoc(firebase, 'TRAINING', training.id);
     });
   });
 
@@ -976,6 +1019,11 @@ describe('Create Training (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body.id).toBe(training.id);
     expect(response.body.components).toHaveLength(2);
+
+    await Promise.all([
+      deleteDoc(firebase, 'COMPONENT', newComponent.id),
+      deleteDocs(firebase, 'TRAINING', [training.id, response.body.id]),
+    ]);
   });
 
   it('should successfully delete training component', async () => {
@@ -1009,6 +1057,11 @@ describe('Create Training (e2e)', () => {
     expect(response.status).toBe(200);
     expect(response.body.id).toBe(training.id);
     expect(response.body.components).toHaveLength(1);
+
+    await Promise.all([
+      deleteDoc(firebase, 'COMPONENT', newComponent.id),
+      deleteDocs(firebase, 'TRAINING', [training.id, response.body.id]),
+    ]);
   });
 
   it('should delete training when training has no more components', async () => {
@@ -1036,5 +1089,7 @@ describe('Create Training (e2e)', () => {
 
     const trainings = await trainingService.findAll(trainer);
     expect(trainings).toHaveLength(0);
+
+    await Promise.all([deleteDoc(firebase, 'TRAINING', training.id)]);
   });
 });

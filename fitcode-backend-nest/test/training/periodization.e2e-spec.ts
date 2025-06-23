@@ -11,7 +11,13 @@ import { TrainingService } from '../../src/training/service/training.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { GroupService } from '../../src/group/group.service';
 import { Group } from '../../src/group/entity/group.entity';
-import { createGroupWithCycles, createInstitution } from '../utils/data.util';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteCollection,
+  deleteDoc,
+  deleteDocs,
+} from '../utils/data.util';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import {
   generateTrainingStub,
@@ -27,15 +33,18 @@ import { PeriodizationType } from '../../src/group/enum/periodization-type.enum'
 import { ParamType } from '../../src/component/enum/param.enum';
 import { ExerciseSet } from '../../src/training/entity/exercise-set.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
+import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
+  let institutionService: InstitutionService;
   let groupService: GroupService;
 
+  let institution: Institution;
   let group: Group;
   let component: Component;
   let baseTraining: Training;
@@ -50,12 +59,14 @@ describe('Periodization functions (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
+    institutionService = moduleFixture.get(InstitutionService);
     groupService = moduleFixture.get(GroupService);
 
+    institution = await createInstitution(institutionService);
     component = await componentService.create(
       generateComponentStub({
         id: 'strength',
@@ -83,9 +94,6 @@ describe('Periodization functions (e2e)', () => {
       }),
     );
 
-    const institutionService = moduleFixture.get(InstitutionService);
-    const institution = await createInstitution(institutionService);
-
     group = await createGroupWithCycles(groupService, {
       institutionId: institution.id,
       cycleLengthInWeeks: 60,
@@ -100,10 +108,9 @@ describe('Periodization functions (e2e)', () => {
       }),
     ]);
 
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING); // to prevent overlapping trainings
-
     const from = new Date(2026, 5, 17); // change this after this date is passed to a WEDNESDAY in future
     const to = addMinutes(from, 30);
+
     baseTraining = await trainingService.create(
       trainer,
       generateTrainingStub({
@@ -160,6 +167,23 @@ describe('Periodization functions (e2e)', () => {
       }),
     );
 
+    function getOffsetTrainingByNDays(numDays: number): Training {
+      return {
+        ...baseTraining,
+        id: null,
+        from: addDays(baseTraining.from, numDays),
+        to: addDays(baseTraining.to, numDays),
+        components: [
+          {
+            ...baseTraining.components[0],
+
+            from: addDays(baseTraining.from, numDays),
+            to: addDays(baseTraining.to, numDays),
+          },
+        ],
+      };
+    }
+
     const differentTargetTraining = {
       ...baseTraining,
       id: null,
@@ -180,101 +204,31 @@ describe('Periodization functions (e2e)', () => {
       ],
     };
 
-    const training1 = {
-      ...baseTraining,
-      id: null,
-      from: addDays(baseTraining.from, 2),
-      to: addDays(baseTraining.to, 2),
-      components: [
-        {
-          ...baseTraining.components[0],
-
-          from: addDays(baseTraining.from, 2),
-          to: addDays(baseTraining.to, 2),
-        },
-      ],
-    };
-
-    const training2 = {
-      ...baseTraining,
-      id: null,
-      from: addDays(baseTraining.from, 4),
-      to: addDays(baseTraining.to, 4),
-      components: [
-        {
-          ...baseTraining.components[0],
-
-          from: addDays(baseTraining.from, 4),
-          to: addDays(baseTraining.to, 4),
-        },
-      ],
-    };
-
-    const training3 = {
-      ...baseTraining,
-      id: null,
-      from: addDays(baseTraining.from, 7),
-      to: addDays(baseTraining.to, 7),
-      components: [
-        {
-          ...baseTraining.components[0],
-
-          from: addDays(baseTraining.from, 7),
-          to: addDays(baseTraining.to, 7),
-        },
-      ],
-    };
-
-    const training4 = {
-      ...baseTraining,
-      id: null,
-      from: addDays(baseTraining.from, 14),
-      to: addDays(baseTraining.to, 14),
-      components: [
-        {
-          ...baseTraining.components[0],
-          from: addDays(baseTraining.from, 14),
-          to: addDays(baseTraining.to, 14),
-        },
-      ],
-    };
-
-    const training5 = {
-      ...baseTraining,
-      id: null,
-      from: addDays(baseTraining.from, 28),
-      to: addDays(baseTraining.to, 28),
-      components: [
-        {
-          ...baseTraining.components[0],
-          from: addDays(baseTraining.from, 28),
-          to: addDays(baseTraining.to, 28),
-        },
-      ],
-    };
-
     // dates: baseTraining(+0d), training1(+2d), training2(+4d), training3(+7d), training4(+14d),
     // differentTargetTraining(+21d), training5(+28d)
     trainings = [
-      training1,
-      training2,
-      training3,
-      training4,
-      training5,
+      getOffsetTrainingByNDays(2),
+      getOffsetTrainingByNDays(4),
+      getOffsetTrainingByNDays(7),
+      getOffsetTrainingByNDays(14),
+      getOffsetTrainingByNDays(28),
       differentTargetTraining,
     ];
 
     await Promise.all(trainings.map((t) => trainingService.create(trainer, t)));
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      firebaseService.deleteCollection(FirestoreCollection.GROUP),
-      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteCollection(firebase, 'TRAINING'),
+      deleteCollection(firebase, 'EXERCISE'),
+      deleteDoc(firebase, 'GROUP', group.id),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+    ]);
+
+    await app.close();
+  });
 
   describe('Periodization functions', () => {
     // perscribed values can be set in generateExerciseSet functions on base training,
@@ -379,7 +333,6 @@ describe('Periodization functions (e2e)', () => {
 
         for (const periodizedTraining of periodizedTrainings) {
           const trainingIndex = periodizedTrainings.indexOf(periodizedTraining);
-
           for (const exercise of periodizedTraining.components[0].supersets[0]
             .exercises) {
             for (const set of exercise.sets) {

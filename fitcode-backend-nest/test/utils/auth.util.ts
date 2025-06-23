@@ -55,10 +55,10 @@ export async function createTrainerUserAndToken(
   return await createTestUserAndToken(firebaseService, UserRole.TRAINER);
 }
 
-export async function createInstitutionUserAndToken(
+export async function createManagerUserAndToken(
   firebaseService: FirebaseService,
 ) {
-  return await createTestUserAndToken(firebaseService, UserRole.INSTITUTION);
+  return await createTestUserAndToken(firebaseService, UserRole.MANAGER);
 }
 
 export async function createAdminUserAndToken(

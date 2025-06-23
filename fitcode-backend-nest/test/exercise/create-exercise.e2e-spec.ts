@@ -14,15 +14,21 @@ import { GLOBAL_EXERCISE_OWNER } from '../../src/exercise/constant/global-exerci
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
 import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
-import { createInstitution } from '../utils/data.util';
+import {
+  createInstitution,
+  deleteCollection,
+  deleteDoc,
+  deleteDocs,
+} from '../utils/data.util';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Create Exercise (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let attributeService: AttributeService;
   let componentService: ComponentService;
+  let institutionService: InstitutionService;
 
   let root: Component;
   let leaf: Component;
@@ -36,10 +42,10 @@ describe('Create Exercise (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
-    const institutionService = moduleFixture.get(InstitutionService);
+    institutionService = moduleFixture.get(InstitutionService);
 
     const attribute = await attributeService.create(generateAttributeStub());
     root = await componentService.create(
@@ -53,14 +59,15 @@ describe('Create Exercise (e2e)', () => {
     institution = await createInstitution(institutionService);
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.ATTRIBUTE),
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteDocs(firebase, 'COMPONENT', [leaf.id, root.id]),
+      deleteCollection(firebase, 'ATTRIBUTE'),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+    ]);
+
+    await app.close();
+  });
 
   it('should create a new exercise for a valid institution', async () => {
     const exercise = generateExerciseStub({
@@ -80,6 +87,8 @@ describe('Create Exercise (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body.name).toBe(exercise.name);
     expect(response.body.ownerId).toBe(institution.id);
+
+    await deleteDoc(firebase, 'EXERCISE', response.body.id);
   });
 
   it('should fail if the component does not exist', async () => {
@@ -143,6 +152,8 @@ describe('Create Exercise (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body.name).toBe(exercise.name);
     expect(response.body.ownerId).toBe(GLOBAL_EXERCISE_OWNER); // Should be global owner
+
+    await deleteDoc(firebase, 'EXERCISE', response.body.id);
   });
 
   it('should validate attributes before creating the exercise', async () => {
@@ -168,6 +179,8 @@ describe('Create Exercise (e2e)', () => {
 
     expect(response.status).toBe(201);
     expect(response.body.attributeValues).toEqual([]);
+
+    await deleteDoc(firebase, 'EXERCISE', response.body.id);
   });
 
   it('should pass with all possible attribute types', async () => {
@@ -302,6 +315,12 @@ describe('Create Exercise (e2e)', () => {
       .send(exercise);
 
     expect(response.status).toBe(201);
+
+    await Promise.all([
+      deleteDoc(firebase, 'EXERCISE', response.body.id),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteCollection(firebase, 'ATTRIBUTE'),
+    ]);
   });
 
   it('should fail if a required attribute is missing', async () => {
@@ -331,6 +350,11 @@ describe('Create Exercise (e2e)', () => {
     expect(response.body.message).toContain(
       `Attribute "${attribute.name}" is required`,
     );
+
+    await Promise.all([
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
+    ]);
   });
 
   it('should fail to create many exercises if something is wrong', async () => {

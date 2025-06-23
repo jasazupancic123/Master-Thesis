@@ -7,7 +7,7 @@ import { TestUser } from './type/auth.type';
 import {
   createAdminUserAndToken,
   createAthleteUserAndToken,
-  createInstitutionUserAndToken,
+  createManagerUserAndToken,
   createTrainerUserAndToken,
 } from './utils/auth.util';
 import { config } from 'dotenv';
@@ -33,8 +33,11 @@ export default async function () {
     firebaseAdminClient,
   );
 
-  global.athlete = await createAthleteUserAndToken(firebaseService);
-  global.trainer = await createTrainerUserAndToken(firebaseService);
-  global.manager = await createInstitutionUserAndToken(firebaseService);
-  global.admin = await createAdminUserAndToken(firebaseService);
+  [global.athlete, global.trainer, global.manager, global.admin] =
+    await Promise.all([
+      createAthleteUserAndToken(firebaseService),
+      createTrainerUserAndToken(firebaseService),
+      createManagerUserAndToken(firebaseService),
+      createAdminUserAndToken(firebaseService),
+    ]);
 }

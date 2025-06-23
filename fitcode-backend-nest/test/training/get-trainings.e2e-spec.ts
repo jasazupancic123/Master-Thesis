@@ -11,25 +11,29 @@ import { FirebaseService } from '../../src/firebase/firebase.service';
 import { TrainingService } from '../../src/training/service/training.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { GroupService } from '../../src/group/group.service';
-import { generateGroupStub } from '../../src/group/mock/group.stub';
 import { Group } from '../../src/group/entity/group.entity';
-import { generateCycleStub } from '../../src/group/mock/cycle.stub';
-import { addWeeks, endOfWeek, startOfWeek } from 'date-fns';
 import { generateTrainingStub } from '../../src/training/mock/training.stub';
 import { UserService } from '../../src/user/user.service';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+} from '../utils/data.util';
+import { Institution } from '../../src/institution/entity/institution.entity';
 
 describe('Get Trainings (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let attributeService: AttributeService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
+  let institutionService: InstitutionService;
   let groupService: GroupService;
   let userService: UserService;
 
+  let institution: Institution;
   let group: Group;
   let component: Component;
 
@@ -41,61 +45,31 @@ describe('Get Trainings (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     userService = moduleFixture.get(UserService);
+    institutionService = moduleFixture.get(InstitutionService);
 
-    const institutionService = moduleFixture.get(InstitutionService);
-    const institution = await institutionService.create(
-      global.admin,
-      generateInstitutionStub(),
-    );
-
+    institution = await createInstitution(institutionService);
     component = await componentService.create(generateComponentStub());
-    group = await groupService.create(
-      global.manager,
-      generateGroupStub({
-        membersIds: [athlete.uid],
-        ownerId: trainer.uid,
-        institutionId: institution.id,
-      }),
-    );
-
-    const cycles = [
-      generateCycleStub({
-        from: startOfWeek(new Date()),
-        to: endOfWeek(new Date()),
-      }),
-      generateCycleStub({
-        from: addWeeks(startOfWeek(new Date()), 1),
-        to: addWeeks(endOfWeek(new Date()), 1),
-      }),
-      generateCycleStub({
-        from: addWeeks(startOfWeek(new Date()), 2),
-        to: addWeeks(endOfWeek(new Date()), 2),
-      }),
-    ];
-
-    group = await groupService.update(
-      trainer,
-      { groupId: group.id },
-      { cycles },
-    );
+    group = await createGroupWithCycles(groupService, {
+      institutionId: institution.id,
+    });
   });
 
-  afterAll(async () =>
-    Promise.all([
-      firebaseService.deleteCollection(FirestoreCollection.EXERCISE),
-      firebaseService.deleteCollection(FirestoreCollection.GROUP),
-      firebaseService.deleteCollection(FirestoreCollection.TRAINING),
-      firebaseService.deleteCollection(FirestoreCollection.INSTITUTION),
-      app.close(),
-    ]),
-  );
+  afterAll(async () => {
+    await Promise.all([
+      deleteDoc(firebase, 'GROUP', group.id),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+    ]);
+
+    await app.close();
+  });
 
   it('should successfully fetch all trainings by owner', async () => {
     const training = generateTrainingStub({ groupId: 'invalid-group-id' });
