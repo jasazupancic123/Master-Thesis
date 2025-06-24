@@ -116,6 +116,7 @@ export class TrainingRepository
           name: s.name,
           membersIds: s.membersIds,
           futureStats: s.futureStats || [],
+          periodizationType: s.periodizationType || null,
           supersets: s.supersets.map((s) => ({
             color: s.color,
             exercises: s.exercises.map((e) => ({

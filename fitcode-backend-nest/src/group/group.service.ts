@@ -30,7 +30,7 @@ export class GroupService implements Permission<Group, Institution> {
   private logger = new Logger(GroupService.name);
 
   constructor(
-    private readonly groupRepository: GroupRepository,
+    private readonly repository: GroupRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly userService: UserService,
@@ -40,7 +40,7 @@ export class GroupService implements Permission<Group, Institution> {
   ) {}
 
   async findAll(user: User): Promise<Group[]> {
-    return await this.groupRepository.getDocs((q) => {
+    return await this.repository.getDocs((q) => {
       return this.firebaseService.isTrainer(user)
         ? q.where('ownerId', '==', user.uid)
         : this.firebaseService.isAthlete(user)
@@ -51,7 +51,7 @@ export class GroupService implements Permission<Group, Institution> {
 
   async findOneById(user: User, ref: GroupRef): Promise<Group | null> {
     // find group
-    const group = await this.groupRepository.getDoc(ref.groupId);
+    const group = await this.repository.getDoc(ref.groupId);
     if (!group || group.deletedAt) return null;
 
     // authorize
@@ -78,7 +78,7 @@ export class GroupService implements Permission<Group, Institution> {
         'You are not allowed to view this institution',
       );
 
-    return await this.groupRepository.getDocs((q) =>
+    return await this.repository.getDocs((q) =>
       q.where('institutionId', '==', ref.institutionId),
     );
   }
@@ -106,7 +106,7 @@ export class GroupService implements Permission<Group, Institution> {
       cycles: [],
     };
 
-    const groupId = await this.groupRepository.addDoc(data);
+    const groupId = await this.repository.addDoc(data);
     return {
       ...data,
       id: groupId,
@@ -203,7 +203,7 @@ export class GroupService implements Permission<Group, Institution> {
     batch: WriteBatch,
     input: BatchUpdateOneGroupDto,
   ) {
-    const docRef = this.groupRepository.doc(input.id);
+    const docRef = this.repository.doc(input.id);
     if (input.membersIds) {
       const trainingDocs = await this.trainingService.getDocs((query) =>
         query.where('groupId', '==', input.id),
@@ -237,7 +237,7 @@ export class GroupService implements Permission<Group, Institution> {
     const institution = await this.institutionService.getDocByIdOrFail(group);
     this.canEdit(user, group, institution);
 
-    await this.groupRepository.deleteDoc(group.id);
+    await this.repository.deleteDoc(group.id);
   }
 
   findCycle(cycleId: string, group: Group) {
@@ -259,7 +259,7 @@ export class GroupService implements Permission<Group, Institution> {
     const groups = await this.firebaseService.batchIn<Group>(
       'id',
       input.map((g) => g.id),
-      this.groupRepository.collection(),
+      this.repository.collection(),
     );
 
     if (groups.length !== input.length)

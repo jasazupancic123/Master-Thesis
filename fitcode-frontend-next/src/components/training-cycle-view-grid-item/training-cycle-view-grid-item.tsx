@@ -116,8 +116,8 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   if (screenSize.isMobile) fontSize = '125%';
   else if (screenSize.isLandscapeMobile) fontSize = 15;
   else if (training?.components.length > 5) {
-    fontSize = 22.5;
-  }
+    fontSize = 20;
+  } else fontSize = 20;
 
   return (
     <Box py={screenSize.isLaptop ? 0 : 1}>
@@ -250,7 +250,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
                       isSameDayAsSelectedComponent
                         ? screenSize.isMobile
                           ? 20
-                          : 33
+                          : 25
                         : fontSize,
                     margin: !componentCalendarView
                       ? !screenSize.isMobile &&

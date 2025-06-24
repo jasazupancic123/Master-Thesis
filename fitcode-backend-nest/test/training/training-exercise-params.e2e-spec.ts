@@ -13,6 +13,7 @@ import {
   createGroupWithCycles,
   deleteDoc,
   deleteCollection,
+  deleteInstitution,
 } from '../common/utils/data.util';
 import { COMPONENT_ENDURANCE } from '../common/constant/component.constant';
 import {
@@ -35,6 +36,10 @@ import { Component } from '../../src/component/entity/component.entity';
 import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
 import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
 import { TestInstitution } from '../common/type/entity.type';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '../../src/component/constant/warmup-cooldown.constant';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;
@@ -79,7 +84,7 @@ describe('Training Exercise Params (e2e)', () => {
   afterAll(async () => {
     await Promise.all([
       deleteDoc(firebase, 'GROUP', group.id),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteInstitution(firebase, institution),
       deleteCollection(firebase, 'COMPONENT'),
       deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
     ]);
@@ -114,6 +119,55 @@ describe('Training Exercise Params (e2e)', () => {
       }),
     );
   }
+
+  describe('Warmup and cooldown components', () => {
+    it('should not populate params', async () => {
+      const exercise = await createExercise([]);
+      const training = await createTraining(
+        COMPONENT_ENDURANCE.id,
+        exercise.id,
+      );
+
+      const updated = await trainingService.update(
+        trainer,
+        { trainingId: training.id },
+        {
+          ...training,
+          warmup: generateTrainingComponent({
+            id: WARMUP_COMPONENT_ID,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: exercise.id, color: 'red' }),
+                ],
+              }),
+            ],
+          }),
+          cooldown: generateTrainingComponent({
+            id: COOLDOWN_COMPONENT_ID,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: exercise.id, color: 'red' }),
+                ],
+              }),
+            ],
+          }),
+        },
+      );
+
+      const warmupParams = updated.warmup.supersets[0].exercises[0].params;
+      const cooldownParams = updated.cooldown.supersets[0].exercises[0].params;
+
+      expect(warmupParams).toHaveLength(0);
+      expect(cooldownParams).toHaveLength(0);
+
+      await Promise.all([
+        deleteDoc(firebase, 'TRAINING', updated.id),
+        deleteDoc(firebase, 'EXERCISE', exercise.id),
+      ]);
+    });
+  });
 
   describe('Endurance select attribute params test', () => {
     it('should keep default params since no attribute values are passed to exercise', async () => {

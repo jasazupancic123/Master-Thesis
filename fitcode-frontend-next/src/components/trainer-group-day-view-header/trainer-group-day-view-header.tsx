@@ -112,72 +112,70 @@ export default function GroupTrainerDayViewHeader(
         justifyContent="center"
         alignItems={screenSize.isSmallerThanLaptop ? 'center' : undefined}
       >
-        <Box
-          display={screenSize.isSmallerThanLaptop ? 'flex' : 'none'}
-          justifyContent="center"
-          flex={1}
-        >
-          <Box
-            bgcolor={theme.palette.background.light}
-            p={!screenSize.isDesktop ? 0 : 1}
-            px={!screenSize.isDesktop ? 1 : 3}
-            sx={{
-              borderTopLeftRadius: 10,
-              borderBottomLeftRadius: 10,
-            }}
-            display="flex"
-            alignItems="center"
-          >
-            <Typography
-              variant="body1"
-              textAlign="center"
+        {screenSize.isSmallerThanLaptop && (
+          <Box display="flex" justifyContent="center" flex={1}>
+            <Box
+              bgcolor={theme.palette.background.light}
+              p={!screenSize.isDesktop ? 0 : 1}
+              px={!screenSize.isDesktop ? 1 : 3}
               sx={{
-                px: 0,
-                pr: !screenSize.isDesktop ? 1 : 4,
-                fontSize: !screenSize.isDesktop ? 15 : 20,
+                borderTopLeftRadius: 10,
+                borderBottomLeftRadius: 10,
               }}
+              display="flex"
+              alignItems="center"
             >
-              {selectedAthlete?.displayName ||
-                selectedSubgroup?.subgroup?.name ||
-                group.name}
-            </Typography>
-          </Box>
-          <Box
-            bgcolor={theme.palette.background.light}
-            p={1}
-            px={3}
-            ml={0.5}
-            sx={{
-              borderTopRightRadius: 10,
-              borderBottomRightRadius: 10,
-            }}
-            display="flex"
-            alignItems="center"
-          >
-            <Select
-              value={cycle?.name || ''}
-              disabled
-              renderValue={(value) => value || 'Select cycle'}
-              displayEmpty
+              <Typography
+                variant="body1"
+                textAlign="center"
+                sx={{
+                  px: 0,
+                  pr: !screenSize.isDesktop ? 1 : 4,
+                  fontSize: !screenSize.isDesktop ? 15 : 20,
+                }}
+              >
+                {selectedAthlete?.displayName ||
+                  selectedSubgroup?.subgroup?.name ||
+                  group.name}
+              </Typography>
+            </Box>
+            <Box
+              bgcolor={theme.palette.background.light}
+              p={1}
+              px={3}
+              ml={0.5}
               sx={{
-                color: 'white',
-                fontSize: screenSize.isDesktop ? 20 : undefined,
-                bgcolor: 'transparent',
-                border: 'none',
-                pl: 1,
-                '&:before, &:after': { borderBottom: 'none !important' },
-                '& .MuiInputBase-input.Mui-disabled': {
-                  color: 'white !important',
-                  WebkitTextFillColor: 'white !important', // For Safari
-                },
-                '& .MuiSelect-icon': {
-                  display: 'none', // Hide the dropdown icon
-                },
+                borderTopRightRadius: 10,
+                borderBottomRightRadius: 10,
               }}
-              variant="standard"
-            />
+              display="flex"
+              alignItems="center"
+            >
+              <Select
+                value={cycle?.name || ''}
+                disabled
+                renderValue={(value) => value || 'No cycle'}
+                displayEmpty
+                sx={{
+                  color: 'white',
+                  fontSize: screenSize.isDesktop ? 20 : undefined,
+                  bgcolor: 'transparent',
+                  border: 'none',
+                  pl: 1,
+                  '&:before, &:after': { borderBottom: 'none !important' },
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    color: 'white !important',
+                    WebkitTextFillColor: 'white !important', // For Safari
+                  },
+                  '& .MuiSelect-icon': {
+                    display: 'none', // Hide the dropdown icon
+                  },
+                }}
+                variant="standard"
+              />
+            </Box>
           </Box>
-        </Box>
+        )}
 
         <Circles
           items={days}
@@ -226,69 +224,67 @@ export default function GroupTrainerDayViewHeader(
         />
       </Box>
 
-      <Box
-        display={screenSize.isSmallerThanLaptop ? 'none' : 'flex'}
-        justifyContent="center"
-        flex={1}
-      >
-        <Box
-          bgcolor={theme.palette.background.light}
-          p={!screenSize.isDesktop ? 0 : 1}
-          px={!screenSize.isDesktop ? 1 : 3}
-          sx={{
-            borderTopLeftRadius: 10,
-            borderBottomLeftRadius: 10,
-          }}
-          display="flex"
-          alignItems="center"
-        >
-          <Typography
-            variant="body1"
-            textAlign="center"
+      {!screenSize.isSmallerThanLaptop && (
+        <Box display="flex" justifyContent="center" flex={1}>
+          <Box
+            bgcolor={theme.palette.background.light}
+            p={!screenSize.isDesktop ? 0 : 1}
+            px={!screenSize.isDesktop ? 1 : 3}
             sx={{
-              px: 3,
-              fontSize: !screenSize.isDesktop ? 15 : 20,
+              borderTopLeftRadius: 10,
+              borderBottomLeftRadius: 10,
             }}
+            display="flex"
+            alignItems="center"
           >
-            Week {week}
-          </Typography>
-        </Box>
-        <Box
-          bgcolor={theme.palette.background.light}
-          p={1}
-          px={3}
-          ml={0.5}
-          sx={{
-            borderTopRightRadius: 10,
-            borderBottomRightRadius: 10,
-          }}
-          display="flex"
-          alignItems="center"
-        >
-          <Select
-            value={cycle?.name || ''}
-            disabled
-            renderValue={(value) => value || 'Select cycle'}
-            displayEmpty
+            <Typography
+              variant="body1"
+              textAlign="center"
+              sx={{
+                px: 3,
+                fontSize: !screenSize.isDesktop ? 15 : 20,
+              }}
+            >
+              Week {week}
+            </Typography>
+          </Box>
+          <Box
+            bgcolor={theme.palette.background.light}
+            p={1}
+            px={3}
+            ml={0.5}
             sx={{
-              color: 'white',
-              fontSize: screenSize.isDesktop ? 20 : undefined,
-              bgcolor: 'transparent',
-              border: 'none',
-              pl: 1,
-              '&:before, &:after': { borderBottom: 'none !important' },
-              '& .MuiInputBase-input.Mui-disabled': {
-                color: 'white !important',
-                WebkitTextFillColor: 'white !important', // For Safari
-              },
-              '& .MuiSelect-icon': {
-                display: 'none', // Hide the dropdown icon
-              },
+              borderTopRightRadius: 10,
+              borderBottomRightRadius: 10,
             }}
-            variant="standard"
-          />
+            display="flex"
+            alignItems="center"
+          >
+            <Select
+              value={cycle?.name || ''}
+              disabled
+              renderValue={(value) => value || 'No cycle'}
+              displayEmpty
+              sx={{
+                color: 'white',
+                fontSize: screenSize.isDesktop ? 20 : undefined,
+                bgcolor: 'transparent',
+                border: 'none',
+                pl: 1,
+                '&:before, &:after': { borderBottom: 'none !important' },
+                '& .MuiInputBase-input.Mui-disabled': {
+                  color: 'white !important',
+                  WebkitTextFillColor: 'white !important', // For Safari
+                },
+                '& .MuiSelect-icon': {
+                  display: 'none', // Hide the dropdown icon
+                },
+              }}
+              variant="standard"
+            />
+          </Box>
         </Box>
-      </Box>
+      )}
     </Stack>
   );
 }

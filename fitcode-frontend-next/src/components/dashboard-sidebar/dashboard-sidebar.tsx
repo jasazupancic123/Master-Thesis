@@ -13,9 +13,12 @@ import React from 'react';
 import { useDashboard } from '@/store/dashboard-provider';
 import { DashboardDesktopSidebar } from '../dashboard-sidebar-desktop/dashboard-sidebar-desktop';
 import { DashboardMobileSidebar } from '../dashboard-sidebar-mobile/dashboard-sidebar-mobile';
+import { useTheme } from '@mui/material';
+import { isAdmin } from '@/common/service/util/firebase-auth.util';
 
 export default function DashboardSidebar() {
   const screenSize = useScreenSize();
+  const theme = useTheme();
 
   const { role, institutions, selectedInstitution, setSelectedInstitution } =
     useDashboard();
@@ -23,61 +26,48 @@ export default function DashboardSidebar() {
   return (
     <Box sx={{ width: !screenSize.isMobile ? 50 : undefined }}>
       <Box sx={{ display: 'flex' }}>
-        <AppBar
-          position="fixed"
-          sx={{
-            width: '100%',
-            transition: 'margin-left 0.3s ease-in-out',
-            boxShadow: 'none',
-            zIndex: 1500,
-          }}
-        >
-          <Toolbar
-            sx={{
-              ml: screenSize.isMobile ? undefined : '50px',
-              height: '50px !important',
-              minHeight: '50px !important',
-              pt: '2px',
-              backgroundColor: 'background.default',
-            }}
-          >
-            {/* Logo */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <Logo width={44.5} height={30} version="narrow" />
-            </Box>
-
-            {role === UserRole.ADMIN && (
-              <SelectInputHorizontal<Institution>
-                label={selectedInstitution?.name || 'Select institution'}
-                icon={<GroupsIcon />}
-                value={selectedInstitution?.id || ''}
-                items={institutions || []}
-                itemKey="id"
-                itemName="name"
-                setValue={(institutionId) => {
-                  const institution = institutions?.find(
-                    (i) => i.id === institutionId
-                  );
-                  if (institution) setSelectedInstitution(institution);
-                }}
-              />
-            )}
-          </Toolbar>
-        </AppBar>
-
         {!screenSize.isMobile ? (
           <DashboardDesktopSidebar />
         ) : (
           <DashboardMobileSidebar />
+        )}
+
+        {isAdmin(role) && (
+          <AppBar
+            position="fixed"
+            sx={{
+              width: '100%',
+              transition: 'margin-left 0.3s ease-in-out',
+              boxShadow: 'none',
+            }}
+          >
+            <Toolbar
+              sx={{
+                height: '50px !important',
+                minHeight: '50px !important',
+                backgroundColor: theme.palette.background.default,
+                ml: !screenSize.isMobile ? '50px' : undefined,
+                px: '5px !important',
+              }}
+            >
+              <Box ml={screenSize.isMobile ? 2 : 0}>
+                <SelectInputHorizontal<Institution>
+                  label={selectedInstitution?.name || 'Select institution'}
+                  icon={<GroupsIcon />}
+                  value={selectedInstitution?.id || ''}
+                  items={institutions || []}
+                  itemKey="id"
+                  itemName="name"
+                  setValue={(institutionId) => {
+                    const institution = institutions?.find(
+                      (i) => i.id === institutionId
+                    );
+                    if (institution) setSelectedInstitution(institution);
+                  }}
+                />
+              </Box>
+            </Toolbar>
+          </AppBar>
         )}
       </Box>
     </Box>

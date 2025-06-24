@@ -24,14 +24,14 @@ import Link from 'next/link';
 export function DashboardDesktopSidebar() {
   const pathname = usePathname();
 
-  const { role, selectedInstitution } = useDashboard();
+  const { role } = useDashboard();
   const { logout } = useAuth();
 
   return (
     <Drawer
       variant="permanent"
       sx={{
-        zIndex: 1200,
+        zIndex: 5000,
         transition: 'width 0.3s ease-in-out',
         '& .MuiDrawer-paper': {
           width: '50px',
@@ -43,7 +43,6 @@ export function DashboardDesktopSidebar() {
     >
       <Box
         sx={{
-          zIndex: 1200,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -52,31 +51,9 @@ export function DashboardDesktopSidebar() {
           justifyContent: 'flex-start',
         }}
       >
-        <Tooltip title={selectedInstitution?.name || ''} placement="right">
-          <IconButton
-            sx={{
-              cursor: role === UserRole.ADMIN ? 'pointer' : 'default',
-            }}
-            disableRipple={role === UserRole.ADMIN ? false : true}
-          >
-            {selectedInstitution?.imageUrl ? (
-              <img
-                src={selectedInstitution.imageUrl}
-                alt="Institution Logo"
-                width={30}
-                height={30}
-                style={{ borderRadius: '50%' }}
-              />
-            ) : (
-              <Logo
-                width={29.5}
-                height={25}
-                version="narrow"
-                sx={{ paddingTop: 3, paddingBottom: 3 }}
-              />
-            )}
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ px: 3, py: 1.5 }}>
+          <Logo version="narrow" height={25} width={37} />
+        </Box>
         {Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role)).map(
           (link, i) => {
             if (!link) return null;

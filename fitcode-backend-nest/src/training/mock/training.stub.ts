@@ -66,6 +66,7 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     name: data?.name || generateRandomName(),
+    periodizationType: data?.periodizationType || null,
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
     futureStats: data?.futureStats || [],

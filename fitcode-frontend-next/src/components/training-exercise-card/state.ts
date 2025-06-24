@@ -181,6 +181,8 @@ export function updateTraining(
       index: number;
     } | null>;
     setSupersets?: SetState<Superset[]>;
+    isInited?: boolean;
+    setIsInited?: SetState<boolean>;
   }
 ) {
   const { exercises, intensityVolumeValues } = input;
@@ -193,6 +195,8 @@ export function updateTraining(
     selectedSubgroup,
     setSelectedSubgroup,
     setSupersets,
+    isInited,
+    setIsInited,
   } = state;
 
   if (!training || !component) return;
@@ -201,7 +205,7 @@ export function updateTraining(
     intensityVolumeValues &&
     exercises.length !== intensityVolumeValues.length
   ) {
-    toast.error('Errro in exercise selection');
+    toast.error('Error in exercise selection');
     return;
   }
 
@@ -269,7 +273,8 @@ export function updateTraining(
   if (!detectedChanges) return;
 
   ReactDOM.unstable_batchedUpdates(() => {
-    setDetectedChanges(true);
+    if (isInited) setDetectedChanges(true);
+    else setIsInited?.(true);
 
     if (selectedSubgroup?.subgroup) {
       updatedSubgroup = {
@@ -294,7 +299,7 @@ export function updateTraining(
       if (setSupersets) {
         setSupersets(newSupersets);
       }
-      
+
       setSelectedSubgroup({
         subgroup: updatedSubgroup!,
         index: selectedSubgroup.index,

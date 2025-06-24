@@ -18,7 +18,6 @@ import { useTheme } from '@mui/material';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { Add } from '@mui/icons-material';
 import MyModal from '../modal/modal';
-import { AddMembersModal } from '../add-members-modal/add-members-modal';
 import { handleApiRequest } from '@/common/type/state.type';
 import { useRouter } from 'next/navigation';
 import { InstitutionController } from '@/controller/institution/institution.controller';
@@ -26,6 +25,8 @@ import { InstitutionService } from '@/controller/institution/institution.service
 import toast from 'react-hot-toast';
 import DashboardAthlete from '../dashboard-athlete/dashboard-athlete';
 import { isManager } from '@/common/service/util/firebase-auth.util';
+import RegisterUsersDashboard from '../dashboard-register-users-modal/dashboard-register-users-modal';
+import { GroupService } from '@/controller/group/group.service';
 
 export default function AthletesView() {
   const screenSize = useScreenSize();
@@ -86,28 +87,6 @@ export default function AthletesView() {
     );
   };
 
-  const handleRemoveAthleteFromInstitution = (athleteId: string) => {
-    if (!selectedInstitution) return;
-
-    handleApiRequest(
-      router,
-      () =>
-        InstitutionController.removeAthletes(token, selectedInstitution.id, {
-          athleteIds: [athleteId],
-        }),
-      (institution) => {
-        institution = InstitutionService.mapUsers(
-          [institution],
-          users || []
-        )[0];
-        setSelectedInstitution(institution);
-        toast.success('Athlete removed successfully');
-      },
-      undefined,
-      'Failed to remove athlete'
-    );
-  };
-
   useEffect(() => {
     if (
       selectedGroup &&
@@ -134,6 +113,28 @@ export default function AthletesView() {
           overflowX: 'auto',
         }}
       >
+        {isManager(role) && (
+          <Tooltip title="Add athlete">
+            <Avatar
+              key={'add'}
+              sx={{
+                width: 30,
+                height: 30,
+                marginY: 'auto',
+                cursor: 'pointer',
+                backgroundColor: theme.palette.primary.main,
+              }}
+              onClick={() => {
+                setModal((prev) => ({
+                  ...prev,
+                  add_athlete: true,
+                }));
+              }}
+            >
+              <Add />
+            </Avatar>
+          </Tooltip>
+        )}
         {selectedInstitution?.athletes &&
           selectedInstitution.athletes.map((a) => (
             <DashboardAthlete
@@ -170,7 +171,11 @@ export default function AthletesView() {
                     i % 2 === 0 && (
                       <GroupAthletesCard
                         key={`${group.id} ${i}`}
-                        group={group}
+                        group={
+                          users
+                            ? GroupService.mapMembers(group, users, true)
+                            : group
+                        }
                         selectedUser={selectedUser}
                         setSelectedUser={setSelectedUser}
                       />
@@ -188,7 +193,11 @@ export default function AthletesView() {
                     i % 2 === 1 && (
                       <GroupAthletesCard
                         key={`${group.id} ${i}`}
-                        group={group}
+                        group={
+                          users
+                            ? GroupService.mapMembers(group, users, true)
+                            : group
+                        }
                         selectedUser={selectedUser} /*  */
                         setSelectedUser={setSelectedUser}
                       />
@@ -282,16 +291,7 @@ export default function AthletesView() {
         onConfirm={handleAddAthletesToInstitution}
         onCancel={() => setModal((prev) => ({ ...prev, add_athlete: false }))}
       >
-        <AddMembersModal
-          users={(users || []).filter((u) =>
-            u.customClaims.role.includes(UserRole.ATHLETE)
-          )}
-          members={addedAthletes}
-          setMembers={setAddedAthletes}
-          addUserToEnd={true}
-          selectedInstitution={selectedInstitution}
-          setSelectedInstitution={setSelectedInstitution}
-        />
+        <RegisterUsersDashboard registerRole={UserRole.ATHLETE} />
       </MyModal>
     </>
   );
