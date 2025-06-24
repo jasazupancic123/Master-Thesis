@@ -171,7 +171,11 @@ export default function AthletesView() {
                     i % 2 === 0 && (
                       <GroupAthletesCard
                         key={`${group.id} ${i}`}
-                        group={group}
+                        group={
+                          users
+                            ? GroupService.mapMembers(group, users, true)
+                            : group
+                        }
                         selectedUser={selectedUser}
                         setSelectedUser={setSelectedUser}
                       />

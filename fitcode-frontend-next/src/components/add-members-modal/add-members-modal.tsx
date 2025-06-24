@@ -75,6 +75,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
               ? { ...g, membersIds: updatedMembers.map((m) => m.uid) }
               : g
           );
+
           return { ...prev, groups: updatedGroups };
         });
       }

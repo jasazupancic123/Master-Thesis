@@ -22,6 +22,7 @@ import FloatingButton from '@/components/floating-button/floating-button';
 import { handleSaveGroup } from '../../app/groups/[group_id]/state';
 import { Target } from '@/controller/target/type/target.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import ComponentPeriodization from '../component-periodization/component-periodization';
 
 export default function TrainerCycleView() {
   const {
@@ -57,6 +58,27 @@ export default function TrainerCycleView() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!cycle) return;
+
+    const newSelectedTargets = [] as { componentId: string; target: Target }[];
+
+    cycle.selectedTargets.map((st) => {
+      const component = components.find((c) => c.id === st.componentId);
+      if (component) {
+        const target = component.targets?.find((t) => t.id === st.targetId);
+        if (target) {
+          newSelectedTargets.push({
+            componentId: st.componentId,
+            target,
+          });
+        }
+      }
+    });
+
+    setSelectedTargets(newSelectedTargets);
   }, []);
 
   // filter trainings by cycle

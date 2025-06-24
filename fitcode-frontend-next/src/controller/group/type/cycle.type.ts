@@ -7,8 +7,7 @@ export type Cycle = BaseEntity &
   Required<DateRange> & {
     name: string;
     description?: string;
-    rootComponentsIds: string[];
-    leafComponentsIds: string[];
+    selectedTargets: { componentId: string; targetId: string }[];
 
     // virtual
     weeks: Week[][];

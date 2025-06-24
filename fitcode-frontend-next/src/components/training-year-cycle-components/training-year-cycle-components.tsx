@@ -10,6 +10,10 @@ import toast from 'react-hot-toast';
 import SelectInput from '../select-input/select-input';
 import CycleComponentsSelect from '../training-year-cycle-components-select/training-year-cycle-components-select';
 import { useTheme } from '@mui/material';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 interface CycleComponentsProps {
   selectedGroup: Group;
@@ -23,23 +27,9 @@ export default function CycleComponents(props: CycleComponentsProps) {
   const theme = useTheme();
   const { components, setDetectedChanges } = useGroup();
 
-  const [cycles, setCycles] = useState(
-    selectedGroup.cycles.sort(
-      (a, b) => dayjs(a.from).unix() - dayjs(b.from).unix()
-    )
-  );
-
-  useEffect(() => {
-    setCycles(
-      selectedGroup.cycles.sort(
-        (a, b) => dayjs(a.from).unix() - dayjs(b.from).unix()
-      )
-    );
-  }, [selectedGroup]);
-
-  const parentComponents = components.filter(
-    (component) => component.parentId === null
-  );
+  const parentComponents = components
+    .filter((component) => component.parentId === null)
+    .filter((component) => ![WARMUP_ID, COOLDOWN_ID].includes(component.id));
 
   return (
     <Box
@@ -55,8 +45,9 @@ export default function CycleComponents(props: CycleComponentsProps) {
         flexWrap: 'nowrap',
       }}
     >
-      {cycles &&
-        cycles.map((cycle) => (
+      {selectedGroup.cycles
+        .sort((a, b) => dayjs(a.from).unix() - dayjs(b.from).unix())
+        .map((cycle) => (
           <Box
             key={cycle.id}
             display="flex"
@@ -70,6 +61,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
           >
             {/*Header*/}
             <Box
+              key="header"
               display="flex"
               flexDirection="column"
               justifyContent="center"
@@ -108,7 +100,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
             {/*Components*/}
             <Box
-              key={cycle.id}
+              key="components"
               display="flex"
               flexDirection="column"
               gap={1}
@@ -125,51 +117,39 @@ export default function CycleComponents(props: CycleComponentsProps) {
               }}
               alignItems="center"
             >
-              {cycle.rootComponentsIds.map((componentId, i) => {
+              {cycle.selectedTargets.map((selectedTarget, i) => {
+                const { componentId, targetId } = selectedTarget;
+
                 const component = components.find(
                   (component) => component.id === componentId
                 );
 
-                const leafComponents = components.filter(
-                  (c) => c.parentId === componentId
-                );
-
-                const selectedLeafComponent = leafComponents.find(
-                  (c) => cycle.leafComponentsIds[i] === c.id
-                );
-
                 if (!component) return <></>;
+
+                const target = component.targets?.find(
+                  (target) => target.id === targetId
+                );
 
                 return (
                   <CycleComponentsSelect
                     key={i}
                     label={component.name}
-                    selectedValue={
-                      components.find(
-                        (c) => c.id === cycle.leafComponentsIds[i]
-                      )?.name || ''
-                    }
-                    rootComponent={component}
-                    components={components}
-                    parentId={component.id}
-                    setValue={(value) => {
+                    selectedValue={target?.name || ''}
+                    component={component}
+                    setValue={(targetId) => {
                       setDetectedChanges(true);
 
-                      if (value === 'Remove') {
-                        const newCycle = {
+                      if (targetId === 'Remove') {
+                        const newCycle: Cycle = {
                           ...cycle,
-                          rootComponentsIds: cycle.rootComponentsIds.filter(
-                            (_, k) => i !== k
-                          ),
-                          leafComponentsIds: cycle.leafComponentsIds.filter(
-                            (_, k) => i !== k
+                          selectedTargets: cycle.selectedTargets.filter(
+                            (st) => st.componentId !== component.id
                           ),
                         };
 
-                        const newCycles = cycles.map((c) =>
+                        const newCycles = selectedGroup.cycles.map((c) =>
                           c.id === cycle.id ? newCycle : c
                         );
-                        setCycles(newCycles);
                         setSelectedGroup({
                           ...selectedGroup,
                           cycles: newCycles,
@@ -177,54 +157,48 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         return;
                       }
 
-                      const newComponent = components.find(
-                        (c) => c.id === value
+                      const newTarget = component.targets?.find(
+                        (c) => c.id === targetId
                       );
-                      if (!newComponent) return;
 
-                      if (cycle.leafComponentsIds.includes(newComponent.id))
-                        return toast.error('Component already added');
+                      if (!newTarget) return;
 
-                      const isNewComponentAParent = components.some(
-                        (c) => c.parentId === newComponent.id
-                      );
-                      let newCycle = { ...cycle };
-
-                      if (isNewComponentAParent) {
-                        // It's a new root component
-                        newCycle.rootComponentsIds[i] = newComponent.id;
-
-                        // If the new root has no children, ensure `leafComponentsIds` gets `""`
-                        if (
-                          !components.some(
-                            (c) => c.parentId === newComponent.id
+                      const newSelectedTargets = cycle.selectedTargets.some(
+                        (st) => st.componentId === component.id
+                      )
+                        ? cycle.selectedTargets.map((st) =>
+                            st.componentId === component.id
+                              ? {
+                                  componentId: component.id,
+                                  targetId: newTarget.id,
+                                }
+                              : st
                           )
-                        ) {
-                          newCycle.leafComponentsIds[i] = '';
-                        }
-                      } else {
-                        // It's a leaf component
-                        newCycle.leafComponentsIds[i] = newComponent.id;
-                      }
+                        : [
+                            ...cycle.selectedTargets,
+                            {
+                              componentId: component.id,
+                              targetId: newTarget.id,
+                            },
+                          ];
 
-                      // 🔹 **Ensure `leafComponentsIds` is the same length as `rootComponentsIds`**
-                      newCycle.leafComponentsIds =
-                        newCycle.rootComponentsIds.map((rootId, idx) => {
-                          return newCycle.leafComponentsIds[idx] || ''; // Fill empty slots with ""
-                        });
+                      const newCycle: Cycle = {
+                        ...cycle,
+                        selectedTargets: newSelectedTargets,
+                      };
 
-                      const newCycles = cycles.map((c) =>
+                      const newCycles = selectedGroup.cycles.map((c) =>
                         c.id === cycle.id ? newCycle : c
                       );
-                      setCycles(newCycles);
                       setSelectedGroup({ ...selectedGroup, cycles: newCycles });
                     }}
                   />
                 );
               })}
 
-              {cycle.rootComponentsIds.length < 4 && (
+              {cycle.selectedTargets.length < 4 && (
                 <SelectInput<Component>
+                  key="add-component"
                   label={'Select component'}
                   icon={null}
                   value={''}
@@ -239,25 +213,30 @@ export default function CycleComponents(props: CycleComponentsProps) {
                     const component = components.find((c) => c.id === value);
                     if (!component) return;
 
-                    if (cycle.rootComponentsIds.includes(component.id))
+                    if (
+                      cycle.selectedTargets.some(
+                        (st) => st.componentId === component.id
+                      )
+                    )
                       return toast.error('Component already added');
 
-                    const newCycle = {
+                    const newSelectedTargets = [
+                      ...cycle.selectedTargets,
+                      { componentId: component.id, targetId: '' },
+                    ];
+
+                    const newCycle: Cycle = {
                       ...cycle,
-                      rootComponentsIds: [
-                        ...cycle.rootComponentsIds,
-                        component.id,
-                      ],
+                      selectedTargets: newSelectedTargets,
                     };
 
-                    const newCycles = cycles.map((c) =>
+                    const newCycles = selectedGroup.cycles.map((c) =>
                       c.id === cycle.id ? newCycle : c
                     );
 
-                    setCycles(newCycles);
                     setSelectedGroup({
                       ...selectedGroup,
-                      cycles: [...newCycles],
+                      cycles: newCycles,
                     });
                   }}
                 />

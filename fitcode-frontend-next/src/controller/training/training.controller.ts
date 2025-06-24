@@ -83,10 +83,10 @@ export class TrainingController {
     token: string,
     body: {
       baseTrainingId: string;
-      excludedTrainingIds: string[];
       componentId: string;
-      exerciseIds: string[];
       periodizationType: PeriodizationType;
+      exerciseIds: string[];
+      subgroupId?: string;
     }
   ) {
     return api.post<Training[]>('/training/periodize/trainings', body, {

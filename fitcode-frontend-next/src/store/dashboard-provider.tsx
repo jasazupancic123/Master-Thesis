@@ -24,7 +24,7 @@ interface DashboardContextProps {
   users: User[] | null;
   setUsers: SetState<User[] | null>;
   selectedGroup: Group | null;
-  setSelectedGroup: (group: Group | null) => void;
+  setSelectedGroup: SetState<Group | null>;
   refetchUsers: () => void;
 }
 
