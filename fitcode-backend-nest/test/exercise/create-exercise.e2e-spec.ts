@@ -18,9 +18,10 @@ import {
   deleteCollection,
   deleteDoc,
   deleteDocs,
+  deleteInstitution,
 } from '../common/utils/data.util';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { Institution } from '../../src/institution/entity/institution.entity';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Create Exercise (e2e)', () => {
   let app: INestApplication;
@@ -31,7 +32,7 @@ describe('Create Exercise (e2e)', () => {
 
   let root: Component;
   let leaf: Component;
-  let institution: Institution;
+  let institution: TestInstitution;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -62,7 +63,7 @@ describe('Create Exercise (e2e)', () => {
     await Promise.all([
       deleteDocs(firebase, 'COMPONENT', [leaf.id, root.id]),
       deleteCollection(firebase, 'ATTRIBUTE'),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteInstitution(firebase, institution),
     ]);
 
     await app.close();

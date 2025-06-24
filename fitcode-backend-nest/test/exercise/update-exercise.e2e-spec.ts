@@ -21,6 +21,7 @@ import { InstitutionService } from '../../src/institution/service/institution.se
 import {
   createInstitution,
   deleteDoc,
+  deleteInstitution,
   deleteUsers,
 } from '../common/utils/data.util';
 import { Institution } from '../../src/institution/entity/institution.entity';
@@ -66,10 +67,10 @@ describe('Update Exercise (e2e)', () => {
 
   afterAll(async () => {
     await Promise.all([
-      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
-      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteInstitution(firebase, institution),
       deleteDoc(firebase, 'EXERCISE', exercise.id),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
     ]);
 
     await app.close();

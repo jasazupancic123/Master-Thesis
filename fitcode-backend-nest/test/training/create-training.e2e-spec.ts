@@ -23,10 +23,11 @@ import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import {
   createGroupWithCycles,
   createInstitution,
+  createInstitutionWithUsers,
   deleteCollection,
   deleteDoc,
   deleteDocs,
-  deleteUsers,
+  deleteInstitution,
   getTime,
 } from '../common/utils/data.util';
 import {
@@ -40,12 +41,7 @@ import { WorkloadService } from '../../src/training/service/workload.service';
 import { SetStatus } from '../../src/training/enum/set-status.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { Institution } from '../../src/institution/entity/institution.entity';
-import {
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '../common/utils/auth.util';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
@@ -57,7 +53,7 @@ describe('Create Training (e2e)', () => {
   let workloadService: WorkloadService;
   let institutionService: InstitutionService;
 
-  let institution: Institution;
+  let institution: TestInstitution;
   let group: Group;
   let component: Component;
 
@@ -79,16 +75,14 @@ describe('Create Training (e2e)', () => {
 
     component = await componentService.create(generateComponentStub());
     institution = await createInstitution(institutionService);
-    group = await createGroupWithCycles(groupService, {
-      institutionId: institution.id,
-    });
+    group = await createGroupWithCycles(groupService, institution);
   });
 
   afterAll(async () => {
     await Promise.all([
-      deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
       deleteDoc(firebase, 'GROUP', group.id),
+      deleteInstitution(firebase, institution),
+      deleteDoc(firebase, 'COMPONENT', component.id),
     ]);
 
     await app.close();
@@ -656,22 +650,15 @@ describe('Create Training (e2e)', () => {
     }); */
 
     it('should fail to create new training if some exercises are from other institution', async () => {
-      const otherAthlete = await createAthleteUserAndToken(firebase);
-      const otherTrainer = await createTrainerUserAndToken(firebase);
-      const otherManager = await createManagerUserAndToken(firebase);
+      const otherInstitution = await createInstitutionWithUsers(
+        firebase,
+        institutionService,
+      );
 
-      const otherInstitution = await createInstitution(institutionService, {
-        owner: otherManager,
-        athleteIds: [otherAthlete.uid],
-        trainerIds: [otherTrainer.uid],
-      });
-
-      const otherGroup = await createGroupWithCycles(groupService, {
-        trainer: otherTrainer,
-        manager: otherManager,
-        institutionId: otherInstitution.id,
-        membersIds: [otherAthlete.uid],
-      });
+      const otherGroup = await createGroupWithCycles(
+        groupService,
+        otherInstitution,
+      );
 
       const globalExercise = await exerciseService.create(
         global.admin,
@@ -684,7 +671,7 @@ describe('Create Training (e2e)', () => {
       );
 
       const otherInstitutionExercise = await exerciseService.create(
-        otherManager,
+        otherInstitution.manager,
         generateExerciseStub({ componentIds: [component.id] }),
       );
 
@@ -712,7 +699,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${otherTrainer.token}`)
+        .set('Authorization', `Bearer ${otherInstitution.trainers[0].token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -721,14 +708,13 @@ describe('Create Training (e2e)', () => {
       );
 
       await Promise.all([
-        deleteUsers(firebase, [otherAthlete, otherTrainer, otherManager]),
-        deleteDoc(firebase, 'INSTITUTION', otherInstitution.id),
-        deleteDoc(firebase, 'GROUP', otherGroup.id),
         deleteDocs(firebase, 'EXERCISE', [
           globalExercise.id,
           exercise.id,
           otherInstitutionExercise.id,
         ]),
+        deleteDoc(firebase, 'GROUP', otherGroup.id),
+        deleteInstitution(firebase, otherInstitution),
       ]);
     });
 
