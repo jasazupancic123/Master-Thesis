@@ -28,14 +28,11 @@ export async function handleSaveGroup(
       GroupController.update(token, selectedGroup.id, {
         cycles: selectedGroup.cycles,
       }),
-    (response) => {
-      if (cycle) {
-        const newCycle = response.cycles.find((c) => c.id === cycle.id);
-        setCycle(newCycle);
-      }
+    (group) => {
+      if (group.cycles.length === 1) setCycle(group.cycles[0]);
 
-      if (setGroup) setGroup(response);
-      setSelectedGroup(response);
+      if (setGroup) setGroup(group);
+      setSelectedGroup(group);
       setDetectedChanges(false);
 
       toast.success('Group successfully saved');

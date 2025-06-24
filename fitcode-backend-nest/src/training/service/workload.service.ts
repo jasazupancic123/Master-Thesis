@@ -84,7 +84,7 @@ export class WorkloadService {
       .where('trainingId', '==', trainingId);
 
     const finalQuery = status ? query.where('status', '==', status) : query;
-    
+
     return await finalQuery
       .get()
       .then(({ docs }) =>
@@ -158,8 +158,8 @@ export class WorkloadService {
   }
 
   async findAllByMembers(membersIds: string[]): Promise<Workload[]> {
-    if(!membersIds.length) return [];
-    
+    if (!membersIds.length) return [];
+
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
       .where('userId', 'in', membersIds)
@@ -211,6 +211,24 @@ export class WorkloadService {
           ),
         ),
       );
+  }
+
+  async findUnstartedWorkloads(userIds: string[]): Promise<Workload[]> {
+    if (!userIds.length) return [];
+
+    const workloads = await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', 'in', userIds)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+
+    return workloads.filter((w) => w.status === SetStatus.NOT_STARTED);
   }
 
   /**

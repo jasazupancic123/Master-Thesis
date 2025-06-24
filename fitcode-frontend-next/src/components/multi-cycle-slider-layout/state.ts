@@ -1,5 +1,5 @@
 import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { Cycle, Week } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Periodization } from '@/controller/group/type/periodization.type';
@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
+import CycleComponentsSelect from '../training-year-cycle-components-select/training-year-cycle-components-select';
 // import isoWeek from 'dayjs/plugin/isoWeek';
 
 // dayjs.extend(isoWeek);
@@ -22,8 +23,12 @@ export async function handleAddCycle(
     setDetectedChanges: SetState<boolean>;
   }
 ) {
-  const { selectedGroup, setSelectedGroup, setCycles, setDetectedChanges } =
-    state;
+  const {
+    selectedGroup,
+    setSelectedGroup,
+    setCycles,
+    setDetectedChanges,
+  } = state;
   const { name, description, from, to } = input;
 
   if (!name || !from || !to) {
@@ -44,19 +49,15 @@ export async function handleAddCycle(
       from,
       to,
       description,
-      leafComponentsIds: [],
-      rootComponentsIds: [],
+      selectedTargets: [],
       weeks: [],
-      periodization: {
-        type: PeriodizationType.NONE,
-        basePeriodizationTrainingIds: [],
-      } as Periodization,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as Cycle,
   ];
   setDetectedChanges(true);
   setCycles(newCycles);
+
   const newGroup = { ...selectedGroup, cycles: newCycles };
   setSelectedGroup(newGroup);
 }

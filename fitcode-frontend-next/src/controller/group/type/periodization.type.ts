@@ -1,4 +1,4 @@
-import { PeriodizationType } from '../enum/periodization-type.enum';
+import { PeriodizationType } from '../../training/enum/periodization-type.enum';
 
 export type Periodization = {
   type: PeriodizationType;

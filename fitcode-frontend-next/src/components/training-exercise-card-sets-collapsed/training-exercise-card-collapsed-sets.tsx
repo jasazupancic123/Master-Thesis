@@ -23,7 +23,6 @@ import {
   updateTraining,
 } from '../training-exercise-card/state';
 import { SetState } from '@/common/type/state.type';
-import { updateExerciseAttributeValues } from '../training-exercise-card-sets-expanded/state';
 import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import { useEffect, useState } from 'react';
 
@@ -179,7 +178,10 @@ export default function TrainingExerciseCardCollapsedSets(
                       setNumber !== undefined &&
                       setNumber < foundInOptions.min
                     ) {
-                      if (selectedExercises.length) {
+                      if (
+                        selectedExercises.length &&
+                        selectedExercises.some((e) => e.id === exercise.id)
+                      ) {
                         const updatedSetsNumbers = [...setsNumbers];
 
                         for (const selectedExercise of selectedExercises) {
@@ -223,7 +225,10 @@ export default function TrainingExerciseCardCollapsedSets(
                       setNumber !== undefined &&
                       setNumber > foundInOptions.max
                     ) {
-                      if (selectedExercises.length) {
+                      if (
+                        selectedExercises.length &&
+                        selectedExercises.some((e) => e.id === exercise.id)
+                      ) {
                         const updatedSetsNumbers = [...setsNumbers];
 
                         for (const selectedExercise of selectedExercises) {
@@ -345,7 +350,10 @@ export default function TrainingExerciseCardCollapsedSets(
                         if (+newValue < 0) return;
 
                         if (param.field === 'volWorkSets') {
-                          if (selectedExercises.length) {
+                          if (
+                            selectedExercises.length &&
+                            selectedExercises.some((e) => e.id === exercise.id)
+                          ) {
                             const updatedSetsNumbers = [...setsNumbers];
 
                             for (const selectedExercise of selectedExercises) {
