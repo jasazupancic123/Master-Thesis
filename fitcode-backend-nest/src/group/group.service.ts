@@ -168,10 +168,36 @@ export class GroupService implements Permission<Group, Institution> {
     );
 
     // validate
-    const group = await this.findOneByIdOrFail(user, { groupId: input[0]?.id });
-    const institution = await this.institutionService.getDocByIdOrFail(group);
-    if (!this.canEdit(user, group, institution))
-      throw new UnauthorizedException('You are not allowed to edit this group');
+    if (!input.length)
+      throw new BadRequestException('Do not provide an empty array of groups');
+
+    const groups = await this.firebaseService.batchIn<Group>(
+      'id',
+      input.map((g) => g.id),
+      this.groupRepository.collection(),
+    );
+
+    if (groups.length !== input.length)
+      throw new BadRequestException('Invalid groups provided');
+
+    const uniqueInstitutionIds = [
+      ...new Set(groups.map((g) => g.institutionId)),
+    ];
+
+    if (uniqueInstitutionIds.length !== 1)
+      throw new BadRequestException(
+        'You can only update groups from the same institution',
+      );
+
+    const institution = await this.institutionService.getDocByIdOrFail(
+      groups[0],
+    );
+
+    for (const group of groups)
+      if (!this.canEdit(user, group, institution))
+        throw new UnauthorizedException(
+          `You are not allowed to edit group ${group.name}`,
+        );
 
     // validate members
     const allMembersIds = input.flatMap((i) => i.membersIds || []);

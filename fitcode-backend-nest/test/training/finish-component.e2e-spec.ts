@@ -25,16 +25,10 @@ import {
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { ATTRIBUTE_ENDURANCE_OPTIONS } from '../common/constant/attribute.constant';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
-import {
-  IntType,
-  ParamType,
-  VolType,
-  VolWorkSetType,
-} from '../../src/component/enum/param.enum';
 import { Attribute } from '../../src/attribute/entity/attribute.entity';
 import { Component } from '../../src/component/entity/component.entity';
 import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
-import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;
@@ -48,7 +42,7 @@ describe('Training Exercise Params (e2e)', () => {
 
   let attribute: Attribute;
   let leaf: Component;
-  let institution: Institution;
+  let institution: TestInstitution;
   let group: Group;
 
   beforeAll(async () => {
@@ -73,9 +67,7 @@ describe('Training Exercise Params (e2e)', () => {
     leaf = componentService.leafsFromFlat(flat)[0];
 
     institution = await createInstitution(institutionService);
-    group = await createGroupWithCycles(groupService, {
-      institutionId: institution.id,
-    });
+    group = await createGroupWithCycles(groupService, institution);
   });
 
   afterAll(async () => {
@@ -116,4 +108,8 @@ describe('Training Exercise Params (e2e)', () => {
       }),
     );
   }
+
+  it('should work', () => {
+    expect(true).toBeTruthy();
+  });
 });

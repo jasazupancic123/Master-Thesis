@@ -26,11 +26,14 @@ import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import {
   createInstitution,
+  createInstitutionWithUsers,
   deleteCollection,
   deleteDoc,
   deleteDocs,
+  deleteInstitution,
   deleteUsers,
 } from '../common/utils/data.util';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Get Exercises (e2e)', () => {
   let app: INestApplication;
@@ -45,17 +48,11 @@ describe('Get Exercises (e2e)', () => {
   let globalExercises: Exercise[];
 
   // first institution
-  let manager1: TestUser;
-  let institution1: Institution;
-  let trainer1: TestUser;
-  let athlete1: TestUser;
+  let institution1: TestInstitution;
   let institution1Exercises: Exercise[];
 
   // second institution
-  let manager2: TestUser;
-  let institution2: Institution;
-  let trainer2: TestUser;
-  let athlete2: TestUser;
+  let institution2: TestInstitution;
   let institution2Exercises: Exercise[];
 
   beforeAll(async () => {
@@ -72,16 +69,6 @@ describe('Get Exercises (e2e)', () => {
     attributeService = moduleFixture.get(AttributeService);
     institutionService = moduleFixture.get(InstitutionService);
 
-    [athlete1, athlete2, trainer1, trainer2, manager1, manager2] =
-      await Promise.all([
-        createAthleteUserAndToken(firebase),
-        createAthleteUserAndToken(firebase),
-        createTrainerUserAndToken(firebase),
-        createTrainerUserAndToken(firebase),
-        createManagerUserAndToken(firebase),
-        createManagerUserAndToken(firebase),
-      ]);
-
     component = await componentService.create(generateComponentStub());
     globalExercises = await exerciseService.createMany(global.admin, [
       generateExerciseStub({ componentIds: [component.id] }),
@@ -89,24 +76,17 @@ describe('Get Exercises (e2e)', () => {
       generateExerciseStub({ componentIds: [component.id] }),
     ]);
 
-    [institution1, institution2] = await Promise.all([
-      createInstitution(institutionService, {
-        owner: manager1,
-        athleteIds: [athlete1.uid],
-        trainerIds: [trainer1.uid],
-      }),
-      createInstitution(institutionService, {
-        owner: manager2,
-        athleteIds: [athlete2.uid],
-        trainerIds: [trainer2.uid],
-      }),
-    ]);
+    institution1 = await createInstitution(institutionService);
+    institution2 = await createInstitutionWithUsers(
+      firebase,
+      institutionService,
+    );
 
     [institution1Exercises, institution2Exercises] = await Promise.all([
-      exerciseService.createMany(manager1, [
+      exerciseService.createMany(institution1.manager, [
         generateExerciseStub({ componentIds: [component.id] }),
       ]),
-      exerciseService.createMany(manager2, [
+      exerciseService.createMany(institution2.manager, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
       ]),
@@ -116,16 +96,10 @@ describe('Get Exercises (e2e)', () => {
   afterAll(async () => {
     await Promise.all([
       deleteCollection(firebase, 'EXERCISE'),
-      deleteDocs(firebase, 'INSTITUTION', [institution1.id, institution2.id]),
+      deleteInstitution(firebase, institution1),
+      deleteInstitution(firebase, institution2),
       deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteUsers(firebase, [
-        athlete1,
-        athlete2,
-        trainer1,
-        trainer2,
-        manager1,
-        manager2,
-      ]),
+      deleteCollection(firebase, 'ATTRIBUTE'),
     ]);
 
     await app.close();
@@ -149,7 +123,7 @@ describe('Get Exercises (e2e)', () => {
     it('should return exercises from institution1 for athlete in the institution', async () => {
       const response = await request(app.getHttpServer())
         .get(`/exercise/institution/${institution1.id}`)
-        .set('Authorization', `Bearer ${athlete1.token}`);
+        .set('Authorization', `Bearer ${institution1.athletes[0].token}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(institution1Exercises.length);
@@ -167,7 +141,7 @@ describe('Get Exercises (e2e)', () => {
     it('should return exercises from institution1 for trainer in the institution', async () => {
       const response = await request(app.getHttpServer())
         .get(`/exercise/institution/${institution1.id}`)
-        .set('Authorization', `Bearer ${trainer1.token}`);
+        .set('Authorization', `Bearer ${institution1.trainers[0].token}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(institution1Exercises.length);
@@ -185,7 +159,7 @@ describe('Get Exercises (e2e)', () => {
     it('should return exercises from institution1 for manager in the institution', async () => {
       const response = await request(app.getHttpServer())
         .get(`/exercise/institution/${institution1.id}`)
-        .set('Authorization', `Bearer ${manager1.token}`);
+        .set('Authorization', `Bearer ${institution1.manager.token}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(institution1Exercises.length);
@@ -229,7 +203,7 @@ describe('Get Exercises (e2e)', () => {
         filters.map((f) =>
           request(app.getHttpServer())
             .get(`/exercise/global?componentIds=${f[0]}`)
-            .set('Authorization', `Bearer ${athlete1.token}`),
+            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
         ),
       );
 
@@ -258,7 +232,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(manager1, exercises)
+        await exerciseService.createMany(institution1.manager, exercises)
       ).map((e) => e.id);
 
       const filters: [string, number][] = [
@@ -274,7 +248,7 @@ describe('Get Exercises (e2e)', () => {
             .get(
               `/exercise/institution/${institution1.id}?componentIds=${f[0]}`,
             )
-            .set('Authorization', `Bearer ${athlete1.token}`),
+            .set('Authorization', `Bearer ${institution1.athletes[0].token}`),
         ),
       );
 
@@ -385,7 +359,7 @@ describe('Get Exercises (e2e)', () => {
       for (const [filter, expectedLength] of filters) {
         const response = await request(app.getHttpServer())
           .get(`/exercise/global?${filter}`)
-          .set('Authorization', `Bearer ${athlete1.token}`);
+          .set('Authorization', `Bearer ${institution1.athletes[0].token}`);
 
         expect(response.status).toEqual(200);
         expect(response.body).toHaveLength(expectedLength);
@@ -530,14 +504,13 @@ describe('Get Exercises (e2e)', () => {
       for (const [filter, expectedLength] of filters) {
         const response = await request(app.getHttpServer())
           .get(`/exercise/global?${filter}`)
-          .set('Authorization', `Bearer ${manager1.token}`);
+          .set('Authorization', `Bearer ${institution1.manager.token}`);
 
         expect(response.status).toEqual(200);
         expect(response.body).toHaveLength(expectedLength);
       }
 
       await Promise.all([
-        deleteCollection(firebase, 'ATTRIBUTE'),
         deleteDocs(firebase, 'COMPONENT', [comp1.id, comp2.id]),
         deleteDocs(firebase, 'EXERCISE', exerciseIds),
       ]);

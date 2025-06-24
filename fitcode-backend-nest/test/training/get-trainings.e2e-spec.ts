@@ -19,7 +19,7 @@ import {
   createInstitution,
   deleteDoc,
 } from '../common/utils/data.util';
-import { Institution } from '../../src/institution/entity/institution.entity';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Get Trainings (e2e)', () => {
   let app: INestApplication;
@@ -32,7 +32,7 @@ describe('Get Trainings (e2e)', () => {
   let groupService: GroupService;
   let userService: UserService;
 
-  let institution: Institution;
+  let institution: TestInstitution;
   let group: Group;
   let component: Component;
 
@@ -53,11 +53,9 @@ describe('Get Trainings (e2e)', () => {
     userService = moduleFixture.get(UserService);
     institutionService = moduleFixture.get(InstitutionService);
 
-    institution = await createInstitution(institutionService);
     component = await componentService.create(generateComponentStub());
-    group = await createGroupWithCycles(groupService, {
-      institutionId: institution.id,
-    });
+    institution = await createInstitution(institutionService);
+    group = await createGroupWithCycles(groupService, institution);
   });
 
   afterAll(async () => {

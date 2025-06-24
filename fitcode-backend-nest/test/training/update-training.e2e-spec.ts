@@ -1,5 +1,5 @@
 import * as request from 'supertest';
-import { INestApplication, Query } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
@@ -18,21 +18,18 @@ import {
 import {
   createGroupWithCycles,
   createInstitution,
+  createInstitutionWithUsers,
   deleteDoc,
   deleteDocs,
+  deleteInstitution,
   deleteUsers,
   getTime,
 } from '../common/utils/data.util';
 import { Training } from '../../src/training/entity/training.entity';
 import { addDays, addMinutes, subDays } from 'date-fns';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { Institution } from '../../src/institution/entity/institution.entity';
-import { TestUser } from '../common/type/auth.type';
-import {
-  createAthleteUserAndToken,
-  createTrainerUserAndToken,
-  createManagerUserAndToken,
-} from '../common/utils/auth.util';
+import { createAthleteUserAndToken } from '../common/utils/auth.util';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
@@ -47,15 +44,12 @@ describe('Update Training (e2e)', () => {
   let component: Component;
 
   // first institution
-  let institution: Institution;
+  let institution: TestInstitution;
   let group: Group;
   let training: Training;
 
   // other institution
-  let otherAthlete: TestUser;
-  let otherTrainer: TestUser;
-  let otherManager: TestUser;
-  let otherInstitution: Institution;
+  let otherInstitution: TestInstitution;
   let otherGroup: Group;
 
   beforeAll(async () => {
@@ -76,42 +70,24 @@ describe('Update Training (e2e)', () => {
 
     component = await componentService.create(generateComponentStub());
     institution = await createInstitution(institutionService);
-    group = await createGroupWithCycles(groupService, {
-      institutionId: institution.id,
-    });
-
+    group = await createGroupWithCycles(groupService, institution);
     training = await createTraining();
 
-    [otherAthlete, otherTrainer, otherManager] = await Promise.all([
-      createAthleteUserAndToken(firebase),
-      createTrainerUserAndToken(firebase),
-      createManagerUserAndToken(firebase),
-    ]);
+    otherInstitution = await createInstitutionWithUsers(
+      firebase,
+      institutionService,
+    );
 
-    otherInstitution = await createInstitution(institutionService, {
-      owner: otherManager,
-      athleteIds: [otherAthlete.uid],
-      trainerIds: [otherTrainer.uid],
-    });
-
-    otherGroup = await createGroupWithCycles(groupService, {
-      trainer: otherTrainer,
-      manager: otherManager,
-      institutionId: otherInstitution.id,
-      membersIds: [otherAthlete.uid],
-    });
+    otherGroup = await createGroupWithCycles(groupService, otherInstitution);
   });
 
   afterAll(async () => {
     await Promise.all([
       deleteDoc(firebase, 'TRAINING', training.id),
       deleteDocs(firebase, 'GROUP', [otherGroup.id, group.id]),
-      deleteDocs(firebase, 'INSTITUTION', [
-        otherInstitution.id,
-        institution.id,
-      ]),
+      deleteInstitution(firebase, institution),
+      deleteInstitution(firebase, otherInstitution),
       deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteUsers(firebase, [otherAthlete, otherTrainer, otherManager]),
     ]);
 
     await app.close();
@@ -162,7 +138,11 @@ describe('Update Training (e2e)', () => {
 
     it('should fail to update training if users from other institution try to edit it', async () => {
       const responses = await Promise.all(
-        [otherAthlete, otherTrainer, otherManager].map((user) =>
+        [
+          otherInstitution.athletes[0],
+          otherInstitution.trainers[0],
+          otherInstitution.manager,
+        ].map((user) =>
           request(app.getHttpServer())
             .patch(`/training/${training.id}`)
             .set('Authorization', `Bearer ${user.token}`)

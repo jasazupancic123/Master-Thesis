@@ -31,7 +31,7 @@ import { PeriodizationType } from '../../src/group/enum/periodization-type.enum'
 import { ParamType } from '../../src/component/enum/param.enum';
 import { ExerciseSet } from '../../src/training/entity/exercise-set.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { Institution } from '../../src/institution/entity/institution.entity';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;
@@ -42,7 +42,7 @@ describe('Periodization functions (e2e)', () => {
   let institutionService: InstitutionService;
   let groupService: GroupService;
 
-  let institution: Institution;
+  let institution: TestInstitution;
   let group: Group;
   let component: Component;
   let baseTraining: Training;
@@ -92,8 +92,7 @@ describe('Periodization functions (e2e)', () => {
       }),
     );
 
-    group = await createGroupWithCycles(groupService, {
-      institutionId: institution.id,
+    group = await createGroupWithCycles(groupService, institution, {
       cycleLengthInWeeks: 60,
     });
 

@@ -18,6 +18,7 @@ import {
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import {
   createGroupWithCycles,
+  createInstitution,
   deleteDoc,
   deleteDocs,
   deleteUsers,
@@ -39,9 +40,8 @@ import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
 import { generateCompletedRepWorkloadsStub } from '../../src/training/mock/workload.stub';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
-import { Institution } from '../../src/institution/entity/institution.entity';
 import { TestUser } from '../common/type/auth.type';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Training Workloads (e2e)', () => {
   let app: INestApplication;
@@ -53,7 +53,7 @@ describe('Training Workloads (e2e)', () => {
   let workloadService: WorkloadService;
   let institutionService: InstitutionService;
 
-  let institution: Institution;
+  let institution: TestInstitution;
   let group: Group;
   let component: Component;
   let athlete2: TestUser;
@@ -84,13 +84,8 @@ describe('Training Workloads (e2e)', () => {
       createAthleteUserAndToken(firebase),
     ]);
 
-    institution = await institutionService.create(
-      global.admin,
-      generateInstitutionStub(),
-    );
-
-    group = await createGroupWithCycles(groupService, {
-      institutionId: institution.id,
+    institution = await createInstitution(institutionService);
+    group = await createGroupWithCycles(groupService, institution, {
       membersIds: [athlete.uid, athlete2.uid, athlete3.uid],
     });
   });
