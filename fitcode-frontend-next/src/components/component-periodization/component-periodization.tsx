@@ -10,7 +10,7 @@ import TrainingWeek from '../training-week/training-week';
 import dayjs from 'dayjs';
 import { ArrowDropDown, ArrowDropUp, Redo } from '@mui/icons-material';
 import SelectInput from '../select-input/select-input';
-import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { Training } from '@/controller/training/type/training.type';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -114,10 +114,7 @@ export default function ComponentPeriodization(
   }, [cycle]);
 
   const handlePeriodize = () => {
-    if (
-      !selectedComponent.periodizationType ||
-      selectedComponent.periodizationType === PeriodizationType.NONE
-    ) {
+    if (!selectedComponent.periodizationType) {
       toast.error('Please select a periodization type.');
       return;
     }

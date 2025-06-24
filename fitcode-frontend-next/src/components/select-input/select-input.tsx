@@ -30,6 +30,7 @@ interface Props<T> {
   inputLabelSize?: number;
   selectedItemSize?: number;
   iconSize?: number;
+  sameValueAction?: boolean;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -68,7 +69,11 @@ export default function SelectInput<T>(props: Props<T>) {
         variant="outlined"
         label={props.label}
         value={props.value}
-        onChange={(e) => props.setValue(e.target.value as string | number)}
+        onChange={
+          !props.sameValueAction
+            ? (e) => props.setValue(e.target.value as string | number)
+            : undefined
+        }
         startAdornment={
           <InputAdornment position="start">{props.icon}</InputAdornment>
         }
@@ -113,6 +118,7 @@ export default function SelectInput<T>(props: Props<T>) {
         <MenuItem
           value={props.enableRemove ? props.placeholder : ''}
           sx={{ minHeight: 20 }}
+          onClick={props.sameValueAction ? () => props.setValue('') : undefined}
         >
           <em>{props.placeholder ? props.placeholder : <>None</>}</em>
         </MenuItem>
@@ -123,6 +129,16 @@ export default function SelectInput<T>(props: Props<T>) {
               props.itemKey
                 ? (item[props.itemKey] as unknown as string)
                 : (item as unknown as string)
+            }
+            onClick={
+              props.sameValueAction
+                ? () =>
+                    props.setValue(
+                      props.itemKey
+                        ? (item[props.itemKey] as unknown as string)
+                        : (item as unknown as string)
+                    )
+                : undefined
             }
           >
             {props.itemName

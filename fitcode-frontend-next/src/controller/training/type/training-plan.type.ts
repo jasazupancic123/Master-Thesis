@@ -10,7 +10,7 @@ import { Target } from '@/controller/target/type/target.type';
 import { Method } from '@/controller/method/type/method.type';
 import { AttributeRange } from '@/controller/attribute/type/attribute-range.entity';
 import { SubgroupInfo } from './subggroup-minimal.type';
-import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &

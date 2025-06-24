@@ -38,7 +38,7 @@ import { Method } from '../../method/entity/method.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { WorkloadService } from './workload.service';
 import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
-import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
@@ -199,7 +199,7 @@ export class TrainingPlanService {
             if (foundFutureStat) {
               foundFutureStat.totalIntensity +=
                 avgInt * subgroup.membersIds.length;
-              foundFutureStat.totalIntensity +=
+              foundFutureStat.totalVolume +=
                 avgVol * subgroup.membersIds.length;
               foundFutureStat.totalNumMembers += subgroup.membersIds.length;
             } else {

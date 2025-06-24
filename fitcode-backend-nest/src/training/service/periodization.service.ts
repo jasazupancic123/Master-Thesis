@@ -1,6 +1,6 @@
 import { ParamType } from '../../component/enum/param.enum';
 import { Training } from '../entity/training.entity';
-import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 import { BadRequestException } from '@nestjs/common';
 import { DUP_SCHEDULE } from '../constant/periodization.constant';
 import { Subgroup } from '../entity/subgroup.entity';
@@ -39,13 +39,7 @@ export class PeriodizationService {
           if (this.isTraining(baseItem) && !subgroupId && !subgroupName) {
             exercisesList = component.supersets.flatMap((s) => s.exercises);
           } else {
-            // currently matching subgroup by membersIds, maybe by id?
-            // const subgroup = component.subgroups.find(
-            //   (s) =>
-            //     s.membersIds.length === subgroupMembersIds.length &&
-            //     subgroupMembersIds.every((id) => s.membersIds.includes(id)),
-            // );
-
+            // matching subgroup by id
             const subgroup = component.subgroups.find(
               (s) => s.id === subgroupId || s.name === subgroupName,
             );

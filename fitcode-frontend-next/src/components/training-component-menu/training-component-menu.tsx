@@ -112,7 +112,7 @@ export default function TrainingComponentMenu(
         </Box>
       )}
 
-      {trainingComponent?.component &&
+      {/* {trainingComponent?.component &&
         ![WARMUP_ID, COOLDOWN_ID].includes(trainingComponent.component.id) && (
           <IconButton
             onClick={() => {
@@ -138,7 +138,7 @@ export default function TrainingComponentMenu(
           >
             <DateRange fontSize="small" />
           </IconButton>
-        )}
+        )} */}
 
       <IconButton sx={{ p: 0 }} onClick={handleMenuOpen}>
         <MoreVert fontSize="small" />

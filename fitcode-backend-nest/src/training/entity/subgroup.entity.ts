@@ -1,11 +1,18 @@
 import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { ColorEntity } from '../../common/entity/color.entity';
 import { IdEntity } from '../../common/entity/id.entity';
 import { Superset } from './superset.entity';
 import { GroupWorkloadStats } from './average-workload-values.entity';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 
 export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @IsString()
@@ -25,6 +32,13 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @ApiProperty()
   @Expose()
   supersets: Superset[];
+
+  @ApiProperty({ enum: PeriodizationType, enumName: 'PeriodizationType' })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsEnum(PeriodizationType)
+  @Expose()
+  periodizationType?: PeriodizationType;
 
   @ValidateNested({ each: true })
   @Type(() => GroupWorkloadStats)
