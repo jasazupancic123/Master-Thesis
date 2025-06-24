@@ -3,7 +3,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
-import { Box, Tooltip } from '@mui/material';
+import { Box, Checkbox, Tooltip, Typography } from '@mui/material';
 import { useState } from 'react';
 import SelectInput from '../select-input/select-input';
 import { AFTER_SETS, MAIN_SETS } from '../trainer-day-view/constant';
@@ -13,7 +13,7 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { Method } from '@/controller/method/type/method.type';
-import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import MyModal from '../modal/modal';
 import { handleApiRequest } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
@@ -21,6 +21,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { isBefore } from 'date-fns';
+import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 
 interface TrainingComponentExpandedProps {
   training: Training;
@@ -51,6 +52,7 @@ export default function TrainingComponentExpanded(
     selectedExercises,
     setTodaysTrainings,
     selectedSubgroup,
+    setSelectedSubgroup,
   } = useTrainerDayViewContext();
 
   const [mainSet, setMainSet] = useState<MainSet | null>();
@@ -61,6 +63,31 @@ export default function TrainingComponentExpanded(
     useState(0);
   const [openModal, setOpenModal] = useState(false);
 
+  const stateUpdate = (updatedComponent: TrainingComponent) => {
+    setComponent(updatedComponent);
+
+    const updatedComponents = training.components.map((c) => {
+      if (
+        c.id === updatedComponent.id ||
+        c.component?.id === updatedComponent.component?.id
+      ) {
+        return {
+          ...updatedComponent,
+        };
+      }
+      return c;
+    });
+
+    setTodaysTrainings((prev) =>
+      prev.map((t) => {
+        if (t.id !== training.id) return t;
+        return {
+          ...t,
+          components: updatedComponents,
+        };
+      })
+    );
+  };
   if (!component) return null;
 
   return (
@@ -119,14 +146,19 @@ export default function TrainingComponentExpanded(
 
       <Tooltip
         title={
-          component.periodizationType
-            ? component.periodizationType
-            : 'No Periodization Type'
+          selectedSubgroup?.subgroup
+            ? selectedSubgroup.subgroup.periodizationType ||
+              'No Periodization Type'
+            : component.periodizationType || 'No Periodization Type'
         }
       >
         <SelectInput<PeriodizationType>
           label="Periodization"
-          value={component.periodizationType || ''}
+          value={
+            selectedSubgroup?.subgroup
+              ? selectedSubgroup?.subgroup.periodizationType || ''
+              : component.periodizationType || ''
+          }
           icon={null}
           items={Object.values(PeriodizationType)}
           itemKey={undefined}
@@ -137,6 +169,7 @@ export default function TrainingComponentExpanded(
           sx={{
             maxWidth: 75,
           }}
+          sameValueAction
           inputLabelSize={13}
           selectedItemSize={15}
           selectSize="small"
@@ -149,14 +182,32 @@ export default function TrainingComponentExpanded(
               return;
             }
 
+            if (!periodizationType) {
+              if (!selectedSubgroup?.subgroup) {
+                setComponent({
+                  ...component,
+                  periodizationType: undefined,
+                });
+              } else {
+                setSelectedSubgroup((prev) => {
+                  if (!prev || !prev.subgroup) return prev;
+                  return {
+                    ...prev,
+                    subgroup: {
+                      ...prev.subgroup,
+                      periodizationType: undefined,
+                    },
+                  };
+                });
+              }
+              return;
+            }
+
             if (
-              !periodizationType ||
-              periodizationType === PeriodizationType.NONE
+              periodizationType !== PeriodizationType.REPLICATE &&
+              !selectedExercises.length
             ) {
-              setComponent({
-                ...component,
-                periodizationType: undefined,
-              });
+              toast.error('Select exercises to periodize');
               return;
             }
 
@@ -367,43 +418,54 @@ export default function TrainingComponentExpanded(
                 })
               );
 
-              const updatedComponent = {
-                ...component,
-                periodizationType: selectedPeriodizationType
-                  ? (selectedPeriodizationType as PeriodizationType)
-                  : undefined,
-              };
-
-              setComponent(updatedComponent);
-
-              const updatedComponents = training.components.map((c) => {
-                if (
-                  c.id === component.id ||
-                  c.component?.id === component.component?.id
-                ) {
+              if (selectedSubgroup?.subgroup) {
+                setSelectedSubgroup((prev) => {
+                  if (!prev || !prev.subgroup) return prev;
                   return {
-                    ...updatedComponent,
+                    ...prev,
+                    subgroup: {
+                      ...prev.subgroup,
+                      periodizationType: selectedPeriodizationType
+                        ? (selectedPeriodizationType as PeriodizationType)
+                        : undefined,
+                    },
                   };
-                }
-                return c;
-              });
+                });
 
-              setTodaysTrainings((prev) =>
-                prev.map((t) => {
-                  if (t.id !== training.id) return t;
-                  return {
-                    ...t,
-                    components: updatedComponents,
-                  };
-                })
-              );
+                const updatedComponent: TrainingComponent = {
+                  ...component,
+                  subgroups: (component.subgroups || []).map((sg) => {
+                    if (sg.id === selectedSubgroup.subgroup?.id) {
+                      return {
+                        ...sg,
+                        periodizationType: selectedPeriodizationType
+                          ? (selectedPeriodizationType as PeriodizationType)
+                          : undefined,
+                      };
+                    }
+                    return sg;
+                  }),
+                };
 
-              // setDetectedChanges(true);
+                stateUpdate(updatedComponent);
+              } else {
+                const updatedComponent = {
+                  ...component,
+                  periodizationType: selectedPeriodizationType
+                    ? (selectedPeriodizationType as PeriodizationType)
+                    : undefined,
+                };
+
+                stateUpdate(updatedComponent);
+              }
+
               setNumTrainingsWithSameTarget(0);
               setSelectedPeriodizationType(null);
               setOpenModal(false);
 
-              toast.success('Trainings periodized successfully.');
+              toast.success(
+                `${selectedSubgroup?.subgroup ? 'Subgroups' : 'Trainings'} periodized successfully`
+              );
             },
             undefined,
             'Failed to periodize trainings'
@@ -411,8 +473,16 @@ export default function TrainingComponentExpanded(
         }}
         cancelText="Close"
       >
-        Periodize {numTrainingsWithSameTarget} other trainings with type{' '}
-        {selectedPeriodizationType}?
+        {selectedSubgroup?.subgroup && (
+          <Typography variant="body1" textAlign="center" mb={1}>
+            {selectedSubgroup?.subgroup &&
+              `Periodizing subgroup ${selectedSubgroup.subgroup.name}`}
+          </Typography>
+        )}
+        <Typography variant="body1" textAlign="center">
+          Periodize {numTrainingsWithSameTarget} other trainings with type{' '}
+          {selectedPeriodizationType}?
+        </Typography>
       </MyModal>
     </Box>
   );

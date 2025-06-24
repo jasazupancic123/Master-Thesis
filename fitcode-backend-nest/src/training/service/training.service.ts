@@ -51,12 +51,11 @@ import { CopyComponentDto } from '../dto/copy-component.dto';
 import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
-import { InstitutionService } from 'src/institution/service/institution.service';
-import { Subgroup } from '../entity/subgroup.entity';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
-} from 'src/component/constant/warmup-cooldown.constant';
+} from '../../component/constant/warmup-cooldown.constant';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 
 @Injectable()
 export class TrainingService {
@@ -468,11 +467,6 @@ export class TrainingService {
         'You cannot periodize warmup or cooldown components',
       );
 
-    /* 
-      if subgroupId is passed, then periodize only subgroup values, if not
-      periodize main group and all subgroups
-    */
-
     this.trainingPlanService.checkPeriodizationType(periodizationType);
 
     const baseTraining = await this.findOneOrFail(user, {
@@ -483,11 +477,14 @@ export class TrainingService {
       baseTraining,
       componentId,
     );
-    baseComponent.periodizationType = periodizationType;
+
+    if (!subgroupId) baseComponent.periodizationType = periodizationType;
 
     const baseSubgroup = baseComponent.subgroups.find(
       (sg) => sg.id === subgroupId,
     );
+
+    if (baseSubgroup) baseSubgroup.periodizationType = periodizationType;
 
     const mainTarget = baseComponent.target;
 
@@ -516,6 +513,8 @@ export class TrainingService {
       lastTraining,
       filteredTrainings,
     );
+
+    let numberOfSubgroupsFound = 0;
 
     for (const ft of filteredTrainings) {
       let component = ft.components.find((c) => c.id === componentId);
@@ -547,6 +546,8 @@ export class TrainingService {
 
         if (!subgroupInComponent) continue;
 
+        numberOfSubgroupsFound++;
+
         component = {
           ...structuredClone(baseComponent),
           id: component.id,
@@ -562,7 +563,11 @@ export class TrainingService {
           supersets: component.supersets,
           subgroups: component.subgroups.map((sg) => {
             if (sg.id === subgroupInComponent.id)
-              return { ...structuredClone(baseSubgroup), id: sg.id };
+              return {
+                ...structuredClone(baseSubgroup),
+                id: sg.id,
+                periodizationType: periodizationType,
+              };
             return sg;
           }),
         };
@@ -572,16 +577,25 @@ export class TrainingService {
       }
     }
 
-    let periodizedTrainings = this.periodizationService.periodize(
-      subgroupId ? baseSubgroup : baseTraining,
-      filteredTrainings,
-      weeks,
-      componentId,
-      periodizationType,
-      exerciseIds,
-      baseSubgroup?.id,
-      baseSubgroup?.name,
-    ) as Training[];
+    if (baseSubgroup && !numberOfSubgroupsFound) {
+      throw new BadRequestException(
+        `Selected Subgroup not found in any future training`,
+      );
+    }
+
+    const periodizedTrainings =
+      periodizationType !== PeriodizationType.REPLICATE
+        ? (this.periodizationService.periodize(
+            subgroupId ? baseSubgroup : baseTraining,
+            filteredTrainings,
+            weeks,
+            componentId,
+            periodizationType,
+            exerciseIds,
+            baseSubgroup?.id,
+            baseSubgroup?.name,
+          ) as Training[])
+        : filteredTrainings;
 
     // update futureStats of baseTraining
     baseTraining.futureStats =
@@ -594,11 +608,12 @@ export class TrainingService {
 
     // update base training's periodizationType
     const baseTrainingDocRef = this.trainingRepository.doc(baseTrainingId);
+
     const updateBaseTrainingQuery =
       this.firebaseService.buildUpdateQuery<Training>({
         ...baseTraining,
         components: baseTraining.components.map((c) =>
-          c.id === componentId ? { ...c, periodizationType } : c,
+          c.id === componentId && !subgroupId ? { ...c, periodizationType } : c,
         ),
       });
 

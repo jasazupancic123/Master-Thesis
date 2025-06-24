@@ -1,4 +1,5 @@
 export enum PeriodizationType {
+  REPLICATE = 'Replicate',
   LINEAR = 'Linear',
   WEEK_UNDULATING = 'Week Undulating',
   DAY_UNDULATING = 'Day Undulating',
@@ -6,5 +7,4 @@ export enum PeriodizationType {
   WAVE = 'Wave',
   AUTOREGULATORY = 'Autoregulatory',
   DUP_TABLE_BASED = 'Dup Table-Based',
-  NONE = 'None',
 }

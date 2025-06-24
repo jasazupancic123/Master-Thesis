@@ -1,4 +1,5 @@
 export enum PeriodizationType {
+  REPLICATE = 'Replicate',
   LINEAR = 'Linear',
   WEEK_UNDULATING = 'Week Undulating',
   DAY_UNDULATING = 'Day Undulating',

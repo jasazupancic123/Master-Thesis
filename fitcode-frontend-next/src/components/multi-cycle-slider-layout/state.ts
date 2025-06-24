@@ -1,5 +1,5 @@
 import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { Cycle, Week } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Periodization } from '@/controller/group/type/periodization.type';
@@ -51,10 +51,6 @@ export async function handleAddCycle(
       description,
       selectedTargets: [],
       weeks: [],
-      periodization: {
-        type: PeriodizationType.NONE,
-        basePeriodizationTrainingIds: [],
-      } as Periodization,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as Cycle,

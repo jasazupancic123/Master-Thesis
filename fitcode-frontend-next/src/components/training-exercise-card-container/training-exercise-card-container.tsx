@@ -92,8 +92,18 @@ export default function TrainingExerciseCardContainer(
       });
     }
 
+    if (
+      newSetsNumbers.every((s) =>
+        setsNumbers.some(
+          (sn) =>
+            sn.exerciseId === s.exerciseId && sn.setsNumber === s.setsNumber
+        )
+      )
+    )
+      return;
+
     setSetsNumbers(newSetsNumbers);
-  }, []);
+  }, [selectedSubgroup?.subgroup]);
   // }, [selectedSubgroup?.subgroup, training, component]);
 
   useEffect(() => {

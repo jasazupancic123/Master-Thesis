@@ -23,6 +23,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const { supersets, setTodaysTrainings, selectedExercises } =
     useTrainerDayViewContext();
 
+  const [isInited, setIsInited] = useState(false);
+
   const {
     supersetIndex,
     setSelectedExercise,
@@ -65,7 +67,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       return;
     }
 
-    if (selectedExercises.length) {
+    if (
+      selectedExercises.length &&
+      selectedExercises.some((e) => e.id === exercise.id)
+    ) {
       const updatedExercises = [] as TrainingExercise[];
       for (const selectedExercise of selectedExercises) {
         const newSets = setsNumbers.find(
@@ -118,6 +123,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           setDetectedChanges,
           selectedSubgroup,
           setSelectedSubgroup,
+          isInited,
+          setIsInited,
         }
       );
     } else {
@@ -169,6 +176,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           selectedSubgroup,
           setSelectedSubgroup,
           setSupersets,
+          isInited,
+          setIsInited,
         }
       );
     }
