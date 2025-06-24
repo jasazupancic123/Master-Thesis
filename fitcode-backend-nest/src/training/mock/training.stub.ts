@@ -9,7 +9,7 @@ import {
 import { Superset } from '../entity/superset.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Subgroup } from '../entity/subgroup.entity';
-import { getTime } from '../../../test/common/utils/data.util';
+import { getTime } from '../../common/service/util/date.util';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { ParamType } from '../../component/enum/param.enum';
 

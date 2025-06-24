@@ -23,8 +23,8 @@ import {
   deleteDocs,
   deleteInstitution,
   deleteUsers,
-  getTime,
 } from '../common/utils/data.util';
+import { getTime } from '../common/utils/date.util';
 import { Training } from '../../src/training/entity/training.entity';
 import { addDays, addMinutes, subDays } from 'date-fns';
 import { InstitutionService } from '../../src/institution/service/institution.service';

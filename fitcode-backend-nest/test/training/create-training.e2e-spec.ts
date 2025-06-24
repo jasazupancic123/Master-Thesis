@@ -28,8 +28,8 @@ import {
   deleteDoc,
   deleteDocs,
   deleteInstitution,
-  getTime,
 } from '../common/utils/data.util';
+import { getTime } from '../common/utils/date.util';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,

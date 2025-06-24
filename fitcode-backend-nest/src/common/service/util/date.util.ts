@@ -1,4 +1,12 @@
-import { addDays, isAfter, isBefore, isEqual, startOfWeek } from 'date-fns';
+import {
+  addDays,
+  isAfter,
+  isBefore,
+  isEqual,
+  setHours,
+  setMinutes,
+  startOfWeek,
+} from 'date-fns';
 import { Week } from '../../../group/entity/cycle.entity';
 
 export class DateUtil {
@@ -76,4 +84,8 @@ export class DateUtil {
 
     return weeksArray;
   }
+}
+
+export function getTime(date: Date, hours: number, minutes = 0) {
+  return setMinutes(setHours(date, hours), minutes);
 }
