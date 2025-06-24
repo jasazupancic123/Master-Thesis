@@ -16,7 +16,10 @@ import {
   deleteUsers,
 } from '../common/utils/data.util';
 import { getTime } from 'src/common/service/util/date.util';
-import { createTrainerUserAndToken } from '../common/utils/auth.util';
+import {
+  createAthleteUserAndToken,
+  createTrainerUserAndToken,
+} from '../common/utils/auth.util';
 import { TestUser } from '../common/type/auth.type';
 import { BatchUpdateOneGroupDto } from '../../src/group/dto/update-group.dto';
 import { generateGroupStub } from '../../src/group/mock/group.stub';
@@ -143,13 +146,31 @@ describe('Update Group (e2e)', () => {
       );
     });
 
-    /* it('should successfully batch update multiple groups', async () => {
-      const response = await batchUpdateRequest(trainer, []);
+    it('should fail if members are not in same institution', async () => {
+      const member = await createAthleteUserAndToken(firebase);
+      const response = await batchUpdateRequest(trainer, [
+        { ...group, membersIds: [...group.membersIds, member.uid] },
+      ]);
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        `Cycles in group ${group.name} cannot overlap`,
+        `User ${member.displayName || member.email} is not part of the institution and cannot be added`,
       );
-    }); */
+
+      await deleteUsers(firebase, [member]);
+    });
+
+    it('should successfully update primitive group field types', async () => {
+      const response = await batchUpdateRequest(trainer, [
+        { ...group, name: 'new test name' },
+      ]);
+
+      const found = await groupService.findOneById(trainer, {
+        groupId: group.id,
+      });
+
+      expect(response.status).toBe(200);
+      expect(found.name).toBe('new test name');
+    });
   });
 });

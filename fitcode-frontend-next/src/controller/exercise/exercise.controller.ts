@@ -9,7 +9,6 @@ export class ExerciseController {
     return api.get<Exercise[]>('/exercise/global', {
       token,
       query,
-      cacheTimeInMs: ONE_HOUR_IN_MS,
     });
   }
   static async findAllByInstitution(
@@ -20,7 +19,6 @@ export class ExerciseController {
     return api.get<Exercise[]>(`/exercise/institution/${institutionId}`, {
       token,
       query,
-      cacheTimeInMs: ONE_HOUR_IN_MS,
     });
   }
 

@@ -169,6 +169,7 @@ export class GroupService implements Permission<Group, Institution> {
 
     // validate
     const groups = await this.validateBatch(input);
+
     // NOTE - trainer and manager can always edit all groups in the institution,
     // so this check is unnecessary, but still here
     for (const group of groups)
@@ -179,7 +180,11 @@ export class GroupService implements Permission<Group, Institution> {
 
     // validate members
     const allMembersIds = input.flatMap((i) => i.membersIds || []);
-    await this.userService.findAllOrFail({ ids: allMembersIds });
+    const members = await this.userService.findAllOrFail({
+      ids: allMembersIds,
+    });
+
+    this.validateMembersInInstitution(members, groups[0].institution);
 
     // validate cycles
     for (const group of input)
@@ -275,6 +280,17 @@ export class GroupService implements Permission<Group, Institution> {
 
     for (const group of groups) group.institution = institution;
     return groups;
+  }
+
+  private validateMembersInInstitution(
+    members: User[],
+    institution: Institution,
+  ) {
+    for (const member of members)
+      if (!institution.athleteIds.includes(member.uid))
+        throw new BadRequestException(
+          `User ${member.displayName || member.email} is not part of the institution and cannot be added`,
+        );
   }
 
   private isCycleOverlap(cycles: Cycle[]): boolean {
