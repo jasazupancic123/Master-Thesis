@@ -20,13 +20,19 @@ export class Workload extends TimestampEntity {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  groupId: string;
+  institutionId?: string;
 
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  cycleId: string;
+  groupId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  cycleId?: string;
 
   @IsString()
   @IsNotEmpty()

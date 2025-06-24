@@ -188,21 +188,17 @@ export class WorkloadService {
   }
 
   async findUnstartedWorkloads(userIds: string[]): Promise<Workload[]> {
-    if (!userIds.length) return [];
+    const ref = this.firebaseService.firestore.collectionGroup(
+      FirestoreCollection.TRAINING_WORKLOAD,
+    );
 
-    const workloads = await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', 'in', userIds)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
-          ),
-        ),
-      );
-
-    return workloads.filter((w) => w.status === SetStatus.NOT_STARTED);
+    return await this.firebaseService.batchIn<Workload>(
+      'userId',
+      userIds,
+      ref,
+      (q) => q.where('status', '==', SetStatus.NOT_STARTED),
+      { batchSize: 15 },
+    );
   }
 
   /**

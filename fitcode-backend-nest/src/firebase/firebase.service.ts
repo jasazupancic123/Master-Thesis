@@ -78,13 +78,18 @@ export class FirebaseService implements OnApplicationBootstrap {
       | FirebaseFirestore.CollectionReference
       | FirebaseFirestore.CollectionGroup,
     query: (query: Query) => Query = (query) => query,
+    options?: {
+      batchSize?: number;
+    },
   ): Promise<T[]> {
     if (!array || !array.length || !collection) return [];
+
+    const { batchSize = 30 } = options || {}; // firestore limits batches to 30
     const copy = [...array];
 
     const batches = [];
     while (copy.length) {
-      const batch = copy.splice(0, 30); // firestore limits batches to 30
+      const batch = copy.splice(0, batchSize);
 
       batches.push(
         query(collection.where(field as string, 'in', batch))
