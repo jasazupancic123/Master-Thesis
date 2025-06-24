@@ -79,11 +79,7 @@ export class GroupRepository
         ...c,
         weeks: this.commonService.date.weeks(c.from, c.to),
       }))
-      .sort(
-        (a, b) =>
-          new Date(a.from).getMilliseconds() -
-          new Date(b.from).getMilliseconds(),
-      );
+      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
 
     return serialized;
   }
