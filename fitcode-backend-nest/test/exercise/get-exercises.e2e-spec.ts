@@ -5,12 +5,6 @@ import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
-import { TestUser } from '../common/type/auth.type';
-import {
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '../common/utils/auth.util';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { Component } from '../../src/component/entity/component.entity';
 import { ComponentService } from '../../src/component/component.service';
@@ -22,7 +16,6 @@ import {
   generateMultiselectAttribute,
 } from '../../src/attribute/mock/attribute.stub';
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
-import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import {
   createInstitution,
@@ -31,7 +24,6 @@ import {
   deleteDoc,
   deleteDocs,
   deleteInstitution,
-  deleteUsers,
 } from '../common/utils/data.util';
 import { TestInstitution } from '../common/type/entity.type';
 

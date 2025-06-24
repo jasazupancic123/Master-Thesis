@@ -11,12 +11,10 @@ import { generateExerciseAttributeValueStub } from '../../../attribute/mock/attr
 import {
   IntType,
   ParamType,
-  VolType,
   VolWorkSetType,
 } from '../../../component/enum/param.enum';
 import {
   DEFAULT_PARAMS_KEY,
-  INT_OPTIONS,
   PARAMS,
   VOL_WORK_SET_OPTIONS,
 } from '../../../component/constant/param.constant';

@@ -5,20 +5,24 @@ import { AppModule } from '../../src/app.module';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { GroupService } from '../../src/group/group.service';
 import { Group } from '../../src/group/entity/group.entity';
-import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import {
   createGroupWithCycles,
   createInstitution,
   createInstitutionWithUsers,
   deleteDoc,
+  deleteDocs,
   deleteInstitution,
+  deleteUsers,
 } from '../common/utils/data.util';
-import { createAthleteUserAndToken } from '../common/utils/auth.util';
+import { getTime } from 'src/common/service/util/date.util';
+import { createTrainerUserAndToken } from '../common/utils/auth.util';
 import { TestUser } from '../common/type/auth.type';
 import { BatchUpdateOneGroupDto } from '../../src/group/dto/update-group.dto';
 import { generateGroupStub } from '../../src/group/mock/group.stub';
 import { TestInstitution } from '../common/type/entity.type';
+import { generateCycleStub } from '../../src/group/mock/cycle.stub';
+import { addDays } from 'date-fns';
 
 describe('Update Group (e2e)', () => {
   let app: INestApplication;
@@ -26,7 +30,6 @@ describe('Update Group (e2e)', () => {
   let groupService: GroupService;
   let institutionService: InstitutionService;
 
-  let newAthlete: TestUser;
   let institution: TestInstitution;
   let group: Group;
 
@@ -42,15 +45,14 @@ describe('Update Group (e2e)', () => {
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
 
-    newAthlete = await createAthleteUserAndToken(firebase);
     institution = await createInstitution(institutionService);
     group = await createGroupWithCycles(groupService, institution);
   });
 
   afterAll(async () => {
     await Promise.all([
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
       deleteDoc(firebase, 'GROUP', group.id),
+      deleteInstitution(firebase, institution),
     ]);
 
     await app.close();
@@ -86,26 +88,68 @@ describe('Update Group (e2e)', () => {
     });
 
     it('should fail if not all groups have the same institution', async () => {
-      const otherInstitution = await createInstitutionWithUsers(
+      const newInstitution = await createInstitutionWithUsers(
         firebase,
         institutionService,
+        { additionalTrainers: [trainer] },
       );
 
-      const otherGroup = await createGroupWithCycles(
+      const newGroup = await createGroupWithCycles(
         groupService,
-        otherInstitution,
+        newInstitution,
       );
 
-      const response = await batchUpdateRequest(trainer, [group, otherGroup]);
+      const response = await batchUpdateRequest(trainer, [group, newGroup]);
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        'You can only update groups from the same institution',
+        `You can only update groups from the same institution`,
       );
 
       await Promise.all([
-        deleteInstitution(firebase, otherInstitution),
-        deleteDoc(firebase, 'GROUP', otherGroup.id),
+        deleteInstitution(firebase, newInstitution),
+        deleteDoc(firebase, 'GROUP', newGroup.id),
       ]);
     });
+
+    it('should fail if not all users are valid', async () => {
+      const response = await batchUpdateRequest(trainer, [
+        { ...group, membersIds: ['invalid-member-id'] },
+      ]);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(`Invalid members provided`);
+    });
+
+    it('should fail if cycles overlap', async () => {
+      const response = await batchUpdateRequest(trainer, [
+        {
+          ...group,
+          cycles: [
+            generateCycleStub({
+              from: new Date(),
+              to: addDays(new Date(), 7),
+            }),
+            generateCycleStub({
+              from: addDays(new Date(), 3),
+              to: addDays(new Date(), 7),
+            }),
+          ],
+        },
+      ]);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Cycles in group ${group.name} cannot overlap`,
+      );
+    });
+
+    /* it('should successfully batch update multiple groups', async () => {
+      const response = await batchUpdateRequest(trainer, []);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Cycles in group ${group.name} cannot overlap`,
+      );
+    }); */
   });
 });

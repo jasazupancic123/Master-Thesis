@@ -168,33 +168,11 @@ export class GroupService implements Permission<Group, Institution> {
     );
 
     // validate
-    if (!input.length)
-      throw new BadRequestException('Do not provide an empty array of groups');
-
-    const groups = await this.firebaseService.batchIn<Group>(
-      'id',
-      input.map((g) => g.id),
-      this.groupRepository.collection(),
-    );
-
-    if (groups.length !== input.length)
-      throw new BadRequestException('Invalid groups provided');
-
-    const uniqueInstitutionIds = [
-      ...new Set(groups.map((g) => g.institutionId)),
-    ];
-
-    if (uniqueInstitutionIds.length !== 1)
-      throw new BadRequestException(
-        'You can only update groups from the same institution',
-      );
-
-    const institution = await this.institutionService.getDocByIdOrFail(
-      groups[0],
-    );
-
+    const groups = await this.validateBatch(input);
+    // NOTE - trainer and manager can always edit all groups in the institution,
+    // so this check is unnecessary, but still here
     for (const group of groups)
-      if (!this.canEdit(user, group, institution))
+      if (!this.canEdit(user, group, group.institution!))
         throw new UnauthorizedException(
           `You are not allowed to edit group ${group.name}`,
         );
@@ -205,7 +183,11 @@ export class GroupService implements Permission<Group, Institution> {
 
     // validate cycles
     for (const group of input)
-      if (group.cycles) this.isCycleOverlap(group.cycles);
+      if (group.cycles)
+        if (this.isCycleOverlap(group.cycles))
+          throw new BadRequestException(
+            `Cycles in group ${group.name} cannot overlap`,
+          );
 
     const batch = this.firebaseService.firestore.batch();
     await Promise.all(input.map((group) => this.batchUpdateOne(batch, group)));
@@ -263,17 +245,51 @@ export class GroupService implements Permission<Group, Institution> {
     return cycle;
   }
 
+  private async validateBatch(
+    input: BatchUpdateOneGroupDto[],
+  ): Promise<Group[]> {
+    if (!input.length)
+      throw new BadRequestException('Do not provide an empty array of groups');
+
+    const groups = await this.firebaseService.batchIn<Group>(
+      'id',
+      input.map((g) => g.id),
+      this.groupRepository.collection(),
+    );
+
+    if (groups.length !== input.length)
+      throw new BadRequestException('Invalid groups provided');
+
+    const uniqueInstitutionIds = [
+      ...new Set(groups.map((g) => g.institutionId)),
+    ];
+
+    if (uniqueInstitutionIds.length !== 1)
+      throw new BadRequestException(
+        'You can only update groups from the same institution',
+      );
+
+    const institution = await this.institutionService.getDocByIdOrFail(
+      groups[0],
+    );
+
+    for (const group of groups) group.institution = institution;
+    return groups;
+  }
+
   private isCycleOverlap(cycles: Cycle[]): boolean {
     if (!cycles || cycles.length < 2) return false;
 
+    // console.log('checking overlap:', cycles);
+
     const sortedCycles = [...cycles].sort(
-      (a, b) => a.from.getTime() - b.from.getTime(),
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );
 
     for (let i = 0; i < sortedCycles.length - 1; i++) {
       const current = sortedCycles[i];
       const next = sortedCycles[i + 1];
-      if (current.to > next.from) return true;
+      if (new Date(current.to) > new Date(next.from)) return true;
     }
 
     return false;

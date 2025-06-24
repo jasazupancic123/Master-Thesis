@@ -133,10 +133,6 @@ export async function createGroupWithCycles(
   return group;
 }
 
-export function getTime(date: Date, hours: number, minutes = 0) {
-  return setMinutes(setHours(date, hours), minutes);
-}
-
 export async function deleteDoc(
   firebase: FirebaseService,
   path: keyof typeof FirestoreCollection,
@@ -211,9 +207,11 @@ export async function deleteInstitution(
     (id) => id !== global.trainer.uid,
   );
 
-  await deleteDoc(firebase, 'INSTITUTION', institution.id);
-  await deleteUsersByIds(
-    firebase,
-    [ownerId, ...athleteIds, ...trainerIds].filter((id) => id),
-  );
+  await Promise.all([
+    deleteDoc(firebase, 'INSTITUTION', institution.id),
+    deleteUsersByIds(
+      firebase,
+      [ownerId, ...athleteIds, ...trainerIds].filter((id) => id),
+    ),
+  ]);
 }
