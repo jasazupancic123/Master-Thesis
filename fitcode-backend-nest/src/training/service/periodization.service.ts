@@ -3,17 +3,21 @@ import { Training } from '../entity/training.entity';
 import { PeriodizationType } from '../../group/enum/periodization-type.enum';
 import { BadRequestException } from '@nestjs/common';
 import { DUP_SCHEDULE } from '../constant/periodization.constant';
+import { Subgroup } from '../entity/subgroup.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
 
 export class PeriodizationService {
   periodize(
-    baseTraining: Training,
+    baseItem: Training | Subgroup,
     trainings: Training[],
     weeks: Training[][],
     componentId: string,
-    exerciseIds: string[],
     periodizationType: PeriodizationType,
-  ) {
-    const baseExercises = this.getExercisesOrFail(baseTraining, componentId);
+    exerciseIds: string[],
+    subgroupId?: string,
+    subgroupName?: string,
+  ): Training[] | Subgroup {
+    const baseExercises = this.getExercisesOrFail(baseItem, componentId);
 
     for (const exerciseId of exerciseIds) {
       let prevIntL = [] as { setIndex: number; value: number }[];
@@ -31,55 +35,36 @@ export class PeriodizationService {
           if (!component) continue;
 
           // get exercises to periodize
-          const exerciseToPeriodize = component.supersets
-            .flatMap((s) => s.exercises)
-            .find((e) => e.id === exerciseId);
+          let exercisesList: TrainingExercise[] = [];
+          if (this.isTraining(baseItem) && !subgroupId && !subgroupName) {
+            exercisesList = component.supersets.flatMap((s) => s.exercises);
+          } else {
+            // currently matching subgroup by membersIds, maybe by id?
+            // const subgroup = component.subgroups.find(
+            //   (s) =>
+            //     s.membersIds.length === subgroupMembersIds.length &&
+            //     subgroupMembersIds.every((id) => s.membersIds.includes(id)),
+            // );
+
+            const subgroup = component.subgroups.find(
+              (s) => s.id === subgroupId || s.name === subgroupName,
+            );
+
+            if (!subgroup) continue;
+
+            exercisesList = subgroup.supersets.flatMap((s) => s.exercises);
+          }
+
+          if (!exercisesList || exercisesList.length === 0) continue;
+
+          const exerciseToPeriodize = exercisesList.find(
+            (e) => e.id === exerciseId,
+          );
 
           if (!exerciseToPeriodize) continue;
 
           const baseExercise = baseExercises.find((e) => e.id === exerciseId);
           if (!baseExercise) continue;
-
-          // if (
-          //   baseExercise.sets.length > 0 &&
-          //   !prevIntL.length &&
-          //   !prevIntR.length &&
-          //   !prevVolL.length &&
-          //   !prevVolR.length
-          // ) {
-          //   prevIntL.push({
-          //     setIndex: 0,
-          //     value: parseFloat(
-          //       baseExercise.sets[0].paramValuesL.find(
-          //         (p) => p.field === ParamType.IntWork1,
-          //       )?.value || '0',
-          //     ),
-          //   });
-          //   prevVolL.push({
-          //     setIndex: 0,
-          //     value: parseFloat(
-          //       baseExercise.sets[0].paramValuesL.find(
-          //         (p) => p.field === ParamType.VolWork1,
-          //       )?.value || '0',
-          //     ),
-          //   });
-          //   prevIntR.push({
-          //     setIndex: 0,
-          //     value: parseFloat(
-          //       baseExercise.sets[0].paramValuesR.find(
-          //         (p) => p.field === ParamType.IntWork1,
-          //       )?.value || '0',
-          //     ),
-          //   });
-          //   prevVolR.push({
-          //     setIndex: 0,
-          //     value: parseFloat(
-          //       baseExercise.sets[0].paramValuesR.find(
-          //         (p) => p.field === ParamType.VolWork1,
-          //       )?.value || '0',
-          //     ),
-          //   });
-          // }
 
           let startInts: {
             exerciseId: string;
@@ -168,19 +153,39 @@ export class PeriodizationService {
                 leftOrRight === 'L'
                   ? prevIntL.find(
                       (e) => e.setIndex === baseExercise.sets.indexOf(set),
-                    )?.value
+                    )?.value ||
+                    parseFloat(
+                      set.paramValuesL.find(
+                        (p) => p.field === ParamType.IntWork1,
+                      )?.value,
+                    )
                   : prevIntR.find(
                       (e) => e.setIndex === baseExercise.sets.indexOf(set),
-                    )?.value;
+                    )?.value ||
+                    parseFloat(
+                      set.paramValuesR.find(
+                        (p) => p.field === ParamType.IntWork1,
+                      )?.value,
+                    );
 
               const prevVol =
                 leftOrRight === 'L'
                   ? prevVolL.find(
                       (e) => e.setIndex === baseExercise.sets.indexOf(set),
-                    )?.value
+                    )?.value ||
+                    parseFloat(
+                      set.paramValuesL.find(
+                        (p) => p.field === ParamType.VolWork1,
+                      )?.value,
+                    )
                   : prevVolR.find(
                       (e) => e.setIndex === baseExercise.sets.indexOf(set),
-                    )?.value;
+                    )?.value ||
+                    parseFloat(
+                      set.paramValuesR.find(
+                        (p) => p.field === ParamType.VolWork1,
+                      )?.value,
+                    );
 
               const { periodizedIntensityValue, periodizedVolumeValue } =
                 this.getPeriodizedIntVolValue(
@@ -257,11 +262,21 @@ export class PeriodizationService {
     return trainings;
   }
 
-  private getExercisesOrFail(training: Training, componentId: string) {
-    const component = training.components.find((c) => c.id === componentId);
-    if (!component) throw new BadRequestException('Base component not found');
+  private isTraining(item: Training | Subgroup): item is Training {
+    return (item as Training).components !== undefined;
+  }
 
-    const exercises = component.supersets.flatMap((s) => s.exercises);
+  private getExercisesOrFail(item: Training | Subgroup, componentId: string) {
+    let exercises: TrainingExercise[];
+    const isTraining = this.isTraining(item);
+
+    if (isTraining) {
+      const component = item.components.find((c) => c.id === componentId);
+      if (!component) throw new BadRequestException('Base component not found');
+
+      exercises = component.supersets.flatMap((s) => s.exercises);
+    } else exercises = item.supersets.flatMap((s) => s.exercises);
+
     if (exercises.length === 0)
       throw new BadRequestException('No exercises found in the base component');
 
@@ -313,7 +328,7 @@ export class PeriodizationService {
         return this.wave(startIntensityValue, weekIndex);
       }
       case PeriodizationType.AUTOREGULATORY: {
-        this.autoregulatory(
+        return this.autoregulatory(
           startIntensityValue,
           startVolumeValue,
           weekIndex,
@@ -324,10 +339,12 @@ export class PeriodizationService {
         );
       }
       case PeriodizationType.DUP_TABLE_BASED: {
-        this.dupTableBased(startIntensityValue, weekIndex, dayIndex);
+        return this.dupTableBased(startIntensityValue, weekIndex, dayIndex);
       }
       default: {
-        throw new Error(`Periodization type ${type} is not implemented`);
+        throw new BadRequestException(
+          `Periodization type ${type} is not implemented`,
+        );
       }
     }
   }

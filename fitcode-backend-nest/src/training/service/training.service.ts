@@ -52,6 +52,11 @@ import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
 import { InstitutionService } from 'src/institution/service/institution.service';
+import { Subgroup } from '../entity/subgroup.entity';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from 'src/component/constant/warmup-cooldown.constant';
 
 @Injectable()
 export class TrainingService {
@@ -448,15 +453,25 @@ export class TrainingService {
   async periodizeTrainings(user: User, input: PeriodizeTrainingsDto) {
     const {
       baseTrainingId,
-      excludedTrainingIds,
       componentId,
-      exerciseIds,
       periodizationType,
+      exerciseIds,
+      subgroupId,
     } = input;
 
     this.logger.log(
-      `User ${user.uid} is periodizing trainings: ${JSON.stringify(excludedTrainingIds)}`,
+      `User ${user.uid} is periodizing trainings: ${JSON.stringify(input)}`,
     );
+
+    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(componentId))
+      throw new BadRequestException(
+        'You cannot periodize warmup or cooldown components',
+      );
+
+    /* 
+      if subgroupId is passed, then periodize only subgroup values, if not
+      periodize main group and all subgroups
+    */
 
     this.trainingPlanService.checkPeriodizationType(periodizationType);
 
@@ -468,22 +483,28 @@ export class TrainingService {
       baseTraining,
       componentId,
     );
+    baseComponent.periodizationType = periodizationType;
+
+    const baseSubgroup = baseComponent.subgroups.find(
+      (sg) => sg.id === subgroupId,
+    );
 
     const mainTarget = baseComponent.target;
-    if (!mainTarget)
-      throw new BadRequestException('Target not found in base training');
 
     const possibleTrainings = await this.findAll(user, {
       groupId: baseTraining.groupId,
       cycleId: baseTraining.cycleId,
     });
 
+    // target can be null/undefined, then just get the trainings without a target
     const filteredTrainings = possibleTrainings.filter(
       (t) =>
-        t.components.some(
-          (c) =>
-            c.id === componentId && c.target && c.target.id === mainTarget.id,
-        ) && !excludedTrainingIds.includes(t.id),
+        isBefore(baseTraining.from, t.from) &&
+        t.components.some((c) =>
+          c.id === componentId && mainTarget
+            ? c.target?.id === mainTarget.id
+            : !c.target,
+        ),
     );
 
     const lastTraining = filteredTrainings.reduce((prev, curr) =>
@@ -496,35 +517,120 @@ export class TrainingService {
       filteredTrainings,
     );
 
-    const periodizedTrainings = this.periodizationService.periodize(
-      baseTraining,
+    for (const ft of filteredTrainings) {
+      let component = ft.components.find((c) => c.id === componentId);
+      if (!component) continue;
+
+      // no subgroup is selected, copy and periodize everything
+      if (!subgroupId) {
+        component = {
+          ...structuredClone(baseComponent),
+          id: component.id,
+          from: addMinutes(ft.from, ft.components.length * 30),
+          to: addMinutes(ft.from, ft.components.length * 30 + 30),
+          completedMembersIds: [],
+          copiedFrom: {
+            lastCopiedFromTrainingId: baseTraining.id,
+            rootCopiedFromTrainingId: baseComponent.copiedFrom
+              ? baseComponent.copiedFrom.rootCopiedFromTrainingId
+              : baseTraining.id,
+          },
+        };
+
+        ft.components = ft.components.filter((c) => c.id !== componentId);
+        ft.components.push(component);
+      } else if (baseSubgroup) {
+        // find subgroup in component by matching membersIds
+        const subgroupInComponent = component.subgroups.find(
+          (sg) => sg.id === baseSubgroup.id || sg.name === baseSubgroup.name,
+        );
+
+        if (!subgroupInComponent) continue;
+
+        component = {
+          ...structuredClone(baseComponent),
+          id: component.id,
+          from: addMinutes(ft.from, ft.components.length * 30),
+          to: addMinutes(ft.from, ft.components.length * 30 + 30),
+          completedMembersIds: [],
+          copiedFrom: {
+            lastCopiedFromTrainingId: baseTraining.id,
+            rootCopiedFromTrainingId: baseComponent.copiedFrom
+              ? baseComponent.copiedFrom.rootCopiedFromTrainingId
+              : baseTraining.id,
+          },
+          supersets: component.supersets,
+          subgroups: component.subgroups.map((sg) => {
+            if (sg.id === subgroupInComponent.id)
+              return { ...structuredClone(baseSubgroup), id: sg.id };
+            return sg;
+          }),
+        };
+
+        ft.components = ft.components.filter((c) => c.id !== componentId);
+        ft.components.push(component);
+      }
+    }
+
+    let periodizedTrainings = this.periodizationService.periodize(
+      subgroupId ? baseSubgroup : baseTraining,
       filteredTrainings,
       weeks,
       componentId,
-      exerciseIds,
       periodizationType,
-    );
+      exerciseIds,
+      baseSubgroup?.id,
+      baseSubgroup?.name,
+    ) as Training[];
+
+    // update futureStats of baseTraining
+    baseTraining.futureStats =
+      this.trainingPlanService.createFutureTrainingStats(
+        [baseComponent],
+        baseTraining.membersIds.length,
+      );
 
     const batch = this.firebaseService.firestore.batch();
 
+    // update base training's periodizationType
+    const baseTrainingDocRef = this.trainingRepository.doc(baseTrainingId);
+    const updateBaseTrainingQuery =
+      this.firebaseService.buildUpdateQuery<Training>({
+        ...baseTraining,
+        components: baseTraining.components.map((c) =>
+          c.id === componentId ? { ...c, periodizationType } : c,
+        ),
+      });
+
+    batch.update(baseTrainingDocRef, updateBaseTrainingQuery);
+
+    const userIds = [
+      ...new Set(filteredTrainings.flatMap((t) => t.membersIds)),
+    ];
+
+    const unstartedWorkloads =
+      await this.workloadService.findUnstartedWorkloads(userIds);
+
     // calculate new avg future workload values
     for (const t of filteredTrainings) {
-      const workloads = await this.workloadService.findAllByMembers(
-        t.membersIds,
-      );
-
       const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
 
-      const exercises = component.supersets.flatMap((s) => s.exercises);
-
-      this.trainingPlanService.calculateFutureTrainingStats(
-        t.futureStats,
-        exercises,
+      t.futureStats = this.trainingPlanService.createFutureTrainingStats(
+        [component],
+        t.membersIds.length,
       );
 
       const updateTrainingQuery =
         this.firebaseService.buildUpdateQuery<Training>({ ...t });
+
+      const workloads = unstartedWorkloads.filter(
+        (w) =>
+          w.trainingId === t.id &&
+          w.componentId === componentId &&
+          w.userId &&
+          t.membersIds.includes(w.userId),
+      );
 
       const trainingDocRef = this.trainingRepository.doc(t.id);
       this.workloadService.createForTraining(batch, t, workloads);
@@ -532,6 +638,8 @@ export class TrainingService {
     }
 
     await batch.commit();
+
+    periodizedTrainings.push(baseTraining);
 
     return periodizedTrainings.sort(
       (a, b) => a.from.getTime() - b.from.getTime(),
@@ -701,9 +809,13 @@ export class TrainingService {
       const wellness = await this.userService.getRecentWellness(membersIds);
       const workloads = await this.workloadService.findAllByMembers(membersIds);
 
-      const updatedTraining = {
+      const updatedTraining: Training = {
         ...training,
         ...this.commonService.object.clean(data),
+        futureStats: this.trainingPlanService.createFutureTrainingStats(
+          data.components,
+          membersIds.length,
+        ),
       };
 
       updated.push(updatedTraining);
@@ -1063,7 +1175,7 @@ export class TrainingService {
       training.completedMembersIds.push(user.uid);
 
     // update stats
-    const stats = this.trainingPlanService.calculateFutureTrainingStats(
+    const stats = this.trainingPlanService.calculateCompletedTrainingStats(
       training.stats,
       exercises,
     );

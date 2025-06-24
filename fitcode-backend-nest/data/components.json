@@ -4,8 +4,8 @@
     "slug": "strength",
     "targets": [
       {
-        "id": "strength",
-        "name": "Strength",
+        "id": "general",
+        "name": "General",
         "componentId": "strength",
         "color": "#201f97"
       },

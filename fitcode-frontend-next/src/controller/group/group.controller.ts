@@ -33,7 +33,7 @@ export class GroupController {
     token: string,
     groupId: string,
     body: { name?: string; membersIds?: string[]; cycles?: Cycle[] }
-  ) {
+  ): Promise<Group> {
     return api.patch<Group>(`/group/${groupId}`, body, { token });
   }
 
@@ -46,6 +46,7 @@ export class GroupController {
       cycles?: Cycle[];
     }[]
   ) {
+    console.log('body', body);
     return api.patch<Group[]>(`/group/update/batch`, body, { token });
   }
 

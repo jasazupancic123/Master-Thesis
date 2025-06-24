@@ -83,9 +83,13 @@ export default function DashboardPage(props: DashboardPageProps) {
 
     const inputs: { id: string; membersIds: string[] }[] = [];
     for (const group of selectedInstitution.groups) {
+      const membersIds = group.members
+        ? new Set([...group.membersIds, ...group.members.map((m) => m.uid)])
+        : group.membersIds;
+
       inputs.push({
         id: group.id,
-        membersIds: group.membersIds,
+        membersIds: Array.from(membersIds),
       });
     }
 

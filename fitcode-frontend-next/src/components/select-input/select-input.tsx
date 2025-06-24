@@ -29,6 +29,7 @@ interface Props<T> {
   selectSize?: 'small' | 'medium';
   inputLabelSize?: number;
   selectedItemSize?: number;
+  iconSize?: number;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -37,7 +38,14 @@ export default function SelectInput<T>(props: Props<T>) {
     <FormControl
       sx={
         props.sx
-          ? { ...props.sx, mr: 1, minWidth: 120 }
+          ? {
+              ...props.sx,
+              mr: 1,
+              minWidth: 120,
+              '& .MuiSelect-icon': {
+                fontSize: props.iconSize,
+              },
+            }
           : { mr: 1, minWidth: 120 }
       }
     >
