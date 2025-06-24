@@ -187,6 +187,24 @@ export class WorkloadService {
       );
   }
 
+  async findUnstartedWorkloads(userIds: string[]): Promise<Workload[]> {
+    if (!userIds.length) return [];
+
+    const workloads = await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', 'in', userIds)
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+
+    return workloads.filter((w) => w.status === SetStatus.NOT_STARTED);
+  }
+
   /**
    * Creates training workload data for group members. It takes exercise
    * meta, calculates individual values for each member and saves them to the

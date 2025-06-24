@@ -9,7 +9,7 @@ import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
 import { CopiedFrom } from './copied-from.entity';
 import { Target } from '../../target/entity/target.entity';
-import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { PeriodizationType } from '../../training/enum/periodization-type.enum';
 
 export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsDate()

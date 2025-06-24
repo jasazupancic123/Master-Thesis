@@ -1,0 +1,341 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { TextField, Button, Typography, Box, Stack } from '@mui/material';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import toast from 'react-hot-toast';
+import { handleApiRequest } from '@/common/type/state.type';
+import { useRouter } from 'next/navigation';
+import { useDashboard } from '@/store/dashboard-provider';
+import { CommonService } from '@/common/service/common.service';
+import { InstitutionController } from '@/controller/institution/institution.controller';
+import MyModal from '../modal/modal';
+import { User } from '@/controller/user/type/user.type';
+
+const commonService = CommonService.instance;
+const firebaseService = commonService.firebase;
+
+interface RegisterUsersDashboardProps {
+  registerRole: UserRole;
+}
+
+export default function RegisterUsersDashboard(
+  props: RegisterUsersDashboardProps
+) {
+  const { registerRole } = props;
+
+  const router = useRouter();
+  const {
+    token,
+    profile,
+    users,
+    refetchUsers,
+    selectedInstitution,
+    setSelectedInstitution,
+  } = useDashboard();
+
+  const [formData, setFormData] = useState({
+    displayName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [openModal, setOpenModal] = useState(false);
+  const [existingUser, setExistingUser] = useState<User | null>(null);
+
+  // refetch users and update institution's athletes or trainers
+  useEffect(() => {
+    if (
+      !formData.displayName ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword
+    )
+      return;
+
+    const user = users?.find((user) => user.email === formData.email);
+
+    setFormData({
+      displayName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    });
+
+    if (!user || !selectedInstitution) return;
+
+    if (registerRole === UserRole.TRAINER) {
+      handleApiRequest(
+        router,
+        () =>
+          InstitutionController.addTrainers(token, selectedInstitution.id, {
+            trainerIds: [user.uid],
+          }),
+        () => {
+          setSelectedInstitution((prev) => {
+            if (!prev) return prev;
+
+            const updatedTrainerIds = prev.trainerIds
+              ? [...prev.trainerIds, user.uid]
+              : [user.uid];
+
+            const updatedTrainers = prev.trainers
+              ? [...prev.trainers, user]
+              : [user];
+
+            return {
+              ...prev,
+              trainers: updatedTrainers,
+              trainerIds: updatedTrainerIds,
+            };
+          });
+
+          toast.success('Successfully added trainer');
+        },
+        undefined,
+        'Failed to register trainer'
+      );
+    } else if (registerRole === UserRole.ATHLETE) {
+      handleApiRequest(
+        router,
+        () =>
+          InstitutionController.addAthletes(token, selectedInstitution.id, {
+            athleteIds: [user.uid],
+          }),
+        () => {
+          setSelectedInstitution((prev) => {
+            if (!prev) return prev;
+
+            const updatedAthleteIds = prev.athleteIds
+              ? [...prev.athleteIds, user.uid]
+              : [user.uid];
+
+            const updatedAthletes = prev.athletes
+              ? [...prev.athletes, user]
+              : [user];
+
+            return {
+              ...prev,
+              athletes: updatedAthletes,
+              athleteIds: updatedAthleteIds,
+            };
+          });
+
+          toast.success('Successfully added athlete');
+        },
+        undefined,
+        'Failed to register athlete'
+      );
+    }
+  }, [users]);
+
+  const handleAddExistingUser = () => {
+    if (!existingUser || !selectedInstitution) return;
+
+    if (registerRole === UserRole.TRAINER) {
+      handleApiRequest(
+        router,
+        () =>
+          InstitutionController.addTrainers(token, selectedInstitution.id, {
+            trainerIds: [existingUser.uid],
+          }),
+        () => {
+          setSelectedInstitution((prev) => {
+            if (!prev) return prev;
+
+            const updatedTrainerIds = prev.trainerIds
+              ? [...prev.trainerIds, existingUser.uid]
+              : [existingUser.uid];
+
+            const updatedTrainers = prev.trainers
+              ? [...prev.trainers, existingUser]
+              : [existingUser];
+
+            return {
+              ...prev,
+              trainers: updatedTrainers,
+              trainerIds: updatedTrainerIds,
+            };
+          });
+
+          toast.success('Successfully added trainer');
+        },
+        undefined,
+        'Failed to register trainer'
+      );
+    } else if (registerRole === UserRole.ATHLETE) {
+      handleApiRequest(
+        router,
+        () =>
+          InstitutionController.addAthletes(token, selectedInstitution.id, {
+            athleteIds: [existingUser.uid],
+          }),
+        () => {
+          setSelectedInstitution((prev) => {
+            if (!prev) return prev;
+
+            const updatedAthleteIds = prev.athleteIds
+              ? [...prev.athleteIds, existingUser.uid]
+              : [existingUser.uid];
+
+            const updatedAthletes = prev.athletes
+              ? [...prev.athletes, existingUser]
+              : [existingUser];
+
+            return {
+              ...prev,
+              athletes: updatedAthletes,
+              athleteIds: updatedAthleteIds,
+            };
+          });
+
+          toast.success('Successfully added athlete');
+        },
+        undefined,
+        'Failed to register athlete'
+      );
+    }
+
+    setOpenModal(false);
+    setExistingUser(null);
+    setFormData({
+      displayName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    });
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    const input = {
+      displayName: formData.displayName,
+      email: formData.email,
+      password: formData.password,
+      role: registerRole,
+    };
+
+    const userAlreadyInInstitution =
+      registerRole === UserRole.ATHLETE
+        ? selectedInstitution?.athletes?.some(
+            (athlete) => athlete.email === input.email
+          )
+        : selectedInstitution?.trainers?.some(
+            (trainer) => trainer.email === input.email
+          );
+
+    if (userAlreadyInInstitution) {
+      toast.error(
+        `User with email ${input.email} is already registered as a ${registerRole}.`
+      );
+      return;
+    }
+
+    const existingUser = users?.find((user) => user.email === input.email);
+
+    if (existingUser) {
+      setExistingUser(existingUser);
+      setOpenModal(true);
+      return;
+    }
+
+    toast.error(
+      `Registering ${registerRole[0].toUpperCase() + registerRole.slice(1)}...`,
+      {
+        icon: '⚠️',
+        duration: 1000,
+      }
+    );
+
+    handleApiRequest(
+      router,
+      () => firebaseService.functions.createUserWithRole(input),
+      () => {
+        refetchUsers();
+      },
+      undefined,
+      'Failed to register user'
+    );
+  };
+
+  return (
+    <>
+      <Box maxWidth={400} mx="auto">
+        <Typography
+          variant="h5"
+          gutterBottom
+          mb={2}
+          textAlign="center"
+          width="100%"
+        >
+          Register {registerRole[0].toUpperCase() + registerRole.slice(1)}
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <Stack spacing={2}>
+            <TextField
+              label="Display Name"
+              name="displayName"
+              value={formData.displayName}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Confirm Password"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+            <Button type="submit" variant="contained" color="primary" fullWidth>
+              Register
+            </Button>
+          </Stack>
+        </form>
+      </Box>
+      <MyModal
+        isOpen={openModal}
+        setIsOpen={(open) => setOpenModal(open)}
+        onConfirm={() => handleAddExistingUser()}
+        onCancel={() => {
+          setOpenModal(false);
+          setExistingUser(null);
+        }}
+      >
+        User with email "{existingUser?.email}" already exists. Do you want to
+        add them to the institution?
+      </MyModal>
+    </>
+  );
+}

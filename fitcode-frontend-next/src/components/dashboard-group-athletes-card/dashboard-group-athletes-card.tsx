@@ -3,12 +3,12 @@ import BorderColor from '@/components/border-color/border-color';
 import MyModal from '@/components/modal/modal';
 import { Group } from '@/controller/group/type/group.type';
 import { User } from '@/controller/user/type/user.type';
-import { PersonAddAlt, Remove } from '@mui/icons-material';
+import { Close, PersonAddAlt, Remove } from '@mui/icons-material';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useDashboard } from '@/store/dashboard-provider';
-import { handleApiRequest } from '@/common/type/state.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -33,15 +33,12 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
     selectedInstitution,
     setSelectedInstitution,
     users,
+    setDetectedChanges,
   } = useDashboard();
 
   const role = profile?.customClaims?.role || [];
 
-  const [groupMembers, setGroupMembers] = useState<User[]>(
-    (users || [])
-      .filter((user: User) => selectedGroup?.membersIds.includes(user.uid))
-      .splice(0, 7) // only show first 7 users
-  );
+  const [groupMembers, setGroupMembers] = useState<User[]>(group.members || []);
 
   const [modal, setModal] = useState<{
     add_member: boolean;
@@ -50,6 +47,12 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
     add_member: false,
     remove_group: false,
   });
+
+  useEffect(() => {
+    setGroupMembers(
+      (users || []).filter((user) => group.membersIds.includes(user.uid))
+    );
+  }, [users]);
 
   useEffect(() => {
     if (!selectedGroup) return;
@@ -97,6 +100,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
       }}
     >
       <Box
+        key={`${group.id}-child`}
         display="flex"
         justifyContent="center"
         alignItems="center"
@@ -155,31 +159,77 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
           {group.name}
         </Typography>
       </Box>
+
       {groupMembers.map((member, i) => (
-        <Typography
-          key={member.uid}
-          variant="body1"
-          onClick={() => {
-            if (selectedUser?.uid === member.uid) {
-              setSelectedUser(null);
-              return;
-            }
-            setSelectedGroup(group);
-            setSelectedUser(member);
-          }}
-          sx={{
-            textAlign: 'center',
-            width: '100%',
-            py: 1,
-            cursor: 'pointer',
-            backgroundColor:
-              selectedGroup === group && selectedUser === member
-                ? 'primary.light'
-                : undefined,
-          }}
-        >
-          {member.displayName}
-        </Typography>
+        <Box key={member.uid} alignItems="center" position="relative">
+          <Typography
+            key={member.uid}
+            variant="body1"
+            onClick={() => {
+              if (selectedUser?.uid === member.uid) {
+                setSelectedUser(null);
+                return;
+              }
+              setSelectedGroup(group);
+              setSelectedUser(member);
+            }}
+            sx={{
+              textAlign: 'center',
+              width: '100%',
+              py: 1,
+              cursor: 'pointer',
+              backgroundColor:
+                selectedGroup === group && selectedUser === member
+                  ? 'primary.light'
+                  : undefined,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              px: 4,
+            }}
+          >
+            {member.displayName}
+          </Typography>
+
+          {isManager(role) && (
+            <IconButton
+              sx={{
+                position: 'absolute',
+                right: 0,
+                top: 0,
+              }}
+              onClick={() => {
+                if (selectedUser?.uid === member.uid) {
+                  setSelectedUser(null);
+                }
+                setGroupMembers((prev) =>
+                  prev.filter((m) => m.uid !== member.uid)
+                );
+                setSelectedInstitution((prev) => {
+                  if (!prev) return null;
+                  const updatedGroups = prev.groups.map((g) => {
+                    if (g.id === group.id) {
+                      return {
+                        ...g,
+                        membersIds: g.membersIds.filter(
+                          (uid) => uid !== member.uid
+                        ),
+                      };
+                    }
+                    return g;
+                  });
+                  return {
+                    ...prev,
+                    groups: updatedGroups,
+                  };
+                });
+                setDetectedChanges(true);
+              }}
+            >
+              <Close fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
       ))}
 
       <BorderColor
@@ -198,11 +248,12 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
           users={selectedInstitution?.athletes || []}
           members={groupMembers}
           setMembers={setGroupMembers}
+          setSelectedInstitution={setSelectedInstitution}
           addUserToEnd={true}
           dashboardView={true}
           group={group}
           selectedInstitution={selectedInstitution}
-          setSelectedInstitution={setSelectedInstitution}
+          enableFirstShowUsers
         />
       </MyModal>
       <MyModal

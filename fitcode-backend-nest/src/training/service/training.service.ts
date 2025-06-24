@@ -57,6 +57,11 @@ import { InstitutionService } from '../../institution/service/institution.servic
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { ComponentService } from '../../component/component.service';
 import { MethodService } from '../../method/service/method.service';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -437,15 +442,20 @@ export class TrainingService implements Permission<Training, Institution> {
   async periodize(user: User, input: PeriodizeTrainingsDto) {
     const {
       baseTrainingId,
-      excludedTrainingIds,
       componentId,
-      exerciseIds,
       periodizationType,
+      exerciseIds,
+      subgroupId,
     } = input;
 
     this.logger.log(
-      `User ${user.uid} is periodizing trainings: ${JSON.stringify(excludedTrainingIds)}`,
+      `User ${user.uid} is periodizing trainings: ${JSON.stringify(input)}`,
     );
+
+    if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(componentId))
+      throw new BadRequestException(
+        'You cannot periodize warmup or cooldown components',
+      );
 
     this.trainingPlanService.checkPeriodizationType(periodizationType);
 
@@ -458,21 +468,30 @@ export class TrainingService implements Permission<Training, Institution> {
       componentId,
     );
 
+    if (!subgroupId) baseComponent.periodizationType = periodizationType;
+
+    const baseSubgroup = baseComponent.subgroups.find(
+      (sg) => sg.id === subgroupId,
+    );
+
+    if (baseSubgroup) baseSubgroup.periodizationType = periodizationType;
+
     const mainTarget = baseComponent.target;
-    if (!mainTarget)
-      throw new BadRequestException('Target not found in base training');
 
     const possibleTrainings = await this.findAll(user, {
       groupId: baseTraining.groupId,
       cycleId: baseTraining.cycleId,
     });
 
+    // target can be null/undefined, then just get the trainings without a target
     const filteredTrainings = possibleTrainings.filter(
       (t) =>
-        t.components.some(
-          (c) =>
-            c.id === componentId && c.target && c.target.id === mainTarget.id,
-        ) && !excludedTrainingIds.includes(t.id),
+        isBefore(baseTraining.from, t.from) &&
+        t.components.some((c) =>
+          c.id === componentId && mainTarget
+            ? c.target?.id === mainTarget.id
+            : !c.target,
+        ),
     );
 
     const lastTraining = filteredTrainings.reduce((prev, curr) =>
@@ -485,35 +504,138 @@ export class TrainingService implements Permission<Training, Institution> {
       filteredTrainings,
     );
 
-    const periodizedTrainings = this.periodizationService.periodize(
-      baseTraining,
-      filteredTrainings,
-      weeks,
-      componentId,
-      exerciseIds,
-      periodizationType,
-    );
+    let numberOfSubgroupsFound = 0;
+
+    for (const ft of filteredTrainings) {
+      let component = ft.components.find((c) => c.id === componentId);
+      if (!component) continue;
+
+      // no subgroup is selected, copy and periodize everything
+      if (!subgroupId) {
+        component = {
+          ...structuredClone(baseComponent),
+          id: component.id,
+          from: addMinutes(ft.from, ft.components.length * 30),
+          to: addMinutes(ft.from, ft.components.length * 30 + 30),
+          completedMembersIds: [],
+          copiedFrom: {
+            lastCopiedFromTrainingId: baseTraining.id,
+            rootCopiedFromTrainingId: baseComponent.copiedFrom
+              ? baseComponent.copiedFrom.rootCopiedFromTrainingId
+              : baseTraining.id,
+          },
+        };
+
+        ft.components = ft.components.filter((c) => c.id !== componentId);
+        ft.components.push(component);
+      } else if (baseSubgroup) {
+        // find subgroup in component by matching membersIds
+        const subgroupInComponent = component.subgroups.find(
+          (sg) => sg.id === baseSubgroup.id || sg.name === baseSubgroup.name,
+        );
+
+        if (!subgroupInComponent) continue;
+
+        numberOfSubgroupsFound++;
+
+        component = {
+          ...structuredClone(baseComponent),
+          id: component.id,
+          from: addMinutes(ft.from, ft.components.length * 30),
+          to: addMinutes(ft.from, ft.components.length * 30 + 30),
+          completedMembersIds: [],
+          copiedFrom: {
+            lastCopiedFromTrainingId: baseTraining.id,
+            rootCopiedFromTrainingId: baseComponent.copiedFrom
+              ? baseComponent.copiedFrom.rootCopiedFromTrainingId
+              : baseTraining.id,
+          },
+          supersets: component.supersets,
+          subgroups: component.subgroups.map((sg) => {
+            if (sg.id === subgroupInComponent.id)
+              return {
+                ...structuredClone(baseSubgroup),
+                id: sg.id,
+                periodizationType: periodizationType,
+              };
+            return sg;
+          }),
+        };
+
+        ft.components = ft.components.filter((c) => c.id !== componentId);
+        ft.components.push(component);
+      }
+    }
+
+    if (baseSubgroup && !numberOfSubgroupsFound) {
+      throw new BadRequestException(
+        `Selected Subgroup not found in any future training`,
+      );
+    }
+
+    const periodizedTrainings =
+      periodizationType !== PeriodizationType.REPLICATE
+        ? (this.periodizationService.periodize(
+            subgroupId ? baseSubgroup : baseTraining,
+            filteredTrainings,
+            weeks,
+            componentId,
+            periodizationType,
+            exerciseIds,
+            baseSubgroup?.id,
+            baseSubgroup?.name,
+          ) as Training[])
+        : filteredTrainings;
+
+    // update futureStats of baseTraining
+    baseTraining.futureStats =
+      this.trainingPlanService.createFutureTrainingStats(
+        [baseComponent],
+        baseTraining.membersIds.length,
+      );
 
     const batch = this.firebaseService.firestore.batch();
 
+    // update base training's periodizationType
+    const baseTrainingDocRef = this.trainingRepository.doc(baseTrainingId);
+
+    const updateBaseTrainingQuery =
+      this.firebaseService.buildUpdateQuery<Training>({
+        ...baseTraining,
+        components: baseTraining.components.map((c) =>
+          c.id === componentId && !subgroupId ? { ...c, periodizationType } : c,
+        ),
+      });
+
+    batch.update(baseTrainingDocRef, updateBaseTrainingQuery);
+
+    const userIds = [
+      ...new Set(filteredTrainings.flatMap((t) => t.membersIds)),
+    ];
+
+    const unstartedWorkloads =
+      await this.workloadService.findUnstartedWorkloads(userIds);
+
     // calculate new avg future workload values
     for (const t of filteredTrainings) {
-      const workloads = await this.workloadService.findAllByMembers(
-        t.membersIds,
-      );
-
       const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
 
-      const exercises = component.supersets.flatMap((s) => s.exercises);
-
-      this.trainingPlanService.calculateFutureTrainingStats(
-        t.futureStats,
-        exercises,
+      t.futureStats = this.trainingPlanService.createFutureTrainingStats(
+        [component],
+        t.membersIds.length,
       );
 
       const updateTrainingQuery =
         this.firebaseService.buildUpdateQuery<Training>({ ...t });
+
+      const workloads = unstartedWorkloads.filter(
+        (w) =>
+          w.trainingId === t.id &&
+          w.componentId === componentId &&
+          w.userId &&
+          t.membersIds.includes(w.userId),
+      );
 
       const trainingDocRef = this.trainingRepository.doc(t.id);
       this.workloadService.createForTraining(batch, t, workloads);
@@ -521,6 +643,8 @@ export class TrainingService implements Permission<Training, Institution> {
     }
 
     await batch.commit();
+
+    periodizedTrainings.push(baseTraining);
 
     return periodizedTrainings.sort(
       (a, b) => a.from.getTime() - b.from.getTime(),
@@ -715,9 +839,13 @@ export class TrainingService implements Permission<Training, Institution> {
       const wellness = await this.userService.getRecentWellness(membersIds);
       const workloads = await this.workloadService.findAllByMembers(membersIds);
 
-      const updatedTraining = {
+      const updatedTraining: Training = {
         ...training,
         ...this.commonService.object.clean(data),
+        futureStats: this.trainingPlanService.createFutureTrainingStats(
+          data.components,
+          membersIds.length,
+        ),
       };
 
       updated.push(updatedTraining);
@@ -1067,6 +1195,11 @@ export class TrainingService implements Permission<Training, Institution> {
     const allComponents =
       this.trainingPlanService.getTrainingComponents(training);
 
+    // FIX:
+    // const allComponents = training.components
+    // allComponents.unshift(training.warmup);
+    // allComponents.push(training.cooldown);
+
     // mark user as completed (for component and training)
     const component = allComponents.find((c) => c.id === componentId);
     if (!component) throw new BadRequestException('Component not found');
@@ -1076,7 +1209,7 @@ export class TrainingService implements Permission<Training, Institution> {
       training.completedMembersIds.push(user.uid);
 
     // update stats
-    const stats = this.trainingPlanService.calculateFutureTrainingStats(
+    const stats = this.trainingPlanService.calculateCompletedTrainingStats(
       training.stats,
       exercises,
     );

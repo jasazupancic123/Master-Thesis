@@ -1,7 +1,6 @@
 'use client';
 
 import { DashboardReportType } from '@/common/enum/dashboard-report-type.enum';
-import { AddMembersModal } from '@/components/add-members-modal/add-members-modal';
 import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-group-modal';
 import ReportsContainer from '@/components/dashboard-reports-container/dashboard-reports-container';
 import MyModal from '@/components/modal/modal';
@@ -28,6 +27,7 @@ import {
 import { Institution } from '@/controller/institution/type/institution.type';
 import DashboardStaffGroupsCycles from '@/components/dashboard-staff-groups-cycles/dashboard-staff-groups-cycles';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
+import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 
 interface DashboardPageProps {
   view: string;
@@ -78,21 +78,18 @@ export default function DashboardPage(props: DashboardPageProps) {
     fetchGroups();
   }, [selectedInstitution]);
 
-  const setTrainers = (trainers: User[]) => {
-    setSelectedInstitution({
-      ...selectedInstitution!,
-      trainers,
-    });
-  };
-
   const handleSaveGroups = () => {
     if (!selectedInstitution) return;
 
     const inputs: { id: string; membersIds: string[] }[] = [];
     for (const group of selectedInstitution.groups) {
+      const membersIds = group.members
+        ? new Set([...group.membersIds, ...group.members.map((m) => m.uid)])
+        : group.membersIds;
+
       inputs.push({
         id: group.id,
-        membersIds: group.membersIds,
+        membersIds: Array.from(membersIds),
       });
     }
 
@@ -190,7 +187,7 @@ export default function DashboardPage(props: DashboardPageProps) {
                     if (detectedChanges) {
                       toast.error('Unsaved changes will be lost', {
                         icon: '⚠️',
-                        duration: 1000,
+                        duration: 3000,
                       });
                       setDetectedChanges(false);
                     } else
@@ -286,23 +283,11 @@ export default function DashboardPage(props: DashboardPageProps) {
       <MyModal
         isOpen={modal.add_trainer}
         setIsOpen={(open) => setModal({ add_trainer: open, add_group: false })}
+        onConfirm={undefined}
         onCancel={() => setModal({ add_trainer: false, add_group: false })}
         cancelText="Close"
-        onConfirm={() => {
-          setModal({ add_trainer: false, add_group: false });
-        }}
       >
-        <AddMembersModal
-          title="Add Trainer"
-          placeholder="Search trainers"
-          users={(users || []).filter((user) =>
-            user.customClaims.role.includes(UserRole.TRAINER)
-          )}
-          members={selectedInstitution.trainers || []}
-          setMembers={setTrainers}
-          addUserToEnd={true}
-          dissableMaxWidth={true}
-        />
+        <RegisterUsersDashboard registerRole={UserRole.TRAINER} />
       </MyModal>
 
       {/* Add Group Modal */}

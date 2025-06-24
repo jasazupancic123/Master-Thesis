@@ -172,5 +172,30 @@ describe('Update Group (e2e)', () => {
       expect(response.status).toBe(200);
       expect(found.name).toBe('new test name');
     });
+
+    it('should successfully update complex group field types - cycles', async () => {
+      const response = await batchUpdateRequest(trainer, [
+        {
+          ...group,
+          cycles: [
+            generateCycleStub({
+              from: addDays(new Date(), 7),
+              to: addDays(new Date(), 8),
+            }),
+            generateCycleStub({
+              from: addDays(new Date(), 1),
+              to: addDays(new Date(), 2),
+            }),
+          ],
+        },
+      ]);
+
+      const found = await groupService.findOneById(trainer, {
+        groupId: group.id,
+      });
+
+      expect(response.status).toBe(200);
+      expect(found.name).toBe('new test name');
+    });
   });
 });
