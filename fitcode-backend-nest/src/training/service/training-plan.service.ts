@@ -38,7 +38,7 @@ import { Method } from '../../method/entity/method.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { WorkloadService } from './workload.service';
 import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
-import { PeriodizationType } from '../../group/enum/periodization-type.enum';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
@@ -143,16 +143,135 @@ export class TrainingPlanService {
   }
 
   /**
-   * @param futureStats - FutureStats of existing training in database
-   * @param exercises - New completed exercises values from athlete
+   * @param components - Components of the training
+   * @param numTotalTrainingMembers - Total number of members in the group
    */
-  calculateFutureTrainingStats(futureStats: GroupWorkloadStats[], exercises: TrainingExercise[]) {
-    for (const exercise of exercises) {
-      const avgFutureStats = futureStats.find(
-        (avg) => avg.exerciseId === exercise.id,
+  createFutureTrainingStats(
+    components: TrainingComponent[],
+    numTotalTrainingMembers: number,
+  ): GroupWorkloadStats[] {
+    const createdFutureStats = [] as {
+      totalIntensity: number;
+      totalVolume: number;
+      totalNumMembers: number;
+      exerciseId: string;
+      rootComponentId: string;
+    }[];
+
+    for (const component of components) {
+      const numMembersInSubgroups = component.subgroups.reduce(
+        (sum, subgroup) => sum + subgroup.membersIds.length,
+        0,
+      );
+      const numMainGroupMembers =
+        numTotalTrainingMembers - numMembersInSubgroups;
+
+      for (const superset of component.supersets) {
+        for (const exercise of superset.exercises) {
+          if (!exercise.sets.length) continue;
+
+          let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
+
+          if (!avgInt || !avgVol) continue;
+
+          createdFutureStats.push({
+            totalIntensity: avgInt * numMainGroupMembers,
+            totalVolume: avgVol * numMainGroupMembers,
+            totalNumMembers: numMainGroupMembers,
+            exerciseId: exercise.id,
+            rootComponentId: component.id,
+          });
+        }
+      }
+      for (const subgroup of component.subgroups) {
+        for (const superset of subgroup.supersets) {
+          for (const exercise of superset.exercises) {
+            if (!exercise.sets.length) continue;
+
+            let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
+
+            if (!avgInt || !avgVol) continue;
+
+            const foundFutureStat = createdFutureStats.find(
+              (fs) => fs.exerciseId === exercise.id,
+            );
+
+            if (foundFutureStat) {
+              foundFutureStat.totalIntensity +=
+                avgInt * subgroup.membersIds.length;
+              foundFutureStat.totalVolume +=
+                avgVol * subgroup.membersIds.length;
+              foundFutureStat.totalNumMembers += subgroup.membersIds.length;
+            } else {
+              createdFutureStats.push({
+                totalIntensity: avgInt * subgroup.membersIds.length,
+                totalVolume: avgVol * subgroup.membersIds.length,
+                totalNumMembers: subgroup.membersIds.length,
+                exerciseId: exercise.id,
+                rootComponentId: component.id,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return createdFutureStats.map((fs) => {
+      const avgIntensity = fs.totalIntensity / fs.totalNumMembers;
+      const avgVolume = fs.totalVolume / fs.totalNumMembers;
+
+      return {
+        exerciseId: fs.exerciseId,
+        rootComponentId: fs.rootComponentId,
+        numMembers: fs.totalNumMembers,
+        intensity: avgIntensity,
+        volume: avgVolume,
+      };
+    });
+  }
+
+  private getAvgIntVolValues(exercise: TrainingExercise) {
+    let avgInt = 0;
+    let avgVol = 0;
+    for (const exerciseSet of exercise.sets) {
+      const intL = exerciseSet.paramValuesL.find(
+        (p) => p.field === ParamType.IntWork1,
+      );
+      const intR = exerciseSet.paramValuesR.find(
+        (p) => p.field === ParamType.IntWork1,
       );
 
-      if (!avgFutureStats) continue;
+      const volL = exerciseSet.paramValuesL.find(
+        (p) => p.field === ParamType.VolWork1,
+      );
+      const volR = exerciseSet.paramValuesR.find(
+        (p) => p.field === ParamType.VolWork1,
+      );
+
+      if (!intL || !intR || !volL || !volR) continue;
+
+      avgInt += (parseFloat(intL.value) + parseFloat(intR.value)) / 2;
+      avgVol += (parseFloat(volL.value) + parseFloat(volR.value)) / 2;
+    }
+
+    return {
+      avgInt: avgInt / exercise.sets.length,
+      avgVol: avgVol / exercise.sets.length,
+    };
+  }
+
+  /**
+   * @param completedStats - CompletedStats of existing training in database
+   * @param exercises - New completed exercises values from athlete
+   */
+  calculateCompletedTrainingStats(
+    completedStats: GroupWorkloadStats[],
+    exercises: TrainingExercise[],
+  ) {
+    for (const exercise of exercises) {
+      const avgFutureStats = completedStats.find(
+        (avg) => avg.exerciseId === exercise.id,
+      );
 
       const intensitiesL = exercise.sets
         .flatMap((set) => set.paramValuesL)
@@ -186,7 +305,7 @@ export class TrainingPlanService {
       avgFutureStats.volume = avgVolume;
     }
 
-    return futureStats;
+    return completedStats;
   }
 
   isTrainingCompleted(userId: string, trainingComponents: TrainingComponent[]) {

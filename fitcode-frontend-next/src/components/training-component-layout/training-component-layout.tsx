@@ -123,10 +123,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                   component &&
                   selectedTraining?.id === training.id &&
                   trainingComponent.id === component.id && (
-                    <TrainingComponentExpanded
-                      training={training}
-                      trainingComponent={trainingComponent}
-                    />
+                    <TrainingComponentExpanded training={training} />
                   )}
               </Box>
             </Box>

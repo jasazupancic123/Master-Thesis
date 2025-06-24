@@ -8,7 +8,7 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useDashboard } from '@/store/dashboard-provider';
-import { handleApiRequest } from '@/common/type/state.type';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -220,10 +220,6 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
                   });
                   return {
                     ...prev,
-                    athleteIds: prev.athleteIds.filter(
-                      (uid) => uid !== member.uid
-                    ),
-                    athletes: prev.athletes.filter((u) => u.uid !== member.uid),
                     groups: updatedGroups,
                   };
                 });
@@ -252,6 +248,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
           users={selectedInstitution?.athletes || []}
           members={groupMembers}
           setMembers={setGroupMembers}
+          setSelectedInstitution={setSelectedInstitution}
           addUserToEnd={true}
           dashboardView={true}
           group={group}

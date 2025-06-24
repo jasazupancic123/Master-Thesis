@@ -24,7 +24,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
   const { selectedGroup, setSelectedGroup } = props;
 
   const screenSize = useScreenSize();
-  const { group, setDetectedChanges } = useGroup();
+  const { group, setDetectedChanges, setCycle } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -185,7 +185,12 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
                 from: from.toDate()!,
                 to: to.toDate()!,
               },
-              { selectedGroup, setSelectedGroup, setCycles, setDetectedChanges }
+              {
+                selectedGroup,
+                setSelectedGroup,
+                setCycles,
+                setDetectedChanges,
+              }
             );
           }}
         >

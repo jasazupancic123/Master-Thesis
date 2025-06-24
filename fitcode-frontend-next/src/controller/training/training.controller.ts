@@ -4,7 +4,7 @@ import { Superset, TrainingComponent } from './type/training-plan.type';
 import { Training, TrainingStatus } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
-import { PeriodizationType } from '../group/enum/periodization-type.enum';
+import { PeriodizationType } from './enum/periodization-type.enum';
 import { TrainingInfo } from './type/training-info.type';
 import { GroupWorkloadStats } from './type/average-workload-values.type';
 
@@ -83,10 +83,10 @@ export class TrainingController {
     token: string,
     body: {
       baseTrainingId: string;
-      excludedTrainingIds: string[];
       componentId: string;
-      exerciseIds: string[];
       periodizationType: PeriodizationType;
+      exerciseIds: string[];
+      subgroupId?: string;
     }
   ) {
     return api.post<Training[]>('/training/periodize/trainings', body, {

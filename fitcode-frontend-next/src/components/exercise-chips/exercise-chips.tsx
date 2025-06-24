@@ -3,13 +3,15 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import {
   Box,
   FormControl,
+  Menu,
   MenuItem,
   Select,
   SxProps,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Component,
   TreeComponent,
@@ -56,6 +58,10 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
     setSelectedTargets,
   } = props;
 
+  const [anchorElMap, setAnchorElMap] = useState<
+    Record<string, HTMLElement | null>
+  >({});
+
   return (
     <Stack
       direction={direction as any}
@@ -80,120 +86,211 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
             key={c.id}
           >
             <Box sx={{ p: 1 }} key={c.id}>
-              <Tooltip key={i} title={c.name} sx={{ m: 2 }}>
-                <div
-                  key={i}
-                  onClick={() => {
-                    if (!setSelected) return;
-
-                    if (Array.isArray(selected)) {
-                      if (selected.some((component) => component.id === c.id)) {
+              <div
+                key={i}
+                onClick={(e) => {
+                  if (cycleView && setSelectedTargets) {
+                    if (
+                      Array.isArray(selected) &&
+                      setSelected &&
+                      selectedTargets
+                    ) {
+                      if (c.targets?.length === 0) {
+                        if (
+                          !selected.some((component) => component.id === c.id)
+                        ) {
+                          setSelected([...selected, c]);
+                        } else {
+                          setSelected(
+                            selected.filter(
+                              (component) => component.id !== c.id
+                            )
+                          );
+                        }
+                        return;
+                      } else if (
+                        selected.some((component) => component.id === c.id) &&
+                        !selectedTargets.find((st) => st.componentId === c.id)
+                          ?.target
+                      ) {
                         setSelected(
                           selected.filter((component) => component.id !== c.id)
                         );
-                      } else {
-                        setSelected([...selected, c]);
+                        return;
+                      }
+                    }
+
+                    setAnchorElMap((prev) => ({
+                      ...prev,
+                      [c.id]: e.currentTarget,
+                    }));
+                    return;
+                  }
+
+                  if (!setSelected) return;
+
+                  if (Array.isArray(selected)) {
+                    if (selected.some((component) => component.id === c.id)) {
+                      setSelected(
+                        selected.filter((component) => component.id !== c.id)
+                      );
+                      if (setSelectedTargets) {
+                        setSelectedTargets((prev) => {
+                          return prev.filter((st) => st.componentId !== c.id);
+                        });
                       }
                     } else {
-                      setSelected(selected?.id === c.id ? null : c);
+                      setSelected([...selected, c]);
                     }
+                  } else {
+                    setSelected(selected?.id === c.id ? null : c);
+                  }
+                }}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: screenSize.isMobile ? 30 : 50,
+                  height: screenSize.isMobile ? 30 : 50,
+                  borderRadius: '5px',
+                  border: `2px solid ${
+                    (Array.isArray(selected) &&
+                      selected.some((component) => component.id === c.id)) ||
+                    (selected &&
+                      !Array.isArray(selected) &&
+                      selected.id === c.id)
+                      ? primaryColor
+                      : 'gray'
+                  }`,
+                  cursor: 'pointer',
+                  backgroundColor:
+                    (Array.isArray(selected) &&
+                      selected.some((component) => component.id === c.id)) ||
+                    (selected &&
+                      !Array.isArray(selected) &&
+                      selected.id === c.id)
+                      ? bgColor
+                      : 'transparent',
+                }}
+              >
+                <IconComponent
+                  sx={{
+                    fontSize: screenSize.isMobile ? 20 : 30,
+                    color:
+                      selectedTargets?.find((st) => st.componentId === c.id)
+                        ?.target.color || undefined,
                   }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: screenSize.isMobile ? 30 : 50, // Adjust size as needed
-                    height: screenSize.isMobile ? 30 : 50, // Adjust size as needed
-                    borderRadius: '50%', // Makes it a circle
-                    border: `2px solid ${
-                      (Array.isArray(selected) &&
-                        selected.some((component) => component.id === c.id)) ||
-                      (selected &&
-                        !Array.isArray(selected) &&
-                        selected.id === c.id)
-                        ? primaryColor
-                        : 'gray'
-                    }`,
-                    cursor: 'pointer',
-                    backgroundColor:
-                      (Array.isArray(selected) &&
-                        selected.some((component) => component.id === c.id)) ||
-                      (selected &&
-                        !Array.isArray(selected) &&
-                        selected.id === c.id)
-                        ? bgColor
-                        : 'transparent',
-                  }}
-                >
-                  <IconComponent
-                    sx={{ fontSize: screenSize.isMobile ? 20 : 30 }}
-                  />
-                </div>
-              </Tooltip>
-              {cycleView && selectedTargets && setSelectedTargets && (
-                <FormControl sx={{ mt: 0.5 }}>
-                  <Tooltip
-                    title={
-                      selectedTargets.find((st) => st.componentId === c.id)
-                        ?.target.name || ''
-                    }
+                />
+
+                {cycleView && selectedTargets && setSelectedTargets && (
+                  <FormControl
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)', // center over the icon
+                      width: screenSize.isMobile ? 20 : 50,
+                      height: screenSize.isMobile ? 20 : 50,
+                      zIndex: 2,
+                      '& .MuiSelect-icon': {
+                        display: 'none', // hide default chevron
+                      },
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        border: 'none', // no outline
+                      },
+                      '& fieldset': {
+                        border: 'none',
+                      },
+                    }}
                   >
-                    <Select
-                      variant="outlined"
-                      value={
-                        selectedTargets.find((st) => st.componentId === c.id)
-                          ?.target.id || ''
+                    <Menu
+                      anchorEl={anchorElMap[c.id]}
+                      open={Boolean(anchorElMap[c.id])}
+                      onClose={() =>
+                        setAnchorElMap((prev) => ({
+                          ...prev,
+                          [c.id]: null,
+                        }))
                       }
-                      onChange={(e) =>
-                        setSelectedTargets((prev) => {
-                          const targetId = e.target.value as string;
-
-                          if (targetId === 'none') {
-                            return prev.filter((st) => st.componentId !== c.id);
-                          }
-
-                          const target =
-                            targets && targets.find((t) => t.id === targetId);
-
-                          if (!target) return prev;
-
-                          const existingIndex = prev.findIndex(
-                            (sm) => sm.componentId === c.id
-                          );
-
-                          if (existingIndex !== -1) {
-                            const updated = [...prev];
-                            updated[existingIndex] = {
-                              componentId: c.id,
-                              target,
-                            };
-                            return updated;
-                          }
-
-                          return [...prev, { componentId: c.id, target }];
-                        })
-                      }
-                      sx={{
-                        maxWidth: 50,
-                        '& .MuiSelect-select': {
-                          paddingY: '2px !important',
-                        },
-                      }}
                     >
-                      <MenuItem key={'none'} value={'none'}>
+                      <MenuItem
+                        value="none"
+                        onClick={() => {
+                          setSelectedTargets?.((prev) =>
+                            prev.filter((st) => st.componentId !== c.id)
+                          );
+                          setAnchorElMap((prev) => ({
+                            ...prev,
+                            [c.id]: null,
+                          }));
+                        }}
+                      >
                         None
                       </MenuItem>
-                      {targets &&
-                        targets.map((target, i) => (
-                          <MenuItem key={i} value={target.id}>
-                            {target.name}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </Tooltip>
-                </FormControl>
-              )}
+                      {targets.map((target, i) => (
+                        <MenuItem
+                          key={i}
+                          onClick={() => {
+                            setSelectedTargets?.((prev) => {
+                              const existingIndex = prev.findIndex(
+                                (st) => st.componentId === c.id
+                              );
+                              if (existingIndex !== -1) {
+                                const updated = [...prev];
+                                updated[existingIndex] = {
+                                  componentId: c.id,
+                                  target,
+                                };
+                                return updated;
+                              }
+                              return [...prev, { componentId: c.id, target }];
+                            });
+
+                            if (
+                              Array.isArray(selected) &&
+                              setSelected &&
+                              !selected.some(
+                                (component) => component.id === c.id
+                              )
+                            ) {
+                              setSelected([...selected, c]);
+                            }
+
+                            setAnchorElMap((prev) => ({
+                              ...prev,
+                              [c.id]: null,
+                            }));
+                          }}
+                          sx={{
+                            color: selectedTargets?.some(
+                              (st) =>
+                                st.componentId === c.id &&
+                                st.target.id === target.id
+                            )
+                              ? target.color
+                              : undefined,
+                          }}
+                        >
+                          {target.name}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </FormControl>
+                )}
+              </div>
             </Box>
+            <Typography
+              variant="caption"
+              sx={{
+                textAlign: 'center',
+                maxWidth: screenSize.isMobile ? 50 : 100,
+                fontSize: screenSize.isMobile ? 10 : 12,
+              }}
+            >
+              {selectedTargets?.find((st) => st.componentId === c.id)?.target
+                .name || ''}
+            </Typography>
           </Box>
         );
       })}

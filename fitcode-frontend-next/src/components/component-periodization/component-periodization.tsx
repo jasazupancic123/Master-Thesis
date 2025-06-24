@@ -10,7 +10,7 @@ import TrainingWeek from '../training-week/training-week';
 import dayjs from 'dayjs';
 import { ArrowDropDown, ArrowDropUp, Redo } from '@mui/icons-material';
 import SelectInput from '../select-input/select-input';
-import { PeriodizationType } from '@/controller/group/enum/periodization-type.enum';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { Training } from '@/controller/training/type/training.type';
 import { CommonService } from '@/common/service/common.service';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -114,10 +114,7 @@ export default function ComponentPeriodization(
   }, [cycle]);
 
   const handlePeriodize = () => {
-    if (
-      !selectedComponent.periodizationType ||
-      selectedComponent.periodizationType === PeriodizationType.NONE
-    ) {
+    if (!selectedComponent.periodizationType) {
       toast.error('Please select a periodization type.');
       return;
     }
@@ -134,54 +131,54 @@ export default function ComponentPeriodization(
       .map((t) => t.id);
     const exerciseIds = selectedExercises.map((e) => e.id);
 
-    handleApiRequest(
-      router,
-      () =>
-        TrainingController.periodizeTrainings(token, {
-          baseTrainingId: training.id,
-          excludedTrainingIds,
-          componentId: selectedComponent.id,
-          exerciseIds,
-          periodizationType:
-            selectedComponent.periodizationType as PeriodizationType,
-        }),
-      (periodizedTrainings) => {
-        periodizedTrainings = periodizedTrainings.map((t) =>
-          TrainingService.mapComponentsExercisesMethods(
-            t,
-            components,
-            exercises,
-            methods
-          )
-        );
+    // handleApiRequest(
+    //   router,
+    //   () =>
+    //     TrainingController.periodizeTrainings(token, {
+    //       baseTrainingId: training.id,
+    //       excludedTrainingIds,
+    //       componentId: selectedComponent.id,
+    //       exerciseIds,
+    //       periodizationType:
+    //         selectedComponent.periodizationType as PeriodizationType,
+    //     }),
+    //   (periodizedTrainings) => {
+    //     periodizedTrainings = periodizedTrainings.map((t) =>
+    //       TrainingService.mapComponentsExercisesMethods(
+    //         t,
+    //         components,
+    //         exercises,
+    //         methods
+    //       )
+    //     );
 
-        const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>
-          TrainingService.convertFromTrainingToTrainingMinimal(t)
-        );
+    //     const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>
+    //       TrainingService.convertFromTrainingToTrainingMinimal(t)
+    //     );
 
-        setTodaysTrainings((prev) =>
-          prev.map((t) => {
-            const newTraining = periodizedTrainings.find(
-              (nt) => nt.id === t.id
-            );
-            return newTraining ? newTraining : t;
-          })
-        );
+    //     setTodaysTrainings((prev) =>
+    //       prev.map((t) => {
+    //         const newTraining = periodizedTrainings.find(
+    //           (nt) => nt.id === t.id
+    //         );
+    //         return newTraining ? newTraining : t;
+    //       })
+    //     );
 
-        setTrainings((prev) =>
-          prev.map((t) => {
-            const newTraining = minimalPeriodizedTrainings.find(
-              (nt) => nt.id === t.id
-            );
-            return newTraining ? newTraining : t;
-          })
-        );
+    //     setTrainings((prev) =>
+    //       prev.map((t) => {
+    //         const newTraining = minimalPeriodizedTrainings.find(
+    //           (nt) => nt.id === t.id
+    //         );
+    //         return newTraining ? newTraining : t;
+    //       })
+    //     );
 
-        toast.success('Trainings periodized successfully.');
-      },
-      undefined,
-      'Failed to periodize trainings'
-    );
+    //     toast.success('Trainings periodized successfully.');
+    //   },
+    //   undefined,
+    //   'Failed to periodize trainings'
+    // );
   };
 
   return (
