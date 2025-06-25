@@ -17,6 +17,7 @@ import { WorkloadRepository } from '../repository/workload.repository';
 import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { TimestampEntity } from '../../common/entity/timestamp.entity';
+import { WorkloadValue } from '../entity/workload-value.entity';
 
 @Injectable()
 export class WorkloadService {
@@ -550,39 +551,7 @@ export class WorkloadService {
 
   private parsePrescribedParamValues(
     paramValues: AttributeValue[],
-  ): Pick<
-    Workload,
-    | 'volWork1Type'
-    | 'prescribedVolWork1ValueL'
-    | 'prescribedVolWork1ValueR'
-    | 'volWork1ValueL'
-    | 'volWork1ValueR'
-    | 'volWork2Type'
-    | 'prescribedVolWork2ValueL'
-    | 'prescribedVolWork2ValueR'
-    | 'volWork2ValueL'
-    | 'volWork2ValueR'
-    | 'volRecType'
-    | 'prescribedVolRecValueL'
-    | 'prescribedVolRecValueR'
-    | 'volRecValueL'
-    | 'volRecValueR'
-    | 'intWork1Type'
-    | 'prescribedIntWork1ValueL'
-    | 'prescribedIntWork1ValueR'
-    | 'intWork1ValueL'
-    | 'intWork1ValueR'
-    | 'intWork2Type'
-    | 'prescribedIntWork2ValueL'
-    | 'prescribedIntWork2ValueR'
-    | 'intWork2ValueL'
-    | 'intWork2ValueR'
-    | 'intRecType'
-    | 'prescribedIntRecValueL'
-    | 'prescribedIntRecValueR'
-    | 'intRecValueL'
-    | 'intRecValueR'
-  > {
+  ): WorkloadValue {
     const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
     const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
     const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);

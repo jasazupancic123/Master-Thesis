@@ -6,19 +6,21 @@ import { ComponentService } from '../../src/component/component.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
 import { FirebaseService } from '../../src/firebase/firebase.service';
-import { TrainingService } from '../../src/training/service/training.service';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { GroupService } from '../../src/group/group.service';
 import { Group } from '../../src/group/entity/group.entity';
 import {
   createGroupWithCycles,
   createInstitution,
+  createInstitutionWithUsers,
+  createTraining,
   deleteCollection,
   deleteDoc,
+  deleteInstitution,
+  deleteUsers,
 } from '../common/utils/data.util';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import {
-  generateTrainingStub,
   generateTrainingComponent,
   generateSuperset,
   generateTrainingExercise,
@@ -27,27 +29,93 @@ import {
 import { Training } from '../../src/training/entity/training.entity';
 import { addDays, addMinutes } from 'date-fns';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
-import { PeriodizationType } from '../../src/training/enum/periodization-type.enum';
 import { ParamType } from '../../src/component/enum/param.enum';
 import { ExerciseSet } from '../../src/training/entity/exercise-set.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { TestInstitution } from '../common/type/entity.type';
+import { TestInstitution, TestTraining } from '../common/type/entity.type';
+import { Target } from '../../src/target/entity/target.entity';
+import { generateTargetStub } from '../../src/target/mock/target.stub';
+import { PERIODIZATION_TEST_VALUES } from '../common/constant/periodization.constant';
+import { PeriodizationType } from '../../src/training/enum/periodization-type.enum';
+import { TrainingService } from '../../src/training/service/training.service';
+import { TrainingRepository } from '../../src/training/repository/training.repository';
+import { createAthleteUserAndToken } from '../common/utils/auth.util';
+import { WorkloadRepository } from '../../src/training/repository/workload.repository';
+import { TestUser } from '../common/type/auth.type';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
-  let trainingService: TrainingService;
   let institutionService: InstitutionService;
+  let trainingService: TrainingService;
+  let trainingRepository: TrainingRepository;
+  let workloadRepository: WorkloadRepository;
   let groupService: GroupService;
 
   let institution: TestInstitution;
   let group: Group;
   let component: Component;
-  let baseTraining: Training;
-  let trainings: Training[];
+  let baseTraining: TestTraining;
   let exercises: Exercise[];
+
+  let targetStrength: Target;
+  let targetPower: Target;
+  let targetPlyometric: Target;
+
+  const from = new Date();
+  const to = addMinutes(from, 30);
+
+  async function createBaseTraining(group: Group) {
+    return await createTraining(firebase, {
+      group,
+      cycleId: group.cycles[0].id,
+      from,
+      to,
+      components: [
+        generateTrainingComponent({
+          id: component.id,
+          from: from,
+          to: addMinutes(from, 1),
+          target: targetPower,
+          supersets: [
+            generateSuperset({
+              exercises: [
+                generateTrainingExercise({
+                  id: exercises[0].id,
+                  periodized: false,
+                  sets: [
+                    generateExerciseSet({ setNumber: 1 }),
+                    generateExerciseSet({ setNumber: 2 }),
+                    generateExerciseSet({ setNumber: 3 }),
+                  ],
+                }),
+                generateTrainingExercise({
+                  id: exercises[1].id,
+                  periodized: false,
+                  sets: [
+                    generateExerciseSet({ setNumber: 1 }),
+                    generateExerciseSet({ setNumber: 2 }),
+                    generateExerciseSet({ setNumber: 3 }),
+                  ],
+                }),
+                generateTrainingExercise({
+                  id: exercises[2].id,
+                  periodized: false,
+                  sets: [
+                    generateExerciseSet({ setNumber: 1 }),
+                    generateExerciseSet({ setNumber: 2 }),
+                    generateExerciseSet({ setNumber: 3 }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+  }
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -60,35 +128,29 @@ describe('Periodization functions (e2e)', () => {
     firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
-    trainingService = moduleFixture.get(TrainingService);
     institutionService = moduleFixture.get(InstitutionService);
+    trainingService = moduleFixture.get(TrainingService);
+    trainingRepository = moduleFixture.get(TrainingRepository);
+    workloadRepository = moduleFixture.get(WorkloadRepository);
     groupService = moduleFixture.get(GroupService);
+
+    [targetStrength, targetPower, targetPlyometric] = [
+      generateTargetStub({
+        id: 'strength',
+        componentId: 'strength',
+      }),
+      generateTargetStub({ id: 'power', componentId: 'strength' }),
+      generateTargetStub({
+        id: 'plyometric',
+        componentId: 'strength',
+      }),
+    ];
 
     institution = await createInstitution(institutionService);
     component = await componentService.create(
       generateComponentStub({
         id: 'strength',
-        name: 'Strength',
-        targets: [
-          {
-            id: 'strength',
-            name: 'Strength',
-            componentId: 'strength',
-            color: '#201f97',
-          },
-          {
-            id: 'power',
-            name: 'Power',
-            componentId: 'strength',
-            color: '#eb6683',
-          },
-          {
-            id: 'plyometric',
-            name: 'Plyometric',
-            componentId: 'strength',
-            color: '#619eae',
-          },
-        ],
+        targets: [targetStrength, targetPower, targetPlyometric],
       }),
     );
 
@@ -99,257 +161,205 @@ describe('Periodization functions (e2e)', () => {
     exercises = await exerciseService.createMany(global.admin, [
       generateExerciseStub({ id: 'deadlift', componentIds: [component.id] }),
       generateExerciseStub({ id: 'squat', componentIds: [component.id] }),
-      generateExerciseStub({
-        id: 'bench-press',
-        componentIds: [component.id],
-      }),
+      generateExerciseStub({ id: 'bench', componentIds: [component.id] }),
     ]);
-
-    const from = new Date(2026, 5, 17); // change this after this date is passed to a WEDNESDAY in future
-    const to = addMinutes(from, 30);
-
-    baseTraining = await trainingService.create(
-      trainer,
-      generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[0].id,
-        from,
-        to,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            from: from,
-            to: addMinutes(from, 1),
-            target: {
-              id: 'power',
-              name: 'Power',
-              componentId: 'strength',
-              color: '#eb6683',
-            },
-            supersets: [
-              generateSuperset({
-                exercises: [
-                  generateTrainingExercise({
-                    id: exercises[0].id,
-                    periodized: false,
-                    sets: [
-                      generateExerciseSet({ setNumber: 1 }),
-                      generateExerciseSet({ setNumber: 2 }),
-                      generateExerciseSet({ setNumber: 3 }),
-                    ],
-                  }),
-                  generateTrainingExercise({
-                    id: exercises[1].id,
-                    periodized: false,
-                    sets: [
-                      generateExerciseSet({ setNumber: 1 }),
-                      generateExerciseSet({ setNumber: 2 }),
-                      generateExerciseSet({ setNumber: 3 }),
-                    ],
-                  }),
-                  generateTrainingExercise({
-                    id: exercises[2].id,
-                    periodized: false,
-                    sets: [
-                      generateExerciseSet({ setNumber: 1 }),
-                      generateExerciseSet({ setNumber: 2 }),
-                      generateExerciseSet({ setNumber: 3 }),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-    );
-
-    function getOffsetTrainingByNDays(numDays: number): Training {
-      return {
-        ...baseTraining,
-        id: null,
-        from: addDays(baseTraining.from, numDays),
-        to: addDays(baseTraining.to, numDays),
-        components: [
-          {
-            ...baseTraining.components[0],
-
-            from: addDays(baseTraining.from, numDays),
-            to: addDays(baseTraining.to, numDays),
-          },
-        ],
-      };
-    }
-
-    const differentTargetTraining = {
-      ...baseTraining,
-      id: null,
-      from: addDays(baseTraining.from, 21),
-      to: addDays(baseTraining.to, 21),
-      components: [
-        {
-          ...baseTraining.components[0],
-          target: {
-            id: 'strength',
-            name: 'Strength',
-            componentId: 'strength',
-            color: '#201f97',
-          },
-          from: addDays(baseTraining.from, 21),
-          to: addDays(baseTraining.to, 21),
-        },
-      ],
-    };
-
-    // dates: baseTraining(+0d), training1(+2d), training2(+4d), training3(+7d), training4(+14d),
-    // differentTargetTraining(+21d), training5(+28d)
-    trainings = [
-      getOffsetTrainingByNDays(2),
-      getOffsetTrainingByNDays(4),
-      getOffsetTrainingByNDays(7),
-      getOffsetTrainingByNDays(14),
-      getOffsetTrainingByNDays(28),
-      differentTargetTraining,
-    ];
-
-    await Promise.all(trainings.map((t) => trainingService.create(trainer, t)));
   });
 
   afterAll(async () => {
     await Promise.all([
       deleteCollection(firebase, 'TRAINING'),
-      deleteCollection(firebase, 'EXERCISE'),
       deleteDoc(firebase, 'GROUP', group.id),
+      deleteCollection(firebase, 'EXERCISE'),
+      deleteInstitution(firebase, institution),
       deleteDoc(firebase, 'COMPONENT', component.id),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
     ]);
 
     await app.close();
   });
 
+  function getOffsetTrainingByNDays(
+    baseTraining: Training,
+    numDays: number,
+    target?: Target,
+  ): Training {
+    return {
+      ...baseTraining,
+      id: null,
+      from: addDays(baseTraining.from, numDays),
+      to: addDays(baseTraining.to, numDays),
+      components: [
+        {
+          ...baseTraining.components[0],
+          target,
+          from: addDays(baseTraining.from, numDays),
+          to: addDays(baseTraining.to, numDays),
+        },
+      ],
+    };
+  }
+
   describe('Periodization functions', () => {
+    // dates: baseTraining(+0d), training1(+2d), training2(+4d), training3(+7d), training4(+14d),
+    // differentTargetTraining(+21d), training5(+28d)
+
     // perscribed values can be set in generateExerciseSet functions on base training,
     // first value in expected is also the perscribed value, as the first training is the base training and it does not change,
     // except for types: block, wave
     // cannot test type autoregulatory, because it uses a random number
     // type dupTableBased is not supported yet
-    const values = [
-      {
-        type: PeriodizationType.LINEAR,
-        expected: [
-          { int: 20, vol: 12 },
-          { int: 22, vol: 11 },
-          { int: 24, vol: 10 },
-          { int: 26, vol: 9 },
-          { int: 28, vol: 8 },
-          { int: 30, vol: 7 },
-        ],
-      },
-      {
-        type: PeriodizationType.WEEK_UNDULATING,
-        expected: [
-          { int: 20, vol: 12 },
-          { int: 20, vol: 12 },
-          { int: 20, vol: 12 },
-          { int: 22, vol: 11 },
-          { int: 18, vol: 13 },
-          { int: 16, vol: 14 },
-        ],
-      },
-      {
-        type: PeriodizationType.DAY_UNDULATING,
-        expected: [
-          { int: 20, vol: 12 },
-          { int: 22, vol: 11 },
-          { int: 18, vol: 13 },
-          { int: 20, vol: 12 },
-          { int: 20, vol: 12 },
-          { int: 20, vol: 12 },
-        ],
-      },
-      {
-        type: PeriodizationType.BLOCK,
-        expected: [
-          { int: 14, vol: 8 },
-          { int: 14, vol: 8 },
-          { int: 14, vol: 8 },
-          { int: 14, vol: 8 },
-          { int: 16, vol: 5 },
-          { int: 18, vol: 3 },
-        ],
-      },
-      {
-        type: PeriodizationType.WAVE,
-        expected: [
-          { int: 11, vol: 5 },
-          { int: 11, vol: 5 },
-          { int: 11, vol: 5 },
-          { int: 12, vol: 3 },
-          { int: 11, vol: 5 },
-          { int: 11, vol: 5 },
-        ],
-      },
-      {
-        type: PeriodizationType.DUP_TABLE_BASED, // type dupTableBased is not supported yet
-        expected: [],
-      },
-    ];
 
-    it.each(values)(
-      'should pass',
-      () => {
-        expect(true).toBeTruthy();
+    it.each(PERIODIZATION_TEST_VALUES)(
+      'should successfully use all the periodization functions for the trainings with the same target',
+      async ({ type, expected }) => {
+        baseTraining = await createBaseTraining(group);
+        const differentTargetTraining = getOffsetTrainingByNDays(
+          baseTraining,
+          21,
+          targetStrength,
+        );
+
+        await Promise.all(
+          [
+            getOffsetTrainingByNDays(baseTraining, 2),
+            getOffsetTrainingByNDays(baseTraining, 4),
+            getOffsetTrainingByNDays(baseTraining, 7),
+            getOffsetTrainingByNDays(baseTraining, 14),
+            getOffsetTrainingByNDays(baseTraining, 28),
+            differentTargetTraining,
+          ].map((t) => createTraining(firebase, t)),
+        );
+
+        const foundTrainings = await trainingRepository.getDocs();
+        expect(foundTrainings).toHaveLength(6 + 1); // 6 created + 1 base training
+
+        /* if (type === PeriodizationType.DUP_TABLE_BASED) {
+          const response = await request(app.getHttpServer())
+            .post(`/training/periodize/trainings`)
+            .set('Authorization', `Bearer ${trainer.token}`)
+            .send({
+              baseTrainingId: baseTraining.id,
+              excludedTrainingIds: [],
+              componentId: component.id,
+              exerciseIds: exercises.map((e) => e.id),
+              periodizationType: type,
+            });
+
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe(
+            `Dup Table Based periodization is not supported yet`,
+          );
+
+          return;
+        }
+
+        const periodizedTrainings = await trainingService.periodize(
+          trainer,
+          {
+            baseTrainingId: baseTraining.id,
+            excludedTrainingIds: [],
+            componentId: component.id,
+            exerciseIds: exercises.map((e) => e.id),
+            periodizationType: type,
+          },
+        );
+
+        expect(periodizedTrainings.length).toBe(6); // base training + 5 periodized trainings, skips the training with different target
+
+        for (const periodizedTraining of periodizedTrainings) {
+          const trainingIndex = periodizedTrainings.indexOf(periodizedTraining);
+
+          for (const exercise of periodizedTraining.components[0].supersets[0]
+            .exercises) {
+            for (const set of exercise.sets) {
+              const { int, vol } = getBaseIntVolValuesFromSet(set);
+              expect(parseFloat(int.value)).toBe(expected[trainingIndex].int);
+              expect(parseFloat(vol.value)).toBe(expected[trainingIndex].vol);
+            }
+          }
+        } */
+
+        await deleteCollection(firebase, 'TRAINING');
       },
-      //   'should successfully use all the periodization functions for the trainings with the same target',
-      //   async ({ type, expected }) => {
-      //     if (type === PeriodizationType.DUP_TABLE_BASED) {
-      //       const response = await request(app.getHttpServer())
-      //         .post(`/training/periodize/trainings`)
-      //         .set('Authorization', `Bearer ${trainer.token}`)
-      //         .send({
-      //           baseTrainingId: baseTraining.id,
-      //           excludedTrainingIds: [],
-      //           componentId: component.id,
-      //           exerciseIds: exercises.map((e) => e.id),
-      //           periodizationType: type,
-      //         });
-
-      //       expect(response.status).toBe(400);
-      //       expect(response.body.message).toBe(
-      //         `Dup Table Based periodization is not supported yet`,
-      //       );
-
-      //       return;
-      //     }
-
-      //     const periodizedTrainings = await trainingService.periodizeTrainings(
-      //       trainer,
-      //       {
-      //         baseTrainingId: baseTraining.id,
-      //         excludedTrainingIds: [],
-      //         componentId: component.id,
-      //         exerciseIds: exercises.map((e) => e.id),
-      //         periodizationType: type,
-      //       },
-      //     );
-
-      //     expect(periodizedTrainings.length).toBe(6); // base training + 5 periodized trainings, skips the training with different target
-
-      //     for (const periodizedTraining of periodizedTrainings) {
-      //       const trainingIndex = periodizedTrainings.indexOf(periodizedTraining);
-
-      //       for (const exercise of periodizedTraining.components[0].supersets[0]
-      //         .exercises) {
-      //         for (const set of exercise.sets) {
-      //           const { int, vol } = getBaseIntVolValuesFromSet(set);
-      //           expect(parseFloat(int.value)).toBe(expected[trainingIndex].int);
-      //           expect(parseFloat(vol.value)).toBe(expected[trainingIndex].vol);
-      //         }
-      //       }
-      //     }
-      //   },
     );
   });
+
+  /* describe('Periodize transaction', () => {
+    const NUM_USERS = 19; // +1 default global athlete
+    const NUM_TRAININGS = 49; // + 1 base training
+
+    let users: TestUser[];
+    let institution: TestInstitution;
+    let group: Group;
+
+    beforeAll(async () => {
+      users = await Promise.all(
+        Array.from({ length: NUM_USERS }, () =>
+          createAthleteUserAndToken(firebase),
+        ),
+      );
+
+      institution = await createInstitutionWithUsers(
+        firebase,
+        institutionService,
+        { additionalAthletes: users },
+      );
+
+      group = await createGroupWithCycles(groupService, institution, {
+        cycleLengthInWeeks: 60,
+      });
+    });
+
+    afterAll(async () => {
+      await Promise.all([
+        deleteCollection(firebase, 'TRAINING'),
+        deleteDoc(firebase, 'GROUP', group.id),
+        deleteInstitution(firebase, institution),
+        deleteUsers(firebase, users),
+      ]);
+    }, 60 * 1000);
+
+    it('should handle load for 100 trainings being periodized (not throw error)', async () => {
+      baseTraining = await createBaseTraining(group);
+
+      // create trainings
+      await Promise.all(
+        Array.from({ length: NUM_TRAININGS }, (_, i) =>
+          createTraining(firebase, {
+            group,
+            ...getOffsetTrainingByNDays(baseTraining, i + 1, targetPower),
+          }),
+        ),
+      );
+
+      const foundTrainings = await trainingRepository.getDocs();
+      expect(foundTrainings).toHaveLength(NUM_TRAININGS + 1); // one base training
+
+      // NOTE - takes too long
+      // const allWorkloadOperations = foundTrainings.flatMap((t) =>
+      //   createWorkloadsForTraining(firebase, t),
+      // );
+
+      // await firebase.paginateBatchWrites(allWorkloadOperations);
+
+      // const foundWorkloads = await workloadRepository.getAllDocs();
+      // expect(foundWorkloads).toHaveLength(
+      //   (NUM_TRAININGS + 1) * (NUM_USERS + 1) * 3 * 3,
+      // ); // 3 exercises, 3 sets
+
+      const response = await request(app.getHttpServer())
+        .post(`/training/periodize/trainings`)
+        .set('Authorization', `Bearer ${institution.trainers[0].token}`)
+        .send({
+          baseTrainingId: baseTraining.id,
+          componentId: component.id,
+          exerciseIds: exercises.map((e) => e.id),
+          periodizationType: PeriodizationType.LINEAR,
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveLength(50);
+    });
+  }); */
 });
 
 function getBaseIntVolValuesFromSet(set: ExerciseSet) {

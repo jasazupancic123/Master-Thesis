@@ -10,6 +10,7 @@ import {
   createGroupWithCycles,
   createInstitution,
   createInstitutionWithUsers,
+  createTraining,
   deleteDoc,
   deleteDocs,
   deleteInstitution,
@@ -21,17 +22,11 @@ import { BatchUpdateOneGroupDto } from '../../src/group/dto/update-group.dto';
 import { generateGroupStub } from '../../src/group/mock/group.stub';
 import { TestInstitution } from '../common/type/entity.type';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
-import { addDays } from 'date-fns';
+import { addDays, subDays } from 'date-fns';
 import { TrainingService } from '../../src/training/service/training.service';
-import {
-  generateTrainingComponent,
-  generateTrainingStub,
-} from '../../src/training/mock/training.stub';
-import { TrainingComponent } from '../../src/training/entity/training-component.entity';
 import { Component } from '../../src/component/entity/component.entity';
 import { ComponentService } from '../../src/component/component.service';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 
 describe('Update Group (e2e)', () => {
   let app: INestApplication;
@@ -225,26 +220,21 @@ describe('Update Group (e2e)', () => {
         },
       );
 
-      async function createTraining(input: Partial<TrainingComponent>) {
-        return await firebase.firestore
-          .collection(FirestoreCollection.TRAINING)
-          .add(
-            firebase.buildCreateQuery(
-              generateTrainingStub({ groupId: group.id }),
-            ),
-          );
-      }
-
       const trainingIds = (
         await Promise.all([
-          createTraining({ from: addDays(new Date(), 1) }),
-          createTraining({ from: addDays(new Date(), 2) }),
-          createTraining({ from: addDays(new Date(), 3) }),
+          // past trainings
+          createTraining(firebase, { group, from: subDays(new Date(), 1) }),
+          createTraining(firebase, { group, from: subDays(new Date(), 2) }),
+          createTraining(firebase, { group, from: subDays(new Date(), 3) }),
+          // future trainings
+          createTraining(firebase, { group, from: addDays(new Date(), 1) }),
+          createTraining(firebase, { group, from: addDays(new Date(), 2) }),
+          createTraining(firebase, { group, from: addDays(new Date(), 3) }),
         ])
       ).map((t) => t.id);
 
       const foundTrainingsBefore = await trainingService.findAll(trainer);
-      expect(foundTrainingsBefore).toHaveLength(3);
+      expect(foundTrainingsBefore).toHaveLength(6);
       for (const t of foundTrainingsBefore) {
         expect(t.membersIds).toHaveLength(1);
         expect(t.membersIds[0]).toBe(athlete.uid);
@@ -259,8 +249,18 @@ describe('Update Group (e2e)', () => {
       });
 
       const foundTrainingsAfter = await trainingService.findAll(trainer);
-      expect(foundTrainingsAfter).toHaveLength(3);
-      for (const t of foundTrainingsAfter) {
+      expect(foundTrainingsAfter).toHaveLength(6);
+
+      const past = foundTrainingsAfter.slice(0, 3);
+      const future = foundTrainingsAfter.slice(3, 6);
+
+      // trainings before should have only one member
+      for (const t of past) {
+        expect(t.membersIds).toHaveLength(1);
+        expect(t.membersIds).toEqual([athlete.uid]);
+      }
+
+      for (const t of future) {
         expect(t.membersIds).toHaveLength(2);
         expect(t.membersIds).toEqual([athlete.uid, newAthlete.uid]);
       }
@@ -270,6 +270,7 @@ describe('Update Group (e2e)', () => {
       expect(foundGroup.membersIds).toEqual([athlete.uid, newAthlete.uid]);
 
       await deleteDocs(firebase, 'TRAINING', trainingIds);
+      await deleteUsers(firebase, [newAthlete]);
     });
   });
 });

@@ -1,8 +1,17 @@
 import {
   CollectionReference,
+  DocumentData,
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
+import { FirestoreEntity } from './entity.type';
+
+export interface BatchWriteOperation<T> {
+  ref: DocumentReference<DocumentData, DocumentData>;
+  data: FirestoreEntity<T> | FirestoreEntity<Partial<T>>;
+  operation: 'set' | 'update';
+  options?: { merge?: boolean }; // Only applicable for 'set' operations
+}
 
 export interface FirestoreCollectionRepository<
   Model = any,

@@ -12,6 +12,10 @@ import { Subgroup } from '../entity/subgroup.entity';
 import { getTime } from '../../common/service/util/date.util';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { ParamType } from '../../component/enum/param.enum';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
   return {
@@ -27,11 +31,14 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
     membersIds: data?.membersIds || [global.athlete.uid],
     stats: data?.stats || [],
     futureStats: data?.futureStats || [],
-    copiedFromId: null,
+    copiedFromId: data?.copiedFromId || null,
     from: data?.from || addDays(new Date(), 1),
     to: data?.to || addHours(addDays(new Date(), 1), 2),
-    warmup: data?.warmup || generateTrainingComponent(),
-    cooldown: data?.cooldown || generateTrainingComponent(),
+    warmup:
+      data?.warmup || generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+    cooldown:
+      data?.cooldown ||
+      generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
     components: data?.components || [],
     wellness: data?.wellness || [],
   };
