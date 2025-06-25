@@ -24,6 +24,7 @@ import { WriteBatch } from 'firebase-admin/firestore';
 import { Permission } from '../common/interface/permission.interface';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
+import { startOfDay } from 'date-fns';
 
 @Injectable()
 export class GroupService implements Permission<Group, Institution> {
@@ -205,8 +206,10 @@ export class GroupService implements Permission<Group, Institution> {
   ) {
     const docRef = this.repository.doc(input.id);
     if (input.membersIds) {
-      const trainingDocs = await this.trainingService.getDocs((query) =>
-        query.where('groupId', '==', input.id),
+      const trainingDocs = await this.trainingService.getDocs((q) =>
+        q
+          .where('groupId', '==', input.id)
+          .where('from', '>=', startOfDay(new Date())),
       );
 
       // update all trainings' members

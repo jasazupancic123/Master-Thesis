@@ -17,9 +17,10 @@ import {
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
-import { Create, Update } from '../../common/type/entity.type';
+import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
 import {
+  BatchWriteOperation,
   ComponentRef,
   CycleRef,
   GroupRef,
@@ -452,12 +453,11 @@ export class TrainingService implements Permission<Training, Institution> {
       `User ${user.uid} is periodizing trainings: ${JSON.stringify(input)}`,
     );
 
+    this.trainingPlanService.checkPeriodizationType(periodizationType);
     if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(componentId))
       throw new BadRequestException(
         'You cannot periodize warmup or cooldown components',
       );
-
-    this.trainingPlanService.checkPeriodizationType(periodizationType);
 
     const baseTraining = await this.findOneByIdOrFail(user, {
       trainingId: baseTrainingId,
@@ -469,35 +469,32 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     if (!subgroupId) baseComponent.periodizationType = periodizationType;
-
     const baseSubgroup = baseComponent.subgroups.find(
       (sg) => sg.id === subgroupId,
     );
 
+    const mainTarget = baseComponent.target;
     if (baseSubgroup) baseSubgroup.periodizationType = periodizationType;
 
-    const mainTarget = baseComponent.target;
-
-    const possibleTrainings = await this.findAll(user, {
-      groupId: baseTraining.groupId,
-      cycleId: baseTraining.cycleId,
-    });
+    const possibleTrainings = await this.trainingRepository.getDocs((q) =>
+      q
+        .where('groupId', '==', baseTraining.groupId)
+        .where('cycleId', '==', baseTraining.cycleId)
+        .where('from', '>', baseTraining.from)
+        .orderBy('from', 'asc')
+        .limit(50),
+    );
 
     // target can be null/undefined, then just get the trainings without a target
-    const filteredTrainings = possibleTrainings.filter(
-      (t) =>
-        isBefore(baseTraining.from, t.from) &&
-        t.components.some((c) =>
-          c.id === componentId && mainTarget
-            ? c.target?.id === mainTarget.id
-            : !c.target,
-        ),
+    const filteredTrainings = possibleTrainings.filter((t) =>
+      t.components.some((c) =>
+        c.id === componentId && mainTarget
+          ? c.target?.id === mainTarget.id
+          : !c.target,
+      ),
     );
 
-    const lastTraining = filteredTrainings.reduce((prev, curr) =>
-      this.commonService.date.isAfter(prev.from, curr.from) ? prev : curr,
-    );
-
+    const lastTraining = filteredTrainings[filteredTrainings.length - 1];
     const weeks = this.trainingPlanService.getSpacedTrainingsByWeek(
       baseTraining,
       lastTraining,
@@ -505,7 +502,6 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     let numberOfSubgroupsFound = 0;
-
     for (const ft of filteredTrainings) {
       let component = ft.components.find((c) => c.id === componentId);
       if (!component) continue;
@@ -567,11 +563,10 @@ export class TrainingService implements Permission<Training, Institution> {
       }
     }
 
-    if (baseSubgroup && !numberOfSubgroupsFound) {
+    if (baseSubgroup && !numberOfSubgroupsFound)
       throw new BadRequestException(
-        `Selected Subgroup not found in any future training`,
+        `Selected subgroup not found in any future training`,
       );
-    }
 
     const periodizedTrainings =
       periodizationType !== PeriodizationType.REPLICATE
@@ -594,29 +589,15 @@ export class TrainingService implements Permission<Training, Institution> {
         baseTraining.membersIds.length,
       );
 
-    const batch = this.firebaseService.firestore.batch();
-
-    // update base training's periodizationType
-    const baseTrainingDocRef = this.trainingRepository.doc(baseTrainingId);
-
-    const updateBaseTrainingQuery =
-      this.firebaseService.buildUpdateQuery<Training>({
-        ...baseTraining,
-        components: baseTraining.components.map((c) =>
-          c.id === componentId && !subgroupId ? { ...c, periodizationType } : c,
-        ),
-      });
-
-    batch.update(baseTrainingDocRef, updateBaseTrainingQuery);
-
-    const userIds = [
-      ...new Set(filteredTrainings.flatMap((t) => t.membersIds)),
-    ];
-
-    const unstartedWorkloads =
-      await this.workloadService.findUnstartedWorkloads(userIds);
+    await this.trainingRepository.updateDoc(baseTrainingId, {
+      components: baseTraining.components.map((c) =>
+        c.id === componentId && !subgroupId ? { ...c, periodizationType } : c,
+      ),
+    });
 
     // calculate new avg future workload values
+    // const operations: BatchWriteOperation<Training>[] = [];
+    const batch = this.firebaseService.firestore.batch();
     for (const t of filteredTrainings) {
       const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
@@ -626,23 +607,22 @@ export class TrainingService implements Permission<Training, Institution> {
         t.membersIds.length,
       );
 
-      const updateTrainingQuery =
-        this.firebaseService.buildUpdateQuery<Training>({ ...t });
+      /* operations.push({
+        ref: this.trainingRepository.doc(t.id),
+        data: this.firebaseService.buildUpdateQuery<Training>({ ...t }),
+        operation: 'update',
+      }); */
 
-      const workloads = unstartedWorkloads.filter(
-        (w) =>
-          w.trainingId === t.id &&
-          w.componentId === componentId &&
-          w.userId &&
-          t.membersIds.includes(w.userId),
+      const ref = this.trainingRepository.doc(t.id);
+      batch.update(
+        ref,
+        this.firebaseService.buildUpdateQuery<Training>({ ...t }),
       );
-
-      const trainingDocRef = this.trainingRepository.doc(t.id);
-      this.workloadService.createForTraining(batch, t, workloads);
-      batch.update(trainingDocRef, updateTrainingQuery);
     }
 
     await batch.commit();
+
+    // await this.firebaseService.paginateBatchWrites(operations);
 
     periodizedTrainings.push(baseTraining);
 

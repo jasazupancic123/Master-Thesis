@@ -40,12 +40,6 @@ export class TrainingRepository
   }
 
   async addDoc(input: Create<Training>): Promise<string> {
-    if (input.membersIds?.length === 0)
-      throw new BadRequestException('Training must have atleast one member');
-
-    if (input.components?.length === 0)
-      throw new BadRequestException('Training must have atleast one component');
-
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Training>(
       {

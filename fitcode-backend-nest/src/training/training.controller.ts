@@ -118,7 +118,7 @@ export class TrainingController {
   }
 
   @Post('/periodize/trainings')
-  async periodizeTrainings(
+  async periodize(
     @RequestUser() user: User,
     @Body() body: PeriodizeTrainingsDto,
   ) {
