@@ -16,7 +16,7 @@ export default function LeftRightExerciseText(
       sx={{
         p: 0,
         m: 0,
-        color: theme.palette.background.dark,
+        color: theme.palette.background.lightBorder,
         zIndex: 1,
         fontSize: 12,
       }}

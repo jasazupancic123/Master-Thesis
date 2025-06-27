@@ -6,6 +6,8 @@ declare module '@mui/material/styles' {
     paper: string;
     light: string;
     dark: string;
+    lightBorder: string;
+    lightText: string;
   }
 }
 
@@ -13,28 +15,43 @@ export const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#1EB980',
+      main: '#34FFBE',
       dark: '#005d57',
     },
     background: {
-      light: '#283444',
-      default: '#263646',
-      paper: '#1A2B3C',
-      dark: '#6d7b87',
+      light: '#363636',
+      default: '#111111',
+      dark: '#212121',
+      paper: '#272727',
+      lightBorder: '#968686',
+      lightText: '#D5D5D5',
     },
     error: {
       main: '#ff6859',
     },
   },
   typography: {
-    fontFamily: 'Roboto Condensed, sans-serif',
+    allVariants: {
+      fontFamily: 'Inter, sans-serif',
+      color: '#D9D9D9', // Replace with your desired color
+    },
     button: { textTransform: 'none', color: '#EAEBED' },
   },
   components: {
+    MuiPaper: {
+      defaultProps: {
+        elevation: 0, // to avoid overlay
+      },
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none', // disables elevation overlay in dark mode
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          color: '#EAEBED',
+          backgroundImage: 'none', // disables elevation overlay in dark mode
         },
       },
     },
@@ -51,22 +68,6 @@ export const theme = createTheme({
           },
         },
       },
-    },
-  },
-});
-
-const robotoCondensed = {
-  fontFamily: 'Roboto Condensed',
-  fontWeight: 400,
-};
-
-export const signInUpTheme = createTheme({
-  ...theme,
-  palette: {
-    ...theme.palette,
-    mode: 'light',
-    text: {
-      primary: '#333333',
     },
   },
 });

@@ -37,13 +37,12 @@ export default async function Layout({ children }: ChildrenProps) {
           display: 'flex',
           flexDirection: 'column',
           p: 0,
-          px: 2,
           pb: 2,
           mx: 0,
           width: '100%',
         }}
       >
-        <Box mt="48px">{children}</Box>
+        <Box>{children}</Box>
       </Container>
     </Box>
   );

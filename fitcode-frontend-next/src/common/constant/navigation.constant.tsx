@@ -137,10 +137,8 @@ export const LINKS_SIDEBAR = {
     profile: LINK_PROFILE,
   },
   [UserRole.TRAINER]: {
-    home: LINK_GROUPS,
-    exercises: LINK_EXERCISES,
-    members: LINK_MEMBERS,
-    add: LINK_ADD_GROUP,
+    dashboard: LINK_DASHBOARD,
+    profile: LINK_PROFILE,
     settings: LINK_SETTINGS,
   },
   [UserRole.MANAGER]: {

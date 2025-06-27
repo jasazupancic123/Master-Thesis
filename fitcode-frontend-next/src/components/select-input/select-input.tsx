@@ -57,7 +57,7 @@ export default function SelectInput<T>(props: Props<T>) {
           id={`${props.label}-label`}
           sx={{
             fontSize: props.inputLabelSize,
-            color: theme.palette.background.dark,
+            color: theme.palette.background.lightBorder,
           }}
         >
           {props.label}

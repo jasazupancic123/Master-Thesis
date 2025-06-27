@@ -129,20 +129,10 @@ export default function TrainingPage(props: TrainingPageProps) {
               px={2}
               gap={1}
             >
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#fff',
-                }}
-              >
+              <Typography variant="body2">
                 {dayjs(training.from).format('A')}
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#fff',
-                }}
-              >
+              <Typography variant="body2">
                 {dayjs(training.from).format('HH:MM')}
               </Typography>
 

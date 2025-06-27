@@ -27,6 +27,10 @@ import { useState } from 'react';
 import Logo from '../logo/logo';
 import { AppBar, Drawer, DrawerHeader } from './style';
 import toast from 'react-hot-toast';
+import GroupDateFilterButtonGroup from '../group-date-filter-button-group/group-date-filter-button-group';
+import { GroupDateFilter } from '@/common/type/filter.type';
+import { SetState } from '@/common/type/state.type';
+import { useGroup } from '@/store/group-provider';
 
 export interface TrainerGroupSidebarProps {
   group: Group | null; // selected group
@@ -34,6 +38,8 @@ export interface TrainerGroupSidebarProps {
 }
 
 export default function GroupSidebar(props: TrainerGroupSidebarProps) {
+  const { filter, setFilter } = useGroup();
+
   const { group, groups } = props;
 
   const screenSize = useScreenSize();
@@ -54,53 +60,23 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box
+      sx={{
+        display: 'flex',
+      }}
+    >
       <AppBar
         position="fixed"
         sx={{
           width: '100%',
           transition: 'margin-left 0.3s ease-in-out',
           boxShadow: 'none',
+          backgroundColor: theme.palette.background.dark,
         }}
       >
-        <Toolbar
-          sx={{
-            height: '50px !important',
-            minHeight: '50px !important',
-            pt: '2px',
-            backgroundColor: 'background.default',
-          }}
-        >
-          {/* Menu Button */}
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            onClick={() => setOpen(!open)}
-            edge="start"
-            sx={{
-              marginRight: 2,
-              py: 0,
-              px: 0,
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          {/* Logo */}
-          {!screenSize.isMobile && !screenSize.isLandscapeMobile && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                py: 0,
-              }}
-            >
-              <Logo width={52} height={35} version="narrow" />
-            </Box>
-          )}
-        </Toolbar>
+        <Box width="100%" sx={{ marginX: 'auto' }}>
+          <GroupDateFilterButtonGroup filter={filter} setFilter={setFilter} />
+        </Box>
       </AppBar>
 
       <Drawer

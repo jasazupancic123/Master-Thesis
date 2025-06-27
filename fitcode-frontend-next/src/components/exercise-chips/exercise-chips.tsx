@@ -42,6 +42,7 @@ export interface ExerciseChipsProps {
   cycleView?: boolean; // used in cycle view to show only components with methods
   selectedTargets?: { componentId: string; target: Target }[];
   setSelectedTargets?: SetState<{ componentId: string; target: Target }[]>;
+  gap?: number; // gap between chips
 }
 
 export default function ExerciseChips(props: ExerciseChipsProps) {
@@ -53,6 +54,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
     direction = 'row',
     bgColor,
     primaryColor,
+    gap,
     cycleView,
     selectedTargets,
     setSelectedTargets,
@@ -65,7 +67,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
   return (
     <Stack
       direction={direction as any}
-      spacing={1}
+      spacing={gap !== undefined ? gap : 1}
       flexWrap="wrap"
       sx={{
         justifyContent: 'center',
@@ -109,13 +111,15 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                         }
                         return;
                       } else if (
-                        selected.some((component) => component.id === c.id) &&
-                        !selectedTargets.find((st) => st.componentId === c.id)
-                          ?.target
+                        selected.some((component) => component.id === c.id)
                       ) {
                         setSelected(
                           selected.filter((component) => component.id !== c.id)
                         );
+                        setSelectedTargets((prev) =>
+                          prev.filter((st) => st.componentId !== c.id)
+                        );
+
                         return;
                       }
                     }
@@ -177,9 +181,6 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                 <IconComponent
                   sx={{
                     fontSize: screenSize.isMobile ? 20 : 30,
-                    color:
-                      selectedTargets?.find((st) => st.componentId === c.id)
-                        ?.target.color || undefined,
                   }}
                 />
 
@@ -217,6 +218,22 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                       <MenuItem
                         value="none"
                         onClick={() => {
+                          if (
+                            selectedTargets &&
+                            !selectedTargets.some(
+                              (st) => st.componentId === c.id
+                            ) &&
+                            setSelected &&
+                            Array.isArray(selected)
+                          ) {
+                            setSelected([...selected, c]);
+                            setAnchorElMap((prev) => ({
+                              ...prev,
+                              [c.id]: null,
+                            }));
+                            return;
+                          }
+
                           setSelectedTargets?.((prev) =>
                             prev.filter((st) => st.componentId !== c.id)
                           );
@@ -231,6 +248,11 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                       {targets.map((target, i) => (
                         <MenuItem
                           key={i}
+                          selected={selectedTargets?.some(
+                            (st) =>
+                              st.componentId === c.id &&
+                              st.target.id === target.id
+                          )}
                           onClick={() => {
                             setSelectedTargets?.((prev) => {
                               const existingIndex = prev.findIndex(
@@ -262,15 +284,6 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                               [c.id]: null,
                             }));
                           }}
-                          sx={{
-                            color: selectedTargets?.some(
-                              (st) =>
-                                st.componentId === c.id &&
-                                st.target.id === target.id
-                            )
-                              ? target.color
-                              : undefined,
-                          }}
                         >
                           {target.name}
                         </MenuItem>
@@ -284,12 +297,15 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
               variant="caption"
               sx={{
                 textAlign: 'center',
-                maxWidth: screenSize.isMobile ? 50 : 100,
+                maxWidth: screenSize.isMobile ? 50 : 80,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap', // <-- 👈 key to force single line!
                 fontSize: screenSize.isMobile ? 10 : 12,
               }}
             >
               {selectedTargets?.find((st) => st.componentId === c.id)?.target
-                .name || ''}
+                .name || c.name}
             </Typography>
           </Box>
         );

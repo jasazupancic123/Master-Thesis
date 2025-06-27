@@ -23,7 +23,6 @@ export default function GroupTrainerDayViewTrainings(
   return !cycle ? (
     <Box
       display="flex"
-      bgcolor={'background.paper'}
       width="100%"
       p={2}
       justifyContent="center"
@@ -47,12 +46,14 @@ export default function GroupTrainerDayViewTrainings(
         borderBottomRightRadius: 10,
         borderBottomLeftRadius: 10,
       }}
+      gap={2}
+      mt={0.5}
+      px={1}
     >
       {/* Training set groups with set exercises */}
       {!loading && !todaysTrainings.length ? (
         <Box
           display="flex"
-          bgcolor={'background.paper'}
           width="100%"
           p={2}
           justifyContent="center"
