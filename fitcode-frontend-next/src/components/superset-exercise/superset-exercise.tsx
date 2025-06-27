@@ -30,6 +30,8 @@ interface SupersetExerciseProps {
   setSupersets: SetState<Superset[]>;
   setsNumbers: { exerciseId: string; setsNumber: number }[];
   setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function SupersetExercise(props: SupersetExerciseProps) {
@@ -47,6 +49,8 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     setSupersets,
     setsNumbers,
     setSetsNumbers,
+    expandedExercisesView,
+    setExpandedExercisesView,
   } = props;
 
   const theme = useTheme();
@@ -119,108 +123,62 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
               >
                 <Typography
                   variant="caption"
-                  color={theme.palette.background.dark}
+                  color={theme.palette.background.lightBorder}
                   sx={{ zIndex: 1 }}
                 >
                   {`${i + 1}${String.fromCharCode(65 + k)}`}
                 </Typography>
               </Box>
-              <Box
-                position="absolute"
-                top={5}
-                right={screenSize.isLandscapeMobile ? 0 : 10}
-                display={selectedExercise?.id === exercise.id ? 'none' : 'flex'}
-                flexDirection="column"
-                zIndex={1}
-              >
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    handleMenuClick(e);
-                    setMenuExercise(exercise); // Save the correct exercise here
-                  }}
-                  sx={{
-                    zIndex: 1000,
-                    pt: 0.5,
-                    mt: 0,
-                  }}
-                  disableRipple
+
+              {expandedExercisesView && (
+                <Box
+                  position="absolute"
+                  top={5}
+                  right={screenSize.isLandscapeMobile ? 0 : 10}
+                  display={
+                    selectedExercise?.id === exercise.id ? 'none' : 'flex'
+                  }
+                  flexDirection="column"
+                  zIndex={1}
                 >
-                  <Checkbox
+                  <IconButton
                     size="small"
-                    checked={selectedExercises.some(
-                      (ex) => ex.id === exercise.id
-                    )}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedExercises((prev) => [...prev, exercise]);
-                      } else {
-                        setSelectedExercises((prev) =>
-                          prev.filter((ex) => ex.id !== exercise.id)
-                        );
-                      }
+                    onClick={(e) => {
+                      handleMenuClick(e);
+                      setMenuExercise(exercise); // Save the correct exercise here
                     }}
                     sx={{
-                      transform: 'scale(0.9)',
-                      width: 16,
-                      height: 16,
                       zIndex: 1000,
+                      pt: 0.5,
+                      mt: 0,
                     }}
-                  />
-                </IconButton>
-                {/* <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleMenuClose}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                sx={{
-                  '& .MuiPaper-root': {
-                    boxShadow: '10px 10px 10px rgba(0, 0, 0, 0.1)', // Disables shadow for the Menu's Paper component
-                  },
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-              >
-                <MenuItem
-                  onClick={() => {
-                    if (!menuExercise) return;
-                    handleDeleteExercise(
-                      { exerciseId: menuExercise.id },
-                      {
-                        training,
-                        setTraining,
-                        setTodaysTrainings,
-                        supersets,
-                        component,
-                        setComponent,
-                        selectedSubgroup,
-                        setSelectedSubgroup,
-                        setDetectedChanges,
-                      }
-                    );
-                    handleMenuClose();
-                  }}
-                  sx={{
-                    textAlign: 'center !important',
-                  }}
-                >
-                  <Typography
-                    width="100%"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
+                    disableRipple
                   >
-                    <DeleteIcon sx={{ mr: 0.5 }} />
-                    Delete123
-                  </Typography>
-                </MenuItem>
-              </Menu> */}
-              </Box>
+                    <Checkbox
+                      size="small"
+                      checked={selectedExercises.some(
+                        (ex) => ex.id === exercise.id
+                      )}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedExercises((prev) => [...prev, exercise]);
+                        } else {
+                          setSelectedExercises((prev) =>
+                            prev.filter((ex) => ex.id !== exercise.id)
+                          );
+                        }
+                      }}
+                      sx={{
+                        transform: 'scale(0.9)',
+                        width: 16,
+                        height: 16,
+                        zIndex: 1000,
+                      }}
+                    />
+                  </IconButton>
+                </Box>
+              )}
+
               <TrainingExerciseCardContainer
                 supersetIndex={i}
                 exercise={exercise}
@@ -236,6 +194,8 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                 setSupersets={setSupersets}
                 setsNumbers={setsNumbers}
                 setSetsNumbers={setSetsNumbers}
+                expandedExercisesView={expandedExercisesView}
+                setExpandedExercisesView={setExpandedExercisesView}
               />
             </Box>
           </Box>

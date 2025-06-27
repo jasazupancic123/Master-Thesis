@@ -8,8 +8,8 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { Delete, Save } from '@mui/icons-material';
-import { IconButton } from '@mui/material';
+import { CopyAll, Delete, LabelImportant, Save } from '@mui/icons-material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -20,6 +20,7 @@ import { useTheme } from '@mui/material';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
+import { handleUpdateMultipleTrainings } from './state';
 
 dayjs.extend(weekOfYear);
 
@@ -45,11 +46,11 @@ export default function TrainerDayView() {
   } = useGroup();
 
   const {
+    component,
     training,
     setTraining,
     todaysTrainings,
     setTodaysTrainings,
-    component,
     setSelectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
@@ -57,19 +58,19 @@ export default function TrainerDayView() {
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
+    selectedSubgroup,
   } = useTrainerDayViewContext();
 
   const [day, setDay] = useState<Day>(commonService.date.getToday());
   const [week, setWeek] = useState<number>(1);
   const [days, setDays] = useState(
     commonService.date.getWeekDays().map(({ label, date }) => ({
-      label: label[0],
+      label,
       value: date.toString(),
-      // sublabel: screenSize.isSmallerThanLaptop
-      //   ? commonService.date.format(date, { withYear: false })
-      //   : undefined,
       sublabel: commonService.date.format(date, {
         withYear: false,
+        withMonth: false,
+        withoutDots: true,
       }),
     }))
   );
@@ -83,64 +84,6 @@ export default function TrainerDayView() {
 
   const [isSticky, setIsSticky] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  async function handleUpdateMultipleTrainings() {
-    const todaysTrainingsFiltered = todaysTrainings.filter(
-      (t) => t !== undefined
-    );
-
-    await handleApiRequest(
-      router,
-      () =>
-        TrainingController.batchUpdate(
-          token,
-          { groupId: group.id, cycleId: cycle!.id },
-          todaysTrainingsFiltered,
-          customAthleteWorkloads
-        ),
-      (newTrainings) => {
-        const mappedTrainings = newTrainings.map((newTraining) => {
-          const mapped = TrainingService.mapComponentsExercisesMethods(
-            newTraining,
-            components,
-            exercises,
-            methods
-          );
-          return mapped;
-        });
-
-        const minimalTrainings = mappedTrainings.map((t) =>
-          TrainingService.convertFromTrainingToTrainingMinimal(t)
-        );
-
-        const current = mappedTrainings.find((t) => t.id === training?.id);
-        if (current) setTraining(current);
-
-        setTrainings((prev) =>
-          prev.map((t) => {
-            const newTraining = minimalTrainings.find((nt) => nt.id === t.id);
-            return newTraining ? newTraining : t;
-          })
-        );
-
-        setTodaysTrainings((prev) =>
-          prev.map((t) => {
-            const newTraining = mappedTrainings.find((nt) => nt.id === t.id);
-            return newTraining ? newTraining : t;
-          })
-        );
-
-        setSelectedAthlete(undefined);
-
-        setCustomAthleteWorkloads([]);
-
-        setDetectedChanges(false);
-        toast.success('Trainings updated successfully');
-      },
-      undefined,
-      'Error when updating training'
-    );
-  }
 
   useEffect(() => {
     setDateFrom(day.date.startOf('day'));
@@ -255,71 +198,123 @@ export default function TrainerDayView() {
   }, [selectedAthlete]);
 
   return (
-    <>
+    <Box position="relative">
       {/* Save button */}
-      {!screenSize.isSmallerThanLaptop ? (
-        <Box position="absolute" top="50%" right={0}>
-          <FloatingButton
-            label="Save trainings"
-            onClick={handleUpdateMultipleTrainings}
-          />
-        </Box>
-      ) : (
-        <Box
-          display="flex"
+      <Box
+        justifyContent="flex-end"
+        alignItems="center"
+        sx={{
+          position: 'absolute',
+          right: screenSize.isSmallerThanLaptop ? 2 : 10,
+          top: -36,
+          zIndex: 1300,
+        }}
+      >
+        {!screenSize.isSmallerThanLaptop ? (
+          <Tooltip title="Save trainings" placement="bottom" sx={{ mx: 1 }}>
+            <IconButton
+              sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
+              onClick={() =>
+                handleUpdateMultipleTrainings({
+                  token,
+                  todaysTrainings,
+                  setTodaysTrainings,
+                  setTrainings,
+                  training,
+                  setTraining,
+                  group,
+                  cycle,
+                  router,
+                  customAthleteWorkloads,
+                  setCustomAthleteWorkloads,
+                  components,
+                  exercises,
+                  methods,
+                  setSelectedAthlete,
+                  setDetectedChanges,
+                })
+              }
+            >
+              <Save fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Box
+            display="flex"
+            sx={{
+              p: 0,
+              ml: 2,
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+              zIndex: 1000,
+            }}
+          >
+            <IconButton
+              onClick={() => {
+                handleUpdateMultipleTrainings({
+                  token,
+                  todaysTrainings,
+                  setTodaysTrainings,
+                  setTrainings,
+                  training,
+                  setTraining,
+                  group,
+                  cycle,
+                  router,
+                  customAthleteWorkloads,
+                  setCustomAthleteWorkloads,
+                  components,
+                  exercises,
+                  methods,
+                  setSelectedAthlete,
+                  setDetectedChanges,
+                });
+              }}
+              sx={{
+                p: 0,
+              }}
+            >
+              <Save
+                sx={{
+                  cursor: 'pointer',
+                  backgroundColor: theme.palette.primary.main,
+                  borderRadius: '50%',
+                  p: 1,
+                  fontSize: 40,
+                }}
+              />
+            </IconButton>
+          </Box>
+        )}
+
+        <IconButton
           sx={{
             p: 0,
-            ml: 2,
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            zIndex: 1000,
+            m: 0,
+            mx: screenSize.isSmallerThanLaptop ? 0 : 1,
+            cursor: 'pointer',
           }}
-          gap={1}
         >
-          <IconButton
-            onClick={() => {
-              handleUpdateMultipleTrainings();
-            }}
-            sx={{
-              p: 0,
-            }}
-          >
-            <Save
-              sx={{
-                cursor: 'pointer',
-                backgroundColor: theme.palette.primary.main,
-                borderRadius: '50%',
-                p: 1,
-                fontSize: 40,
-              }}
-            />
-          </IconButton>
-          <IconButton
-            sx={{
-              p: 0,
-            }}
-            onClick={() => {}}
-          >
-            <Delete
-              sx={{
-                cursor: 'pointer',
-                backgroundColor: theme.palette.primary.main,
-                borderRadius: '50%',
-                p: 1,
-                fontSize: 40,
-              }}
-            />
-          </IconButton>
-        </Box>
-      )}
+          <CopyAll fontSize="small" />
+        </IconButton>
+        <IconButton
+          sx={{
+            p: 0,
+            m: 0,
+            mx: screenSize.isSmallerThanLaptop ? 0 : 1,
+            cursor: 'pointer',
+          }}
+        >
+          <Delete fontSize="small" />
+        </IconButton>
+      </Box>
 
       <Box
         display="flex"
         flexDirection="column"
         alignItems="center"
         width="100%"
-        minHeight={195}
         sx={{
           borderBottomRightRadius: !todaysTrainings.length || !cycle ? 0 : 10,
           borderBottomLeftRadius: !todaysTrainings.length || !cycle ? 0 : 10,
@@ -341,15 +336,57 @@ export default function TrainerDayView() {
           width="100%"
           justifyContent="center"
           alignItems="center"
-          sx={{ p: isSticky ? 0 : undefined, pt: 0, pb: component ? 0 : 2 }}
+          sx={{
+            p: isSticky ? 0 : undefined,
+            py: 2,
+            backgroundColor: theme.palette.background.default,
+          }}
         >
           {/* Training members */}
           <TrainingMembers isSticky={isSticky} />
         </Box>
       </Box>
 
+      {cycle && todaysTrainings.length > 0 && component && (
+        <Box
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          width="100%"
+          sx={{
+            mt: 1,
+          }}
+        >
+          <Box
+            width="100%"
+            sx={{
+              backgroundColor: theme.palette.background.dark,
+              height: '5px',
+            }}
+          />
+          <Box
+            sx={{
+              display: 'inline-block',
+              backgroundColor: theme.palette.background.dark,
+              borderBottomLeftRadius: 100,
+              borderBottomRightRadius: 100,
+              margin: '0 auto', // centers the box
+              px: 4, // optional padding around text
+            }}
+          >
+            <Typography
+              textAlign="center"
+              variant="body2"
+              sx={{ pb: 1, color: theme.palette.background.lightText }}
+            >
+              {selectedSubgroup?.subgroup?.name || 'Main group'}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       {/* Trainings for the day */}
       <GroupTrainerDayViewTrainings day={day} loading={loading} />
-    </>
+    </Box>
   );
 }

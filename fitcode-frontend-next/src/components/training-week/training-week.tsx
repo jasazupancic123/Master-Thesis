@@ -49,12 +49,13 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
       <Box>
         {/* Render days of the week */}
         <Stack
+          width="90%"
           direction="row"
           p={2}
           sx={{
+            marginX: 'auto',
             padding: '0px',
             textAlign: 'center',
-            border: '1px solid',
             borderColor: 'background.default',
             backgroundColor: 'background.paper',
             height: '100%',
@@ -63,43 +64,32 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
             borderBottomLeftRadius: 8,
           }}
         >
-          {/* Extra column to display the week number */}
-          <Typography
-            color={theme.palette.background.paper}
-            bgcolor={theme.palette.primary.main}
-            p={screenSize.isMobile ? 0.1 : 2}
-            sx={{
-              writingMode: 'vertical-rl',
-              transform: 'rotate(180deg)',
-              borderBottomRightRadius: 8,
-              borderTopRightRadius: 8,
-            }}
-          >
-            Week {index + 1}
-          </Typography>
-
-          <TrainingWeekDates
-            week={week}
-            componentCalendarView={componentCalendarView}
-            periodizationView={periodizationView}
-            cycleView={cycleView}
-            copyComponent={copyComponent}
-            trainingComponent={trainingComponent}
-            training={training}
-            selectedTrainings={selectedTrainings}
-            setSelectedTrainings={setSelectedTrainings}
-            selected={selected}
-            selectedTarget={selectedTarget}
-            selectedTargets={selectedTargets}
-            setTodaysTrainings={setTodaysTrainings}
-            setOpenAreYouSureModal={setOpenAreYouSureModal}
-            setSelectedTraining={setSelectedTraining}
-            setOpenOverwriteModal={setOpenOverwriteModal}
-            setTrainingInPeriodForModal={setTrainingInPeriodForModal}
-            addTrainingComponent={addTrainingComponent}
-            deleteTrainingComponent={deleteTrainingComponent}
-            day={day}
-          />
+          <Box display="flex" flexDirection="column" width="100%">
+            <Box display="flex" flexDirection="row" justifyContent="center">
+              <TrainingWeekDates
+                week={week}
+                componentCalendarView={componentCalendarView}
+                periodizationView={periodizationView}
+                cycleView={cycleView}
+                copyComponent={copyComponent}
+                trainingComponent={trainingComponent}
+                training={training}
+                selectedTrainings={selectedTrainings}
+                setSelectedTrainings={setSelectedTrainings}
+                selected={selected}
+                selectedTarget={selectedTarget}
+                selectedTargets={selectedTargets}
+                setTodaysTrainings={setTodaysTrainings}
+                setOpenAreYouSureModal={setOpenAreYouSureModal}
+                setSelectedTraining={setSelectedTraining}
+                setOpenOverwriteModal={setOpenOverwriteModal}
+                setTrainingInPeriodForModal={setTrainingInPeriodForModal}
+                addTrainingComponent={addTrainingComponent}
+                deleteTrainingComponent={deleteTrainingComponent}
+                day={day}
+              />
+            </Box>
+          </Box>
         </Stack>
       </Box>
       <MyModal

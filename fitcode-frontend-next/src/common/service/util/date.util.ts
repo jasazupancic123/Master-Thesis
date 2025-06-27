@@ -11,8 +11,16 @@ export type Day = {
 };
 
 export class DateUtil {
-  format(date: Dayjs | Date, options = { withYear: true }): string {
-    return dayjs(date).format(`DD. MM.${options.withYear ? ' YYYY' : ''}`);
+  format(
+    date: Dayjs | Date,
+    options: { withYear?: boolean; withMonth?: boolean; withoutDots?: boolean }
+  ): string {
+    const format =
+      `DD${options.withMonth ? '. MM.' : ''}${options.withYear ? '. YYYY' : ''}`.replace(
+        '.',
+        options.withoutDots ? '' : '.'
+      );
+    return dayjs(date).format(format);
   }
 
   formatTime(date: Dayjs | Date): string {
@@ -60,7 +68,7 @@ export class DateUtil {
     }
 
     const days: Day[] = [];
-    
+
     let date = dayjs(toZonedTime(start.toDate(), 'UTC').setHours(12));
     date = dayjs(date).set('day', dayjs(start).day());
 

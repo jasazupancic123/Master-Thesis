@@ -13,6 +13,7 @@ import { GroupIdPageProps } from './props';
 import { AttributeController } from '@/controller/attribute/attribute.controller';
 import { MethodController } from '@/controller/method/method.controller';
 import { ReactNode } from 'react';
+import { InstitutionController } from '@/controller/institution/institution.controller';
 
 interface LayoutProps {
   children: ReactNode;
@@ -41,16 +42,25 @@ export default async function Layout({ children, params }: LayoutProps) {
 
   if ([UserRole.ATHLETE, UserRole.ADMIN].includes(role)) return notFound();
 
-  const [users, groups, exercises, attributes, components, trainings, methods] =
-    await Promise.all([
-      UserController.findAll(token),
-      GroupController.findAll(token),
-      ExerciseController.findAll(token),
-      AttributeController.findAll(),
-      ComponentController.findAll(),
-      TrainingController.findAll(token, { groupId, minimal }),
-      MethodController.findAll(token),
-    ]);
+  const [
+    users,
+    groups,
+    institution,
+    exercises,
+    attributes,
+    components,
+    trainings,
+    methods,
+  ] = await Promise.all([
+    UserController.findAll(token),
+    GroupController.findAll(token),
+    InstitutionController.findById(token, group.institutionId),
+    ExerciseController.findAll(token),
+    AttributeController.findAll(),
+    ComponentController.findAll(),
+    TrainingController.findAll(token, { groupId, minimal }),
+    MethodController.findAll(token),
+  ]);
 
   const mappedTrainings = trainings.map((t) =>
     TrainingService.mapComponentsExercisesMethods(
@@ -65,6 +75,7 @@ export default async function Layout({ children, params }: LayoutProps) {
     token,
     userId: profile.uid,
     group,
+    institution,
     users,
     groups,
     exercises,

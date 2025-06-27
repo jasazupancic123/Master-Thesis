@@ -1,18 +1,8 @@
-import { COLORS } from '@/common/constant/color.constant';
-import { CommonService } from '@/common/service/common.service';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { FileCopy } from '@mui/icons-material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import {
-  Box,
-  IconButton,
-  MenuItem,
-  Select,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, IconButton, MenuItem, Select, Typography } from '@mui/material';
 import {
   DatePicker,
   DesktopDatePicker,
@@ -26,8 +16,7 @@ import MyModal from '../modal/modal';
 import { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
-
-const commonService = CommonService.instance;
+import { useTheme } from '@mui/material';
 
 export default function TrainingCard(props: TrainingCardProps) {
   const {
@@ -49,6 +38,8 @@ export default function TrainingCard(props: TrainingCardProps) {
     selectedAthlete,
     setSelectedAthlete,
   } = useTrainerDayViewContext();
+
+  const theme = useTheme();
 
   const { training, period, day } = props;
 
@@ -105,7 +96,7 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   return (
     <Box width="100%">
-      <Box display="flex" mt={2}>
+      <Box display="flex">
         <Box
           display="flex"
           width="wrap"
@@ -116,29 +107,12 @@ export default function TrainingCard(props: TrainingCardProps) {
             borderTopRightRadius: 10,
           }}
           p={0}
-          pl={0.9375}
-          pb={1.25}
         >
-          <Box
-            width={6}
-            height={10}
-            sx={{
-              backgroundColor:
-                !selectedSubgroup?.subgroup &&
-                selectedTraining?.id === training.id
-                  ? '#9e9e9e'
-                  : selectedSubgroup?.subgroup &&
-                      selectedTraining?.id === training.id
-                    ? COLORS[selectedSubgroup.index % COLORS.length]
-                    : '#005D57',
-              borderRadius: 10,
-            }}
-          />
           <Typography variant="caption" sx={{ mx: 1, fontSize: 12 }}>
             {period === 'AM' ? 'Morning' : 'Afternoon'}
           </Typography>
 
-          <Tooltip title="Copy training">
+          {/* <Tooltip title="Copy training">
             <IconButton
               sx={{ p: 0, m: 0, pr: 1 }}
               onClick={() => {
@@ -147,7 +121,7 @@ export default function TrainingCard(props: TrainingCardProps) {
             >
               <FileCopy sx={{ fontSize: 14 }} />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
         </Box>
       </Box>
       <Box
@@ -155,9 +129,8 @@ export default function TrainingCard(props: TrainingCardProps) {
           border: '1px solidrgb(36, 38, 46)',
           borderRadius: 2,
           borderTopLeftRadius: 0,
-          backgroundColor: 'background.paper',
+          backgroundColor: theme.palette.background.default,
           px: 1,
-          mt: -1,
         }}
       >
         {training && (

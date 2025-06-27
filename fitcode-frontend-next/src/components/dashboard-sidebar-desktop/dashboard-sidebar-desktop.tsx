@@ -37,7 +37,7 @@ export function DashboardDesktopSidebar() {
           width: '50px',
           transition: 'width 0.3s ease-in-out',
           overflowX: 'hidden',
-          backgroundColor: '#344352',
+          backgroundColor: 'background.dark',
         },
       }}
     >
