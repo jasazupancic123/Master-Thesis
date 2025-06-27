@@ -17,7 +17,13 @@ import { handleAddExerciseToSupersetComponent } from './state';
 import { useTheme } from '@mui/material';
 
 export default function Supersets(props: SupersetsProps) {
-  const { openAddExerciseModal, setOpenAddExerciseModal } = props;
+  const {
+    openAddExerciseModal,
+    setOpenAddExerciseModal,
+    expandedExercisesView,
+    setExpandedExercisesView,
+  } = props;
+
   const screenSize = useScreenSize();
   const theme = useTheme();
 
@@ -118,6 +124,8 @@ export default function Supersets(props: SupersetsProps) {
               setSupersets={setSupersets}
               setsNumbers={setNumbers}
               setSetsNumbers={setSetsNumbers}
+              expandedExercisesView={expandedExercisesView}
+              setExpandedExercisesView={setExpandedExercisesView}
             />
           ))}
 
@@ -139,15 +147,15 @@ export default function Supersets(props: SupersetsProps) {
                   borderRadius={2}
                   sx={{
                     cursor: 'pointer',
-                    backgroundColor: theme.palette.background.default,
+                    backgroundColor: theme.palette.background.dark,
                   }}
                   p={1}
-                  py={7.5}
+                  py={!expandedExercisesView ? 2.25 : 8.75}
                   mx={1}
                   onClick={() => setOpenAddExerciseModal(true)}
                 >
                   <Typography variant="body2" align="center">
-                    Drop here to add a new superset or click to add an exercise
+                    Add/drop exercise
                   </Typography>
                 </Box>
               )}

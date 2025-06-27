@@ -1,4 +1,5 @@
 import { User } from '../user/type/user.type';
+import { Cycle } from './type/cycle.type';
 import { Group } from './type/group.type';
 
 export class GroupService {
@@ -14,5 +15,14 @@ export class GroupService {
     );
 
     return returnGroup ? item : item.members;
+  }
+
+  static getCyclesForSelect(
+    cycles: Cycle[]
+  ): { label: string; value: string }[] {
+    return cycles.map((cycle) => ({
+      label: cycle.name,
+      value: cycle.id,
+    }));
   }
 }

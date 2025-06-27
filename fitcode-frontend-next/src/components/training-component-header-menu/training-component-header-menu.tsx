@@ -3,7 +3,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
-import { Box, Checkbox, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { useState } from 'react';
 import SelectInput from '../select-input/select-input';
 import { AFTER_SETS, MAIN_SETS } from '../trainer-day-view/constant';
@@ -27,7 +27,7 @@ interface TrainingComponentExpandedProps {
   training: Training;
 }
 
-export default function TrainingComponentExpanded(
+export default function TrainingComponentHeaderMenu(
   props: TrainingComponentExpandedProps
 ) {
   const { training } = props;
@@ -92,57 +92,72 @@ export default function TrainingComponentExpanded(
 
   return (
     <Box
-      width={screenSize.isMobile ? '100%' : undefined}
-      display={screenSize.isMobile ? 'flex' : undefined}
+      width={screenSize.isSmallerThanLaptop ? '100%' : undefined}
+      display={screenSize.isSmallerThanLaptop ? 'flex' : undefined}
       alignItems={screenSize.isMobile ? 'center' : undefined}
+      justifyContent={
+        screenSize.isSmallerThanLaptop && !screenSize.isMobile
+          ? 'center'
+          : undefined
+      }
       flexDirection={screenSize.isMobile ? 'column' : undefined}
-      mt={screenSize.isMobile ? 2.5 : 1.5}
+      mt={screenSize.isSmallerThanLaptop ? 2.5 : 1.5}
       flexWrap="nowrap"
-      gap={screenSize.isMobile ? 1 : 0}
+      gap={screenSize.isSmallerThanLaptop ? 1 : 0}
     >
-      <SelectInput<MainSet>
-        label={'Main Set'}
-        value={mainSet?.id || ''}
-        icon={null}
-        displayEmpty
-        iconSize={17}
-        items={MAIN_SETS}
-        itemKey="id"
-        itemName="name"
-        placeholder="None"
-        disableInputLabel={false}
-        setValue={(mainSetId) => {
-          setDetectedChanges(true);
-          const mainSet = MAIN_SETS.find((g) => g.id === mainSetId)!;
+      <Tooltip title="Main Set">
+        <SelectInput<MainSet>
+          label={'Main Set'}
+          value={mainSet?.id || ''}
+          icon={null}
+          displayEmpty
+          iconSize={17}
+          items={MAIN_SETS}
+          itemKey="id"
+          itemName="name"
+          sx={{
+            maxWidth: 75,
+          }}
+          placeholder="None"
+          disableInputLabel={false}
+          setValue={(mainSetId) => {
+            setDetectedChanges(true);
+            const mainSet = MAIN_SETS.find((g) => g.id === mainSetId)!;
 
-          setMainSet(mainSet);
-        }}
-        selectSize="small"
-        inputLabelSize={13}
-        selectedItemSize={15}
-      />
+            setMainSet(mainSet);
+          }}
+          selectSize="small"
+          inputLabelSize={13}
+          selectedItemSize={15}
+        />
+      </Tooltip>
 
-      <SelectInput<AfterSet>
-        label={'After Set'}
-        value={afterSet?.id || ''}
-        icon={null}
-        displayEmpty
-        iconSize={17}
-        items={AFTER_SETS}
-        itemKey="id"
-        itemName="name"
-        placeholder="None"
-        disableInputLabel={false}
-        setValue={(afterSetId) => {
-          setDetectedChanges(true);
-          const afterSet = AFTER_SETS.find((g) => g.id === afterSetId)!;
+      <Tooltip title="After Set">
+        <SelectInput<AfterSet>
+          label={'After Set'}
+          value={afterSet?.id || ''}
+          icon={null}
+          displayEmpty
+          iconSize={17}
+          inputLabelSize={13}
+          selectedItemSize={15}
+          selectSize="small"
+          sx={{
+            maxWidth: 75,
+          }}
+          items={AFTER_SETS}
+          itemKey="id"
+          itemName="name"
+          placeholder="None"
+          disableInputLabel={false}
+          setValue={(afterSetId) => {
+            setDetectedChanges(true);
+            const afterSet = AFTER_SETS.find((g) => g.id === afterSetId)!;
 
-          setAfterSet(afterSet);
-        }}
-        selectSize="small"
-        inputLabelSize={13}
-        selectedItemSize={15}
-      />
+            setAfterSet(afterSet);
+          }}
+        />
+      </Tooltip>
 
       <Tooltip
         title={
@@ -375,6 +390,7 @@ export default function TrainingComponentExpanded(
           }}
         />
       </Tooltip>
+
       <MyModal
         isOpen={openModal}
         setIsOpen={(open) => setOpenModal(open)}

@@ -42,6 +42,8 @@ interface TrainignExerciseSelectedProps {
   setsNumbers: { exerciseId: string; setsNumber: number }[];
   setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
   setSupersets: SetState<Superset[]>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function TrainignExerciseSelected(
@@ -70,6 +72,8 @@ export default function TrainignExerciseSelected(
     setsNumbers,
     setSetsNumbers,
     setSupersets,
+    expandedExercisesView,
+    setExpandedExercisesView,
   } = props;
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
@@ -102,6 +106,8 @@ export default function TrainignExerciseSelected(
           setsNumbers={setsNumbers}
           setSetsNumbers={setSetsNumbers}
           setSupersets={setSupersets}
+          expandedExercisesView={expandedExercisesView}
+          setExpandedExercisesView={setExpandedExercisesView}
         />
       </Grid2>
       <Grid2
@@ -147,7 +153,7 @@ export default function TrainignExerciseSelected(
                 width: '80%',
                 color: 'background.paper',
                 '& .MuiSlider-thumb': {
-                  backgroundColor: '#1abc9c', // Green dots
+                  backgroundColor: theme.palette.primary.main,
                   width: 20,
                   height: 20,
                 },
@@ -243,9 +249,7 @@ export default function TrainignExerciseSelected(
                   mr: 1,
                 }}
               />
-              <Typography variant="body2" sx={{ color: '#fff' }}>
-                Intensity
-              </Typography>
+              <Typography variant="body2">Intensity</Typography>
             </Box>
             <Box display="flex" alignItems="center">
               <Box
@@ -257,9 +261,7 @@ export default function TrainignExerciseSelected(
                   mr: 1,
                 }}
               />
-              <Typography variant="body2" sx={{ color: '#fff' }}>
-                Volume
-              </Typography>
+              <Typography variant="body2">Volume</Typography>
             </Box>
           </Box>
 

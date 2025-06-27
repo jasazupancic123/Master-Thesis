@@ -34,7 +34,6 @@ export default function TrainerWeekComponentItem(
     <Stack key={c.id}>
       <Typography
         sx={{
-          color: '#fff',
           textAlign: 'left',
           flexBasis: '66.67%',
         }}
