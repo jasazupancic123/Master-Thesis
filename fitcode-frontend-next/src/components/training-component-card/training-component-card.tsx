@@ -5,16 +5,26 @@ import { useTheme } from '@mui/material';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { SetState } from '@/common/type/state.type';
+import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
+import { preconnect } from 'react-dom';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;
   training: Training;
   setOpenAddExerciseModal: SetState<boolean>;
   setOpenCalendarModal: SetState<boolean>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function TrainingComponentCard(props: TrainingComponentProps) {
-  const { trainingComponent, training, setOpenAddExerciseModal } = props;
+  const {
+    trainingComponent,
+    training,
+    setOpenAddExerciseModal,
+    expandedExercisesView,
+    setExpandedExercisesView,
+  } = props;
 
   const screenSize = useScreenSize();
 
@@ -106,6 +116,18 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               ? `${trainingComponent.component.name} - ${trainingComponent.target.name}`
               : trainingComponent.component.name}
           </Typography>
+          {component?.id === trainingComponent.id && (
+            <IconButton
+              sx={{ p: 0, m: 0, ml: 1 }}
+              onClick={() => setExpandedExercisesView((prev) => !prev)}
+            >
+              {expandedExercisesView ? (
+                <KeyboardArrowDown />
+              ) : (
+                <KeyboardArrowRight />
+              )}
+            </IconButton>
+          )}
         </Box>
       )}
     </Box>

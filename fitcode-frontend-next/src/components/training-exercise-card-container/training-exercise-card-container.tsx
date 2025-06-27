@@ -30,6 +30,8 @@ interface TrainingExerciseCardContainerProps {
   setSupersets: SetState<Superset[]>;
   setsNumbers: { exerciseId: string; setsNumber: number }[];
   setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function TrainingExerciseCardContainer(
@@ -56,6 +58,8 @@ export default function TrainingExerciseCardContainer(
     onAthleteView,
     setsNumbers,
     setSetsNumbers,
+    expandedExercisesView,
+    setExpandedExercisesView,
   } = props;
 
   const [data, setData] = useState<ChartWorkloadData[]>([]);
@@ -216,6 +220,8 @@ export default function TrainingExerciseCardContainer(
       setsNumbers={setsNumbers}
       setSetsNumbers={setSetsNumbers}
       setSupersets={setSupersets}
+      expandedExercisesView={expandedExercisesView}
+      setExpandedExercisesView={setExpandedExercisesView}
     />
   ) : (
     <TrainingExerciseCard
@@ -228,6 +234,8 @@ export default function TrainingExerciseCardContainer(
       setsNumbers={setsNumbers}
       setSetsNumbers={setSetsNumbers}
       setSupersets={setSupersets}
+      expandedExercisesView={expandedExercisesView}
+      setExpandedExercisesView={setExpandedExercisesView}
     />
   );
 }

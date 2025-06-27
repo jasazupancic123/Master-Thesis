@@ -13,6 +13,7 @@ interface ScreenSizeContextType {
   isLaptop: boolean;
   isDesktop: boolean;
   isTablet: boolean;
+  isSmallTablet: boolean;
   isSmallerThanLaptop: boolean;
   isBetween: (min: number, max: number) => boolean;
 }
@@ -29,6 +30,9 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
   const isMobile = useMediaQuery('(max-width:600px)');
   const isLandscape = useMediaQuery('(orientation: landscape)');
   const isLandscapeMobile = isSmallHeight && isLandscape;
+  const isSmallTablet = useMediaQuery(
+    '(min-width:600px) and (max-width:800px)'
+  );
   const isTablet = useMediaQuery('(min-width:600px) and (max-width:1024px)');
   const isDesktop = useMediaQuery('(min-width:1700px)');
   const isSmallerThanLaptop = useMediaQuery('(max-width:1024px)');
@@ -51,6 +55,7 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
         isLaptop,
         isDesktop,
         isTablet,
+        isSmallTablet,
         isSmallerThanLaptop,
         isBetween,
       }}

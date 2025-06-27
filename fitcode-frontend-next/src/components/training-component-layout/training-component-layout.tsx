@@ -9,7 +9,6 @@ import MyModal from '../modal/modal';
 import { useRouter } from 'next/navigation';
 import MuscleHeatmapView from '../muscle-heatmap-view/muscle-heatmap-view';
 import toast from 'react-hot-toast';
-import ComponentPeriodization from '../component-periodization/component-periodization';
 import { handleCopyComponentApiRequest } from './state';
 import TrainingComponentCard from '../training-component-card/training-component-card';
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';
@@ -19,11 +18,13 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
+import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
+import { useTheme } from '@mui/material';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
+  const theme = useTheme();
 
   const { training, trainingComponent, day } = props;
 
@@ -50,10 +51,11 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const [openOverwriteModal, setOpenOverwriteModal] = useState(false);
   const [trainingInPeriodForModal, setTrainingInPeriodForModal] =
     useState<TrainingInfo | null>(null);
+  const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
   return (
     <Box mb={0} py={0.25} px={0}>
-      <Box sx={{ bgcolor: 'background.paper', my: 0.5 }}>
+      <Box sx={{ my: 0.5 }}>
         <Box
           sx={{
             display: 'flex',
@@ -88,7 +90,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           />
           <Stack
             direction={
-              screenSize.isMobile ||
+              screenSize.isSmallerThanLaptop ||
               (screenSize.isLandscapeMobile && trainingComponent === component)
                 ? 'column'
                 : 'row'
@@ -100,8 +102,10 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               display="flex"
               p={0}
               justifyContent="space-between"
-              alignItems={!screenSize.isMobile ? 'center' : undefined}
-              flexDirection={screenSize.isMobile ? 'column' : 'row'}
+              alignItems={
+                !screenSize.isSmallerThanLaptop ? 'center' : undefined
+              }
+              flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
               width="100%"
             >
               <TrainingComponentCard
@@ -109,6 +113,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                 training={training}
                 setOpenAddExerciseModal={setOpenAddExerciseModal}
                 setOpenCalendarModal={setOpenAddExerciseModal}
+                expandedExercisesView={expandedExercisesView}
+                setExpandedExercisesView={setExpandedExercisesView}
               />
               <Box
                 display="flex"
@@ -118,12 +124,12 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                 alignItems={!screenSize.isMobile ? 'center' : undefined}
                 flexDirection={screenSize.isMobile ? 'column' : 'row'}
               >
-                {screenSize.isMobile &&
+                {screenSize.isSmallerThanLaptop &&
                   trainingComponent &&
                   component &&
                   selectedTraining?.id === training.id &&
                   trainingComponent.id === component.id && (
-                    <TrainingComponentExpanded training={training} />
+                    <TrainingComponentHeaderMenu training={training} />
                   )}
               </Box>
             </Box>
@@ -140,7 +146,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           unmountOnExit
         >
           <Box
-            bgcolor="background.paper"
             p={2}
             pt={0}
             px={
@@ -156,6 +161,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               <Supersets
                 openAddExerciseModal={openAddExerciseModal}
                 setOpenAddExerciseModal={setOpenAddExerciseModal}
+                expandedExercisesView={expandedExercisesView}
+                setExpandedExercisesView={setExpandedExercisesView}
               />
             )}
           </Box>
@@ -163,16 +170,14 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
         {/* )} */}
       </Box>
 
-      {trainingComponent.id !== COOLDOWN_ID && (
-        <Divider
-          sx={{
-            width: '100%',
-            color: 'white',
-            p: 0,
-            m: 0,
-          }}
-        />
-      )}
+      <Divider
+        sx={{
+          width: '100%',
+          color: 'white',
+          p: 0,
+          m: 0,
+        }}
+      />
 
       {/* Training Component Calendar Modal */}
       <MyModal

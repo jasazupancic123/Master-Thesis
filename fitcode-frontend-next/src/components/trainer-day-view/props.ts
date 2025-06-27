@@ -39,6 +39,8 @@ export interface TrainingExerciseCardProps {
   setsNumbers: { exerciseId: string; setsNumber: number }[];
   setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
   setSupersets: SetState<Superset[]>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
 }
 
 export interface SubgroupProps {
@@ -48,6 +50,8 @@ export interface SubgroupProps {
 export interface SupersetsProps {
   openAddExerciseModal: boolean;
   setOpenAddExerciseModal: SetState<boolean>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
 }
 
 export interface SetExerciseState {

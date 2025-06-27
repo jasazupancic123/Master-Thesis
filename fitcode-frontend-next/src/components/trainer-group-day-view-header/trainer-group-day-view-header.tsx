@@ -1,16 +1,16 @@
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
-import Circles from '@/components/circles/circles';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { MenuItem, Select, Stack, TextField, Typography } from '@mui/material';
+import { IconButton, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React from 'react';
 import { useTheme } from '@mui/material';
+import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import { MoreVert } from '@mui/icons-material';
 
 dayjs.extend(weekOfYear);
 
@@ -34,257 +34,245 @@ export default function GroupTrainerDayViewHeader(
 
   const { group, cycle, setDateFrom, setDateTo } = useGroup();
 
-  const { selectedAthlete, selectedSubgroup, setSelectedExercises } =
-    useTrainerDayViewContext();
-  return (
-    <Stack
-      direction="row"
-      width="100%"
-      p={2}
-      pb={0}
-      justifyContent={
-        screenSize.isSmallerThanLaptop ? 'center' : 'space-between'
-      }
-    >
-      <Box
-        display={screenSize.isSmallerThanLaptop ? 'none' : 'flex'}
-        justifyContent="center"
-        flex={1}
-      >
-        <Box
-          width="45%"
-          bgcolor={theme.palette.background.light}
-          p={!screenSize.isDesktop ? 0 : 1}
-          px={!screenSize.isDesktop ? 1 : 3}
-          sx={{
-            borderTopLeftRadius: 10,
-            borderBottomLeftRadius: 10,
-          }}
-          display="flex"
-          alignItems="center"
-        >
-          <Typography
-            width="100%"
-            variant="body1"
-            textAlign="center"
-            sx={{
-              px: 0,
-              pr: !screenSize.isDesktop ? 1 : 4,
-              fontSize: !screenSize.isDesktop ? 15 : 20,
-            }}
-          >
-            {selectedAthlete?.displayName ||
-              selectedSubgroup?.subgroup?.name ||
-              group.name}
-          </Typography>
-        </Box>
-        <Box
-          bgcolor={theme.palette.background.light}
-          p={1}
-          px={3}
-          ml={0.5}
-          sx={{
-            borderTopRightRadius: 10,
-            borderBottomRightRadius: 10,
-          }}
-          display="flex"
-          alignItems="center"
-        >
-          <Typography
-            variant="body1"
-            textAlign="center"
-            sx={{
-              px: 0,
-              pr: !screenSize.isDesktop ? 1 : 4,
-              fontSize: !screenSize.isDesktop ? 15 : 20,
-            }}
-          >
-            {dayjs(day.date).format('DD-MMM-YY')}
-          </Typography>
-          <CalendarMonthIcon />
-        </Box>
-      </Box>
+  const { setSelectedExercises } = useTrainerDayViewContext();
 
+  interface PeriodSelectProps {
+    smallDisplay?: boolean;
+  }
+  function PeriodSelect(props: PeriodSelectProps) {
+    const { smallDisplay } = props;
+    return (
       <Box
         display="flex"
-        flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-        gap={screenSize.isSmallerThanLaptop ? 2 : 0}
-        justifyContent="center"
-        alignItems={screenSize.isSmallerThanLaptop ? 'center' : undefined}
+        flexDirection={smallDisplay ? 'row' : 'column'}
+        mt={smallDisplay ? 3 : 1}
+        ml={smallDisplay ? 0 : 2}
+        justifyContent={smallDisplay ? 'center' : undefined}
+        gap={smallDisplay ? 4 : 1}
       >
-        {screenSize.isSmallerThanLaptop && (
-          <Box display="flex" justifyContent="center" flex={1}>
+        {['AM', 'PM'].map((period) => {
+          const selectedPeriod = true ? period === 'AM' : false;
+          return (
             <Box
-              bgcolor={theme.palette.background.light}
-              p={!screenSize.isDesktop ? 0 : 1}
-              px={!screenSize.isDesktop ? 1 : 3}
-              sx={{
-                borderTopLeftRadius: 10,
-                borderBottomLeftRadius: 10,
-              }}
+              key={period}
               display="flex"
+              flexDirection={smallDisplay ? 'column-reverse' : 'row'}
               alignItems="center"
+              gap={smallDisplay ? 0 : 1}
             >
-              <Typography
-                variant="body1"
-                textAlign="center"
+              <Box
+                height={16}
+                width={4}
                 sx={{
-                  px: 0,
-                  pr: !screenSize.isDesktop ? 1 : 4,
-                  fontSize: !screenSize.isDesktop ? 15 : 20,
+                  backgroundColor: selectedPeriod
+                    ? theme.palette.primary.main
+                    : 'transparent',
+                  borderRadius: 5,
+                  transform: smallDisplay ? 'rotate(90deg)' : 'none',
+                }}
+              />
+
+              <Typography
+                variant="body2"
+                fontWeight={600}
+                sx={{
+                  cursor: 'pointer',
                 }}
               >
-                {selectedAthlete?.displayName ||
-                  selectedSubgroup?.subgroup?.name ||
-                  group.name}
+                {period}
               </Typography>
             </Box>
-            <Box
-              bgcolor={theme.palette.background.light}
-              p={1}
-              px={3}
-              ml={0.5}
-              sx={{
-                borderTopRightRadius: 10,
-                borderBottomRightRadius: 10,
-              }}
-              display="flex"
-              alignItems="center"
-            >
-              <Select
-                value={cycle?.name || ''}
-                disabled
-                renderValue={(value) => value || 'No cycle'}
-                displayEmpty
-                sx={{
-                  color: 'white',
-                  fontSize: screenSize.isDesktop ? 20 : undefined,
-                  bgcolor: 'transparent',
-                  border: 'none',
-                  pl: 1,
-                  '&:before, &:after': { borderBottom: 'none !important' },
-                  '& .MuiInputBase-input.Mui-disabled': {
-                    color: 'white !important',
-                    WebkitTextFillColor: 'white !important', // For Safari
-                  },
-                  '& .MuiSelect-icon': {
-                    display: 'none', // Hide the dropdown icon
-                  },
-                }}
-                variant="standard"
-              />
-            </Box>
-          </Box>
-        )}
-
-        <Circles
-          items={days}
-          value={day.date.toString()}
-          setValue={(value) => {
-            setDay({ label: '', date: dayjs(value) });
-            setDateFrom(dayjs(value).startOf('day'));
-            setDateTo(dayjs(value).endOf('day'));
-            setSelectedExercises([]);
-          }}
-          onlySelectedValueColored
-          getBackgroundColor={(value, itemValue) =>
-            commonService.date.isSameDay(dayjs(value), dayjs(itemValue))
-              ? theme.palette.primary.main
-              : 'rgba(255, 255, 255, 0.1)'
-          }
-          sx={{
-            borderBottomRightRadius: 0,
-            borderBottomLeftRadius: 0,
-          }}
-          arrows
-          onArrowClick={(direction) => {
-            const newDay =
-              direction === 'left'
-                ? day.date.subtract(1, 'week')
-                : day.date.add(1, 'week');
-
-            setDay({ label: '', date: newDay });
-            setDateFrom(newDay.startOf('day'));
-            setDateTo(newDay.endOf('day'));
-            setDays(
-              commonService.date.getWeekDays(newDay).map(({ label, date }) => ({
-                label: label[0],
-                value: date.toString(),
-                // sublabel: screenSize.isSmallerThanLaptop
-                //   ? commonService.date.format(date, {
-                //       withYear: false,
-                //     })
-                //   : undefined,
-                sublabel: commonService.date.format(date, {
-                  withYear: false,
-                }),
-              }))
-            );
-          }}
-        />
+          );
+        })}
       </Box>
+    );
+  }
 
-      {!screenSize.isSmallerThanLaptop && (
-        <Box display="flex" justifyContent="center" flex={1}>
+  interface GroupInfoProps {
+    smallDisplay?: boolean;
+  }
+  function GroupCycleInfo(props: GroupInfoProps) {
+    const { smallDisplay } = props;
+    return (
+      <Box
+        width="100%"
+        display="flex"
+        justifyContent={smallDisplay ? 'center' : 'flex-end'}
+        gap={screenSize.isSmallerThanLaptop ? 0 : 4}
+        position="relative"
+      >
+        <Box display="flex" flexDirection="column" mt={1}>
           <Box
-            bgcolor={theme.palette.background.light}
-            p={!screenSize.isDesktop ? 0 : 1}
-            px={!screenSize.isDesktop ? 1 : 3}
-            sx={{
-              borderTopLeftRadius: 10,
-              borderBottomLeftRadius: 10,
-            }}
             display="flex"
-            alignItems="center"
+            flexDirection="column"
+            alignItems="flex-end"
+            justifyContent="flex-start"
+            gap={0.5}
+            sx={{
+              px: smallDisplay ? 2 : undefined,
+            }}
           >
             <Typography
-              variant="body1"
+              variant="body2"
+              fontWeight={500}
               textAlign="center"
+              fontSize={12}
               sx={{
-                px: 3,
-                fontSize: !screenSize.isDesktop ? 15 : 20,
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                maxWidth: '100%',
+                letterSpacing: 2,
+                textTransform: 'uppercase',
               }}
             >
-              Week {week}
+              {group.name}
+            </Typography>
+            <Typography
+              variant="body2"
+              fontWeight={500}
+              textAlign="center"
+              fontSize={12}
+              sx={{
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                maxWidth: '100%',
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+              }}
+            >
+              Week {week} / {cycle?.name || 'No cycle'}
             </Typography>
           </Box>
-          <Box
-            bgcolor={theme.palette.background.light}
-            p={1}
-            px={3}
-            ml={0.5}
+        </Box>
+        <Box
+          display="flex"
+          flexDirection="column"
+          sx={{
+            mt: !smallDisplay ? -1.33 : 0,
+            position: smallDisplay ? 'absolute' : undefined,
+            right: smallDisplay ? 1 : undefined,
+            top: smallDisplay ? 6 : undefined,
+          }}
+          gap={0.5}
+        >
+          <IconButton
             sx={{
-              borderTopRightRadius: 10,
-              borderBottomRightRadius: 10,
+              p: 0,
+              m: 0,
+              mt: screenSize.isMobile ? undefined : 2.3,
             }}
-            display="flex"
-            alignItems="center"
           >
-            <Select
-              value={cycle?.name || ''}
-              disabled
-              renderValue={(value) => value || 'No cycle'}
-              displayEmpty
-              sx={{
-                color: 'white',
-                fontSize: screenSize.isDesktop ? 20 : undefined,
-                bgcolor: 'transparent',
-                border: 'none',
-                pl: 1,
-                '&:before, &:after': { borderBottom: 'none !important' },
-                '& .MuiInputBase-input.Mui-disabled': {
-                  color: 'white !important',
-                  WebkitTextFillColor: 'white !important', // For Safari
-                },
-                '& .MuiSelect-icon': {
-                  display: 'none', // Hide the dropdown icon
-                },
+            <MoreVert fontSize="medium" />
+          </IconButton>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      width="100%"
+      sx={{
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
+      {screenSize.isSmallTablet || screenSize.isMobile ? (
+        <>
+          <HorizontalItemsList
+            items={days}
+            value={day.date.toString()}
+            setValue={(value) => {
+              setDay({ label: '', date: dayjs(value) });
+              setDateFrom(dayjs(value).startOf('day'));
+              setDateTo(dayjs(value).endOf('day'));
+              setSelectedExercises([]);
+            }}
+            checkIsSameValue={(value: string) => {
+              return dayjs(value).isSame(dayjs(day.date), 'day');
+            }}
+            onArrowClick={(direction) => {
+              const newDay =
+                direction === 'left'
+                  ? day.date.subtract(1, 'week')
+                  : day.date.add(1, 'week');
+
+              setDay({ label: '', date: newDay });
+              setDateFrom(newDay.startOf('day'));
+              setDateTo(newDay.endOf('day'));
+              setDays(
+                commonService.date
+                  .getWeekDays(newDay)
+                  .map(({ label, date }) => ({
+                    label,
+                    value: date.toString(),
+                    sublabel: commonService.date.format(date, {
+                      withYear: false,
+                      withMonth: false,
+                      withoutDots: true,
+                    }),
+                  }))
+              );
+            }}
+          />
+          <GroupCycleInfo smallDisplay />
+          <PeriodSelect smallDisplay />
+        </>
+      ) : (
+        <Box
+          display="flex"
+          width="100%"
+          justifyContent="space-around"
+          alignItems="flex-start"
+        >
+          <Box width="25%">
+            <PeriodSelect />
+          </Box>
+          <Box width="50%">
+            <HorizontalItemsList
+              items={days}
+              value={day.date.toString()}
+              setValue={(value) => {
+                setDay({ label: '', date: dayjs(value) });
+                setDateFrom(dayjs(value).startOf('day'));
+                setDateTo(dayjs(value).endOf('day'));
+                setSelectedExercises([]);
               }}
-              variant="standard"
+              checkIsSameValue={(value: string) => {
+                return dayjs(value).isSame(dayjs(day.date), 'day');
+              }}
+              onArrowClick={(direction) => {
+                const newDay =
+                  direction === 'left'
+                    ? day.date.subtract(1, 'week')
+                    : day.date.add(1, 'week');
+
+                setDay({ label: '', date: newDay });
+                setDateFrom(newDay.startOf('day'));
+                setDateTo(newDay.endOf('day'));
+                setDays(
+                  commonService.date
+                    .getWeekDays(newDay)
+                    .map(({ label, date }) => ({
+                      label,
+                      value: date.toString(),
+                      sublabel: commonService.date.format(date, {
+                        withYear: false,
+                        withMonth: false,
+                        withoutDots: true,
+                      }),
+                    }))
+                );
+              }}
             />
+          </Box>
+          <Box width="25%">
+            <GroupCycleInfo />
           </Box>
         </Box>
       )}
-    </Stack>
+    </Box>
   );
 }
