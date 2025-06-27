@@ -3,15 +3,15 @@ import { ExerciseService } from './service/exercise.service';
 import { ExerciseController } from './exercise.controller';
 import { ComponentModule } from '../component/component.module';
 import { ExerciseRepository } from './repository/exercise.repository';
-import { UserModule } from '../user/user.module';
 import { ExerciseAttributeValueRepository } from './repository/exercise-attribute-value.repository';
 import { AttributeModule } from '../attribute/attribute.module';
 import { TrainingModule } from '../training/training.module';
+import { InstitutionModule } from '../institution/institution.module';
 
 @Module({
   imports: [
     AttributeModule,
-    forwardRef(() => UserModule),
+    InstitutionModule,
     forwardRef(() => ComponentModule),
     forwardRef(() => TrainingModule),
   ],

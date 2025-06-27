@@ -1,83 +1,19 @@
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import {
-  CACHE_KEY_ATTRIBUTES,
-  CACHE_KEY_FLAT_COMPONENTS,
-  CACHE_KEY_METHODS,
-} from '../common/constant/cache.constant';
-import { Wrapper } from '../common/type/wrapper.type';
-import { ComponentService } from '../component/component.service';
-import { Component } from '../component/entity/component.entity';
-import { Attribute } from '../attribute/entity/attribute.entity';
-import { AttributeService } from '../attribute/service/attribute.service';
-import { MethodService } from '../method/service/method.service';
-import { Method } from '../method/entity/method.entity';
+import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CacheManagerService {
-  constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    @Inject(forwardRef(() => ComponentService))
-    private readonly componentService: Wrapper<ComponentService>,
-    @Inject(forwardRef(() => AttributeService))
-    private readonly attributeService: Wrapper<AttributeService>,
-    @Inject(forwardRef(() => MethodService))
-    private readonly methodService: Wrapper<MethodService>,
-  ) {}
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  async getComponents(): Promise<Component[]> {
-    const cached = await this.cacheManager.get(CACHE_KEY_FLAT_COMPONENTS);
-    if (!cached) {
-      const components = await this.componentService.findAllFlat();
-      await this.cacheManager.set(
-        CACHE_KEY_FLAT_COMPONENTS,
-        components,
-        24 * 3600 * 1000,
-      );
-
-      return components;
-    }
-
-    return await this.cacheManager.get(CACHE_KEY_FLAT_COMPONENTS);
+  async get<T>(key: string): Promise<T> {
+    return await this.cacheManager.get<T>(key);
   }
 
-  async clearComponents(): Promise<void> {
-    await this.cacheManager.del(CACHE_KEY_FLAT_COMPONENTS);
+  async set<T>(key: string, value: T, duration = 3600): Promise<void> {
+    await this.cacheManager.set<T>(key, value, duration);
   }
 
-  async getAttributes(): Promise<Attribute[]> {
-    const cached = await this.cacheManager.get(CACHE_KEY_ATTRIBUTES);
-    if (!cached) {
-      const attributes = await this.attributeService.findAll();
-      await this.cacheManager.set(
-        CACHE_KEY_ATTRIBUTES,
-        attributes,
-        24 * 3600 * 1000,
-      );
-
-      return attributes;
-    }
-
-    return await this.cacheManager.get(CACHE_KEY_ATTRIBUTES);
-  }
-
-  async clearAttributes(): Promise<void> {
-    await this.cacheManager.del(CACHE_KEY_ATTRIBUTES);
-  }
-
-  async getMethods(): Promise<Method[]> {
-    const cached = await this.cacheManager.get(CACHE_KEY_METHODS);
-    if (!cached) {
-      const methods = await this.methodService.findAll();
-      await this.cacheManager.set(CACHE_KEY_METHODS, methods, 24 * 3600 * 1000);
-
-      return methods;
-    }
-
-    return await this.cacheManager.get(CACHE_KEY_METHODS);
-  }
-
-  async clearMethods(): Promise<void> {
-    await this.cacheManager.del(CACHE_KEY_METHODS);
+  async del(key: string): Promise<void> {
+    await this.cacheManager.del(key);
   }
 }

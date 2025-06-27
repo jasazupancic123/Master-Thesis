@@ -6,7 +6,11 @@ import { Auth, UserIdentifier } from 'firebase-admin/auth';
 import {
   DocumentReference,
   GeoPoint,
+  PartialWithFieldValue,
+  Query,
   Timestamp,
+  UpdateData,
+  WriteBatch,
 } from 'firebase-admin/firestore';
 import { Storage } from 'firebase-admin/storage';
 import { TimestampEntity } from '../common/entity/timestamp.entity';
@@ -16,6 +20,7 @@ import { DecodedUser, User } from '../common/type/firebase-auth.type';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
+import { BatchWriteOperation } from '../common/type/firestore.type';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -67,6 +72,103 @@ export class FirebaseService implements OnApplicationBootstrap {
       ...cleaned,
       updatedAt: new Date(),
     }) as FirestoreEntity<Partial<T>>;
+  }
+
+  async batchIn<T>(
+    field: keyof T,
+    array: string[],
+    collection:
+      | FirebaseFirestore.CollectionReference
+      | FirebaseFirestore.CollectionGroup,
+    query: (query: Query) => Query = (query) => query,
+    options?: {
+      batchSize?: number;
+    },
+  ): Promise<T[]> {
+    if (!array || !array.length || !collection) return [];
+
+    const { batchSize = 30 } = options || {}; // firestore limits batches to 30
+    const copy = [...array];
+
+    const batches = [];
+    while (copy.length) {
+      const batch = copy.splice(0, batchSize);
+
+      batches.push(
+        query(collection.where(field as string, 'in', batch))
+          .get()
+          .then(({ docs }) =>
+            docs.map((doc) =>
+              this.serialize<T>(doc.data() as FirestoreEntity<T>),
+            ),
+          ),
+      );
+    }
+
+    // after all of the data is fetched, return it
+    return Promise.all(batches).then((content) => content.flat());
+  }
+
+  /**
+   * Executes batched write operations in Firestore
+   * @param operations Array of write operations to execute
+   * @param options Configuration options
+   */
+  async paginateBatchWrites<T>(
+    operations: BatchWriteOperation<T>[],
+    options?: {
+      batchSize?: number;
+      maxRetries?: number;
+      retryDelayMs?: number; // ms
+    },
+  ): Promise<{ successCount: number; failureCount: number }> {
+    if (!operations?.length) return { successCount: 0, failureCount: 0 };
+
+    const {
+      batchSize = 500,
+      maxRetries = 3,
+      retryDelayMs = 1000,
+    } = options || {};
+
+    const db = this.firestore;
+    const chunks = this.chunkArray(operations, batchSize);
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (const [chunkIndex, chunk] of chunks.entries()) {
+      let retryAttempt = 0;
+      let chunkSuccess = false;
+
+      while (retryAttempt <= maxRetries && !chunkSuccess) {
+        try {
+          const batch = db.batch();
+
+          chunk.forEach(({ ref, data, operation, options }) => {
+            if (operation === 'set')
+              batch.set(ref, data as PartialWithFieldValue<T>, options || {});
+            else batch.update(ref, data as any);
+          });
+
+          await batch.commit();
+
+          successCount += chunk.length;
+          chunkSuccess = true;
+        } catch (e: any) {
+          retryAttempt++;
+          if (retryAttempt > maxRetries) {
+            failureCount += chunk.length;
+
+            console.error(
+              `Failed batch ${chunkIndex} after ${maxRetries} attempts`,
+              e,
+            );
+          } else
+            await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+        }
+      }
+    }
+
+    return { successCount, failureCount };
   }
 
   /**
@@ -174,9 +276,9 @@ export class FirebaseService implements OnApplicationBootstrap {
     );
   }
 
-  private checkRole(user: User | DecodedUser, role: UserRole): boolean {
-    if (isUser(user)) return user.customClaims.role.includes(role);
-    return user.role.includes(role);
+  checkRole(user: User | DecodedUser, role: UserRole): boolean {
+    if (isUser(user)) return user?.customClaims?.role?.includes(role);
+    return user?.role?.includes(role);
   }
 
   private cleanUser(user: User): Partial<User> {
@@ -188,6 +290,15 @@ export class FirebaseService implements OnApplicationBootstrap {
       photoURL: user.photoURL,
       displayName: user.displayName,
     };
+  }
+
+  // Helper function to split array into chunks
+  private chunkArray<T>(array: T[], size: number): T[][] {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size)
+      chunks.push(array.slice(i, i + size));
+
+    return chunks;
   }
 }
 

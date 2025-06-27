@@ -78,7 +78,7 @@ export class WellnessRepository
   collection(ref: Required<UserRef>) {
     return this.userRepository
       .doc(ref.uid)
-      .collection(FirestoreCollection.USER_META);
+      .collection(FirestoreCollection.WELLNESS);
   }
 
   serialize(snapshot: DocumentSnapshot | QueryDocumentSnapshot): Wellness {

@@ -3,10 +3,10 @@ import { Cycle } from './cycle.type';
 import { User } from '@/controller/user/type/user.type';
 
 export type Group = BaseEntity & {
-  name: string;
-  ownerId: string;
-  membersIds: string[];
   institutionId: string;
+  ownerId: string;
+  name: string;
+  membersIds: string[];
   cycles: Cycle[];
 
   // mapped properties

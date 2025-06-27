@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import { Institution } from '../entity/institution.entity';
-import { generateRandomName } from '../../../test/utils/random.util';
+import { generateRandomName } from '../../../test/common/utils/random.util';
 
 export function generateInstitutionStub(
   data?: Partial<Institution>,
@@ -14,7 +14,6 @@ export function generateInstitutionStub(
     ownerId: data?.ownerId || global.manager.uid,
     trainerIds: data?.trainerIds || [global.trainer.uid],
     athleteIds: data?.athleteIds || [global.athlete.uid],
-    groupIds: data?.groupIds || [],
     imageUrl: data?.imageUrl || null,
   };
 }

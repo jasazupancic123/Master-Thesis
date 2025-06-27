@@ -5,12 +5,12 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Subgroup } from './subgroup.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { CopiedFrom } from '@/controller/component/type/copied-from.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Method } from '@/controller/method/type/method.type';
 import { AttributeRange } from '@/controller/attribute/type/attribute-range.entity';
-import { SubgroupInfo } from './subggroup-minimal.type';
+import { SubgroupInfo } from './subgroup-minimal.type';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
+import { CopiedFrom } from './copied-from.type';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
@@ -20,7 +20,7 @@ export type TrainingComponent = IdEntity &
     completedMembersIds: string[]; // members who completed the component
     methodId?: string;
     target?: Target; // selected target
-    periodizationType?: PeriodizationType
+    periodizationType?: PeriodizationType;
 
     // mapped properties
     method?: Method;

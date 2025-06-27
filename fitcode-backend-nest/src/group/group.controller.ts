@@ -11,10 +11,12 @@ import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { UpdateGroupDto, UpdateGroupDtoWithId } from './dto/update-group.dto';
+import { BatchUpdateGroupsDto, UpdateGroupDto } from './dto/update-group.dto';
 import { GroupService } from './group.service';
 import { UserRole } from '../user/enum/user-role.enum';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Group')
 @Controller('group')
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
@@ -28,16 +30,7 @@ export class GroupController {
   @Get(':groupId')
   @Auth()
   async findById(@RequestUser() user: User, @Param('groupId') groupId: string) {
-    return await this.groupService.findByIdOrFail(user, { groupId });
-  }
-
-  @Get(':groupId/members')
-  @Auth()
-  async findMembers(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-  ) {
-    return await this.groupService.findMembers(user, { groupId });
+    return await this.groupService.findOneByIdOrFail(user, { groupId });
   }
 
   @Get('institution/:institutionId')
@@ -69,11 +62,12 @@ export class GroupController {
 
   @Patch('update/batch')
   @Auth()
-  async updateMultiple(
+  async batchUpdate(
     @RequestUser() user: User,
-    @Body() body: UpdateGroupDtoWithId[],
+    @Body() { groups }: BatchUpdateGroupsDto,
   ) {
-    return await this.groupService.batchUpdate(user, body);
+    await this.groupService.batchUpdate(user, groups);
+    return {};
   }
 
   @Delete(':groupId')

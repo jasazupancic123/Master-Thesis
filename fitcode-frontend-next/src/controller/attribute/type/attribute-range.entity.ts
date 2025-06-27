@@ -1,12 +1,9 @@
 import { AttributeType } from '../enum/attribute-value.enum';
+import { Attribute } from './attribute.type';
 
-export interface AttributeRange {
-  field: string; // name of the field in the database
-  name: string;
+export interface AttributeRange extends Attribute {
   type: AttributeType; // defaults to "string"
-  required?: boolean;
-  unit?: string; // kg, lbs, ...
-  defaultValue?: string;
+  name: string;
   options?: AttributeRange[]; // possible values for select type
   min?: number; // minimum value for range
   max?: number; // maximum value for range

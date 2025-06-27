@@ -24,6 +24,8 @@ import {
 import { FirebaseService } from '../../../firebase/firebase.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { WorkloadService } from '../workload.service';
+import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
+import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('validateSupersets', () => {
   let service: TrainingPlanService;
@@ -41,6 +43,10 @@ describe('validateSupersets', () => {
           useValue: createMock<FirebaseService>(),
         },
         {
+          provide: CacheManagerService,
+          useValue: createMock<CacheManagerService>(),
+        },
+        {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
         },
@@ -48,6 +54,10 @@ describe('validateSupersets', () => {
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
+        },
+        {
+          provide: InstitutionService,
+          useValue: createMock<InstitutionService>(),
         },
         {
           provide: ExerciseService,
@@ -129,7 +139,7 @@ describe('validateSupersets', () => {
       ),
     });
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).toThrow('You can only have up to 8 supersets per training component');
   });
 
@@ -145,7 +155,7 @@ describe('validateSupersets', () => {
       ],
     });
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).toThrow('You can only have up to 4 exercises per superset');
   });
 
@@ -164,7 +174,7 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).toThrow('Training exercise not found');
   });
 
@@ -200,7 +210,7 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises, components),
+      service.validateSupersets(trainingComponent, exercises),
     ).not.toThrow();
   });
 });

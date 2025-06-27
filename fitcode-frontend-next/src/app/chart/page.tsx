@@ -14,7 +14,7 @@ export default async function Page() {
   const components = await ComponentController.findAll();
   if (!components) return <div>Unauthorized</div>;
 
-  const exercises = await ExerciseController.findAll(token);
+  const exercises = await ExerciseController.findAllGlobal(token);
   if (!exercises) return <div>Unauthorized</div>;
 
   const profile = await UserController.findMe(token);
