@@ -81,6 +81,7 @@ export class GroupRepository
       }))
       .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
 
+    serialized.id = snapshot.id;
     return serialized;
   }
 }

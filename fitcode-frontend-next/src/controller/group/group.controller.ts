@@ -1,7 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
 import { Cycle } from './type/cycle.type';
 import { Group } from './type/group.type';
-import { UserEntity } from '../user/type/user.type';
 
 const api = CommonService.instance.api;
 
@@ -33,7 +32,12 @@ export class GroupController {
   static async update(
     token: string,
     groupId: string,
-    body: { name?: string; membersIds?: string[]; cycles?: Cycle[] }
+    body: {
+      name?: string;
+      ownerId?: string;
+      membersIds?: string[];
+      cycles?: Cycle[];
+    }
   ): Promise<Group> {
     return api.patch<Group>(`/group/${groupId}`, body, { token });
   }
@@ -42,7 +46,7 @@ export class GroupController {
     token: string,
     body: {
       id: string;
-      ownerId: string;
+      ownerId?: string;
       name?: string;
       membersIds?: string[];
       cycles?: Cycle[];
