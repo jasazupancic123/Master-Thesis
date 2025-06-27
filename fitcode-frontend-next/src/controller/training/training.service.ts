@@ -16,7 +16,7 @@ import { Target } from '../target/type/target.type';
 import { Method } from '../method/type/method.type';
 import { TrainingInfo } from './type/training-info.type';
 import { Subgroup } from './type/subgroup.type';
-import { SubgroupInfo } from './type/subggroup-minimal.type';
+import { SubgroupInfo } from './type/subgroup-minimal.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training;
@@ -127,20 +127,6 @@ export class TrainingService {
     );
 
     return item;
-  }
-
-  static mapAvailableMembers(training: Training): Training {
-    const subgroupMembersIds = training.components.flatMap((component) =>
-      component.subgroups.flatMap((subgroup) => subgroup.membersIds)
-    );
-
-    const allSubgroupMembersIds = new Set(subgroupMembersIds);
-    const availableMembersIds = training.membersIds.filter(
-      (memberId) => !allSubgroupMembersIds.has(memberId)
-    );
-
-    training.availableMembersIds = availableMembersIds;
-    return training;
   }
 
   static excludeWarmupCooldown(components: Component[]): Component[] {

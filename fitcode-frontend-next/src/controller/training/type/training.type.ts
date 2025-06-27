@@ -8,10 +8,12 @@ import { GroupWorkloadStats } from './average-workload-values.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
-    groupId: string;
-    cycleId: string;
+    institutionId?: string;
+    groupId?: string;
+    cycleId?: string;
     ownerId: string;
     membersIds: string[];
+    completedMembersIds: string[];
     copiedFromId?: string;
     warmup: TrainingComponent;
     cooldown: TrainingComponent;
@@ -22,8 +24,6 @@ export type Training = BaseEntity &
 
     // mapped properties
     members?: User[];
-    completedMembersIds: string[];
-    availableMembersIds?: string[];
   };
 
 export type TrainingStatus = TimestampEntity & {

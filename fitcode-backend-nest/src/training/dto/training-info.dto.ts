@@ -29,6 +29,7 @@ export class SubgroupInfoDto extends PickType(Subgroup, [
 
 export class TrainingInfoDto extends PickType(Training, [
   'id',
+  'institutionId',
   'groupId',
   'cycleId',
   'copiedFromId',

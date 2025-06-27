@@ -4,7 +4,7 @@ import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { IntersectionType } from '@nestjs/mapped-types';
 import { ColorEntity } from '../../common/entity/color.entity';
-import { SelectTargetsDto } from './selected-targets.dto';
+import { PartialTarget } from '../../target/entity/partial-target.dto';
 
 export interface Week {
   date: Date;
@@ -35,10 +35,10 @@ export class Cycle extends IntersectionType(BaseEntity, ColorEntity) {
   to: Date;
 
   @ValidateNested({ each: true })
-  @Type(() => SelectTargetsDto)
+  @Type(() => PartialTarget)
   @ApiProperty()
   @Expose()
-  selectedTargets: SelectTargetsDto[];
+  selectedTargets: PartialTarget[];
 
   // virtual
   weeks?: Week[][];

@@ -530,7 +530,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
           id: docRef.id,
           exerciseId: ref.exerciseId,
-          ownerId: institution.id,
+          ownerId: institution?.id || GLOBAL_EXERCISE_OWNER,
           componentIds: input.componentIds || exercise.componentIds,
           field: v.field,
           value: v.value,
@@ -549,7 +549,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       attributeValues: attributeValues.map((v) => ({
         ...v,
         exerciseId: ref.exerciseId,
-        ownerId: institution.id,
+        ownerId: institution?.id || GLOBAL_EXERCISE_OWNER,
       })),
     };
   }

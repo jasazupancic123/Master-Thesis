@@ -28,7 +28,7 @@ export class InstitutionController {
 
   @Get(':institutionId/athletes')
   @Auth([UserRole.ADMIN, UserRole.TRAINER])
-  async findMembers(@Param('institutionId') institutionId: string) {
+  async findAthletes(@Param('institutionId') institutionId: string) {
     return this.institutionService.findMembers({ institutionId });
   }
 
