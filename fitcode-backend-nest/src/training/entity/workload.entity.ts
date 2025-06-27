@@ -12,21 +12,28 @@ import {
   Min,
 } from 'class-validator';
 import { TimestampEntity } from '../../common/entity/timestamp.entity';
-import { IntType, VolType } from '../../component/enum/param.enum';
 import { SetStatus } from '../enum/set-status.enum';
+import { IntersectionType } from '@nestjs/mapped-types';
+import { WorkloadValue } from './workload-value.entity';
 
-export class Workload extends TimestampEntity {
+export class Workload extends IntersectionType(TimestampEntity, WorkloadValue) {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  groupId: string;
+  institutionId?: string;
 
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  cycleId: string;
+  groupId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  cycleId?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -79,214 +86,4 @@ export class Workload extends TimestampEntity {
   @ApiProperty()
   @Expose()
   isPersonalized: boolean;
-
-  /* --------------- Vol Work 1 --------------- */
-  @IsEnum(VolType)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork1Type?: VolType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork1ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork1ValueR?: number;
-
-  /* --------------- Vol Work 2 --------------- */
-  @IsEnum(VolType)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork2Type?: VolType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolWork2ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volWork2ValueR?: number;
-
-  /* --------------- Vol Rec --------------- */
-  @IsEnum(VolType)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volRecType?: VolType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedVolRecValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  volRecValueR?: number;
-
-  /* --------------- Int Work 1 --------------- */
-  @IsEnum(IntType)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork1Type?: IntType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork1ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork1ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork1ValueR?: number;
-
-  /* --------------- Int Work 2 --------------- */
-  @IsEnum(IntType)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork2Type?: IntType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntWork2ValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork2ValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intWork2ValueR?: number;
-
-  /* --------------- Int Rec --------------- */
-  @IsEnum(IntType)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intRecType?: IntType;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  prescribedIntRecValueR?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intRecValueL?: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @ApiProperty()
-  @Expose()
-  intRecValueR?: number;
 }

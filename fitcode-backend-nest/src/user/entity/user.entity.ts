@@ -7,21 +7,6 @@ import { Gender } from '../enum/gender.enum';
 import { SportLevel } from '../enum/sport-level.enum';
 
 export class UserEntity extends BaseEntity {
-  @IsString({ each: true })
-  @Expose()
-  @ApiProperty()
-  institutionIds: string[]; // array of institution ids user is trainer or athlete of
-
-  @IsString({ each: true })
-  @Expose()
-  @ApiProperty()
-  groupsIds: string[]; // array of group ids user is owner or member of
-
-  @IsString({ each: true })
-  @Expose()
-  @ApiProperty()
-  trainersIds: string[]; // for athlete, this is a list of trainer ids, and for trainer, this is a list of manager ids
-
   @IsOptional()
   @IsString()
   @ApiPropertyOptional()

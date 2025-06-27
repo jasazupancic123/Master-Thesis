@@ -11,19 +11,30 @@ import { BaseEntity } from '../../common/entity/base.entity';
 import { TrainingComponent } from './training-component.entity';
 import { Wellness } from '../../user/entity/wellness.entity';
 import { GroupWorkloadStats } from './average-workload-values.entity';
+import { Institution } from '../../institution/entity/institution.entity';
 
 export class Training extends BaseEntity {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  groupId: string;
+  institutionId?: string;
+  institution?: Institution | null;
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
-  cycleId: string;
+  groupId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Expose()
+  cycleId?: string;
 
   @IsString()
   @IsNotEmpty()

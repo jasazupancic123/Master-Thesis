@@ -29,7 +29,9 @@ import { CopyComponentDto } from './dto/copy-component.dto';
 import { plainToInstance } from 'class-transformer';
 import { TrainingInfoDto } from './dto/training-info.dto';
 import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Training')
 @Controller('training')
 export class TrainingController {
   constructor(
@@ -116,31 +118,12 @@ export class TrainingController {
   }
 
   @Post('/periodize/trainings')
-  async periodizeTrainings(
+  async periodize(
     @RequestUser() user: User,
     @Body() body: PeriodizeTrainingsDto,
   ) {
-    return await this.trainingService.periodizeTrainings(user, body);
+    return await this.trainingService.periodize(user, body);
   }
-
-  // @Post(':trainingId/withComponent')
-  // @Auth()
-  // async createWithTrainingComponent(
-  //   @RequestUser() user: User,
-  //   @Param('trainingId') trainingId: string,
-  //   @Body()
-  //   body: {
-  //     trainingComponent: TrainingComponent;
-  //     date: { from: Date; to: Date };
-  //   },
-  // ) {
-  //   const ref = { trainingId };
-  //   return await this.trainingService.createWithTrainingComponent(
-  //     user,
-  //     ref,
-  //     body,
-  //   );
-  // }
 
   @Patch(':trainingId')
   @Auth()

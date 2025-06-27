@@ -55,7 +55,7 @@ export default async function Layout({ children, params }: LayoutProps) {
     UserController.findAll(token),
     GroupController.findAll(token),
     InstitutionController.findById(token, group.institutionId),
-    ExerciseController.findAll(token),
+    ExerciseController.findAllGlobal(token),
     AttributeController.findAll(),
     ComponentController.findAll(),
     TrainingController.findAll(token, { groupId, minimal }),

@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
+  CollectionGroup,
   CollectionReference,
   DocumentReference,
 } from 'firebase-admin/firestore';
@@ -26,12 +27,20 @@ export class WorkloadRepository
     private readonly trainingRepository: Wrapper<TrainingRepository>,
   ) {}
 
+  async getAllDocs(
+    query: (ref: Query) => Query = (ref) => ref,
+  ): Promise<Workload[]> {
+    const snapshot = await query(this.collectionGroup()).get();
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
+    );
+  }
+
   async getDocs(
     ref: TrainingRef,
     query: (ref: Query) => Query = (ref) => ref,
   ): Promise<Workload[]> {
     const snapshot = await query(this.collection(ref)).get();
-
     return snapshot.docs.map((doc) =>
       this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
     );
@@ -80,6 +89,12 @@ export class WorkloadRepository
     return this.trainingRepository
       .doc(ref.trainingId)
       .collection(FirestoreCollection.TRAINING_WORKLOAD);
+  }
+
+  collectionGroup(): CollectionGroup {
+    return this.firebaseService.firestore.collectionGroup(
+      FirestoreCollection.TRAINING_WORKLOAD,
+    );
   }
 
   getKey(ref: WorkloadRef) {

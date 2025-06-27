@@ -1,7 +1,10 @@
-import { UserRole } from '../../src/user/enum/user-role.enum';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { CustomClaims, User } from '../../src/common/type/firebase-auth.type';
-import { UserEntity } from '../../src/user/entity/user.entity';
+import { UserRole } from '../../../src/user/enum/user-role.enum';
+import { FirebaseService } from '../../../src/firebase/firebase.service';
+import {
+  CustomClaims,
+  User,
+} from '../../../src/common/type/firebase-auth.type';
+import { UserEntity } from '../../../src/user/entity/user.entity';
 import { TestUser } from '../type/auth.type';
 import { generateRandomEmail } from './random.util';
 
@@ -19,7 +22,7 @@ export async function createTestUserAndToken(
   await firebaseService.auth.setCustomUserClaims(user.uid, customClaims);
 
   const createUserQuery = firebaseService.buildCreateQuery<UserEntity>(
-    { id: user.uid, groupsIds: [], trainersIds: [], institutionIds: [] },
+    { id: user.uid },
     { timestamps: true },
   );
 

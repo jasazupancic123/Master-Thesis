@@ -27,6 +27,8 @@ import { addMinutes, subMinutes } from 'date-fns';
 import { FirebaseService } from '../../../firebase/firebase.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { WorkloadService } from '../workload.service';
+import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
+import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('validateTrainingComponents', () => {
   let service: TrainingPlanService;
@@ -44,6 +46,10 @@ describe('validateTrainingComponents', () => {
           useValue: createMock<FirebaseService>(),
         },
         {
+          provide: CacheManagerService,
+          useValue: createMock<CacheManagerService>(),
+        },
+        {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
         },
@@ -51,6 +57,10 @@ describe('validateTrainingComponents', () => {
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
+        },
+        {
+          provide: InstitutionService,
+          useValue: createMock<InstitutionService>(),
         },
         {
           provide: ExerciseService,
@@ -238,7 +248,8 @@ describe('validateTrainingComponents', () => {
     ).toThrow(`Component Component 1 has to start before Component 2`);
   });
 
-  it('should throw error if wrong exercises is provided', () => {
+  // NOTE - disabled functionality (for now)
+  /* it('should throw error if wrong exercises is provided', () => {
     const now = new Date();
     const trainingComponents = [
       generateTrainingComponent({
@@ -277,7 +288,7 @@ describe('validateTrainingComponents', () => {
     ).toThrow(
       `Exercise ${exercise?.name} cannot be part of selected component`,
     );
-  });
+  }); */
 
   it('should throw error if there is an invalid member in subgroup', () => {
     const memberIds = ['m1', 'm2', 'm3'];

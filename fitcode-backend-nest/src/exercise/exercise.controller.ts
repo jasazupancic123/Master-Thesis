@@ -15,28 +15,26 @@ import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { CreateExercisesDto } from './dto/create-exercises.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { ExerciseService } from './service/exercise.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Exercise')
 @Controller('exercise')
 export class ExerciseController {
   constructor(private readonly exerciseService: ExerciseService) {}
 
-  @Get()
+  @Get('global')
   @Auth()
-  async findAll(
-    @RequestUser() user: User,
-    @Query() query?: Record<string, string>,
-  ) {
-    return this.exerciseService.findAll(user, query);
+  async findAllGlobal(@Query() query?: Record<string, string>) {
+    return this.exerciseService.findAllGlobal(query);
   }
 
-  @Get(':exerciseId')
+  @Get('institution/:institutionId')
   @Auth()
-  async findById(
-    @RequestUser() user: User,
-    @Param('exerciseId') exerciseId: string,
+  async findAll(
+    @Param('institutionId') institutionId: string,
+    @Query() query?: Record<string, string>,
   ) {
-    const ref = { exerciseId };
-    return this.exerciseService.findByIdOrFail(user, ref);
+    return this.exerciseService.findAllByInstitution(institutionId, query);
   }
 
   @Post()

@@ -6,7 +6,6 @@ import {
   Query,
 } from 'firebase-admin/firestore';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CommonService } from '../../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -15,16 +14,12 @@ import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
-import { Subgroup } from '../entity/subgroup.entity';
 
 @Injectable()
 export class TrainingRepository
   implements RootFirestoreCollectionRepository<Training>
 {
-  constructor(
-    private readonly firebaseService: FirebaseService,
-    private readonly commonService: CommonService,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -45,12 +40,6 @@ export class TrainingRepository
   }
 
   async addDoc(input: Create<Training>): Promise<string> {
-    if (input.membersIds?.length === 0)
-      throw new BadRequestException('Training must have atleast one member');
-
-    if (input.components?.length === 0)
-      throw new BadRequestException('Training must have atleast one component');
-
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Training>(
       {

@@ -1,16 +1,10 @@
-import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
+import { SetState } from '@/common/type/state.type';
 import { Cycle, Week } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
-import { Periodization } from '@/controller/group/type/periodization.type';
 import dayjs from 'dayjs';
 import { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
-import CycleComponentsSelect from '../training-year-cycle-components-select/training-year-cycle-components-select';
-// import isoWeek from 'dayjs/plugin/isoWeek';
-
-// dayjs.extend(isoWeek);
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 
@@ -23,12 +17,8 @@ export async function handleAddCycle(
     setDetectedChanges: SetState<boolean>;
   }
 ) {
-  const {
-    selectedGroup,
-    setSelectedGroup,
-    setCycles,
-    setDetectedChanges,
-  } = state;
+  const { selectedGroup, setSelectedGroup, setCycles, setDetectedChanges } =
+    state;
   const { name, description, from, to } = input;
 
   if (!name || !from || !to) {

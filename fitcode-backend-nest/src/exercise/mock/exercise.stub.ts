@@ -1,4 +1,4 @@
-import { generateRandomName } from '../../../test/utils/random.util';
+import { generateRandomName } from '../../../test/common/utils/random.util';
 import { Exercise } from '../entity/exercise.entity';
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { v4 } from 'uuid';

@@ -96,6 +96,7 @@
         "name": "Power",
         "slug": "power",
         "attributes": [
+          "location",
           "equipment",
           "pattern",
           "loadingSide",
@@ -153,6 +154,7 @@
         "name": "Other",
         "slug": "other-1",
         "attributes": [
+          "location",
           "equipment",
           "pattern",
           "loadingSide",
@@ -169,6 +171,7 @@
         "name": "General",
         "slug": "general-strength",
         "attributes": [
+          "location",
           "equipment",
           "pattern",
           "loadingSide",
@@ -206,6 +209,7 @@
         "name": "Corrective",
         "slug": "corrective",
         "attributes": [
+          "location",
           "equipment",
           "pattern",
           "loadingSide",
@@ -314,6 +318,7 @@
         "name": "Acceleration",
         "slug": "acceleration",
         "attributes": [
+          "location",
           "pattern",
           "loadingSide",
           "movDir",
@@ -355,6 +360,7 @@
         "name": "Deceleration",
         "slug": "deceleration",
         "attributes": [
+          "location",
           "pattern",
           "loadingSide",
           "movDir",
@@ -396,6 +402,7 @@
         "name": "Peak Speed",
         "slug": "peak-speed",
         "attributes": [
+          "location",
           "pattern",
           "loadingSide",
           "movDir",
@@ -437,6 +444,7 @@
         "name": "COD",
         "slug": "cod",
         "attributes": [
+          "location",
           "pattern",
           "loadingSide",
           "movDir",
@@ -478,6 +486,7 @@
         "name": "Agility",
         "slug": "agility",
         "attributes": [
+          "location",
           "pattern",
           "loadingSide",
           "movDir",
@@ -578,7 +587,7 @@
           ]
         }
       ],
-      "end-opt-2": [
+      "end-opts:selected:end-opt-2": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
@@ -619,7 +628,7 @@
           ]
         }
       ],
-      "end-opt-3": [
+      "end-opts:selected:end-opt-3": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
@@ -677,7 +686,7 @@
           ]
         }
       ],
-      "end-opt-4": [
+      "end-opts:selected:end-opt-4": [
         {
           "field": "volWorkSets",
           "defaultValue": "set",
@@ -728,25 +737,25 @@
       {
         "name": "Aerobic Capacity",
         "slug": "aerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       },
       {
         "name": "Aerobic Power",
         "slug": "aerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       },
       {
         "name": "Anaerobic Capacity",
         "slug": "anaerobic-capacity",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       },
       {
         "name": "Anaerobic Power",
         "slug": "anaerobic-power",
-        "attributes": ["pattern", "coeff", "method", "sportTask"],
+        "attributes": ["pattern", "coeff", "method", "sportTask", "end-opts"],
         "children": []
       }
     ]
@@ -842,7 +851,7 @@
       {
         "name": "Flexibility",
         "slug": "flexibility",
-        "attributes": ["diagnosis", "muscle"],
+        "attributes": ["location", "diagnosis", "muscle"],
         "children": [
           {
             "name": "Ballistic Stretching",
@@ -884,7 +893,7 @@
       {
         "name": "Mobility",
         "slug": "mobility",
-        "attributes": ["diagnosis", "muscle"],
+        "attributes": ["location", "diagnosis", "muscle"],
         "children": [
           {
             "name": "Dynamic WU",

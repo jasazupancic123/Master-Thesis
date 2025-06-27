@@ -1,9 +1,14 @@
+import { generateRandomNumber } from '../../../test/common/utils/random.util';
 import { IntType, VolType } from '../../component/enum/param.enum';
+import { WorkloadValue } from '../entity/workload-value.entity';
 import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 
-export function generateWorkloadStub(data?: Partial<Workload>): Workload {
+export function generateWorkloadStub(
+  data?: Partial<Workload> & { completed?: boolean },
+): Workload {
   return {
+    institutionId: data?.institutionId,
     groupId: data?.groupId,
     cycleId: data?.cycleId,
     userId: data?.userId || global.athlete.uid,
@@ -17,7 +22,55 @@ export function generateWorkloadStub(data?: Partial<Workload>): Workload {
     isPersonalized: false,
     createdAt: new Date(),
     updatedAt: new Date(),
+    deletedAt: null,
     ...data,
+  };
+}
+
+export function generateWorkloadValuesStub(
+  data?: Partial<WorkloadValue> & { completed?: boolean },
+): WorkloadValue {
+  const completed = data?.completed || false;
+
+  return {
+    volWork1Type: data?.volWork1Type || VolType.Rep,
+    prescribedVolWork1ValueL: data?.prescribedVolWork1ValueL || 12,
+    prescribedVolWork1ValueR: data?.prescribedVolWork1ValueR || 12,
+    volWork1ValueL:
+      data?.volWork1ValueL || completed ? generateRandomNumber(0, 12) : null,
+    volWork1ValueR:
+      data?.volWork1ValueR || completed ? generateRandomNumber(0, 12) : null,
+    volWork2Type: data?.volWork2Type || VolType.Time,
+    prescribedVolWork2ValueL: data?.prescribedVolWork2ValueL || 60,
+    prescribedVolWork2ValueR: data?.prescribedVolWork2ValueL || 60,
+    volWork2ValueL:
+      data?.volWork2ValueL || completed ? generateRandomNumber(0, 12) : null,
+    volWork2ValueR:
+      data?.volWork2ValueR || completed ? generateRandomNumber(0, 12) : null,
+    volRecType: data?.volRecType || VolType.Time,
+    prescribedVolRecValueL: data?.prescribedVolRecValueL || 60,
+    prescribedVolRecValueR: data?.prescribedVolRecValueR || 60,
+    volRecValueL:
+      data?.volRecValueL || completed ? generateRandomNumber(0, 60) : null,
+    volRecValueR:
+      data?.volRecValueR || completed ? generateRandomNumber(0, 60) : null,
+    intWork1Type: data?.intWork1Type || IntType.Kg,
+    prescribedIntWork1ValueL: data?.prescribedIntWork1ValueL || 20,
+    prescribedIntWork1ValueR: data?.prescribedIntWork1ValueR || 20,
+    intWork1ValueL:
+      data?.intWork1ValueL || completed ? generateRandomNumber(0, 20) : null,
+    intWork1ValueR:
+      data?.intWork1ValueR || completed ? generateRandomNumber(0, 20) : null,
+    intWork2Type: data.intWork2Type || IntType.Eff,
+    prescribedIntWork2ValueL: data?.prescribedIntWork2ValueL || 0,
+    prescribedIntWork2ValueR: data?.prescribedIntWork2ValueR || 0,
+    intWork2ValueL: data?.intWork2ValueL || completed ? 0 : null,
+    intWork2ValueR: data?.intWork2ValueR || completed ? 0 : null,
+    intRecType: data?.intRecType || IntType.Tempo,
+    prescribedIntRecValueL: data?.prescribedIntRecValueL || 0,
+    prescribedIntRecValueR: data?.prescribedIntRecValueR || 0,
+    intRecValueL: data?.intRecValueL || completed ? 0 : null,
+    intRecValueR: data?.intRecValueR || completed ? 0 : null,
   };
 }
 
