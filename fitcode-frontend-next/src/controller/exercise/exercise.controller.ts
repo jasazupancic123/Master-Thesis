@@ -11,6 +11,7 @@ export class ExerciseController {
       query,
     });
   }
+
   static async findAllByInstitution(
     token: string,
     institutionId: string,

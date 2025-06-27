@@ -26,6 +26,12 @@ export class InstitutionController {
     return this.institutionService.getDocByIdOrFail({ institutionId });
   }
 
+  @Get(':institutionId/athletes')
+  @Auth([UserRole.ADMIN, UserRole.TRAINER])
+  async findMembers(@Param('institutionId') institutionId: string) {
+    return this.institutionService.findMembers({ institutionId });
+  }
+
   @Post()
   @Auth([UserRole.ADMIN])
   async create(@RequestUser() user: User, @Body() body: CreateInstitutionDto) {

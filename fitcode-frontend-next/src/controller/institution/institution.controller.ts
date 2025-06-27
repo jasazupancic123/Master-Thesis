@@ -1,5 +1,6 @@
 import { CommonService } from '@/common/service/common.service';
 import { Institution } from './type/institution.type';
+import { UserEntity } from '../user/type/user.type';
 
 const api = CommonService.instance.api;
 
@@ -12,14 +13,16 @@ export class InstitutionController {
     return api.get<Institution>(`/institution/${id}`, { token });
   }
 
+  static async findAthletes(token: string, id: string) {
+    return api.get<UserEntity[]>(`/institution/${id}/athletes`, { token });
+  }
+
   static async create(
     token: string,
     body: {
+      ownerId: string;
       name: string;
       imageUrl: string;
-      ownerId: string;
-      trainerIds: [];
-      athleteIds: [];
     }
   ) {
     return api.post<Institution>('/institution', body, { token });
