@@ -24,8 +24,7 @@ export function ExerciseCard(props: Props) {
         }
         sx={{
           height: 140,
-          background:
-            'linear-gradient(180deg, rgba(26,43,60,1) 0%, rgba(37,53,70,1) 100%)',
+          background: 'background.dark',
         }}
         src={exercise.videoUrl || exercise.imageUrl}
         title={exercise.name}

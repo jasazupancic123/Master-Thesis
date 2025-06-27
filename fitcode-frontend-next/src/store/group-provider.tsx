@@ -9,9 +9,9 @@ import { GroupDateFilter } from '@/common/type/filter.type';
 import { ChildrenProps } from '@/common/type/props.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
-import { Training } from '@/controller/training/type/training.type';
+import { Institution } from '@/controller/institution/type/institution.type';
 import dayjs from 'dayjs';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 const dateService = CommonService.instance.date;
 
@@ -30,6 +30,7 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     exercises,
     groups,
     group: providedGroup,
+    institution: providedInstitution,
     trainings: allTrainings,
     methods,
   } = props;
@@ -37,6 +38,8 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
   const [group, setGroup] = useState<Group>(providedGroup);
+  const [institution, setInstitution] =
+    useState<Institution>(providedInstitution);
 
   // find the cycle which is in the current date, else undefined:
   const todaysCycle = group.cycles.find((c) =>
@@ -64,6 +67,8 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
     methods,
     filter,
     setFilter,
+    institution,
+    setInstitution,
     group,
     setGroup,
     cycle,

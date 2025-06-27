@@ -1,7 +1,9 @@
 import { GroupDateFilter } from '@/common/type/filter.type';
-import { ToggleButton } from '@mui/material';
+import { ToggleButton, Typography } from '@mui/material';
 import React from 'react';
 import { useTheme } from '@mui/material';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useGroup } from '@/store/group-provider';
 
 interface Props {
   value: GroupDateFilter;
@@ -9,8 +11,11 @@ interface Props {
 }
 
 export default function FilterButton(props: Props) {
-  const { value, disabled = false } = props;
+  const { filter } = useGroup();
   const theme = useTheme();
+  const screenSize = useScreenSize();
+
+  const { value, disabled = false } = props;
 
   return (
     <ToggleButton
@@ -18,19 +23,12 @@ export default function FilterButton(props: Props) {
       disabled={disabled}
       sx={{
         width: '25%',
-        px: 2,
-        py: 0.75,
-        color: '#fff',
-        backgroundColor: 'background.default',
-        '&.Mui-selected': {
-          backgroundColor: theme.palette.primary.main,
-          color: '#fff',
-          borderBottomLeftRadius: '80px',
-          borderBottomRightRadius: '80px',
+        '&.MuiButtonBase-root': {
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          backgroundColor: theme.palette.background.light,
         },
         border: 'none',
-        borderBottomLeftRadius: '50px',
-        borderBottomRightRadius: '50px',
         '&:hover': {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           color: '#fff',
@@ -38,7 +36,15 @@ export default function FilterButton(props: Props) {
         textTransform: 'none',
       }}
     >
-      {value.toUpperCase()}
+      <Typography
+        variant="body2"
+        sx={{
+          fontSize: screenSize.isMobile ? '12px' : '16px',
+          color: filter === value ? theme.palette.primary.main : undefined,
+        }}
+      >
+        {value.toUpperCase()}
+      </Typography>
     </ToggleButton>
   );
 }

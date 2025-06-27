@@ -164,33 +164,21 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           maxWidth: 1500,
           borderRadius: 2,
           rowGap: 1,
-          py: isSticky ? 1 : !component ? 1 : 2,
+          py: 0.5,
+          px: !component ? 0.5 : 0,
           display: 'flex',
           flexWrap: 'wrap',
           margin: 'auto',
           justifyContent: 'center',
-          mt: !component ? 2 : 0,
-          minHeight:
-            group.membersIds &&
-            group.membersIds.length > 0 &&
-            !isSticky &&
-            component
-              ? 80
-              : group.membersIds &&
-                  group.membersIds.length > 0 &&
-                  !isSticky &&
-                  component
-                ? 60
-                : undefined,
-          backgroundColor: !component
-            ? theme.palette.background.light
-            : 'background.paper',
           zIndex: isSticky ? 10 : undefined,
           position: isSticky ? 'fixed' : 'relative',
           top: isSticky ? '70px' : undefined,
-          px: !component ? 1 : 0,
           boxShadow: isSticky ? '0px 4px 10px rgba(0, 0, 0, 0.1)' : 'none',
-          border: isSticky ? '1px solid grey' : 'none',
+          border: isSticky
+            ? '1px solid grey'
+            : !component
+              ? '1px solid grey'
+              : undefined,
         }}
       >
         <DragDropContext onDragEnd={(result) => handleOnDragEnd(result)}>
@@ -212,7 +200,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                   sx={{ mx: 1, py: 0 }}
                 >
                   <Box
-                    sx={{ p: 0, my: 1, cursor: 'pointer' }}
+                    sx={{ p: 0, cursor: 'pointer' }}
                     onClick={() => setSelectedAthlete(member)}
                     onContextMenu={(e) => {
                       e.preventDefault();
@@ -233,8 +221,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
                           ?.profileImageUrl || '/user_avatar.png'
                       }
                       sx={{
-                        width: screenSize.isMobile ? 40 : 50,
-                        height: screenSize.isMobile ? 40 : 50,
+                        width: 40,
+                        height: 40,
                         mx: 0,
                         py: 0,
                       }}

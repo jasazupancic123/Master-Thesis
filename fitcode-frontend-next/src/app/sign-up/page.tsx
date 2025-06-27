@@ -13,7 +13,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { FormEvent, useState } from 'react';
 import toast from 'react-hot-toast';
-import { signInUpTheme } from '../style';
 import { useTheme } from '@mui/material';
 
 export default function Page() {
@@ -42,124 +41,115 @@ export default function Page() {
   }
 
   return (
-    <ThemeProvider theme={signInUpTheme}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100dvh',
+        justifyContent: 'center',
+      }}
+    >
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100dvh',
-          justifyContent: 'center',
+          justifyItems: 'center',
+          padding: 4,
+          borderRadius: 3,
         }}
       >
-        <Box
-          sx={{
-            justifyItems: 'center',
-            backgroundColor: '#FFFFFF',
-            padding: 4,
-            borderRadius: 3,
-          }}
-        >
-          <Avatar sx={{ m: 1, bgcolor: theme.palette.primary.main }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            {LINKS_AUTH.register.label}
-          </Typography>
+        <Avatar sx={{ m: 1, bgcolor: theme.palette.primary.main }}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          {LINKS_AUTH.register.label}
+        </Typography>
 
-          <Box
-            component="form"
-            noValidate
-            onSubmit={handleSubmit}
-            sx={{ mt: 3 }}
+        <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                autoComplete="given-name"
+                name="firstName"
+                required
+                fullWidth
+                id="firstName"
+                label="First Name"
+                autoFocus
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                id="lastName"
+                label="Last Name"
+                name="lastName"
+                autoComplete="family-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </Grid>
+          </Grid>
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{
+              mt: 3,
+              mb: 2,
+              px: 2,
+              py: 2,
+              backgroundColor: theme.palette.primary.main,
+            }}
           >
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  autoComplete="given-name"
-                  name="firstName"
-                  required
-                  fullWidth
-                  id="firstName"
-                  label="First Name"
-                  autoFocus
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
-              </Grid>
+            {LINKS_AUTH.register.label}
+          </Button>
 
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="lastName"
-                  label="Last Name"
-                  name="lastName"
-                  autoComplete="family-name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  id="email"
-                  label="Email Address"
-                  name="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  id="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </Grid>
+          <Grid container sx={{ justifyContent: 'center' }}>
+            <Grid item>
+              <Link
+                href={LINKS_AUTH.login.href}
+                style={{
+                  textDecoration: 'none',
+                  color: theme.palette.primary.main,
+                }}
+              >
+                Sign in
+              </Link>
             </Grid>
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{
-                mt: 3,
-                mb: 2,
-                px: 2,
-                py: 2,
-                backgroundColor: theme.palette.primary.main,
-                color: 'white',
-              }}
-            >
-              {LINKS_AUTH.register.label}
-            </Button>
-
-            <Grid container sx={{ justifyContent: 'center' }}>
-              <Grid item>
-                <Link
-                  href={LINKS_AUTH.login.href}
-                  style={{
-                    textDecoration: 'none',
-                    color: theme.palette.primary.main,
-                  }}
-                >
-                  Sign in
-                </Link>
-              </Grid>
-            </Grid>
-          </Box>
+          </Grid>
         </Box>
       </Box>
-    </ThemeProvider>
+    </Box>
   );
 }
