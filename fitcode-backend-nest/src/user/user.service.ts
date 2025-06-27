@@ -45,6 +45,10 @@ export class UserService {
     return this.userRepository.doc(id);
   }
 
+  getCollection() {
+    return this.userRepository.collection();
+  }
+
   async getDocs(query: (query: Query) => Query = (query) => query) {
     return await this.userRepository.getDocs(query);
   }

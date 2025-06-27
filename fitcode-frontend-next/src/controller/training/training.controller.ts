@@ -79,7 +79,7 @@ export class TrainingController {
     return api.post<Training>('/training/copy/component', body, { token });
   }
 
-  static async periodizeTrainings(
+  static async periodize(
     token: string,
     body: {
       baseTrainingId: string;
@@ -137,25 +137,9 @@ export class TrainingController {
     return api.post<Training>(`/training/${trainingId}/copy`, body, { token });
   }
 
-  static async createWithTrainingComponent(
-    token: string,
-    trainingId: string,
-    body: { trainingComponent: TrainingComponent; date: DateRange }
-  ) {
-    return api.post<Training>(`/training/${trainingId}/withComponent`, body, {
-      token,
-    });
-  }
-
   static async delete(token: string, trainingId: string) {
     await api.delete<{}>(`/training/${trainingId}`, { token });
     return null;
-  }
-
-  static async getTrainingStatus(token: string, trainingId: string) {
-    return api.get<TrainingStatus[]>(`/training/${trainingId}/status`, {
-      token,
-    });
   }
 
   static async finishComponent(
@@ -169,9 +153,7 @@ export class TrainingController {
     return api.patch<Training>(
       `/training/${trainingId}/finish/${componentId}/component`,
       { userId, rootComponentId, supersets },
-      {
-        token,
-      }
+      { token }
     );
   }
 

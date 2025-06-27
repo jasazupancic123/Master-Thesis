@@ -23,7 +23,7 @@ export default async function Page() {
   const role = profile.customClaims.role[0];
   const [trainings, exercises, components, methods] = await Promise.all([
     TrainingController.findAll(token),
-    ExerciseController.findAll(token),
+    ExerciseController.findAllGlobal(token),
     ComponentController.findAll(),
     MethodController.findAll(token),
   ]);

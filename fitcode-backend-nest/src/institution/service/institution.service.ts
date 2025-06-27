@@ -18,6 +18,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { Permission } from '../../common/interface/permission.interface';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMembersDto } from '../dto/update-institution-members.dto';
+import { UserEntity } from '../../user/entity/user.entity';
 
 @Injectable()
 export class InstitutionService implements Permission<Institution> {
@@ -111,6 +112,17 @@ export class InstitutionService implements Permission<Institution> {
 
     await this.repository.updateDoc(ref.institutionId, input);
     return { ...institution, ...this.commonService.object.clean(input) };
+  }
+
+  async findMembers(ref: InstitutionRef): Promise<UserEntity[]> {
+    const institution = await this.getDocByIdOrFail(ref);
+    const collection = this.userService.getCollection();
+
+    return this.firebaseService.batchIn(
+      'id',
+      institution.athleteIds,
+      collection,
+    );
   }
 
   async updateMembers(

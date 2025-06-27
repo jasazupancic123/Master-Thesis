@@ -8,6 +8,7 @@ import { handleApiRequest } from '@/common/type/state.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { GroupController } from '@/controller/group/group.controller';
+import { InstitutionController } from '@/controller/institution/institution.controller';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import {
@@ -99,7 +100,7 @@ export function TrainerDayViewProvider(
     async function fetchMembers() {
       handleApiRequest(
         router,
-        () => GroupController.findMembers(token, group.id),
+        () => InstitutionController.findAthletes(token, group.institutionId),
         (members) => setMembers(members),
         undefined
       );
