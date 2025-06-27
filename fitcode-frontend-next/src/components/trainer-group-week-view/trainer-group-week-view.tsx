@@ -122,8 +122,12 @@ export default function TrainerWeekView() {
                   flexDirection: 'column',
                 }}
               >
-                <Typography sx={{ color: '#fff' }}>
-                  {commonService.date.format(day)}
+                <Typography>
+                  {commonService.date.format(day, {
+                    withYear: false,
+                    withMonth: true,
+                    withoutDots: false,
+                  })}
                 </Typography>
 
                 <Box

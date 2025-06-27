@@ -1,6 +1,8 @@
 import { useGroup } from '@/store/group-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import {
+  CheckBox,
+  CheckBoxOutlineBlank,
   Close,
   DateRange,
   Delete,
@@ -10,7 +12,7 @@ import {
   Visibility,
   VisibilityOff,
 } from '@mui/icons-material';
-import { Box, IconButton, Menu, MenuItem } from '@mui/material';
+import { Box, Checkbox, IconButton, Menu, MenuItem } from '@mui/material';
 import { DoNotDisturb } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-plan.type';
@@ -20,7 +22,7 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { SetState } from '@/common/type/state.type';
-import TrainingComponentExpanded from '../training-component-expanded/training-component-expanded';
+import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import { useScreenSize } from '@/store/screen-size-provider';
 
 interface TrainingComponentMenuProps {
@@ -93,52 +95,24 @@ export default function TrainingComponentMenu(
   };
 
   return (
-    <Box display="flex" alignItems="center" position="absolute" right={0}>
-      {!screenSize.isMobile && (
+    <Box display="flex" alignItems="center" position="absolute" right={-11.5}>
+      {!screenSize.isSmallerThanLaptop && (
         <Box
           display="flex"
-          width={screenSize.isMobile ? '100%' : undefined}
+          width={screenSize.isSmallerThanLaptop ? '100%' : undefined}
           p={0}
           mr={1}
           alignItems="center"
-          flexDirection={screenSize.isMobile ? 'column' : 'row'}
+          flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
         >
           {trainingComponent &&
             component &&
             selectedTraining?.id === training.id &&
             trainingComponent.id === component.id && (
-              <TrainingComponentExpanded training={training} />
+              <TrainingComponentHeaderMenu training={training} />
             )}
         </Box>
       )}
-
-      {/* {trainingComponent?.component &&
-        ![WARMUP_ID, COOLDOWN_ID].includes(trainingComponent.component.id) && (
-          <IconButton
-            onClick={() => {
-              if (detectedChanges) {
-                toast.error('Save training first', {
-                  icon: '⚠️',
-                  duration: 3000,
-                });
-                return;
-              }
-
-              if (!component || trainingComponent.id !== component.id) {
-                setTraining(training);
-                setComponent(trainingComponent);
-              }
-
-              setOpenCalendarModal(true);
-            }}
-            sx={{
-              p: 0,
-              m: 0,
-            }}
-          >
-            <DateRange fontSize="small" />
-          </IconButton>
-        )} */}
 
       <IconButton sx={{ p: 0 }} onClick={handleMenuOpen}>
         <MoreVert fontSize="small" />
@@ -160,6 +134,38 @@ export default function TrainingComponentMenu(
           ) : (
             <>
               <Visibility sx={{ mr: 1 }} /> Show Component
+            </>
+          )}
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => {
+            const allExercisesSelected = trainingComponent.supersets?.every(
+              (s) =>
+                s.exercises.every((e) =>
+                  selectedExercises.some((se) => se.id === e.id)
+                )
+            );
+            if (allExercisesSelected) {
+              setSelectedExercises([]);
+            } else {
+              setSelectedExercises(
+                trainingComponent.supersets?.flatMap((s) => s.exercises) || []
+              );
+            }
+          }}
+        >
+          {trainingComponent.supersets?.every((s) =>
+            s.exercises.every((e) =>
+              selectedExercises.some((se) => se.id === e.id)
+            )
+          ) ? (
+            <>
+              <CheckBoxOutlineBlank sx={{ mr: 1 }} /> Deselect All Exercises
+            </>
+          ) : (
+            <>
+              <CheckBox sx={{ mr: 1 }} /> Select All Exercises{' '}
             </>
           )}
         </MenuItem>
@@ -270,10 +276,10 @@ export default function TrainingComponentMenu(
                 handleMenuClose();
               }}
             >
-              <Close sx={{ mr: 1 }} /> Delete Selected Exercises
+              <Delete sx={{ mr: 1 }} /> Delete Selected Exercises
             </MenuItem>
 
-            <MenuItem
+            {/* <MenuItem
               onClick={() => {
                 const newTraining = { ...training };
                 newTraining.components = newTraining.components.filter(
@@ -291,7 +297,7 @@ export default function TrainingComponentMenu(
               }}
             >
               <Delete sx={{ mr: 1 }} /> Delete Component
-            </MenuItem>
+            </MenuItem> */}
           </Box>
         )}
       </Menu>

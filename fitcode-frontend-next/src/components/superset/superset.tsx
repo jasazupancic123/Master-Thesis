@@ -31,6 +31,8 @@ interface SupersetComponentProps {
   setSupersets: SetState<SupersetClass[]>;
   setsNumbers: { exerciseId: string; setsNumber: number }[];
   setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function Superset(props: SupersetComponentProps) {
@@ -49,6 +51,8 @@ export default function Superset(props: SupersetComponentProps) {
     setSupersets,
     setsNumbers,
     setSetsNumbers,
+    expandedExercisesView,
+    setExpandedExercisesView,
   } = props;
 
   const screenSize = useScreenSize();
@@ -102,13 +106,7 @@ export default function Superset(props: SupersetComponentProps) {
           <Stack
             ref={provided.innerRef}
             {...provided.droppableProps}
-            p={
-              screenSize.isLaptop || screenSize.isMobile
-                ? 0
-                : screenSize.isLandscapeMobile
-                  ? 0.5
-                  : 2
-            }
+            p={screenSize.isLandscapeMobile ? 0.5 : 0}
             pt={0}
           >
             <Box
@@ -176,6 +174,8 @@ export default function Superset(props: SupersetComponentProps) {
                     setSupersets={setSupersets}
                     setsNumbers={setsNumbers}
                     setSetsNumbers={setSetsNumbers}
+                    expandedExercisesView={expandedExercisesView}
+                    setExpandedExercisesView={setExpandedExercisesView}
                   />
                 ))
               )}

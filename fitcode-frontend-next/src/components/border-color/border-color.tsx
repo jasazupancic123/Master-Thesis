@@ -9,11 +9,12 @@ export default function BorderColor(props: {
   applyMargin?: boolean;
   marginValue?: string | number;
 }) {
+  const height = 3;
   if (props.lower)
     return (
       <Box
         sx={{
-          height: 6,
+          height,
           borderBottomRightRadius: 25,
           borderBottomLeftRadius: 25,
           backgroundColor: props.color,
@@ -26,7 +27,7 @@ export default function BorderColor(props: {
   return (
     <Box
       sx={{
-        height: 6,
+        height,
         borderTopRightRadius: 25,
         borderTopLeftRadius: 25,
         backgroundColor: props.color,

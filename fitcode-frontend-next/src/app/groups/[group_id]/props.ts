@@ -19,6 +19,7 @@ import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { Institution } from '@/controller/institution/type/institution.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
@@ -26,6 +27,7 @@ export interface GroupIdPageProps {
   token: string;
   userId: string;
   group: Group;
+  institution: Institution;
   users: User[];
   components: Component[];
   attributes: Attribute[];
@@ -41,6 +43,8 @@ export type GroupContextProps = GroupIdPageProps & {
   setUsers: SetState<User[]>;
   group: Group;
   setGroup: SetState<Group>;
+  institution: Institution;
+  setInstitution: SetState<Institution>;
   cycle: Cycle | undefined;
   setCycle: SetStateNullable<Cycle>;
   dateFrom: Dayjs;

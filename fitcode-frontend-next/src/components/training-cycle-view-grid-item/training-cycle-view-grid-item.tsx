@@ -120,7 +120,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
   } else fontSize = 20;
 
   return (
-    <Box py={screenSize.isLaptop ? 0 : 1}>
+    <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ flex: 1 }}></Box>
       </Box>
@@ -132,19 +132,7 @@ export function TrainingGridItem(props: TrainingCycleViewGridItemProps) {
         alignItems="center"
         flexDirection={screenSize.isMobile ? 'column' : 'row'}
         flexWrap="wrap"
-        maxHeight={40}
-        mt={
-          screenSize.isLandscapeMobile ||
-          (training.components.length >= 5 && screenSize.isLaptop)
-            ? 1
-            : screenSize.isLaptop
-              ? 1
-              : screenSize.isMobile
-                ? 2
-                : training.components.length > 5
-                  ? 0.5
-                  : undefined
-        }
+        height="70px"
         sx={{
           overflowY:
             isWrapped || screenSize.isMobile || screenSize.isLandscapeMobile

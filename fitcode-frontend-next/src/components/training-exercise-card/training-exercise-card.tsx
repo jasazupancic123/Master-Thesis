@@ -34,6 +34,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     setsNumbers,
     setSetsNumbers,
     setSupersets,
+    expandedExercisesView,
+    setExpandedExercisesView,
   } = props;
 
   // const [exercise, setExercise] = useState(propsExercise);
@@ -187,7 +189,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     <Stack
       p={1}
       px={screenSize.isMobile ? 0 : undefined}
-      pb={2}
+      pb={expandedExercisesView ? 2 : 1}
       gap={1}
       sx={{
         width: '100% !important',
@@ -210,7 +212,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(38, 54, 70, 0.825)',
+          backgroundColor: theme.palette.background.dark,
           zIndex: 0,
           opacity: 100,
         }}
@@ -228,7 +230,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         <Tooltip title={exercise.exercise?.name} placement="top">
           <Typography
             variant="body1"
-            fontWeight="bold"
+            fontWeight={400}
             fontSize={14}
             textTransform="uppercase"
             sx={{
@@ -246,26 +248,27 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         </Tooltip>
       </Stack>
 
-      {chartView ? (
-        <></>
-      ) : !expandedSetsView ? (
-        <TrainingExerciseCardCollapsedSets
-          exercise={exercise}
-          setSupersets={setSupersets}
-          expandedSetsView={expandedSetsView}
-          setExpandedSetsView={setExpandedSetsView}
-          setsNumbers={setsNumbers}
-          setSetsNumbers={setSetsNumbers}
-          i={i}
-        />
-      ) : (
-        <TrainingExerciseCardExpandedSets
-          exercise={exercise}
-          expandedSetsView={expandedSetsView}
-          setExpandedSetsView={setExpandedSetsView}
-          supersetIndex={supersetIndex}
-        />
-      )}
+      {expandedExercisesView &&
+        (chartView ? (
+          <></>
+        ) : !expandedSetsView ? (
+          <TrainingExerciseCardCollapsedSets
+            exercise={exercise}
+            setSupersets={setSupersets}
+            expandedSetsView={expandedSetsView}
+            setExpandedSetsView={setExpandedSetsView}
+            setsNumbers={setsNumbers}
+            setSetsNumbers={setSetsNumbers}
+            i={i}
+          />
+        ) : (
+          <TrainingExerciseCardExpandedSets
+            exercise={exercise}
+            expandedSetsView={expandedSetsView}
+            setExpandedSetsView={setExpandedSetsView}
+            supersetIndex={supersetIndex}
+          />
+        ))}
     </Stack>
   );
 }

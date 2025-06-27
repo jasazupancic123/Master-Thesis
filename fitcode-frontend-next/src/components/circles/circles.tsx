@@ -125,7 +125,7 @@ export default function Circles(props: Props) {
                     userSelect: 'none',
                   }}
                 >
-                  <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>
+                  <Typography sx={{ fontSize: '0.9rem' }}>
                     {item.label}
                   </Typography>
                 </Box>
@@ -141,7 +141,7 @@ export default function Circles(props: Props) {
                           'day'
                         )
                         ? theme.palette.grey[500]
-                        : '#fff'
+                        : undefined
                       : undefined,
                   }}
                 >

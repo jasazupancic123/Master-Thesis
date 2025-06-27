@@ -32,6 +32,7 @@ import { useExerciseContext } from '@/store/exercises-provider';
 import { Publish } from '@mui/icons-material';
 import { useAuth } from '@/store/auth-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { isAdmin } from '@/common/service/util/firebase-auth.util';
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -115,15 +116,18 @@ export default function ExercisesPage() {
   return (
     <Box p={2} px={screenSize.isMobile ? 0 : undefined}>
       {/* Import Button */}
-      <Tooltip title="Import">
-        <IconButton
-          onClick={() => {
-            setModal({ ...modal, import: true });
-          }}
-        >
-          <Publish />
-        </IconButton>
-      </Tooltip>
+      {isAdmin(roles) && (
+        <Tooltip title="Import">
+          <IconButton
+            onClick={() => {
+              setModal({ ...modal, import: true });
+            }}
+          >
+            <Publish />
+          </IconButton>
+        </Tooltip>
+      )}
+
       <Box
         display="flex"
         justifyContent="center"
@@ -132,7 +136,7 @@ export default function ExercisesPage() {
         my={2}
         borderRadius={2}
         pb={1}
-        bgcolor={theme.palette.background.paper}
+        bgcolor={theme.palette.background.default}
       >
         <Box pb={1}>
           <PageTitle title="Exercises" />
