@@ -89,7 +89,7 @@ export default function HorizontalItemsList(
             display: 'none',
           },
           mx: 1, // optional spacing between arrows and days
-          justifyContent: 'space-between',
+          justifyContent: items.length <= 3 ? 'space-around' : 'space-between',
           flexGrow: screenSize.isMobile ? 1 : undefined,
         }}
       >
