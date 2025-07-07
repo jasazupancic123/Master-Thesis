@@ -36,9 +36,10 @@ export class GroupRepository
   }
 
   async addDoc(input: Create<Group>) {
+    const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Group>(
       {
-        id: null,
+        id,
         name: input.name,
         ownerId: input.ownerId,
         membersIds: input.membersIds,
@@ -48,8 +49,8 @@ export class GroupRepository
       { timestamps: true },
     );
 
-    const result = await this.collection().add(query);
-    return result.id;
+    await this.doc(id).set(query);
+    return id;
   }
 
   async updateDoc(id: string, input: Update<Group>) {
