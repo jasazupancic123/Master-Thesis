@@ -31,6 +31,8 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const MAX_WIDTH = '1264px';
+
   const {
     token,
     group,
@@ -318,7 +320,7 @@ export default function TrainerDayView() {
         sx={{
           borderBottomRightRadius: !todaysTrainings.length || !cycle ? 0 : 10,
           borderBottomLeftRadius: !todaysTrainings.length || !cycle ? 0 : 10,
-          bgcolor: 'background.paper',
+          bgcolor: 'background.default',
         }}
         justifyContent="space-evenly"
       >
@@ -333,7 +335,7 @@ export default function TrainerDayView() {
         <Box
           display="flex"
           flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-          width="100%"
+          maxWidth={MAX_WIDTH}
           justifyContent="center"
           alignItems="center"
           sx={{
@@ -352,9 +354,10 @@ export default function TrainerDayView() {
           display="flex"
           flexDirection="column"
           justifyContent="center"
-          width="100%"
+          maxWidth={MAX_WIDTH}
           sx={{
             mt: 1,
+            mx: 'auto',
           }}
         >
           <Box
@@ -386,7 +389,9 @@ export default function TrainerDayView() {
       )}
 
       {/* Trainings for the day */}
-      <GroupTrainerDayViewTrainings day={day} loading={loading} />
+      <Box maxWidth={MAX_WIDTH} mx="auto">
+        <GroupTrainerDayViewTrainings day={day} loading={loading} />
+      </Box>
     </Box>
   );
 }
