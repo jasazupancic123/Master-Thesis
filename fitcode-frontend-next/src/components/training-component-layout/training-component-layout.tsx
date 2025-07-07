@@ -54,8 +54,26 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const [expandedExercisesView, setExpandedExercisesView] = useState(false);
 
   return (
-    <Box mb={0} py={0.25} px={0}>
-      <Box sx={{ my: 0.5 }}>
+    <Box
+      sx={{
+        mb: 0,
+        pt: trainingComponent.id === WARMUP_ID ? 0 : undefined,
+        pb: trainingComponent.id === COOLDOWN_ID ? 0 : undefined,
+        px: 0,
+      }}
+    >
+      <Box
+        sx={{
+          my: 0.5,
+          py: component?.id !== trainingComponent.id ? 0.5 : 0,
+          pt:
+            trainingComponent.id === WARMUP_ID
+              ? 0
+              : component?.id === trainingComponent.id
+                ? 0.5
+                : undefined,
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
@@ -63,14 +81,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             justifyContent: 'space-between',
           }}
           pt={trainingComponent.id === WARMUP_ID ? 1 : undefined}
-          pb={trainingComponent.id === COOLDOWN_ID ? 1 : undefined}
           position="relative"
-          py={
-            component?.id === trainingComponent.id &&
-            training.id === selectedTraining?.id
-              ? 1
-              : 0
-          }
           mb={
             component?.id === trainingComponent.id &&
             training.id === selectedTraining?.id
@@ -120,7 +131,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
                 display="flex"
                 width={screenSize.isMobile ? '100%' : undefined}
                 p={0}
-                mr={1}
                 alignItems={!screenSize.isMobile ? 'center' : undefined}
                 flexDirection={screenSize.isMobile ? 'column' : 'row'}
               >
@@ -145,16 +155,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           timeout="auto"
           unmountOnExit
         >
-          <Box
-            p={2}
-            pt={0}
-            px={
-              screenSize.isMobile || screenSize.isLandscapeMobile
-                ? 0
-                : undefined
-            }
-            key={filter}
-          >
+          <Box p={2} pt={0} px={0} mt={2} key={filter}>
             {heatmapView ? (
               <MuscleHeatmapView setHeatmapView={setHeatmapView} />
             ) : (

@@ -109,7 +109,7 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
             >
               <Box
                 position="absolute"
-                top={9.31}
+                top={7.1}
                 left={10}
                 display="flex"
                 flexDirection="column"

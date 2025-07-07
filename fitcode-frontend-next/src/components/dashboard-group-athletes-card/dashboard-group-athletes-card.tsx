@@ -265,7 +265,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
         onConfirm={handleRemoveGroup}
         cancelText="Close"
       >
-        {`Remove group ${group.name}`}
+        {`Remove group ${group.name}?`}
       </MyModal>
     </Box>
   );

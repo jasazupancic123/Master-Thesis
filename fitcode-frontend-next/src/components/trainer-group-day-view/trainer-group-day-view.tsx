@@ -31,6 +31,8 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const MAX_WIDTH = '1264px';
+
   const {
     token,
     group,
@@ -318,7 +320,7 @@ export default function TrainerDayView() {
         sx={{
           borderBottomRightRadius: !todaysTrainings.length || !cycle ? 0 : 10,
           borderBottomLeftRadius: !todaysTrainings.length || !cycle ? 0 : 10,
-          bgcolor: 'background.paper',
+          bgcolor: 'background.default',
         }}
         justifyContent="space-evenly"
       >
@@ -333,7 +335,7 @@ export default function TrainerDayView() {
         <Box
           display="flex"
           flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-          width="100%"
+          maxWidth={MAX_WIDTH}
           justifyContent="center"
           alignItems="center"
           sx={{
@@ -347,46 +349,29 @@ export default function TrainerDayView() {
         </Box>
       </Box>
 
-      {cycle && todaysTrainings.length > 0 && component && (
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        maxWidth={MAX_WIDTH}
+        sx={{
+          mt: 1,
+          mx: 'auto',
+        }}
+      >
         <Box
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
           width="100%"
           sx={{
-            mt: 1,
+            backgroundColor: theme.palette.background.dark,
+            height: '5px',
           }}
-        >
-          <Box
-            width="100%"
-            sx={{
-              backgroundColor: theme.palette.background.dark,
-              height: '5px',
-            }}
-          />
-          <Box
-            sx={{
-              display: 'inline-block',
-              backgroundColor: theme.palette.background.dark,
-              borderBottomLeftRadius: 100,
-              borderBottomRightRadius: 100,
-              margin: '0 auto', // centers the box
-              px: 4, // optional padding around text
-            }}
-          >
-            <Typography
-              textAlign="center"
-              variant="body2"
-              sx={{ pb: 1, color: theme.palette.background.lightText }}
-            >
-              {selectedSubgroup?.subgroup?.name || 'Main group'}
-            </Typography>
-          </Box>
-        </Box>
-      )}
+        />
+      </Box>
 
       {/* Trainings for the day */}
-      <GroupTrainerDayViewTrainings day={day} loading={loading} />
+      <Box maxWidth={MAX_WIDTH} mx="auto">
+        <GroupTrainerDayViewTrainings day={day} loading={loading} />
+      </Box>
     </Box>
   );
 }

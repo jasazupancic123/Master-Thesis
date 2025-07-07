@@ -230,9 +230,10 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         <Tooltip title={exercise.exercise?.name} placement="top">
           <Typography
             variant="body1"
-            fontWeight={400}
-            fontSize={14}
+            fontWeight={700}
+            fontSize={12}
             textTransform="uppercase"
+            color={theme.palette.text.primary}
             sx={{
               textAlign: 'center',
               overflow: 'hidden',

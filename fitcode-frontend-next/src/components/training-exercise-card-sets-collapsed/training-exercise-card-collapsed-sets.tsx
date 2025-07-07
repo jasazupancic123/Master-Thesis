@@ -92,8 +92,8 @@ export default function TrainingExerciseCardCollapsedSets(
           display="flex"
           flexDirection="column"
           alignItems="center"
-          gap={1}
-          mt={1.2}
+          gap={0.9}
+          mt={0.8}
         >
           <IconButton
             disableRipple
@@ -117,7 +117,7 @@ export default function TrainingExerciseCardCollapsedSets(
             key="exercise-title"
             display="flex"
             flexDirection="column"
-            gap={1.5}
+            gap={1}
           >
             <LeftRightExerciseText key="L" title="L" />
             <LeftRightExerciseText key="R" title="R" />

@@ -7,6 +7,7 @@ import { SetState } from '@/common/type/state.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { useTheme } from '@mui/material';
 
 interface Props {
   param: Attribute;
@@ -26,6 +27,8 @@ interface Props {
 }
 
 export function ExerciseParam(props: Props) {
+  const theme = useTheme();
+
   const {
     param,
     value,
@@ -62,7 +65,7 @@ export function ExerciseParam(props: Props) {
               textAlign: 'center',
               pr: 0,
               pl: 0,
-              color: '#989fa5',
+              fontWeight: 700,
               '& .MuiSelect-select': {
                 textAlign: 'center',
                 display: 'flex',
@@ -70,13 +73,12 @@ export function ExerciseParam(props: Props) {
                 justifyContent: 'center',
                 pr: 0,
                 pl: 0,
-                color: '#989fa5',
+                color: theme.palette.background.lightBorder,
               },
               '& .MuiInputBase-input': {
                 textAlign: 'center',
                 paddingRight: '0px !important',
                 paddingLeft: '0px !important',
-                color: '#989fa5',
               },
               '&.Mui-disabled': {
                 backgroundColor: 'transparent',
@@ -138,10 +140,14 @@ export function ExerciseParam(props: Props) {
               textAlign: 'center',
               '& .MuiSelect-select': { textAlign: 'center' },
               '& .MuiInputBase-input': {
+                py: 0,
                 width: '100% !important',
-                fontSize: 14,
+                fontSize: 12,
+                height: 25,
                 textAlign: 'center',
                 px: '0px !important',
+                color: theme.palette.text.primary,
+                fontWeight: 400,
               },
               '::before': {
                 border: 'none !important',
@@ -235,9 +241,10 @@ export function ExerciseParam(props: Props) {
               max: max && nestedOption?.type === 'number' ? max : undefined,
               style: {
                 textAlign: 'center',
+                fontSize: 12,
                 paddingRight: '0px !important',
                 paddingLeft: '0px !important',
-                color: 'white !important',
+                color: theme.palette.text.primary,
               },
             }}
             sx={{
@@ -245,7 +252,9 @@ export function ExerciseParam(props: Props) {
               '& .MuiInputBase-input': {
                 p: 0.5,
                 textAlign: 'center',
-                color: 'white',
+                color: theme.palette.text.primary,
+                fontSize: 12,
+                fontWeight: 400,
               },
               '& .MuiInputBase-input.Mui-disabled': {
                 color: readOnly ? 'white !important' : undefined,

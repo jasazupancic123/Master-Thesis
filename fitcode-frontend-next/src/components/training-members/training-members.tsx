@@ -9,6 +9,7 @@ import { User } from '@/controller/user/type/user.type';
 import {
   Avatar,
   Box,
+  Card,
   Stack,
   TextField,
   Tooltip,
@@ -162,10 +163,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         sx={{
           width: !isSticky ? '100%' : undefined,
           maxWidth: 1500,
-          borderRadius: 2,
+          borderRadius: '5px',
           rowGap: 1,
-          py: 0.5,
-          px: !component ? 0.5 : 0,
           display: 'flex',
           flexWrap: 'wrap',
           margin: 'auto',
@@ -190,49 +189,153 @@ export default function TrainingMembers(props: TrainingMembersProps) {
           )}
 
           {/* Training/component is not selected yet, display the members normally */}
-          {!component &&
-            sortedMembers.length > 0 &&
-            sortedMembers.map((member) => {
-              return (
-                <Tooltip
-                  key={member.uid + 'tooltip1'}
-                  title={member.email}
-                  sx={{ mx: 1, py: 0 }}
+          {!component && (
+            <Box
+              display="flex"
+              flexDirection="row"
+              alignItems="center"
+              sx={{
+                backgroundColor: theme.palette.background.dark,
+                borderRadius: 2,
+              }}
+            >
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                sx={{
+                  backgroundColor: theme.palette.background.dark,
+                  borderTopLeftRadius: 10,
+                  borderBottomLeftRadius: 10,
+                  px: 0.5,
+                }}
+                gap={0.2}
+              >
+                {/* First Typography (Green Box) */}
+                <Box
+                  width={20}
+                  height={20}
+                  sx={{
+                    textAlign: 'center',
+                    display: 'flex', // Center content inside
+                    flex: 1, // Fill remaining space
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderTopLeftRadius: 5,
+                    borderBottomLeftRadius: 5,
+                  }}
                 >
-                  <Box
-                    sx={{ p: 0, cursor: 'pointer' }}
-                    onClick={() => setSelectedAthlete(member)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setSelectedAthlete(member);
-                      setShowAthleteReport(true);
-                    }}
-                    borderRadius={selectedAthlete === member ? '50%' : 0}
-                    border={
-                      selectedAthlete === member
-                        ? `2px solid ${theme.palette.primary.main}`
-                        : 'none'
-                    }
+                  <Typography
+                    variant="caption"
+                    fontSize="10px"
+                    sx={{ textAlign: 'center', color: 'white' }}
                   >
-                    <Avatar
-                      className="avatar-border"
-                      src={
-                        groupMembers.find((m) => m.id === member.uid)
-                          ?.profileImageUrl || '/user_avatar.png'
-                      }
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        mx: 0,
-                        py: 0,
-                      }}
+                    G
+                  </Typography>
+                </Box>
+
+                {/*sx={{
+                backgroundColor: theme.palette.primary.main,
+                width: 5,
+                height: 20,
+                borderRadius: 5,
+              }}*/}
+
+                <Box
+                  sx={{
+                    height: 16,
+                    width: 4,
+                    borderRadius: 5,
+                    backgroundColor: theme.palette.primary.main,
+                  }}
+                ></Box>
+
+                {/* Second Typography (Member Count) */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center', // Centers text
+                    flex: 1, // Fill remaining space
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Typography
+                    fontSize="10px"
+                    variant="caption"
+                    sx={{ textAlign: 'center' }}
+                  >
+                    {group.membersIds.length}
+                  </Typography>
+                </Box>
+              </Box>
+              <Card
+                sx={{
+                  m: 0.1,
+                  ml: 0,
+                  backgroundColor: theme.palette.background.default,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                }}
+              >
+                {group.membersIds.map((memberId, index) => {
+                  const member = members.find((user) => user.uid === memberId);
+
+                  if (!member) return null;
+
+                  return (
+                    <Tooltip
+                      key={`${member.uid}-tooltip`}
+                      title={member.email}
+                      sx={{ mx: 1, p: 0 }}
                     >
-                      {/* {member.email[0].toUpperCase()} */}
-                    </Avatar>
-                  </Box>
-                </Tooltip>
-              );
-            })}
+                      <Box
+                        sx={{ p: 0, m: 0 }}
+                        onClick={() => {
+                          if (selectedAthlete === member) {
+                            setSelectedAthlete(undefined);
+                            return;
+                          }
+
+                          setSelectedAthlete(member);
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setSelectedAthlete(member);
+                          setShowAthleteReport(true);
+                        }}
+                        borderRadius={selectedAthlete === member ? '50%' : 0}
+                        border={
+                          selectedAthlete === member
+                            ? `2px solid ${theme.palette.primary.main}`
+                            : 'none'
+                        }
+                        zIndex={1000}
+                      >
+                        <Avatar
+                          className="avatar-border"
+                          src={
+                            groupMembers.find((m) => m.id === member.uid)
+                              ?.profileImageUrl || '/user_avatar.png'
+                          }
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            m: selectedAthlete === member ? 0.25 : 0.5,
+                          }}
+                        >
+                          {/* {member.email[0].toUpperCase()} */}
+                        </Avatar>
+                      </Box>
+                    </Tooltip>
+                  );
+                })}
+              </Card>
+            </Box>
+          )}
 
           {training &&
             subgroups.map((subgroup, subgroupIndex) => {
