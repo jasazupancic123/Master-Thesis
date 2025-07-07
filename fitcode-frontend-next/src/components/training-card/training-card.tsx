@@ -95,7 +95,7 @@ export default function TrainingCard(props: TrainingCardProps) {
   };
 
   return (
-    <Box width="100%">
+    <Box width="100%" mt={!component ? 6.5 : 0}>
       <Box display="flex">
         <Box
           display="flex"
