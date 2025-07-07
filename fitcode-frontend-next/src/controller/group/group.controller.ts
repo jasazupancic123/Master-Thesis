@@ -45,14 +45,16 @@ export class GroupController {
   static async batchUpdate(
     token: string,
     body: {
-      id: string;
-      ownerId?: string;
-      name?: string;
-      membersIds?: string[];
-      cycles?: Cycle[];
-    }[]
+      groups: {
+        id: string;
+        ownerId?: string;
+        name?: string;
+        membersIds?: string[];
+        cycles?: Cycle[];
+      }[];
+    }
   ) {
-    return api.patch<Group[]>(`/group/update/batch`, body, { token });
+    return api.patch<void>(`/group/update/batch`, body, { token });
   }
 
   static async delete(token: string, groupId: string) {
