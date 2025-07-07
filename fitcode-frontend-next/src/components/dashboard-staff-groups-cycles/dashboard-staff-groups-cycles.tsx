@@ -58,7 +58,7 @@ export default function DashboardStaffGroupsCycles(
 
   useEffect(() => {
     async function fetchGroups() {
-      if (!selectedInstitution) return;
+      if (!selectedInstitution || selectedInstitution.groups) return;
 
       selectedInstitution.groups = await GroupController.findAllByInstitution(
         token,

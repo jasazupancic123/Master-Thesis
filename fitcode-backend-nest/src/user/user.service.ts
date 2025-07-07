@@ -82,9 +82,9 @@ export class UserService {
   async findAllOrFail(filter?: FilterUserQueryDto): Promise<User[]> {
     let users = await this.findAll(filter);
     if (filter) {
-      const length = filter.ids?.length || 0 + filter.emails?.length || 0;
+      /* const length = filter.ids?.length || 0 + filter.emails?.length || 0;
       if (users.length !== length)
-        throw new BadRequestException('Invalid members provided');
+        throw new BadRequestException('Invalid members provided'); */
 
       if (filter.role)
         users = users.filter((u) =>
