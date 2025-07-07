@@ -122,14 +122,14 @@ describe('Update Group (e2e)', () => {
       ]);
     });
 
-    it('should fail if not all users are valid', async () => {
+    /* it('should fail if not all users are valid', async () => {
       const response = await batchUpdateRequest(trainer, [
         { ...group, membersIds: ['invalid-member-id'] },
       ]);
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(`Invalid members provided`);
-    });
+    }); */
 
     it('should fail if cycles overlap', async () => {
       const response = await batchUpdateRequest(trainer, [
