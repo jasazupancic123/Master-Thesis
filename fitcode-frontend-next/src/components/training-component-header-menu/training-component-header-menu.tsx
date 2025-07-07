@@ -101,7 +101,7 @@ export default function TrainingComponentHeaderMenu(
           : undefined
       }
       flexDirection={screenSize.isMobile ? 'column' : undefined}
-      mt={screenSize.isSmallerThanLaptop ? 2.5 : 1.5}
+      mt={screenSize.isSmallerThanLaptop ? 2.5 : 3.5}
       flexWrap="nowrap"
       gap={screenSize.isSmallerThanLaptop ? 1 : 0}
     >
@@ -127,8 +127,8 @@ export default function TrainingComponentHeaderMenu(
             setMainSet(mainSet);
           }}
           selectSize="small"
-          inputLabelSize={13}
-          selectedItemSize={15}
+          inputLabelSize={'12px'}
+          selectedItemSize={12}
         />
       </Tooltip>
 
@@ -139,8 +139,8 @@ export default function TrainingComponentHeaderMenu(
           icon={null}
           displayEmpty
           iconSize={17}
-          inputLabelSize={13}
-          selectedItemSize={15}
+          inputLabelSize={'12px'}
+          selectedItemSize={12}
           selectSize="small"
           sx={{
             maxWidth: 75,
@@ -185,8 +185,8 @@ export default function TrainingComponentHeaderMenu(
             maxWidth: 75,
           }}
           sameValueAction
-          inputLabelSize={13}
-          selectedItemSize={15}
+          inputLabelSize={'12px'}
+          selectedItemSize={12}
           selectSize="small"
           setValue={(periodizationType) => {
             if (detectedChanges) {
@@ -268,8 +268,8 @@ export default function TrainingComponentHeaderMenu(
           sx={{
             maxWidth: 75,
           }}
-          inputLabelSize={13}
-          selectedItemSize={15}
+          inputLabelSize={'12px'}
+          selectedItemSize={12}
           selectSize="small"
           setValue={(methodId) => {
             const method = allMethods.find((m) => m.id === methodId);

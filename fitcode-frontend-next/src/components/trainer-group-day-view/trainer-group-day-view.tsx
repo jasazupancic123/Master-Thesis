@@ -349,44 +349,24 @@ export default function TrainerDayView() {
         </Box>
       </Box>
 
-      {cycle && todaysTrainings.length > 0 && component && (
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        maxWidth={MAX_WIDTH}
+        sx={{
+          mt: 1,
+          mx: 'auto',
+        }}
+      >
         <Box
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          maxWidth={MAX_WIDTH}
+          width="100%"
           sx={{
-            mt: 1,
-            mx: 'auto',
+            backgroundColor: theme.palette.background.dark,
+            height: '5px',
           }}
-        >
-          <Box
-            width="100%"
-            sx={{
-              backgroundColor: theme.palette.background.dark,
-              height: '5px',
-            }}
-          />
-          <Box
-            sx={{
-              display: 'inline-block',
-              backgroundColor: theme.palette.background.dark,
-              borderBottomLeftRadius: 100,
-              borderBottomRightRadius: 100,
-              margin: '0 auto', // centers the box
-              px: 4, // optional padding around text
-            }}
-          >
-            <Typography
-              textAlign="center"
-              variant="body2"
-              sx={{ pb: 1, color: theme.palette.background.lightText }}
-            >
-              {selectedSubgroup?.subgroup?.name || 'Main group'}
-            </Typography>
-          </Box>
-        </Box>
-      )}
+        />
+      </Box>
 
       {/* Trainings for the day */}
       <Box maxWidth={MAX_WIDTH} mx="auto">

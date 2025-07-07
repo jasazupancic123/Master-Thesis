@@ -48,7 +48,7 @@ export default function TrainingExerciseCardExpandedSets(
   if (!training || !component) return null;
 
   return (
-    <Box display="flex" flexDirection="column" width="100%" gap={1}>
+    <Box display="flex" flexDirection="column" width="100%" gap={0.9}>
       {/* Expanded sets view */}
       {exercise.sets.map((set, i) => {
         return (
@@ -64,8 +64,8 @@ export default function TrainingExerciseCardExpandedSets(
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
-                gap={1}
-                mt={i === 0 ? 1.2 : 1}
+                gap={0.9}
+                mt={i === 0 ? 0.9 : 0.5}
               >
                 {i === 0 && (
                   <IconButton
@@ -98,7 +98,7 @@ export default function TrainingExerciseCardExpandedSets(
                   key="exercise-title"
                   display="flex"
                   flexDirection="column"
-                  gap={1.5}
+                  gap={0.9}
                 >
                   <LeftRightExerciseText key="L" title="L" />
                   <LeftRightExerciseText key="R" title="R" />
