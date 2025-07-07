@@ -18,7 +18,7 @@ export default function GroupTrainerDayViewTrainings(
   const { day, loading } = props;
 
   const { cycle } = useGroup();
-  const { todaysTrainings } = useTrainerDayViewContext();
+  const { todaysTrainings, component } = useTrainerDayViewContext();
 
   return !cycle ? (
     <Box
@@ -47,7 +47,6 @@ export default function GroupTrainerDayViewTrainings(
         borderBottomLeftRadius: 10,
       }}
       gap={2}
-      mt={0.5}
       px={1}
     >
       {/* Training set groups with set exercises */}
@@ -67,17 +66,19 @@ export default function GroupTrainerDayViewTrainings(
           </Typography>
         </Box>
       ) : (
-        todaysTrainings.map((training) => {
-          const period = dayjs(training.from).hour() < 12 ? 'AM' : 'PM';
-          return (
-            <TrainingCard
-              key={training.id}
-              day={day}
-              training={training}
-              period={period}
-            />
-          );
-        })
+        <Box width="100%">
+          {todaysTrainings.map((training) => {
+            const period = dayjs(training.from).hour() < 12 ? 'AM' : 'PM';
+            return (
+              <TrainingCard
+                key={training.id}
+                day={day}
+                training={training}
+                period={period}
+              />
+            );
+          })}
+        </Box>
       )}
     </Box>
   );

@@ -27,7 +27,7 @@ interface Props<T> {
   displayEmpty?: boolean;
   disabled?: boolean;
   selectSize?: 'small' | 'medium';
-  inputLabelSize?: number;
+  inputLabelSize?: number | string;
   selectedItemSize?: number;
   iconSize?: number;
   sameValueAction?: boolean;
@@ -41,13 +41,12 @@ export default function SelectInput<T>(props: Props<T>) {
         props.sx
           ? {
               ...props.sx,
-              mr: 1,
               minWidth: 120,
               '& .MuiSelect-icon': {
                 fontSize: props.iconSize,
               },
             }
-          : { mr: 1, minWidth: 120 }
+          : { minWidth: 120 }
       }
     >
       {props.disableInputLabel === true ? (
@@ -57,7 +56,7 @@ export default function SelectInput<T>(props: Props<T>) {
           id={`${props.label}-label`}
           sx={{
             fontSize: props.inputLabelSize,
-            color: theme.palette.background.lightBorder,
+            color: theme.palette.background.lightText,
           }}
         >
           {props.label}
@@ -120,7 +119,7 @@ export default function SelectInput<T>(props: Props<T>) {
           sx={{ minHeight: 20 }}
           onClick={props.sameValueAction ? () => props.setValue('') : undefined}
         >
-          <em>{props.placeholder ? props.placeholder : <>None</>}</em>
+          {props.placeholder ? props.placeholder : <>None</>}
         </MenuItem>
         {props.items.map((item, i) => (
           <MenuItem

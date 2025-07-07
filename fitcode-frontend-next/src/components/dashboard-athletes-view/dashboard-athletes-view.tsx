@@ -288,7 +288,7 @@ export default function AthletesView() {
         setIsOpen={(open) =>
           setModal((prev) => ({ ...prev, add_athlete: open }))
         }
-        onConfirm={handleAddAthletesToInstitution}
+        onConfirm={undefined}
         onCancel={() => setModal((prev) => ({ ...prev, add_athlete: false }))}
       >
         <RegisterUsersDashboard registerRole={UserRole.ATHLETE} />

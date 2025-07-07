@@ -199,7 +199,7 @@ export default function TrainingMembersSubgroup(
           <Box
             display="flex"
             flexDirection="row"
-            alignItems="space-between"
+            alignItems="center"
             sx={{
               backgroundColor: theme.palette.background.dark,
               borderRadius: 10,
@@ -222,9 +222,11 @@ export default function TrainingMembersSubgroup(
                 borderBottomLeftRadius: 10,
                 px: 0.5,
               }}
+              gap={0.2}
             >
               {/* First Typography (Green Box) */}
               <Box
+                width={20}
                 height={20}
                 sx={{
                   textAlign: 'center',
@@ -235,11 +237,10 @@ export default function TrainingMembersSubgroup(
                   borderTopLeftRadius: 5,
                   borderBottomLeftRadius: 5,
                 }}
-                width={20}
               >
                 <Typography
                   variant="caption"
-                  fontSize={screenSize.isMobile ? '10px' : undefined}
+                  fontSize="10px"
                   sx={{ textAlign: 'center', color: 'white' }}
                 >
                   {`G${subgroupIndex + 1}`}
@@ -249,8 +250,8 @@ export default function TrainingMembersSubgroup(
               {isSubgroupSelected(subgroup.id) && (
                 <Box
                   sx={{
-                    height: 10,
-                    width: 5,
+                    height: 16,
+                    width: 4,
                     borderRadius: 5,
                     backgroundColor: theme.palette.primary.main,
                   }}
@@ -267,7 +268,7 @@ export default function TrainingMembersSubgroup(
                 }}
               >
                 <Typography
-                  fontSize={screenSize.isMobile ? '10px' : undefined}
+                  fontSize="10px"
                   variant="caption"
                   sx={{ textAlign: 'center' }}
                 >
@@ -278,7 +279,7 @@ export default function TrainingMembersSubgroup(
             <Card
               key={`card-${subgroup.id}`}
               sx={{
-                m: 0.25,
+                m: 0.1,
                 ml: 0,
                 backgroundColor: theme.palette.background.default,
                 display: 'flex',
@@ -300,36 +301,36 @@ export default function TrainingMembersSubgroup(
                     index={index}
                   >
                     {(provided, snapshot) => (
-                      <Tooltip
+                      <Box
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         key={`${subgroup.id}-${member.uid}-tooltip`}
-                        title={member.email}
-                        sx={{ mx: 1, p: 0 }}
-                      >
-                        <Box
-                          sx={{ p: 0, m: 0 }}
-                          onClick={() => {
-                            if (selectedAthlete === member) {
-                              setSelectedAthlete(undefined);
-                              return;
-                            }
-
-                            setSelectedAthlete(member);
-                          }}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            setSelectedAthlete(member);
-                            setShowAthleteReport(true);
-                          }}
-                          borderRadius={selectedAthlete === member ? '50%' : 0}
-                          border={
-                            selectedAthlete === member
-                              ? `2px solid ${theme.palette.primary.main}`
-                              : 'none'
+                        sx={{ p: 0, m: 0 }}
+                        onClick={() => {
+                          if (selectedAthlete === member) {
+                            setSelectedAthlete(undefined);
+                            return;
                           }
-                          zIndex={1000}
+
+                          setSelectedAthlete(member);
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setSelectedAthlete(member);
+                          setShowAthleteReport(true);
+                        }}
+                        borderRadius={selectedAthlete === member ? '50%' : 0}
+                        border={
+                          selectedAthlete === member
+                            ? `2px solid ${theme.palette.primary.main}`
+                            : 'none'
+                        }
+                        zIndex={1000}
+                      >
+                        <Tooltip
+                          title={member.email}
+                          sx={{ mx: 1, my: '0px !important', p: 0 }}
                         >
                           <Avatar
                             className="avatar-border"
@@ -345,8 +346,8 @@ export default function TrainingMembersSubgroup(
                           >
                             {/* {member.email[0].toUpperCase()} */}
                           </Avatar>
-                        </Box>
-                      </Tooltip>
+                        </Tooltip>
+                      </Box>
                     )}
                   </Draggable>
                 );

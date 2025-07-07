@@ -29,6 +29,9 @@ export const theme = createTheme({
     error: {
       main: '#ff6859',
     },
+    text: {
+      primary: '#D9D9D9', // Replace with your desired color
+    }
   },
   typography: {
     allVariants: {
