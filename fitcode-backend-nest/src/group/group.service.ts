@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -8,194 +7,110 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { NUM_MAX_GROUPS } from '../common/constant/limit.constant';
-import { Create, FirestoreEntity, Update } from '../common/type/entity.type';
-import { Training } from '../training/entity/training.entity';
+import { Create } from '../common/type/entity.type';
 import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
 import { GroupRef, InstitutionRef } from '../common/type/firestore.type';
 import { Wrapper } from '../common/type/wrapper.type';
 import { FirebaseService } from '../firebase/firebase.service';
-import { Subgroup } from '../training/entity/subgroup.entity';
 import { TrainingService } from '../training/service/training.service';
 import { UserService } from '../user/user.service';
 import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
 import { GroupRepository } from './repository/group.repository';
-import { UserEntity } from '../user/entity/user.entity';
 import { InstitutionService } from '../institution/service/institution.service';
 import { Institution } from '../institution/entity/institution.entity';
-import { UserRole } from '../user/enum/user-role.enum';
+import { WriteBatch } from 'firebase-admin/firestore';
+import { Permission } from '../common/interface/permission.interface';
+import { CreateGroupDto } from './dto/create-group.dto';
+import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
+import { startOfDay } from 'date-fns';
 
 @Injectable()
-export class GroupService {
+export class GroupService implements Permission<Group, Institution> {
   private logger = new Logger(GroupService.name);
 
   constructor(
-    private readonly groupRepository: GroupRepository,
+    private readonly repository: GroupRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
+    private readonly userService: UserService,
+    private readonly institutionService: InstitutionService,
     @Inject(forwardRef(() => TrainingService))
     private readonly trainingService: Wrapper<TrainingService>,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: Wrapper<UserService>,
-    @Inject(forwardRef(() => InstitutionService))
-    private readonly institutionService: Wrapper<InstitutionService>,
   ) {}
 
-  async isAuthorized(user: User, group: Group) {
-    if (
-      !this.isMember(user.uid, group) &&
-      !(await this.isTrainer(user.uid, group)) &&
-      !this.isOwner(user.uid, group)
-    )
-      throw new UnauthorizedException(
-        'You are not authorized to perform this action',
-      );
-  }
-
-  async isTrainer(userId: string, group: Group): Promise<boolean> {
-    const trainers = await this.userService.getDocs((query) =>
-      query.where('id', '==', userId),
-    );
-    if (trainers.length !== 1) return false;
-    const trainer = trainers[0];
-
-    return trainer.groupsIds.includes(group.id);
-  }
-
-  isMember(userId: string, group: Group | Subgroup): boolean {
-    return group.membersIds.includes(userId);
-  }
-
-  isOwner(userId: string, groupOrTraining: Group | Training): boolean {
-    return groupOrTraining.ownerId === userId;
-  }
-
   async findAll(user: User): Promise<Group[]> {
-    const groups = await this.groupRepository.getDocs((collection) => {
+    return await this.repository.getDocs((q) => {
       return this.firebaseService.isTrainer(user)
-        ? collection.where('ownerId', '==', user.uid)
+        ? q.where('ownerId', '==', user.uid)
         : this.firebaseService.isAthlete(user)
-          ? collection.where('membersIds', 'array-contains', user.uid)
-          : collection;
+          ? q.where('membersIds', 'array-contains', user.uid)
+          : q;
     });
-
-    return groups;
   }
 
-  async findById(user: User, ref: GroupRef): Promise<Group | null> {
+  async findOneById(user: User, ref: GroupRef): Promise<Group | null> {
     // find group
-    const group = await this.groupRepository.getDoc(ref.groupId);
+    const group = await this.repository.getDoc(ref.groupId);
     if (!group || group.deletedAt) return null;
 
     // authorize
-    await this.isAuthorized(user, group);
+    group.institution = await this.institutionService.getDocByIdOrFail(group);
+    if (!this.canView(user, group, group.institution))
+      throw new UnauthorizedException('You are not allowed to view this group');
 
     return group;
   }
 
-  async findByIdOrFail(user: User, ref: GroupRef): Promise<Group> {
-    const group = await this.findById(user, ref);
+  async findOneByIdOrFail(user: User, ref: GroupRef): Promise<Group> {
+    const group = await this.findOneById(user, ref);
     if (!group) throw new NotFoundException('Group does not exist');
     return group;
-  }
-
-  async findMembers(user: User, ref: GroupRef): Promise<UserEntity[]> {
-    const group = await this.findByIdOrFail(user, ref);
-    this.validateOwner(user, group);
-
-    if(!group.membersIds.length) return [];
-
-    return await this.userService.getDocs((q) =>
-      q.where('id', 'in', group.membersIds),
-    );
   }
 
   async findAllByInstitution(
     user: User,
     ref: InstitutionRef,
   ): Promise<Group[]> {
-    const institution = await this.institutionService.findOneOrFail(ref);
-    if (!institution) return [];
-
-    if (
-      institution.ownerId !== user.uid &&
-      !institution.trainerIds.includes(user.uid) &&
-      !user.customClaims.role.includes(UserRole.ADMIN)
-    )
+    const institution = await this.institutionService.getDocByIdOrFail(ref);
+    if (!this.institutionService.canView(user, institution))
       throw new UnauthorizedException(
-        'You are not authorized to view groups of this institution',
+        'You are not allowed to view this institution',
       );
 
-    const groupIds = institution.groupIds;
-    if (!groupIds || !groupIds.length) return [];
-
-    const groups = await this.groupRepository.getDocs((q) =>
-      q.where('id', 'in', groupIds),
+    return await this.repository.getDocs((q) =>
+      q.where('institutionId', '==', ref.institutionId),
     );
-
-    return groups;
   }
 
-  async create(
-    user: User,
-    input: Create<Group, 'name' | 'membersIds' | 'institutionId' | 'ownerId'>,
-  ): Promise<Group> {
+  async create(user: User, input: CreateGroupDto): Promise<Group> {
     const { name, membersIds, institutionId, ownerId } = input;
     this.logger.log(
       `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
     );
 
     // validate
-    await this.validateMembers(membersIds);
-    // await this.checkLimit(user.uid);
+    const institution = await this.institutionService.getDocByIdOrFail(input);
+    await this.userService.findAllOrFail({ ids: membersIds });
+    if (!this.institutionService.canEdit(user, institution))
+      throw new UnauthorizedException(
+        'You are not allowed to create group in this institution',
+      );
 
-    const institution = await this.institutionService.findOneOrFail({
+    const data: Create<Group> = {
+      id: null,
+      name,
+      ownerId,
+      membersIds,
       institutionId,
-    });
-
-    let groupId: string;
-    await this.firebaseService.firestore.runTransaction(async (transaction) => {
-      // add group
-      const docRef = this.groupRepository.collection().doc();
-      groupId = docRef.id;
-
-      const query = this.firebaseService.buildCreateQuery<Group>(
-        {
-          id: groupId,
-          name: name,
-          ownerId: ownerId || user.uid,
-          membersIds: membersIds,
-          institutionId: institutionId,
-          cycles: [],
-        },
-        { timestamps: true },
-      );
-
-      transaction.set(docRef, query);
-
-      // add group to all members and trainer
-      [...membersIds, user.uid].map((userId) =>
-        this.userService.addGroup(transaction, userId, groupId),
-      );
-    });
-
-    // add group to institution
-    institution.groupIds.push(groupId);
-    await this.institutionService.update(
-      user,
-      { institutionId: institution.id },
-      { groupIds: institution.groupIds },
-    );
-
-    return {
-      id: groupId,
-      name: name,
-      ownerId: user.uid,
-      membersIds: membersIds,
-      institutionId: institutionId,
       cycles: [],
+    };
+
+    const groupId = await this.repository.addDoc(data);
+    return {
+      ...data,
+      id: groupId,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as Group;
@@ -204,220 +119,128 @@ export class GroupService {
   async update(
     user: User,
     ref: GroupRef,
-    input: Update<Group, 'name' | 'membersIds' | 'cycles'>,
+    input: UpdateGroupDto,
   ): Promise<Group> {
     this.logger.log(
-      `User ${user.uid} is updating group ${ref.groupId}: ${JSON.stringify(input)}`,
+      `User ${user.uid} is updating group: ${JSON.stringify(input)}`,
     );
 
-    const group = await this.findByIdOrFail(user, ref);
-
     // validate
-    this.validateOwner(user, group);
+    const group = await this.findOneByIdOrFail(user, ref);
+    const institution = await this.institutionService.getDocByIdOrFail(group);
+    if (!this.canEdit(user, group, institution))
+      throw new UnauthorizedException('You are not allowed to edit this group');
+
+    // validate members
     if (input.membersIds)
-      await this.validateMembers(input.membersIds as string[]);
-    if (input.cycles) this.checkCycleOverlap(input.cycles);
+      await this.userService.findAllOrFail({ ids: input.membersIds });
 
-    if (input.membersIds) {
-      // update trainings and members' groups array in transaction
-      const trainingDocs = await this.trainingService.getDocs((query) =>
-        query.where('groupId', '==', ref.groupId),
-      );
+    // validate cycles
+    if (input.cycles)
+      if (this.isCycleOverlap(input.cycles))
+        throw new BadRequestException('Cycles overlap');
 
-      await this.firebaseService.firestore.runTransaction(
-        async (transaction) => {
-          // update all trainings from the group by updating their members
-          trainingDocs.forEach((doc) => {
-            transaction.update(doc.ref, { membersIds: input.membersIds });
-          });
+    // validate owner
+    if (input.ownerId)
+      if (
+        !this.firebaseService.isManager(user) ||
+        institution.ownerId !== user.uid
+      )
+        throw new UnauthorizedException('You are not allowed to update owner');
 
-          // update all members by adding group id to their groupsIds field if it doesn't exist yet
-          (input.membersIds as string[]).forEach((userId) =>
-            this.userService.addGroup(transaction, userId, group.id),
-          );
+    const batch = this.firebaseService.firestore.batch();
+    await this.batchUpdateOne(batch, { ...input, id: ref.groupId });
+    await batch.commit();
 
-          // TODO - add new user meta to all trainings in the future
-
-          // TODO - calculate new workloads for all trainings in the future
-
-          const docRef = this.groupRepository.doc(ref.groupId);
-          const query = this.firebaseService.buildUpdateQuery<Group>({
-            ...input,
-            cycles: input.cycles?.map((c) => {
-              const { weeks, ...cycle } = c;
-              return cycle as Cycle;
-            }),
-          });
-
-          transaction.update(docRef, query);
-        },
-      );
-    }
-    // update other fields in a single query
-    else await this.groupRepository.updateDoc(ref.groupId, input);
-
-    const updatedGroup = {
-      ...group,
-      ...this.commonService.object.clean(input),
-    };
-
-    updatedGroup.cycles = updatedGroup.cycles
+    const updated = { ...group, ...this.commonService.object.clean(input) };
+    updated.cycles = updated.cycles
       .map((c) => ({
         ...c,
         weeks: this.commonService.date.weeks(c.from, c.to),
       }))
       .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds());
 
-    return updatedGroup as Group;
+    return { ...updated, id: ref.groupId };
   }
 
-  async batchUpdate(
-    user: User,
-    input: Update<Group, 'id' | 'name' | 'membersIds' | 'cycles'>[],
-  ): Promise<Group[]> {
+  async batchUpdate(user: User, input: BatchUpdateOneGroupDto[]) {
     this.logger.log(
-      `User ${user.uid} is updating multiple groups: ${JSON.stringify(input)}`,
+      `User ${user.uid} is updating multiple groups: ${input.length}`,
     );
 
-    const updatedGroups: Group[] = [];
-    let updateInstitution = false;
+    // validate
+    const groups = await this.validateBatch(input);
 
-    for (const i of input) {
-      const ref: GroupRef = { groupId: i.id };
-      const group = await this.findByIdOrFail(user, ref);
-
-      // athletes in group might miss in institution, also add them to institution if yes
-      const institutions = await this.institutionService
-        .getDocs((q) => q.where('groupIds', 'array-contains', group.id))
-        .then(({ docs }) =>
-          docs.map((doc) =>
-            this.firebaseService.serialize(
-              doc.data() as FirestoreEntity<Institution>,
-            ),
-          ),
+    // NOTE - trainer and manager can always edit all groups in the institution,
+    // so this check is unnecessary, but still here
+    for (const group of groups)
+      if (!this.canEdit(user, group, group.institution!))
+        throw new UnauthorizedException(
+          `You are not allowed to edit group ${group.name}`,
         );
 
-      if (institutions.length !== 1)
-        throw new ConflictException('Group is not in exactly one institution');
+    // validate members
+    const allMembersIds = input.flatMap((i) => i.membersIds || []);
+    const members = await this.userService.findAllOrFail({
+      ids: allMembersIds,
+    });
 
-      const instituion = institutions[0];
+    this.validateMembersInInstitution(members, groups[0].institution);
 
-      group.membersIds.map((userId) => {
-        if (!instituion.athleteIds.includes(userId)) {
-          updateInstitution = true;
-          instituion.athleteIds.push(userId);
-        }
+    // validate cycles
+    for (const group of input)
+      if (group.cycles)
+        if (this.isCycleOverlap(group.cycles))
+          throw new BadRequestException(
+            `Cycles in group ${group.name} cannot overlap`,
+          );
+
+    const batch = this.firebaseService.firestore.batch();
+    await Promise.all(input.map((group) => this.batchUpdateOne(batch, group)));
+    await batch.commit();
+  }
+
+  private async batchUpdateOne(
+    batch: WriteBatch,
+    input: BatchUpdateOneGroupDto,
+  ) {
+    const docRef = this.repository.doc(input.id);
+    if (input.membersIds) {
+      const trainingDocs = await this.trainingService.getDocs((q) =>
+        q
+          .where('groupId', '==', input.id)
+          .where('from', '>=', startOfDay(new Date())),
+      );
+
+      // update all trainings' members
+      trainingDocs.forEach((doc) => {
+        batch.update(doc.ref, { membersIds: input.membersIds });
       });
 
-      // validate
-      this.validateManager(user, group);
-      if (i.membersIds) await this.validateMembers(i.membersIds as string[]);
-      if (i.cycles) this.checkCycleOverlap(i.cycles);
-
-      if (i.membersIds) {
-        // update trainings and members' groups array in transaction
-        const trainingDocs = await this.trainingService.getDocs((query) =>
-          query.where('groupId', '==', ref.groupId),
-        );
-
-        await this.firebaseService.firestore.runTransaction(
-          async (transaction) => {
-            // update all trainings from the group by updating their members
-            trainingDocs.forEach((doc) => {
-              transaction.update(doc.ref, { membersIds: i.membersIds });
-            });
-
-            // update all members by adding group id to their groupsIds field if it doesn't exist yet
-            (i.membersIds as string[]).forEach((userId) =>
-              this.userService.addGroup(transaction, userId, group.id),
-            );
-
-            // TODO - add new user meta to all trainings in the future
-
-            // TODO - calculate new workloads for all trainings in the future
-
-            const docRef = this.groupRepository.doc(ref.groupId);
-            const query = this.firebaseService.buildUpdateQuery<Group>({
-              ...i,
-              cycles: i.cycles?.map((c) => {
-                const { weeks, ...cycle } = c;
-                return cycle as Cycle;
-              }),
-            });
-
-            transaction.update(docRef, query);
-          },
-        );
-      }
-      // update other fields in a single query
-      else await this.groupRepository.updateDoc(ref.groupId, i);
-
-      const updatedGroup = {
-        ...group,
-        ...this.commonService.object.clean(i),
-      };
-
-      updatedGroup.cycles = updatedGroup.cycles
-        .map((c) => ({
-          ...c,
-          weeks: this.commonService.date.weeks(c.from, c.to),
-        }))
-        .sort((a, b) => a.from.getMilliseconds() - b.from.getMilliseconds());
-
-      updatedGroups.push(updatedGroup as Group);
-
-      if (updateInstitution) {
-        await this.institutionService.update(
-          user,
-          { institutionId: instituion.id },
-          { athleteIds: instituion.athleteIds },
-        );
-      }
+      // TODO - add new user meta to all trainings in the future
+      // TODO - calculate new workloads for all trainings in the future
     }
 
-    return updatedGroups;
+    batch.update(
+      docRef,
+      this.firebaseService.buildUpdateQuery<Group>({
+        ...input,
+        cycles: input.cycles?.map((c) => {
+          const { weeks, ...cycle } = c;
+          return cycle;
+        }),
+      }),
+    );
   }
 
   async delete(user: User, ref: GroupRef): Promise<void> {
     this.logger.log(`User ${user.uid} is removing group ${ref.groupId}`);
 
-    const group = await this.findByIdOrFail(user, ref);
-    this.validateManager(user, group);
+    const group = await this.findOneByIdOrFail(user, ref);
+    const institution = await this.institutionService.getDocByIdOrFail(group);
+    this.canEdit(user, group, institution);
 
-    // remove group from institution
-    const institutions = await this.institutionService
-      .getDocs((q) => q.where('groupIds', 'array-contains', group.id))
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Institution>,
-          ),
-        ),
-      );
-
-    if (institutions.length !== 1)
-      throw new ConflictException('Group is not in exactly one institution');
-
-    const institution = institutions[0];
-    institution.groupIds = institution.groupIds.filter((id) => id !== group.id);
-
-    await this.firebaseService.firestore.runTransaction(async (transaction) => {
-      // remove group from all members and owner
-      [...group.membersIds, user.uid].forEach((userId) =>
-        this.userService.removeGroup(transaction, userId, group.id),
-      );
-
-      // delete group
-      const docRef = this.groupRepository.doc(group.id);
-      transaction.delete(docRef);
-    });
-
-    // institution transaction
-    await this.institutionService.update(
-      user,
-      { institutionId: institution.id },
-      { groupIds: institution.groupIds },
-    );
+    await this.repository.deleteDoc(group.id);
   }
 
   findCycle(cycleId: string, group: Group) {
@@ -430,48 +253,96 @@ export class GroupService {
     return cycle;
   }
 
-  private checkCycleOverlap(cycles: Cycle[]) {
-    for (let i = 0; i < cycles.length; i++) {
-      for (let j = i + 1; j < cycles.length; j++) {
-        const a = cycles[i];
-        const b = cycles[j];
+  private async validateBatch(
+    input: BatchUpdateOneGroupDto[],
+  ): Promise<Group[]> {
+    if (!input.length)
+      throw new BadRequestException('Do not provide an empty array of groups');
 
-        const overlap = this.commonService.date.isBetween(a.from, b.from, b.to);
-        if (overlap)
-          throw new ConflictException(
-            `Cycle "${a.name}" overlaps with cycle "${b.name}"`,
-          );
-      }
+    const groups = await this.firebaseService.batchIn<Group>(
+      'id',
+      input.map((g) => g.id),
+      this.repository.collection(),
+    );
+
+    if (groups.length !== input.length)
+      throw new BadRequestException('Invalid groups provided');
+
+    const uniqueInstitutionIds = [
+      ...new Set(groups.map((g) => g.institutionId)),
+    ];
+
+    if (uniqueInstitutionIds.length !== 1)
+      throw new BadRequestException(
+        'You can only update groups from the same institution',
+      );
+
+    const institution = await this.institutionService.getDocByIdOrFail(
+      groups[0],
+    );
+
+    for (const group of groups) group.institution = institution;
+    return groups;
+  }
+
+  private validateMembersInInstitution(
+    members: User[],
+    institution: Institution,
+  ) {
+    for (const member of members)
+      if (!institution.athleteIds.includes(member.uid))
+        throw new BadRequestException(
+          `User ${member.displayName || member.email} is not part of the institution and cannot be added`,
+        );
+  }
+
+  private isCycleOverlap(cycles: Cycle[]): boolean {
+    if (!cycles || cycles.length < 2) return false;
+
+    // console.log('checking overlap:', cycles);
+
+    const sortedCycles = [...cycles].sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    );
+
+    for (let i = 0; i < sortedCycles.length - 1; i++) {
+      const current = sortedCycles[i];
+      const next = sortedCycles[i + 1];
+      if (new Date(current.to) > new Date(next.from)) return true;
     }
+
+    return false;
   }
 
-  private validateOwner(user: User, groupOrTraining: Group | Training) {
-    if (!this.isOwner(user.uid, groupOrTraining))
-      throw new UnauthorizedException(
-        'You are not authorized to perform this action',
-      );
+  canView(user: User, group: Group, institution?: Institution) {
+    if (group.membersIds.includes(user.uid)) return true; // athlete is member
+    if (group.ownerId === user.uid) return true; // trainer is owner
+
+    if (institution) {
+      if (institution.ownerId === user.uid) return true; // institution owner
+
+      // other institution members can view other groups
+      if (
+        institution.athleteIds.includes(user.uid) ||
+        institution.trainerIds.includes(user.uid)
+      )
+        return true;
+    }
+
+    return false;
   }
 
-  private validateManager(user: User, group: Group) {
-    if (!this.firebaseService.isManager(user))
-      throw new UnauthorizedException(
-        'You are not authorized to perform this action',
-      );
-  }
+  canEdit(user: User, group: Group, institution: Institution) {
+    if (this.firebaseService.isTrainer(user) && group.ownerId === user.uid)
+      return true; // owner of the group (trainer) can edit group
 
-  private async validateMembers(membersIds: string[]) {
-    if (membersIds.length === 0) return [];
+    if (
+      this.firebaseService.isManager(user) &&
+      institution.ownerId === user.uid
+    )
+      // manager can edit all groups
+      return true;
 
-    const members = await this.userService.findAllOrFail({ ids: membersIds });
-    if (members.length !== membersIds.length)
-      throw new BadRequestException('Invalid members provided');
-
-    return members;
-  }
-
-  private async checkLimit(userId: string) {
-    const user = await this.userService.findOneOrFail(userId);
-    if (user.groupsIds.length === NUM_MAX_GROUPS - 1)
-      throw new ConflictException('Group limit reached');
+    return false;
   }
 }

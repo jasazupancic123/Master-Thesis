@@ -5,13 +5,17 @@ import { TrainingComponent } from '../entity/training-component.entity';
 import {
   generateRandomColor,
   generateRandomName,
-} from '../../../test/utils/random.util';
+} from '../../../test/common/utils/random.util';
 import { Superset } from '../entity/superset.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Subgroup } from '../entity/subgroup.entity';
-import { getTime } from '../../../test/utils/data.util';
+import { getTime } from '../../common/service/util/date.util';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { ParamType } from '../../component/enum/param.enum';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '../../component/constant/warmup-cooldown.constant';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
   return {
@@ -19,18 +23,22 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
-    completedMembersIds: data.completedMembersIds || [],
+    completedMembersIds: data?.completedMembersIds || [],
+    institutionId: data?.institutionId,
     groupId: data?.groupId,
     cycleId: data?.cycleId,
     ownerId: data?.ownerId || global.trainer.uid,
     membersIds: data?.membersIds || [global.athlete.uid],
     stats: data?.stats || [],
     futureStats: data?.futureStats || [],
-    copiedFromId: null,
+    copiedFromId: data?.copiedFromId || null,
     from: data?.from || addDays(new Date(), 1),
     to: data?.to || addHours(addDays(new Date(), 1), 2),
-    warmup: data?.warmup || generateTrainingComponent(),
-    cooldown: data?.cooldown || generateTrainingComponent(),
+    warmup:
+      data?.warmup || generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+    cooldown:
+      data?.cooldown ||
+      generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
     components: data?.components || [],
     wellness: data?.wellness || [],
   };
@@ -85,9 +93,7 @@ export function generateTrainingExercise(
   };
 }
 
-export function generateExerciseSet(
-  data?: Partial<ExerciseSet>,
-): ExerciseSet {
+export function generateExerciseSet(data?: Partial<ExerciseSet>): ExerciseSet {
   return {
     setNumber: data?.setNumber || 1,
     paramValuesL: data?.paramValuesL || [

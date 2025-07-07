@@ -1,7 +1,5 @@
 import {
   BadRequestException,
-  forwardRef,
-  Inject,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -14,26 +12,25 @@ import { Method } from '../entity/method.entity';
 import { MethodRef } from '../../common/type/firestore.type';
 import { Create } from '../../common/type/entity.type';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
-import { Wrapper } from '../../common/type/wrapper.type';
+import { CACHE_KEY_METHODS } from '../constant/cache.constant';
 
 @Injectable()
 export class MethodService {
   private logger = new Logger(MethodService.name);
 
   constructor(
-    @Inject(forwardRef(() => CacheManagerService))
-    private readonly cacheManagerService: Wrapper<CacheManagerService>,
+    private readonly cacheManagerService: CacheManagerService,
     private readonly firebaseService: FirebaseService,
-    private readonly methodRepository: MethodRepository,
+    private readonly repository: MethodRepository,
   ) {}
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
-    return query(this.methodRepository.collection()).get();
+    return query(this.repository.collection()).get();
   }
 
   async findOne(ref: MethodRef): Promise<Method | null> {
     // find method
-    const method = await this.methodRepository.getDoc(ref.methodId);
+    const method = await this.repository.getDoc(ref.methodId);
     if (!method) return null;
 
     return method;
@@ -46,8 +43,10 @@ export class MethodService {
   }
 
   async findAll(): Promise<Method[]> {
-    let methods = await this.methodRepository.getDocs();
-    return methods;
+    const cached =
+      await this.cacheManagerService.get<Method[]>(CACHE_KEY_METHODS);
+
+    return cached ? cached : await this.repository.getDocs();
   }
 
   async create(user: User, input: Create<Method>): Promise<Method> {
@@ -71,8 +70,7 @@ export class MethodService {
         'You are not authorized to create a method',
       );
 
-    await this.cacheManagerService.clearMethods();
-
+    await this.cacheManagerService.del(CACHE_KEY_METHODS);
     const data: Create<Method> = {
       id,
       name,
@@ -86,7 +84,7 @@ export class MethodService {
       recovery,
     };
 
-    const methodDocRef = this.methodRepository.collection().doc(id);
+    const methodDocRef = this.repository.collection().doc(id);
     const method: Method = {
       ...data,
       id: methodDocRef.id,

@@ -5,7 +5,6 @@ import {
   TrainingComponent,
   TrainingComponentInfo,
 } from '@/controller/training/type/training-plan.type';
-import { CopiedFrom } from '@/controller/component/type/copied-from.type';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
 import { addMinutes } from 'date-fns';
@@ -16,6 +15,7 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Day } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { CopiedFrom } from '@/controller/training/type/copied-from.type';
 
 export async function handleCopyComponentApiRequest(
   input: {

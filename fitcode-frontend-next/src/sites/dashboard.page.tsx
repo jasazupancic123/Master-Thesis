@@ -66,22 +66,17 @@ export default function DashboardPage(props: DashboardPageProps) {
         token,
         selectedInstitution.id
       );
-      setSelectedInstitution(
-        (prev) =>
-          ({
-            ...prev,
-            groups: groups,
-          }) as Institution
-      );
+
+      setSelectedInstitution((prev) => ({ ...prev, groups }) as Institution);
       if (groups.length) setSelectedGroup(groups[0]);
     };
     fetchGroups();
   }, [selectedInstitution]);
 
   const handleSaveGroups = () => {
-    if (!selectedInstitution) return;
+    if (!selectedInstitution || !owner) return;
 
-    const inputs: { id: string; membersIds: string[] }[] = [];
+    const inputs: { id: string; membersIds: string[]; ownerId: string }[] = [];
     for (const group of selectedInstitution.groups) {
       const membersIds = group.members
         ? new Set([...group.membersIds, ...group.members.map((m) => m.uid)])
@@ -89,13 +84,14 @@ export default function DashboardPage(props: DashboardPageProps) {
 
       inputs.push({
         id: group.id,
+        ownerId: owner.uid,
         membersIds: Array.from(membersIds),
       });
     }
 
     handleApiRequest(
       router,
-      () => GroupController.updateMultiple(token, inputs),
+      () => GroupController.batchUpdate(token, inputs),
       (groups) => {
         const newGroup = groups.find((g) => g.id === selectedGroup?.id);
         if (newGroup) {

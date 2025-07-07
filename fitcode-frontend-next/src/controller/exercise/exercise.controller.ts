@@ -5,16 +5,22 @@ import { ONE_HOUR_IN_MS } from '@/common/constant/time.constant';
 const api = CommonService.instance.api;
 
 export class ExerciseController {
-  static async findAll(token: string, query?: Record<string, string>) {
-    return api.get<Exercise[]>('/exercise', {
+  static async findAllGlobal(token: string, query?: Record<string, string>) {
+    return api.get<Exercise[]>('/exercise/global', {
       token,
       query,
-      cacheTimeInMs: ONE_HOUR_IN_MS,
     });
   }
 
-  static async findById(token: string, exerciseId: string) {
-    return api.get<Exercise>(`/exercise/${exerciseId}`, { token });
+  static async findAllByInstitution(
+    token: string,
+    institutionId: string,
+    query?: Record<string, string>
+  ) {
+    return api.get<Exercise[]>(`/exercise/institution/${institutionId}`, {
+      token,
+      query,
+    });
   }
 
   static async create(

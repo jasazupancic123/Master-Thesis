@@ -1,5 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { UserModule } from '../user/user.module';
+import { Module } from '@nestjs/common';
 import { MethodController } from './method.controller';
 import { MethodRepository } from './repository/method.repository';
 import { MethodService } from './service/method.service';

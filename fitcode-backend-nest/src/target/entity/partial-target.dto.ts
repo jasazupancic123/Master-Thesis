@@ -1,14 +1,10 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { Target } from './target.entity';
+import { PickType } from '@nestjs/mapped-types';
 
-export class SelectTargetsDto {
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  @ApiProperty()
-  componentId: string;
-
+export class PartialTarget extends PickType(Target, ['componentId'] as const) {
   @IsString()
   @IsNotEmpty()
   @Expose()

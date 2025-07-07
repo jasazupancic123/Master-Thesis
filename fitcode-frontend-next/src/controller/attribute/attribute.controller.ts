@@ -6,8 +6,6 @@ const api = CommonService.instance.api;
 
 export class AttributeController {
   static async findAll() {
-    return api.get<Attribute[]>('/attribute', {
-      cacheTimeInMs: ONE_HOUR_IN_MS,
-    });
+    return api.get<Attribute[]>('/attribute', {});
   }
 }

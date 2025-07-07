@@ -15,6 +15,12 @@ export class Exercise extends BaseEntity {
   @IsNotEmpty()
   @Expose()
   @ApiProperty()
+  ownerId: string; // special 'global' string value for global exercises, institution id for institutions
+
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
+  @ApiProperty()
   name: string;
 
   @IsString({ each: true })
@@ -22,12 +28,6 @@ export class Exercise extends BaseEntity {
   @Expose()
   @ApiProperty()
   componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
-
-  @IsString()
-  @IsNotEmpty()
-  @Expose()
-  @ApiProperty()
-  ownerId: string; // special 'global' string value for global exercises
 
   @IsString()
   @IsOptional()

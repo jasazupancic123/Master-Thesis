@@ -1,29 +1,22 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Create, Update } from '../common/type/entity.type';
 import { CommonService } from '../common/service/common.service';
 import { Filter } from '../common/type/orm.type';
 import { Component } from './entity/component.entity';
 import { ComponentRepository } from './repository/component.repository';
 import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
-import { Wrapper } from '../../src/common/type/wrapper.type';
 import {
   COOLDOWN_COMPONENT,
   WARMUP_COMPONENT,
 } from './constant/warmup-cooldown.constant';
+import { CACHE_KEY_FLAT_COMPONENTS } from './constant/cache.constant';
 
 @Injectable()
 export class ComponentService {
   private logger = new Logger(ComponentService.name);
 
   constructor(
-    @Inject(forwardRef(() => CacheManagerService))
-    private readonly cacheManagerService: Wrapper<CacheManagerService>,
+    private readonly cacheManagerService: CacheManagerService,
     private readonly commonService: CommonService,
     private readonly componentRepository: ComponentRepository,
   ) {}
@@ -34,7 +27,7 @@ export class ComponentService {
 
     // TODO - if newly created component is leaf node, move all parent exercises to "Other" component
 
-    await this.cacheManagerService.clearComponents();
+    await this.cacheManagerService.del(CACHE_KEY_FLAT_COMPONENTS);
     return await this.componentRepository.getDoc(componentSlug);
   }
 
@@ -45,7 +38,7 @@ export class ComponentService {
   ): Promise<Component> {
     const { children, ...rest } = data;
     const component = await this.create({ ...rest, parentId: data.parentId });
-    await this.cacheManagerService.clearComponents();
+    await this.cacheManagerService.del(CACHE_KEY_FLAT_COMPONENTS);
 
     for (const child of children) {
       const childData = {
@@ -71,7 +64,11 @@ export class ComponentService {
   }
 
   async findAllFlat(excludeHardcoded = false): Promise<Component[]> {
-    const components = await this.componentRepository.getDocs();
+    let components = await this.cacheManagerService.get<Component[]>(
+      CACHE_KEY_FLAT_COMPONENTS,
+    );
+
+    if (!components) components = await this.componentRepository.getDocs();
     if (!excludeHardcoded)
       components.push(WARMUP_COMPONENT, COOLDOWN_COMPONENT);
 
@@ -132,6 +129,8 @@ export class ComponentService {
     if (!component) throw new BadRequestException('Component not found');
 
     await this.componentRepository.updateDoc(id, data);
+    await this.cacheManagerService.del(CACHE_KEY_FLAT_COMPONENTS);
+
     return component;
   }
 

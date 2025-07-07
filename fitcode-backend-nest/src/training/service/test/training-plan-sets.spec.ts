@@ -19,6 +19,8 @@ import { AttributeRepository } from '../../../attribute/repository/attribute.rep
 import { FirebaseService } from '../../../firebase/firebase.service';
 import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import { WorkloadService } from '../workload.service';
+import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
+import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('getSetData', () => {
   let service: TrainingPlanService;
@@ -37,6 +39,10 @@ describe('getSetData', () => {
           useValue: createMock<FirebaseService>(),
         },
         {
+          provide: CacheManagerService,
+          useValue: createMock<CacheManagerService>(),
+        },
+        {
           provide: AttributeRepository,
           useValue: createMock<AttributeRepository>(),
         },
@@ -44,6 +50,10 @@ describe('getSetData', () => {
         {
           provide: ComponentService,
           useValue: createMock<ComponentService>(),
+        },
+        {
+          provide: InstitutionService,
+          useValue: createMock<InstitutionService>(),
         },
         {
           provide: ExerciseService,

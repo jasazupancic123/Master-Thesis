@@ -8,29 +8,31 @@ import {
 } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 import { Cycle } from './cycle.entity';
+import { Institution } from '../../institution/entity/institution.entity';
 
 export class Group extends BaseEntity {
-  @IsString()
-  @ApiProperty()
-  @Expose()
-  name: string;
-
-  @IsString()
-  @ApiProperty()
-  @Expose()
-  ownerId: string; // owner of the group
-
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  membersIds: string[]; // all members of the group 
-
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
   institutionId: string; // institution id
+  institution?: Institution | null;
+
+  @IsString()
+  @ApiProperty()
+  @Expose()
+  ownerId: string; // owner of the group (trainer, added by manager)
+
+  @IsString()
+  @ApiProperty()
+  @Expose()
+  name: string;
+
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @ApiProperty()
+  @Expose()
+  membersIds: string[]; // all members of the group
 
   @ValidateNested({ each: true })
   @Type(() => Cycle)

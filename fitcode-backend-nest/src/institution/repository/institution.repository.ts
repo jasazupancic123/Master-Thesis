@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
 import { Institution } from '../entity/institution.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
@@ -40,11 +40,10 @@ export class InstitutionRepository
     const { id } = this.collection().doc();
     const query = this.firebaseService.buildCreateQuery<Institution>({
       id,
-      name: input.name,
       ownerId: input.ownerId,
       trainerIds: input.trainerIds || [],
       athleteIds: input.athleteIds || [],
-      groupIds: input.groupIds || [],
+      name: input.name,
       imageUrl: input.imageUrl,
     });
 
@@ -54,11 +53,10 @@ export class InstitutionRepository
 
   async updateDoc(id: string, input: Update<Institution>) {
     const query = this.firebaseService.buildUpdateQuery<Institution>({
-      name: input.name,
       ownerId: input.ownerId,
       trainerIds: input.trainerIds,
       athleteIds: input.athleteIds,
-      groupIds: input.groupIds,
+      name: input.name,
       imageUrl: input.imageUrl,
     });
 

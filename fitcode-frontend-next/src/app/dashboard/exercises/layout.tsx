@@ -17,7 +17,7 @@ export default async function Layout({ children }: ChildrenProps) {
   if (!profile) return <div>Unauthorized</div>;
 
   const [exercises, attributes, components] = await Promise.all([
-    ExerciseController.findAll(token),
+    ExerciseController.findAllGlobal(token),
     AttributeController.findAll(),
     ComponentController.findAll(),
   ]);

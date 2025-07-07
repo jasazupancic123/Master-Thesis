@@ -21,6 +21,7 @@ import { isManager } from '@/common/service/util/firebase-auth.util';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import toast from 'react-hot-toast';
+import { GroupController } from '@/controller/group/group.controller';
 
 const AVATAR_SIZE = 45;
 
@@ -56,15 +57,30 @@ export default function DashboardStaffGroupsCycles(
   const role = profile.customClaims.role || [];
 
   useEffect(() => {
-    if (
-      !selectedInstitution.groups ||
-      !selectedInstitution.groups.length ||
-      (selectedGroup &&
-        !selectedInstitution.groupIds.includes(selectedGroup?.id))
-    ) {
-      setSelectedGroup(null);
-      setSelectedCycle(null);
+    async function fetchGroups() {
+      if (!selectedInstitution) return;
+
+      selectedInstitution.groups = await GroupController.findAllByInstitution(
+        token,
+        selectedInstitution.id
+      );
+
+      console.log(selectedInstitution.groups);
+
+      if (
+        !selectedInstitution.groups ||
+        !selectedInstitution.groups.length ||
+        (selectedGroup &&
+          !selectedInstitution.groups
+            .map((g) => g.id)
+            .includes(selectedGroup?.id))
+      ) {
+        setSelectedGroup(null);
+        setSelectedCycle(null);
+      }
     }
+
+    fetchGroups().then();
   }, [selectedInstitution]);
 
   const handleRemoveTrainerFromInstitution = (trainerId: string) => {

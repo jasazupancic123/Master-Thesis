@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { ComponentService } from '../../src/component/component.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
@@ -17,7 +16,13 @@ import {
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { createGroupWithCycles } from '../utils/data.util';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+  deleteDocs,
+  deleteUsers,
+} from '../common/utils/data.util';
 import {
   DEFAULT_PARAMS_KEY,
   INT_OPTIONS,
@@ -30,24 +35,29 @@ import {
   VolType,
 } from '../../src/component/enum/param.enum';
 import { WorkloadService } from '../../src/training/service/workload.service';
-import { createAthleteUserAndToken } from '../utils/auth.util';
+import { createAthleteUserAndToken } from '../common/utils/auth.util';
 import { AttributeType } from '../../src/common/enum/attribute-type.enum';
 import { Workload } from '../../src/training/entity/workload.entity';
 import { generateCompletedRepWorkloadsStub } from '../../src/training/mock/workload.stub';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../src/institution/mock/institution.mock';
+import { TestUser } from '../common/type/auth.type';
+import { TestInstitution } from '../common/type/entity.type';
 
 describe('Training Workloads (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
+  let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
   let workloadService: WorkloadService;
+  let institutionService: InstitutionService;
 
+  let institution: TestInstitution;
   let group: Group;
   let component: Component;
+  let athlete2: TestUser;
+  let athlete3: TestUser;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -57,53 +67,43 @@ describe('Training Workloads (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    firebaseService = moduleFixture.get(FirebaseService);
+    firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     workloadService = moduleFixture.get(WorkloadService);
+    institutionService = moduleFixture.get(InstitutionService);
 
     component = await componentService.create(
       generateComponentStub({ params: { [DEFAULT_PARAMS_KEY]: [] } }),
     );
 
-    const [athlete2, athlete3] = await Promise.all([
-      createAthleteUserAndToken(firebaseService),
-      createAthleteUserAndToken(firebaseService),
+    [athlete2, athlete3] = await Promise.all([
+      createAthleteUserAndToken(firebase),
+      createAthleteUserAndToken(firebase),
     ]);
 
-    const institutionService = moduleFixture.get(InstitutionService);
-    const institution = await institutionService.create(
-      global.admin,
-      generateInstitutionStub(),
-    );
-
-    group = await createGroupWithCycles(groupService, {
-      institutionId: institution.id,
-      owner: trainer,
+    institution = await createInstitution(institutionService);
+    group = await createGroupWithCycles(groupService, institution, {
       membersIds: [athlete.uid, athlete2.uid, athlete3.uid],
     });
   });
 
-  beforeEach(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
-    await firebaseService.deleteCollection(
-      FirestoreCollection.TRAINING_WORKLOAD,
-    );
-  });
-
   afterAll(async () => {
-    await firebaseService.deleteCollection(FirestoreCollection.EXERCISE);
-    await firebaseService.deleteCollection(FirestoreCollection.GROUP);
-    await firebaseService.deleteCollection(FirestoreCollection.TRAINING);
+    await Promise.all([
+      deleteDoc(firebase, 'GROUP', group.id),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteUsers(firebase, [athlete2, athlete3]),
+    ]);
+
     await app.close();
   });
 
   describe('Create workloads', () => {
     it('should successfully create training workloads for all members for training if only sets are provided', async () => {
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(admin, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
@@ -166,10 +166,19 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.intRecValueL).toBeNull();
         expect(workload.intRecValueR).toBeNull();
       }
+
+      await Promise.all([
+        deleteDocs(
+          firebase,
+          'EXERCISE',
+          exercises.map((e) => e.id),
+        ),
+        deleteDoc(firebase, 'TRAINING', response.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for a single param value', async () => {
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(admin, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
@@ -221,6 +230,15 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.prescribedIntRecValueL).toBeUndefined();
         expect(workload.intRecValueL).toBeNull();
       }
+
+      await Promise.all([
+        deleteDocs(
+          firebase,
+          'EXERCISE',
+          exercises.map((e) => e.id),
+        ),
+        deleteDoc(firebase, 'TRAINING', response.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for multiple param values', async () => {
@@ -256,7 +274,7 @@ describe('Training Workloads (e2e)', () => {
         }),
       );
 
-      const exercises = await exerciseService.createMany(trainer, [
+      const exercises = await exerciseService.createMany(admin, [
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
         generateExerciseStub({ componentIds: [component.id] }),
@@ -356,6 +374,16 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.prescribedIntRecValueL).toBe(1);
         expect(workload.intRecValueL).toBeNull();
       }
+
+      await Promise.all([
+        deleteDocs(
+          firebase,
+          'EXERCISE',
+          exercises.map((e) => e.id),
+        ),
+        deleteDoc(firebase, 'TRAINING', response.id),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+      ]);
     });
 
     it.each([IntType.Hrmax, IntType.Mas])(
@@ -376,7 +404,7 @@ describe('Training Workloads (e2e)', () => {
         );
 
         const exercise = await exerciseService.create(
-          trainer,
+          admin,
           generateExerciseStub({ componentIds: [component.id] }),
         );
 
@@ -404,6 +432,12 @@ describe('Training Workloads (e2e)', () => {
           expect(workload.prescribedIntWork1ValueL).toBe(0.7);
           expect(workload.intWork1ValueL).toBeNull();
         }
+
+        await Promise.all([
+          deleteDoc(firebase, 'EXERCISE', exercise.id),
+          deleteDoc(firebase, 'TRAINING', response.id),
+          deleteDoc(firebase, 'COMPONENT', component.id),
+        ]);
       },
     );
 
@@ -423,7 +457,7 @@ describe('Training Workloads (e2e)', () => {
       );
 
       const exercise = await exerciseService.create(
-        trainer,
+        admin,
         generateExerciseStub({ componentIds: [component.id] }),
       );
 
@@ -460,7 +494,7 @@ describe('Training Workloads (e2e)', () => {
       );
 
       jest
-        .spyOn(workloadService, 'findAllByRef')
+        .spyOn(workloadService, 'findAllByMembers')
         .mockImplementationOnce(async () => mockWorkloads);
 
       const response = await trainingService.create(trainer, training);
@@ -472,6 +506,12 @@ describe('Training Workloads (e2e)', () => {
         expect(workload.prescribedIntWork1ValueL).toBeGreaterThanOrEqual(113); // epley and brzycki return value 116.1, lander returns 113.5
         expect(workload.intWork1ValueL).toBeNull();
       }
+
+      await Promise.all([
+        deleteDoc(firebase, 'EXERCISE', exercise.id),
+        deleteDoc(firebase, 'TRAINING', response.id),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for bw', async () => {
@@ -490,7 +530,7 @@ describe('Training Workloads (e2e)', () => {
       );
 
       const exercise = await exerciseService.create(
-        trainer,
+        admin,
         generateExerciseStub({ componentIds: [component.id] }),
       );
 
@@ -513,6 +553,12 @@ describe('Training Workloads (e2e)', () => {
       );
 
       const workloads = await workloadService.findAllByTraining(response.id);
+
+      await Promise.all([
+        deleteDoc(firebase, 'EXERCISE', exercise.id),
+        deleteDoc(firebase, 'TRAINING', response.id),
+        deleteDoc(firebase, 'COMPONENT', component.id),
+      ]);
     });
 
     it('should successfully create training workloads for all members for training for exercises that have custom attributes and parameters', async () => {});
