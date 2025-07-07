@@ -11,8 +11,8 @@ export class SwaggerSetup extends BaseSetup {
     const config = new DocumentBuilder()
       .setTitle('FitCode Nest JS API')
       .setDescription('The FitCode API description')
-      .setVersion('1.0')
-      .addTag('fitcode')
+      .setVersion('0.0.1')
+      .addTag('Fitcode Backend')
       .build();
 
     const document = SwaggerModule.createDocument(this.app, config);

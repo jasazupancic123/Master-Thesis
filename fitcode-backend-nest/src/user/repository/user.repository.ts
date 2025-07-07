@@ -45,7 +45,7 @@ export class UserRepository
     if (!input.id) throw new Error('User ID is required');
 
     const query = this.firebaseService.buildCreateQuery<UserEntity>(
-      { id: input.id, groupsIds: [], trainersIds: [], institutionIds: [] },
+      { id: input.id },
       { timestamps: true },
     );
 

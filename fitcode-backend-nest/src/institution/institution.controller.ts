@@ -3,11 +3,13 @@ import { User } from '../common/type/firebase-auth.type';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { Auth } from '../common/decorator/auth.decorator';
 import { InstitutionService } from './service/institution.service';
-import { CreateInstitutionDto } from './dto/create-insitution.dto';
+import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { UserRole } from '../user/enum/user-role.enum';
 import { AddAthletesDto } from './dto/add-athletes.dto';
 import { AddTrainersDto } from './dto/add-trainers.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Institution')
 @Controller('institution')
 export class InstitutionController {
   constructor(private readonly institutionService: InstitutionService) {}
@@ -21,7 +23,13 @@ export class InstitutionController {
   @Get(':institutionId')
   @Auth([UserRole.ADMIN, UserRole.TRAINER])
   async findById(@Param('institutionId') institutionId: string) {
-    return this.institutionService.findOneOrFail({ institutionId });
+    return this.institutionService.getDocByIdOrFail({ institutionId });
+  }
+
+  @Get(':institutionId/athletes')
+  @Auth([UserRole.ADMIN, UserRole.TRAINER])
+  async findAthletes(@Param('institutionId') institutionId: string) {
+    return this.institutionService.findMembers({ institutionId });
   }
 
   @Post()
@@ -37,7 +45,11 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() body: AddAthletesDto,
   ) {
-    return this.institutionService.addAthletes(user, { institutionId }, body);
+    return this.institutionService.updateMembers(
+      user,
+      { institutionId },
+      { add: true, memberIds: body.athleteIds, trainers: false },
+    );
   }
 
   @Post(':institutionId/athletes/delete')
@@ -47,10 +59,10 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() body: AddAthletesDto,
   ) {
-    return this.institutionService.removeAthletes(
+    return this.institutionService.updateMembers(
       user,
       { institutionId },
-      body,
+      { add: false, memberIds: body.athleteIds, trainers: false },
     );
   }
 
@@ -61,7 +73,11 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() body: AddTrainersDto,
   ) {
-    return this.institutionService.addTrainers(user, { institutionId }, body);
+    return this.institutionService.updateMembers(
+      user,
+      { institutionId },
+      { add: true, memberIds: body.trainerIds, trainers: false },
+    );
   }
 
   @Post(':institutionId/trainers/delete')
@@ -71,10 +87,10 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Body() body: AddTrainersDto,
   ) {
-    return this.institutionService.removeTrainers(
+    return this.institutionService.updateMembers(
       user,
       { institutionId },
-      body,
+      { add: false, memberIds: body.trainerIds, trainers: false },
     );
   }
 }

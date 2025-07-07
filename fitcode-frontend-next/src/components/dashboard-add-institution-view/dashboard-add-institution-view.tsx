@@ -45,8 +45,6 @@ export default function AddInstitutionDashboard() {
           name,
           imageUrl,
           ownerId: owner.uid,
-          athleteIds: [],
-          trainerIds: [],
         }),
       (institution) => {
         institution = InstitutionService.mapUsers(

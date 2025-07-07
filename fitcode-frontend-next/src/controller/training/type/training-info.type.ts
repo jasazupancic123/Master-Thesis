@@ -5,8 +5,9 @@ import { GroupWorkloadStats } from './average-workload-values.type';
 
 export type TrainingInfo = BaseEntity &
   Required<DateRange> & {
-    groupId: string;
-    cycleId: string;
+    institutionId?: string;
+    groupId?: string;
+    cycleId?: string;
     copiedFromId?: string;
     warmup: TrainingComponentInfo;
     cooldown: TrainingComponentInfo;

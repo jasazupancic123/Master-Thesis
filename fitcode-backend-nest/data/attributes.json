@@ -901,5 +901,27 @@
           "type":"value"
         }
       ]
+    },
+    {
+      "field": "location",
+      "name": "Location",
+      "type": "select",
+      "options": [
+        {
+          "field": "loc-gym",
+          "name": "Gym",
+          "type": "value"
+        },
+        {
+          "field": "loc-pitch",
+          "name": "Pitch",
+          "type": "value"
+        },
+        {
+          "field": "loc-home",
+          "name": "Home",
+          "type": "value"
+        }
+      ]
     }
   ]

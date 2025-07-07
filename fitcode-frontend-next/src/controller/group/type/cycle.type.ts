@@ -1,6 +1,5 @@
 import { DateRange } from '@/common/type/date-range.type';
 import { BaseEntity, ColorEntity } from '@/common/type/entity.type';
-import { Periodization } from './periodization.type';
 
 export type Cycle = BaseEntity &
   ColorEntity &

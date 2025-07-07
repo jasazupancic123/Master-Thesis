@@ -15,7 +15,6 @@ import { Component } from '../../component/entity/component.entity';
 import { Exercise } from '../../exercise/entity/exercise.entity';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ExerciseService } from '../../exercise/service/exercise.service';
-import { User } from '../../common/type/firebase-auth.type';
 import { ComponentService } from '../../component/component.service';
 import {
   DEFAULT_PARAMS_KEY,
@@ -36,25 +35,43 @@ import {
 } from '../../component/constant/warmup-cooldown.constant';
 import { Method } from '../../method/entity/method.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { WorkloadService } from './workload.service';
 import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 import { CommonService } from '../../common/service/common.service';
+import { User } from '../../common/type/firebase-auth.type';
+import { InstitutionService } from '../../institution/service/institution.service';
+import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
+import { Institution } from '../..//institution/entity/institution.entity';
 
 @Injectable()
 export class TrainingPlanService {
   constructor(
     private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
-    @Inject(forwardRef(() => ComponentService))
-    private readonly componentService: Wrapper<ComponentService>,
+    private readonly institutionService: InstitutionService,
+    private readonly componentService: ComponentService,
     @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: Wrapper<ExerciseService>,
     @Inject(forwardRef(() => ExerciseAttributeValueRepository))
     private readonly exerciseAttributeValueRepository: Wrapper<ExerciseAttributeValueRepository>,
-    @Inject(forwardRef(() => WorkloadService))
-    private readonly workloadService: Wrapper<WorkloadService>,
   ) {}
+
+  async getInstitution(exercise: Exercise): Promise<Institution | null> {
+    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
+      return await this.institutionService.getDoc({
+        institutionId: exercise.ownerId,
+      });
+
+    return null;
+  }
+
+  async validateCanViewExercise(user: User, exercise: Exercise) {
+    const institution = await this.getInstitution(exercise);
+    if (!this.exerciseService.canView(user, exercise, institution))
+      throw new BadRequestException(
+        `You cannot view exercise ${exercise.name}`,
+      );
+  }
 
   getTrainingComponents(training: Training) {
     return [training.warmup, ...training.components, training.cooldown];
@@ -104,8 +121,7 @@ export class TrainingPlanService {
     return [query, training];
   }
 
-  async findAllTrainingExercises(
-    user: User,
+  async getAllTrainingExercises(
     trainingComponents: TrainingComponent[],
   ): Promise<Exercise[]> {
     const trainingExercises = trainingComponents.flatMap((c) => [
@@ -114,8 +130,7 @@ export class TrainingPlanService {
     ]);
 
     const ids = [...new Set(trainingExercises.map((e) => e.id))];
-    const exercises =
-      ids.length > 0 ? await this.exerciseService.findAllByIds(user, ids) : [];
+    const exercises = await this.exerciseService.getAll(ids);
 
     return await Promise.all(
       exercises.map(async (e) => ({
@@ -356,8 +371,8 @@ export class TrainingPlanService {
       }
 
       // validate supersets and subgroups
-      this.validateSupersets(curr, exercises, allComponents);
-      this.validateSubgroups(trainingMemberIds, curr, exercises, allComponents);
+      this.validateSupersets(curr, exercises);
+      this.validateSubgroups(trainingMemberIds, curr);
       this.validateTrainingExerciseValues(curr, allMethods);
     }
 
@@ -499,6 +514,9 @@ export class TrainingPlanService {
     attributes: Attribute[],
   ) {
     for (const tComponent of trainingComponents) {
+      if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tComponent.id))
+        continue;
+
       const component = components.find((c) => c.id === tComponent.id)!;
       const root = this.componentService.getRoot(component, components);
       const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
@@ -542,11 +560,7 @@ export class TrainingPlanService {
     }
   }
 
-  validateSupersets(
-    component: TrainingComponent,
-    exercises: Exercise[],
-    allComponents: Component[],
-  ) {
+  validateSupersets(component: TrainingComponent, exercises: Exercise[]) {
     if (component.supersets.length > 8)
       throw new ConflictException(
         'You can only have up to 8 supersets per training component',
@@ -573,7 +587,8 @@ export class TrainingPlanService {
         if (!exercise)
           throw new NotFoundException('Training exercise not found');
 
-        const exerciseComponentLeaf = allComponents.find(
+        // NOTE - currently disabled, as we can add exercises to any component
+        /* const exerciseComponentLeaf = allComponents.find(
           (c) => c.id === exercise.componentIds[0],
         );
 
@@ -585,17 +600,12 @@ export class TrainingPlanService {
         if (exerciseComponentRoot.id !== component.id)
           throw new BadRequestException(
             `Exercise ${exercise.name} cannot be part of selected component`,
-          );
+          ); */
       }
     }
   }
 
-  validateSubgroups(
-    trainingMemberIds: string[],
-    component: TrainingComponent,
-    exercises: Exercise[],
-    allComponents: Component[],
-  ) {
+  validateSubgroups(trainingMemberIds: string[], component: TrainingComponent) {
     // validate all subgroups have unique members (one member cannot be in multiple subgroups)
     const trainingMemberIdsSet = new Set(trainingMemberIds);
     const membersIdsSet = new Set<string>();
@@ -673,16 +683,14 @@ export class TrainingPlanService {
 
     for (const condition of Object.keys(params)) {
       if (condition === DEFAULT_PARAMS_KEY) continue;
-      const [field, operator, value] = condition.split(':'); // e.g. "field:eq:value"
 
+      const [field, operator, value] = condition.split(':'); // e.g. "field:eq:value"
       const attrVal = attributeValues.find((a) => a.field === field);
       const attribute = attributes.find((a) => a.field === field)!;
 
-      if (attribute && !attrVal && operator === '!') {
+      if (attribute && !attrVal && operator === '!')
         // case for empty value and operator ! (value does not exist)
-        componentParams = params[condition];
-        continue;
-      }
+        return params[condition];
 
       if (!attribute || !attrVal) continue;
 
@@ -693,10 +701,10 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) === parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
           else if (attrVal.value === value)
             // string
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'like': // string inclusion
@@ -705,7 +713,7 @@ export class TrainingPlanService {
             attrVal.value.includes(value)
           )
             // string
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'gt': // greater than
@@ -714,7 +722,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) > parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'lt': // less than
@@ -723,7 +731,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) < parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'gte': // greater than or equal
@@ -732,7 +740,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) >= parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'lte': // Less than or equal
@@ -741,7 +749,7 @@ export class TrainingPlanService {
             parseFloat(attrVal.value) <= parseFloat(value)
           )
             // number
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         case 'range': // range check
@@ -750,26 +758,44 @@ export class TrainingPlanService {
             const [min, max] = value.split('-').map(parseFloat);
             const numericValue = parseFloat(attrVal.value);
             if (numericValue >= min && numericValue <= max)
-              componentParams = params[condition];
+              return params[condition];
           }
 
           break;
+        case 'selected': // select attribute
+          if (attribute.type !== AttributeType.Select)
+            throw new BadRequestException(
+              'Operator "selected" can only be used with select attribute types',
+            );
+
+          // single select with only values as options
+          const option = (attribute.options || []).find(
+            (o) => o.field === attrVal.value,
+          );
+
+          if (
+            option &&
+            option.type === AttributeType.Value &&
+            value === attrVal.value
+          )
+            return params[condition];
         case '!': // boolean false value
           if (
             attribute.type === AttributeType.Boolean &&
             attrVal.value === 'false'
           )
             // boolean
-            componentParams = params[condition];
+            return params[condition];
 
           break;
         // default case for boolean or no operator (just check if the field exists)
         default:
           if (
-            attribute.type === AttributeType.Boolean &&
-            attrVal.value === 'true'
+            (attribute.type === AttributeType.Boolean ||
+              attribute.type === AttributeType.Value) &&
+            (attrVal.value === 'true' || !attrVal.value)
           )
-            componentParams = params[condition];
+            return params[condition];
       }
     }
 

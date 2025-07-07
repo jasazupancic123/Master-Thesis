@@ -4,16 +4,22 @@ import { Attribute } from '../entity/attribute.entity';
 import { Create } from '../../common/type/entity.type';
 import { AttributeValue } from '../entity/attribute-value.entity';
 import { AttributeType } from '../../common/enum/attribute-type.enum';
+import { CacheManagerService } from '../../cache-manager/cache-manager.service';
+import { CACHE_KEY_ATTRIBUTES } from '../constant/cache.constant';
 
 @Injectable()
 export class AttributeService {
   private logger = new Logger(AttributeService.name);
 
-  constructor(private readonly repository: AttributeRepository) {}
+  constructor(
+    private readonly repository: AttributeRepository,
+    private readonly cacheManagerService: CacheManagerService,
+  ) {}
 
   async create(data: Create<Attribute>): Promise<Attribute> {
     this.logger.debug(`Creating attribute with data ${JSON.stringify(data)}`);
     await this.repository.addDoc(data);
+    await this.cacheManagerService.del(CACHE_KEY_ATTRIBUTES);
     return data;
   }
 
@@ -28,7 +34,10 @@ export class AttributeService {
   }
 
   async findAll(): Promise<Attribute[]> {
-    return await this.repository.getDocs();
+    const cached =
+      await this.cacheManagerService.get<Attribute[]>(CACHE_KEY_ATTRIBUTES);
+
+    return cached ? cached : await this.repository.getDocs();
   }
 
   validate(values: AttributeValue[], attributes: Attribute[]) {

@@ -2,15 +2,23 @@ import { TimestampEntity } from '@/common/type/entity.type';
 import { SetStatus } from '../enum/set-status.enum';
 import { IntType, VolType } from '@/controller/component/enum/param.enum';
 
-export type Workload = TimestampEntity & {
-  userId: string;
-  trainingId: string;
-  componentId: string;
-  exerciseId: string;
-  setNumber: number;
-  status: SetStatus;
-  plannedAt: Date;
-  notes?: string;
+export type Workload = TimestampEntity &
+  WorkloadValue & {
+    institutionId?: string;
+    groupId?: string;
+    cycleId?: string;
+    userId: string;
+    trainingId: string;
+    componentId: string;
+    exerciseId: string;
+    setNumber: number;
+    status: SetStatus;
+    plannedAt: Date;
+    notes?: string;
+    isPersonalized: boolean;
+  };
+
+export type WorkloadValue = {
   volWork1Type?: VolType;
   prescribedVolWork1ValueL?: number;
   prescribedVolWork1ValueR?: number;

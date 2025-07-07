@@ -1,7 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
-  ForbiddenException,
   forwardRef,
   Inject,
   Injectable,
@@ -9,10 +7,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { NUM_MAX_EXERCISES } from '../../common/constant/limit.constant';
 import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { UserEntity } from '../../user/entity/user.entity';
-import { UserService } from '../../user/user.service';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
 import { User } from '../../common/type/firebase-auth.type';
@@ -27,38 +22,105 @@ import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entit
 import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { Component } from '../../component/entity/component.entity';
-import { FieldPath, Query } from 'firebase-admin/firestore';
+import { Query } from 'firebase-admin/firestore';
 import { TrainingPlanService } from '../../training/service/training-plan.service';
 import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
-import { UserRole } from '../../user/enum/user-role.enum';
+import { Permission } from '../../common/interface/permission.interface';
+import { Institution } from '../../institution/entity/institution.entity';
+import { InstitutionService } from '../../institution/service/institution.service';
+import { CreateExerciseDto } from '../dto/create-exercise.dto';
+import { Attribute } from '../../attribute/entity/attribute.entity';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
 
 @Injectable()
-export class ExerciseService {
+export class ExerciseService implements Permission<Exercise, Institution> {
   private logger = new Logger(ExerciseService.name);
 
   constructor(
-    @Inject(forwardRef(() => CacheManagerService))
-    private readonly cacheManagerService: Wrapper<CacheManagerService>,
+    private readonly cacheManagerService: CacheManagerService,
     private readonly exerciseRepository: ExerciseRepository,
     private readonly exerciseAttributeValueRepository: ExerciseAttributeValueRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly attributeService: AttributeService,
+    private readonly institutionService: InstitutionService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: Wrapper<UserService>,
     private readonly trainingPlanService: TrainingPlanService,
   ) {}
 
-  async findAll(
-    user: User,
+  async findAllGlobal(filter?: Record<string, string>) {
+    return await this.findAllByUser(GLOBAL_EXERCISE_OWNER, filter);
+  }
+
+  async findAllByInstitution(
+    institutionId: string,
+    filter?: Record<string, string>,
+  ) {
+    return await this.findAllByUser(institutionId, filter);
+  }
+
+  async getAll(ids?: string[]): Promise<Exercise[]> {
+    if (ids && !ids.length) return [];
+
+    let exercises =
+      await this.cacheManagerService.get<Exercise[]>(CACHE_KEY_EXERCISES);
+
+    if (!exercises) {
+      exercises = await this.exerciseRepository.getDocs();
+      await this.cacheManagerService.set(CACHE_KEY_EXERCISES, exercises);
+    }
+
+    return ids?.length
+      ? exercises.filter((e) => ids.includes(e.id))
+      : exercises;
+  }
+
+  private async map(exercises: Exercise[]) {
+    let mapped: Exercise[] = exercises;
+
+    // map attributes
+    mapped = await Promise.all(
+      exercises.map(async (e) => ({
+        ...e,
+        attributeValues:
+          await this.exerciseAttributeValueRepository.getAllByExercise({
+            exerciseId: e.id,
+          }),
+      })),
+    );
+
+    const attributes = await this.attributeService.findAll();
+    const components = await this.componentService.findAllFlat();
+
+    // map params
+    return mapped.map((exercise) => {
+      const component = components.find(
+        (c) => c.id === exercise.componentIds[0],
+      )!;
+
+      const root = this.componentService.getRoot(component, components);
+      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
+
+      const params = this.trainingPlanService.getComponentParamAttributes(
+        componentParams,
+        exercise.attributeValues,
+        attributes,
+      );
+
+      exercise.defaultParams =
+        this.trainingPlanService.getParamAttributes(params);
+
+      return exercise;
+    });
+  }
+
+  async findAllByUser(
+    userId: string, // either global or institution id
     filter?: Record<string, string>,
   ): Promise<Exercise[]> {
-    const dbUser = await this.userService.findOneByIdOrFail(user.uid);
-    const components = await this.cacheManagerService.getComponents();
-
-    const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
+    const components = await this.componentService.findAllFlat();
     let exercises: Exercise[] = [];
 
     if (
@@ -68,7 +130,7 @@ export class ExerciseService {
       // filtering only by components from exercise repository
       let query = this.exerciseRepository
         .collection()
-        .where('ownerId', 'in', userIds);
+        .where('ownerId', '==', userId);
 
       if (filter?.componentIds)
         query = this.filterByComponents(
@@ -90,7 +152,7 @@ export class ExerciseService {
       // filtering by attributes
       let query = this.exerciseAttributeValueRepository
         .collectionGroup()
-        .where('ownerId', 'in', userIds);
+        .where('ownerId', '==', userId);
 
       if (filter) {
         if (filter.componentIds)
@@ -108,202 +170,79 @@ export class ExerciseService {
 
       const exerciseIds = await query
         .get()
-        .then(({ docs }) => docs.map((doc) => doc.data().exerciseId));
+        .then(({ docs }) => docs.map((doc) => doc.data().exerciseId as string));
 
-      if (exerciseIds.length > 0)
-        exercises = await this.exerciseRepository.getDocs((q) =>
-          q.where(FieldPath.documentId(), 'in', exerciseIds),
-        );
+      exercises = await this.getAll(exerciseIds);
     }
 
     // map attributes
-    exercises = await Promise.all(
-      exercises.map(async (e) => ({
-        ...e,
-        attributeValues:
-          await this.exerciseAttributeValueRepository.getAllByExercise({
-            exerciseId: e.id,
-          }),
-      })),
-    );
-
-    const attributes = await this.cacheManagerService.getAttributes();
-
-    // map params
-    const finalExercises = exercises.map((exercise) => {
-      const component = components.find(
-        (c) => c.id === exercise.componentIds[0],
-      )!;
-
-      const root = this.componentService.getRoot(component, components);
-      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
-
-      const params = this.trainingPlanService.getComponentParamAttributes(
-        componentParams,
-        exercise.attributeValues,
-        attributes,
-      );
-
-      exercise.defaultParams =
-        this.trainingPlanService.getParamAttributes(params);
-
-      return exercise;
-    });
-
-    return finalExercises;
+    return await this.map(exercises);
   }
 
-  async findAllByIds(user: User, ids: string[]) {
-    const dbUser = await this.userService.findOneByIdOrFail(user.uid);
-    const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
-
-    let exercises = await this.exerciseRepository
-      .collection()
-      .where('ownerId', 'in', userIds)
-      .where(FieldPath.documentId(), 'in', ids)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Exercise>,
-          ),
-        ),
-      );
-
-    // map attributes
-    exercises = await Promise.all(
-      exercises.map(async (e) => ({
-        ...e,
-        attributeValues:
-          await this.exerciseAttributeValueRepository.getAllByExercise({
-            exerciseId: e.id,
-          }),
-      })),
-    );
-
-    const components = await this.cacheManagerService.getComponents();
-    const attributes = await this.cacheManagerService.getAttributes();
-
-    return exercises.map((exercise) => {
-      const component = components.find(
-        (c) => c.id === exercise.componentIds[0],
-      )!;
-
-      const root = this.componentService.getRoot(component, components);
-      const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
-
-      const params = this.trainingPlanService.getComponentParamAttributes(
-        componentParams,
-        exercise.attributeValues,
-        attributes,
-      );
-
-      exercise.defaultParams =
-        this.trainingPlanService.getParamAttributes(params);
-
-      return exercise;
-    });
-  }
-
-  async findById(
-    user: User,
-    ref: Required<ExerciseRef>,
-  ): Promise<Exercise | null> {
-    const dbUser = await this.userService.findOneByIdOrFail(user.uid);
-    const userIds = [...dbUser.trainersIds, user.uid, GLOBAL_EXERCISE_OWNER];
-
+  async findOneById(user: User, ref: ExerciseRef): Promise<Exercise | null> {
     // find exercise
     const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
     if (!exercise) return null;
 
-    // authorize
-    if (!userIds.includes(exercise.ownerId)) throw new ForbiddenException();
+    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER) {
+      // institution created an exercise
+      const institution = await this.institutionService.getDoc({
+        institutionId: exercise.ownerId,
+      });
+
+      // authorize
+      if (!this.canView(user, exercise, institution))
+        throw new UnauthorizedException(
+          'You are not allowed to view this exercise',
+        );
+    }
+
     return exercise;
   }
 
-  async findByIdOrFail(
-    user: User,
-    ref: Required<ExerciseRef>,
-  ): Promise<Exercise> {
-    const exercise = await this.findById(user, ref);
+  async findOneByIdOrFail(user: User, ref: ExerciseRef): Promise<Exercise> {
+    const exercise = await this.findOneById(user, ref);
     if (!exercise) throw new NotFoundException('Exercise does not exist');
     return exercise;
   }
 
-  async create(
-    user: User,
-    data: Create<
-      Omit<Exercise, 'ownerId' | 'id' | 'values' | 'rootComponentId'>
-    >,
-  ): Promise<Exercise> {
+  async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
     this.logger.log(
       `User ${user.uid} is creating new exercise: ${JSON.stringify(data)}`,
     );
 
-    if (data.componentIds.length < 1)
-      throw new BadRequestException('Exercise must have atleast one component');
+    const attributes = await this.attributeService.findAll();
+    const components = await this.componentService.findAllFlat();
 
-    // validate exercises
-    const dbUser = await this.userService.findOneOrFail(user.uid);
-    const exercises = await this.exerciseRepository.getDocs((q) =>
-      q.where('ownerId', '==', user.uid),
-    );
+    const institution = this.firebaseService.isManager(user)
+      ? await this.institutionService.getDocByOwner(user.uid)
+      : null;
 
-    this.checkLimit(dbUser, exercises);
+    const ownerId = this.firebaseService.isAdmin(user)
+      ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
+      : institution
+        ? institution.id
+        : null;
 
-    // validate components
-    const components = await this.cacheManagerService.getComponents();
-    for (const componentId of data.componentIds) {
-      const component = components.find((c) => c.id === componentId);
-
-      // check that component exists
-      if (!component)
-        throw new NotFoundException(`Component ${componentId} does not exist`);
-    }
-
-    // check that component is leaf
-    const mainComponent = components.find(
-      (c) => c.id === data.componentIds[0],
-    )!;
-
-    if (mainComponent.children?.length > 0)
-      throw new BadRequestException(
-        `Main component ${mainComponent.name.toLowerCase()} is not valid for an exercise`,
+    if (!ownerId || !this.canAdd(user))
+      throw new UnauthorizedException(
+        'You are not allowed to create exercises',
       );
 
-    // validate attributes
-    // NOTE - exercise inherits attributes only from the first (main) component
-    const parents = mainComponent.parents!.map(
-      (parentId) => components.find((c) => c.id === parentId)!,
-    );
-
-    const attributeFields = [
-      ...parents.flatMap((p) => p.attributes || []),
-      ...(mainComponent.attributes || []),
-    ];
-
-    const allAttributes = await this.attributeService.findAll();
-    const attributes = attributeFields.map(
-      (field) => allAttributes.find((a) => a.field === field)!,
-    );
-
-    const attributeValues = this.attributeService.validate(
-      data.attributeValues,
-      attributes || [],
+    const attributeValues = this.validateCreateExercise(
+      data,
+      components,
+      attributes,
     );
 
     // create exercise
-    const ownerId = this.firebaseService.isAdmin(user)
-      ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
-      : user.uid;
-
     const batch = this.firebaseService.firestore.batch();
     const docRef = this.exerciseRepository.collection().doc();
     const exerciseId = docRef.id;
     const createExerciseQuery = this.firebaseService.buildCreateQuery<Exercise>(
       {
         id: exerciseId,
-        ownerId,
+        ownerId: ownerId,
         name: data.name,
         componentIds: data.componentIds,
         videoUrl: data.videoUrl,
@@ -336,11 +275,12 @@ export class ExerciseService {
     });
 
     await batch.commit();
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
     return {
       ...data,
       id: exerciseId,
-      ownerId,
+      ownerId: ownerId,
       attributeValues: attributeValues.map((v) => ({
         ...v,
         id: undefined,
@@ -361,80 +301,54 @@ export class ExerciseService {
       `User ${user.uid} is creating new exercises: ${JSON.stringify(exercises)}`,
     );
 
-    // validate
-    const userExercises = await this.exerciseRepository.getDocs((q) =>
-      q.where('ownerId', '==', user.uid),
-    );
+    // validate components
+    const allComponents = await this.componentService.findAllFlat();
+    const allAttributes = await this.attributeService.findAll();
 
-    const components = await this.cacheManagerService.getComponents();
+    const institution = this.firebaseService.isManager(user)
+      ? await this.institutionService.getDocByOwner(user.uid)
+      : null;
+
     const ownerId = this.firebaseService.isAdmin(user)
       ? GLOBAL_EXERCISE_OWNER // if user is admin, exercise is global
-      : user.uid;
+      : institution
+        ? institution.id
+        : null;
+
+    if (!this.canAdd(user))
+      throw new UnauthorizedException(
+        'You are not allowed to create exercises',
+      );
+
+    const duplicates = this.commonService.array.duplicates<string>(
+      exercises.map((e) => e.name),
+    );
+
+    if (duplicates.length)
+      throw new BadRequestException(
+        `You have a duplicate exercise ${duplicates[0]}`,
+      );
 
     const exercisesToCreate: Create<
       Omit<Exercise, 'id' | 'ownerId' | 'attributes'>
     >[] = [];
 
-    let i = 0;
-    for (const e of exercises) {
-      // check limit
-      if (
-        !this.firebaseService.isAdmin(user) &&
-        userExercises.length + i++ + 1 > NUM_MAX_EXERCISES
-      )
-        break;
-
-      // validate components
-      if (e.componentIds.length < 1)
-        throw new BadRequestException(
-          'Exercise must have atleast one component',
-        );
-
-      for (const componentId of e.componentIds) {
-        const component = components.find((c) => c.id === componentId);
-        if (!component)
-          throw new NotFoundException(
-            `Component ${componentId} does not exist`,
-          );
-      }
-
-      // check that component is leaf
-      const mainComponent = components.find((c) => c.id === e.componentIds[0])!;
-      if (mainComponent.children?.length > 0)
-        throw new BadRequestException(
-          `Main component ${mainComponent.name.toLowerCase()} is not valid for an exercise`,
-        );
-
-      // validate attributes
-      // NOTE - exercise inherits attributes only from the first (main) component
-      const parents = mainComponent.parents!.map(
-        (parentId) => components.find((c) => c.id === parentId)!,
+    for (const data of exercises) {
+      const attributeValues = this.validateCreateExercise(
+        data,
+        allComponents,
+        allAttributes,
       );
 
-      const attributeFields = [
-        ...parents.flatMap((p) => p.attributes || []),
-        ...(mainComponent.attributes || []),
-      ];
-
-      const allAttributes = await this.attributeService.findAll();
-      const attributes = attributeFields.map(
-        (field) => allAttributes.find((a) => a.field === field)!,
-      );
-
-      const attributeValues = this.attributeService.validate(
-        e.attributeValues,
-        attributes || [],
-      );
-
-      e.attributeValues = attributeValues.map((v) => ({
+      data.attributeValues = attributeValues.map((v) => ({
         ...v,
         id: undefined,
         exerciseId: undefined,
         ownerId,
-        componentIds: e.componentIds,
+        componentIds: data.componentIds,
       }));
 
-      exercisesToCreate.push(e);
+      exercisesToCreate.push(data);
     }
 
     const result: Exercise[] = [];
@@ -446,9 +360,7 @@ export class ExerciseService {
 
       const item: Create<Exercise> = {
         id: exerciseId,
-        ownerId: this.firebaseService.isAdmin(user)
-          ? GLOBAL_EXERCISE_OWNER
-          : user.uid,
+        ownerId,
         name: e.name,
         componentIds: e.componentIds,
         videoUrl: e.videoUrl,
@@ -491,7 +403,70 @@ export class ExerciseService {
     });
 
     await batch.commit();
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
+
     return result;
+  }
+
+  private validateCreateExercise(
+    input: CreateExerciseDto,
+    allComponents: Component[],
+    allAttributes: Attribute[],
+  ): AttributeValue[] {
+    // validate components
+    if (input.componentIds.length < 1)
+      throw new BadRequestException('Exercise must have atleast one component');
+
+    for (const componentId of input.componentIds) {
+      const component = allComponents.find((c) => c.id === componentId);
+      if (!component)
+        // check that component exists
+        throw new NotFoundException(`Component ${componentId} does not exist`);
+    }
+
+    // check that component is leaf
+    const mainComponent = allComponents.find(
+      (c) => c.id === input.componentIds[0],
+    )!;
+
+    if (mainComponent.children?.length > 0)
+      throw new BadRequestException(
+        `Main component ${mainComponent.name.toLowerCase()} is not valid for an exercise`,
+      );
+
+    return this.validateAttributeValues(
+      input.attributeValues,
+      mainComponent,
+      allComponents,
+      allAttributes,
+    );
+  }
+
+  private validateAttributeValues(
+    attributeValues: AttributeValue[],
+    component: Component,
+    allComponents: Component[],
+    allAttributes: Attribute[],
+  ) {
+    // validate attributes
+    // NOTE - exercise inherits attributes only from the first (main) component
+    const parents = component.parents!.map(
+      (parentId) => allComponents.find((c) => c.id === parentId)!,
+    );
+
+    const attributeFields = [
+      ...parents.flatMap((p) => p.attributes || []),
+      ...(component.attributes || []),
+    ];
+
+    const attributes = attributeFields.map(
+      (field) => allAttributes.find((a) => a.field === field)!,
+    );
+
+    return this.attributeService.validate(
+      attributeValues || [],
+      attributes || [],
+    );
   }
 
   async update(user: User, ref: ExerciseRef, input: Update<Exercise>) {
@@ -499,8 +474,18 @@ export class ExerciseService {
       `User ${user.uid} is updating exercise ${ref.exerciseId}: ${JSON.stringify(input)}`,
     );
 
-    const exercise = await this.findByIdOrFail(user, ref);
-    this.validateOwner(user, exercise);
+    const exercise = await this.findOneByIdOrFail(user, ref);
+
+    let institution: Institution | null = null;
+    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
+      institution = await this.institutionService.getDocByIdOrFail({
+        institutionId: exercise.ownerId,
+      });
+
+    if (!this.canEdit(user, exercise, institution))
+      throw new UnauthorizedException(
+        'You are not allowed to edit this exercise',
+      );
 
     if (input.componentIds?.length > 0) {
       if (input.componentIds[0] !== exercise.componentIds[0])
@@ -509,41 +494,30 @@ export class ExerciseService {
         );
     }
 
+    const allComponents = await this.componentService.findAllFlat();
+    const allAttributes = await this.attributeService.findAll();
+
     // validate attributes
     // delete old attribute values
     await this.exerciseAttributeValueRepository.deleteAllByExercise({
       exerciseId: exercise.id,
     });
 
-    const components = await this.cacheManagerService.getComponents();
-    const mainComponent = components.find(
+    const mainComponent = allComponents.find(
       (c) => c.id === exercise.componentIds[0],
     )!;
 
-    const parents = mainComponent.parents!.map(
-      (parentId) => components.find((c) => c.id === parentId)!,
-    );
-
-    const attributeFields = [
-      ...parents.flatMap((p) => p.attributes || []),
-      ...(mainComponent.attributes || []),
-    ];
-
-    const allAttributes = await this.attributeService.findAll();
-    const attributes = attributeFields.map(
-      (field) => allAttributes.find((a) => a.field === field)!,
-    );
-
-    const attributeValues = this.attributeService.validate(
+    const attributeValues = this.validateAttributeValues(
       input.attributeValues || [],
-      attributes || [],
+      mainComponent,
+      allComponents,
+      allAttributes,
     );
 
     const batch = this.firebaseService.firestore.batch();
     const docRef = this.exerciseRepository.doc(exercise.id);
-    const updateExerciseQuery = this.firebaseService.buildUpdateQuery<Exercise>(
-      { ...input, updatedAt: new Date() },
-    );
+    const updateExerciseQuery =
+      this.firebaseService.buildUpdateQuery<Exercise>(input);
 
     batch.update(docRef, updateExerciseQuery);
 
@@ -556,7 +530,7 @@ export class ExerciseService {
         this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
           id: docRef.id,
           exerciseId: ref.exerciseId,
-          ownerId: user.uid,
+          ownerId: institution?.id || GLOBAL_EXERCISE_OWNER,
           componentIds: input.componentIds || exercise.componentIds,
           field: v.field,
           value: v.value,
@@ -567,6 +541,7 @@ export class ExerciseService {
     });
 
     await batch.commit();
+    await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
 
     return {
       ...exercise,
@@ -574,7 +549,7 @@ export class ExerciseService {
       attributeValues: attributeValues.map((v) => ({
         ...v,
         exerciseId: ref.exerciseId,
-        ownerId: user.uid,
+        ownerId: institution?.id || GLOBAL_EXERCISE_OWNER,
       })),
     };
   }
@@ -582,8 +557,18 @@ export class ExerciseService {
   async delete(user: User, ref: ExerciseRef) {
     this.logger.log(`User ${user.uid} is deleting exercise ${ref.exerciseId}`);
 
-    const exercise = await this.findByIdOrFail(user, ref);
-    this.validateOwner(user, exercise);
+    const exercise = await this.findOneByIdOrFail(user, ref);
+
+    let institution: Institution | null = null;
+    if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER)
+      institution = await this.institutionService.getDocByIdOrFail({
+        institutionId: exercise.ownerId,
+      });
+
+    if (!this.canEdit(user, exercise, institution))
+      throw new UnauthorizedException(
+        'You are not allowed to edit this exercise',
+      );
 
     await this.exerciseRepository.deleteDoc(ref.exerciseId);
   }
@@ -595,34 +580,21 @@ export class ExerciseService {
    * For example, if training has components `Strength` and `Speed` selected,
    * then exercise with component parents `Endurance` is not valid.
    */
-  validateExercises(
+  validateComponents(
     rootComponentId: string,
     exercises: Exercise[],
     leafs: Component[],
   ) {
     // check that parents of leaf are in training's root component ids
-    for (const exercise of exercises) {
+    for (const exercise of exercises)
       for (const componentId of exercise.componentIds) {
         const leaf = leafs.find((leaf) => leaf.id === componentId)!;
         if (leaf?.id === rootComponentId) continue;
-        if (!leaf.parents.includes(rootComponentId)) {
+        if (!leaf.parents.includes(rootComponentId))
           throw new BadRequestException(
             `Exercise ${exercise.name} cannot be part of selected component`,
           );
-        }
       }
-    }
-  }
-
-  private checkLimit(user: UserEntity, exercises: Exercise[]) {
-    // user entity for subscription check
-    if (exercises.length > NUM_MAX_EXERCISES)
-      throw new ConflictException('Exercises limit reached');
-  }
-
-  private validateOwner(user: User, exercise: Exercise) {
-    if (user.uid !== exercise.ownerId && !this.firebaseService.isAdmin(user))
-      throw new UnauthorizedException("You don't have access to this exercise");
   }
 
   private getLeafComponentIdsByRoots(
@@ -661,11 +633,48 @@ export class ExerciseService {
       allComponents,
     );
 
-    query = query.where('componentIds', 'array-contains-any', [
+    return query.where('componentIds', 'array-contains-any', [
       ...filterComponentIds,
-      leafs,
+      ...leafs,
     ]);
+  }
 
-    return query;
+  canView(user: User, exercise: Exercise, institution?: Institution) {
+    if (exercise.ownerId === GLOBAL_EXERCISE_OWNER) return true;
+    if (exercise.ownerId === user.uid) return true;
+
+    if (institution) {
+      if (user.uid === institution.ownerId) return true;
+      if (institution.trainerIds.includes(user.uid)) return true;
+      if (institution.athleteIds.includes(user.uid)) return true;
+    }
+
+    return false;
+  }
+
+  canEdit(user: User, _exercise: Exercise, institution?: Institution) {
+    if (this.firebaseService.isAdmin(user)) return true;
+
+    if (institution) {
+      if (
+        this.firebaseService.isManager(user) &&
+        user.uid === institution.ownerId
+      )
+        return true;
+
+      if (
+        this.firebaseService.isTrainer(user) &&
+        institution.trainerIds.includes(user.uid)
+      )
+        return true;
+    }
+
+    return false;
+  }
+
+  canAdd(user: User) {
+    if (this.firebaseService.isAdmin(user)) return true;
+    if (this.firebaseService.isManager(user)) return true;
+    return false;
   }
 }

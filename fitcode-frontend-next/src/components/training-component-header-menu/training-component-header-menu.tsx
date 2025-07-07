@@ -403,7 +403,7 @@ export default function TrainingComponentHeaderMenu(
           handleApiRequest(
             router,
             () =>
-              TrainingController.periodizeTrainings(token, {
+              TrainingController.periodize(token, {
                 baseTrainingId: training.id,
                 componentId: component.id,
                 periodizationType:

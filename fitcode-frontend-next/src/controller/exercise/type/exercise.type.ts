@@ -4,9 +4,9 @@ import { Component } from '@/controller/component/type/component.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 export type Exercise = BaseEntity & {
+  ownerId: string;
   name: string;
   componentIds: string[];
-  ownerId: string;
   imageUrl?: string;
   videoUrl?: string;
   instruction?: string;

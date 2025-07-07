@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
 
 export class Institution extends BaseEntity {
@@ -8,13 +8,7 @@ export class Institution extends BaseEntity {
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  @Expose()
-  ownerId: string;
+  ownerId: string; // added by admin
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
@@ -28,15 +22,16 @@ export class Institution extends BaseEntity {
   @Expose()
   athleteIds: string[];
 
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  @ApiProperty()
-  @Expose()
-  groupIds: string[];
-
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
   @Expose()
-  imageUrl: string;
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiPropertyOptional()
+  @Expose()
+  @IsOptional()
+  imageUrl?: string;
 }
