@@ -74,7 +74,7 @@ export default function DashboardPage(props: DashboardPageProps) {
   }, [selectedInstitution]);
 
   const handleSaveGroups = () => {
-    if (!selectedInstitution || !owner) return;
+    if (!selectedInstitution) return;
 
     const inputs: { id: string; membersIds: string[]; ownerId: string }[] = [];
     for (const group of selectedInstitution.groups) {
@@ -84,23 +84,23 @@ export default function DashboardPage(props: DashboardPageProps) {
 
       inputs.push({
         id: group.id,
-        ownerId: owner.uid,
+        ownerId: group.ownerId,
         membersIds: Array.from(membersIds),
       });
     }
 
     handleApiRequest(
       router,
-      () => GroupController.batchUpdate(token, inputs),
-      (groups) => {
-        const newGroup = groups.find((g) => g.id === selectedGroup?.id);
+      () => GroupController.batchUpdate(token, { groups: inputs }),
+      () => {
+        /* const newGroup = groups.find((g) => g.id === selectedGroup?.id);
         if (newGroup) {
           setSelectedGroup(newGroup);
-        }
-        setSelectedInstitution({
+        } */
+        /* setSelectedInstitution({
           ...selectedInstitution!,
           groups: groups,
-        });
+        }); */
         setDetectedChanges(false);
         toast.success('Groups saved successfully');
       },

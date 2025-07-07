@@ -52,10 +52,10 @@ export default function AthletesView() {
     selectedInstitution?.athletes || []
   );
 
-  useEffect(() => {
+  /* useEffect(() => {
     if (!selectedInstitution) return;
     setAddedAthletes(selectedInstitution.athletes || []);
-  }, [selectedInstitution]);
+  }, [selectedInstitution]); */
 
   const handleAddAthletesToInstitution = () => {
     if (!selectedInstitution || !addedAthletes.length) return;
