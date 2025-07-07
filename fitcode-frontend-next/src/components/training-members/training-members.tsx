@@ -244,8 +244,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
 
                 <Box
                   sx={{
-                    height: 19,
-                    width: 5,
+                    height: 16,
+                    width: 4,
                     borderRadius: 5,
                     backgroundColor: theme.palette.primary.main,
                   }}
@@ -271,7 +271,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
               </Box>
               <Card
                 sx={{
-                  m: 0.25,
+                  m: 0.1,
                   ml: 0,
                   backgroundColor: theme.palette.background.default,
                   display: 'flex',

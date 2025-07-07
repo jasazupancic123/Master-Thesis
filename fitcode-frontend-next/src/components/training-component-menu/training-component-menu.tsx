@@ -101,7 +101,6 @@ export default function TrainingComponentMenu(
           display="flex"
           width={screenSize.isSmallerThanLaptop ? '100%' : undefined}
           p={0}
-          mr={1}
           alignItems="center"
           flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
         >

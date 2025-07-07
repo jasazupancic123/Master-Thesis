@@ -95,33 +95,45 @@ export default function TrainingCard(props: TrainingCardProps) {
   };
 
   return (
-    <Box width="100%" mt={!component ? 6.5 : 0}>
-      <Box display="flex">
-        <Box
-          display="flex"
-          width="wrap"
-          alignItems="center"
-          justifyContent="flex-start"
-          sx={{
-            borderTopLeftRadius: 10,
-            borderTopRightRadius: 10,
-          }}
-          p={0}
-        >
-          <Typography variant="caption" sx={{ mx: 1, fontSize: 12 }}>
+    <Box width="100%">
+      <Box display="flex" width="100%">
+        <Box display="flex" width="100%" position="relative">
+          <Typography
+            variant="caption"
+            sx={{
+              mx: 1,
+              mt: 0.5,
+              fontSize: 12,
+              height: '17px',
+              color: theme.palette.background.lightText,
+            }}
+          >
             {period === 'AM' ? 'Morning' : 'Afternoon'}
           </Typography>
 
-          {/* <Tooltip title="Copy training">
-            <IconButton
-              sx={{ p: 0, m: 0, pr: 1 }}
-              onClick={() => {
-                setShowCopyTrainingModal(true);
+          {cycle && component && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                textAlign: 'center',
+                backgroundColor: theme.palette.background.dark,
+                borderBottomLeftRadius: 100,
+                borderBottomRightRadius: 100,
+                px: screenSize.isMobile ? 2 : 4,
               }}
             >
-              <FileCopy sx={{ fontSize: 14 }} />
-            </IconButton>
-          </Tooltip> */}
+              <Typography
+                textAlign="center"
+                variant="body2"
+                fontSize={12}
+                sx={{ pb: 0.5, color: theme.palette.background.lightText }}
+              >
+                {selectedSubgroup?.subgroup?.name || 'Main group'}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
       <Box

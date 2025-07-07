@@ -39,7 +39,7 @@ export default function FilterButton(props: Props) {
       <Typography
         variant="body2"
         sx={{
-          fontSize: screenSize.isMobile ? '12px' : '16px',
+          fontSize: screenSize.isMobile ? '12px' : 12,
           color: filter === value ? theme.palette.primary.main : undefined,
         }}
       >

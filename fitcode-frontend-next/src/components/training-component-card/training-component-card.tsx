@@ -69,8 +69,8 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 <Box
                   sx={{
                     backgroundColor: theme.palette.primary.main,
-                    width: 5,
-                    height: 20,
+                    width: 4,
+                    height: 16,
                     borderRadius: 5,
                   }}
                 />
@@ -80,15 +80,15 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
             <Box
               sx={{
                 backgroundColor: theme.palette.primary.main,
-                width: 5,
-                height: 20,
+                width: 4,
+                height: 16,
                 borderRadius: 5,
               }}
             />
           )}
           <Typography
             variant="body2"
-            fontSize={15}
+            fontSize={12}
             noWrap
             sx={{
               color: theme.palette.primary.main,
@@ -122,9 +122,9 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
               onClick={() => setExpandedExercisesView((prev) => !prev)}
             >
               {expandedExercisesView ? (
-                <KeyboardArrowDown />
+                <KeyboardArrowDown sx={{ fontSize: 18 }} />
               ) : (
-                <KeyboardArrowRight />
+                <KeyboardArrowRight sx={{ fontSize: 18 }} />
               )}
             </IconButton>
           )}
