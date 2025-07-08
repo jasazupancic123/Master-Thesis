@@ -10,7 +10,6 @@ import {
   ExerciseTrainingView,
 } from '@/common/type/exercise-or-training.type';
 import { User } from '@firebase/auth';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export const handleFinishTraining = async (state: {
   trainingInProgress: AthleteTrainingInProgress | null;
@@ -43,7 +42,7 @@ export const handleFinishTraining = async (state: {
   handleApiRequest(
     router,
     () =>
-      TrainingController.finishComponent(
+      TrainingController.completeTrainingComponent(
         token,
         trainingInProgress.training.id,
         user.uid,
