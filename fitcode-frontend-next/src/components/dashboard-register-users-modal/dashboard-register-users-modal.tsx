@@ -254,7 +254,7 @@ export default function RegisterUsersDashboard(
       `Registering ${registerRole[0].toUpperCase() + registerRole.slice(1)}...`,
       {
         icon: '⚠️',
-        duration: 1000,
+        duration: 2000,
       }
     );
 

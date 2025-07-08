@@ -40,7 +40,7 @@ export default function TrainingExerciseCardExpandedSets(
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
-  const { setTodaysTrainings } = useTrainerDayViewContext();
+  const { setTraining } = useTrainerDayViewContext();
 
   const { exercise, expandedSetsView, setExpandedSetsView, supersetIndex } =
     props;
@@ -211,7 +211,7 @@ export default function TrainingExerciseCardExpandedSets(
                                 param,
                                 training,
                                 component,
-                                setTodaysTrainings,
+                                setTraining,
                                 supersets,
                                 setDetectedChanges,
                                 selectedSubgroup,

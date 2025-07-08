@@ -30,6 +30,7 @@ import { plainToInstance } from 'class-transformer';
 import { TrainingInfoDto } from './dto/training-info.dto';
 import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
 
 @ApiTags('Training')
 @Controller('training')
@@ -59,14 +60,14 @@ export class TrainingController {
       : trainings;
   }
 
-  @Post('/:groupId/day')
+  @Post('/:groupId/day-period')
   @Auth()
-  async findByDay(
+  async findByDayAndPeriod(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Body() body: FindByDayDto,
+    @Body() body: FindByDayAndPeriodDto,
   ) {
-    return await this.trainingService.findByDay(user, { groupId }, body);
+    return await this.trainingService.findByDayAndPeriod(user, { groupId }, body);
   }
 
   @Get(':trainingId/component/:componentId')

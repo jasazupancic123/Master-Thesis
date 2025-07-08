@@ -61,7 +61,7 @@ export default function Circles(props: Props) {
                 if (detectedChanges) {
                   toast.error('Unsaved changes will be lost', {
                     icon: '⚠️',
-                    duration: 1000,
+                    duration: 2000,
                   });
 
                   setDetectedChanges(false);

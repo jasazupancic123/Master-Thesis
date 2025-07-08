@@ -20,7 +20,10 @@ import { Draggable, Droppable } from 'react-beautiful-dnd';
 import { MoreVert } from '@mui/icons-material';
 import { useTheme } from '@mui/material';
 import { SetState } from '@/common/type/state.type';
-import { DEFAULT_SUBGROUP } from '../trainer-day-view/constant';
+import {
+  DEFAULT_SUBGROUP,
+  DEFAULT_SUBGROUP_ID,
+} from '../trainer-day-view/constant';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;
@@ -42,8 +45,7 @@ export default function TrainingMembersSubgroup(
   const screenSize = useScreenSize();
 
   const { setDetectedChanges } = useGroup();
-  const { setTodaysTrainings, setSelectedExercises } =
-    useTrainerDayViewContext();
+  const { setSelectedExercises } = useTrainerDayViewContext();
 
   const {
     members: groupMembers,
@@ -136,7 +138,7 @@ export default function TrainingMembersSubgroup(
             position: 'relative',
           }}
         >
-          {subgroup.id !== 'default' &&
+          {subgroup.id !== DEFAULT_SUBGROUP_ID &&
             selectedSubgroup?.subgroup &&
             subgroup.id === selectedSubgroup?.subgroup.id && (
               <Box position="absolute" right={0} top={0}>
@@ -180,7 +182,6 @@ export default function TrainingMembersSubgroup(
                         {
                           training,
                           setTraining,
-                          setTodaysTrainings,
                           component,
                           setComponent,
                           setDetectedChanges,
@@ -204,7 +205,7 @@ export default function TrainingMembersSubgroup(
               backgroundColor: theme.palette.background.dark,
               borderRadius: 10,
               marginRight:
-                subgroup.id !== 'default' &&
+                subgroup.id !== DEFAULT_SUBGROUP_ID &&
                 selectedSubgroup?.subgroup &&
                 selectedSubgroup.subgroup.id === subgroup.id
                   ? '20px'
