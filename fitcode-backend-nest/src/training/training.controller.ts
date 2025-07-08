@@ -21,7 +21,6 @@ import {
   UpdateSingleTrainingDto,
 } from './dto/update-training.dto';
 import { TrainingService } from './service/training.service';
-import { FinishComponentDto } from './dto/finish-component.dto';
 import { Workload } from './entity/workload.entity';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { FindByDayDto } from './dto/find-by-day.dto';
@@ -30,6 +29,8 @@ import { plainToInstance } from 'class-transformer';
 import { TrainingInfoDto } from './dto/training-info.dto';
 import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { UserRole } from '../user/enum/user-role.enum';
+import { CompletedTrainingComponent } from './entity/completed-training';
 
 @ApiTags('Training')
 @Controller('training')
@@ -170,16 +171,20 @@ export class TrainingController {
     return {};
   }
 
-  @Patch(':trainingId/finish/:componentId/component')
-  @Auth()
-  async finishComponent(
+  @Patch(':trainingId/component/:componentId/complete')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async completeTrainingComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Body() body: FinishComponentDto,
+    @Body() body: CompletedTrainingComponent,
   ) {
     const ref = { trainingId, componentId };
-    return await this.trainingService.finishComponent(user, ref, body);
+    return await this.trainingService.completeTrainingComponent(
+      user,
+      ref,
+      body,
+    );
   }
 
   @Post(':trainingId/component')

@@ -1,3 +1,4 @@
+import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
@@ -6,7 +7,6 @@ import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { Group } from '../../src/group/entity/group.entity';
 import { GroupService } from '../../src/group/group.service';
-import { Institution } from '../../src/institution/entity/institution.entity';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { TrainingService } from '../../src/training/service/training.service';
 import {
@@ -72,6 +72,8 @@ describe('Training Exercise Params (e2e)', () => {
 
   afterAll(async () => {
     await Promise.all([
+      deleteCollection(firebase, 'TRAINING'),
+      deleteCollection(firebase, 'EXERCISE'),
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
       deleteCollection(firebase, 'COMPONENT'),
@@ -80,6 +82,10 @@ describe('Training Exercise Params (e2e)', () => {
 
     await app.close();
   });
+
+  function url(trainingId: string, componentId: string) {
+    return `/training/${trainingId}/component/${componentId}/finish`;
+  }
 
   async function createExercise(attributeValues: ExerciseAttributeValue[]) {
     return await exerciseService.create(
@@ -109,7 +115,22 @@ describe('Training Exercise Params (e2e)', () => {
     );
   }
 
-  it('should work', () => {
-    expect(true).toBeTruthy();
+  it('should work', async () => {
+    const exercise = await createExercise([]);
+    const training = await createTraining(COMPONENT_ENDURANCE.id, exercise.id);
+
+    const workloads = [
+      generateSuperset({
+        exercises: [generateTrainingExercise()],
+      }),
+    ];
+
+    const response = await request(app.getHttpServer())
+      .post(url(training.id, COMPONENT_ENDURANCE.id))
+      .set('Authorization', `Bearer ${athlete.token}`)
+      .send({
+        rootComponentId: COMPONENT_ENDURANCE.id,
+        supersets: workloads,
+      });
   });
 });

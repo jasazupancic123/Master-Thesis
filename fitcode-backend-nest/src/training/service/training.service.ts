@@ -43,7 +43,7 @@ import { WorkloadService } from './workload.service';
 import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { ParamType } from '../../component/enum/param.enum';
-import { FinishComponentDto } from '../dto/finish-component.dto';
+import { CompletedTrainingComponent } from '../dto/completed-training';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { PeriodizationService } from './periodization.service';
@@ -1152,14 +1152,23 @@ export class TrainingService implements Permission<Training, Institution> {
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
-  async finishComponent(
+  async completeTrainingComponent(
     user: User,
     ref: TrainingRef & ComponentRef,
-    input: FinishComponentDto,
+    input: CompletedTrainingComponent,
   ): Promise<Training> {
     this.logger.log(
       `User ${user.uid} is finishing component ${ref.componentId} for training ${ref.trainingId}`,
     );
+
+    if (
+      (this.firebaseService.isManager(user) ||
+        this.firebaseService.isTrainer(user)) &&
+      !input.userId
+    )
+      throw new BadRequestException(
+        'You have to pass in athlete for whom to complete training component',
+      );
 
     // find refs
     const { trainingId, componentId } = ref;
