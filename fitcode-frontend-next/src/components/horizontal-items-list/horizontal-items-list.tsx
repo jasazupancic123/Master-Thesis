@@ -14,6 +14,7 @@ interface TrainerGroupDayViewDaysProps {
   checkIsSameValue: (value: string) => boolean;
   onArrowClick?: (direction: 'left' | 'right') => void;
   cycleView?: boolean;
+  alertOnChange?: boolean;
 }
 
 export default function HorizontalItemsList(
@@ -60,10 +61,10 @@ export default function HorizontalItemsList(
             return;
           }
 
-          if (detectedChanges) {
+          if (props.alertOnChange && detectedChanges) {
             toast.error('Unsaved changes will be lost', {
               icon: '⚠️',
-              duration: 1000,
+              duration: 2000,
             });
 
             setDetectedChanges(false);
@@ -112,10 +113,21 @@ export default function HorizontalItemsList(
                 flex: '0 0 auto', // important so it doesn't shrink
               }}
               onClick={() => {
+                if (props.alertOnChange && detectedChanges) {
+                  toast.error('Unsaved changes will be lost', {
+                    icon: '⚠️',
+                    duration: 2000,
+                  });
+
+                  setDetectedChanges(false);
+                  return;
+                }
+
                 setValue(item.value);
               }}
             >
               <Typography
+                key={item.value}
                 variant="subtitle2"
                 textAlign="center"
                 sx={{
@@ -174,10 +186,10 @@ export default function HorizontalItemsList(
             });
             return;
           }
-          if (detectedChanges) {
+          if (props.alertOnChange && detectedChanges) {
             toast.error('Unsaved changes will be lost', {
               icon: '⚠️',
-              duration: 1000,
+              duration: 2000,
             });
 
             setDetectedChanges(false);

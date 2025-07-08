@@ -1,15 +1,14 @@
 import { CommonService } from '@/common/service/common.service';
 import { Day } from '@/common/service/util/date.util';
 import { handleApiRequest } from '@/common/type/state.type';
-import FloatingButton from '@/components/floating-button/floating-button';
 import TrainingMembers from '@/components/training-members/training-members';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { CopyAll, Delete, LabelImportant, Save } from '@mui/icons-material';
-import { IconButton, Tooltip, Typography } from '@mui/material';
+import { CopyAll, Delete, Save } from '@mui/icons-material';
+import { IconButton, Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -21,6 +20,7 @@ import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
 import { handleUpdateMultipleTrainings } from './state';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 dayjs.extend(weekOfYear);
 
@@ -30,8 +30,6 @@ export default function TrainerDayView() {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
-
-  const MAX_WIDTH = '1264px';
 
   const {
     token,
@@ -48,11 +46,11 @@ export default function TrainerDayView() {
   } = useGroup();
 
   const {
-    component,
     training,
     setTraining,
-    todaysTrainings,
-    setTodaysTrainings,
+    selectedPeriod,
+    component,
+    setComponent,
     setSelectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
@@ -60,7 +58,6 @@ export default function TrainerDayView() {
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
-    selectedSubgroup,
   } = useTrainerDayViewContext();
 
   const [day, setDay] = useState<Day>(commonService.date.getToday());
@@ -126,34 +123,45 @@ export default function TrainerDayView() {
   useEffect(() => {
     handleApiRequest(
       router,
-      () => TrainingController.findByDay(token, day.date.toDate(), group.id),
+      () =>
+        TrainingController.findByDayAndPeriod(
+          token,
+          day.date.toDate(),
+          selectedPeriod,
+          group.id
+        ),
       (response) => {
-        const mapped = response.map((t) =>
-          TrainingService.mapComponentsExercisesMethods(
-            t,
-            components,
-            exercises,
-            methods
-          )
+        setComponent(undefined);
+
+        const foundTraining = response.training;
+        if (!foundTraining) {
+          setTraining(undefined);
+          setLoading(false);
+          return;
+        }
+
+        const mapped = TrainingService.mapComponentsExercisesMethods(
+          foundTraining,
+          components,
+          exercises,
+          methods
         );
-        setTodaysTrainings(mapped);
+        setTraining(mapped);
       },
       undefined,
       undefined
     );
-  }, [day]);
+  }, [day, selectedPeriod]);
 
   useEffect(() => {
     setLoading(false);
-  }, [todaysTrainings]);
+  }, [training]);
 
   useEffect(() => {
     const fetchWorkloads = async () => {
       if (!selectedAthlete) return;
 
-      const combinedComponents = todaysTrainings
-        .map((t) => t.components)
-        .flat();
+      const combinedComponents = training?.components;
 
       if (!combinedComponents || !combinedComponents.length) {
         setSelectedAthleteWorkloads(COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE);
@@ -219,8 +227,6 @@ export default function TrainerDayView() {
               onClick={() =>
                 handleUpdateMultipleTrainings({
                   token,
-                  todaysTrainings,
-                  setTodaysTrainings,
                   setTrainings,
                   training,
                   setTraining,
@@ -256,8 +262,6 @@ export default function TrainerDayView() {
               onClick={() => {
                 handleUpdateMultipleTrainings({
                   token,
-                  todaysTrainings,
-                  setTodaysTrainings,
                   setTrainings,
                   training,
                   setTraining,
@@ -318,8 +322,8 @@ export default function TrainerDayView() {
         alignItems="center"
         width="100%"
         sx={{
-          borderBottomRightRadius: !todaysTrainings.length || !cycle ? 0 : 10,
-          borderBottomLeftRadius: !todaysTrainings.length || !cycle ? 0 : 10,
+          borderBottomRightRadius: !training || !cycle ? 0 : 10,
+          borderBottomLeftRadius: !training || !cycle ? 0 : 10,
           bgcolor: 'background.default',
         }}
         justifyContent="space-evenly"

@@ -57,7 +57,6 @@ export default function TrainingComponentMenu(
     setTraining,
     component,
     setComponent,
-    setTodaysTrainings,
     selectedSubgroup,
     setSelectedSubgroup,
     selectedExercises,
@@ -82,7 +81,6 @@ export default function TrainingComponentMenu(
       component &&
       trainingComponent.id === component.id
     ) {
-      setTraining(undefined);
       setComponent(undefined);
       setSelectedExercises([]);
     } else {
@@ -267,9 +265,6 @@ export default function TrainingComponentMenu(
 
                 setComponent(newComponent);
                 setTraining(newTraining);
-                setTodaysTrainings((prev) =>
-                  prev.map((t) => (t.id === training.id ? newTraining : t))
-                );
                 setSelectedExercises([]);
                 setDetectedChanges(true);
                 handleMenuClose();
@@ -288,9 +283,6 @@ export default function TrainingComponentMenu(
                   (c) => c.rootComponentId !== trainingComponent.component?.id
                 );
                 setTraining(newTraining);
-                setTodaysTrainings((prev) =>
-                  prev.map((t) => (t.id === training.id ? newTraining : t))
-                );
                 setDetectedChanges(true);
                 handleMenuClose();
               }}
