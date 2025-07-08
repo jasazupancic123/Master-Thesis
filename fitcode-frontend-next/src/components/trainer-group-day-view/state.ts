@@ -15,8 +15,6 @@ import toast from 'react-hot-toast';
 
 export async function handleUpdateMultipleTrainings(state: {
   token: string;
-  todaysTrainings: Training[];
-  setTodaysTrainings: SetState<Training[]>;
   setTrainings: SetState<TrainingInfo[]>;
   training: Training | undefined;
   setTraining: SetState<Training | undefined>;
@@ -33,8 +31,6 @@ export async function handleUpdateMultipleTrainings(state: {
 }) {
   const {
     token,
-    todaysTrainings,
-    setTodaysTrainings,
     setTrainings,
     training,
     setTraining,
@@ -50,9 +46,10 @@ export async function handleUpdateMultipleTrainings(state: {
     setDetectedChanges,
   } = state;
 
-  const todaysTrainingsFiltered = todaysTrainings.filter(
-    (t) => t !== undefined
-  );
+  if (!training) {
+    toast.error('No training to update');
+    return;
+  }
 
   await handleApiRequest(
     router,
@@ -60,38 +57,28 @@ export async function handleUpdateMultipleTrainings(state: {
       TrainingController.batchUpdate(
         token,
         { groupId: group.id, cycleId: cycle!.id },
-        todaysTrainingsFiltered,
+        [training],
         customAthleteWorkloads
       ),
     (newTrainings) => {
-      const mappedTrainings = newTrainings.map((newTraining) => {
-        const mapped = TrainingService.mapComponentsExercisesMethods(
-          newTraining,
-          components,
-          exercises,
-          methods
-        );
-        return mapped;
-      });
+      const newTraining = newTrainings[0];
 
-      const minimalTrainings = mappedTrainings.map((t) =>
-        TrainingService.convertFromTrainingToTrainingMinimal(t)
+      const mapped = TrainingService.mapComponentsExercisesMethods(
+        newTraining,
+        components,
+        exercises,
+        methods
       );
 
-      const current = mappedTrainings.find((t) => t.id === training?.id);
-      if (current) setTraining(current);
+      const minimalTraining =
+        TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+
+      setTraining(mapped);
 
       setTrainings((prev) =>
         prev.map((t) => {
-          const newTraining = minimalTrainings.find((nt) => nt.id === t.id);
-          return newTraining ? newTraining : t;
-        })
-      );
-
-      setTodaysTrainings((prev) =>
-        prev.map((t) => {
-          const newTraining = mappedTrainings.find((nt) => nt.id === t.id);
-          return newTraining ? newTraining : t;
+          if (t.id === minimalTraining.id) return minimalTraining;
+          return t;
         })
       );
 

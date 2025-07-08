@@ -29,6 +29,19 @@ export class TrainingController {
     return api.post<Training[]>(`/training/${groupId}/day`, { day }, { token });
   }
 
+  static async findByDayAndPeriod(
+    token: string,
+    day: Date,
+    period: 'AM' | 'PM',
+    groupId: string
+  ) {
+    return api.post<{training: Training | null}>(
+      `/training/${groupId}/day-period`,
+      { day, period },
+      { token }
+    );
+  }
+
   static async findByIdAndPopulateAthleteWorkloads(
     token: string,
     trainingId: string,

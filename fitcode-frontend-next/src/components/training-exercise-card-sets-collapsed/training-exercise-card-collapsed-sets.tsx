@@ -64,7 +64,7 @@ export default function TrainingExerciseCardCollapsedSets(
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
-  const { supersets, setTodaysTrainings } = useTrainerDayViewContext();
+  const { setTraining, supersets } = useTrainerDayViewContext();
 
   const [setNumber, setSetsNumber] = useState(
     setsNumbers.find((sn) => sn.exerciseId === exercise.id)?.setsNumber ||
@@ -490,7 +490,7 @@ export default function TrainingExerciseCardCollapsedSets(
                             {
                               training,
                               component,
-                              setTodaysTrainings,
+                              setTraining,
                               supersets,
                               setDetectedChanges,
                               selectedSubgroup,
@@ -574,7 +574,7 @@ export default function TrainingExerciseCardCollapsedSets(
                             {
                               training,
                               component,
-                              setTodaysTrainings,
+                              setTraining,
                               supersets,
                               setDetectedChanges,
                               selectedSubgroup,

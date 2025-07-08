@@ -43,7 +43,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     setComponent,
     training,
     setTraining,
-    setTodaysTrainings,
     setSelectedSubgroup,
     selectedSubgroup,
     selectedAthlete,
@@ -121,7 +120,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         {
           training,
           setTraining,
-          setTodaysTrainings,
           component,
           setComponent,
           setDetectedChanges,
@@ -139,7 +137,6 @@ export default function TrainingMembers(props: TrainingMembersProps) {
         component,
         training,
         setTraining,
-        setTodaysTrainings,
       });
     }
   };

@@ -4,6 +4,8 @@ import { GroupWorkloadStats } from '@/controller/training/type/average-workload-
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 
+export const MAX_WIDTH = '1264px';
+
 export const NUM_MAX_SUPERSETS = 8;
 
 export const NUM_MAX_EXERCISES_PER_SUPERSET = 4;
@@ -22,11 +24,14 @@ export const AFTER_SETS: AfterSet[] = [
   { id: '6', name: 'Issometric' },
 ];
 
+export const DEFAULT_SUBGROUP_ID = 'default';
+export const ABSENT_SUBGRUP_ID = 'absent';
+
 export const DEFAULT_SUBGROUP = (
   availableMembers: User[],
   stats: GroupWorkloadStats[]
 ): Subgroup => ({
-  id: 'default',
+  id: DEFAULT_SUBGROUP_ID,
   name: 'Main Group',
   color: '#9e9e9e',
   membersIds: availableMembers.map((user) => user.uid),
@@ -34,8 +39,8 @@ export const DEFAULT_SUBGROUP = (
   supersets: [],
 });
 
-export const ABSENT_SUBGRUP = (): Subgroup => ({
-  id: 'absent',
+export const ABSENT_SUBGROUP = (): Subgroup => ({
+  id: ABSENT_SUBGRUP_ID,
   name: 'Absent',
   color: '#454545',
   futureStats: [],

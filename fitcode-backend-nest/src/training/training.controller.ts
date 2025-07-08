@@ -23,7 +23,6 @@ import {
 import { TrainingService } from './service/training.service';
 import { Workload } from './entity/workload.entity';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
-import { FindByDayDto } from './dto/find-by-day.dto';
 import { CopyComponentDto } from './dto/copy-component.dto';
 import { plainToInstance } from 'class-transformer';
 import { TrainingInfoDto } from './dto/training-info.dto';
@@ -31,6 +30,7 @@ import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { UserRole } from '../user/enum/user-role.enum';
 import { CompletedTrainingComponent } from './entity/completed-training';
+import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
 
 @ApiTags('Training')
 @Controller('training')
@@ -60,14 +60,18 @@ export class TrainingController {
       : trainings;
   }
 
-  @Post('/:groupId/day')
+  @Post('/:groupId/day-period')
   @Auth()
-  async findByDay(
+  async findByDayAndPeriod(
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
-    @Body() body: FindByDayDto,
+    @Body() body: FindByDayAndPeriodDto,
   ) {
-    return await this.trainingService.findByDay(user, { groupId }, body);
+    return await this.trainingService.findByDayAndPeriod(
+      user,
+      { groupId },
+      body,
+    );
   }
 
   @Get(':trainingId/component/:componentId')

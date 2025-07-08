@@ -47,10 +47,10 @@ export default function TrainingComponentHeaderMenu(
   } = useGroup();
 
   const {
+    setTraining,
     component,
     setComponent,
     selectedExercises,
-    setTodaysTrainings,
     selectedSubgroup,
     setSelectedSubgroup,
   } = useTrainerDayViewContext();
@@ -78,16 +78,16 @@ export default function TrainingComponentHeaderMenu(
       return c;
     });
 
-    setTodaysTrainings((prev) =>
-      prev.map((t) => {
-        if (t.id !== training.id) return t;
-        return {
-          ...t,
-          components: updatedComponents,
-        };
-      })
+    setTraining((prev) =>
+      !prev
+        ? prev
+        : {
+            ...prev,
+            components: updatedComponents,
+          }
     );
   };
+
   if (!component) return null;
 
   return (
@@ -376,14 +376,13 @@ export default function TrainingComponentHeaderMenu(
               return c;
             });
 
-            setTodaysTrainings((prev) =>
-              prev.map((t) => {
-                if (t.id !== training.id) return t;
-                return {
-                  ...t,
-                  components: updatedComponents,
-                };
-              })
+            setTraining((prev) =>
+              !prev
+                ? prev
+                : {
+                    ...prev,
+                    components: updatedComponents,
+                  }
             );
 
             setDetectedChanges(true);
