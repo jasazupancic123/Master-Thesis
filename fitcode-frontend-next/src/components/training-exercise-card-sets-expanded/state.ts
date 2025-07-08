@@ -9,7 +9,7 @@ import {
 import { updateTraining } from '../training-exercise-card/state';
 import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import { Training } from '@/controller/training/type/training.type';
-import { SetState } from '@/common/type/state.type';
+import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { SetStateAction } from 'react';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
@@ -27,7 +27,7 @@ export function updateExerciseAttributeValues(
     param: Attribute;
     training: Training;
     component: TrainingComponent;
-    setTodaysTrainings: SetState<Training[]>;
+    setTraining: SetStateNullable<Training>;
     supersets: Superset[];
     setDetectedChanges: SetState<boolean>;
     selectedSubgroup: {
@@ -48,7 +48,7 @@ export function updateExerciseAttributeValues(
     param,
     training,
     component,
-    setTodaysTrainings,
+    setTraining,
     supersets,
     setDetectedChanges,
     selectedSubgroup,
@@ -123,7 +123,7 @@ export function updateExerciseAttributeValues(
       {
         training,
         component,
-        setTodaysTrainings,
+        setTraining,
         supersets,
         setDetectedChanges,
         selectedSubgroup,
@@ -208,7 +208,7 @@ export function updateExerciseAttributeValues(
       {
         training,
         component,
-        setTodaysTrainings,
+        setTraining,
         supersets,
         setDetectedChanges,
         selectedSubgroup,

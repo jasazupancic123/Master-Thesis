@@ -31,7 +31,6 @@ export async function handleCopyComponentApiRequest(
     allExercises: Exercise[];
     allMethods: Method[];
     setTrainings: SetState<TrainingInfo[]>;
-    setTodaysTrainings: SetState<Training[]>;
     day: Day;
   }
 ) {
@@ -44,7 +43,6 @@ export async function handleCopyComponentApiRequest(
     allExercises,
     allMethods,
     setTrainings,
-    setTodaysTrainings,
     day,
   } = state;
 
@@ -123,15 +121,6 @@ export async function handleCopyComponentApiRequest(
           return t;
         })
       );
-
-      if (dayjs(trainingInPeriod.from).isSame(day.date, 'day')) {
-        setTodaysTrainings((prev) =>
-          prev.map((t) => {
-            if (t.id === mapped.id) return mapped;
-            return t;
-          })
-        );
-      }
 
       toast.success('Component copied successfully');
     },

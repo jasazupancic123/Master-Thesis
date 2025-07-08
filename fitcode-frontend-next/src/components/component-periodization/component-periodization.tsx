@@ -3,21 +3,16 @@ import {
   TrainingComponent,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { Fragment, useEffect, useState } from 'react';
 import TrainingWeek from '../training-week/training-week';
 import dayjs from 'dayjs';
-import { ArrowDropDown, ArrowDropUp, Redo } from '@mui/icons-material';
 import SelectInput from '../select-input/select-input';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { Training } from '@/controller/training/type/training.type';
 import { CommonService } from '@/common/service/common.service';
-import { handleApiRequest } from '@/common/type/state.type';
-import { useRouter } from 'next/navigation';
-import { TrainingController } from '@/controller/training/training.controller';
 import toast from 'react-hot-toast';
-import { TrainingService } from '@/controller/training/training.service';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { Target } from '@/controller/target/type/target.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -34,23 +29,11 @@ export default function ComponentPeriodization(
   const { selectedComponent, training } = props;
 
   const theme = useTheme();
-  const router = useRouter();
   const screenSize = useScreenSize();
 
-  const {
-    token,
-    cycle,
-    trainings,
-    setDateFrom,
-    setTrainings,
-    setDateTo,
-    components,
-    exercises,
-    methods,
-  } = useGroup();
+  const { cycle, trainings, setDateFrom, setDateTo } = useGroup();
 
-  const { setTodaysTrainings, selectedExercises, setSelectedExercises } =
-    useTrainerDayViewContext();
+  const { selectedExercises } = useTrainerDayViewContext();
 
   const [allExercises, setAllExercises] = useState<TrainingExercise[]>(
     selectedComponent.supersets.map((s) => s.exercises.map((e) => e)).flat()

@@ -36,7 +36,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
     day,
     addTrainingComponent,
     deleteTrainingComponent,
-    setTodaysTrainings,
   } = props;
 
   const [openAreYouSureModal, setOpenAreYouSureModal] = useState(false);
@@ -79,7 +78,6 @@ export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
                 selected={selected}
                 selectedTarget={selectedTarget}
                 selectedTargets={selectedTargets}
-                setTodaysTrainings={setTodaysTrainings}
                 setOpenAreYouSureModal={setOpenAreYouSureModal}
                 setSelectedTraining={setSelectedTraining}
                 setOpenOverwriteModal={setOpenOverwriteModal}

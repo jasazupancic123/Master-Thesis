@@ -140,7 +140,7 @@ export default function HeroNavbar({ showLogin = true }) {
                 }}
               >
                 <NextLink href={mainPageMapper[role[0]].href} passHref>
-                  Training
+                  Dashboard
                 </NextLink>
                 <NextLink href="#" onClick={logout}>
                   Sign Out

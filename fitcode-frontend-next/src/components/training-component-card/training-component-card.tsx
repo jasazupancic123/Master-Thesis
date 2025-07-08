@@ -103,7 +103,6 @@ export default function TrainingComponentCard(props: TrainingComponentProps) {
                 component &&
                 trainingComponent.id === component.id
               ) {
-                setTraining(undefined);
                 setComponent(undefined);
               } else {
                 setTraining(training);

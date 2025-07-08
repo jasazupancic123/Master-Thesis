@@ -31,7 +31,8 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   const {
     training: selectedTraining,
-    setTodaysTrainings,
+    selectedPeriod,
+    setSelectedPeriod,
     selectedSubgroup,
     setSelectedSubgroup,
     component,
@@ -41,12 +42,11 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   const theme = useTheme();
 
-  const { training, period, day } = props;
+  const { training, day } = props;
 
   const screenSize = useScreenSize();
   const router = useRouter();
   const [showCopyTrainingModal, setShowCopyTrainingModal] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
   const [justClikedOnCopyDate, setJustClickedOnCopyDate] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false); // Keep it open
 
@@ -108,7 +108,7 @@ export default function TrainingCard(props: TrainingCardProps) {
               color: theme.palette.background.lightText,
             }}
           >
-            {period === 'AM' ? 'Morning' : 'Afternoon'}
+            {selectedPeriod === 'AM' ? 'Morning' : 'Afternoon'}
           </Typography>
 
           {cycle && component && (
@@ -211,7 +211,6 @@ export default function TrainingCard(props: TrainingCardProps) {
                       training,
                       cycle: cycle!,
                       setTrainings,
-                      setTodaysTrainings,
                       day,
                       components,
                       exercises,
@@ -261,7 +260,6 @@ export default function TrainingCard(props: TrainingCardProps) {
                       training,
                       cycle: cycle!,
                       setTrainings,
-                      setTodaysTrainings,
                       day,
                       components,
                       exercises,
