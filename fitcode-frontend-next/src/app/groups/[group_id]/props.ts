@@ -63,8 +63,8 @@ export type TrainerDayViewContextProps = {
   members: UserEntity[]; // group members
   training: Training | undefined;
   setTraining: SetStateNullable<Training>;
-  todaysTrainings: Training[];
-  setTodaysTrainings: SetState<Training[]>;
+  selectedPeriod: 'AM' | 'PM'; // selected period for the training
+  setSelectedPeriod: SetState<'AM' | 'PM'>;
   exercises: Exercise[];
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;

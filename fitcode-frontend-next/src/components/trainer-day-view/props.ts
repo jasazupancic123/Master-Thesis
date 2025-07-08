@@ -13,7 +13,6 @@ import { Dispatch, SetStateAction } from 'react';
 export interface TrainingCardProps {
   day: Day;
   training: Training;
-  period: string;
 }
 
 export interface TrainingComponentProps {

@@ -56,7 +56,7 @@ export default function TrainerCycleView() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      setIsSticky(scrollY > 150);
+      setIsSticky(scrollY > 200);
     };
 
     window.addEventListener('scroll', handleScroll);

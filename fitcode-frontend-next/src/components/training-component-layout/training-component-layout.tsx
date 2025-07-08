@@ -37,11 +37,7 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
     methods: allMethods,
   } = useGroup();
 
-  const {
-    training: selectedTraining,
-    component,
-    setTodaysTrainings,
-  } = useTrainerDayViewContext();
+  const { training: selectedTraining, component } = useTrainerDayViewContext();
 
   const [openAddExerciseModal, setOpenAddExerciseModal] = useState(false);
   const [openCalendarModal, setOpenCalendarModal] = useState(false);
@@ -234,7 +230,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               allExercises,
               allMethods,
               setTrainings,
-              setTodaysTrainings,
               day,
             }
           );

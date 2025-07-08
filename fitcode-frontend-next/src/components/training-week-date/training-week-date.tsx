@@ -49,7 +49,6 @@ interface TrainingWeekDatesProps {
     trainingId: string,
     componentId: string
   ) => Promise<void>;
-  setTodaysTrainings?: SetState<Training[]>;
 }
 
 export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
@@ -82,7 +81,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
     selectedTarget,
     selectedTargets,
     day,
-    setTodaysTrainings,
     setOpenAreYouSureModal,
     setSelectedTraining,
     setOpenOverwriteModal,
@@ -141,7 +139,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                     selected,
                     selectedTargets,
                     day,
-                    setTodaysTrainings,
                     setTrainings,
                     setCycle,
                     setOpenOverwriteModal,
