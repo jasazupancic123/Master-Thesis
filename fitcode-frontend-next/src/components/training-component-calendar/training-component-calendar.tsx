@@ -36,7 +36,6 @@ export default function TrainingComponentCalendar(
   } = props;
 
   const { cycle, setDateFrom, setDateTo } = useGroup();
-  const { setTodaysTrainings } = useTrainerDayViewContext();
 
   const theme = useTheme();
   const [selectedComponents, setSelectedComponents] = useState<Component[]>([]);
@@ -109,7 +108,6 @@ export default function TrainingComponentCalendar(
                   setOpenOverwriteModal={setOpenOverwriteModal}
                   setTrainingInPeriodForModal={setTrainingInPeriodForModal}
                   copyComponent={copyComponent}
-                  setTodaysTrainings={setTodaysTrainings}
                   day={day}
                 />
               </Fragment>

@@ -52,8 +52,8 @@ export function TrainerDayViewProvider(
     pages: 1,
     total: 0,
   });
+  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
 
-  const [todaysTrainings, setTodaysTrainings] = useState<Training[]>([]);
   const [training, setTraining] = useState<Training | undefined>();
   const [component, setComponent] = useState<TrainingComponent | undefined>();
   const [selectedExercises, setSelectedExercises] = useState<
@@ -147,8 +147,8 @@ export function TrainerDayViewProvider(
     }),
     training,
     setTraining,
-    todaysTrainings,
-    setTodaysTrainings,
+    selectedPeriod,
+    setSelectedPeriod,
     component,
     setComponent,
     selectedExercises,

@@ -50,7 +50,6 @@ export async function handleClickDateCell(
     }[];
     day?: Day;
     setTrainings: SetState<TrainingInfo[]>;
-    setTodaysTrainings?: SetState<Training[]>;
     setCycle: SetStateNullable<Cycle>;
     setOpenOverwriteModal?: SetState<boolean>;
     setTrainingInPeriodForModal?: SetState<TrainingInfo | null>;
@@ -75,7 +74,6 @@ export async function handleClickDateCell(
     selectedTargets,
     day,
     setTrainings,
-    setTodaysTrainings,
     setCycle,
     setOpenOverwriteModal,
     setTrainingInPeriodForModal,
@@ -94,7 +92,7 @@ export async function handleClickDateCell(
 
     if (trainingInPeriod && !trainingInPeriodIncludesComponent) {
       // ADD THE SELECTED TRAINING COMPONENT TO THE TRAINING
-      if (copyComponent && training && day && setTodaysTrainings) {
+      if (copyComponent && training && day) {
         handleCopyComponentApiRequest(
           {
             training,
@@ -108,7 +106,6 @@ export async function handleClickDateCell(
             allExercises,
             allMethods: methods,
             setTrainings,
-            setTodaysTrainings,
             day,
           }
         );
@@ -172,16 +169,6 @@ export async function handleClickDateCell(
               return aDate.getTime() - bDate.getTime();
             }
           );
-
-          if (day?.date.isSame(newTraining.from, 'day') && setTodaysTrainings) {
-            setTodaysTrainings((prev) =>
-              [...prev, newTraining].sort((a, b) => {
-                const aDate = new Date(a.from);
-                const bDate = new Date(b.from);
-                return aDate.getTime() - bDate.getTime();
-              })
-            );
-          }
 
           setTrainings(sortedTrainings);
           toast.success('Training with current component created successfully');

@@ -11,6 +11,8 @@ import React from 'react';
 import { useTheme } from '@mui/material';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MoreVert } from '@mui/icons-material';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
+import toast from 'react-hot-toast';
 
 dayjs.extend(weekOfYear);
 
@@ -32,9 +34,17 @@ export default function GroupTrainerDayViewHeader(
 
   const { day, setDay, days, setDays, week } = props;
 
-  const { group, cycle, setDateFrom, setDateTo } = useGroup();
+  const {
+    group,
+    cycle,
+    setDateFrom,
+    setDateTo,
+    detectedChanges,
+    setDetectedChanges,
+  } = useGroup();
 
-  const { setSelectedExercises } = useTrainerDayViewContext();
+  const { selectedPeriod, setSelectedPeriod, setSelectedExercises } =
+    useTrainerDayViewContext();
 
   interface PeriodSelectProps {
     smallDisplay?: boolean;
@@ -51,7 +61,7 @@ export default function GroupTrainerDayViewHeader(
         gap={smallDisplay ? 4 : 1}
       >
         {['AM', 'PM'].map((period) => {
-          const selectedPeriod = true ? period === 'AM' : false;
+          const isPeriodSelected = selectedPeriod === period;
           return (
             <Box
               key={period}
@@ -59,12 +69,24 @@ export default function GroupTrainerDayViewHeader(
               flexDirection={smallDisplay ? 'column-reverse' : 'row'}
               alignItems="center"
               gap={smallDisplay ? 0 : 1}
+              onClick={() => {
+                if (detectedChanges) {
+                  toast.error('Unsaved changes will be lost', {
+                    icon: '⚠️',
+                    duration: 2000,
+                  });
+
+                  setDetectedChanges(false);
+                  return;
+                }
+                setSelectedPeriod(period as 'AM' | 'PM');
+              }}
             >
               <Box
                 height={16}
                 width={4}
                 sx={{
-                  backgroundColor: selectedPeriod
+                  backgroundColor: isPeriodSelected
                     ? theme.palette.primary.main
                     : 'transparent',
                   borderRadius: 5,
@@ -175,6 +197,7 @@ export default function GroupTrainerDayViewHeader(
       flexDirection="column"
       justifyContent="center"
       width="100%"
+      maxWidth={MAX_WIDTH}
       sx={{
         backgroundColor: theme.palette.background.default,
       }}
@@ -193,6 +216,7 @@ export default function GroupTrainerDayViewHeader(
             checkIsSameValue={(value: string) => {
               return dayjs(value).isSame(dayjs(day.date), 'day');
             }}
+            alertOnChange
             onArrowClick={(direction) => {
               const newDay =
                 direction === 'left'
@@ -243,6 +267,7 @@ export default function GroupTrainerDayViewHeader(
               checkIsSameValue={(value: string) => {
                 return dayjs(value).isSame(dayjs(day.date), 'day');
               }}
+              alertOnChange
               onArrowClick={(direction) => {
                 const newDay =
                   direction === 'left'

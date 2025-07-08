@@ -66,7 +66,6 @@ export default function Superset(props: SupersetComponentProps) {
     supersets,
     selectedSubgroup,
     setSelectedSubgroup,
-    setTodaysTrainings,
   } = useTrainerDayViewContext();
 
   if (!component || !training) return null;
@@ -120,7 +119,6 @@ export default function Superset(props: SupersetComponentProps) {
                     training,
                     setTraining,
                     supersets,
-                    setTodaysTrainings,
                     component,
                     setComponent,
                     selectedSubgroup,
@@ -194,7 +192,6 @@ export default function Superset(props: SupersetComponentProps) {
                     training,
                     setTraining,
                     supersets,
-                    setTodaysTrainings,
                     component,
                     setComponent,
                     selectedSubgroup,

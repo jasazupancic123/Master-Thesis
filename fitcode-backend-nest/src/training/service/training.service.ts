@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import {
   addMinutes,
+  addHours,
   endOfDay,
   isBefore,
   startOfDay,
@@ -63,6 +64,7 @@ import {
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
 import { PeriodizationType } from '../enum/periodization-type.enum';
+import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -161,17 +163,17 @@ export class TrainingService implements Permission<Training, Institution> {
     return trainings;
   }
 
-  async findByDay(
+  async findByDayAndPeriod(
     user: User,
     ref: GroupRef,
-    input: FindByDayDto,
-  ): Promise<Training[]> {
+    input: FindByDayAndPeriodDto,
+  ): Promise<{ training: Training | null }> {
     this.logger.log(
       `User ${user.uid} is getting trainings for day: ${JSON.stringify(input)}`,
     );
 
     const { groupId } = ref;
-    const { day } = input;
+    const { day, period } = input;
     const startOfDayDate = startOfDay(day);
     const endOfDayDate = endOfDay(day);
 
@@ -183,10 +185,16 @@ export class TrainingService implements Permission<Training, Institution> {
       q = q.where('groupId', '==', groupId);
       q = q.where('from', '>=', startOfDayDate);
       q = q.where('to', '<=', endOfDayDate);
+      if (period === 'AM')
+        q = q.where('from', '<', addHours(startOfDayDate, 12));
+      else if (period === 'PM')
+        q = q.where('from', '>=', addHours(startOfDayDate, 12));
       return q;
     });
 
-    return trainings;
+    const training = trainings && trainings.length ? trainings[0] : null;
+
+    return { training };
   }
 
   async findByIdAndPopulateAthleteWorkloads(

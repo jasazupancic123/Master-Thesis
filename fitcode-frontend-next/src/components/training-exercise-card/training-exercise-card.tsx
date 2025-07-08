@@ -20,7 +20,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
-  const { supersets, setTodaysTrainings, selectedExercises } =
+  const { setTraining, supersets, selectedExercises } =
     useTrainerDayViewContext();
 
   const [isInited, setIsInited] = useState(false);
@@ -120,11 +120,11 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         {
           training,
           component,
-          setTodaysTrainings,
           supersets,
           setDetectedChanges,
           selectedSubgroup,
           setSelectedSubgroup,
+          setTraining,
           isInited,
           setIsInited,
         }
@@ -172,7 +172,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         {
           training,
           component,
-          setTodaysTrainings,
+          setTraining,
           supersets,
           setDetectedChanges,
           selectedSubgroup,

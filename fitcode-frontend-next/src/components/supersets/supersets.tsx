@@ -32,7 +32,6 @@ export default function Supersets(props: SupersetsProps) {
   const {
     training,
     setTraining,
-    setTodaysTrainings,
     component,
     setComponent,
     selectedSubgroup,
@@ -99,7 +98,6 @@ export default function Supersets(props: SupersetsProps) {
           setSelectedSubgroup,
           supersets,
           setSupersets,
-          setTodaysTrainings,
           setDetectedChanges,
         })
       }
@@ -200,7 +198,6 @@ export default function Supersets(props: SupersetsProps) {
             {
               training,
               setTraining,
-              setTodaysTrainings,
               setTrainings,
               component,
               setComponent,

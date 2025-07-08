@@ -19,7 +19,11 @@ import { User } from '@/controller/user/type/user.type';
 import dayjs, { Dayjs } from 'dayjs';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
-import { DEFAULT_SUBGROUP, NUM_MAX_SUPERSETS } from './constant';
+import {
+  DEFAULT_SUBGROUP,
+  DEFAULT_SUBGROUP_ID,
+  NUM_MAX_SUPERSETS,
+} from './constant';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
@@ -46,7 +50,6 @@ export async function handleCopyTraining(
     cycle: Cycle;
     day: Day;
     setTrainings: SetState<TrainingInfo[]>;
-    setTodaysTrainings: SetState<Training[]>;
     components: Component[];
     exercises: Exercise[];
     methods: Method[];
@@ -59,7 +62,6 @@ export async function handleCopyTraining(
     cycle,
     setTrainings,
     day,
-    setTodaysTrainings,
     components,
     exercises,
     methods,
@@ -115,15 +117,6 @@ export async function handleCopyTraining(
         )
       );
 
-      // update todays trainings if on same day
-      if (dayjs(mappedCopiedTraining.from).isSame(day.date, 'day')) {
-        setTodaysTrainings((prev) =>
-          [...prev, mappedCopiedTraining as Training].sort(
-            (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
-          )
-        );
-      }
-
       toast.success('Successfully copied training');
     },
     undefined,
@@ -144,7 +137,6 @@ export function onDragEndSubgroup(
     component: TrainingComponent | undefined;
     training: Training | undefined;
     setTraining: SetStateNullable<Training>;
-    setTodaysTrainings: SetState<Training[]>;
   }
 ) {
   const {
@@ -158,7 +150,6 @@ export function onDragEndSubgroup(
     component,
     training,
     setTraining,
-    setTodaysTrainings,
   } = state;
 
   if (!destination || !training || !component) return;
@@ -242,18 +233,6 @@ export function onDragEndSubgroup(
     };
   });
 
-  setTodaysTrainings((prev) =>
-    prev.map((t) => {
-      if (t.id === training.id) {
-        return {
-          ...t,
-          futureStats: newTraining.futureStats,
-        };
-      }
-      return t;
-    })
-  );
-
   setSubgroups(updatedSubgroups);
 }
 
@@ -267,7 +246,6 @@ export function handleRightClickSubgroup(
     setSubgroups: SetState<Subgroup[]>;
     training: Training;
     setTraining: SetStateNullable<Training>;
-    setTodaysTrainings: SetState<Training[]>;
     setAvailableMembers: SetState<User[]>;
     component: TrainingComponent | undefined;
     setComponent: SetStateNullable<TrainingComponent>;
@@ -280,14 +258,13 @@ export function handleRightClickSubgroup(
     setSubgroups,
     training,
     setTraining,
-    setTodaysTrainings,
     setAvailableMembers,
     component,
     setComponent,
     users,
   } = state;
 
-  if (subgroupId === 'default' || !training || !component) return;
+  if (subgroupId === DEFAULT_SUBGROUP_ID || !training || !component) return;
 
   const updatedComponents = [...training.components];
   const i = training.components.findIndex((c) => c.id === component.id);
@@ -308,18 +285,11 @@ export function handleRightClickSubgroup(
     ...prev,
     users.find((user) => user.uid === memberId)!,
   ]);
-
-  setTodaysTrainings((prev) =>
-    prev.map((t) =>
-      t.id === training?.id ? { ...t, subgroups: updatedSubgroups } : t
-    )
-  );
 }
 
 export async function handleAddSubgroup(state: {
   training: Training;
   setTraining: SetStateNullable<Training>;
-  setTodaysTrainings: SetState<Training[]>;
   component: TrainingComponent;
   setComponent: SetStateNullable<TrainingComponent>;
   createSubgroup: { name: string; membersIds: string[] };
@@ -336,7 +306,6 @@ export async function handleAddSubgroup(state: {
     setComponent,
     createSubgroup,
     setCreateSubgroup,
-    setTodaysTrainings,
     setDetectedChanges,
     updateTrainingsAvgFutureWorkload,
   } = state;
@@ -395,7 +364,6 @@ export async function handleAddSubgroup(state: {
     component,
     newComponent,
     setTraining,
-    setTodaysTrainings,
     component.id === WARMUP_ID || component.id === COOLDOWN_ID
   );
 
@@ -408,7 +376,6 @@ export function handleDeleteSubgroup(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
-    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     setDetectedChanges: SetState<boolean>;
@@ -418,7 +385,6 @@ export function handleDeleteSubgroup(
   const {
     training,
     setTraining,
-    setTodaysTrainings,
     component,
     setComponent,
     setDetectedChanges,
@@ -464,13 +430,6 @@ export function handleDeleteSubgroup(
     futureStats: stats,
   };
   setTraining(newTraining);
-
-  setTodaysTrainings((prev) =>
-    prev.map((t) => {
-      if (t.id === newTraining.id) return newTraining;
-      return t;
-    })
-  );
 }
 
 export async function onDragEnd(
@@ -478,7 +437,6 @@ export async function onDragEnd(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
-    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
@@ -495,7 +453,6 @@ export async function onDragEnd(
   const {
     training,
     setTraining,
-    setTodaysTrainings,
     component,
     setComponent,
     selectedSubgroup,
@@ -555,7 +512,6 @@ export async function onDragEnd(
         component,
         updatedComponent,
         setTraining,
-        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
     } else {
@@ -573,7 +529,6 @@ export async function onDragEnd(
         component,
         updatedComponent,
         setTraining,
-        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
     }
@@ -634,7 +589,6 @@ export async function onDragEnd(
         component,
         updatedComponent,
         setTraining,
-        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
 
@@ -658,7 +612,6 @@ export async function onDragEnd(
         component,
         updatedComponent,
         setTraining,
-        setTodaysTrainings,
         component.id === WARMUP_ID || component.id === COOLDOWN_ID
       );
 
@@ -734,7 +687,6 @@ export async function onDragEnd(
       component,
       updatedComponent,
       setTraining,
-      setTodaysTrainings,
       component.id === WARMUP_ID || component.id === COOLDOWN_ID
     );
 
@@ -754,7 +706,6 @@ export async function onDragEnd(
       component,
       updatedComponent,
       setTraining,
-      setTodaysTrainings,
       component.id === WARMUP_ID || component.id === COOLDOWN_ID
     );
   }
@@ -766,7 +717,6 @@ export function handleDeleteExercise(
   state: {
     training: Training;
     setTraining: SetStateNullable<Training>;
-    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
@@ -782,7 +732,6 @@ export function handleDeleteExercise(
   const {
     training,
     setTraining,
-    setTodaysTrainings,
     component,
     setComponent,
     supersets,
@@ -836,13 +785,6 @@ export function handleDeleteExercise(
 
     const newTraining = { ...training, components: updatedComponents };
     setTraining(newTraining);
-
-    setTodaysTrainings((prev) =>
-      prev.map((t) => {
-        if (t.id === newTraining.id) return newTraining;
-        return t;
-      })
-    );
   } else {
     const updatedComponent = {
       ...component,
@@ -864,13 +806,6 @@ export function handleDeleteExercise(
       futureStats: newAvgFutureWorkloadValues,
     };
     setTraining(newTraining);
-
-    setTodaysTrainings((prev) =>
-      prev.map((t) => {
-        if (t.id === newTraining.id) return newTraining;
-        return t;
-      })
-    );
   }
 }
 
@@ -880,7 +815,6 @@ export function handleDeleteSuperset(
     training: Training;
     setTraining: SetStateNullable<Training>;
     supersets: Superset[];
-    setTodaysTrainings: SetState<Training[]>;
     component: TrainingComponent;
     setComponent: SetStateNullable<TrainingComponent>;
     selectedSubgroup: { subgroup: Subgroup | null; index: number } | null;
@@ -896,7 +830,6 @@ export function handleDeleteSuperset(
     training,
     setTraining,
     supersets,
-    setTodaysTrainings,
     component,
     setComponent,
     selectedSubgroup,
@@ -923,12 +856,6 @@ export function handleDeleteSuperset(
 
     setComponent(updatedComponent);
     setTraining(newTraining);
-    setTodaysTrainings((prev) =>
-      prev.map((t) => {
-        if (t.id === newTraining.id) return newTraining;
-        return t;
-      })
-    );
   } else {
     if (selectedSubgroup?.subgroup) {
       // update selected subgroup's supersets
@@ -960,13 +887,6 @@ export function handleDeleteSuperset(
 
       const newTraining = { ...training, components: updatedComponents };
       setTraining(newTraining);
-
-      setTodaysTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === newTraining.id) return newTraining;
-          return t;
-        })
-      );
     } else {
       // update component's supersets
       const updatedSupersets = [...supersets].filter((_, i) => i !== index);
@@ -983,12 +903,6 @@ export function handleDeleteSuperset(
 
       const newTraining = { ...training, components: updatedComponents };
       setTraining(newTraining);
-      setTodaysTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === newTraining.id) return newTraining;
-          return t;
-        })
-      );
     }
   }
 }
@@ -998,7 +912,6 @@ function updateGlobalStates(
   component: TrainingComponent,
   updatedComponent: TrainingComponent,
   setTraining: SetState<Training | undefined>,
-  setTodaysTrainings: SetState<Training[]>,
   warmupOrCooldown: boolean
 ) {
   if (warmupOrCooldown) {
@@ -1007,13 +920,6 @@ function updateGlobalStates(
     else newTraining.cooldown = updatedComponent;
 
     setTraining(newTraining);
-
-    setTodaysTrainings((prev) =>
-      prev.map((t) => {
-        if (t.id === newTraining.id) return newTraining;
-        return t;
-      })
-    );
   } else {
     const updatedComponents = [...training.components].map((c) =>
       c.id === component.id ? updatedComponent : c
@@ -1021,13 +927,6 @@ function updateGlobalStates(
 
     const newTraining = { ...training, components: updatedComponents };
     setTraining(newTraining);
-
-    setTodaysTrainings((prev) =>
-      prev.map((t) => {
-        if (t.id === newTraining.id) return newTraining;
-        return t;
-      })
-    );
   }
 }
 

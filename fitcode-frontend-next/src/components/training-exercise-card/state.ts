@@ -169,7 +169,6 @@ export function updateTraining(
   state: {
     training: Training;
     component: TrainingComponent | null;
-    setTodaysTrainings: SetState<Training[]>;
     supersets: Superset[];
     setDetectedChanges: SetState<boolean>;
     selectedSubgroup: {
@@ -180,6 +179,7 @@ export function updateTraining(
       subgroup: Subgroup | null;
       index: number;
     } | null>;
+    setTraining: SetStateNullable<Training>;
     setSupersets?: SetState<Superset[]>;
     isInited?: boolean;
     setIsInited?: SetState<boolean>;
@@ -189,11 +189,11 @@ export function updateTraining(
   const {
     training,
     component,
-    setTodaysTrainings,
     supersets,
     setDetectedChanges,
     selectedSubgroup,
     setSelectedSubgroup,
+    setTraining,
     setSupersets,
     isInited,
     setIsInited,
@@ -305,9 +305,7 @@ export function updateTraining(
         index: selectedSubgroup.index,
       });
 
-      setTodaysTrainings((prev) =>
-        prev.map((t) => (t.id === newTraining.id ? newTraining : t))
-      );
+      setTraining(newTraining);
     } else {
       updatedComponent = {
         ...updatedComponent,
@@ -328,9 +326,7 @@ export function updateTraining(
         setSupersets(newSupersets);
       }
 
-      setTodaysTrainings((prev) =>
-        prev.map((t) => (t.id === newTraining.id ? newTraining : t))
-      );
+      setTraining(newTraining);
     }
   });
 }

@@ -29,6 +29,7 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/store/auth-provider';
 import { useRouter } from 'next/navigation';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 export interface GroupDateFilterButtonGroupProps {
   filter: GroupDateFilter;
@@ -169,41 +170,48 @@ export default function GroupDateFilterButtonGroup(
         </Box>
       )}
 
-      <ToggleButtonGroup
-        value={filter}
-        exclusive
-        onChange={(_, val: GroupDateFilter) => {
-          if (detectedChanges) {
-            toast.error('Unsaved changes will be lost', {
-              icon: '⚠️',
-              duration: 1000,
-            });
-
-            setDetectedChanges(false);
-            return;
-          }
-
-          setFilter((prev) => (!val ? prev : val));
-        }}
+      <Box
         sx={{
-          display: 'flex',
-          bgcolor: theme.palette.background.light,
-          maxHeight: '38px',
-          width: screenSize.isMobile
-            ? '66% !important'
-            : screenSize.isTablet
-              ? '50% !important'
-              : '33% !important',
-          mx: screenSize.isMobile ? 1 : 'auto',
-          mt: '12px',
+          width: '100%',
+          maxWidth: MAX_WIDTH,
         }}
       >
-        {(['day', 'week', 'cycle', 'year'] as GroupDateFilter[]).map(
-          (val, index) => (
-            <FilterButton key={val} value={val} />
-          )
-        )}
-      </ToggleButtonGroup>
+        <ToggleButtonGroup
+          value={filter}
+          exclusive
+          onChange={(_, val: GroupDateFilter) => {
+            if (detectedChanges) {
+              toast.error('Unsaved changes will be lost', {
+                icon: '⚠️',
+                duration: 2000,
+              });
+
+              setDetectedChanges(false);
+              return;
+            }
+
+            setFilter((prev) => (!val ? prev : val));
+          }}
+          sx={{
+            display: 'flex',
+            bgcolor: theme.palette.background.light,
+            maxHeight: '38px',
+            width: screenSize.isMobile
+              ? '66% !important'
+              : screenSize.isTablet
+                ? '50% !important'
+                : '33% !important',
+            mx: 'auto',
+            mt: '12px',
+          }}
+        >
+          {(['day', 'week', 'cycle', 'year'] as GroupDateFilter[]).map(
+            (val, index) => (
+              <FilterButton key={val} value={val} />
+            )
+          )}
+        </ToggleButtonGroup>
+      </Box>
     </Box>
   );
 }
