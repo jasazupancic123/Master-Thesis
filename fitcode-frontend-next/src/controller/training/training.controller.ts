@@ -142,7 +142,7 @@ export class TrainingController {
     return null;
   }
 
-  static async finishComponent(
+  static async completeTrainingComponent(
     token: string,
     trainingId: string,
     userId: string,
@@ -151,7 +151,7 @@ export class TrainingController {
     supersets: Superset[]
   ): Promise<Training> {
     return api.patch<Training>(
-      `/training/${trainingId}/finish/${componentId}/component`,
+      `/training/${trainingId}/component/${componentId}/finish`,
       { userId, rootComponentId, supersets },
       { token }
     );
