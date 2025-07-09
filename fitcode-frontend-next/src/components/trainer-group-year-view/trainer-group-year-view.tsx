@@ -131,14 +131,9 @@ export default function TrainerYearView() {
 
         <Box width="100%" maxWidth="100%">
           <CycleComponents
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            setEditModal={setShowEditCycleModal}
-            setEditCycle={setEditCycle}
             sortedCycles={sortedCycles}
             setSortedCycles={setSortedCycles}
             sliderProperties={sliderProperties}
-            setSliderProperties={setSliderProperties}
           />
         </Box>
       </Box>
