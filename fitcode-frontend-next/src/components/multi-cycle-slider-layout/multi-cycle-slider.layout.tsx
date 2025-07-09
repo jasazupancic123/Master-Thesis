@@ -39,7 +39,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const { group, setDetectedChanges, setCycle } = useGroup();
+  const { group, setDetectedChanges } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
   const [yearsForSelect, setYearsForSelect] = useState<
