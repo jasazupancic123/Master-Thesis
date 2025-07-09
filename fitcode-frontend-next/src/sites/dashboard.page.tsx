@@ -165,7 +165,7 @@ export default function DashboardPage(props: DashboardPageProps) {
           }}
           gap={1}
         >
-          {detectedChanges && isManager(role) && (
+          {detectedChanges && (isManager(role) || isTrainer(role)) && (
             <Tooltip title="Save changes" placement="top">
               <Fab color="primary" aria-label="save" onClick={handleSaveGroups}>
                 <Save />

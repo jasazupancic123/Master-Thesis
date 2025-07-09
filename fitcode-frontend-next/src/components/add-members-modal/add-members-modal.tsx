@@ -30,6 +30,7 @@ export type AddMembersModalProps = {
   singleMember?: User | null; // for single member selection
   setSingleMember?: SetState<User | null>; // for single member selection
   enableFirstShowUsers?: boolean; // to show first 5 users when search is empty
+  enableScroll?: boolean; // to enable scroll in the modal
 };
 
 export function AddMembersModal(props: AddMembersModalProps) {
@@ -47,6 +48,7 @@ export function AddMembersModal(props: AddMembersModalProps) {
     singleMember,
     setSingleMember,
     enableFirstShowUsers,
+    enableScroll,
   } = props;
   const { setDetectedChanges } = useDashboard();
 
@@ -136,7 +138,9 @@ export function AddMembersModal(props: AddMembersModalProps) {
           .includes(searchQueryAddPlayer.toLowerCase())
     );
 
-    filteredUsers.length = 5; // limit to 5
+    if (!enableScroll) {
+      filteredUsers.length = 5; // limit to 5
+    }
     filteredUsers = filteredUsers.filter(
       (user, index, self) => index === self.findIndex((t) => t.uid === user.uid)
     );
@@ -164,7 +168,12 @@ export function AddMembersModal(props: AddMembersModalProps) {
           />
         </Box>
         <Box>
-          <List>
+          <List
+            sx={{
+              maxHeight: enableScroll ? 300 : undefined,
+              overflowY: enableScroll ? 'auto' : undefined,
+            }}
+          >
             {searchQueryAddPlayer.length > 0 && filteredUsers?.length === 0 ? (
               <Box
                 display="flex"
@@ -179,56 +188,53 @@ export function AddMembersModal(props: AddMembersModalProps) {
               filteredUsers &&
               filteredUsers
                 .filter((user) => user && user.uid) // Ensure valid users
-                .map(
-                  (user, index) =>
-                    //check if index is less than 5
-                    index < 5 && (
-                      <ListItem key={index}>
-                        <ListItemText
-                          primary={user.displayName}
-                          secondary={user.email}
-                          sx={{ m: 0 }}
-                        />
-                        {isUserIncluded(user) ? (
-                          <Button
-                            variant="contained"
-                            sx={{
-                              backgroundColor: theme.palette.grey[500],
-                              '&:hover': {
-                                backgroundColor: theme.palette.grey[700],
-                              },
-                            }}
-                            onClick={() => {
-                              handleRemoveMember(user);
-                            }}
-                          >
-                            <Typography variant="body2" color="white">
-                              Added
-                            </Typography>
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            sx={{
-                              backgroundColor: theme.palette.primary.main,
-                              color: 'white',
-                              mr: 0.5,
-                              '&:hover': {
-                                backgroundColor: theme.palette.primary.dark,
-                              },
-                            }}
-                            onClick={() =>
-                              setSingleMember
-                                ? handleChangeMember(user)
-                                : handleAddMember(user)
-                            }
-                          >
-                            <Typography variant="body2">Add</Typography>
-                          </Button>
-                        )}
-                      </ListItem>
-                    )
-                )
+                .map((user, index) => (
+                  //check if index is less than 5
+                  <ListItem key={index}>
+                    <ListItemText
+                      primary={user.displayName}
+                      secondary={user.email}
+                      sx={{ m: 0 }}
+                    />
+                    {isUserIncluded(user) ? (
+                      <Button
+                        variant="contained"
+                        sx={{
+                          backgroundColor: theme.palette.grey[500],
+                          '&:hover': {
+                            backgroundColor: theme.palette.grey[700],
+                          },
+                        }}
+                        onClick={() => {
+                          handleRemoveMember(user);
+                        }}
+                      >
+                        <Typography variant="body2" color="white">
+                          Added
+                        </Typography>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        sx={{
+                          backgroundColor: theme.palette.primary.main,
+                          color: 'white',
+                          mr: 0.5,
+                          '&:hover': {
+                            backgroundColor: theme.palette.primary.dark,
+                          },
+                        }}
+                        onClick={() =>
+                          setSingleMember
+                            ? handleChangeMember(user)
+                            : handleAddMember(user)
+                        }
+                      >
+                        <Typography variant="body2">Add</Typography>
+                      </Button>
+                    )}
+                  </ListItem>
+                ))
             )}
           </List>
         </Box>

@@ -98,25 +98,36 @@ export default function FileUpload(props: Props) {
           // set error to empty string to remove the error message
           setPreview((prev) => ({ ...prev, error: '' }));
         }}
-        sx={{ ...sx }}
+        sx={{
+          ...sx,
+          width: '100%',
+          height: !preview.error && preview.url ? undefined : '100%',
+        }}
       >
-        <Box p={1}>
-          <Typography>{label}</Typography>
-
+        <Box
+          width="100%"
+          sx={{
+            height: !preview.error && preview.url ? undefined : '100%',
+            mx: 'auto',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           {preview.error ? (
             <Typography color="error">{preview.error}</Typography>
           ) : preview.url ? null : isDragActive ? (
             <Typography width="100%">Drop</Typography>
           ) : (
-            <Typography width="100%">
-              Drop file here or click to select
+            <Typography width="100%" textAlign="center" my={'auto'} px={1}>
+              {`Drop ${label} here or click to select`}
             </Typography>
           )}
         </Box>
 
         {!preview.error && preview.url && input !== 'csv' && (
           <Box
-            height={100}
+            height={150}
             position="relative"
             display="flex"
             justifyContent="center"
@@ -137,8 +148,7 @@ export default function FileUpload(props: Props) {
                 alt="Image Preview"
                 style={{
                   objectFit: 'contain',
-                  height: 108,
-                  width: '100%', // Make sure the image stretches to cover the width.
+                  height: 140,
                 }}
                 onError={() => {
                   setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
