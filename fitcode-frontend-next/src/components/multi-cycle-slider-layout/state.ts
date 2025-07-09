@@ -115,25 +115,27 @@ export function handleChange(
 
   const { sliderRef, setValuesReal, setDetectedChanges } = state;
 
-  if (draggingIndex !== null) {
-    if (newValues[draggingIndex + 1] === 1 && sliderRef.current) {
-      //Get the slider position & size
-      const sliderBounds = sliderRef.current.getBoundingClientRect();
-      if (!mouseX) return;
-      const relativeX = mouseX - sliderBounds.left; // X position inside the slider
-      const sliderWidth = sliderBounds.width;
+  if (
+    draggingIndex !== null &&
+    newValues[draggingIndex + 1] === 1 &&
+    sliderRef.current
+  ) {
+    //Get the slider position & size
+    const sliderBounds = sliderRef.current.getBoundingClientRect();
+    if (!mouseX) return;
+    const relativeX = mouseX - sliderBounds.left; // X position inside the slider
+    const sliderWidth = sliderBounds.width;
 
-      let adjustedValue = Math.round((relativeX / sliderWidth) * 365);
-      adjustedValue = Math.max(2, Math.min(365, adjustedValue));
+    let adjustedValue = Math.round((relativeX / sliderWidth) * 365);
+    adjustedValue = Math.max(2, Math.min(365, adjustedValue));
 
-      setValuesReal((prev) => {
-        const updatedValues = [...prev];
-        updatedValues[draggingIndex] = adjustedValue;
-        return updatedValues;
-      });
+    setValuesReal((prev) => {
+      const updatedValues = [...prev];
+      updatedValues[draggingIndex] = adjustedValue;
+      return updatedValues;
+    });
 
-      return;
-    }
+    return;
   }
 
   setDetectedChanges(true);

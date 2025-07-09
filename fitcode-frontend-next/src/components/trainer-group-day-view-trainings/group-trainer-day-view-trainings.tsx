@@ -32,7 +32,7 @@ export default function GroupTrainerDayViewTrainings(
       }}
     >
       <Typography variant="h6" mb={2}>
-        Select a cycle
+        No session for current date
       </Typography>
     </Box>
   ) : (

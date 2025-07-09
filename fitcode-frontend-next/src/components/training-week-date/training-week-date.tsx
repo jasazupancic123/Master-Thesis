@@ -94,7 +94,12 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
       key={j}
       width="calc(100% / 7)"
       sx={{
-        backgroundColor: theme.palette.background.default,
+        backgroundColor:
+          cycle &&
+          dayjs(cycle.from).isBefore(date.endOf('day')) &&
+          dayjs(cycle.to).isAfter(date.endOf('day'))
+            ? theme.palette.background.default
+            : theme.palette.background.paper,
         cursor:
           components.length &&
           cycle &&
@@ -147,7 +152,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                 );
               }}
             >
-              {/* Period Label */}
               {period === 'AM' && (
                 <Typography
                   sx={{
