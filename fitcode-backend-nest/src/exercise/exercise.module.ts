@@ -5,7 +5,6 @@ import { ComponentModule } from '../component/component.module';
 import { ExerciseRepository } from './repository/exercise.repository';
 import { ExerciseAttributeValueRepository } from './repository/exercise-attribute-value.repository';
 import { AttributeModule } from '../attribute/attribute.module';
-import { TrainingModule } from '../training/training.module';
 import { InstitutionModule } from '../institution/institution.module';
 
 @Module({
@@ -13,7 +12,6 @@ import { InstitutionModule } from '../institution/institution.module';
     AttributeModule,
     InstitutionModule,
     forwardRef(() => ComponentModule),
-    forwardRef(() => TrainingModule),
   ],
   controllers: [ExerciseController],
   providers: [

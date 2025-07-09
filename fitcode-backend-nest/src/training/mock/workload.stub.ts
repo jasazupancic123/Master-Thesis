@@ -1,6 +1,10 @@
 import { generateRandomNumber } from '../../../test/common/utils/random.util';
 import { IntType, VolType } from '../../component/enum/param.enum';
-import { WorkloadValue } from '../entity/workload-value.entity';
+import {
+  CompletedWorkload,
+  PrescribedWorkload,
+  WorkloadValue,
+} from '../entity/workload-value.entity';
 import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 

@@ -7,7 +7,7 @@ import {
   IsOptional,
   ValidateNested,
 } from 'class-validator';
-import { AttributeRange } from '../../attribute/entity/attribute-range.entity';
+import { Attribute } from '../../attribute/entity/attribute.entity';
 
 export class Method extends IdEntity {
   @IsString()
@@ -23,10 +23,10 @@ export class Method extends IdEntity {
   targetId: string;
 
   @ValidateNested({ each: true })
-  @Type(() => AttributeRange)
+  @Type(() => Attribute)
   @ApiProperty()
   @Expose()
-  attributeRanges: AttributeRange[];
+  attributes: Attribute[];
 
   @IsString()
   @IsNotEmpty()

@@ -23,7 +23,6 @@ import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constan
 import { AttributeService } from '../../attribute/service/attribute.service';
 import { Component } from '../../component/entity/component.entity';
 import { Query } from 'firebase-admin/firestore';
-import { TrainingPlanService } from '../../training/service/training-plan.service';
 import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
 import { Permission } from '../../common/interface/permission.interface';
 import { Institution } from '../../institution/entity/institution.entity';
@@ -47,7 +46,6 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     private readonly institutionService: InstitutionService,
     @Inject(forwardRef(() => ComponentService))
     private readonly componentService: Wrapper<ComponentService>,
-    private readonly trainingPlanService: TrainingPlanService,
   ) {}
 
   async findAllGlobal(filter?: Record<string, string>) {
@@ -103,15 +101,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       const root = this.componentService.getRoot(component, components);
       const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
-      const params = this.trainingPlanService.getComponentParamAttributes(
+      const params = this.componentService.getComponentParamAttributes(
         componentParams,
         exercise.attributeValues,
         attributes,
       );
 
-      exercise.defaultParams =
-        this.trainingPlanService.getParamAttributes(params);
-
+      exercise.defaultParams = this.componentService.getParamAttributes(params);
       return exercise;
     });
   }

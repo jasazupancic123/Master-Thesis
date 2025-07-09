@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ComponentService } from './component.service';
 import { ComponentController } from './component.controller';
 import { ComponentRepository } from './repository/component.repository';
+import { ComponentService } from './component.service';
 
 @Module({
   controllers: [ComponentController],

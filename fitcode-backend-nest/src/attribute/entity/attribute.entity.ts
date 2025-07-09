@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -47,6 +48,18 @@ export class Attribute {
   @IsOptional()
   @Expose()
   defaultValue?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  min?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  max?: number;
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)

@@ -16,9 +16,8 @@ import {
   subMinutes,
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
-import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
+import { Create, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
 import {
   BatchWriteOperation,
@@ -44,11 +43,9 @@ import { WorkloadService } from './workload.service';
 import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { ParamType } from '../../component/enum/param.enum';
-import { CompletedTrainingComponent } from '../dto/completed-training';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { PeriodizationService } from './periodization.service';
-import { FindByDayDto } from '../dto/find-by-day.dto';
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
@@ -65,6 +62,12 @@ import {
 } from '../../component/constant/warmup-cooldown.constant';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
+import {
+  CompletedTrainingComponent,
+  CompletedTrainingExercise,
+} from '../entity/completed-training.entity';
+import { ExerciseService } from '../../exercise/service/exercise.service';
+import { WorkloadRepository } from '../repository/workload.repository';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -72,15 +75,16 @@ export class TrainingService implements Permission<Training, Institution> {
 
   constructor(
     private readonly firebaseService: FirebaseService,
-    private readonly cacheManagerService: CacheManagerService,
     private readonly commonService: CommonService,
     private readonly attributeService: AttributeService,
     private readonly componentService: ComponentService,
     private readonly methodService: MethodService,
+    private readonly exerciseService: ExerciseService,
     private readonly userService: UserService,
     private readonly periodizationService: PeriodizationService,
     private readonly trainingRepository: TrainingRepository,
     private readonly trainingPlanService: TrainingPlanService,
+    private readonly workloadRepository: WorkloadRepository,
     private readonly workloadService: WorkloadService,
     @Inject(forwardRef(() => GroupService))
     private readonly groupService: Wrapper<GroupService>,
@@ -393,7 +397,8 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // create training
-    const wellness = await this.userService.getRecentWellness(membersIds);
+    const wellness =
+      await this.userService.getRecentWellnessForMany(membersIds);
     const workloads = await this.workloadService.findAllByMembers(membersIds);
 
     const data: Create<Training> = {
@@ -716,7 +721,8 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // for future trainings, update latest meta and calculate workloads
-    const wellness = await this.userService.getRecentWellness(membersIds);
+    const wellness =
+      await this.userService.getRecentWellnessForMany(membersIds);
     const workloads = await this.workloadService.findAllByMembers(membersIds);
 
     const updated = {
@@ -824,7 +830,8 @@ export class TrainingService implements Permission<Training, Institution> {
       );
 
       // for future trainings, update latest meta and calculate workloads
-      const wellness = await this.userService.getRecentWellness(membersIds);
+      const wellness =
+        await this.userService.getRecentWellnessForMany(membersIds);
       const workloads = await this.workloadService.findAllByMembers(membersIds);
 
       const updatedTraining: Training = {
@@ -892,7 +899,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
 
-    const wellness = await this.userService.getRecentWellness(
+    const wellness = await this.userService.getRecentWellnessForMany(
       training.membersIds,
     );
 
@@ -1166,99 +1173,149 @@ export class TrainingService implements Permission<Training, Institution> {
     input: CompletedTrainingComponent,
   ): Promise<Training> {
     this.logger.log(
-      `User ${user.uid} is finishing component ${ref.componentId} for training ${ref.trainingId}`,
+      `User ${user.uid} is completing component ${ref.componentId} for training ${ref.trainingId}`,
     );
-
-    if (
-      (this.firebaseService.isManager(user) ||
-        this.firebaseService.isTrainer(user)) &&
-      !input.userId
-    )
-      throw new BadRequestException(
-        'You have to pass in athlete for whom to complete training component',
-      );
 
     // find refs
     const { trainingId, componentId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
-    const workloads = await this.workloadService.findAllByRef({
-      userId: user.uid,
-      trainingId,
-      componentId,
-    });
 
-    // validation
-    const exercises = input.supersets.flatMap((s) => s.exercises); // completed exercises
-    const allComponents =
+    // validate athlete input for manager / trainer
+    let athlete = user;
+    if (
+      training.institution &&
+      (this.firebaseService.isManager(user) ||
+        this.firebaseService.isTrainer(user))
+    ) {
+      const found = await this.userService.findOneBy('id', input.userId);
+      if (!this.institutionService.canView(found, training.institution))
+        throw new UnauthorizedException(
+          `Athlete ${found.displayName || found.email} cannot view institution ${training.institution.name}`,
+        );
+
+      athlete = found;
+    }
+
+    // component validation
+    const allTrainingComponents =
       this.trainingPlanService.getTrainingComponents(training);
 
-    // FIX:
-    // const allComponents = training.components
-    // allComponents.unshift(training.warmup);
-    // allComponents.push(training.cooldown);
+    const trainingComponent = allTrainingComponents.find(
+      (c) => c.id === componentId,
+    );
 
-    // mark user as completed (for component and training)
-    const component = allComponents.find((c) => c.id === componentId);
-    if (!component) throw new BadRequestException('Component not found');
+    if (!trainingComponent)
+      throw new BadRequestException('Training component not found');
 
-    component.completedMembersIds.push(user.uid);
-    if (this.trainingPlanService.isTrainingCompleted(user.uid, allComponents))
-      training.completedMembersIds.push(user.uid);
+    const errors: string[] = [];
+
+    // create workloads
+    const operations: BatchWriteOperation<Workload>[] = [];
+    const collection = this.workloadRepository.collection({
+      trainingId: training.id,
+    });
+
+    const completedExercises: CompletedTrainingExercise[] = [];
+    for (const completedExercise of input.exercises) {
+      // find prescribed supersets (either from subgroup or main group)
+      const subgroup = trainingComponent.subgroups.find((s) =>
+        s.membersIds.includes(athlete.uid),
+      );
+
+      const prescribedSupersets = subgroup
+        ? subgroup.supersets
+        : trainingComponent.supersets;
+
+      const prescribedSuperset =
+        prescribedSupersets[completedExercise.supersetIndex];
+
+      if (!prescribedSuperset) {
+        errors.push(
+          `Superset ${completedExercise.supersetIndex + 1} not found in prescribed training`,
+        );
+
+        continue;
+      }
+
+      const prescribedExercise = prescribedSuperset.exercises.find(
+        (e) => e.id === completedExercise.id,
+      );
+
+      if (!prescribedExercise) {
+        errors.push(`Training exercise not prescribed`);
+        continue;
+      }
+
+      for (const completedSet of completedExercise.sets) {
+        const prescribedSet = prescribedExercise.sets.find(
+          (s) => s.setNumber === completedSet.setNumber,
+        );
+
+        if (
+          !prescribedSet ||
+          !this.trainingPlanService.isEqualSet(prescribedSet, completedSet)
+        ) {
+          errors.push(
+            `Completed set ${completedSet.setNumber} for exercise ${completedExercise.id} does not match prescribed set`,
+          );
+
+          continue;
+        }
+
+        const workload: Create<Workload> = {
+          institutionId: training.institutionId,
+          groupId: training.groupId,
+          cycleId: training.cycleId,
+          userId: athlete.uid,
+          trainingId: training.id,
+          componentId: trainingComponent.id,
+          exerciseId: completedExercise.id,
+          setNumber: completedSet.setNumber,
+          status: SetStatus.COMPLETED,
+          notes: '',
+          plannedAt: training.from,
+          isPersonalized: false,
+          ...this.workloadService.parseCompletedParamValues(completedSet),
+          ...this.workloadService.parsePrescribedParamValues(
+            prescribedSet.paramValuesL,
+          ),
+        };
+
+        operations.push({
+          operation: 'set',
+          ref: collection.doc(),
+          data: this.firebaseService.buildCreateQuery(workload),
+        });
+      }
+
+      completedExercises.push(completedExercise);
+    }
+
+    this.firebaseService.paginateBatchWrites(operations);
 
     // update stats
     const stats = this.trainingPlanService.calculateCompletedTrainingStats(
       training.stats,
-      exercises,
+      completedExercises,
     );
 
-    // update workloads
-    const batch = this.firebaseService.firestore.batch();
-    for (const w of workloads) {
-      const exercise = exercises.find((e) => e.id === w.exerciseId);
-      if (!exercise) continue;
+    // mark user as completed (for component and training)
+    trainingComponent.completedMembersIds.push(user.uid);
+    if (
+      this.trainingPlanService.isTrainingCompleted(
+        user.uid,
+        allTrainingComponents,
+      )
+    )
+      training.completedMembersIds.push(user.uid);
 
-      const set = exercise.sets.find((s) => s.setNumber === w.setNumber);
-      const paramValuesL = this.workloadService.parseActualParamValues(
-        set.paramValuesL,
-      );
-
-      const paramValuesR = this.workloadService.parseActualParamValues(
-        set.paramValuesR,
-      );
-
-      const query = this.firebaseService.buildUpdateQuery<Workload>({
-        status: SetStatus.COMPLETED,
-        volWork1ValueL: paramValuesL.volWork1Value,
-        volWork1ValueR: paramValuesR.volWork1Value,
-        volWork2ValueL: paramValuesL.volWork2Value,
-        volWork2ValueR: paramValuesR.volWork2Value,
-        volRecValueL: paramValuesL.volRecValue,
-        volRecValueR: paramValuesR.volRecValue,
-        intWork1ValueL: paramValuesL.intWork1Value,
-        intWork1ValueR: paramValuesR.intWork1Value,
-        intWork2ValueL: paramValuesL.intWork2Value,
-        intWork2ValueR: paramValuesR.intWork2Value,
-        intRecValueL: paramValuesL.intRecValue,
-        intRecValueR: paramValuesR.intRecValue,
-      });
-
-      const docRef = this.workloadService.getDoc(w);
-      batch.update(docRef, query);
-    }
-
-    const docRef = this.trainingRepository.doc(trainingId);
-    const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
-      {
-        warmup: training.warmup,
-        cooldown: training.cooldown,
-        components: training.components,
-        completedMembersIds: training.completedMembersIds,
-        stats: [...(training.stats || []), ...stats],
-      },
-    );
-
-    batch.update(docRef, updateTrainingQuery);
-    await batch.commit();
+    await this.trainingRepository.updateDoc(trainingId, {
+      warmup: training.warmup,
+      cooldown: training.cooldown,
+      components: training.components,
+      completedMembersIds: training.completedMembersIds,
+      stats: [...(training.stats || []), ...stats],
+    });
 
     return training;
   }

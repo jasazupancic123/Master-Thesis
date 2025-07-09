@@ -20,6 +20,8 @@ export class GenericUtil {
     const end = page * pageSize;
     return data.slice(start, end);
   }
+
+  
 }
 
 export function parseQueryArray(value: string): string[] {

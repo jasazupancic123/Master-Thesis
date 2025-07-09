@@ -1,5 +1,3 @@
-import { AttributeType } from '../../../common/enum/attribute-type.enum';
-import { Attribute } from '../../../attribute/entity/attribute.entity';
 import { ObjectUtil } from '../util';
 
 describe('ObjectUtil::Unit', () => {

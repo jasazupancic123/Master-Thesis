@@ -12,7 +12,7 @@ import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
 import { Wellness } from './entity/wellness.entity';
 import { UserEntity } from './entity/user.entity';
-import { WellnessRepository } from './repository/user-meta.repository';
+import { WellnessRepository } from './repository/wellness.repository';
 import { UserRepository } from './repository/user.repository';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
@@ -165,7 +165,7 @@ export class UserService {
     });
   }
 
-  async getMeta(ref: WellnessRef): Promise<Wellness> {
+  async getWellness(ref: WellnessRef): Promise<Wellness> {
     return await this.wellnessRepository.getDoc(ref);
   }
 
@@ -188,7 +188,7 @@ export class UserService {
     return await this.wellnessRepository.updateDoc(ref, input);
   }
 
-  async getLastMeta(ref: UserRef): Promise<Wellness> {
+  async getRecentWellness(ref: UserRef): Promise<Wellness> {
     const snapshot = await this.wellnessRepository
       .collection(ref)
       .orderBy('date', 'desc')
@@ -199,7 +199,7 @@ export class UserService {
     return this.wellnessRepository.serialize(snapshot.docs[0]);
   }
 
-  async getRecentWellness(userIds: string[]): Promise<Wellness[]> {
+  async getRecentWellnessForMany(userIds: string[]): Promise<Wellness[]> {
     try {
       const collectionGroup = this.firebaseService.firestore.collectionGroup(
         FirestoreCollection.WELLNESS,

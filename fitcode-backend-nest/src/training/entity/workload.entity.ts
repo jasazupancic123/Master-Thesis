@@ -14,9 +14,13 @@ import {
 import { TimestampEntity } from '../../common/entity/timestamp.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { IntersectionType } from '@nestjs/mapped-types';
-import { WorkloadValue } from './workload-value.entity';
+import { CompletedWorkload, PrescribedWorkload } from './workload-value.entity';
 
-export class Workload extends IntersectionType(TimestampEntity, WorkloadValue) {
+export class Workload extends IntersectionType(
+  TimestampEntity,
+  PrescribedWorkload,
+  CompletedWorkload,
+) {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

@@ -29,7 +29,7 @@ import { TrainingInfoDto } from './dto/training-info.dto';
 import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { UserRole } from '../user/enum/user-role.enum';
-import { CompletedTrainingComponent } from './entity/completed-training';
+import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
 
 @ApiTags('Training')

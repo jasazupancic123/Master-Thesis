@@ -88,7 +88,7 @@ export function generateTrainingExercise(
     color: data?.color || generateRandomColor(),
     params: data?.params || [],
     sets: data?.sets || [],
-    attributeRanges: data?.attributeRanges || [],
+    attributes: data?.attributes || [],
     periodized: data?.periodized || false,
   };
 }

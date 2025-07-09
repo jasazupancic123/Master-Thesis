@@ -5,7 +5,6 @@ import { ColorEntity } from '../../common/entity/color.entity';
 import { IdEntity } from '../../common/entity/id.entity';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { ExerciseSet } from './exercise-set.entity';
-import { AttributeRange } from '../../attribute/entity/attribute-range.entity';
 
 export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {
   @ValidateNested({ each: true })
@@ -26,8 +25,8 @@ export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {
   periodized: boolean;
 
   @ValidateNested({ each: true })
-  @Type(() => AttributeRange)
+  @Type(() => Attribute)
   @ApiProperty()
   @Expose()
-  attributeRanges: AttributeRange[];
+  attributes: Attribute[];
 }
