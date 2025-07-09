@@ -14,6 +14,7 @@ interface TrainerGroupDayViewDaysProps {
   checkIsSameValue: (value: string) => boolean;
   onArrowClick?: (direction: 'left' | 'right') => void;
   cycleView?: boolean;
+  yearView?: boolean;
   alertOnChange?: boolean;
 }
 
@@ -24,7 +25,14 @@ export default function HorizontalItemsList(
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { items, setValue, onArrowClick, cycleView, checkIsSameValue } = props;
+  const {
+    items,
+    setValue,
+    onArrowClick,
+    cycleView,
+    yearView,
+    checkIsSameValue,
+  } = props;
 
   const { detectedChanges, setDetectedChanges } = useGroup();
 
@@ -37,7 +45,7 @@ export default function HorizontalItemsList(
       justifyContent="space-between"
       marginX="auto"
       sx={{
-        py: 1,
+        py: yearView ? 2.3 : 1,
         backgroundColor: theme.palette.background.dark,
         ml: cycleView ? 'auto' : undefined,
         width: screenSize.isMobile
@@ -127,11 +135,11 @@ export default function HorizontalItemsList(
               }}
             >
               <Typography
-                key={item.value}
+                key={`${item.value}-${i}`}
                 variant="subtitle2"
                 textAlign="center"
                 sx={{
-                  fontSize: cycleView ? '14px' : isSameValue ? '13px' : '12px',
+                  fontSize: isSameValue ? '13px' : '12px',
                   fontWeight: 250,
                   p: isSameValue ? 0.5 : 0,
                   minWidth: isSameValue ? '50px' : undefined,
@@ -145,7 +153,7 @@ export default function HorizontalItemsList(
               >
                 {cycleView ? (
                   item.label.split(' ').map((word, index) => (
-                    <>
+                    <Box key={`${word}-${index}`}>
                       {index < 2
                         ? word +
                           (index === 1 && item.label.split(' ').length > 2
@@ -154,7 +162,7 @@ export default function HorizontalItemsList(
                         : undefined}
                       {index < 2 &&
                         index < item.label.split(' ').length - 1 && <br />}
-                    </>
+                    </Box>
                   ))
                 ) : isSameValue ? (
                   <>

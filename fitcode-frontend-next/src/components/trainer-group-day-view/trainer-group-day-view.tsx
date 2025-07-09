@@ -221,7 +221,7 @@ export default function TrainerDayView() {
         }}
       >
         {!screenSize.isSmallerThanLaptop ? (
-          <Tooltip title="Save trainings" placement="bottom" sx={{ mx: 1 }}>
+          <Tooltip title="Save training" placement="bottom" sx={{ mx: 1 }}>
             <IconButton
               sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
               onClick={() =>
