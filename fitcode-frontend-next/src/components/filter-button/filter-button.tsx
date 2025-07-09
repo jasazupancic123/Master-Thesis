@@ -23,6 +23,7 @@ export default function FilterButton(props: Props) {
       disabled={disabled}
       sx={{
         width: '25%',
+        maxWidth: '25%',
         '&.MuiButtonBase-root': {
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,

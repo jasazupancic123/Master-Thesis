@@ -127,7 +127,11 @@ export default function GroupTrainerDayViewHeader(
           <Box
             display="flex"
             flexDirection="column"
-            alignItems="flex-end"
+            alignItems={
+              screenSize.isMobile || screenSize.isSmallTablet
+                ? 'center'
+                : 'flex-end'
+            }
             justifyContent="flex-start"
             gap={0.5}
             sx={{
@@ -137,7 +141,7 @@ export default function GroupTrainerDayViewHeader(
             <Typography
               variant="body2"
               fontWeight={500}
-              textAlign="center"
+              textAlign="right"
               fontSize={12}
               sx={{
                 wordWrap: 'break-word',
@@ -152,7 +156,7 @@ export default function GroupTrainerDayViewHeader(
             <Typography
               variant="body2"
               fontWeight={500}
-              textAlign="center"
+              textAlign="right"
               fontSize={12}
               sx={{
                 wordWrap: 'break-word',
