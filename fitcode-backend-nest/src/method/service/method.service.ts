@@ -29,10 +29,8 @@ export class MethodService {
   }
 
   async findOne(ref: MethodRef): Promise<Method | null> {
-    // find method
     const method = await this.repository.getDoc(ref.methodId);
     if (!method) return null;
-
     return method;
   }
 
@@ -56,7 +54,7 @@ export class MethodService {
       targetId,
       ability,
       intensity,
-      attributeRanges: limits,
+      attributes: limits,
       tempo,
       recovery,
       repetition,
@@ -79,7 +77,7 @@ export class MethodService {
       intensity,
       repetition,
       set,
-      attributeRanges: limits,
+      attributes: limits,
       tempo,
       recovery,
     };

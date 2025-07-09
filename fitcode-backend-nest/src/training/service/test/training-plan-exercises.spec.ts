@@ -141,7 +141,7 @@ describe('validateTrainingExerciseValues', () => {
       id: 'm1',
       name: 'Method1',
       ability: 'Ability1',
-      attributeRanges: [
+      attributes: [
         {
           field: 'vol1',
           defaultValue: 'rep',
@@ -166,7 +166,7 @@ describe('validateTrainingExerciseValues', () => {
       id: 'm2',
       name: 'Method2',
       ability: 'Ability2',
-      attributeRanges: [
+      attributes: [
         {
           field: 'vol1',
           defaultValue: 'rep',

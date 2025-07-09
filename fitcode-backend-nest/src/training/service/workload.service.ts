@@ -17,18 +17,26 @@ import { WorkloadRepository } from '../repository/workload.repository';
 import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { TimestampEntity } from '../../common/entity/timestamp.entity';
-import { WorkloadValue } from '../entity/workload-value.entity';
+import {
+  CompletedWorkload,
+  PrescribedWorkload,
+} from '../entity/workload-value.entity';
+import { ExerciseSet } from '../entity/exercise-set.entity';
 
 @Injectable()
 export class WorkloadService {
   constructor(
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
-    private readonly workloadRepository: WorkloadRepository,
+    private readonly repository: WorkloadRepository,
   ) {}
 
   getDoc(id: WorkloadRef) {
-    return this.workloadRepository.doc(id);
+    return this.repository.doc(id);
+  }
+
+  collection(trainingId: string) {
+    return this.repository.collection({ trainingId });
   }
 
   /**
@@ -50,6 +58,23 @@ export class WorkloadService {
       );
   }
 
+  async findHistory(ref: ExerciseRef & { userId: string }) {
+    return await this.firebaseService.firestore
+      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('userId', '==', ref.userId)
+      .where('exerciseId', '==', ref.exerciseId)
+      .where('status', 'not-in', [SetStatus.NOT_STARTED, SetStatus.IGNORED])
+      .orderBy('intWork1ValueL')
+      .get()
+      .then(({ docs }) =>
+        docs.map((doc) =>
+          this.firebaseService.serialize(
+            doc.data() as FirestoreEntity<Workload>,
+          ),
+        ),
+      );
+  }
+
   async findOne(
     trainingId: string,
     componentId: string,
@@ -57,10 +82,10 @@ export class WorkloadService {
     setNumber: number,
     userId: string,
   ) {
-    return await this.workloadRepository
+    return await this.repository
       .collection({ trainingId })
       .doc(
-        this.workloadRepository.getKey({
+        this.repository.getKey({
           trainingId,
           componentId,
           exerciseId,
@@ -269,10 +294,10 @@ export class WorkloadService {
 
           if (existing?.isPersonalized) continue;
 
-          const docRef = this.workloadRepository
+          const docRef = this.repository
             .collection({ trainingId: training.id })
             .doc(
-              this.workloadRepository.getKey({
+              this.repository.getKey({
                 trainingId: training.id,
                 componentId: exercise.componentId,
                 exerciseId: exercise.id,
@@ -312,10 +337,10 @@ export class WorkloadService {
     trainings: Training[],
   ) {
     for (const workload of workloads) {
-      const docRef = this.workloadRepository
+      const docRef = this.repository
         .collection({ trainingId: workload.trainingId })
         .doc(
-          this.workloadRepository.getKey({
+          this.repository.getKey({
             trainingId: workload.trainingId,
             componentId: workload.componentId,
             exerciseId: workload.exerciseId,
@@ -366,10 +391,10 @@ export class WorkloadService {
     workloads: Workload[],
   ) {
     for (const workload of workloads) {
-      const docRef = this.workloadRepository
+      const docRef = this.repository
         .collection({ trainingId: ref.trainingId })
         .doc(
-          this.workloadRepository.getKey({
+          this.repository.getKey({
             trainingId: ref.trainingId,
             componentId: ref.componentId,
             exerciseId: workload.exerciseId,
@@ -408,7 +433,7 @@ export class WorkloadService {
       userId: w.userId,
     }));
 
-    this.workloadRepository.deleteDocs(refs);
+    this.repository.deleteDocs(refs);
   }
 
   getStatus(workload: Workload): SetStatus {
@@ -531,27 +556,76 @@ export class WorkloadService {
    * Parses values that athlete completed, so it's assumed that `paramValues`
    * are populated with correct values
    */
-  parseActualParamValues(paramValues: AttributeValue[]) {
-    const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
-    const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
-    const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
-    const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
-    const intWork2 = paramValues.find((p) => p.field === ParamType.IntWork2);
-    const intRec = paramValues.find((p) => p.field === ParamType.IntRec1);
+  parseCompletedParamValues(completedSet: ExerciseSet): CompletedWorkload {
+    const { paramValuesL, paramValuesR } = completedSet;
+
+    const volWork1ValueL = paramValuesL.find(
+      (p) => p.field === ParamType.VolWork1,
+    );
+
+    const volWork1ValueR = paramValuesR.find(
+      (p) => p.field === ParamType.VolWork1,
+    );
+
+    const volWork2ValueL = paramValuesL.find(
+      (p) => p.field === ParamType.VolWork2,
+    );
+
+    const volWork2ValueR = paramValuesR.find(
+      (p) => p.field === ParamType.VolWork2,
+    );
+
+    const volRecValueL = paramValuesL.find(
+      (p) => p.field === ParamType.VolRec1,
+    );
+
+    const volRecValueR = paramValuesR.find(
+      (p) => p.field === ParamType.VolRec1,
+    );
+
+    const intWork1ValueL = paramValuesL.find(
+      (p) => p.field === ParamType.IntWork1,
+    );
+
+    const intWork1ValueR = paramValuesR.find(
+      (p) => p.field === ParamType.IntWork1,
+    );
+
+    const intWork2ValueL = paramValuesL.find(
+      (p) => p.field === ParamType.IntWork2,
+    );
+
+    const intWork2ValueR = paramValuesR.find(
+      (p) => p.field === ParamType.IntWork2,
+    );
+
+    const intRecValueL = paramValuesL.find(
+      (p) => p.field === ParamType.IntRec1,
+    );
+
+    const intRecValueR = paramValuesR.find(
+      (p) => p.field === ParamType.IntRec1,
+    );
 
     return {
-      volWork1Value: this.parseValue(volWork1),
-      volWork2Value: this.parseValue(volWork2),
-      volRecValue: this.parseValue(volRec),
-      intWork1Value: this.parseValue(intWork1),
-      intWork2Value: this.parseValue(intWork2),
-      intRecValue: this.parseValue(intRec),
+      volWork1ValueL: this.parseValue(volWork1ValueL),
+      volWork1ValueR: this.parseValue(volWork1ValueR),
+      volWork2ValueL: this.parseValue(volWork2ValueL),
+      volWork2ValueR: this.parseValue(volWork2ValueR),
+      volRecValueL: this.parseValue(volRecValueL),
+      volRecValueR: this.parseValue(volRecValueR),
+      intWork1ValueL: this.parseValue(intWork1ValueL),
+      intWork1ValueR: this.parseValue(intWork1ValueR),
+      intWork2ValueL: this.parseValue(intWork2ValueL),
+      intWork2ValueR: this.parseValue(intWork2ValueR),
+      intRecValueL: this.parseValue(intRecValueL),
+      intRecValueR: this.parseValue(intRecValueR),
     };
   }
 
-  private parsePrescribedParamValues(
+  parsePrescribedParamValues(
     paramValues: AttributeValue[],
-  ): WorkloadValue {
+  ): PrescribedWorkload {
     const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
     const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
     const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
@@ -563,36 +637,24 @@ export class WorkloadService {
       volWork1Type: this.parseSelected<VolType>(volWork1),
       prescribedVolWork1ValueL: this.parseValue(volWork1) as number,
       prescribedVolWork1ValueR: this.parseValue(volWork1) as number,
-      volWork1ValueL: null,
-      volWork1ValueR: null,
       volWork2Type: this.parseSelected<VolType>(volWork2),
       prescribedVolWork2ValueL: this.parseValue(volWork2) as number,
       prescribedVolWork2ValueR: this.parseValue(volWork2) as number,
-      volWork2ValueL: null,
-      volWork2ValueR: null,
       volRecType: this.parseSelected<VolType>(volRec),
       prescribedVolRecValueL: this.parseValue(volRec) as number,
       prescribedVolRecValueR: this.parseValue(volRec) as number,
-      volRecValueL: null,
-      volRecValueR: null,
       intWork1Type: this.parseSelected<IntType>(intWork1),
-      intWork1ValueL: null,
-      intWork1ValueR: null,
       intWork2Type: this.parseSelected<IntType>(intWork2),
-      intWork2ValueL: null,
-      intWork2ValueR: null,
       intRecType: this.parseSelected<IntType>(intRec),
       prescribedIntRecValueL: this.parseValue(intRec),
       prescribedIntRecValueR: this.parseValue(intRec),
-      intRecValueL: null,
-      intRecValueR: null,
     };
   }
 
-  private calculateIntValues(
+  calculateIntValues(
     paramValues: AttributeValue[],
     bodyweight: number,
-    workloads: Workload[],
+    history: Workload[],
   ): Pick<
     Workload,
     | 'prescribedIntWork1ValueL'
@@ -611,7 +673,7 @@ export class WorkloadService {
     const prescribedIntWork1Value = isNaN(intWork1Value)
       ? undefined
       : intWork1Field === IntType.Rm && !isNaN(intWork1Value)
-        ? this.calculateRM(intWork1Value, workloads)
+        ? this.calculateRM(intWork1Value, history)
         : intWork1Field === IntType.Bw && !isNaN(intWork1Value)
           ? bodyweight * this.commonService.number.percent(intWork1Value)
           : [IntType.Mas, IntType.Hrmax].includes(intWork1Field) &&
@@ -622,7 +684,7 @@ export class WorkloadService {
     const prescribedIntWork2Value = isNaN(intWork1Value)
       ? undefined
       : intWork2Field === IntType.Rm && !isNaN(intWork2Value)
-        ? this.calculateRM(intWork2Value, workloads)
+        ? this.calculateRM(intWork2Value, history)
         : intWork2Field === IntType.Bw && !isNaN(intWork2Value)
           ? bodyweight * this.commonService.number.percent(intWork2Value)
           : [IntType.Mas, IntType.Hrmax].includes(intWork2Field) &&

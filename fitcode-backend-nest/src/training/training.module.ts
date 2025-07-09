@@ -19,7 +19,7 @@ import { MethodModule } from '../method/method.module';
     MethodModule,
     ComponentModule,
     InstitutionModule,
-    forwardRef(() => ExerciseModule),
+    ExerciseModule,
     forwardRef(() => GroupModule),
   ],
   providers: [

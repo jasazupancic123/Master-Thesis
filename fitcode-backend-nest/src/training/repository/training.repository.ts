@@ -94,49 +94,7 @@ export class TrainingRepository
   }
 
   async updateDoc(id: string, input: Update<Training>) {
-    const query = this.firebaseService.buildUpdateQuery<Training>({
-      from: input.from,
-      components: input.components?.map((c) => ({
-        id: c.id,
-        from: c.from,
-        to: c.to,
-        target: c.target || null,
-        periodizationType: c.periodizationType || null,
-        methodId: c.methodId || null,
-        color: c.color,
-        completedMembersIds: c.completedMembersIds,
-        subgroups: c.subgroups.map((s) => ({
-          id: s.id,
-          name: s.name,
-          membersIds: s.membersIds,
-          futureStats: s.futureStats || [],
-          periodizationType: s.periodizationType || null,
-          supersets: s.supersets.map((s) => ({
-            color: s.color,
-            exercises: s.exercises.map((e) => ({
-              id: e.id,
-              color: e.color,
-              params: { ...e.params },
-              sets: e.sets.map((s) => ({ ...s })),
-              periodized: e.periodized,
-              attributeRanges: e.attributeRanges.map((m) => ({ ...m })),
-            })),
-          })),
-        })),
-        supersets: c.supersets.map((s) => ({
-          color: s.color,
-          exercises: s.exercises.map((e) => ({
-            id: e.id,
-            color: e.color,
-            params: { ...e.params },
-            sets: e.sets.map((s) => ({ ...s })),
-            periodized: e.periodized,
-            attributeRanges: e.attributeRanges.map((m) => ({ ...m })),
-          })),
-        })),
-      })),
-    });
-
+    const query = this.firebaseService.buildUpdateQuery<Training>(input);
     await this.doc(id).update(query);
   }
 

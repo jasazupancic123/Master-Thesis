@@ -70,7 +70,7 @@ export class UserController {
   async getMyMeta(@RequestUser() user: User) {
     const ref = { uid: user.uid };
     return (
-      (await this.userService.getLastMeta(ref)) || {
+      (await this.userService.getRecentWellness(ref)) || {
         date: new Date(),
         userId: user.uid,
       }

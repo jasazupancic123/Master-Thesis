@@ -3,7 +3,6 @@ import { Test } from '@nestjs/testing';
 import { CommonModule } from '../../../common/common.module';
 import { validationSchema } from '../../../config/environment-validation-schema';
 import { TrainingPlanService } from '../training-plan.service';
-import { ComponentService } from '../../../component/component.service';
 import {
   IntType,
   ParamType,
@@ -21,6 +20,8 @@ import { WorkloadRepository } from '../../../training/repository/workload.reposi
 import { WorkloadService } from '../workload.service';
 import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
 import { InstitutionService } from '../../../institution/service/institution.service';
+import { ComponentService } from '../../../component/component.service';
+import { ComponentRepository } from '../../../component/repository/component.repository';
 
 describe('getSetData', () => {
   let service: TrainingPlanService;
@@ -48,9 +49,10 @@ describe('getSetData', () => {
         },
         AttributeService,
         {
-          provide: ComponentService,
-          useValue: createMock<ComponentService>(),
+          provide: ComponentRepository,
+          useValue: createMock<ComponentRepository>,
         },
+        ComponentService,
         {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
@@ -102,7 +104,7 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
+    const params = componentService.getParamAttributes(componentParams);
     const result = service.getSetData(params);
 
     expect(result.length).toBe(3);
@@ -132,7 +134,7 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
+    const params = componentService.getParamAttributes(componentParams);
     const result = service.getSetData(params);
 
     expect(result.length).toBe(1);
@@ -177,7 +179,7 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
+    const params = componentService.getParamAttributes(componentParams);
     const result = service.getSetData(params, paramValues);
 
     expect(result.length).toBe(2);
@@ -211,7 +213,7 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
+    const params = componentService.getParamAttributes(componentParams);
     const result = service.getSetData(params);
 
     expect(result.length).toBe(1);
@@ -248,7 +250,7 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
+    const params = componentService.getParamAttributes(componentParams);
     const result = service.getSetData(params);
 
     for (const paramValues of [
@@ -280,7 +282,7 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
+    const params = componentService.getParamAttributes(componentParams);
     const result = service.getSetData(params);
 
     expect(result.length).toBe(1);
