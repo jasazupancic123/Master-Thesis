@@ -114,7 +114,8 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
                 display="flex"
                 flexDirection="column"
                 onClick={() => {
-                  if (selectedExercise) setSelectedExercise(null);
+                  if (selectedExercise?.id === exercise.id)
+                    setSelectedExercise(null);
                   else setSelectedExercise(exercise);
                 }}
                 sx={{

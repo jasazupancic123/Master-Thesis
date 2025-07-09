@@ -1,7 +1,6 @@
 import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/store/group-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
 import { Box, Divider, Typography } from '@mui/material';
 import SelectInput from '../select-input/select-input';
 import { useTheme } from '@mui/material';
@@ -16,25 +15,13 @@ import { Target } from '@/controller/target/type/target.type';
 const commonService = CommonService.instance;
 
 interface CycleComponentsProps {
-  selectedGroup: Group;
-  setSelectedGroup: SetState<Group>;
-  setEditModal: SetState<boolean>;
-  setEditCycle: React.Dispatch<React.SetStateAction<Cycle | null>>;
   sortedCycles: Cycle[];
   setSortedCycles: SetState<Cycle[]>;
   sliderProperties: { width: string; centerPosition: string }[];
-  setSliderProperties: SetState<{ width: string; centerPosition: string }[]>;
 }
 
 export default function CycleComponents(props: CycleComponentsProps) {
-  const {
-    setEditCycle,
-    setEditModal,
-    sortedCycles,
-    setSortedCycles,
-    sliderProperties,
-    setSliderProperties,
-  } = props;
+  const { sortedCycles, setSortedCycles, sliderProperties } = props;
 
   const theme = useTheme();
   const screenSize = useScreenSize();
