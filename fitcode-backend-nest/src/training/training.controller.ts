@@ -74,18 +74,15 @@ export class TrainingController {
     );
   }
 
-  @Get(':trainingId/component/:componentId')
+  @Get(':trainingId/athlete/:athleteId')
   @Auth()
-  async findByIdAndPopulateAthleteWorkloads(
+  async calculatePrescribedWorkloads(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
+    @Param('athleteId') athleteId: string,
   ) {
-    const ref = { trainingId, componentId };
-    return await this.trainingService.findByIdAndPopulateAthleteWorkloads(
-      user,
-      ref,
-    );
+    const ref = { trainingId, athleteId };
+    return this.trainingService.calculatePrescribedWorkloads(user, ref);
   }
 
   @Post('group/:groupId/athlete/:athleteId/workloads')

@@ -250,7 +250,7 @@ export function createWorkloadsForTraining(
             status: SetStatus.NOT_STARTED,
             plannedAt: training.from,
             notes: null,
-            isPersonalized: false,
+            isCustom: false,
           }),
         );
 

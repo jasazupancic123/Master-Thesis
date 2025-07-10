@@ -1,0 +1,50 @@
+import { Logger } from '@nestjs/common';
+import { User } from '../type/firebase-auth.type';
+
+function isPrimitive(val: any): boolean {
+  return (
+    val === null ||
+    typeof val === 'undefined' ||
+    typeof val === 'string' ||
+    typeof val === 'number' ||
+    typeof val === 'boolean'
+  );
+}
+
+function isFirebaseUser(val: any): val is User {
+  return val && typeof val === 'object' && typeof val.uid === 'string';
+}
+
+export function LogMethod(): MethodDecorator {
+  return (target, propertyKey, descriptor: PropertyDescriptor) => {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = async function (...args: any[]) {
+      const className = target.constructor.name;
+      const methodName = propertyKey.toString();
+      const logger = new Logger(className);
+
+      const argList = args
+        .map((arg, i) => {
+          let value: string;
+
+          if (isFirebaseUser(arg)) value = `userId=${arg.uid}`;
+          else if (isPrimitive(arg)) value = String(arg);
+          else
+            try {
+              value = JSON.stringify(arg);
+            } catch {
+              value = '[Unserializable]';
+            }
+
+          return `arg${i + 1}=${value}`;
+        })
+        .join(', ');
+
+      logger.log(`[${className}] ${methodName} called with: ${argList}`);
+      return await originalMethod.apply(this, args);
+    };
+
+    return descriptor;
+  };
+}

@@ -23,7 +23,7 @@ export function generateWorkloadStub(
     plannedAt: data?.plannedAt || new Date(),
     status: data?.status || SetStatus.NOT_STARTED,
     notes: data?.notes || null,
-    isPersonalized: false,
+    isCustom: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
