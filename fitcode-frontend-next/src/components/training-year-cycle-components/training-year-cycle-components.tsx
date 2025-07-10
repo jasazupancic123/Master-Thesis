@@ -27,7 +27,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { group, setGroup, components, setDetectedChanges } = useGroup();
+  const { setGroup, components, setDetectedChanges } = useGroup();
 
   const parentComponents = components
     .filter((component) => component.parentId === null)
@@ -48,6 +48,31 @@ export default function CycleComponents(props: CycleComponentsProps) {
       default:
         return undefined;
     }
+  };
+
+  const updateCycleState = (newCycle: Cycle) => {
+    const newCycles = sortedCycles.map((c) =>
+      c.id === newCycle.id ? newCycle : c
+    );
+
+    setSortedCycles(newCycles);
+
+    setGroup((prevGroup) => {
+      const newStateCycles = prevGroup.cycles.map(
+        (c) => newCycles.find((nc) => nc.id === c.id) || c
+      );
+
+      newCycles.forEach((nc) => {
+        if (!newStateCycles.some((c) => c.id === nc.id)) {
+          newStateCycles.push(nc);
+        }
+      });
+
+      return {
+        ...prevGroup,
+        cycles: newStateCycles,
+      };
+    });
   };
 
   return (
@@ -235,18 +260,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                                 ),
                               };
 
-                              const newCycles = sortedCycles.map((c) =>
-                                c.id === cycle.id ? newCycle : c
-                              );
-
-                              setSortedCycles(newCycles);
-
-                              setGroup((prevGroup) => ({
-                                ...prevGroup,
-                                cycles: group.cycles.map((c) =>
-                                  c.id === cycle.id ? newCycle : c
-                                ),
-                              }));
+                              updateCycleState(newCycle);
 
                               return;
                             }
@@ -278,18 +292,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                               selectedTargets: newSelectedTargets,
                             };
 
-                            const newCycles = sortedCycles.map((c) =>
-                              c.id === cycle.id ? newCycle : c
-                            );
-
-                            setSortedCycles(newCycles);
-
-                            setGroup((prevGroup) => ({
-                              ...prevGroup,
-                              cycles: group.cycles.map((c) =>
-                                c.id === cycle.id ? newCycle : c
-                              ),
-                            }));
+                            updateCycleState(newCycle);
                           }}
                         />
                       )}
@@ -330,18 +333,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                               ),
                             };
 
-                            const newCycles = sortedCycles.map((c) =>
-                              c.id === cycle.id ? newCycle : c
-                            );
-
-                            setSortedCycles(newCycles);
-
-                            setGroup((prevGroup) => ({
-                              ...prevGroup,
-                              cycles: group.cycles.map((c) =>
-                                c.id === cycle.id ? newCycle : c
-                              ),
-                            }));
+                            updateCycleState(newCycle);
 
                             return;
                           }
@@ -376,18 +368,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                             selectedTargets: newSelectedTargets,
                           };
 
-                          const newCycles = sortedCycles.map((c) =>
-                            c.id === cycle.id ? newCycle : c
-                          );
-
-                          setSortedCycles(newCycles);
-
-                          setGroup((prevGroup) => ({
-                            ...prevGroup,
-                            cycles: group.cycles.map((c) =>
-                              c.id === cycle.id ? newCycle : c
-                            ),
-                          }));
+                          updateCycleState(newCycle);
                         }}
                       />
                     </div>

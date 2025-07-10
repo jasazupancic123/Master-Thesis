@@ -1,8 +1,5 @@
 'use client';
 
-import EditCycleForm from '@/components/edit-cycle-form/edit-cycle-form';
-import FloatingButton from '@/components/floating-button/floating-button';
-import MyModal from '@/components/modal/modal';
 import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
 import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
 import { useGroup } from '@/store/group-provider';
@@ -25,8 +22,6 @@ export default function TrainerYearView() {
 
   const theme = useTheme();
   const [selectedGroup, setSelectedGroup] = useState({ ...group });
-  const [showEditCycleModal, setShowEditCycleModal] = useState(false);
-  const [editCycle, setEditCycle] = useState<Cycle | null>(null);
 
   const [sortedCycles, setSortedCycles] = useState<Cycle[]>([]);
   const [sliderProperties, setSliderProperties] = useState<
