@@ -93,7 +93,7 @@ export function handleAddExerciseToSupersetComponent(
           .map((p) => {
             if (p.field === 'volWorkSets') return undefined;
 
-            let attributeRange = method?.attributeRanges.find(
+            let attributeRange = method?.attributes.find(
               (ar) => ar.field === p.field
             );
             if (attributeRange) {
@@ -125,7 +125,7 @@ export function handleAddExerciseToSupersetComponent(
       id,
       exercise: exercise,
       periodized: false,
-      attributeRanges: component?.method?.attributeRanges || [],
+      attributeRanges: component?.method?.attributes || [],
       params: exercise?.defaultParams || [],
       sets: exercise?.defaultParams
         ? Array.from({ length: 3 }, (_, i) => ({

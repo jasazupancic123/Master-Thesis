@@ -7,7 +7,6 @@ import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Method } from '@/controller/method/type/method.type';
-import { AttributeRange } from '@/controller/attribute/type/attribute-range.entity';
 import { SubgroupInfo } from './subgroup-minimal.type';
 import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { CopiedFrom } from './copied-from.type';
@@ -50,7 +49,7 @@ export type TrainingExercise = IdEntity &
     params: Attribute[];
     sets: ExerciseSet[];
     periodized: boolean;
-    attributeRanges: AttributeRange[];
+    attributes: Attribute[];
 
     // mapped properties
     exercise?: Exercise;

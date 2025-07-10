@@ -15,7 +15,7 @@ export type Workload = TimestampEntity &
     status: SetStatus;
     plannedAt: Date;
     notes?: string;
-    isPersonalized: boolean;
+    isCustom: boolean;
   };
 
 export type WorkloadValue = {

@@ -1,10 +1,10 @@
 import { IdEntity } from '@/common/type/entity.type';
-import { AttributeRange } from '@/controller/attribute/type/attribute-range.entity';
+import { Attribute } from '@/controller/attribute/type/attribute.type';
 
 export interface Method extends IdEntity {
   name: string;
   targetId: string;
-  attributeRanges: AttributeRange[];
+  attributes: Attribute[];
   ability: string;
   intensity: string;
   recovery: string;
