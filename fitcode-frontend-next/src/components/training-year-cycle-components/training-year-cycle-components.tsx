@@ -11,6 +11,7 @@ import {
 import { useScreenSize } from '@/store/screen-size-provider';
 import { CommonService } from '@/common/service/common.service';
 import { Target } from '@/controller/target/type/target.type';
+import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
 
 const commonService = CommonService.instance;
 
@@ -26,16 +27,99 @@ export default function CycleComponents(props: CycleComponentsProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { setGroup, components, setDetectedChanges } = useGroup();
+  const { group, setGroup, components, setDetectedChanges } = useGroup();
 
   const parentComponents = components
     .filter((component) => component.parentId === null)
     .filter((component) => ![WARMUP_ID, COOLDOWN_ID].includes(component.id));
 
-  return (
-    <Box width="100%" display="flex" flexDirection="column" gap={3} mt={3}>
-      <Divider sx={{ p: 0, m: 0 }} />
+  const getComponentLevelColor = (
+    componentLevel: ComponentLevel | undefined
+  ) => {
+    if (!componentLevel) return undefined;
 
+    switch (componentLevel) {
+      case ComponentLevel.MAINTENANCE:
+        return '#FFA14E';
+      case ComponentLevel.DEVELOPMENT:
+        return '#A275F7';
+      case ComponentLevel.RECOVERY:
+        return '#76E36C';
+      default:
+        return undefined;
+    }
+  };
+
+  return (
+    <Box
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      gap={3}
+      mt={3}
+      position="relative"
+    >
+      <Box
+        width="100%"
+        sx={{
+          height: 22,
+          backgroundColor: theme.palette.background.paper,
+          position: 'absolute',
+        }}
+      />
+      <Box
+        width="88%"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          ml: '7.175%',
+          height: 22,
+          backgroundColor: theme.palette.background.paper,
+          position: 'relative',
+        }}
+      >
+        {sortedCycles.map((cycle, i) => {
+          const sliderPropety = sliderProperties[i];
+          if (!sliderPropety) return null;
+
+          // parse number from string
+          const width = sliderPropety.width;
+          const centerPosition = sliderPropety.centerPosition;
+
+          return (
+            <div
+              key={cycle.id}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                position: 'absolute',
+                left: centerPosition,
+                transform: 'translateX(-50%)',
+                width: width,
+                maxWidth: width,
+                gap: 4.5,
+              }}
+            >
+              <Typography
+                sx={{
+                  textAlign: 'center',
+                  fontSize: 12,
+                  fontWeight: 400,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                  color: theme.palette.text.primary,
+                  zIndex: 1000,
+                }}
+              >
+                {`${cycle.name}`}
+              </Typography>
+            </div>
+          );
+        })}
+      </Box>
       {parentComponents.toReversed().map((component) => {
         const IconComponent = commonService.navigation.getComponentIcon(
           component.name
@@ -71,7 +155,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 >
                   <IconComponent
                     sx={{
-                      fontSize: screenSize.isMobile ? 20 : 25,
+                      fontSize: screenSize.isMobile ? 15 : 25,
                     }}
                   />
                 </Box>
@@ -102,9 +186,9 @@ export default function CycleComponents(props: CycleComponentsProps) {
                     (st) => st.componentId === component.id
                   );
 
-                  const targetColor = component.targets?.find(
-                    (c) => c.id === selectedTarget?.targetId
-                  )?.color;
+                  const componentLevelColor = getComponentLevelColor(
+                    selectedTarget?.componentLevel
+                  );
 
                   return (
                     <div
@@ -122,27 +206,100 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         gap: 4.5,
                       }}
                     >
-                      <Typography
-                        sx={{
-                          textAlign: 'center',
-                          fontSize: 12,
-                          fontWeight: 400,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '100%',
-                          color: theme.palette.text.primary,
-                          zIndex: 1000,
-                        }}
-                      >
-                        {`${cycle.name}`}
-                      </Typography>
+                      {selectedTarget && (
+                        <SelectInput<ComponentLevel>
+                          label=""
+                          value={selectedTarget?.componentLevel || ''}
+                          icon={<></>}
+                          selectedItemSize={12}
+                          items={Object.values(ComponentLevel)}
+                          itemKey={undefined}
+                          itemName={undefined}
+                          selectPadding={'0'}
+                          maxWidth={'100%'}
+                          minWidth={60}
+                          setValue={(value) => {
+                            setDetectedChanges(true);
+
+                            if (value === 'None' || !value) {
+                              const newCycle: Cycle = {
+                                ...cycle,
+                                selectedTargets: cycle.selectedTargets.map(
+                                  (st) =>
+                                    st.componentId === component.id
+                                      ? {
+                                          ...st,
+                                          componentLevel: undefined,
+                                        }
+                                      : st
+                                ),
+                              };
+
+                              const newCycles = sortedCycles.map((c) =>
+                                c.id === cycle.id ? newCycle : c
+                              );
+
+                              setSortedCycles(newCycles);
+
+                              setGroup((prevGroup) => ({
+                                ...prevGroup,
+                                cycles: group.cycles.map((c) =>
+                                  c.id === cycle.id ? newCycle : c
+                                ),
+                              }));
+
+                              return;
+                            }
+
+                            const newSelectedTargets =
+                              cycle.selectedTargets.some(
+                                (st) => st.componentId === component.id
+                              )
+                                ? cycle.selectedTargets.map((st) =>
+                                    st.componentId === component.id
+                                      ? {
+                                          ...st,
+                                          componentLevel:
+                                            value as ComponentLevel,
+                                        }
+                                      : st
+                                  )
+                                : [
+                                    ...cycle.selectedTargets,
+                                    {
+                                      componentId: component.id,
+                                      targetId: selectedTarget.targetId,
+                                      componentLevel: value as ComponentLevel,
+                                    },
+                                  ];
+
+                            const newCycle: Cycle = {
+                              ...cycle,
+                              selectedTargets: newSelectedTargets,
+                            };
+
+                            const newCycles = sortedCycles.map((c) =>
+                              c.id === cycle.id ? newCycle : c
+                            );
+
+                            setSortedCycles(newCycles);
+
+                            setGroup((prevGroup) => ({
+                              ...prevGroup,
+                              cycles: group.cycles.map((c) =>
+                                c.id === cycle.id ? newCycle : c
+                              ),
+                            }));
+                          }}
+                        />
+                      )}
 
                       <Box
                         width="100%"
-                        height={5}
+                        height={5.5}
                         sx={{
-                          backgroundColor: targetColor,
+                          mt: 0.05,
+                          backgroundColor: componentLevelColor,
                           zIndex: 100000,
                           borderRadius: 2,
                         }}
@@ -158,7 +315,10 @@ export default function CycleComponents(props: CycleComponentsProps) {
                         itemName={'name'}
                         selectPadding={'0'}
                         maxWidth={'100%'}
-                        dissableMinWidth
+                        minWidth={60}
+                        sx={{
+                          mt: !selectedTarget ? 3 : 0,
+                        }}
                         setValue={(value) => {
                           setDetectedChanges(true);
 
@@ -175,9 +335,12 @@ export default function CycleComponents(props: CycleComponentsProps) {
                             );
 
                             setSortedCycles(newCycles);
+
                             setGroup((prevGroup) => ({
                               ...prevGroup,
-                              cycles: newCycles,
+                              cycles: group.cycles.map((c) =>
+                                c.id === cycle.id ? newCycle : c
+                              ),
                             }));
 
                             return;
@@ -218,9 +381,12 @@ export default function CycleComponents(props: CycleComponentsProps) {
                           );
 
                           setSortedCycles(newCycles);
+
                           setGroup((prevGroup) => ({
                             ...prevGroup,
-                            cycles: newCycles,
+                            cycles: group.cycles.map((c) =>
+                              c.id === cycle.id ? newCycle : c
+                            ),
                           }));
                         }}
                       />

@@ -102,10 +102,11 @@ export default function TrainingCard(props: TrainingCardProps) {
             variant="caption"
             sx={{
               mx: 1,
-              mt: 0.5,
-              fontSize: 12,
-              height: '17px',
+              fontSize: 10,
               color: theme.palette.background.lightText,
+              position: 'absolute',
+              top: -1,
+              left: 0,
             }}
           >
             {selectedPeriod === 'AM' ? 'Morning' : 'Afternoon'}
