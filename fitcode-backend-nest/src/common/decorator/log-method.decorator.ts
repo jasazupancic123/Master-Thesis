@@ -20,9 +20,8 @@ export function LogMethod(): MethodDecorator {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      const className = target.constructor.name;
       const methodName = propertyKey.toString();
-      const logger = new Logger(className);
+      const logger = new Logger(target.constructor.name);
 
       const argList = args
         .map((arg, i) => {
@@ -37,11 +36,11 @@ export function LogMethod(): MethodDecorator {
               value = '[Unserializable]';
             }
 
-          return `arg${i + 1}=${value}`;
+          return value;
         })
         .join(', ');
 
-      logger.log(`[${className}] ${methodName} called with: ${argList}`);
+      logger.log(`${methodName}(${argList})`);
       return await originalMethod.apply(this, args);
     };
 

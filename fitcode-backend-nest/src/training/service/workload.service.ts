@@ -1,15 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CollectionGroup, WriteBatch } from 'firebase-admin/firestore';
-import { FirestoreEntity } from '../../common/type/entity.type';
+import { Create, FirestoreEntity } from '../../common/type/entity.type';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
 import {
+  BatchWriteOperation,
+  CycleRef,
   ExerciseRef,
   GroupRef,
+  InstitutionRef,
+  TrainingComponentRef,
+  UserRef,
   WorkloadRef,
 } from '../../common/type/firestore.type';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
 import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
@@ -20,8 +24,15 @@ import { TimestampEntity } from '../../common/entity/timestamp.entity';
 import {
   CompletedWorkload,
   PrescribedWorkload,
+  WorkloadValue,
 } from '../entity/workload-value.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
+import {
+  CompletedTrainingComponent,
+  CompletedTrainingExercise,
+} from '../entity/completed-training.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingPlanService } from './training-plan.service';
 
 @Injectable()
 export class WorkloadService {
@@ -29,6 +40,7 @@ export class WorkloadService {
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
     private readonly repository: WorkloadRepository,
+    private readonly trainingPlanService: TrainingPlanService,
   ) {}
 
   getDoc(id: WorkloadRef) {
@@ -228,107 +240,98 @@ export class WorkloadService {
   }
 
   /**
-   * Creates training workload data for group members. It takes exercise
-   * meta, calculates individual values for each member and saves them to the
-   * correct training component exercise user data document.
+   * Creates workloads for provided user for training component
+   * with completed set data input. It loops through all prescribed
+   * values and finds corresponding input exercises and sets that
+   * are provided as completed.
    */
-  createForTraining(
-    batch: WriteBatch,
-    training: Training,
-    workloads: Workload[], // to calculate RMs
+  async createForTrainingComponent(
+    trainingComponent: TrainingComponent,
+    ref: InstitutionRef & CycleRef & TrainingComponentRef & UserRef,
+    input: CompletedTrainingExercise[],
   ) {
-    const membersMap: {
-      [userId: string]: {
-        exercises: (TrainingExercise & { componentId: string })[];
-        bodyweight: number;
-        history: Workload[];
-      };
-    } = {};
+    // get all exercises for their names in case of error
+    const allExercises = await this.trainingPlanService.getAllTrainingExercises(
+      [trainingComponent],
+    );
 
-    for (const userId of training.membersIds)
-      membersMap[userId] = {
-        exercises: [], // populated in the next loop
-        bodyweight:
-          training.wellness.find((m) => m.userId === userId)?.weight ?? 0,
-        history: workloads.filter((w) => w.userId === userId),
-      };
+    // find prescribed supersets (either from subgroup or main group)
+    const subgroup = trainingComponent.subgroups.find((s) =>
+      s.membersIds.includes(ref.uid),
+    );
 
-    for (const component of training.components) {
-      // workloads for main training group
-      for (const superset of component.supersets)
-        for (const exercise of superset.exercises)
-          for (const userId of training.membersIds)
-            membersMap[userId].exercises.push({
-              ...exercise,
-              componentId: component.id,
-            });
+    const prescribedSupersets = subgroup
+      ? subgroup.supersets
+      : trainingComponent.supersets;
 
-      // workloads for subgroups
-      for (const subgroup of component.subgroups)
-        for (const superset of subgroup.supersets)
-          for (const exercise of superset.exercises)
-            for (const userId of subgroup.membersIds)
-              membersMap[userId].exercises.push({
-                ...exercise,
-                componentId: component.id,
-              });
-    }
+    // TODO - fetch custom workloads in the future and map them to prescribedSupersets
 
-    // for each member, calculate individual values for exercise user data
-    for (const userId of Object.keys(membersMap)) {
-      const { exercises, bodyweight, history } = membersMap[userId];
+    const collection = this.repository.collection(ref);
+    const operations: BatchWriteOperation<Workload>[] = [];
 
-      for (const exercise of exercises) {
-        const workloads = history // filter workload history for selected user and exercise
-          .filter((e) => e.exerciseId === exercise.id);
+    prescribedSupersets.forEach(
+      ({ exercises: prescribedExercises }, supersetIndex) => {
+        prescribedExercises.forEach((prescribedExercise) => {
+          const exerciseName = allExercises.find(
+            (e) => e.id === prescribedExercise.id,
+          )?.name;
 
-        for (const { setNumber, paramValuesL: paramValues } of exercise.sets) {
-          // skip if workload is already personalized
-          const existing = workloads.find(
-            (w) =>
-              w.trainingId === training.id &&
-              w.exerciseId === exercise.id &&
-              w.setNumber === setNumber &&
-              w.userId === userId,
+          const completedExercise = input.find(
+            (e) =>
+              e.id === prescribedExercise.id &&
+              e.supersetIndex === supersetIndex,
           );
 
-          if (existing?.isCustom) continue;
-
-          const docRef = this.repository
-            .collection({ trainingId: training.id })
-            .doc(
-              this.repository.getKey({
-                trainingId: training.id,
-                componentId: exercise.componentId,
-                exerciseId: exercise.id,
-                setNumber,
-                userId,
-              }),
+          if (!completedExercise)
+            throw new BadRequestException(
+              `You have to complete prescribed exercise ${exerciseName} in superset ${supersetIndex + 1}`,
             );
 
-          const query = this.firebaseService.buildCreateQuery<Workload>(
-            {
-              groupId: training.groupId,
-              cycleId: training.cycleId,
-              userId,
-              trainingId: training.id,
-              componentId: exercise.componentId,
-              exerciseId: exercise.id,
-              setNumber,
-              status: SetStatus.NOT_STARTED,
-              plannedAt: training.from,
-              notes: null,
-              isCustom: false,
-              ...this.parsePrescribedParamValues(paramValues),
-              ...this.calculateIntValues(paramValues, bodyweight, workloads),
-            },
-            { timestamps: true },
-          );
+          prescribedExercise.sets.forEach((prescribedSet) => {
+            const completedSet = completedExercise.sets.find(
+              (set) => set.setNumber === prescribedSet.setNumber,
+            );
 
-          batch.set(docRef, query);
-        }
-      }
-    }
+            if (!completedSet) return; // user can skip sets
+            if (
+              !this.trainingPlanService.isEqualSet(prescribedSet, completedSet)
+            )
+              throw new BadRequestException(
+                `Completed set ${completedSet.setNumber} for ${exerciseName} does not match prescribed set`,
+              );
+
+            const workloadValue = this.getWorkloadValue(
+              prescribedSet,
+              completedSet,
+            );
+
+            const workload: Create<Workload> = {
+              institutionId: ref.institutionId,
+              groupId: ref.groupId,
+              cycleId: ref.cycleId,
+              userId: ref.uid,
+              trainingId: ref.trainingId,
+              componentId: ref.componentId,
+              exerciseId: prescribedExercise.id,
+              setNumber: prescribedSet.setNumber,
+              status: this.getStatus(workloadValue),
+              notes: '',
+              plannedAt: trainingComponent.from,
+              isCustom: false,
+              ...workloadValue,
+            };
+
+            operations.push({
+              operation: 'set',
+              ref: collection.doc(),
+              data: this.firebaseService.buildCreateQuery(workload),
+            });
+          });
+        });
+      },
+    );
+
+    return await this.firebaseService.paginateBatchWrites(operations);
   }
 
   createForCustomAthleteWorkloads(
@@ -385,45 +388,6 @@ export class WorkloadService {
     }
   }
 
-  async updateByTrainingComponent(
-    batch: WriteBatch,
-    ref: Omit<WorkloadRef, 'exerciseId' | 'setNumber'>,
-    workloads: Workload[],
-  ) {
-    for (const workload of workloads) {
-      const docRef = this.repository
-        .collection({ trainingId: ref.trainingId })
-        .doc(
-          this.repository.getKey({
-            trainingId: ref.trainingId,
-            componentId: ref.componentId,
-            exerciseId: workload.exerciseId,
-            setNumber: workload.setNumber,
-            userId: ref.userId,
-          }),
-        );
-
-      const query = this.firebaseService.buildUpdateQuery<Workload>({
-        status: this.getStatus(workload),
-        notes: workload.notes || null,
-        volWork1ValueL: workload.volWork1ValueL || null,
-        volWork1ValueR: workload.volWork1ValueR || null,
-        volWork2ValueL: workload.volWork2ValueL || null,
-        volWork2ValueR: workload.volWork2ValueR || null,
-        volRecValueL: workload.volRecValueL || null,
-        volRecValueR: workload.volRecValueR || null,
-        intWork1ValueL: workload.intWork1ValueL || null,
-        intWork1ValueR: workload.intWork1ValueR || null,
-        intWork2ValueL: workload.intWork2ValueL || null,
-        intWork2ValueR: workload.intWork2ValueR || null,
-        intRecValueL: workload.intRecValueL || null,
-        intRecValueR: workload.intRecValueR || null,
-      });
-
-      batch.set(docRef, query);
-    }
-  }
-
   async deleteWorkloads(workloads: Workload[]): Promise<void> {
     const refs = workloads.map((w) => ({
       trainingId: w.trainingId,
@@ -436,35 +400,35 @@ export class WorkloadService {
     this.repository.deleteDocs(refs);
   }
 
-  getStatus(workload: Workload): SetStatus {
+  getStatus(workloadValue: WorkloadValue): SetStatus {
     const volWork1Status = this.getStatusByField(
-      workload.prescribedVolWork1ValueL,
-      workload.volWork1ValueL,
+      workloadValue.prescribedVolWork1ValueL,
+      workloadValue.volWork1ValueL,
     );
 
     const volWork2Status = this.getStatusByField(
-      workload.prescribedVolWork2ValueL,
-      workload.volWork2ValueL,
+      workloadValue.prescribedVolWork2ValueL,
+      workloadValue.volWork2ValueL,
     );
 
     const volRecStatus = this.getStatusByField(
-      workload.prescribedVolRecValueL,
-      workload.volRecValueL,
+      workloadValue.prescribedVolRecValueL,
+      workloadValue.volRecValueL,
     );
 
     const intWork1Status = this.getStatusByField(
-      workload.prescribedIntWork1ValueL,
-      workload.intWork1ValueL,
+      workloadValue.prescribedIntWork1ValueL,
+      workloadValue.intWork1ValueL,
     );
 
     const intWork2Status = this.getStatusByField(
-      workload.prescribedIntWork2ValueL,
-      workload.intWork2ValueL,
+      workloadValue.prescribedIntWork2ValueL,
+      workloadValue.intWork2ValueL,
     );
 
     const intRecStatus = this.getStatusByField(
-      workload.prescribedIntRecValueL,
-      workload.intRecValueL,
+      workloadValue.prescribedIntRecValueL,
+      workloadValue.intRecValueL,
     );
 
     const fieldStatus = [
@@ -510,18 +474,18 @@ export class WorkloadService {
 
   private getStatusByField(
     prescribedValue?: number,
-    performedValue?: number,
+    completedValue?: number,
   ): SetStatus {
     if (prescribedValue === undefined || prescribedValue === null)
       return SetStatus.IGNORED; // field not prescribed, ignore
 
-    if (performedValue === undefined || performedValue === null)
+    if (completedValue === undefined || completedValue === null)
       return SetStatus.NOT_STARTED; // field prescribed, but not performed
 
     // TODO - currently, this is comparing STRING values, not numbers, so it will be wrong
-    if (performedValue < prescribedValue) return SetStatus.PARTIAL; // partial set
-    if (performedValue === prescribedValue) return SetStatus.COMPLETED; // completed set
-    if (performedValue > prescribedValue) return SetStatus.OVER; // over-completed set
+    if (completedValue < prescribedValue) return SetStatus.PARTIAL; // partial set
+    if (completedValue === prescribedValue) return SetStatus.COMPLETED; // completed set
+    if (completedValue > prescribedValue) return SetStatus.OVER; // over-completed set
   }
 
   private calculateRM(n: number, data: Workload[]) {
@@ -552,11 +516,21 @@ export class WorkloadService {
     return this.commonService.number.rm(weight, reps <= 0 ? 1 : reps)(n);
   }
 
+  getWorkloadValue(
+    prescribedSet: ExerciseSet,
+    completedSet: ExerciseSet,
+  ): WorkloadValue {
+    return {
+      ...this.getPrescribedWorkload(prescribedSet),
+      ...this.getCompletedWorkload(completedSet),
+    };
+  }
+
   /**
    * Parses values that athlete completed, so it's assumed that `paramValues`
    * are populated with correct values
    */
-  parseCompletedParamValues(completedSet: ExerciseSet): CompletedWorkload {
+  getCompletedWorkload(completedSet: ExerciseSet): CompletedWorkload {
     const { paramValuesL, paramValuesR } = completedSet;
 
     const volWork1ValueL = paramValuesL.find(
@@ -623,31 +597,40 @@ export class WorkloadService {
     };
   }
 
-  parsePrescribedParamValues(
-    paramValues: AttributeValue[],
-  ): PrescribedWorkload {
-    const volWork1 = paramValues.find((p) => p.field === ParamType.VolWork1);
-    const volWork2 = paramValues.find((p) => p.field === ParamType.VolWork2);
-    const volRec = paramValues.find((p) => p.field === ParamType.VolRec1);
-    const intWork1 = paramValues.find((p) => p.field === ParamType.IntWork1);
-    const intWork2 = paramValues.find((p) => p.field === ParamType.IntWork2);
-    const intRec = paramValues.find((p) => p.field === ParamType.IntRec1);
+  getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
+    const { paramValuesL, paramValuesR } = prescribedSet;
+    const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
+    const volWork1R = paramValuesL.find((p) => p.field === ParamType.VolWork1);
+    const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
+    const volWork2R = paramValuesR.find((p) => p.field === ParamType.VolWork2);
+    const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
+    const volRecR = paramValuesR.find((p) => p.field === ParamType.VolRec1);
+    const intWork1L = paramValuesL.find((p) => p.field === ParamType.IntWork1);
+    const intWork1R = paramValuesR.find((p) => p.field === ParamType.IntWork1);
+    const intWork2L = paramValuesL.find((p) => p.field === ParamType.IntWork2);
+    const intWork2R = paramValuesR.find((p) => p.field === ParamType.IntWork2);
+    const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
+    const intRecR = paramValuesR.find((p) => p.field === ParamType.IntRec1);
 
     return {
-      volWork1Type: this.parseSelected<VolType>(volWork1),
-      prescribedVolWork1ValueL: this.parseValue(volWork1) as number,
-      prescribedVolWork1ValueR: this.parseValue(volWork1) as number,
-      volWork2Type: this.parseSelected<VolType>(volWork2),
-      prescribedVolWork2ValueL: this.parseValue(volWork2) as number,
-      prescribedVolWork2ValueR: this.parseValue(volWork2) as number,
-      volRecType: this.parseSelected<VolType>(volRec),
-      prescribedVolRecValueL: this.parseValue(volRec) as number,
-      prescribedVolRecValueR: this.parseValue(volRec) as number,
-      intWork1Type: this.parseSelected<IntType>(intWork1),
-      intWork2Type: this.parseSelected<IntType>(intWork2),
-      intRecType: this.parseSelected<IntType>(intRec),
-      prescribedIntRecValueL: this.parseValue(intRec),
-      prescribedIntRecValueR: this.parseValue(intRec),
+      volWork1Type: this.parseSelected<VolType>(volWork1L),
+      prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
+      prescribedVolWork1ValueR: this.parseValue(volWork1R) as number,
+      volWork2Type: this.parseSelected<VolType>(volWork2L),
+      prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
+      prescribedVolWork2ValueR: this.parseValue(volWork2R) as number,
+      volRecType: this.parseSelected<VolType>(volRecL),
+      prescribedVolRecValueL: this.parseValue(volRecL) as number,
+      prescribedVolRecValueR: this.parseValue(volRecR) as number,
+      intWork1Type: this.parseSelected<IntType>(intWork1L),
+      prescribedIntWork1ValueL: this.parseValue(intWork1L),
+      prescribedIntWork1ValueR: this.parseValue(intWork1R),
+      intWork2Type: this.parseSelected<IntType>(intWork2L),
+      prescribedIntWork2ValueL: this.parseValue(intWork2L),
+      prescribedIntWork2ValueR: this.parseValue(intWork2R),
+      intRecType: this.parseSelected<IntType>(intRecL),
+      prescribedIntRecValueL: this.parseValue(intRecL),
+      prescribedIntRecValueR: this.parseValue(intRecR),
     };
   }
 

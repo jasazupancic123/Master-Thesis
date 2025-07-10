@@ -75,7 +75,6 @@ export class TrainingPlanService {
     const components = training.components;
     components.unshift(training.warmup);
     components.push(training.cooldown);
-
     return components;
   }
 
@@ -149,12 +148,11 @@ export class TrainingPlanService {
     training: Training,
     componentId: string,
   ): TrainingComponent {
-    const foundComponent = training.components.find(
-      (c) => c.id === componentId,
-    );
+    const trainingComponents = this.getTrainingComponents(training);
+    const foundComponent = trainingComponents.find((c) => c.id === componentId);
 
     if (!foundComponent)
-      throw new NotFoundException(`Component with id ${componentId} not found`);
+      throw new NotFoundException(`Training component not found`);
 
     return foundComponent;
   }
@@ -200,6 +198,7 @@ export class TrainingPlanService {
           });
         }
       }
+
       for (const subgroup of component.subgroups) {
         for (const superset of subgroup.supersets) {
           for (const exercise of superset.exercises) {
@@ -293,6 +292,7 @@ export class TrainingPlanService {
       const intensitiesL = exercise.sets
         .flatMap((set) => set.paramValuesL)
         .filter((p) => p.field === ParamType.IntWork1);
+
       const intensitiesR = exercise.sets
         .flatMap((set) => set.paramValuesR)
         .filter((p) => p.field === ParamType.IntWork1);
@@ -307,6 +307,7 @@ export class TrainingPlanService {
       const volumesL = exercise.sets
         .flatMap((set) => set.paramValuesL)
         .filter((p) => p.field === ParamType.VolWork1);
+
       const volumesR = exercise.sets
         .flatMap((set) => set.paramValuesR)
         .filter((p) => p.field === ParamType.VolWork1);
@@ -325,7 +326,8 @@ export class TrainingPlanService {
     return completedStats;
   }
 
-  isTrainingCompleted(userId: string, trainingComponents: TrainingComponent[]) {
+  isTrainingCompleted(training: Training, userId: string) {
+    const trainingComponents = this.getTrainingComponents(training);
     return trainingComponents.every((c) =>
       c.completedMembersIds.includes(userId),
     );

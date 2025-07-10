@@ -283,7 +283,7 @@ describe('Periodization functions (e2e)', () => {
     );
   });
 
-  /* describe('Periodize transaction', () => {
+  describe('Periodize transaction', () => {
     const NUM_USERS = 19; // +1 default global athlete
     const NUM_TRAININGS = 49; // + 1 base training
 
@@ -334,18 +334,6 @@ describe('Periodization functions (e2e)', () => {
       const foundTrainings = await trainingRepository.getDocs();
       expect(foundTrainings).toHaveLength(NUM_TRAININGS + 1); // one base training
 
-      // NOTE - takes too long
-      // const allWorkloadOperations = foundTrainings.flatMap((t) =>
-      //   createWorkloadsForTraining(firebase, t),
-      // );
-
-      // await firebase.paginateBatchWrites(allWorkloadOperations);
-
-      // const foundWorkloads = await workloadRepository.getAllDocs();
-      // expect(foundWorkloads).toHaveLength(
-      //   (NUM_TRAININGS + 1) * (NUM_USERS + 1) * 3 * 3,
-      // ); // 3 exercises, 3 sets
-
       const response = await request(app.getHttpServer())
         .post(`/training/periodize/trainings`)
         .set('Authorization', `Bearer ${institution.trainers[0].token}`)
@@ -359,7 +347,7 @@ describe('Periodization functions (e2e)', () => {
       expect(response.status).toBe(201);
       expect(response.body).toHaveLength(50);
     });
-  }); */
+  });
 });
 
 function getBaseIntVolValuesFromSet(set: ExerciseSet) {
