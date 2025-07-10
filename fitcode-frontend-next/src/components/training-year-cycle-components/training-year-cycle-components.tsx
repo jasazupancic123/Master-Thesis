@@ -241,12 +241,25 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                               setSortedCycles(newCycles);
 
-                              setGroup((prevGroup) => ({
-                                ...prevGroup,
-                                cycles: group.cycles.map((c) =>
-                                  c.id === cycle.id ? newCycle : c
-                                ),
-                              }));
+                              setGroup((prevGroup) => {
+                                const newStateCycles = prevGroup.cycles.map(
+                                  (c) =>
+                                    newCycles.find((nc) => nc.id === c.id) || c
+                                );
+
+                                newCycles.forEach((nc) => {
+                                  if (
+                                    !newStateCycles.some((c) => c.id === nc.id)
+                                  ) {
+                                    newStateCycles.push(nc);
+                                  }
+                                });
+
+                                return {
+                                  ...prevGroup,
+                                  cycles: newStateCycles,
+                                };
+                              });
 
                               return;
                             }
@@ -284,12 +297,25 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                             setSortedCycles(newCycles);
 
-                            setGroup((prevGroup) => ({
-                              ...prevGroup,
-                              cycles: group.cycles.map((c) =>
-                                c.id === cycle.id ? newCycle : c
-                              ),
-                            }));
+                            setGroup((prevGroup) => {
+                              const newStateCycles = prevGroup.cycles.map(
+                                (c) =>
+                                  newCycles.find((nc) => nc.id === c.id) || c
+                              );
+
+                              newCycles.forEach((nc) => {
+                                if (
+                                  !newStateCycles.some((c) => c.id === nc.id)
+                                ) {
+                                  newStateCycles.push(nc);
+                                }
+                              });
+
+                              return {
+                                ...prevGroup,
+                                cycles: newStateCycles,
+                              };
+                            });
                           }}
                         />
                       )}
@@ -336,12 +362,25 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                             setSortedCycles(newCycles);
 
-                            setGroup((prevGroup) => ({
-                              ...prevGroup,
-                              cycles: group.cycles.map((c) =>
-                                c.id === cycle.id ? newCycle : c
-                              ),
-                            }));
+                            setGroup((prevGroup) => {
+                              const newStateCycles = prevGroup.cycles.map(
+                                (c) =>
+                                  newCycles.find((nc) => nc.id === c.id) || c
+                              );
+
+                              newCycles.forEach((nc) => {
+                                if (
+                                  !newStateCycles.some((c) => c.id === nc.id)
+                                ) {
+                                  newStateCycles.push(nc);
+                                }
+                              });
+
+                              return {
+                                ...prevGroup,
+                                cycles: newStateCycles,
+                              };
+                            });
 
                             return;
                           }
@@ -382,12 +421,22 @@ export default function CycleComponents(props: CycleComponentsProps) {
 
                           setSortedCycles(newCycles);
 
-                          setGroup((prevGroup) => ({
-                            ...prevGroup,
-                            cycles: group.cycles.map((c) =>
-                              c.id === cycle.id ? newCycle : c
-                            ),
-                          }));
+                          setGroup((prevGroup) => {
+                            const newStateCycles = prevGroup.cycles.map(
+                              (c) => newCycles.find((nc) => nc.id === c.id) || c
+                            );
+
+                            newCycles.forEach((nc) => {
+                              if (!newStateCycles.some((c) => c.id === nc.id)) {
+                                newStateCycles.push(nc);
+                              }
+                            });
+
+                            return {
+                              ...prevGroup,
+                              cycles: newStateCycles,
+                            };
+                          });
                         }}
                       />
                     </div>
