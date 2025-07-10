@@ -62,7 +62,6 @@ export default function GroupDateFilterButtonGroup(
         <>
           <div
             style={{
-              width: '33%',
               position: 'fixed',
               top: 3,
               left: 5,

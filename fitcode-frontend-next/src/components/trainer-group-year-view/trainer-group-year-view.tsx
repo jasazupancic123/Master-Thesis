@@ -12,9 +12,10 @@ import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { useScreenSize } from '@/store/screen-size-provider';
-import { IconButton } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
 import Save from '@mui/icons-material/Save';
 import { handleSaveGroup } from '../../app/groups/[group_id]/state';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 export default function TrainerYearView() {
   const screenSize = useScreenSize();
@@ -27,21 +28,20 @@ export default function TrainerYearView() {
   const [showEditCycleModal, setShowEditCycleModal] = useState(false);
   const [editCycle, setEditCycle] = useState<Cycle | null>(null);
 
-  function handleDeleteCycle() {
-    if (!editCycle || !selectedGroup) return;
-
-    const updatedCycles = [...selectedGroup.cycles].filter(
-      (cycle) => cycle.id !== editCycle.id
-    );
-
-    if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
-    setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
-    setEditCycle(null);
-    setDetectedChanges(true);
-  }
+  const [sortedCycles, setSortedCycles] = useState<Cycle[]>([]);
+  const [sliderProperties, setSliderProperties] = useState<
+    { width: string; centerPosition: string }[]
+  >([]);
 
   return (
-    <>
+    <Box
+      sx={{
+        backgroundColor: theme.palette.background.default,
+        width: '100%',
+        maxWidth: MAX_WIDTH,
+        mx: 'auto',
+      }}
+    >
       {screenSize.isSmallerThanLaptop ? (
         <IconButton
           onClick={() =>
@@ -70,21 +70,36 @@ export default function TrainerYearView() {
           />
         </IconButton>
       ) : (
-        <FloatingButton
-          label="Save group"
-          onClick={() =>
-            handleSaveGroup(
-              selectedGroup,
-              setSelectedGroup,
-              cycle,
-              setCycle,
-              setDetectedChanges,
-              token,
-              router,
-              setGroup
-            )
-          }
-        />
+        <Box
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{
+            position: 'absolute',
+            right: screenSize.isSmallerThanLaptop ? 2 : 10,
+            top: 11,
+            zIndex: 1300,
+          }}
+        >
+          <Tooltip title="Save group" placement="bottom" sx={{ mx: 1 }}>
+            <IconButton
+              sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
+              onClick={() =>
+                handleSaveGroup(
+                  selectedGroup,
+                  setSelectedGroup,
+                  cycle,
+                  setCycle,
+                  setDetectedChanges,
+                  token,
+                  router,
+                  setGroup
+                )
+              }
+            >
+              <Save fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       )}
 
       <Box
@@ -94,7 +109,7 @@ export default function TrainerYearView() {
         justifyContent="center"
         width="100%"
         maxWidth="100%"
-        mb={3}
+        pb={10}
         sx={{ overflowX: 'hidden' }}
       >
         <Box
@@ -103,62 +118,25 @@ export default function TrainerYearView() {
           display="flex"
           flexDirection="column"
           alignItems="center"
-          minHeight={165}
-          sx={{
-            backgroundColor: theme.palette.background.paper,
-            borderBottomLeftRadius: 20,
-            borderBottomRightRadius: 20,
-            '& > :first-of-type': {
-              marginTop: 0,
-              paddingTop: 0,
-            },
-          }}
         >
           <MultiCycleSliderLayout
             selectedGroup={selectedGroup}
             setSelectedGroup={setSelectedGroup}
+            sortedCycles={sortedCycles}
+            setSortedCycles={setSortedCycles}
+            sliderProperties={sliderProperties}
+            setSliderProperties={setSliderProperties}
           />
         </Box>
 
-        <Box
-          width="100%"
-          maxWidth="100%"
-          sx={{
-            overflowX: 'hidden', // Prevents unexpected expansion
-          }}
-        >
+        <Box width="100%" maxWidth="100%">
           <CycleComponents
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            setEditModal={setShowEditCycleModal}
-            setEditCycle={setEditCycle}
+            sortedCycles={sortedCycles}
+            setSortedCycles={setSortedCycles}
+            sliderProperties={sliderProperties}
           />
         </Box>
       </Box>
-
-      {editCycle && (
-        <MyModal
-          isOpen={showEditCycleModal}
-          setIsOpen={(open) => setShowEditCycleModal(open)}
-          onCancel={() => setShowEditCycleModal(false)}
-          cancelText="Close"
-          onConfirm={() => {
-            const newCycles = selectedGroup.cycles.map((c) =>
-              c.id === editCycle.id ? { ...editCycle } : c
-            );
-            setSelectedGroup({ ...selectedGroup, cycles: newCycles });
-            setDetectedChanges(true);
-            setShowEditCycleModal(false);
-            setEditCycle(null);
-          }}
-        >
-          <EditCycleForm
-            selectedCycle={editCycle}
-            setSelectedCycle={setEditCycle}
-            handleDeleteCycle={handleDeleteCycle}
-          />
-        </MyModal>
-      )}
-    </>
+    </Box>
   );
 }

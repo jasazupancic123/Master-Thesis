@@ -1,249 +1,404 @@
 import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/store/group-provider';
-import { Component } from '@/controller/component/type/component.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
-import { Box, Typography } from '@mui/material';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import { Box, Divider, Typography } from '@mui/material';
 import SelectInput from '../select-input/select-input';
-import CycleComponentsSelect from '../training-year-cycle-components-select/training-year-cycle-components-select';
 import { useTheme } from '@mui/material';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { CommonService } from '@/common/service/common.service';
+import { Target } from '@/controller/target/type/target.type';
+import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
+
+const commonService = CommonService.instance;
 
 interface CycleComponentsProps {
-  selectedGroup: Group;
-  setSelectedGroup: SetState<Group>;
-  setEditModal: SetState<boolean>;
-  setEditCycle: React.Dispatch<React.SetStateAction<Cycle | null>>;
+  sortedCycles: Cycle[];
+  setSortedCycles: SetState<Cycle[]>;
+  sliderProperties: { width: string; centerPosition: string }[];
 }
 
 export default function CycleComponents(props: CycleComponentsProps) {
-  const { selectedGroup, setSelectedGroup, setEditCycle, setEditModal } = props;
+  const { sortedCycles, setSortedCycles, sliderProperties } = props;
+
   const theme = useTheme();
-  const { components, setDetectedChanges } = useGroup();
+  const screenSize = useScreenSize();
+
+  const { group, setGroup, components, setDetectedChanges } = useGroup();
 
   const parentComponents = components
     .filter((component) => component.parentId === null)
     .filter((component) => ![WARMUP_ID, COOLDOWN_ID].includes(component.id));
 
+  const getComponentLevelColor = (
+    componentLevel: ComponentLevel | undefined
+  ) => {
+    if (!componentLevel) return undefined;
+
+    switch (componentLevel) {
+      case ComponentLevel.MAINTENANCE:
+        return '#FFA14E';
+      case ComponentLevel.DEVELOPMENT:
+        return '#A275F7';
+      case ComponentLevel.RECOVERY:
+        return '#76E36C';
+      default:
+        return undefined;
+    }
+  };
+
   return (
     <Box
-      display="flex"
       width="100%"
-      maxWidth="100%"
-      mt={2}
-      gap={1}
-      sx={{
-        overflowX: 'auto',
-        whiteSpace: 'nowrap',
-        minWidth: 0,
-        flexWrap: 'nowrap',
-      }}
+      display="flex"
+      flexDirection="column"
+      gap={3}
+      mt={3}
+      position="relative"
     >
-      {selectedGroup.cycles
-        .sort((a, b) => dayjs(a.from).unix() - dayjs(b.from).unix())
-        .map((cycle) => (
-          <Box
-            key={cycle.id}
-            display="flex"
-            flexDirection="column"
-            width={200}
-            sx={{
-              minWidth: '200px',
-              maxWidth: '200px',
-              flexShrink: 0,
-            }}
-          >
-            {/*Header*/}
-            <Box
-              key="header"
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              alignItems="center"
-              bgcolor={theme.palette.primary.main}
-              sx={{
-                borderTopLeftRadius: 10,
-                borderTopRightRadius: 10,
-                cursor: 'pointer',
-              }}
-              py={1}
-              onClick={() => {
-                setEditModal(true);
-                setEditCycle(cycle);
+      <Box
+        width="100%"
+        sx={{
+          height: 22,
+          backgroundColor: theme.palette.background.paper,
+          position: 'absolute',
+        }}
+      />
+      <Box
+        width="88%"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          ml: '7.175%',
+          height: 22,
+          backgroundColor: theme.palette.background.paper,
+          position: 'relative',
+        }}
+      >
+        {sortedCycles.map((cycle, i) => {
+          const sliderPropety = sliderProperties[i];
+          if (!sliderPropety) return null;
+
+          // parse number from string
+          const width = sliderPropety.width;
+          const centerPosition = sliderPropety.centerPosition;
+
+          return (
+            <div
+              key={cycle.id}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                position: 'absolute',
+                left: centerPosition,
+                transform: 'translateX(-50%)',
+                width: width,
+                maxWidth: width,
+                gap: 4.5,
               }}
             >
               <Typography
-                variant="body1"
                 sx={{
-                  color: 'background.paper',
-                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  fontSize: 12,
+                  fontWeight: 400,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   maxWidth: '100%',
-                  display: 'block',
+                  color: theme.palette.text.primary,
+                  zIndex: 1000,
                 }}
               >
-                {cycle.name.toUpperCase()}
+                {`${cycle.name}`}
               </Typography>
+            </div>
+          );
+        })}
+      </Box>
+      {parentComponents.toReversed().map((component) => {
+        const IconComponent = commonService.navigation.getComponentIcon(
+          component.name
+        );
 
-              <Typography variant="body2" sx={{ color: 'background.paper' }}>
-                {dayjs(cycle.from).format('DD. MMM.').toLowerCase()} -{' '}
-                {dayjs(cycle.to).format('DD. MMM.').toLowerCase()}
-              </Typography>
-            </Box>
-
-            {/*Components*/}
+        return (
+          <>
             <Box
-              key="components"
               display="flex"
-              flexDirection="column"
-              gap={1}
-              minHeight={275}
               width="100%"
-              bgcolor="background.paper"
               sx={{
-                p: 0,
-                px: 1,
-                pt: 2,
-                borderBottomLeftRadius: 10,
-                borderBottomRightRadius: 10,
-                overflowY: 'auto',
+                alignItems: 'center',
               }}
-              alignItems="center"
             >
-              {cycle.selectedTargets.map((selectedTarget, i) => {
-                const { componentId, targetId } = selectedTarget;
-
-                const component = components.find(
-                  (component) => component.id === componentId
-                );
-
-                if (!component) return <></>;
-
-                const target = component.targets?.find(
-                  (target) => target.id === targetId
-                );
-
-                return (
-                  <CycleComponentsSelect
-                    key={i}
-                    label={component.name}
-                    selectedValue={target?.name || ''}
-                    component={component}
-                    setValue={(targetId) => {
-                      setDetectedChanges(true);
-
-                      if (targetId === 'Remove') {
-                        const newCycle: Cycle = {
-                          ...cycle,
-                          selectedTargets: cycle.selectedTargets.filter(
-                            (st) => st.componentId !== component.id
-                          ),
-                        };
-
-                        const newCycles = selectedGroup.cycles.map((c) =>
-                          c.id === cycle.id ? newCycle : c
-                        );
-                        setSelectedGroup({
-                          ...selectedGroup,
-                          cycles: newCycles,
-                        });
-                        return;
-                      }
-
-                      const newTarget = component.targets?.find(
-                        (c) => c.id === targetId
-                      );
-
-                      if (!newTarget) return;
-
-                      const newSelectedTargets = cycle.selectedTargets.some(
-                        (st) => st.componentId === component.id
-                      )
-                        ? cycle.selectedTargets.map((st) =>
-                            st.componentId === component.id
-                              ? {
-                                  componentId: component.id,
-                                  targetId: newTarget.id,
-                                }
-                              : st
-                          )
-                        : [
-                            ...cycle.selectedTargets,
-                            {
-                              componentId: component.id,
-                              targetId: newTarget.id,
-                            },
-                          ];
-
-                      const newCycle: Cycle = {
-                        ...cycle,
-                        selectedTargets: newSelectedTargets,
-                      };
-
-                      const newCycles = selectedGroup.cycles.map((c) =>
-                        c.id === cycle.id ? newCycle : c
-                      );
-                      setSelectedGroup({ ...selectedGroup, cycles: newCycles });
+              <Box
+                width="7.25%"
+                display="flex"
+                sx={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Box
+                  display="flex"
+                  sx={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: theme.palette.background.light,
+                    p: 1,
+                    px: 0.65,
+                    borderRadius: 1,
+                  }}
+                >
+                  <IconComponent
+                    sx={{
+                      fontSize: screenSize.isMobile ? 15 : 25,
                     }}
                   />
-                );
-              })}
+                </Box>
+              </Box>
+              <Box
+                width="87.9%"
+                height={4}
+                sx={{
+                  borderRadius: 2,
+                  backgroundColor: theme.palette.text.primary,
+                  position: 'relative',
+                }}
+              >
+                {sortedCycles.map((cycle, i) => {
+                  const sliderPropety = sliderProperties[i];
+                  if (!sliderPropety) return null;
 
-              {cycle.selectedTargets.length < 4 && (
-                <SelectInput<Component>
-                  key="add-component"
-                  label={'Select component'}
-                  icon={null}
-                  value={''}
-                  items={parentComponents}
-                  disableInputLabel={true}
-                  itemKey="id"
-                  itemName="name"
-                  sx={{ width: '90%' }}
-                  setValue={(value) => {
-                    setDetectedChanges(true);
+                  // parse number from string
+                  let widthNumber = parseFloat(sliderPropety.width);
+                  if (isNaN(widthNumber)) return null;
 
-                    const component = components.find((c) => c.id === value);
-                    if (!component) return;
+                  widthNumber += 0.5; // Add 0.5% for border radius
+                  const width = `${widthNumber}%`;
 
-                    if (
-                      cycle.selectedTargets.some(
-                        (st) => st.componentId === component.id
-                      )
-                    )
-                      return toast.error('Component already added');
+                  const centerPosition = sliderPropety.centerPosition;
 
-                    const newSelectedTargets = [
-                      ...cycle.selectedTargets,
-                      { componentId: component.id, targetId: '' },
-                    ];
+                  const selectedTarget = cycle.selectedTargets.find(
+                    (st) => st.componentId === component.id
+                  );
 
-                    const newCycle: Cycle = {
-                      ...cycle,
-                      selectedTargets: newSelectedTargets,
-                    };
+                  const componentLevelColor = getComponentLevelColor(
+                    selectedTarget?.componentLevel
+                  );
 
-                    const newCycles = selectedGroup.cycles.map((c) =>
-                      c.id === cycle.id ? newCycle : c
-                    );
+                  return (
+                    <div
+                      key={cycle.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        position: 'absolute',
+                        left: centerPosition,
+                        top: -23,
+                        transform: 'translateX(-50%)',
+                        width: width,
+                        maxWidth: width,
+                        gap: 4.5,
+                      }}
+                    >
+                      {selectedTarget && (
+                        <SelectInput<ComponentLevel>
+                          label=""
+                          value={selectedTarget?.componentLevel || ''}
+                          icon={<></>}
+                          selectedItemSize={12}
+                          items={Object.values(ComponentLevel)}
+                          itemKey={undefined}
+                          itemName={undefined}
+                          selectPadding={'0'}
+                          maxWidth={'100%'}
+                          minWidth={60}
+                          setValue={(value) => {
+                            setDetectedChanges(true);
 
-                    setSelectedGroup({
-                      ...selectedGroup,
-                      cycles: newCycles,
-                    });
-                  }}
-                />
-              )}
+                            if (value === 'None' || !value) {
+                              const newCycle: Cycle = {
+                                ...cycle,
+                                selectedTargets: cycle.selectedTargets.map(
+                                  (st) =>
+                                    st.componentId === component.id
+                                      ? {
+                                          ...st,
+                                          componentLevel: undefined,
+                                        }
+                                      : st
+                                ),
+                              };
+
+                              const newCycles = sortedCycles.map((c) =>
+                                c.id === cycle.id ? newCycle : c
+                              );
+
+                              setSortedCycles(newCycles);
+
+                              setGroup((prevGroup) => ({
+                                ...prevGroup,
+                                cycles: group.cycles.map((c) =>
+                                  c.id === cycle.id ? newCycle : c
+                                ),
+                              }));
+
+                              return;
+                            }
+
+                            const newSelectedTargets =
+                              cycle.selectedTargets.some(
+                                (st) => st.componentId === component.id
+                              )
+                                ? cycle.selectedTargets.map((st) =>
+                                    st.componentId === component.id
+                                      ? {
+                                          ...st,
+                                          componentLevel:
+                                            value as ComponentLevel,
+                                        }
+                                      : st
+                                  )
+                                : [
+                                    ...cycle.selectedTargets,
+                                    {
+                                      componentId: component.id,
+                                      targetId: selectedTarget.targetId,
+                                      componentLevel: value as ComponentLevel,
+                                    },
+                                  ];
+
+                            const newCycle: Cycle = {
+                              ...cycle,
+                              selectedTargets: newSelectedTargets,
+                            };
+
+                            const newCycles = sortedCycles.map((c) =>
+                              c.id === cycle.id ? newCycle : c
+                            );
+
+                            setSortedCycles(newCycles);
+
+                            setGroup((prevGroup) => ({
+                              ...prevGroup,
+                              cycles: group.cycles.map((c) =>
+                                c.id === cycle.id ? newCycle : c
+                              ),
+                            }));
+                          }}
+                        />
+                      )}
+
+                      <Box
+                        width="100%"
+                        height={5.5}
+                        sx={{
+                          mt: 0.05,
+                          backgroundColor: componentLevelColor,
+                          zIndex: 100000,
+                          borderRadius: 2,
+                        }}
+                      />
+
+                      <SelectInput<Target>
+                        label=""
+                        icon={<></>}
+                        selectedItemSize={12}
+                        value={selectedTarget?.targetId || ''}
+                        items={component.targets || []}
+                        itemKey={'id'}
+                        itemName={'name'}
+                        selectPadding={'0'}
+                        maxWidth={'100%'}
+                        minWidth={60}
+                        sx={{
+                          mt: !selectedTarget ? 3 : 0,
+                        }}
+                        setValue={(value) => {
+                          setDetectedChanges(true);
+
+                          if (value === 'None' || !value) {
+                            const newCycle: Cycle = {
+                              ...cycle,
+                              selectedTargets: cycle.selectedTargets.filter(
+                                (st) => st.componentId !== component.id
+                              ),
+                            };
+
+                            const newCycles = sortedCycles.map((c) =>
+                              c.id === cycle.id ? newCycle : c
+                            );
+
+                            setSortedCycles(newCycles);
+
+                            setGroup((prevGroup) => ({
+                              ...prevGroup,
+                              cycles: group.cycles.map((c) =>
+                                c.id === cycle.id ? newCycle : c
+                              ),
+                            }));
+
+                            return;
+                          }
+
+                          const target = component.targets?.find(
+                            (c) => c.id === value
+                          );
+
+                          if (!target) return;
+
+                          const newSelectedTargets = cycle.selectedTargets.some(
+                            (st) => st.componentId === component.id
+                          )
+                            ? cycle.selectedTargets.map((st) =>
+                                st.componentId === component.id
+                                  ? {
+                                      componentId: component.id,
+                                      targetId: target.id,
+                                    }
+                                  : st
+                              )
+                            : [
+                                ...cycle.selectedTargets,
+                                {
+                                  componentId: component.id,
+                                  targetId: target.id,
+                                },
+                              ];
+
+                          const newCycle: Cycle = {
+                            ...cycle,
+                            selectedTargets: newSelectedTargets,
+                          };
+
+                          const newCycles = sortedCycles.map((c) =>
+                            c.id === cycle.id ? newCycle : c
+                          );
+
+                          setSortedCycles(newCycles);
+
+                          setGroup((prevGroup) => ({
+                            ...prevGroup,
+                            cycles: group.cycles.map((c) =>
+                              c.id === cycle.id ? newCycle : c
+                            ),
+                          }));
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </Box>
             </Box>
-          </Box>
-        ))}
+            <Divider sx={{ p: 0, m: 0 }} />
+          </>
+        );
+      })}
     </Box>
   );
 }

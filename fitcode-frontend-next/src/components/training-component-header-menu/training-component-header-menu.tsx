@@ -101,7 +101,7 @@ export default function TrainingComponentHeaderMenu(
           : undefined
       }
       flexDirection={screenSize.isMobile ? 'column' : undefined}
-      mt={screenSize.isSmallerThanLaptop ? 2.5 : 3.5}
+      mt={1.5}
       flexWrap="nowrap"
       gap={screenSize.isSmallerThanLaptop ? 1 : 0}
     >

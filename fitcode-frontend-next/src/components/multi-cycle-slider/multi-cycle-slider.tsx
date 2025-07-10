@@ -1,22 +1,22 @@
 'use client';
 
-import { COLORS } from '@/common/constant/color.constant';
 import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Cycle, Week } from '@/controller/group/type/cycle.type';
+import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
-import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
-import { Box, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Range } from 'react-range';
 import {
   handleDrag,
   handleChange,
   handleDragEnd,
 } from '../multi-cycle-slider-layout/state';
+import { useTheme } from '@mui/material';
+import MyModal from '../modal/modal';
+import EditCycleForm from '../edit-cycle-form/edit-cycle-form';
 
 dayjs.extend(dayOfYear);
 
@@ -35,6 +35,10 @@ interface MultiCycleSliderProps {
   yearStart: number;
   yearEnd: number;
   setSortedCycles: SetState<Cycle[]>;
+  sliderProperties: {
+    width: string;
+    centerPosition: string;
+  }[];
 }
 
 export default function MultiCycleSlider(props: MultiCycleSliderProps) {
@@ -53,18 +57,36 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
     setCycles,
     setSortedCycles,
     cycles,
+    sliderProperties,
   } = props;
 
-  const { group, setGroup, setDetectedChanges } = useGroup();
+  const theme = useTheme();
+
+  const { group, setGroup, cycle, setCycle, setDetectedChanges } = useGroup();
 
   const [draggedDay, setDraggedDay] = useState<number | null>(null);
   const [mouseX, setMouseX] = useState<number | null>(null);
+  const [openEditCycleModal, setOpenEditCycleModal] = useState(false);
+  const [editCycle, setEditCycle] = useState<Cycle | null>(null);
 
   const handleDragStart = (index: number) => {
     setDraggingIndex(index);
   };
 
   const onMouseMove = (e: any) => setMouseX(e.clientX);
+
+  function handleDeleteCycle() {
+    if (!editCycle || !selectedGroup) return;
+
+    const updatedCycles = [...selectedGroup.cycles].filter(
+      (cycle) => cycle.id !== editCycle.id
+    );
+
+    if (cycle && editCycle.id === cycle?.id) setCycle(undefined);
+    setSelectedGroup({ ...selectedGroup, cycles: updatedCycles });
+    setEditCycle(null);
+    setDetectedChanges(true);
+  }
 
   return (
     <div
@@ -78,6 +100,7 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
         min={yearStart}
         max={yearEnd}
         values={valuesReal}
+        allowOverlap={false}
         onChange={(newValues: number[]) => {
           handleChange(
             {
@@ -131,75 +154,58 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
               {...otherProps}
               style={{
                 ...props.style,
-                height: 6,
+                height: 4,
+                borderRadius: 2,
                 width: '100%',
-                backgroundColor: '#ccc',
+                backgroundColor: theme.palette.text.primary,
                 position: 'relative',
                 top: '50%',
                 transform: 'translateY(-50%)',
               }}
             >
               {/* Editable Cycle Names */}
-              {sortedCycles.map((cycle, index) => {
-                const start = valuesReal[index * 2];
-                const end = valuesReal[index * 2 + 1];
+              {sliderProperties.length > 0 &&
+                sortedCycles.map((cycle, index) => {
+                  const sliderProperty = sliderProperties[index];
+                  if (!sliderProperty) return null;
 
-                const centerPosition = `${
-                  (((start + end) / 2 - yearStart) / (yearEnd - yearStart)) *
-                  100
-                }%`;
+                  const centerPosition = sliderProperty.centerPosition;
+                  const width = sliderProperty.width;
 
-                return (
-                  <div
-                    key={cycle.id}
-                    style={{
-                      position: 'absolute',
-                      top:
-                        cycles.indexOf(cycles.find((c) => c.id === cycle.id)!) %
-                          2 ===
-                        0
-                          ? '-25px'
-                          : '15px',
-                      left: centerPosition,
-                      transform: 'translateX(-50%)',
-                      whiteSpace: 'nowrap',
-                      zIndex: 0, // Ensure it's above slider
-                      pointerEvents: 'auto',
-                    }}
-                  >
-                    <TextField
-                      variant="standard"
-                      value={cycle.name}
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()} // Stops blocking mouse events
-                      onFocus={(e) => e.stopPropagation()} // Ensures it can be focused
-                      onChange={(e) => handleNameChange(index, e.target.value)}
-                      inputProps={{
-                        style: {
+                  return (
+                    <div
+                      key={cycle.id}
+                      style={{
+                        position: 'absolute',
+                        top: '-30px',
+                        left: centerPosition,
+                        transform: 'translateX(-50%)',
+                        width,
+                      }}
+                    >
+                      <Typography
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenEditCycleModal(true);
+                          setEditCycle(cycle);
+                        }}
+                        sx={{
                           textAlign: 'center',
-                          fontSize: 12,
-                          fontWeight: 'bold',
-                          color: COLORS[index % COLORS.length],
-                        },
-                      }}
-                      sx={{
-                        '& .MuiInput-underline:before': {
-                          borderBottom: 'none !important',
-                        },
-                        '& .MuiInput-underline:hover:before': {
-                          borderBottom: 'none !important',
-                        },
-                        '& .MuiInput-underline:after': {
-                          borderBottom: 'none !important',
-                        },
-                        '& .MuiInputBase-input': {
-                          borderBottom: 'none !important',
-                        },
-                      }}
-                    />
-                  </div>
-                );
-              })}
+                          fontSize: 14,
+                          fontWeight: 400,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          width: '100%',
+                          color: theme.palette.text.primary,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {cycle.name}
+                      </Typography>
+                    </div>
+                  );
+                })}
 
               {/* Render Colored Cycle Segments */}
               {sortedCycles.map((cycle, index) => {
@@ -222,8 +228,8 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
                       top: '50%',
                       left,
                       width,
-                      height: 6,
-                      backgroundColor: COLORS[index % COLORS.length],
+                      height: 4,
+                      backgroundColor: theme.palette.primary.main,
                       borderRadius: 2,
                       transform: 'translateY(-50%)',
                     }}
@@ -292,10 +298,10 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
               }
               style={{
                 ...props.style,
-                height: 14,
-                width: 14,
+                height: 13,
+                width: 13,
                 borderRadius: '50%',
-                backgroundColor: COLORS[cycleIndex % COLORS.length],
+                backgroundColor: theme.palette.primary.main,
                 position: 'absolute',
                 transform: 'translateY(-50%)',
               }}
@@ -323,6 +329,28 @@ export default function MultiCycleSlider(props: MultiCycleSliderProps) {
           );
         }}
       />
+      {editCycle && (
+        <MyModal
+          isOpen={openEditCycleModal}
+          setIsOpen={(open) => setOpenEditCycleModal(open)}
+          onCancel={() => setOpenEditCycleModal(false)}
+          cancelText="Close"
+          onConfirm={() => {
+            const newCycles = selectedGroup.cycles.map((c) =>
+              c.id === editCycle.id ? { ...editCycle } : c
+            );
+            setSelectedGroup({ ...selectedGroup, cycles: newCycles });
+            setDetectedChanges(true);
+            setOpenEditCycleModal(false);
+          }}
+        >
+          <EditCycleForm
+            selectedCycle={editCycle}
+            setSelectedCycle={setEditCycle}
+            handleDeleteCycle={handleDeleteCycle}
+          />
+        </MyModal>
+      )}
     </div>
   );
 }
