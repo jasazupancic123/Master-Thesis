@@ -84,7 +84,7 @@ describe('Training Exercise Params (e2e)', () => {
   });
 
   function url(trainingId: string, componentId: string) {
-    return `/training/${trainingId}/component/${componentId}/finish`;
+    return `/training/${trainingId}/component/${componentId}/complete`;
   }
 
   async function createExercise(attributeValues: ExerciseAttributeValue[]) {

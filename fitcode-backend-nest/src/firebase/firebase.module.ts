@@ -1,6 +1,5 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
-import { FirebaseMiddleware } from './firebase.middleware';
 import { FIREBASE_ADMIN, getFirebaseClient } from './get-firebase-client';
 import { ConfigService } from '@nestjs/config';
 import { CommonService } from '../common/service/common.service';
@@ -28,9 +27,8 @@ export class FirebaseModule {
           },
         },
         FirebaseService,
-        FirebaseMiddleware,
       ],
-      exports: [FIREBASE_ADMIN, FirebaseService, FirebaseMiddleware],
+      exports: [FIREBASE_ADMIN, FirebaseService],
     };
   }
 }

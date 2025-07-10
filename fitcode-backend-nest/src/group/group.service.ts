@@ -25,6 +25,7 @@ import { Permission } from '../common/interface/permission.interface';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
 import { startOfDay } from 'date-fns';
+import { LogMethod } from '../common/decorator/log-method.decorator';
 
 @Injectable()
 export class GroupService implements Permission<Group, Institution> {
@@ -84,11 +85,9 @@ export class GroupService implements Permission<Group, Institution> {
     );
   }
 
+  @LogMethod()
   async create(user: User, input: CreateGroupDto): Promise<Group> {
     const { name, membersIds, institutionId, ownerId } = input;
-    this.logger.log(
-      `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
-    );
 
     // validate
     const institution = await this.institutionService.getDocByIdOrFail(input);
@@ -116,15 +115,12 @@ export class GroupService implements Permission<Group, Institution> {
     } as Group;
   }
 
+  @LogMethod()
   async update(
     user: User,
     ref: GroupRef,
     input: UpdateGroupDto,
   ): Promise<Group> {
-    this.logger.log(
-      `User ${user.uid} is updating group: ${JSON.stringify(input)}`,
-    );
-
     // validate
     const group = await this.findOneByIdOrFail(user, ref);
     const institution = await this.institutionService.getDocByIdOrFail(group);

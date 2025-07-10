@@ -111,6 +111,7 @@ export class TrainingController {
   }
 
   @Post('/copy/component')
+  @Auth()
   async copyComponent(
     @RequestUser() user: User,
     @Body()
@@ -120,6 +121,7 @@ export class TrainingController {
   }
 
   @Post('/periodize/trainings')
+  @Auth()
   async periodize(
     @RequestUser() user: User,
     @Body() body: PeriodizeTrainingsDto,

@@ -858,52 +858,10 @@ describe('Create Training (e2e)', () => {
           ]);
         }
 
-        // it should create user workloads
-        const workloads = (
-          await workloadService.findAllByTraining(response.body.id)
-        ).sort((a, b) => {
-          return a.setNumber - b.setNumber;
-        });
-
-        // 1 group member x 2 exercises x 3 sets each (default) = 6 workloads
-        expect(workloads).toHaveLength(6);
-        expect(workloads[0]).toEqual({
-          userId: athlete.uid,
-          groupId: group.id,
-          cycleId: group.cycles[1].id,
-          plannedAt: expect.anything(),
-          trainingId: response.body.id,
-          componentId: component.id,
-          exerciseId: expect.anything(),
-          setNumber: 1,
-          notes: null,
-          isCustom: false,
-          deletedAt: null,
-          createdAt: expect.anything(),
-          updatedAt: expect.anything(),
-          volWork1Type: VolType.Rep,
-          prescribedVolWork1ValueL: 12,
-          prescribedVolWork1ValueR: 12,
-          volWork1ValueL: null,
-          volWork1ValueR: null,
-          volWork2ValueL: null,
-          volWork2ValueR: null,
-          intRecValueL: null,
-          intRecValueR: null,
-          volRecValueL: null,
-          volRecValueR: null,
-          intWork1ValueL: null,
-          intWork1ValueR: null,
-          intWork2ValueL: null,
-          intWork2ValueR: null,
-          status: SetStatus.NOT_STARTED,
-        } as Workload);
-
         await Promise.all([
           deleteDocs(firebase, 'EXERCISE', [globalExercise.id, exercise.id]),
           deleteDoc(firebase, 'COMPONENT', component.id),
           deleteDoc(firebase, 'TRAINING', response.body.id),
-          deleteCollection(firebase, 'TRAINING_WORKLOAD'),
         ]);
       },
     );

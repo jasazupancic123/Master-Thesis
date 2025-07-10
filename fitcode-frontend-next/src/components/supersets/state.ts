@@ -93,24 +93,24 @@ export function handleAddExerciseToSupersetComponent(
           .map((p) => {
             if (p.field === 'volWorkSets') return undefined;
 
-            let attributeRange = method?.attributes.find(
+            let attribute = method?.attributes.find(
               (ar) => ar.field === p.field
             );
-            if (attributeRange) {
-              const foundInOptions = attributeRange.options?.find(
+            if (attribute) {
+              const foundInOptions = attribute.options?.find(
                 (o) => o.field === p.defaultValue
               );
-              if (foundInOptions) attributeRange = foundInOptions;
+              if (foundInOptions) attribute = foundInOptions;
             }
 
             return {
               field: p.field,
               selected: p.defaultValue,
               value:
-                attributeRange &&
-                attributeRange.min !== undefined &&
-                attributeRange.max !== undefined
-                  ? Math.ceil((attributeRange.min + attributeRange.max) / 2)
+                attribute &&
+                attribute.min !== undefined &&
+                attribute.max !== undefined
+                  ? Math.ceil((attribute.min + attribute.max) / 2)
                   : p.options?.find((o) => o.field === p.defaultValue)?.options
                         ?.length
                     ? '0' //picks the first element in the options array
@@ -125,7 +125,7 @@ export function handleAddExerciseToSupersetComponent(
       id,
       exercise: exercise,
       periodized: false,
-      attributeRanges: component?.method?.attributes || [],
+      attributes: component?.method?.attributes || [],
       params: exercise?.defaultParams || [],
       sets: exercise?.defaultParams
         ? Array.from({ length: 3 }, (_, i) => ({
