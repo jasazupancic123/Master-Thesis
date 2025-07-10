@@ -35,20 +35,9 @@ export class TrainingController {
     period: 'AM' | 'PM',
     groupId: string
   ) {
-    return api.post<{training: Training | null}>(
+    return api.post<{ training: Training | null }>(
       `/training/${groupId}/day-period`,
       { day, period },
-      { token }
-    );
-  }
-
-  static async findByIdAndPopulateAthleteWorkloads(
-    token: string,
-    trainingId: string,
-    componentId: string
-  ) {
-    return api.get<Training>(
-      `/training/${trainingId}/component/${componentId}`,
       { token }
     );
   }
@@ -164,7 +153,7 @@ export class TrainingController {
     supersets: Superset[]
   ): Promise<Training> {
     return api.patch<Training>(
-      `/training/${trainingId}/component/${componentId}/finish`,
+      `/training/${trainingId}/component/${componentId}/complete`,
       { userId, rootComponentId, supersets },
       { token }
     );

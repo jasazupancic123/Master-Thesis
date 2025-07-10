@@ -164,7 +164,7 @@ export default function TrainingExerciseCardCollapsedSets(
 
               let min: number | undefined;
               let max: number | undefined;
-              const attributeRange = exercise.attributeRanges.find(
+              const attributeRange = exercise.attributes.find(
                 (ar) => ar.field === param.field
               );
               if (attributeRange) {

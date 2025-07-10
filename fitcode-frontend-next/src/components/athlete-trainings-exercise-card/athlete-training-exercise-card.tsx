@@ -98,12 +98,15 @@ export default function AthleteTrainingExerciseCard(
 
           handleApiRequest(
             router,
-            () =>
-              TrainingController.findByIdAndPopulateAthleteWorkloads(
+            () => {
+              /* TrainingController.findByIdAndPopulateAthleteWorkloads(
                 token,
                 trainingInProgress.training.id,
                 trainingInProgress.selectedComponent.id
-              ),
+              ) */
+
+              return {} as Promise<Training>;
+            },
             (training) => {
               const selectedComponent = [
                 training.warmup,

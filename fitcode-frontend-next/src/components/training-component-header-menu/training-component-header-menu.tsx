@@ -282,11 +282,11 @@ export default function TrainingComponentHeaderMenu(
                 ...s,
                 exercises: s.exercises.map((e) => ({
                   ...e,
-                  attributeRanges: method?.attributeRanges || [],
+                  attributeRanges: method?.attributes || [],
                   sets: e.sets.map((set) => ({
                     ...set,
                     paramValuesL: set.paramValuesL.map((p) => {
-                      let attributeRange = method?.attributeRanges.find(
+                      let attributeRange = method?.attributes.find(
                         (ar) => ar.field === p.field
                       );
                       if (!attributeRange) return p;
@@ -322,7 +322,7 @@ export default function TrainingComponentHeaderMenu(
                       }
                     }),
                     paramValuesR: set.paramValuesR.map((p) => {
-                      let attributeRange = method?.attributeRanges.find(
+                      let attributeRange = method?.attributes.find(
                         (ar) => ar.field === p.field
                       );
                       if (!attributeRange) return p;
