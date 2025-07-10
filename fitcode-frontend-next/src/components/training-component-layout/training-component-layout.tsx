@@ -60,14 +60,8 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
     >
       <Box
         sx={{
-          my: 0.5,
-          py: component?.id !== trainingComponent.id ? 0.5 : 0,
-          pt:
-            trainingComponent.id === WARMUP_ID
-              ? 0
-              : component?.id === trainingComponent.id
-                ? 0.5
-                : undefined,
+          py: component?.id !== trainingComponent.id ? 1.75 : 0,
+          pt: component?.id === trainingComponent.id ? 1.75 : undefined,
         }}
       >
         <Box
@@ -76,7 +70,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
             alignItems: 'center',
             justifyContent: 'space-between',
           }}
-          pt={trainingComponent.id === WARMUP_ID ? 1 : undefined}
           position="relative"
           mb={
             component?.id === trainingComponent.id &&
@@ -151,7 +144,13 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           timeout="auto"
           unmountOnExit
         >
-          <Box p={2} pt={0} px={0} mt={2} key={filter}>
+          <Box
+            p={2}
+            pt={0}
+            px={0}
+            mt={screenSize.isSmallerThanLaptop ? 0 : 2}
+            key={filter}
+          >
             {heatmapView ? (
               <MuscleHeatmapView setHeatmapView={setHeatmapView} />
             ) : (

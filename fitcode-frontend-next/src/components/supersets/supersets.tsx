@@ -152,7 +152,7 @@ export default function Supersets(props: SupersetsProps) {
                   mx={1}
                   onClick={() => setOpenAddExerciseModal(true)}
                 >
-                  <Typography variant="body2" align="center">
+                  <Typography variant="body2" align="center" fontSize={12}>
                     Add/drop exercise
                   </Typography>
                 </Box>
