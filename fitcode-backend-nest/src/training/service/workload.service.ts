@@ -292,7 +292,7 @@ export class WorkloadService {
               w.userId === userId,
           );
 
-          if (existing?.isPersonalized) continue;
+          if (existing?.isCustom) continue;
 
           const docRef = this.repository
             .collection({ trainingId: training.id })
@@ -318,7 +318,7 @@ export class WorkloadService {
               status: SetStatus.NOT_STARTED,
               plannedAt: training.from,
               notes: null,
-              isPersonalized: false,
+              isCustom: false,
               ...this.parsePrescribedParamValues(paramValues),
               ...this.calculateIntValues(paramValues, bodyweight, workloads),
             },
@@ -364,7 +364,7 @@ export class WorkloadService {
           status: SetStatus.NOT_STARTED,
           plannedAt: training.from,
           notes: null,
-          isPersonalized: true,
+          isCustom: true,
           prescribedIntRecValueL: workload.prescribedIntRecValueL,
           prescribedIntRecValueR: workload.prescribedIntRecValueR,
           prescribedIntWork1ValueL: workload.prescribedIntWork1ValueL,

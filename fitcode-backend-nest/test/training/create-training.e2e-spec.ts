@@ -877,7 +877,7 @@ describe('Create Training (e2e)', () => {
           exerciseId: expect.anything(),
           setNumber: 1,
           notes: null,
-          isPersonalized: false,
+          isCustom: false,
           deletedAt: null,
           createdAt: expect.anything(),
           updatedAt: expect.anything(),

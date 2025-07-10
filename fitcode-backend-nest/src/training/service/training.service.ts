@@ -42,7 +42,6 @@ import { TrainingPlanService } from './training-plan.service';
 import { WorkloadService } from './workload.service';
 import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
-import { ParamType } from '../../component/enum/param.enum';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { PeriodizationService } from './periodization.service';
@@ -68,6 +67,7 @@ import {
 } from '../entity/completed-training.entity';
 import { ExerciseService } from '../../exercise/service/exercise.service';
 import { WorkloadRepository } from '../repository/workload.repository';
+import { LogMethod } from '../../common/decorator/log-method.decorator';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -94,14 +94,6 @@ export class TrainingService implements Permission<Training, Institution> {
 
   async getDocs(query: (query: Query) => Query = (query) => query) {
     return query(this.trainingRepository.collection()).get();
-  }
-
-  async getDocsByGroup(groupId: string) {
-    return this.trainingRepository
-      .collection()
-      .where('groupId', '==', groupId)
-      .orderBy('from', 'asc')
-      .get();
   }
 
   async findOneById(
@@ -199,107 +191,6 @@ export class TrainingService implements Permission<Training, Institution> {
     const training = trainings && trainings.length ? trainings[0] : null;
 
     return { training };
-  }
-
-  async findByIdAndPopulateAthleteWorkloads(
-    user: User,
-    ref: TrainingRef & ComponentRef,
-  ): Promise<Training> {
-    const { trainingId, componentId } = ref;
-    this.logger.log(`User ${user.uid} is getting training ${trainingId}`);
-
-    const training = await this.findOneByIdOrFail(user, { trainingId });
-
-    const component = [
-      training.warmup,
-      ...training.components,
-      training.cooldown,
-    ].find((c) => c.id === componentId);
-
-    if (!component)
-      throw new BadRequestException('Component not found in training');
-
-    const workloads =
-      await this.workloadService.findAllByUserTrainingComponentId(
-        user.uid,
-        trainingId,
-        componentId,
-      );
-
-    for (const superset of component.supersets) {
-      for (const exercise of superset.exercises) {
-        for (const set of exercise.sets) {
-          const workload = workloads.find(
-            (w) =>
-              w.exerciseId === exercise.id && w.setNumber === set.setNumber,
-          );
-
-          if (!workload) continue;
-
-          for (const paramValue of set.paramValuesL) {
-            const value = this.getPrescribedValueByParamField(
-              paramValue.field,
-              workload,
-              'L',
-            );
-
-            if (!value) continue;
-            paramValue.value = value;
-          }
-
-          for (const paramValue of set.paramValuesR) {
-            const value = this.getPrescribedValueByParamField(
-              paramValue.field,
-              workload,
-              'R',
-            );
-
-            if (!value) continue;
-            paramValue.value = value;
-          }
-        }
-      }
-    }
-
-    return training;
-  }
-
-  private getPrescribedValueByParamField(
-    field: string,
-    workload: Workload,
-    leftOrRight: 'L' | 'R',
-  ) {
-    switch (field) {
-      case ParamType.VolWorkSets:
-        // cannot set different number of sets for athlete
-        return null;
-      case ParamType.VolRec1:
-        return leftOrRight === 'L'
-          ? workload.prescribedVolRecValueL.toString()
-          : workload.prescribedVolRecValueR.toString();
-      case ParamType.VolWork1:
-        return leftOrRight === 'L'
-          ? workload.prescribedVolWork1ValueL.toString()
-          : workload.prescribedVolWork1ValueR.toString();
-      case ParamType.VolWork2:
-        return leftOrRight === 'L'
-          ? workload.prescribedVolWork2ValueL.toString()
-          : workload.prescribedVolWork2ValueR.toString();
-      case ParamType.IntRec1:
-        return leftOrRight === 'L'
-          ? workload.prescribedIntRecValueL.toString()
-          : workload.prescribedIntRecValueR.toString();
-      case ParamType.IntWork1:
-        return leftOrRight === 'L'
-          ? workload.prescribedIntWork1ValueL.toString()
-          : workload.prescribedIntWork1ValueR.toString();
-      case ParamType.IntWork2:
-        return leftOrRight === 'L'
-          ? workload.prescribedIntWork2ValueL.toString()
-          : workload.prescribedIntWork2ValueR.toString();
-      default:
-        return null;
-    }
   }
 
   async findAthleteGroupWorkloads(
@@ -1274,7 +1165,7 @@ export class TrainingService implements Permission<Training, Institution> {
           status: SetStatus.COMPLETED,
           notes: '',
           plannedAt: training.from,
-          isPersonalized: false,
+          isCustom: false,
           ...this.workloadService.parseCompletedParamValues(completedSet),
           ...this.workloadService.parsePrescribedParamValues(
             prescribedSet.paramValuesL,
@@ -1413,6 +1304,40 @@ export class TrainingService implements Permission<Training, Institution> {
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 
     return updatedTraining;
+  }
+
+  @LogMethod()
+  async calculatePrescribedWorkloads(
+    user: User,
+    ref: TrainingRef & { athleteId: string },
+  ) {
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(user, {
+      athleteId: ref.athleteId,
+      institution: training.institution,
+    });
+  }
+
+  /**
+   * Returns athlete user. If current user is athlete, it returns itself,
+   * else if current user is trainer or manager, it returns found athlete
+   * by athleteId if it exists and if it belongs to institution.
+   */
+  private async getAthlete(
+    user: User,
+    trainerOptions?: { athleteId: string; institution: Institution },
+  ) {
+    if (this.firebaseService.isAthlete(user)) return user;
+    if (!trainerOptions) throw new Error('You must provide trainer options');
+
+    const { athleteId, institution } = trainerOptions;
+    const found = await this.userService.findOneBy('id', athleteId);
+
+    if (institution)
+      if (!this.institutionService.canView(found, institution))
+        throw new UnauthorizedException(
+          `Athlete ${found.displayName || found.email} cannot view institution ${institution.name}`,
+        );
   }
 
   private getFromAndToDates(components: TrainingComponent[]): {

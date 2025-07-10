@@ -89,5 +89,5 @@ export class Workload extends IntersectionType(
   @IsBoolean()
   @ApiProperty()
   @Expose()
-  isPersonalized: boolean;
+  isCustom: boolean; // indicating whether workload is changed by trainer and contains only changed prescribed values, not actual completed ones
 }
