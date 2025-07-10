@@ -31,6 +31,8 @@ interface Props<T> {
   selectedItemSize?: number;
   iconSize?: number;
   sameValueAction?: boolean;
+  minWidth?: string | number | undefined;
+  maxWidth?: string | number;
 }
 
 export default function SelectInput<T>(props: Props<T>) {
@@ -41,12 +43,16 @@ export default function SelectInput<T>(props: Props<T>) {
         props.sx
           ? {
               ...props.sx,
-              minWidth: 120,
+              minWidth: props.minWidth || 120,
+              maxWidth: props.maxWidth,
               '& .MuiSelect-icon': {
                 fontSize: props.iconSize,
               },
             }
-          : { minWidth: 120 }
+          : {
+              minWidth: props.minWidth || 120,
+              maxWidth: props.maxWidth,
+            }
       }
     >
       {props.disableInputLabel === true ? (

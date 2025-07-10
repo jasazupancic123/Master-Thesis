@@ -19,6 +19,7 @@ import { Target } from '@/controller/target/type/target.type';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { GroupService } from '@/controller/group/group.service';
 import { MoreVert } from '@mui/icons-material';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 export default function TrainerCycleView() {
   const {
@@ -51,6 +52,19 @@ export default function TrainerCycleView() {
   useEffect(() => {
     setCyclesForSelect(GroupService.getCyclesForSelect(group.cycles));
   }, [startIndex, group.cycles]);
+
+  useEffect(() => {
+    if (!cycle) return;
+
+    setSelectedTargets(
+      cycle.selectedTargets.map((st) => ({
+        componentId: st.componentId,
+        target: components
+          .find((c) => c.id === st.componentId)
+          ?.targets?.find((t) => t.id === st.targetId) as Target,
+      })) || []
+    );
+  }, [cycle]);
 
   // effect to track scroll position and set sticky mode
   useEffect(() => {
@@ -92,7 +106,13 @@ export default function TrainerCycleView() {
   }, [cycle]);
 
   return (
-    <Box pb={10}>
+    <Box
+      pb={10}
+      maxWidth={MAX_WIDTH}
+      sx={{
+        mx: 'auto',
+      }}
+    >
       <Box
         display="flex"
         flexDirection="column"
@@ -176,7 +196,7 @@ export default function TrainerCycleView() {
                       }}
                     >
                       {cycle.from && cycle.to
-                        ? `${Math.ceil(dayjs(cycle.to).diff(dayjs(cycle.from), 'day') / 7)} weeks`
+                        ? `${cycle.weeks.length} weeks`
                         : 'N/A'}
                     </Typography>
                   </Box>
@@ -186,7 +206,7 @@ export default function TrainerCycleView() {
           ) : (
             <>
               <Box width="25%" display="flex" />
-              <Box width="50%" display="flex" maxHeight={70}>
+              <Box width="50%" display="flex" maxHeight={67}>
                 <HorizontalItemsList
                   items={cyclesForSelect}
                   value={cycle?.id || ''}
@@ -250,7 +270,7 @@ export default function TrainerCycleView() {
                         }}
                       >
                         {cycle.from && cycle.to
-                          ? `${Math.ceil(dayjs(cycle.to).diff(dayjs(cycle.from), 'day') / 7)} weeks`
+                          ? `${cycle.weeks.length} weeks`
                           : 'N/A'}
                       </Typography>
                     </Box>
@@ -301,9 +321,6 @@ export default function TrainerCycleView() {
           />
         </Box>
       </Box>
-
-      {/* Choose cycle */}
-      <Box mb={2} />
 
       {cycle && (
         <Box

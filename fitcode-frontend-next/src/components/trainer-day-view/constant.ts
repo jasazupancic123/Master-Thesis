@@ -4,7 +4,7 @@ import { GroupWorkloadStats } from '@/controller/training/type/average-workload-
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 
-export const MAX_WIDTH = '1264px';
+export const MAX_WIDTH = '1340px';
 
 export const NUM_MAX_SUPERSETS = 8;
 

@@ -5,34 +5,63 @@ import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
-import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
+import { Add } from '@mui/icons-material';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useEffect, useRef, useState } from 'react';
-import { changeYear, handleAddCycle } from './state';
+import { handleAddCycle } from './state';
 import MultiCycleSlider from '../multi-cycle-slider/multi-cycle-slider';
+import { useTheme } from '@mui/material';
+import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 
 dayjs.extend(dayOfYear);
 
 interface MultiCycleSliderProps {
   selectedGroup: Group;
   setSelectedGroup: SetState<Group>;
+  sliderProperties: { width: string; centerPosition: string }[];
+  setSliderProperties: SetState<{ width: string; centerPosition: string }[]>;
+  sortedCycles: Cycle[];
+  setSortedCycles: SetState<Cycle[]>;
 }
 
 export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
-  const { selectedGroup, setSelectedGroup } = props;
+  const {
+    selectedGroup,
+    setSelectedGroup,
+    sliderProperties,
+    setSliderProperties,
+    sortedCycles,
+    setSortedCycles,
+  } = props;
 
   const screenSize = useScreenSize();
-  const { group, setDetectedChanges, setCycle } = useGroup();
+  const theme = useTheme();
+
+  const { group, setDetectedChanges } = useGroup();
 
   const [selectedYear, setSelectedYear] = useState(dayjs().year());
+  const [yearsForSelect, setYearsForSelect] = useState<
+    { label: string; value: string }[]
+  >(() => {
+    const currentYear = dayjs().year();
+    const yearsBefore = Array.from(
+      { length: 2 },
+      (_, i) => currentYear - 1 - i
+    );
+    const yearsAfter = Array.from({ length: 3 }, (_, i) => currentYear + i);
+    return [...yearsBefore.toReversed(), ...yearsAfter].map((year) => ({
+      label: year.toString(),
+      value: year.toString(),
+    }));
+  });
+
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
   const yearStart = dayjs(`${selectedYear}-01-01`).dayOfYear();
   const yearEnd = dayjs(`${selectedYear}-12-31`).dayOfYear();
 
-  const [sortedCycles, setSortedCycles] = useState<Cycle[]>([]);
   const [valuesReal, setValuesReal] = useState<number[]>(() =>
     sortedCycles.flatMap((cycle) => {
       let start = dayjs(cycle.from).year(selectedYear).dayOfYear();
@@ -45,7 +74,24 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
     })
   );
 
+  useEffect(() => {
+    const newSliderProperties = sortedCycles.map((cycle, index) => {
+      const start = valuesReal[index * 2];
+      const end = valuesReal[index * 2 + 1];
+
+      const centerPosition = `${
+        (((start + end) / 2 - yearStart) / (yearEnd - yearStart)) * 100
+      }%`;
+
+      const width = `${((end - start) / (yearEnd - yearStart)) * 100}%`;
+      return { width, centerPosition };
+    });
+
+    setSliderProperties(newSliderProperties);
+  }, [sortedCycles, valuesReal]);
+
   const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [activeCycle, setActiveCycle] = useState<Cycle | undefined>(undefined);
   const sliderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -77,6 +123,15 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
     if (!selectedGroup) return;
     setCycles([...selectedGroup.cycles]);
   }, [selectedGroup]);
+
+  useEffect(() => {
+    const currentCycle = cycles.find(
+      (cycle) =>
+        dayjs(cycle.from).isBefore(dayjs()) && dayjs(cycle.to).isAfter(dayjs())
+    );
+
+    setActiveCycle(currentCycle);
+  }, [cycles]);
 
   useEffect(() => {
     const selectedGroup_ = {
@@ -116,28 +171,165 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
 
   return (
     <Box
+      width="100%"
+      height="100%"
       display="flex"
       flexDirection="column"
       alignItems="center"
-      p={screenSize.isMobile ? 1 : 3}
-      width="100%"
-      height="100%"
       sx={{
-        margin: 'auto 0',
+        px: 0,
+        backgroundColor: theme.palette.background.default,
       }}
     >
-      {/* Year Navigation */}
-      <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-        <IconButton onClick={() => changeYear('prev', setSelectedYear)}>
-          <ArrowLeft />
-        </IconButton>
-
-        <Typography variant="h6">{selectedYear}</Typography>
-
-        <IconButton onClick={() => changeYear('next', setSelectedYear)}>
-          <ArrowRight />
-        </IconButton>
-      </Stack>
+      <Box width="100%" display="flex">
+        {screenSize.isSmallerThanLaptop ? (
+          <Box width="100%" display="flex" flexDirection="column">
+            <HorizontalItemsList
+              items={yearsForSelect}
+              value={selectedYear.toString()}
+              setValue={(value) => {
+                setSelectedYear(parseInt(value, 10));
+              }}
+              onArrowClick={(direction) => {}}
+              cycleView
+              yearView
+              checkIsSameValue={(value: string) => {
+                return dayjs(value).year() === selectedYear;
+              }}
+            />
+            <Box display="flex" width="100%">
+              <Box width="50%" mt={0.75}>
+                <Box display="flex" flexDirection="column">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '12px',
+                      fontWeight: 400,
+                      textAlign: 'center',
+                    }}
+                  >
+                    Active cycle
+                  </Typography>
+                  <Typography
+                    textTransform="uppercase"
+                    sx={{
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {activeCycle ? activeCycle.name : 'No active cycle'}
+                  </Typography>
+                </Box>
+              </Box>
+              <Box width="50%" mt={0.75}>
+                <Box display="flex" flexDirection="column">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '12px',
+                      fontWeight: 400,
+                      textAlign: 'center',
+                    }}
+                  >
+                    Group
+                  </Typography>
+                  <Typography
+                    textTransform="uppercase"
+                    sx={{
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {group.name}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        ) : (
+          <>
+            <Box width="25%" mt={0.75}>
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="flex-start"
+                sx={{
+                  ml: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '12px',
+                    fontWeight: 400,
+                    textAlign: 'right',
+                  }}
+                >
+                  Active cycle
+                </Typography>
+                <Typography
+                  textTransform="uppercase"
+                  sx={{
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    textAlign: 'left',
+                  }}
+                >
+                  {activeCycle ? activeCycle.name : 'No active cycle'}
+                </Typography>
+              </Box>
+            </Box>
+            <Box width="50%">
+              <HorizontalItemsList
+                items={yearsForSelect}
+                value={selectedYear.toString()}
+                setValue={(value) => {
+                  setSelectedYear(parseInt(value, 10));
+                }}
+                onArrowClick={(direction) => {}}
+                cycleView
+                yearView
+                checkIsSameValue={(value: string) => {
+                  return dayjs(value).year() === selectedYear;
+                }}
+              />
+            </Box>
+            <Box width="25%" mt={0.75}>
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="flex-end"
+                sx={{
+                  mr: 2,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '12px',
+                    fontWeight: 400,
+                    textAlign: 'right',
+                  }}
+                >
+                  Group
+                </Typography>
+                <Typography
+                  textTransform="uppercase"
+                  sx={{
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    textAlign: 'right',
+                  }}
+                >
+                  {group.name}
+                </Typography>
+              </Box>
+            </Box>
+          </>
+        )}
+      </Box>
 
       <Box
         flexDirection="row"
@@ -145,18 +337,19 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
         width="100%"
         alignItems="center"
         justifyContent="flex-start"
+        sx={{
+          px: screenSize.isMobile ? 2 : 8,
+        }}
       >
         <IconButton
           sx={{
-            mb: screenSize.isMobile ? 4.4 : 5.1,
-            backgroundColor: 'primary.light',
-            color: 'white',
+            backgroundColor: theme.palette.primary.dark,
+            color: theme.palette.text.primary,
             borderRadius: '50%',
-            width: screenSize.isMobile ? 20 : 30,
-            height: screenSize.isMobile ? 20 : 30,
-            p: screenSize.isMobile ? 1 : 0,
+            p: 0.3,
             mr: 1,
-            '&:hover': { backgroundColor: 'primary.dark' },
+            mt: screenSize.isMobile ? 2.3 : 2.5,
+            '&:hover': { backgroundColor: 'primary.main' },
           }}
           onClick={() => {
             if (!selectedGroup) return;
@@ -194,10 +387,17 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             );
           }}
         >
-          <Add />
+          <Add fontSize="small" />
         </IconButton>
 
-        <Box display="flex" flexDirection="column" width="100%">
+        <Box
+          display="flex"
+          flexDirection="column"
+          width="100%"
+          sx={{
+            mt: screenSize.isMobile ? 4.45 : 5.2,
+          }}
+        >
           {/* Slider */}
           <MultiCycleSlider
             selectedGroup={selectedGroup}
@@ -214,6 +414,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             yearStart={yearStart}
             yearEnd={yearEnd}
             setSortedCycles={setSortedCycles}
+            sliderProperties={sliderProperties}
           />
 
           {/* Month Labels */}
@@ -221,7 +422,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
             direction="row"
             justifyContent="space-between"
             width="100%"
-            mt={2.5}
+            mt={0}
           >
             {Array.from({ length: 13 }).map((_, monthIndex) => (
               <Typography

@@ -12,7 +12,7 @@ import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { isManager } from '@/common/service/util/firebase-auth.util';
+import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
 
 interface GroupAthletesCardProps {
   group: Group;
@@ -133,7 +133,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
             </IconButton>
           </Tooltip>
         )}
-        {isManager(role) && (
+        {(isManager(role) || isTrainer(role)) && (
           <Tooltip title="Add athlete" placement="top">
             <IconButton
               onClick={() =>
@@ -191,7 +191,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
             {member.displayName}
           </Typography>
 
-          {isManager(role) && (
+          {(isManager(role) || isTrainer(role)) && (
             <IconButton
               sx={{
                 position: 'absolute',
@@ -254,6 +254,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
           group={group}
           selectedInstitution={selectedInstitution}
           enableFirstShowUsers
+          enableScroll
         />
       </MyModal>
       <MyModal
