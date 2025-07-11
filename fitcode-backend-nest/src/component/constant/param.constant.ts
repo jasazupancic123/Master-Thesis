@@ -205,6 +205,6 @@ export const PARAMS: Attribute[] = [
     name: 'Rec',
     type: AttributeType.Select,
     options: INT_OPTIONS,
-    defaultValue: VolType.Time,
+    defaultValue: IntType.Eff,
   },
 ];

@@ -14,6 +14,7 @@ import {
   createGroupWithCycles,
   deleteDoc,
   deleteCollection,
+  deleteUsers,
 } from '../common/utils/data.util';
 import {
   generateSuperset,
@@ -22,7 +23,6 @@ import {
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { AttributeService } from '../../src/attribute/service/attribute.service';
 import { Component } from '../../src/component/entity/component.entity';
 import { TestInstitution } from '../common/type/entity.type';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
@@ -31,12 +31,16 @@ import { Training } from '../../src/training/entity/training.entity';
 import { generateComponentStub } from '../../src/component/mock/component.stub';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
+import { createAthleteUserAndToken } from '../common/utils/auth.util';
+import {
+  CompletedTrainingComponent,
+  CompletedTrainingExercise,
+} from '../../src/training/entity/completed-training.entity';
 
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
   let componentService: ComponentService;
-  let attributeService: AttributeService;
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
@@ -73,7 +77,6 @@ describe('Complete training component (e2e)', () => {
     await app.init();
 
     firebase = moduleFixture.get(FirebaseService);
-    attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
@@ -112,12 +115,12 @@ describe('Complete training component (e2e)', () => {
     );
 
     exercises = await exerciseService.createMany(admin, [
-      generateExerciseStub({ componentIds: [leaf1.id] }),
-      generateExerciseStub({ componentIds: [leaf1.id] }),
-      generateExerciseStub({ componentIds: [leaf1.id] }),
-      generateExerciseStub({ componentIds: [leaf2.id] }),
-      generateExerciseStub({ componentIds: [leaf2.id] }),
-      generateExerciseStub({ componentIds: [leaf2.id] }),
+      generateExerciseStub({ name: 'Squat L1', componentIds: [leaf1.id] }),
+      generateExerciseStub({ name: 'Bench L1', componentIds: [leaf1.id] }),
+      generateExerciseStub({ name: 'Deadlift L1', componentIds: [leaf1.id] }),
+      generateExerciseStub({ name: 'Squat L2', componentIds: [leaf2.id] }),
+      generateExerciseStub({ name: 'Bench L2', componentIds: [leaf2.id] }),
+      generateExerciseStub({ name: 'Deadlift L2', componentIds: [leaf2.id] }),
     ]);
 
     training = await trainingService.create(
@@ -277,10 +280,59 @@ describe('Complete training component (e2e)', () => {
     expect(response.body.message).toBe('Athlete does not exist');
   });
 
-  it('should throw error if provided athlete is not part of the institution', async () => {});
+  it('should throw error if provided athlete is not part of the institution', async () => {
+    const newAthlete = await createAthleteUserAndToken(firebase);
+
+    const response = await request(app.getHttpServer())
+      .patch(url(training.id, component1.id))
+      .set('Authorization', `Bearer ${trainer.token}`)
+      .send({ userId: newAthlete.uid });
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe(
+      `Athlete ${newAthlete.email} cannot view institution ${institution.name}`,
+    );
+
+    await deleteUsers(firebase, [newAthlete]);
+  });
 
   describe('Create Workloads', () => {
-    it('should throw error if a single prescribed exercise in superset is omitted', async () => {});
+    it.each([
+      [{ exercises: [] as CompletedTrainingExercise[] }],
+      [
+        {
+          exercises: [
+            {
+              id: 'deadlift-l1',
+              supersetIndex: 0,
+              sets: [
+                {
+                  setNumber: 1,
+                  paramValuesL: [],
+                  paramValuesR: [],
+                },
+              ],
+            },
+          ] as CompletedTrainingExercise[],
+        },
+      ],
+    ])(
+      'should throw error if a single prescribed exercise in superset is omitted',
+      async ({ exercises }: CompletedTrainingComponent) => {
+        const response = await request(app.getHttpServer())
+          .patch(url(training.id, component1.id))
+          .set('Authorization', `Bearer ${athlete.token}`)
+          .send({
+            userId: athlete.uid,
+            exercises,
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+          `You have to complete prescribed exercise Squat L1 in superset 1`,
+        );
+      },
+    );
 
     it('should throw error if a combination of prescribed exercises in superset are omitted', async () => {});
 
