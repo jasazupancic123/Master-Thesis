@@ -20,6 +20,7 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import { useTheme } from '@mui/material';
+import { SupersetsProvider } from '@/store/supersets-provider';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();

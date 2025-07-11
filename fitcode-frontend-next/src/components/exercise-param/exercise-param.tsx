@@ -8,6 +8,7 @@ import { AttributeValue } from '@/controller/attribute/type/attribute-value.type
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import { useTheme } from '@mui/material';
+import { useGroup } from '@/store/group-provider';
 
 interface Props {
   param: Attribute;
@@ -44,6 +45,8 @@ export function ExerciseParam(props: Props) {
     min,
     max,
   } = props;
+
+  const { setDetectedChanges } = useGroup();
 
   const nestedOption = param.options?.find((o) =>
     value.selected.includes(o.field)
@@ -88,6 +91,7 @@ export function ExerciseParam(props: Props) {
             value={value.selected.split(':')[0]}
             onChange={(e) => {
               onOptionChange(e.target.value as string);
+              setDetectedChanges(true);
             }}
           >
             <MenuItem
@@ -163,6 +167,7 @@ export function ExerciseParam(props: Props) {
             value={value.value}
             onChange={(e) => {
               onSubOptionChange(e.target.value as string);
+              setDetectedChanges(true);
             }}
           >
             {nestedOption?.options?.map((value) => (
@@ -203,6 +208,7 @@ export function ExerciseParam(props: Props) {
                   e.target.value = min.toString();
               }
               onSubOptionChange(e.target.value as string);
+              setDetectedChanges(true);
             }}
             onBlur={(e) => {
               if (

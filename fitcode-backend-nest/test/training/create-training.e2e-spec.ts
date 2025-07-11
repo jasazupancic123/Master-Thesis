@@ -870,6 +870,7 @@ describe('Create Training (e2e)', () => {
         expect(workloads[0]).toEqual({
           userId: athlete.uid,
           groupId: group.id,
+          institutionId: institution.id,
           cycleId: group.cycles[1].id,
           plannedAt: expect.anything(),
           trainingId: response.body.id,

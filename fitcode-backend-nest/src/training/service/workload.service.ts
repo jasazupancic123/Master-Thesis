@@ -285,6 +285,7 @@ export class WorkloadService {
             {
               groupId: training.groupId,
               cycleId: training.cycleId,
+              institutionId: training.institutionId,
               userId,
               trainingId: training.id,
               componentId: exercise.componentId,
@@ -329,6 +330,7 @@ export class WorkloadService {
 
       const query = this.firebaseService.buildCreateQuery<Workload>(
         {
+          institutionId: workload.institutionId,
           groupId: workload.groupId,
           cycleId: workload.cycleId,
           userId: workload.userId,
