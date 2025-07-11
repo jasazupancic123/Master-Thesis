@@ -17,50 +17,39 @@ import { isBefore } from 'date-fns';
 import { Dimensions } from '@/common/type/dimensions.type';
 import TrainignExerciseSelected from '../training-exercise-selected/training-exercise-selected';
 import { SetState } from '@/common/type/state.type';
+import { useSupersets } from '@/store/supersets-provider';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;
   exercise: TrainingExercise;
-  selectedExercise: TrainingExercise | null;
-  setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
   onAthleteView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
-  setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
-  supersets: Superset[];
-  setSupersets: SetState<Superset[]>;
-  setsNumbers: { exerciseId: string; setsNumber: number }[];
-  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
-  expandedExercisesView: boolean;
-  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
   const {
+    setOpenVideoPlayerModal,
+    selectedExercise,
+    setSelectedExercise,
+    setsNumbers,
+    setSetsNumbers,
+    expandedExercisesView,
+    setExpandedExercisesView,
+  } = useSupersets();
+  const {
     training,
     selectedAthlete,
     selectedAthleteWorkloads,
     component,
     selectedSubgroup,
+    supersets,
+    setSupersets,
   } = useTrainerDayViewContext();
   const { trainings } = useGroup();
 
-  const {
-    supersetIndex,
-    exercise,
-    selectedExercise,
-    setSelectedExercise,
-    superior,
-    setOpenVideoPlayerModal,
-    supersets,
-    setSupersets,
-    onAthleteView,
-    setsNumbers,
-    setSetsNumbers,
-    expandedExercisesView,
-    setExpandedExercisesView,
-  } = props;
+  const { supersetIndex, exercise, superior, onAthleteView } = props;
 
   const [data, setData] = useState<ChartWorkloadData[]>([]);
   const [percentageForChartBackground, setPercentageForChartBackground] =
@@ -205,37 +194,20 @@ export default function TrainingExerciseCardContainer(
     <TrainignExerciseSelected
       supersetIndex={supersetIndex}
       exercise={exercise}
-      selectedExercise={selectedExercise}
-      setSelectedExercise={setSelectedExercise}
-      supersets={supersets}
       range={range}
       setRange={setRange}
-      setOpenVideoPlayerModal={setOpenVideoPlayerModal}
       paddingForChartBackground={paddingForChartBackground}
       percentageForChartBackground={percentageForChartBackground}
       max={max}
       data={data}
       onAthleteView={onAthleteView}
       superior={superior}
-      setsNumbers={setsNumbers}
-      setSetsNumbers={setSetsNumbers}
-      setSupersets={setSupersets}
-      expandedExercisesView={expandedExercisesView}
-      setExpandedExercisesView={setExpandedExercisesView}
     />
   ) : (
     <TrainingExerciseCard
       supersetIndex={supersetIndex}
       exercise={exercise}
-      selectedExercise={selectedExercise}
-      setSelectedExercise={setSelectedExercise}
       superior={superior}
-      setOpenVideoPlayerModal={setOpenVideoPlayerModal}
-      setsNumbers={setsNumbers}
-      setSetsNumbers={setSetsNumbers}
-      setSupersets={setSupersets}
-      expandedExercisesView={expandedExercisesView}
-      setExpandedExercisesView={setExpandedExercisesView}
     />
   );
 }
