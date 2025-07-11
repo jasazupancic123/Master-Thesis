@@ -19,7 +19,10 @@ import { useTheme } from '@mui/material';
 import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
-import { handleUpdateMultipleTrainings } from './state';
+import {
+  deleteSelectedExercises,
+  handleUpdateMultipleTrainings,
+} from './state';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 dayjs.extend(weekOfYear);
@@ -58,6 +61,9 @@ export default function TrainerDayView() {
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
     isSettingAthleteWorkloads,
+    selectedExercises,
+    setSelectedExercises,
+    selectedSubgroup,
   } = useTrainerDayViewContext();
 
   const [day, setDay] = useState<Day>(commonService.date.getToday());
@@ -216,14 +222,14 @@ export default function TrainerDayView() {
         sx={{
           position: 'absolute',
           right: screenSize.isSmallerThanLaptop ? 2 : 10,
-          top: -36,
+          top: screenSize.isSmallerThanLaptop ? -38 : -43,
           zIndex: 1300,
         }}
       >
         {!screenSize.isSmallerThanLaptop ? (
           <Tooltip title="Save training" placement="bottom" sx={{ mx: 1 }}>
             <IconButton
-              sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
+              sx={{ mx: 0, cursor: 'pointer' }}
               onClick={() =>
                 handleUpdateMultipleTrainings({
                   token,
@@ -259,6 +265,10 @@ export default function TrainerDayView() {
             }}
           >
             <IconButton
+              sx={{
+                p: 0,
+                m: 0,
+              }}
               onClick={() => {
                 handleUpdateMultipleTrainings({
                   token,
@@ -277,9 +287,6 @@ export default function TrainerDayView() {
                   setDetectedChanges,
                 });
               }}
-              sx={{
-                p: 0,
-              }}
             >
               <Save
                 sx={{
@@ -296,24 +303,43 @@ export default function TrainerDayView() {
 
         <IconButton
           sx={{
-            p: 0,
-            m: 0,
-            mx: screenSize.isSmallerThanLaptop ? 0 : 1,
+            mx: 0,
+            m: screenSize.isSmallerThanLaptop ? 0 : undefined,
+            p: screenSize.isSmallerThanLaptop ? 0 : undefined,
             cursor: 'pointer',
           }}
         >
           <CopyAll fontSize="small" />
         </IconButton>
-        <IconButton
-          sx={{
-            p: 0,
-            m: 0,
-            mx: screenSize.isSmallerThanLaptop ? 0 : 1,
-            cursor: 'pointer',
-          }}
-        >
-          <Delete fontSize="small" />
-        </IconButton>
+
+        <Tooltip title="Delete selected exercises" placement="bottom">
+          <IconButton
+            sx={{
+              m: screenSize.isSmallerThanLaptop ? 0 : undefined,
+              p: screenSize.isSmallerThanLaptop ? 0 : undefined,
+              cursor: 'pointer',
+            }}
+            onClick={() => {
+              deleteSelectedExercises(
+                {
+                  selectedExercises,
+                },
+                {
+                  component,
+                  training,
+                  setComponent,
+                  setTraining,
+                  setSelectedExercises,
+                  selectedSubgroup,
+                  setSelectedSubgroup,
+                  setDetectedChanges,
+                }
+              );
+            }}
+          >
+            <Delete fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
 
       <Box
