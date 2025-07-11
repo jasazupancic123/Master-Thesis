@@ -21,11 +21,11 @@ import { useDashboard } from '@/store/dashboard-provider';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import {
-  DASHBOARD_GROUPS,
+  DASHBOARD_PROGRESS,
   DASHBOARD_MAIN,
 } from '@/common/constant/dashboard-views-constant';
 import { Institution } from '@/controller/institution/type/institution.type';
-import DashboardStaffGroupsCycles from '@/components/dashboard-staff-groups-cycles/dashboard-staff-groups-cycles';
+import DashboardStaffGroupsCycles from '@/components/dashboard-groups-staff/dashboard-groups-staff';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 
@@ -202,7 +202,7 @@ export default function DashboardPage(props: DashboardPageProps) {
 
         <DashboardStaffGroupsCycles setModal={setModal} />
 
-        {view === DASHBOARD_MAIN ? (
+        {/* {view === DASHBOARD_MAIN ? (
           screenSize.isSmallerThanLaptop ? (
             <Box
               display="flex"
@@ -272,7 +272,7 @@ export default function DashboardPage(props: DashboardPageProps) {
           )
         ) : (
           view === DASHBOARD_GROUPS && <AthletesView />
-        )}
+        )} */}
       </Box>
 
       {/* Add Trainer Modal */}

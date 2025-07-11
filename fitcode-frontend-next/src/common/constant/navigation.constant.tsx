@@ -23,7 +23,7 @@ import {
 import {
   DASHBOARD_ADD_INSTITUTION,
   DASHBOARD_EXERCISES,
-  DASHBOARD_GROUPS,
+  DASHBOARD_PROGRESS,
   DASHBOARD_MAIN,
   DASHBOARD_REGISTER_USERS,
 } from '@/common/constant/dashboard-views-constant';
@@ -99,12 +99,29 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
 
+export const LINK_DASHBOARD_HOME = link('Home', DASHBOARD_MAIN, <Groups />);
+export const LINK_DASHBOARD_PROGRESS = link(
+  'Progress',
+  DASHBOARD_PROGRESS,
+  <TrendingUp />
+);
+export const LINK_EXERCISES_DASHBOARD_NAVIGATION = link(
+  'Exercises',
+  DASHBOARD_EXERCISES,
+  <FitnessCenterIcon />
+);
+export const LINK_ADD_INSTITUTION = link(
+  'Add Institution',
+  DASHBOARD_REGISTER_USERS,
+  <PersonAddAlt1 />
+);
+
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole[]) => ({
-  home: link('Home', DASHBOARD_MAIN, <HomeIcon />),
-  athletes: link('Progress', DASHBOARD_GROUPS, <TrendingUp />),
-  exercises: link('Exercises', DASHBOARD_EXERCISES, <FitnessCenterIcon />),
+  home: LINK_DASHBOARD_HOME,
+  athletes: LINK_DASHBOARD_PROGRESS,
+  exercises: LINK_EXERCISES_DASHBOARD_NAVIGATION,
   addInstitution: role.includes(UserRole.ADMIN)
-    ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)
+    ? LINK_ADD_INSTITUTION
     : undefined,
 });
 

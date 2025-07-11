@@ -33,6 +33,10 @@ import { Publish } from '@mui/icons-material';
 import { useAuth } from '@/store/auth-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -144,7 +148,9 @@ export default function ExercisesPage() {
 
         <ExerciseChips
           noSelectionLabel="All"
-          components={ComponentService.toTree(components)}
+          components={ComponentService.toTree(
+            components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID)
+          )}
           selected={selectedComponent}
           setSelected={(component) =>
             setSelectedComponent(component as Component)

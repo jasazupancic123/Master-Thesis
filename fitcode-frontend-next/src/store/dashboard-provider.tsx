@@ -1,7 +1,9 @@
 'use client';
 
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
+import { LINK_DASHBOARD_HOME } from '@/common/constant/navigation.constant';
 import { useFetch } from '@/common/hooks/use-fetch.hook';
+import { ILink } from '@/common/type/link.type';
 import { ChildrenProps } from '@/common/type/props.type';
 import { SetState } from '@/common/type/state.type';
 import { Group } from '@/controller/group/type/group.type';
@@ -12,6 +14,8 @@ import { url } from 'inspector';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 interface DashboardContextProps {
+  filter: ILink;
+  setFilter: SetState<ILink>;
   role: UserRole[];
   token: string;
   profile: User;
@@ -54,6 +58,7 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   // const [users, setUsers] = useState<User[]>(propsUsers);
 
+  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_HOME);
   const [institutions, setInstitutions] =
     useState<Institution[]>(propsInstitutions);
   const [selectedInstitution, setSelectedInstitution] =
@@ -77,6 +82,8 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   });
 
   const value: DashboardContextProps = {
+    filter,
+    setFilter,
     role,
     token,
     profile,
