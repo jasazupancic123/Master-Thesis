@@ -19,19 +19,22 @@ import { WorkloadValue } from './workload-value.entity';
 export class Workload extends IntersectionType(TimestampEntity, WorkloadValue) {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   institutionId?: string;
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   groupId?: string;
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   cycleId?: string;
 
