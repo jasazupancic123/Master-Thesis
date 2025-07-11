@@ -151,7 +151,7 @@ export default function CycleComponents(props: CycleComponentsProps) {
         );
 
         return (
-          <>
+          <Box key={component.id} width="100%">
             <Box
               display="flex"
               width="100%"
@@ -376,8 +376,8 @@ export default function CycleComponents(props: CycleComponentsProps) {
                 })}
               </Box>
             </Box>
-            <Divider sx={{ p: 0, m: 0 }} />
-          </>
+            <Divider sx={{ p: 0, mt: 3 }} />
+          </Box>
         );
       })}
     </Box>

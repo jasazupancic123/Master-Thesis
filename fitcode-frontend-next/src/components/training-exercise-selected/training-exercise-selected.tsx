@@ -23,27 +23,19 @@ import { useTheme } from '@mui/material/styles';
 import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import { Dimensions } from '@/common/type/dimensions.type';
 import { SetState } from '@/common/type/state.type';
+import { useSupersets } from '@/store/supersets-provider';
 
 interface TrainignExerciseSelectedProps {
   supersetIndex: number;
   exercise: TrainingExercise;
-  selectedExercise: TrainingExercise | null;
-  setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
-  supersets: Superset[];
   range: number[];
   setRange: SetState<number[]>;
-  setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
   paddingForChartBackground: Dimensions;
   percentageForChartBackground: number;
   max: number;
   data: ChartWorkloadData[];
   onAthleteView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
-  setsNumbers: { exerciseId: string; setsNumber: number }[];
-  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
-  setSupersets: SetState<Superset[]>;
-  expandedExercisesView: boolean;
-  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function TrainignExerciseSelected(
@@ -52,28 +44,29 @@ export default function TrainignExerciseSelected(
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const { selectedAthlete } = useTrainerDayViewContext();
+  const {
+    selectedExercise,
+    setSelectedExercise,
+    setOpenVideoPlayerModal,
+    setsNumbers,
+    setSetsNumbers,
+    expandedExercisesView,
+    setExpandedExercisesView,
+  } = useSupersets();
+  const { selectedAthlete, supersets, setSupersets } =
+    useTrainerDayViewContext();
   const { group } = useGroup();
 
   const {
     supersetIndex,
     exercise,
-    selectedExercise,
-    setSelectedExercise,
     superior,
-    setOpenVideoPlayerModal,
-    supersets,
     range,
     setRange,
     max,
     paddingForChartBackground,
     percentageForChartBackground,
     data,
-    setsNumbers,
-    setSetsNumbers,
-    setSupersets,
-    expandedExercisesView,
-    setExpandedExercisesView,
   } = props;
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
@@ -98,16 +91,8 @@ export default function TrainignExerciseSelected(
         <TrainingExerciseCard
           supersetIndex={supersetIndex}
           exercise={exercise}
-          selectedExercise={selectedExercise}
-          setSelectedExercise={setSelectedExercise}
           chartView={true}
           superior={superior}
-          setOpenVideoPlayerModal={setOpenVideoPlayerModal}
-          setsNumbers={setsNumbers}
-          setSetsNumbers={setSetsNumbers}
-          setSupersets={setSupersets}
-          expandedExercisesView={expandedExercisesView}
-          setExpandedExercisesView={setExpandedExercisesView}
         />
       </Grid2>
       <Grid2

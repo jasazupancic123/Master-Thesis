@@ -2,7 +2,14 @@ import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { Box, IconButton, MenuItem, Select, Typography } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material';
 import {
   DatePicker,
   DesktopDatePicker,
@@ -31,11 +38,13 @@ export default function TrainingCard(props: TrainingCardProps) {
 
   const {
     training: selectedTraining,
+    setTraining,
     selectedPeriod,
     setSelectedPeriod,
     selectedSubgroup,
     setSelectedSubgroup,
     component,
+    setComponent,
     selectedAthlete,
     setSelectedAthlete,
   } = useTrainerDayViewContext();
@@ -115,6 +124,10 @@ export default function TrainingCard(props: TrainingCardProps) {
           {cycle && component && (
             <Box
               sx={{
+                height: 22,
+                maxHeight: 22,
+                width: 150,
+                maxWidth: 150,
                 position: 'absolute',
                 left: '50%',
                 transform: 'translateX(-50%)',
@@ -125,14 +138,83 @@ export default function TrainingCard(props: TrainingCardProps) {
                 px: screenSize.isMobile ? 2 : 4,
               }}
             >
-              <Typography
-                textAlign="center"
-                variant="body2"
-                fontSize={12}
-                sx={{ pb: 0.5, color: theme.palette.background.lightText }}
-              >
-                {selectedSubgroup?.subgroup?.name || 'Main group'}
-              </Typography>
+              {selectedSubgroup?.subgroup ? (
+                <TextField
+                  value={selectedSubgroup.subgroup.name}
+                  variant="standard"
+                  size="small"
+                  fullWidth
+                  sx={{
+                    color: theme.palette.text.primary,
+                    fontSize: 12,
+                    textAlign: 'center',
+                    width: '100%',
+                    p: 0,
+                    m: 0,
+                    '& .MuiInput-underline:before': {
+                      color: 'transparent !important',
+                      border: 'none !important',
+                    },
+                    '& .MuiInput-underline:after': {
+                      border: 'none',
+                    },
+                    '& .MuiInput-underline:hover:before': {
+                      border: 'none',
+                    },
+                    ':hover': {
+                      border: 'none',
+                    },
+                  }}
+                  inputProps={{
+                    style: {
+                      border: 'none',
+                      textAlign: 'center',
+                      fontSize: 12,
+                      paddingTop: 0,
+                      paddingBottom: 0,
+                    },
+                  }}
+                  onChange={(e) => {
+                    setSelectedSubgroup((prev) => {
+                      if (!prev || !prev.subgroup) return null;
+                      const updatedSubgroup = {
+                        ...prev.subgroup,
+                        name: e.target.value,
+                      };
+                      const updatedComponent = {
+                        ...component,
+                        subgroups: component.subgroups.map((sg) =>
+                          sg.id === prev.subgroup?.id ? updatedSubgroup : sg
+                        ),
+                      };
+                      setComponent(updatedComponent);
+                      setTraining((prev) => {
+                        if (!prev) return prev;
+                        return {
+                          ...prev,
+                          components: prev.components.map((c) =>
+                            c.id === component.id ? updatedComponent : c
+                          ),
+                        };
+                      });
+
+                      return {
+                        ...prev,
+                        subgroup: updatedSubgroup,
+                      };
+                    });
+                  }}
+                />
+              ) : (
+                <Typography
+                  textAlign="center"
+                  variant="body2"
+                  fontSize={12}
+                  sx={{ pb: 0.5, color: theme.palette.background.lightText }}
+                >
+                  Main group
+                </Typography>
+              )}
             </Box>
           )}
         </Box>
