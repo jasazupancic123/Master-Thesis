@@ -334,60 +334,6 @@ export class WorkloadService {
     return await this.firebaseService.paginateBatchWrites(operations);
   }
 
-  createForCustomAthleteWorkloads(
-    batch: WriteBatch,
-    workloads: Workload[],
-    trainings: Training[],
-  ) {
-    for (const workload of workloads) {
-      const docRef = this.repository
-        .collection({ trainingId: workload.trainingId })
-        .doc(
-          this.repository.getKey({
-            trainingId: workload.trainingId,
-            componentId: workload.componentId,
-            exerciseId: workload.exerciseId,
-            setNumber: workload.setNumber,
-            userId: workload.userId,
-          }),
-        );
-
-      const training = trainings.find((t) => t.id === workload.trainingId);
-      if (!training) continue;
-
-      const query = this.firebaseService.buildCreateQuery<Workload>(
-        {
-          groupId: workload.groupId,
-          cycleId: workload.cycleId,
-          userId: workload.userId,
-          trainingId: workload.trainingId,
-          componentId: workload.componentId,
-          exerciseId: workload.exerciseId,
-          setNumber: workload.setNumber,
-          status: SetStatus.NOT_STARTED,
-          plannedAt: training.from,
-          notes: null,
-          isCustom: true,
-          prescribedIntRecValueL: workload.prescribedIntRecValueL,
-          prescribedIntRecValueR: workload.prescribedIntRecValueR,
-          prescribedIntWork1ValueL: workload.prescribedIntWork1ValueL,
-          prescribedIntWork1ValueR: workload.prescribedIntWork1ValueR,
-          prescribedIntWork2ValueL: workload.prescribedIntWork2ValueL,
-          prescribedIntWork2ValueR: workload.prescribedIntWork2ValueR,
-          prescribedVolRecValueL: workload.prescribedVolRecValueL,
-          prescribedVolRecValueR: workload.prescribedVolRecValueR,
-          prescribedVolWork1ValueL: workload.prescribedVolWork1ValueL,
-          prescribedVolWork1ValueR: workload.prescribedVolWork1ValueR,
-          prescribedVolWork2ValueL: workload.prescribedVolWork2ValueL,
-          prescribedVolWork2ValueR: workload.prescribedVolWork2ValueR,
-        },
-        { timestamps: true },
-      );
-
-      batch.set(docRef, query);
-    }
-  }
-
   async deleteWorkloads(workloads: Workload[]): Promise<void> {
     const refs = workloads.map((w) => ({
       trainingId: w.trainingId,

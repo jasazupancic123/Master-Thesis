@@ -75,9 +75,7 @@ export class WorkloadRepository
 
   async deleteDocs(ref: WorkloadRef[]) {
     const batch = this.firebaseService.firestore.batch();
-    ref.forEach((r) => {
-      batch.delete(this.doc(r));
-    });
+    ref.forEach((r) => batch.delete(this.doc(r)));
     await batch.commit();
   }
 

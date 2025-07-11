@@ -1,16 +1,14 @@
+import { WorkloadOptions } from '../../../test/common/type/workload.type';
 import { generateRandomNumber } from '../../../test/common/utils/random.util';
 import { IntType, VolType } from '../../component/enum/param.enum';
 import {
   CompletedWorkload,
   PrescribedWorkload,
-  WorkloadValue,
 } from '../entity/workload-value.entity';
 import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 
-export function generateWorkloadStub(
-  data?: Partial<Workload> & { completed?: boolean },
-): Workload {
+export function generateWorkloadStub(data?: Partial<Workload>): Workload {
   return {
     institutionId: data?.institutionId,
     groupId: data?.groupId,
@@ -31,50 +29,58 @@ export function generateWorkloadStub(
   };
 }
 
-export function generateWorkloadValuesStub(
-  data?: Partial<WorkloadValue> & { completed?: boolean },
-): WorkloadValue {
-  const completed = data?.completed || false;
-
+export function generatePrescribedWorkloadStub(
+  data?: Partial<PrescribedWorkload>,
+): PrescribedWorkload {
   return {
     volWork1Type: data?.volWork1Type || VolType.Rep,
     prescribedVolWork1ValueL: data?.prescribedVolWork1ValueL || 12,
     prescribedVolWork1ValueR: data?.prescribedVolWork1ValueR || 12,
-    volWork1ValueL:
-      data?.volWork1ValueL || completed ? generateRandomNumber(0, 12) : null,
-    volWork1ValueR:
-      data?.volWork1ValueR || completed ? generateRandomNumber(0, 12) : null,
     volWork2Type: data?.volWork2Type || VolType.Time,
     prescribedVolWork2ValueL: data?.prescribedVolWork2ValueL || 60,
     prescribedVolWork2ValueR: data?.prescribedVolWork2ValueL || 60,
-    volWork2ValueL:
-      data?.volWork2ValueL || completed ? generateRandomNumber(0, 12) : null,
-    volWork2ValueR:
-      data?.volWork2ValueR || completed ? generateRandomNumber(0, 12) : null,
     volRecType: data?.volRecType || VolType.Time,
     prescribedVolRecValueL: data?.prescribedVolRecValueL || 60,
     prescribedVolRecValueR: data?.prescribedVolRecValueR || 60,
-    volRecValueL:
-      data?.volRecValueL || completed ? generateRandomNumber(0, 60) : null,
-    volRecValueR:
-      data?.volRecValueR || completed ? generateRandomNumber(0, 60) : null,
     intWork1Type: data?.intWork1Type || IntType.Kg,
     prescribedIntWork1ValueL: data?.prescribedIntWork1ValueL || 20,
     prescribedIntWork1ValueR: data?.prescribedIntWork1ValueR || 20,
-    intWork1ValueL:
-      data?.intWork1ValueL || completed ? generateRandomNumber(0, 20) : null,
-    intWork1ValueR:
-      data?.intWork1ValueR || completed ? generateRandomNumber(0, 20) : null,
     intWork2Type: data.intWork2Type || IntType.Eff,
     prescribedIntWork2ValueL: data?.prescribedIntWork2ValueL || 0,
     prescribedIntWork2ValueR: data?.prescribedIntWork2ValueR || 0,
-    intWork2ValueL: data?.intWork2ValueL || completed ? 0 : null,
-    intWork2ValueR: data?.intWork2ValueR || completed ? 0 : null,
     intRecType: data?.intRecType || IntType.Tempo,
     prescribedIntRecValueL: data?.prescribedIntRecValueL || 0,
     prescribedIntRecValueR: data?.prescribedIntRecValueR || 0,
-    intRecValueL: data?.intRecValueL || completed ? 0 : null,
-    intRecValueR: data?.intRecValueR || completed ? 0 : null,
+  };
+}
+
+export function generateCompletedWorkloadStub(
+  data?: Partial<CompletedWorkload>,
+  options?: WorkloadOptions,
+): CompletedWorkload {
+  const random = options?.random || false;
+
+  return {
+    volWork1ValueL:
+      data?.volWork1ValueL || random ? generateRandomNumber(0, 12) : null,
+    volWork1ValueR:
+      data?.volWork1ValueR || random ? generateRandomNumber(0, 12) : null,
+    volWork2ValueL:
+      data?.volWork2ValueL || random ? generateRandomNumber(0, 12) : null,
+    volWork2ValueR:
+      data?.volWork2ValueR || random ? generateRandomNumber(0, 12) : null,
+    volRecValueL:
+      data?.volRecValueL || random ? generateRandomNumber(0, 60) : null,
+    volRecValueR:
+      data?.volRecValueR || random ? generateRandomNumber(0, 60) : null,
+    intWork1ValueL:
+      data?.intWork1ValueL || random ? generateRandomNumber(0, 20) : null,
+    intWork1ValueR:
+      data?.intWork1ValueR || random ? generateRandomNumber(0, 20) : null,
+    intWork2ValueL: data?.intWork2ValueL || random ? 0 : null,
+    intWork2ValueR: data?.intWork2ValueR || random ? 0 : null,
+    intRecValueL: data?.intRecValueL || random ? 0 : null,
+    intRecValueR: data?.intRecValueR || random ? 0 : null,
   };
 }
 

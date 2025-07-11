@@ -15,7 +15,6 @@ import {
   deleteDoc,
   deleteCollection,
 } from '../common/utils/data.util';
-import { COMPONENT_ENDURANCE } from '../common/constant/component.constant';
 import {
   generateSuperset,
   generateTrainingComponent,
@@ -23,14 +22,17 @@ import {
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { ATTRIBUTE_ENDURANCE_OPTIONS } from '../common/constant/attribute.constant';
 import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { Attribute } from '../../src/attribute/entity/attribute.entity';
 import { Component } from '../../src/component/entity/component.entity';
-import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
 import { TestInstitution } from '../common/type/entity.type';
+import { generateCycleStub } from '../../src/group/mock/cycle.stub';
+import { addDays, addMinutes, subDays } from 'date-fns';
+import { Training } from '../../src/training/entity/training.entity';
+import { generateComponentStub } from '../../src/component/mock/component.stub';
+import { Exercise } from '../../src/exercise/entity/exercise.entity';
+import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 
-describe('Training Exercise Params (e2e)', () => {
+describe('Complete training component (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
   let componentService: ComponentService;
@@ -40,10 +42,27 @@ describe('Training Exercise Params (e2e)', () => {
   let groupService: GroupService;
   let institutionService: InstitutionService;
 
-  let attribute: Attribute;
-  let leaf: Component;
+  let component1: Component;
+  let component2: Component;
+  let leaf1: Component;
+  let leaf2: Component;
+
   let institution: TestInstitution;
   let group: Group;
+
+  /**
+   * ```txt
+   * Training:
+   *   1st component (component1):
+   *     1st superset: e1, e2
+   *     2nd superset: e1, e3
+   *   2st component (component2):
+   *     1st superset: e5, e6
+   *     2nd superset: e4
+   * ```
+   */
+  let training: Training;
+  let exercises: Exercise[];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -61,13 +80,107 @@ describe('Training Exercise Params (e2e)', () => {
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
 
-    attribute = await attributeService.create(ATTRIBUTE_ENDURANCE_OPTIONS);
-    await componentService.createFromTree(COMPONENT_ENDURANCE);
-    const flat = await componentService.findAllFlat();
-    leaf = componentService.leafsFromFlat(flat)[0];
+    component1 = await componentService.create(
+      generateComponentStub({ id: 'c1' }),
+    );
+
+    component2 = await componentService.create(
+      generateComponentStub({ id: 'c2' }),
+    );
+
+    leaf1 = await componentService.create(
+      generateComponentStub({ id: 'leaf1', parentId: 'c1' }),
+    );
+
+    leaf2 = await componentService.create(
+      generateComponentStub({ id: 'leaf2', parentId: 'c2' }),
+    );
 
     institution = await createInstitution(institutionService);
     group = await createGroupWithCycles(groupService, institution);
+    group = await groupService.update(
+      trainer,
+      { groupId: group.id },
+      {
+        cycles: [
+          generateCycleStub({
+            from: subDays(new Date(), 3),
+            to: addDays(new Date(), 3),
+          }),
+        ],
+      },
+    );
+
+    exercises = await exerciseService.createMany(admin, [
+      generateExerciseStub({ componentIds: [leaf1.id] }),
+      generateExerciseStub({ componentIds: [leaf1.id] }),
+      generateExerciseStub({ componentIds: [leaf1.id] }),
+      generateExerciseStub({ componentIds: [leaf2.id] }),
+      generateExerciseStub({ componentIds: [leaf2.id] }),
+      generateExerciseStub({ componentIds: [leaf2.id] }),
+    ]);
+
+    training = await trainingService.create(
+      trainer,
+      generateTrainingStub({
+        institutionId: institution.id,
+        groupId: group.id,
+        cycleId: group.cycles[0].id,
+        membersIds: [athlete.uid],
+        components: [
+          generateTrainingComponent({
+            from: new Date(),
+            id: component1.id,
+          }),
+          generateTrainingComponent({
+            from: addMinutes(new Date(), 30),
+            id: component2.id,
+          }),
+        ],
+      }),
+    );
+
+    training = await trainingService.update(
+      trainer,
+      { trainingId: training.id },
+      {
+        components: [
+          generateTrainingComponent({
+            from: new Date(),
+            id: component1.id,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: exercises[0].id }),
+                  generateTrainingExercise({ id: exercises[1].id }),
+                ],
+              }),
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: exercises[0].id }),
+                  generateTrainingExercise({ id: exercises[2].id }),
+                ],
+              }),
+            ],
+          }),
+          generateTrainingComponent({
+            from: addMinutes(new Date(), 30),
+            id: component2.id,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({ id: exercises[4].id }),
+                  generateTrainingExercise({ id: exercises[5].id }),
+                ],
+              }),
+              generateSuperset({
+                exercises: [generateTrainingExercise({ id: exercises[3].id })],
+              }),
+            ],
+          }),
+        ],
+      },
+    );
   });
 
   afterAll(async () => {
@@ -77,7 +190,6 @@ describe('Training Exercise Params (e2e)', () => {
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
       deleteCollection(firebase, 'COMPONENT'),
-      deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
     ]);
 
     await app.close();
@@ -87,50 +199,95 @@ describe('Training Exercise Params (e2e)', () => {
     return `/training/${trainingId}/component/${componentId}/complete`;
   }
 
-  async function createExercise(attributeValues: ExerciseAttributeValue[]) {
-    return await exerciseService.create(
-      admin,
-      generateExerciseStub({ componentIds: [leaf.id], attributeValues }),
-    );
-  }
+  it('should throw error if training not found', async () => {
+    const response = await request(app.getHttpServer())
+      .patch(url('invalid-training-id', 'component-id'))
+      .set('Authorization', `Bearer ${athlete.token}`)
+      .send({});
 
-  async function createTraining(componentId: string, exerciseId: string) {
-    return await trainingService.create(
-      trainer,
-      generateTrainingStub({
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: componentId,
-            supersets: [
-              generateSuperset({
-                exercises: [generateTrainingExercise({ id: exerciseId })],
-              }),
-            ],
-          }),
-        ],
-      }),
-    );
-  }
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Training not found');
+  });
 
-  it('should work', async () => {
-    const exercise = await createExercise([]);
-    const training = await createTraining(COMPONENT_ENDURANCE.id, exercise.id);
-
-    const workloads = [
-      generateSuperset({
-        exercises: [generateTrainingExercise()],
-      }),
-    ];
+  it('should throw error if training is in the future', async () => {
+    const trainingTomorrow = await firebase.firestore
+      .collection(FirestoreCollection.TRAINING)
+      .add(generateTrainingStub({ from: addDays(new Date(), 2) }));
 
     const response = await request(app.getHttpServer())
-      .post(url(training.id, COMPONENT_ENDURANCE.id))
+      .patch(url(trainingTomorrow.id, 'component-id'))
       .set('Authorization', `Bearer ${athlete.token}`)
-      .send({
-        rootComponentId: COMPONENT_ENDURANCE.id,
-        supersets: workloads,
-      });
+      .send({});
+
+    expect(response.status).toBe(409);
+    expect(response.body.message).toBe('You cannot start this training');
+
+    await deleteDoc(firebase, 'TRAINING', trainingTomorrow.id);
   });
+
+  it('should throw error if training is in the future', async () => {
+    const trainingYesterday = await firebase.firestore
+      .collection(FirestoreCollection.TRAINING)
+      .add(generateTrainingStub({ from: subDays(new Date(), 2) }));
+
+    const response = await request(app.getHttpServer())
+      .patch(url(trainingYesterday.id, 'component-id'))
+      .set('Authorization', `Bearer ${athlete.token}`)
+      .send({});
+
+    expect(response.status).toBe(409);
+    expect(response.body.message).toBe('You cannot start this training');
+
+    await deleteDoc(firebase, 'TRAINING', trainingYesterday.id);
+  });
+
+  it('should throw error if training component does not exist', async () => {
+    const response = await request(app.getHttpServer())
+      .patch(url(training.id, 'component-id'))
+      .set('Authorization', `Bearer ${athlete.token}`)
+      .send({});
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Training component not found');
+  });
+
+  it.each([
+    ['manager', manager.token],
+    ['trainer', trainer.token],
+  ])(
+    'should throw error if current user is %s and does not provide athleteId',
+    async (_, token) => {
+      const response = await request(app.getHttpServer())
+        .patch(url(training.id, component1.id))
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('You must provide athlete');
+    },
+  );
+
+  it('should throw error if provided athlete does not exist', async () => {
+    const response = await request(app.getHttpServer())
+      .patch(url(training.id, component1.id))
+      .set('Authorization', `Bearer ${trainer.token}`)
+      .send({ userId: 'unknown-athlete-id' });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Athlete does not exist');
+  });
+
+  it('should throw error if provided athlete is not part of the institution', async () => {});
+
+  describe('Create Workloads', () => {
+    it('should throw error if a single prescribed exercise in superset is omitted', async () => {});
+
+    it('should throw error if a combination of prescribed exercises in superset are omitted', async () => {});
+
+    it('should throw error if a single provided completed set does not equal provided set (same setNumber and fields)', async () => {});
+
+    it('should throw error if a combination of provided completed sets does not equal provided sets', async () => {});
+  });
+
+  it('should successfully complete training component and update necessary relations', async () => {});
 });

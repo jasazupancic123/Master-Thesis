@@ -278,22 +278,22 @@ export class TrainingPlanService {
 
   /**
    * @param completedStats - CompletedStats of existing training in database
-   * @param exercises - New completed exercises values from athlete
+   * @param completedExercises - New completed exercises values from athlete
    */
   calculateCompletedTrainingStats(
     completedStats: GroupWorkloadStats[],
-    exercises: CompletedTrainingExercise[],
+    completedExercises: CompletedTrainingExercise[],
   ) {
-    for (const exercise of exercises) {
+    for (const completedExercise of completedExercises) {
       const avgFutureStats = completedStats.find(
-        (avg) => avg.exerciseId === exercise.id,
+        (avg) => avg.exerciseId === completedExercise.id,
       );
 
-      const intensitiesL = exercise.sets
+      const intensitiesL = completedExercise.sets
         .flatMap((set) => set.paramValuesL)
         .filter((p) => p.field === ParamType.IntWork1);
 
-      const intensitiesR = exercise.sets
+      const intensitiesR = completedExercise.sets
         .flatMap((set) => set.paramValuesR)
         .filter((p) => p.field === ParamType.IntWork1);
 
@@ -304,11 +304,11 @@ export class TrainingPlanService {
             intensitiesR.length) /
         2;
 
-      const volumesL = exercise.sets
+      const volumesL = completedExercise.sets
         .flatMap((set) => set.paramValuesL)
         .filter((p) => p.field === ParamType.VolWork1);
 
-      const volumesR = exercise.sets
+      const volumesR = completedExercise.sets
         .flatMap((set) => set.paramValuesR)
         .filter((p) => p.field === ParamType.VolWork1);
 
