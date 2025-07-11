@@ -1,9 +1,11 @@
 import {
   BadRequestException,
+  ConflictException,
   forwardRef,
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import {
@@ -68,6 +70,7 @@ import {
 import { ExerciseService } from '../../exercise/service/exercise.service';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { LogMethod } from '../../common/decorator/log-method.decorator';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -591,11 +594,14 @@ export class TrainingService implements Permission<Training, Institution> {
     // for future trainings, update latest meta and calculate workloads
     const wellness =
       await this.userService.getRecentWellnessForMany(membersIds);
-    const workloads = await this.workloadService.findAllByMembers(membersIds);
 
     const updated = {
       ...training,
       ...this.commonService.object.clean(input),
+      futureStats: this.trainingPlanService.createFutureTrainingStats(
+        input.components,
+        membersIds.length,
+      ),
     };
 
     const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
@@ -641,16 +647,6 @@ export class TrainingService implements Permission<Training, Institution> {
         { trainingId: data.id },
         { skipInstitution: true },
       );
-
-      const flatTrainingIds = customAthleteWorkloads.flatMap(
-        (cw) => cw.trainingId,
-      );
-
-      const trainings = flatTrainingIds.length
-        ? await this.trainingRepository.getDocs((q) =>
-            q.where('id', 'in', flatTrainingIds),
-          )
-        : [];
 
       const { from, to } = this.getFromAndToDates(data.components);
       this.validateIsDateInCycle(from, cycle);
@@ -994,13 +990,6 @@ export class TrainingService implements Permission<Training, Institution> {
     this.validateCanEdit(user, training, institution);
     this.validateIsDateInFuture(training.from);
 
-    const notStartedWorkloads = await this.workloadService.findAllByTraining(
-      ref.trainingId,
-      SetStatus.NOT_STARTED,
-    );
-
-    // delete non started workloads
-    await this.workloadService.deleteWorkloads(notStartedWorkloads);
     await this.trainingRepository.deleteDoc(ref.trainingId);
   }
 
@@ -1012,16 +1001,28 @@ export class TrainingService implements Permission<Training, Institution> {
   ): Promise<Training> {
     const { trainingId, componentId } = ref;
     const training = await this.findOneByIdOrFail(user, ref);
+
+    // if training does not start within the current day, throw error
+    if (
+      !this.commonService.date.isBetween(
+        training.from,
+        startOfDay(new Date()),
+        endOfDay(new Date()),
+      )
+    )
+      throw new ConflictException('You cannot start this training');
+
     const trainingComponent = this.trainingPlanService.findComponentOrFail(
       training,
       componentId,
     );
 
     // validate athlete input for manager / trainer
-    const athlete = await this.getAthlete(user, {
-      athleteId: input.userId,
-      institution: training.institution,
-    });
+    const athlete = await this.getAthlete(
+      user,
+      input.userId,
+      training.institution,
+    );
 
     // create workloads
     await this.workloadService.createForTrainingComponent(
@@ -1145,17 +1146,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // delete component
     if (query.components.length === 0) {
-      // delete doc
       this.logger.log('No components left, deleting training');
-
-      const notStartedWorkloads = await this.workloadService.findAllByTraining(
-        ref.trainingId,
-        SetStatus.NOT_STARTED,
-      );
-
-      // delete non started workloads
-      await this.workloadService.deleteWorkloads(notStartedWorkloads);
-
       await this.trainingRepository.deleteDoc(ref.trainingId);
     } else await this.trainingRepository.updateDoc(ref.trainingId, query);
 
@@ -1168,10 +1159,11 @@ export class TrainingService implements Permission<Training, Institution> {
     ref: TrainingRef & { athleteId: string },
   ) {
     const training = await this.findOneByIdOrFail(user, ref);
-    const athlete = await this.getAthlete(user, {
-      athleteId: ref.athleteId,
-      institution: training.institution,
-    });
+    const athlete = await this.getAthlete(
+      user,
+      ref.athleteId,
+      training.institution,
+    );
   }
 
   /**
@@ -1181,13 +1173,14 @@ export class TrainingService implements Permission<Training, Institution> {
    */
   private async getAthlete(
     user: User,
-    trainerOptions?: { athleteId: string; institution: Institution },
+    athleteId: string,
+    institution?: Institution,
   ) {
     if (this.firebaseService.isAthlete(user)) return user;
-    if (!trainerOptions) throw new Error('You must provide trainer options');
+    if (!athleteId) throw new BadRequestException('You must provide athlete');
 
-    const { athleteId, institution } = trainerOptions;
     const found = await this.userService.findOneBy('id', athleteId);
+    if (!found) throw new NotFoundException('Athlete does not exist');
 
     if (institution)
       if (!this.institutionService.canView(found, institution))

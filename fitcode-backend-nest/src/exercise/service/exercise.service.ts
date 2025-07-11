@@ -31,6 +31,7 @@ import { CreateExerciseDto } from '../dto/create-exercise.dto';
 import { Attribute } from '../../attribute/entity/attribute.entity';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
+import { LogMethod } from '../../common/decorator/log-method.decorator';
 
 @Injectable()
 export class ExerciseService implements Permission<Exercise, Institution> {
@@ -38,7 +39,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
   constructor(
     private readonly cacheManagerService: CacheManagerService,
-    private readonly exerciseRepository: ExerciseRepository,
+    private readonly repository: ExerciseRepository,
     private readonly exerciseAttributeValueRepository: ExerciseAttributeValueRepository,
     private readonly commonService: CommonService,
     private readonly firebaseService: FirebaseService,
@@ -66,7 +67,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       await this.cacheManagerService.get<Exercise[]>(CACHE_KEY_EXERCISES);
 
     if (!exercises) {
-      exercises = await this.exerciseRepository.getDocs();
+      exercises = await this.repository.getDocs();
       await this.cacheManagerService.set(CACHE_KEY_EXERCISES, exercises);
     }
 
@@ -124,9 +125,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
       (Object.keys(filter).length === 1 && filter.componentIds)
     ) {
       // filtering only by components from exercise repository
-      let query = this.exerciseRepository
-        .collection()
-        .where('ownerId', '==', userId);
+      let query = this.repository.collection().where('ownerId', '==', userId);
 
       if (filter?.componentIds)
         query = this.filterByComponents(
@@ -177,7 +176,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
   async findOneById(user: User, ref: ExerciseRef): Promise<Exercise | null> {
     // find exercise
-    const exercise = await this.exerciseRepository.getDoc(ref.exerciseId);
+    const exercise = await this.repository.getDoc(ref.exerciseId);
     if (!exercise) return null;
 
     if (exercise.ownerId !== GLOBAL_EXERCISE_OWNER) {
@@ -202,11 +201,8 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     return exercise;
   }
 
+  @LogMethod()
   async create(user: User, data: CreateExerciseDto): Promise<Exercise> {
-    this.logger.log(
-      `User ${user.uid} is creating new exercise: ${JSON.stringify(data)}`,
-    );
-
     const attributes = await this.attributeService.findAll();
     const components = await this.componentService.findAllFlat();
 
@@ -232,12 +228,12 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     );
 
     // create exercise
+    const slug = await this.repository.slug(data.name);
     const batch = this.firebaseService.firestore.batch();
-    const docRef = this.exerciseRepository.collection().doc();
-    const exerciseId = docRef.id;
+    const docRef = this.repository.collection().doc(slug);
     const createExerciseQuery = this.firebaseService.buildCreateQuery<Exercise>(
       {
-        id: exerciseId,
+        id: slug,
         ownerId: ownerId,
         name: data.name,
         componentIds: data.componentIds,
@@ -253,13 +249,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     // create attributes
     attributeValues.forEach((v) => {
       const docRef = this.exerciseAttributeValueRepository
-        .collection({ exerciseId })
+        .collection({ exerciseId: slug })
         .doc();
 
       const query =
         this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
           id: docRef.id,
-          exerciseId,
+          exerciseId: slug,
           ownerId,
           componentIds: data.componentIds,
           field: v.field,
@@ -275,12 +271,12 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
     return {
       ...data,
-      id: exerciseId,
+      id: slug,
       ownerId: ownerId,
       attributeValues: attributeValues.map((v) => ({
         ...v,
         id: undefined,
-        exerciseId,
+        exerciseId: slug,
         ownerId,
         componentIds: data.componentIds,
       })),
@@ -289,14 +285,11 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     };
   }
 
+  @LogMethod()
   async createMany(
     user: User,
     exercises: Create<Omit<Exercise, 'ownerId' | 'id' | 'attributes'>>[],
   ) {
-    this.logger.log(
-      `User ${user.uid} is creating new exercises: ${JSON.stringify(exercises)}`,
-    );
-
     // validate components
     const allComponents = await this.componentService.findAllFlat();
     const allAttributes = await this.attributeService.findAll();
@@ -350,12 +343,12 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     const result: Exercise[] = [];
     const batch = this.firebaseService.firestore.batch();
 
-    exercisesToCreate.forEach((e) => {
-      const docRef = this.exerciseRepository.collection().doc();
-      const exerciseId = docRef.id;
+    for (const e of exercisesToCreate) {
+      const slug = await this.repository.slug(e.name);
+      const docRef = this.repository.collection().doc(slug);
 
       const item: Create<Exercise> = {
-        id: exerciseId,
+        id: slug,
         ownerId,
         name: e.name,
         componentIds: e.componentIds,
@@ -373,13 +366,13 @@ export class ExerciseService implements Permission<Exercise, Institution> {
 
       e.attributeValues.forEach((v) => {
         const docRef = this.exerciseAttributeValueRepository
-          .collection({ exerciseId })
+          .collection({ exerciseId: slug })
           .doc();
 
         const query =
           this.firebaseService.buildCreateQuery<ExerciseAttributeValue>({
             id: docRef.id,
-            exerciseId,
+            exerciseId: slug,
             ownerId,
             componentIds: e.componentIds,
             field: v.field,
@@ -396,7 +389,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-    });
+    }
 
     await batch.commit();
     await this.cacheManagerService.del(CACHE_KEY_EXERCISES);
@@ -511,7 +504,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
     );
 
     const batch = this.firebaseService.firestore.batch();
-    const docRef = this.exerciseRepository.doc(exercise.id);
+    const docRef = this.repository.doc(exercise.id);
     const updateExerciseQuery =
       this.firebaseService.buildUpdateQuery<Exercise>(input);
 
@@ -566,7 +559,7 @@ export class ExerciseService implements Permission<Exercise, Institution> {
         'You are not allowed to edit this exercise',
       );
 
-    await this.exerciseRepository.deleteDoc(ref.exerciseId);
+    await this.repository.deleteDoc(ref.exerciseId);
   }
 
   /**

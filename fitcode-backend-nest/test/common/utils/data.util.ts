@@ -239,7 +239,6 @@ export function createWorkloadsForTraining(
       for (const { setNumber } of exercise.sets)
         workloads.push(
           generateWorkloadStub({
-            completed: options?.completed,
             groupId: training.groupId,
             cycleId: training.cycleId,
             userId,

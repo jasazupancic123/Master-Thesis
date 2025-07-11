@@ -4,7 +4,7 @@ import { CommonService } from '../common/service/common.service';
 import { Filter } from '../common/type/orm.type';
 import { Component } from './entity/component.entity';
 import { ComponentRepository } from './repository/component.repository';
-import { CacheManagerService } from '../../src/cache-manager/cache-manager.service';
+import { CacheManagerService } from '../cache-manager/cache-manager.service';
 import {
   COOLDOWN_COMPONENT,
   WARMUP_COMPONENT,
@@ -15,6 +15,7 @@ import { Attribute } from '../attribute/entity/attribute.entity';
 import { AttributeType } from '../common/enum/attribute-type.enum';
 import { PARAMS, DEFAULT_PARAMS_KEY } from './constant/param.constant';
 import { ComponentParam } from './entity/component-param.entity';
+import { LogMethod } from '../common/decorator/log-method.decorator';
 
 @Injectable()
 export class ComponentService {
@@ -26,8 +27,8 @@ export class ComponentService {
     private readonly componentRepository: ComponentRepository,
   ) {}
 
+  @LogMethod()
   async create(data: Create<Component>): Promise<Component> {
-    this.logger.debug(`Creating component with data ${JSON.stringify(data)}`);
     const componentSlug = await this.componentRepository.addDoc(data);
 
     // TODO - if newly created component is leaf node, move all parent exercises to "Other" component

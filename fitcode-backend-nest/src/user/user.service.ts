@@ -59,14 +59,20 @@ export class UserService {
     return user;
   }
 
-  async findOneBy(key: 'id' | 'email', value: string): Promise<User> {
-    switch (key) {
-      case 'id':
-        return (await this.firebaseService.auth.getUser(value)) as User;
-      case 'email':
-        return (await this.firebaseService.auth.getUserByEmail(value)) as User;
-      default:
-        throw new Error('Invalid key');
+  async findOneBy(key: 'id' | 'email', value: string): Promise<User | null> {
+    try {
+      switch (key) {
+        case 'id':
+          return (await this.firebaseService.auth.getUser(value)) as User;
+        case 'email':
+          return (await this.firebaseService.auth.getUserByEmail(
+            value,
+          )) as User;
+        default:
+          throw new Error('Invalid key');
+      }
+    } catch (e) {
+      return null;
     }
   }
 
