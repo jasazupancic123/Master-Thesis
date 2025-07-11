@@ -330,7 +330,7 @@ export class WorkloadService {
 
       const query = this.firebaseService.buildCreateQuery<Workload>(
         {
-          institutionId: workload.institutionId || training.institutionId,
+          institutionId: workload.institutionId,
           groupId: workload.groupId,
           cycleId: workload.cycleId,
           userId: workload.userId,
