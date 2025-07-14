@@ -17,6 +17,7 @@ import {
   deleteUsers,
 } from '../common/utils/data.util';
 import {
+  generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
@@ -32,10 +33,7 @@ import { generateComponentStub } from '../../src/component/mock/component.stub';
 import { Exercise } from '../../src/exercise/entity/exercise.entity';
 import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { createAthleteUserAndToken } from '../common/utils/auth.util';
-import {
-  CompletedTrainingComponent,
-  CompletedTrainingExercise,
-} from '../../src/training/entity/completed-training.entity';
+import { generateCompletedTrainingExerciseStub } from '../../src/training/mock/completed-training.stub';
 
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;
@@ -58,11 +56,11 @@ describe('Complete training component (e2e)', () => {
    * ```txt
    * Training:
    *   1st component (component1):
-   *     1st superset: e1, e2
-   *     2nd superset: e1, e3
+   *     1st superset: squat l1 (partial params), bench l1 (partial params)
+   *     2nd superset: squat l1, deadlift l1
    *   2st component (component2):
-   *     1st superset: e5, e6
-   *     2nd superset: e4
+   *     1st superset: bench l2, deadlift l2
+   *     2nd superset: squat l2
    * ```
    */
   let training: Training;
@@ -154,8 +152,14 @@ describe('Complete training component (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExercise(
+                    { id: exercises[0].id },
+                    { partialSet: true },
+                  ),
+                  generateTrainingExercise(
+                    { id: exercises[1].id },
+                    { partialSet: true },
+                  ),
                 ],
               }),
               generateSuperset({
@@ -298,27 +302,65 @@ describe('Complete training component (e2e)', () => {
 
   describe('Create Workloads', () => {
     it.each([
-      [{ exercises: [] as CompletedTrainingExercise[] }],
+      ['empty array', { correctExercise: 'Squat L1', supersetIndex: 1 }, []],
       [
+        'invalid first exercise', // description of error
         {
-          exercises: [
-            {
-              id: 'deadlift-l1',
-              supersetIndex: 0,
-              sets: [
-                {
-                  setNumber: 1,
-                  paramValuesL: [],
-                  paramValuesR: [],
-                },
-              ],
-            },
-          ] as CompletedTrainingExercise[],
+          correctExercise: 'Squat L1', // correct exercise that should be provided
+          supersetIndex: 1, // superset index in which the correct exercise is
         },
+        [
+          generateCompletedTrainingExerciseStub({
+            id: 'deadlift-l1', // actual provided exercise
+            supersetIndex: 0,
+          }),
+        ],
+      ],
+      [
+        'valid exercise with wrong superset',
+        { correctExercise: 'Squat L1', supersetIndex: 1 },
+        [
+          generateCompletedTrainingExerciseStub({
+            id: 'squat-l1',
+            supersetIndex: 1,
+          }),
+        ],
+      ],
+      [
+        'invalid exercise in first superset',
+        { correctExercise: 'Bench L1', supersetIndex: 1 },
+        [
+          generateCompletedTrainingExerciseStub({
+            id: 'squat-l1',
+            supersetIndex: 0,
+          }),
+          generateCompletedTrainingExerciseStub({
+            id: 'deadlift-l1',
+            supersetIndex: 0,
+          }),
+        ],
+      ],
+      [
+        'invalid exercise in second superset',
+        { correctExercise: 'Squat L1', supersetIndex: 2 },
+        [
+          generateCompletedTrainingExerciseStub({
+            id: 'squat-l1',
+            supersetIndex: 0,
+          }),
+          generateCompletedTrainingExerciseStub({
+            id: 'bench-l1',
+            supersetIndex: 0,
+          }),
+          generateCompletedTrainingExerciseStub({
+            id: 'bench-l2',
+            supersetIndex: 1,
+          }),
+        ],
       ],
     ])(
-      'should throw error if a single prescribed exercise in superset is omitted',
-      async ({ exercises }: CompletedTrainingComponent) => {
+      'should throw error if any prescribed exercise in superset is omitted (%s)',
+      async (_, { correctExercise, supersetIndex }, exercises) => {
         const response = await request(app.getHttpServer())
           .patch(url(training.id, component1.id))
           .set('Authorization', `Bearer ${athlete.token}`)
@@ -329,16 +371,105 @@ describe('Complete training component (e2e)', () => {
 
         expect(response.status).toBe(400);
         expect(response.body.message).toBe(
-          `You have to complete prescribed exercise Squat L1 in superset 1`,
+          `You have to complete prescribed exercise ${correctExercise} in superset ${supersetIndex}`,
         );
       },
     );
 
-    it('should throw error if a combination of prescribed exercises in superset are omitted', async () => {});
+    it.each([
+      [
+        'completed exercise has more params than prescribed',
+        {
+          correctExercise: 'Squat L1',
+          supersetIndex: 0,
+        },
+        [
+          generateCompletedTrainingExerciseStub({
+            id: 'squat-l1',
+            supersetIndex: 0,
+            sets: [generateExerciseSet(1)], // should be partial params but we provide all params
+          }),
+        ],
+      ],
+      [
+        'completed exercise has less params than prescribed',
+        {
+          correctExercise: 'Deadlift L1',
+          supersetIndex: 1,
+        },
+        [
+          generateCompletedTrainingExerciseStub({
+            id: 'squat-l1',
+            supersetIndex: 0,
+            sets: [generateExerciseSet(1, 'partial')], // should be partial
+          }),
+          generateCompletedTrainingExerciseStub({
+            id: 'bench-l1',
+            supersetIndex: 0,
+            sets: [generateExerciseSet(1, 'partial')], // should be partial
+          }),
+          generateCompletedTrainingExerciseStub({
+            id: 'squat-l1',
+            supersetIndex: 1,
+            sets: [generateExerciseSet(1)], // should be all params
+          }),
+          generateCompletedTrainingExerciseStub({
+            id: 'deadlift-l1',
+            supersetIndex: 1,
+            sets: [generateExerciseSet(1, 'partial')], // should be all params but we provide partial
+          }),
+        ],
+      ],
+    ])(
+      'should throw error if provided completed set does not equal prescribed set if %s',
+      async (_, { correctExercise, supersetIndex }, exercises) => {
+        const response = await request(app.getHttpServer())
+          .patch(url(training.id, component1.id))
+          .set('Authorization', `Bearer ${athlete.token}`)
+          .send({
+            userId: athlete.uid,
+            exercises,
+          });
 
-    it('should throw error if a single provided completed set does not equal provided set (same setNumber and fields)', async () => {});
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+          `Completed set 1 for ${correctExercise} in superset ${supersetIndex + 1} does not match prescribed set`,
+        );
+      },
+    );
 
-    it('should throw error if a combination of provided completed sets does not equal provided sets', async () => {});
+    it('should successfully create all workloads (even for ignored sets)', async () => {
+      const exercises = [
+        generateCompletedTrainingExerciseStub({
+          id: 'squat-l1',
+          supersetIndex: 0,
+          sets: [generateExerciseSet(1, 'partial')],
+        }),
+        generateCompletedTrainingExerciseStub({
+          id: 'bench-l1',
+          supersetIndex: 0,
+          sets: [generateExerciseSet(1, 'partial')],
+        }),
+        generateCompletedTrainingExerciseStub({
+          id: 'squat-l1',
+          supersetIndex: 1,
+          sets: [generateExerciseSet(1)],
+        }),
+        generateCompletedTrainingExerciseStub({
+          id: 'deadlift-l1',
+          supersetIndex: 1,
+          sets: [generateExerciseSet(1)],
+        }),
+      ];
+
+      const response = await request(app.getHttpServer())
+        .patch(url(training.id, component1.id))
+        .set('Authorization', `Bearer ${athlete.token}`)
+        .send({
+          userId: athlete.uid,
+          exercises,
+        });
+    });
   });
 
   it('should successfully complete training component and update necessary relations', async () => {});

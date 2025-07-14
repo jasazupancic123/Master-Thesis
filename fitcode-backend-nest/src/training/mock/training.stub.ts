@@ -11,11 +11,15 @@ import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { getTime } from '../../common/service/util/date.util';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import { ParamType } from '../../component/enum/param.enum';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
+import { AttributeValue } from 'src/attribute/entity/attribute-value.entity';
+import {
+  ALL_PARAM_VALUES,
+  PARTIAL_PARAM_VALUES,
+} from '../constant/param-values.constant';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
   return {
@@ -82,63 +86,41 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
 
 export function generateTrainingExercise(
   data?: Partial<TrainingExercise>,
+  options?: {
+    partialSet?: boolean;
+  },
 ): TrainingExercise {
   return {
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     params: data?.params || [],
-    sets: data?.sets || [],
+    sets: data?.sets || [
+      generateExerciseSet(1, options?.partialSet ? 'partial' : 'full'),
+      generateExerciseSet(2, options?.partialSet ? 'partial' : 'full'),
+      generateExerciseSet(3, options?.partialSet ? 'partial' : 'full'),
+    ],
     attributes: data?.attributes || [],
     periodized: data?.periodized || false,
   };
 }
 
-export function generateExerciseSet(data?: Partial<ExerciseSet>): ExerciseSet {
+/**
+ * @param setNumber - set number, start with 1
+ * @param mode - if full (by default), all possible attribute values for exercise params (see `PARAMS` constant in training constants) will be assigned, if 'partial', then only a few
+ * @param paramValues - custom param values if provided, overrides any previous changes
+ * @returns
+ */
+export function generateExerciseSet(
+  setNumber: number,
+  mode: 'partial' | 'full' = 'full',
+  paramValues?: AttributeValue[],
+): ExerciseSet {
+  const generatedParamValues =
+    mode === 'partial' ? PARTIAL_PARAM_VALUES : ALL_PARAM_VALUES;
+
   return {
-    setNumber: data?.setNumber || 1,
-    paramValuesL: data?.paramValuesL || [
-      {
-        field: ParamType.VolWork1,
-        selected: 'rep',
-        value: '12',
-      },
-      {
-        field: ParamType.IntWork1,
-        selected: 'kg',
-        value: '20',
-      },
-      {
-        field: ParamType.IntWork2,
-        selected: 'eff',
-        value: '0',
-      },
-      {
-        field: ParamType.VolRec1,
-        selected: 'time',
-        value: '60',
-      },
-    ],
-    paramValuesR: data?.paramValuesR || [
-      {
-        field: ParamType.VolWork1,
-        selected: 'rep',
-        value: '12',
-      },
-      {
-        field: ParamType.IntWork1,
-        selected: 'kg',
-        value: '20',
-      },
-      {
-        field: ParamType.IntWork2,
-        selected: 'eff',
-        value: '0',
-      },
-      {
-        field: ParamType.VolRec1,
-        selected: 'time',
-        value: '60',
-      },
-    ],
+    setNumber,
+    paramValuesL: paramValues || generatedParamValues,
+    paramValuesR: paramValues || generatedParamValues,
   };
 }

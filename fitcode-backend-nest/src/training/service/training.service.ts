@@ -1025,7 +1025,7 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // create workloads
-    await this.workloadService.createForTrainingComponent(
+    const result = await this.workloadService.createForTrainingComponent(
       trainingComponent,
       {
         institutionId: training.institutionId,
@@ -1037,6 +1037,8 @@ export class TrainingService implements Permission<Training, Institution> {
       },
       input.exercises,
     );
+
+    console.log('result:', result);
 
     // update stats
     const stats = this.trainingPlanService.calculateCompletedTrainingStats(

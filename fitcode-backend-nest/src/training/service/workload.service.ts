@@ -288,24 +288,7 @@ export class WorkloadService {
             );
 
           prescribedExercise.sets.forEach((prescribedSet) => {
-            const completedSet = completedExercise.sets.find(
-              (set) => set.setNumber === prescribedSet.setNumber,
-            );
-
-            if (!completedSet) return; // user can skip sets
-            if (
-              !this.trainingPlanService.isEqualSet(prescribedSet, completedSet)
-            )
-              throw new BadRequestException(
-                `Completed set ${completedSet.setNumber} for ${exerciseName} does not match prescribed set`,
-              );
-
-            const workloadValue = this.getWorkloadValue(
-              prescribedSet,
-              completedSet,
-            );
-
-            const workload: Create<Workload> = {
+            const partialWorkload = {
               institutionId: ref.institutionId,
               groupId: ref.groupId,
               cycleId: ref.cycleId,
@@ -314,18 +297,62 @@ export class WorkloadService {
               componentId: ref.componentId,
               exerciseId: prescribedExercise.id,
               setNumber: prescribedSet.setNumber,
-              status: this.getStatus(workloadValue),
-              notes: '',
               plannedAt: trainingComponent.from,
               isCustom: false,
-              ...workloadValue,
+              notes: '',
             };
 
-            operations.push({
-              operation: 'set',
-              ref: collection.doc(),
-              data: this.firebaseService.buildCreateQuery(workload),
-            });
+            const completedSet = completedExercise.sets.find(
+              (set) => set.setNumber === prescribedSet.setNumber,
+            );
+
+            if (!completedSet)
+              // create workload with status IGNORED
+              operations.push({
+                operation: 'set',
+                ref: collection.doc(),
+                data: this.firebaseService.buildCreateQuery({
+                  ...partialWorkload,
+                  ...this.getPrescribedWorkload(prescribedSet),
+                  status: SetStatus.IGNORED,
+                }),
+              });
+            else {
+              if (
+                !this.trainingPlanService.isEqualSet(
+                  prescribedSet,
+                  completedSet,
+                )
+              )
+                throw new BadRequestException(
+                  `Completed set ${completedSet.setNumber} for ${exerciseName} in superset ${supersetIndex + 1} does not match prescribed set`,
+                );
+
+              const workloadValue = this.getWorkloadValue(
+                prescribedSet,
+                completedSet,
+              );
+
+              operations.push({
+                operation: 'set',
+                ref: collection.doc(),
+                data: this.firebaseService.buildCreateQuery({
+                  institutionId: ref.institutionId,
+                  groupId: ref.groupId,
+                  cycleId: ref.cycleId,
+                  userId: ref.uid,
+                  trainingId: ref.trainingId,
+                  componentId: ref.componentId,
+                  exerciseId: prescribedExercise.id,
+                  setNumber: prescribedSet.setNumber,
+                  status: this.getStatus(workloadValue),
+                  notes: '',
+                  plannedAt: trainingComponent.from,
+                  isCustom: false,
+                  ...workloadValue,
+                }),
+              });
+            }
           });
         });
       },
