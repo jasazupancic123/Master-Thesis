@@ -93,42 +93,23 @@ describe('validateTrainingExerciseValues', () => {
         exercises: [
           generateTrainingExercise({
             sets: [
-              generateExerciseSet({
-                paramValuesL: [
-                  {
-                    field: 'vol1',
-                    value: '12',
-                    selected: 'rep',
-                  },
-                  {
-                    field: 'int1',
-                    value: '20',
-                    selected: '',
-                  },
-                  {
-                    field: 'volWorkSets',
-                    value: '3',
-                    selected: 'set',
-                  },
-                ],
-                paramValuesR: [
-                  {
-                    field: 'vol1',
-                    value: '12',
-                    selected: 'rep',
-                  },
-                  {
-                    field: 'int1',
-                    value: '20',
-                    selected: '',
-                  },
-                  {
-                    field: 'volWorkSets',
-                    value: '3',
-                    selected: 'set',
-                  },
-                ],
-              }),
+              generateExerciseSet(1, 'custom', [
+                {
+                  field: 'vol1',
+                  value: '12',
+                  selected: 'rep',
+                },
+                {
+                  field: 'int1',
+                  value: '20',
+                  selected: '',
+                },
+                {
+                  field: 'volWorkSets',
+                  value: '3',
+                  selected: 'set',
+                },
+              ]),
             ],
           }),
         ],

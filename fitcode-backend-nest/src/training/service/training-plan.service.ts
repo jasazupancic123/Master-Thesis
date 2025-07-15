@@ -536,8 +536,7 @@ export class TrainingPlanService {
 
       for (const s of tComponent.supersets)
         for (const tExercise of s.exercises) {
-          if (tExercise.params.length > 0 || tExercise.sets.length > 0)
-            continue; // already populated
+          if (tExercise.params.length > 0) continue; // already populated
 
           const exercise = exercises.find((e) => e.id === tExercise.id)!;
           if (!exercise) continue;

@@ -112,9 +112,14 @@ export function generateTrainingExercise(
  */
 export function generateExerciseSet(
   setNumber: number,
-  mode: 'partial' | 'full' = 'full',
+  mode: 'partial' | 'full' | 'custom' = 'full',
   paramValues?: AttributeValue[],
 ): ExerciseSet {
+  if (mode === 'custom' && !paramValues)
+    throw new Error(
+      'You provided "custom" mode for exercise set, you need to pass in custom paramValues',
+    );
+
   const generatedParamValues =
     mode === 'partial' ? PARTIAL_PARAM_VALUES : ALL_PARAM_VALUES;
 

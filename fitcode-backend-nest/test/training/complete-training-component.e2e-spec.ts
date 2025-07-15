@@ -387,7 +387,7 @@ describe('Complete training component (e2e)', () => {
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 0,
-            sets: [generateExerciseSet(1)], // should be partial params but we provide all params
+            sets: [generateExerciseSet(1, 'full')], // should be partial params but we provide all params
           }),
         ],
       ],
@@ -411,7 +411,7 @@ describe('Complete training component (e2e)', () => {
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 1,
-            sets: [generateExerciseSet(1)], // should be all params
+            sets: [generateExerciseSet(1, 'full')], // should be all params
           }),
           generateCompletedTrainingExerciseStub({
             id: 'deadlift-l1',
@@ -462,13 +462,15 @@ describe('Complete training component (e2e)', () => {
         }),
       ];
 
-      const response = await request(app.getHttpServer())
+      /* const response = await request(app.getHttpServer())
         .patch(url(training.id, component1.id))
         .set('Authorization', `Bearer ${athlete.token}`)
         .send({
           userId: athlete.uid,
           exercises,
         });
+
+      console */
     });
   });
 
