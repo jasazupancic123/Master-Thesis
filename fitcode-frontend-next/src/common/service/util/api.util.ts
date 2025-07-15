@@ -3,6 +3,7 @@ import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
 import { FetchOptions, Query } from '@/common/type/api.type';
 import { redirect } from 'next/navigation';
 import qs from 'qs';
+import { auth } from '@/common/config/firebase.config';
 
 export class ApiUtil {
   static formatQuery(query: Query[string]): string {
@@ -27,15 +28,23 @@ export class ApiUtil {
     return ApiUtil.query(query);
   }
 
+  static async getFreshIdToken(): Promise<string | null> {
+    const user = auth.currentUser;
+    if (!user) return null;
+
+    return await user.getIdToken(true); // true = force refresh if expired
+  }
+
   async fetch<T>(url: string, options?: FetchOptions): Promise<T> {
     const {
       method = 'GET',
-      token,
       body,
       query,
       formData,
       cacheTimeInMs,
     } = options || {};
+
+    const freshToken = await ApiUtil.getFreshIdToken();
 
     const res = await fetch(
       `${BACKEND_API_BASE_URL}${url}${this.query(query)}`,
@@ -43,7 +52,7 @@ export class ApiUtil {
         method,
         headers: {
           ...(!formData ? { 'Content-Type': 'application/json' } : {}),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(freshToken ? { Authorization: `Bearer ${freshToken}` } : {}),
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
         ...(formData ? { body: formData } : {}),
@@ -67,7 +76,7 @@ export class ApiUtil {
 
   async get<T>(
     url: string,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'cacheTimeInMs'>
+    options?: Pick<FetchOptions, 'query' | 'cacheTimeInMs'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'GET' });
   }
@@ -75,7 +84,7 @@ export class ApiUtil {
   async post<T>(
     url: string,
     body: object,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'formData'>
+    options?: Pick<FetchOptions, 'query' | 'formData'>
   ): Promise<T> {
     return await this.fetch<T>(url, {
       ...(options || {}),
@@ -87,14 +96,14 @@ export class ApiUtil {
   async patch<T>(
     url: string,
     body: object,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'formData'>
+    options?: Pick<FetchOptions, 'query' | 'formData'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'PATCH', body });
   }
 
   async delete<T>(
     url: string,
-    options?: Pick<FetchOptions, 'token' | 'query' | 'body'>
+    options?: Pick<FetchOptions, 'query' | 'body'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'DELETE' });
   }

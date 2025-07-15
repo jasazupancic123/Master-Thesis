@@ -25,7 +25,6 @@ export async function handleCopyComponentApiRequest(
     override?: boolean;
   },
   state: {
-    token: string;
     router: AppRouterInstance;
     allComponents: Component[];
     allExercises: Exercise[];
@@ -36,15 +35,8 @@ export async function handleCopyComponentApiRequest(
 ) {
   const { training, trainingInPeriod, component, override } = input;
 
-  const {
-    router,
-    token,
-    allComponents,
-    allExercises,
-    allMethods,
-    setTrainings,
-    day,
-  } = state;
+  const { router, allComponents, allExercises, allMethods, setTrainings, day } =
+    state;
 
   let from;
   const componentInTraining = trainingInPeriod.components.find(
@@ -99,7 +91,7 @@ export async function handleCopyComponentApiRequest(
   handleApiRequest(
     router,
     () =>
-      TrainingController.copyComponent(token, {
+      TrainingController.copyComponent({
         copyFromTrainingId: training.id,
         copyToTrainingId: trainingInPeriod.id,
         componentId: component.id,

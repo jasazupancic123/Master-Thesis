@@ -64,7 +64,6 @@ export function handlePaginateExercises(
 }
 
 export async function handleAddExercise(
-  token: string,
   input: Partial<Exercise>,
   state: {
     router: AppRouterInstance;
@@ -147,7 +146,7 @@ export async function handleAddExercise(
   handleApiRequest(
     router,
     () =>
-      ExerciseController.create(token, {
+      ExerciseController.create({
         name: input.name!,
         componentIds: input.componentIds!,
         imageUrl: input.imageUrl,
@@ -183,7 +182,6 @@ export async function handleAddExercise(
 }
 
 export async function handleUpdateExercise(
-  token: string,
   exerciseId: string,
   input: Partial<Exercise>,
   state: {
@@ -263,7 +261,7 @@ export async function handleUpdateExercise(
   handleApiRequest(
     router,
     () =>
-      ExerciseController.update(token, exerciseId, {
+      ExerciseController.update(exerciseId, {
         name: input.name!,
         componentIds: input.componentIds!,
         imageUrl: input.imageUrl,
@@ -292,7 +290,6 @@ export async function handleUpdateExercise(
 }
 
 export async function handleDeleteExercise(
-  token: string,
   exerciseId: string,
   state: {
     router: AppRouterInstance;
@@ -304,7 +301,7 @@ export async function handleDeleteExercise(
 
   handleApiRequest(
     router,
-    () => ExerciseController.delete(token, exerciseId),
+    () => ExerciseController.delete(exerciseId),
     () => {
       setFilteredExercises((prev) => prev.filter((e) => e.id !== exerciseId));
       setExercises((prev) => prev.filter((e) => e.id !== exerciseId));
@@ -347,8 +344,7 @@ export async function handleCsvFileUpload(
 }
 
 export async function handleCreateManyExercises(
-  token: string,
-  input: Parameters<typeof ExerciseController.createMany>[1],
+  input: Parameters<typeof ExerciseController.createMany>[0],
   state: {
     router: AppRouterInstance;
     setExercises: SetState<Exercise[]>;
@@ -358,7 +354,7 @@ export async function handleCreateManyExercises(
 
   handleApiRequest(
     router,
-    () => ExerciseController.createMany(token, input),
+    () => ExerciseController.createMany(input),
     (exercises) => {
       setExercises((prev) => [...prev, ...exercises]);
       toast.success('Successfully imported exercises!');

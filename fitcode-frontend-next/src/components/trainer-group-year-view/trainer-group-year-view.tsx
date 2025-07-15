@@ -17,8 +17,7 @@ import { MAX_WIDTH } from '../trainer-day-view/constant';
 export default function TrainerYearView() {
   const screenSize = useScreenSize();
   const router = useRouter();
-  const { token, group, setGroup, cycle, setCycle, setDetectedChanges } =
-    useGroup();
+  const { group, setGroup, cycle, setCycle, setDetectedChanges } = useGroup();
 
   const theme = useTheme();
   const [selectedGroup, setSelectedGroup] = useState({ ...group });
@@ -46,7 +45,6 @@ export default function TrainerYearView() {
               cycle,
               setCycle,
               setDetectedChanges,
-              token,
               router,
               setGroup
             )
@@ -85,7 +83,6 @@ export default function TrainerYearView() {
                   cycle,
                   setCycle,
                   setDetectedChanges,
-                  token,
                   router,
                   setGroup
                 )

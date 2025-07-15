@@ -37,7 +37,6 @@ export default function DashboardStaffGroupsCycles(
   const router = useRouter();
 
   const {
-    token,
     users,
     profile,
     selectedInstitution,
@@ -61,11 +60,8 @@ export default function DashboardStaffGroupsCycles(
       if (!selectedInstitution || selectedInstitution.groups) return;
 
       selectedInstitution.groups = await GroupController.findAllByInstitution(
-        token,
         selectedInstitution.id
       );
-
-      console.log(selectedInstitution.groups);
 
       if (
         !selectedInstitution.groups ||
@@ -89,7 +85,7 @@ export default function DashboardStaffGroupsCycles(
     handleApiRequest(
       router,
       () =>
-        InstitutionController.removeTrainers(token, selectedInstitution.id, {
+        InstitutionController.removeTrainers(selectedInstitution.id, {
           trainerIds: [trainerId],
         }),
       (institution) => {

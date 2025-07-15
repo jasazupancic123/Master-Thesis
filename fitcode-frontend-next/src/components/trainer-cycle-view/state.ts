@@ -21,7 +21,6 @@ import { Method } from '@/controller/method/type/method.type';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
 
 export async function handleCreateTraining(
-  token: string,
   input: {
     group: Group;
     cycle: Cycle;
@@ -77,7 +76,7 @@ export async function handleCreateTraining(
   handleApiRequest(
     router,
     () =>
-      TrainingController.create(token, {
+      TrainingController.create({
         groupId: group.id,
         cycleId: cycle.id,
         components: selectedComponents,
@@ -101,7 +100,6 @@ export async function handleCreateTraining(
 }
 
 export async function handleAddTrainingComponents(
-  token: string,
   input: AddTrainingComponents & { trainingId: string },
   state: {
     router: AppRouterInstance;
@@ -134,9 +132,9 @@ export async function handleAddTrainingComponents(
     () =>
       !restInput.components.length
         ? // if outside box was clicked, delete the whole training
-          TrainingController.delete(token, trainingId)
+          TrainingController.delete(trainingId)
         : // else, add components
-          TrainingController.addComponents(token, trainingId, restInput),
+          TrainingController.addComponents(trainingId, restInput),
     (training) => {
       if (!training) {
         // training was deleted
@@ -169,7 +167,6 @@ export async function handleAddTrainingComponents(
 }
 
 export async function handleDeleteTrainingComponent(
-  token: string,
   input: {
     trainingId: string;
     componentId: string;
@@ -187,7 +184,7 @@ export async function handleDeleteTrainingComponent(
 
   handleApiRequest(
     router,
-    () => TrainingController.deleteComponent(token, trainingId, componentId),
+    () => TrainingController.deleteComponent(trainingId, componentId),
     (training) => {
       const mapped = TrainingService.mapComponentsExercisesMethods(
         training,

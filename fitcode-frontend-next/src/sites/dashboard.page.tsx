@@ -39,7 +39,6 @@ export default function DashboardPage(props: DashboardPageProps) {
 
   const {
     users,
-    token,
     profile,
     institutions,
     selectedInstitution,
@@ -49,6 +48,8 @@ export default function DashboardPage(props: DashboardPageProps) {
     selectedGroup,
     setSelectedGroup,
   } = useDashboard();
+
+  if (!profile) return null;
 
   const { view } = props;
 
@@ -63,7 +64,6 @@ export default function DashboardPage(props: DashboardPageProps) {
     if (!selectedInstitution || selectedInstitution.groups) return;
     const fetchGroups = async () => {
       const groups = await GroupController.findAllByInstitution(
-        token,
         selectedInstitution.id
       );
 
@@ -91,7 +91,7 @@ export default function DashboardPage(props: DashboardPageProps) {
 
     handleApiRequest(
       router,
-      () => GroupController.batchUpdate(token, { groups: inputs }),
+      () => GroupController.batchUpdate({ groups: inputs }),
       () => {
         /* const newGroup = groups.find((g) => g.id === selectedGroup?.id);
         if (newGroup) {
@@ -310,7 +310,7 @@ export default function DashboardPage(props: DashboardPageProps) {
 
           handleApiRequest(
             router,
-            () => GroupController.create(token, input),
+            () => GroupController.create(input),
             (group) => {
               setSelectedInstitution({
                 ...selectedInstitution,

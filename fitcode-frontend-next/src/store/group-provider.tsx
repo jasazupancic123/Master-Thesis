@@ -23,7 +23,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const {
     children,
     userId,
-    token,
     users: allUsers,
     components,
     attributes,
@@ -56,7 +55,6 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
 
   const value: GroupContextProps = {
-    token,
     userId,
     users,
     setUsers,

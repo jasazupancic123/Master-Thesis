@@ -6,52 +6,43 @@ import { User, UserEntity } from './type/user.type';
 const api = CommonService.instance.api;
 
 export class UserController {
-  static async findAll(
-    token: string,
-    query?: {
-      ids?: string[];
-      emails?: string[];
-    }
-  ) {
-    return api.get<User[]>('/user', { token, query });
+  static async findAll(query?: { ids?: string[]; emails?: string[] }) {
+    return api.get<User[]>('/user', { query });
   }
 
-  static async findMe(token: string) {
-    return api.get<User>('/user/me', { token });
+  static async findMe() {
+    return api.get<User>('/user/me');
   }
 
-  static async findProfile(token: string) {
-    return api.get<UserEntity>('/user/me/profile', { token });
+  static async findProfile() {
+    return api.get<UserEntity>('/user/me/profile');
   }
 
-  static async findById(token: string, id: string) {
-    return api.get<User>(`/user/${id}`, { token });
+  static async findById(id: string) {
+    return api.get<User>(`/user/${id}`);
   }
 
-  static async updateClaims(
-    token: string,
-    id: string,
-    input: { role: UserRole[] }
-  ) {
-    return api.patch<{}>(`/user/${id}`, input, { token });
+  static async updateClaims(id: string, input: { role: UserRole[] }) {
+    return api.patch<{}>(`/user/${id}`, input);
   }
 
-  static async updateProfile(token: string, input: Partial<UserEntity>) {
-    return api.patch<{}>('/user/me/profile', input, { token });
+  static async updateProfile(input: Partial<UserEntity>) {
+    return api.patch<{}>('/user/me/profile', input);
   }
 
-  static async getMyMeta(token: string) {
-    return api.get<Wellness>('/user/me/meta', { token });
+  static async getMyMeta() {
+    return api.get<Wellness>('/user/me/meta');
   }
 
-  static async saveMeta(token: string, body: Omit<Wellness, 'userId'>) {
-    return api.post<Wellness>('/user/me/meta', body, { token });
+  static async saveMeta(body: Omit<Wellness, 'userId'>) {
+    return api.post<Wellness>('/user/me/meta', body);
   }
 
-  static async addAthlete(
-    token: string,
-    input: { email: string; displayName: string; password: string }
-  ) {
-    return api.post<User>('/user/athlete/add', input, { token });
+  static async addAthlete(input: {
+    email: string;
+    displayName: string;
+    password: string;
+  }) {
+    return api.post<User>('/user/athlete/add', input);
   }
 }

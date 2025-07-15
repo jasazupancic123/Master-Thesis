@@ -276,6 +276,7 @@ export default function TrainingExerciseCardCollapsedSets(
                 >
                   {['L', 'R'].map((lOrR) => (
                     <ExerciseParam
+                      key={`${param.field}-${lOrR}`}
                       param={param}
                       value={
                         param.field === ParamType.VolWorkSets

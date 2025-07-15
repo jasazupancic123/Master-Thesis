@@ -26,7 +26,6 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
   const {
-    token,
     profile,
     selectedGroup,
     setSelectedGroup,
@@ -72,7 +71,7 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
   const handleRemoveGroup = () => {
     handleApiRequest(
       router,
-      () => GroupController.delete(token, group.id),
+      () => GroupController.delete(group.id),
       () => {
         setSelectedGroup(null);
         setSelectedInstitution((prev) => {

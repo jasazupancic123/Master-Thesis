@@ -36,7 +36,6 @@ export default function TrainingComponentHeaderMenu(
   const screenSize = useScreenSize();
 
   const {
-    token,
     detectedChanges,
     setDetectedChanges,
     trainings,
@@ -402,7 +401,7 @@ export default function TrainingComponentHeaderMenu(
           handleApiRequest(
             router,
             () =>
-              TrainingController.periodize(token, {
+              TrainingController.periodize({
                 baseTrainingId: training.id,
                 componentId: component.id,
                 periodizationType:

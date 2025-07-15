@@ -24,7 +24,6 @@ export default function DashboardAthlete(props: DashboardAthleteProps) {
   const { athlete, selectedUser, setSelectedUser } = props;
 
   const {
-    token,
     users,
     profile,
     selectedInstitution,
@@ -41,7 +40,7 @@ export default function DashboardAthlete(props: DashboardAthleteProps) {
     handleApiRequest(
       router,
       () =>
-        InstitutionController.removeAthletes(token, selectedInstitution.id, {
+        InstitutionController.removeAthletes(selectedInstitution.id, {
           athleteIds: [athleteId],
         }),
       (institution) => {

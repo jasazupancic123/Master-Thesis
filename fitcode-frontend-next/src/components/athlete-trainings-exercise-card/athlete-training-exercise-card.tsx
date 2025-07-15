@@ -23,7 +23,6 @@ type AthleteTrainingExerciseCardProps = {
   components: TrainingComponent[];
   training: Training;
   profile: User;
-  token: string;
 };
 
 export default function AthleteTrainingExerciseCard(
@@ -31,7 +30,7 @@ export default function AthleteTrainingExerciseCard(
 ) {
   const theme = useTheme();
   const router = useRouter();
-  const { components, training, profile, token } = props;
+  const { components, training, profile } = props;
   const screenSize = useScreenSize();
 
   const { trainingInProgress, setTrainingInProgress, setView } = useTraining();
@@ -100,7 +99,6 @@ export default function AthleteTrainingExerciseCard(
             router,
             () =>
               TrainingController.findByIdAndPopulateAthleteWorkloads(
-                token,
                 trainingInProgress.training.id,
                 trainingInProgress.selectedComponent.id
               ),

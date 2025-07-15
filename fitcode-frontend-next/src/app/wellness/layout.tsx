@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import SidebarAthlete from '@/components/sidebar-athlete/sidebar-athlete';
 import { ChildrenProps } from '@/common/type/props.type';
 import { AthleteProvider } from '@/store/athlete-provider';
+import WellnessInitializer from '@/initializers/wellness.initializer';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
@@ -11,7 +12,9 @@ export default function Layout({ children }: ChildrenProps) {
         <SidebarAthlete />
 
         <Container component="main" maxWidth="lg" sx={{ px: '0px !important' }}>
-          <Box>{children}</Box>
+          <Box>
+            <WellnessInitializer> {children}</WellnessInitializer>
+          </Box>
         </Container>
       </AthleteProvider>
     </Box>

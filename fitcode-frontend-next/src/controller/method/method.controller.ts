@@ -4,15 +4,15 @@ import { Method } from './type/method.type';
 const api = CommonService.instance.api;
 
 export class MethodController {
-  static async findAll(token: string): Promise<Method[]> {
-    return api.get('/method', { token });
+  static async findAll(): Promise<Method[]> {
+    return api.get('/method');
   }
 
-  static async findById(token: string, id: string): Promise<Method> {
-    return api.get(`/method/${id}`, { token });
+  static async findById(id: string): Promise<Method> {
+    return api.get(`/method/${id}`);
   }
 
-  static async create(token: string, body: Method): Promise<Method> {
-    return api.post<Method>('/method', body, { token });
+  static async create(body: Method): Promise<Method> {
+    return api.post<Method>('/method', body);
   }
 }

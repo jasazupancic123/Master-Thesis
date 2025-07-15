@@ -10,7 +10,6 @@ export const useExerciseContext = () => useContext(ExerciseContext)!;
 
 export function ExerciseProvider(props: ExercisePageProps & ChildrenProps) {
   const {
-    token,
     children,
     components,
     attributes: allAttributes,
@@ -22,7 +21,6 @@ export function ExerciseProvider(props: ExercisePageProps & ChildrenProps) {
   const [exercises, setExercises] = useState(allExercises);
 
   const value: ExerciseContextProps = {
-    token,
     components,
     attributes,
     setAttributes,
