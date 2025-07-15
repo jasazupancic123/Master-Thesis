@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CollectionGroup, WriteBatch } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity } from '../../common/type/entity.type';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { TimestampEntity } from '../../common/entity/timestamp.entity';
 import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
 import { CommonService } from '../../common/service/common.service';
+import { FirestoreEntity } from '../../common/type/entity.type';
 import {
   BatchWriteOperation,
   CycleRef,
@@ -13,25 +15,20 @@ import {
   UserRef,
   WorkloadRef,
 } from '../../common/type/firestore.type';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { Training } from '../entity/training.entity';
-import { Workload } from '../entity/workload.entity';
-import { SetStatus } from '../enum/set-status.enum';
-import { WorkloadRepository } from '../repository/workload.repository';
+import { PARAMS } from '../../component/constant/param.constant';
 import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { TimestampEntity } from '../../common/entity/timestamp.entity';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { CompletedTrainingExercise } from '../entity/completed-training.entity';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
 import {
   CompletedWorkload,
   PrescribedWorkload,
   WorkloadValue,
 } from '../entity/workload-value.entity';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import {
-  CompletedTrainingComponent,
-  CompletedTrainingExercise,
-} from '../entity/completed-training.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
+import { Workload } from '../entity/workload.entity';
+import { SetStatus } from '../enum/set-status.enum';
+import { WorkloadRepository } from '../repository/workload.repository';
 import { TrainingPlanService } from './training-plan.service';
 
 @Injectable()
@@ -288,6 +285,9 @@ export class WorkloadService {
             );
 
           prescribedExercise.sets.forEach((prescribedSet) => {
+            const prescribedWorkload =
+              this.getPrescribedWorkload(prescribedSet);
+
             const partialWorkload = {
               institutionId: ref.institutionId,
               groupId: ref.groupId,
@@ -307,49 +307,100 @@ export class WorkloadService {
             );
 
             if (!completedSet)
-              // create workload with status IGNORED
+              // create workload with status IGNORED and no completed values
               operations.push({
                 operation: 'set',
                 ref: collection.doc(),
                 data: this.firebaseService.buildCreateQuery({
                   ...partialWorkload,
-                  ...this.getPrescribedWorkload(prescribedSet),
+                  ...prescribedWorkload,
                   status: SetStatus.IGNORED,
                 }),
               });
             else {
-              if (
-                !this.trainingPlanService.isEqualSet(
-                  prescribedSet,
-                  completedSet,
-                )
-              )
-                throw new BadRequestException(
-                  `Completed set ${completedSet.setNumber} for ${exerciseName} in superset ${supersetIndex + 1} does not match prescribed set`,
-                );
-
-              const workloadValue = this.getWorkloadValue(
-                prescribedSet,
-                completedSet,
+              const { added, removed } = this.commonService.array.diff(
+                prescribedSet.paramValuesL.map((p) => p.field),
+                completedSet.paramValuesL.map((p) => p.field),
               );
+
+              // throw error for all added or removed fields
+              if (added.length)
+                this.checkParamDifference(added, 'complete', {
+                  prescribedSet,
+                  exerciseName,
+                  supersetIndex,
+                });
+              /* for (const field of added) {
+                  const param = PARAMS.find((p) => p.field === field);
+                  const selectedField = prescribedSet.paramValuesL.find(
+                    (p) => p.field === field,
+                  )?.selected;
+
+                  if (param && selectedField) {
+                    const selected = param.options?.find(
+                      (o) => o.field === selectedField.split(':')[0],
+                    );
+
+                    const paramName = (
+                      param.description || param.name
+                    ).toLowerCase();
+
+                    const selectedName = (
+                      selected.description || selected.name
+                    ).toLowerCase();
+
+                    if (selected)
+                      throw new BadRequestException(
+                        `You have to complete parameter ${paramName} (${selectedName}) in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
+                      );
+                  }
+                } */
+
+              if (removed.length)
+                this.checkParamDifference(removed, 'remove', {
+                  prescribedSet,
+                  exerciseName,
+                  supersetIndex,
+                });
+              /* for (const field of removed) {
+                  const param = PARAMS.find((p) => p.field === field);
+                  const selectedField = prescribedSet.paramValuesL.find(
+                    (p) => p.field === field,
+                  )?.selected;
+
+                  if (param && selectedField) {
+                    const selected = param.options?.find(
+                      (o) => o.field === selectedField.split(':')[0],
+                    );
+
+                    const paramName = (
+                      param.description || param.name
+                    ).toLowerCase();
+
+                    const selectedName = (
+                      selected.description || selected.name
+                    ).toLowerCase();
+
+                    if (selected)
+                      throw new BadRequestException(
+                        `You have to remove parameter ${paramName} (${selectedName}) in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
+                      );
+                  }
+                } */
+
+              const completedWorkload = this.getCompletedWorkload(completedSet);
+              const workloadValue: WorkloadValue = {
+                ...prescribedWorkload,
+                ...completedWorkload,
+              };
 
               operations.push({
                 operation: 'set',
                 ref: collection.doc(),
                 data: this.firebaseService.buildCreateQuery({
-                  institutionId: ref.institutionId,
-                  groupId: ref.groupId,
-                  cycleId: ref.cycleId,
-                  userId: ref.uid,
-                  trainingId: ref.trainingId,
-                  componentId: ref.componentId,
-                  exerciseId: prescribedExercise.id,
-                  setNumber: prescribedSet.setNumber,
-                  status: this.getStatus(workloadValue),
-                  notes: '',
-                  plannedAt: trainingComponent.from,
-                  isCustom: false,
+                  ...partialWorkload,
                   ...workloadValue,
+                  status: this.getStatus(workloadValue),
                 }),
               });
             }
@@ -669,5 +720,41 @@ export class WorkloadService {
       if (!isNaN(+attributeValue.value)) return +attributeValue.value;
 
     return NaN;
+  }
+
+  private checkParamDifference(
+    fields: string[],
+    action: 'complete' | 'remove',
+    input: {
+      prescribedSet: ExerciseSet;
+      exerciseName: string;
+      supersetIndex: number;
+    },
+  ) {
+    const { prescribedSet, exerciseName, supersetIndex } = input;
+
+    for (const field of fields) {
+      const param = PARAMS.find((p) => p.field === field);
+      const selectedField = prescribedSet.paramValuesL.find(
+        (p) => p.field === field,
+      )?.selected;
+
+      if (!param || !selectedField) continue;
+
+      const selected = param.options?.find(
+        (o) => o.field === selectedField.split(':')[0],
+      );
+
+      if (!selected) continue;
+
+      const paramName = (param.description || param.name).toLowerCase();
+      const selectedName = (
+        selected.description || selected.name
+      ).toLowerCase();
+
+      throw new BadRequestException(
+        `You have to ${action} parameter ${paramName} (${selectedName}) in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
+      );
+    }
   }
 }

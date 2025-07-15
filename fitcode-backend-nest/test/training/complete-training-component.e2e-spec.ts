@@ -1,21 +1,33 @@
-import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { TestingModule, Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
+import { addDays, addMinutes, subDays } from 'date-fns';
+import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
+import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { ComponentService } from '../../src/component/component.service';
+import {
+  DEFAULT_PARAMS_KEY,
+  PARAMS,
+} from '../../src/component/constant/param.constant';
+import { Component } from '../../src/component/entity/component.entity';
+import {
+  IntType,
+  ParamType,
+  VolType,
+} from '../../src/component/enum/param.enum';
+import { generateComponentParamsStub } from '../../src/component/mock/component-param.stub';
+import { generateComponentStub } from '../../src/component/mock/component.stub';
+import { Exercise } from '../../src/exercise/entity/exercise.entity';
+import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
 import { ExerciseService } from '../../src/exercise/service/exercise.service';
 import { FirebaseService } from '../../src/firebase/firebase.service';
 import { Group } from '../../src/group/entity/group.entity';
 import { GroupService } from '../../src/group/group.service';
+import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { InstitutionService } from '../../src/institution/service/institution.service';
-import { TrainingService } from '../../src/training/service/training.service';
-import {
-  createInstitution,
-  createGroupWithCycles,
-  deleteDoc,
-  deleteCollection,
-  deleteUsers,
-} from '../common/utils/data.util';
+import { Training } from '../../src/training/entity/training.entity';
+import { ValidParams } from '../../src/training/interface/param-to-selected.interface';
+import { generateCompletedTrainingExerciseStub } from '../../src/training/mock/completed-training.stub';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -23,17 +35,16 @@ import {
   generateTrainingExercise,
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { Component } from '../../src/component/entity/component.entity';
+import { TrainingService } from '../../src/training/service/training.service';
 import { TestInstitution } from '../common/type/entity.type';
-import { generateCycleStub } from '../../src/group/mock/cycle.stub';
-import { addDays, addMinutes, subDays } from 'date-fns';
-import { Training } from '../../src/training/entity/training.entity';
-import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { Exercise } from '../../src/exercise/entity/exercise.entity';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
 import { createAthleteUserAndToken } from '../common/utils/auth.util';
-import { generateCompletedTrainingExerciseStub } from '../../src/training/mock/completed-training.stub';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteCollection,
+  deleteDoc,
+  deleteUsers,
+} from '../common/utils/data.util';
 
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;
@@ -44,7 +55,14 @@ describe('Complete training component (e2e)', () => {
   let groupService: GroupService;
   let institutionService: InstitutionService;
 
+  /**
+   * First component has component params VolWorkSets, VolWork1, IntWork1
+   */
   let component1: Component;
+
+  /**
+   * Second component has component params VolWorkSets, VolWork2, VolRec1
+   */
   let component2: Component;
   let leaf1: Component;
   let leaf2: Component;
@@ -82,11 +100,29 @@ describe('Complete training component (e2e)', () => {
     institutionService = moduleFixture.get(InstitutionService);
 
     component1 = await componentService.create(
-      generateComponentStub({ id: 'c1' }),
+      generateComponentStub({
+        id: 'c1',
+        params: {
+          [DEFAULT_PARAMS_KEY]: generateComponentParamsStub([
+            ParamType.VolWorkSets,
+            ParamType.VolWork1,
+            ParamType.IntWork1,
+          ]),
+        },
+      }),
     );
 
     component2 = await componentService.create(
-      generateComponentStub({ id: 'c2' }),
+      generateComponentStub({
+        id: 'c2',
+        params: {
+          [DEFAULT_PARAMS_KEY]: generateComponentParamsStub([
+            ParamType.VolWorkSets,
+            ParamType.VolWork2,
+            ParamType.VolRec1,
+          ]),
+        },
+      }),
     );
 
     leaf1 = await componentService.create(
@@ -100,7 +136,7 @@ describe('Complete training component (e2e)', () => {
     institution = await createInstitution(institutionService);
     group = await createGroupWithCycles(groupService, institution);
     group = await groupService.update(
-      trainer,
+      global.trainer,
       { groupId: group.id },
       {
         cycles: [
@@ -112,7 +148,7 @@ describe('Complete training component (e2e)', () => {
       },
     );
 
-    exercises = await exerciseService.createMany(admin, [
+    exercises = await exerciseService.createMany(global.admin, [
       generateExerciseStub({ name: 'Squat L1', componentIds: [leaf1.id] }),
       generateExerciseStub({ name: 'Bench L1', componentIds: [leaf1.id] }),
       generateExerciseStub({ name: 'Deadlift L1', componentIds: [leaf1.id] }),
@@ -122,12 +158,12 @@ describe('Complete training component (e2e)', () => {
     ]);
 
     training = await trainingService.create(
-      trainer,
+      global.trainer,
       generateTrainingStub({
         institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[0].id,
-        membersIds: [athlete.uid],
+        membersIds: [global.athlete.uid],
         components: [
           generateTrainingComponent({
             from: new Date(),
@@ -142,7 +178,7 @@ describe('Complete training component (e2e)', () => {
     );
 
     training = await trainingService.update(
-      trainer,
+      global.trainer,
       { trainingId: training.id },
       {
         components: [
@@ -152,14 +188,8 @@ describe('Complete training component (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise(
-                    { id: exercises[0].id },
-                    { partialSet: true },
-                  ),
-                  generateTrainingExercise(
-                    { id: exercises[1].id },
-                    { partialSet: true },
-                  ),
+                  generateTrainingExercise({ id: exercises[0].id }),
+                  generateTrainingExercise({ id: exercises[1].id }),
                 ],
               }),
               generateSuperset({
@@ -209,7 +239,7 @@ describe('Complete training component (e2e)', () => {
   it('should throw error if training not found', async () => {
     const response = await request(app.getHttpServer())
       .patch(url('invalid-training-id', 'component-id'))
-      .set('Authorization', `Bearer ${athlete.token}`)
+      .set('Authorization', `Bearer ${global.athlete.token}`)
       .send({});
 
     expect(response.status).toBe(400);
@@ -223,7 +253,7 @@ describe('Complete training component (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .patch(url(trainingTomorrow.id, 'component-id'))
-      .set('Authorization', `Bearer ${athlete.token}`)
+      .set('Authorization', `Bearer ${global.athlete.token}`)
       .send({});
 
     expect(response.status).toBe(409);
@@ -239,7 +269,7 @@ describe('Complete training component (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .patch(url(trainingYesterday.id, 'component-id'))
-      .set('Authorization', `Bearer ${athlete.token}`)
+      .set('Authorization', `Bearer ${global.athlete.token}`)
       .send({});
 
     expect(response.status).toBe(409);
@@ -251,7 +281,7 @@ describe('Complete training component (e2e)', () => {
   it('should throw error if training component does not exist', async () => {
     const response = await request(app.getHttpServer())
       .patch(url(training.id, 'component-id'))
-      .set('Authorization', `Bearer ${athlete.token}`)
+      .set('Authorization', `Bearer ${global.athlete.token}`)
       .send({});
 
     expect(response.status).toBe(404);
@@ -259,8 +289,8 @@ describe('Complete training component (e2e)', () => {
   });
 
   it.each([
-    ['manager', manager.token],
-    ['trainer', trainer.token],
+    ['manager', global.manager.token],
+    ['trainer', global.trainer.token],
   ])(
     'should throw error if current user is %s and does not provide athleteId',
     async (_, token) => {
@@ -277,7 +307,7 @@ describe('Complete training component (e2e)', () => {
   it('should throw error if provided athlete does not exist', async () => {
     const response = await request(app.getHttpServer())
       .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.trainer.token}`)
       .send({ userId: 'unknown-athlete-id' });
 
     expect(response.status).toBe(404);
@@ -289,7 +319,7 @@ describe('Complete training component (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .patch(url(training.id, component1.id))
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.trainer.token}`)
       .send({ userId: newAthlete.uid });
 
     expect(response.status).toBe(401);
@@ -301,6 +331,19 @@ describe('Complete training component (e2e)', () => {
   });
 
   describe('Create Workloads', () => {
+    const c1ValidExerciseParamValues: ValidParams[] = [
+      {
+        field: ParamType.VolWork1,
+        selected: VolType.Rep,
+        value: 10,
+      },
+      {
+        field: ParamType.IntWork1,
+        selected: IntType.Kg,
+        value: 60,
+      },
+    ];
+
     it.each([
       ['empty array', { correctExercise: 'Squat L1', supersetIndex: 1 }, []],
       [
@@ -363,9 +406,9 @@ describe('Complete training component (e2e)', () => {
       async (_, { correctExercise, supersetIndex }, exercises) => {
         const response = await request(app.getHttpServer())
           .patch(url(training.id, component1.id))
-          .set('Authorization', `Bearer ${athlete.token}`)
+          .set('Authorization', `Bearer ${global.athlete.token}`)
           .send({
-            userId: athlete.uid,
+            userId: global.athlete.uid,
             exercises,
           });
 
@@ -378,62 +421,85 @@ describe('Complete training component (e2e)', () => {
 
     it.each([
       [
-        'completed exercise has more params than prescribed',
+        'completed exercise does not have the same parameters as prescribed (first superset)',
         {
           correctExercise: 'Squat L1',
           supersetIndex: 0,
+          invalidSetText:
+            'You have to complete parameter intensity (kilograms)',
         },
         [
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 0,
-            sets: [generateExerciseSet(1, 'full')], // should be partial params but we provide all params
+            sets: [
+              generateExerciseSet(1, [
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: 10,
+                },
+              ]),
+            ], // incomplete (IntWork1 is missing)
           }),
         ],
       ],
       [
-        'completed exercise has less params than prescribed',
+        'completed exercise does not have the same parameters as prescribed (n-th superset)',
         {
           correctExercise: 'Deadlift L1',
           supersetIndex: 1,
+          invalidSetText: 'You have to complete parameter volume (reps)',
         },
         [
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 0,
-            sets: [generateExerciseSet(1, 'partial')], // should be partial
+            sets: [generateExerciseSet(1, c1ValidExerciseParamValues)],
           }),
           generateCompletedTrainingExerciseStub({
             id: 'bench-l1',
             supersetIndex: 0,
-            sets: [generateExerciseSet(1, 'partial')], // should be partial
+            sets: [generateExerciseSet(1, c1ValidExerciseParamValues)],
           }),
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 1,
-            sets: [generateExerciseSet(1, 'full')], // should be all params
+            sets: [generateExerciseSet(1, c1ValidExerciseParamValues)],
           }),
           generateCompletedTrainingExerciseStub({
             id: 'deadlift-l1',
             supersetIndex: 1,
-            sets: [generateExerciseSet(1, 'partial')], // should be all params but we provide partial
+            sets: [
+              generateExerciseSet(1, [
+                {
+                  field: ParamType.IntWork1,
+                  selected: IntType.Kg,
+                  value: 60,
+                },
+              ]), // incomplete (VolWork1 is missing)
+            ],
           }),
         ],
       ],
     ])(
       'should throw error if provided completed set does not equal prescribed set if %s',
-      async (_, { correctExercise, supersetIndex }, exercises) => {
+      async (
+        _,
+        { correctExercise, supersetIndex, invalidSetText },
+        exercises,
+      ) => {
         const response = await request(app.getHttpServer())
           .patch(url(training.id, component1.id))
-          .set('Authorization', `Bearer ${athlete.token}`)
+          .set('Authorization', `Bearer ${global.athlete.token}`)
           .send({
-            userId: athlete.uid,
+            userId: global.athlete.uid,
             exercises,
           });
 
         expect(response.status).toBe(400);
         expect(response.body.message).toBe(
-          `Completed set 1 for ${correctExercise} in superset ${supersetIndex + 1} does not match prescribed set`,
+          `${invalidSetText} in exercise ${correctExercise} in superset ${supersetIndex + 1}`,
         );
       },
     );
@@ -443,22 +509,22 @@ describe('Complete training component (e2e)', () => {
         generateCompletedTrainingExerciseStub({
           id: 'squat-l1',
           supersetIndex: 0,
-          sets: [generateExerciseSet(1, 'partial')],
+          sets: [generateExerciseSet(1, [])],
         }),
         generateCompletedTrainingExerciseStub({
           id: 'bench-l1',
           supersetIndex: 0,
-          sets: [generateExerciseSet(1, 'partial')],
+          sets: [generateExerciseSet(1, [])],
         }),
         generateCompletedTrainingExerciseStub({
           id: 'squat-l1',
           supersetIndex: 1,
-          sets: [generateExerciseSet(1)],
+          sets: [generateExerciseSet(1, [])],
         }),
         generateCompletedTrainingExerciseStub({
           id: 'deadlift-l1',
           supersetIndex: 1,
-          sets: [generateExerciseSet(1)],
+          sets: [generateExerciseSet(1, [])],
         }),
       ];
 

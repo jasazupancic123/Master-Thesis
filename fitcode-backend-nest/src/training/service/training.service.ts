@@ -9,8 +9,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {
-  addMinutes,
   addHours,
+  addMinutes,
   endOfDay,
   isBefore,
   startOfDay,
@@ -18,6 +18,10 @@ import {
   subMinutes,
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
+import { NotFoundError } from 'rxjs';
+import { AttributeService } from '../../attribute/service/attribute.service';
+import { LogMethod } from '../../common/decorator/log-method.decorator';
+import { Permission } from '../../common/interface/permission.interface';
 import { CommonService } from '../../common/service/common.service';
 import { Create, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
@@ -32,45 +36,41 @@ import {
 } from '../../common/type/firestore.type';
 import { Filter } from '../../common/type/orm.type';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { Cycle } from '../../group/entity/cycle.entity';
-import { Group } from '../../group/entity/group.entity';
-import { GroupService } from '../../group/group.service';
-import { UserService } from '../../user/user.service';
-import { TrainingComponent } from '../entity/training-component.entity';
-import { Training } from '../entity/training.entity';
-import { TrainingRepository } from '../repository/training.repository';
-import { TrainingPlanService } from './training-plan.service';
-import { WorkloadService } from './workload.service';
-import { Workload } from '../entity/workload.entity';
-import { SetStatus } from '../enum/set-status.enum';
-import { CreateTrainingDto } from '../dto/create-training.dto';
-import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { PeriodizationService } from './periodization.service';
-import { CopyComponentDto } from '../dto/copy-component.dto';
-import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
-import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
-import { CopyTrainingDto } from '../dto/copy-training.dto';
-import { Permission } from '../../common/interface/permission.interface';
-import { Institution } from '../../institution/entity/institution.entity';
-import { InstitutionService } from '../../institution/service/institution.service';
-import { AttributeService } from '../../attribute/service/attribute.service';
 import { ComponentService } from '../../component/component.service';
-import { MethodService } from '../../method/service/method.service';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
-import { PeriodizationType } from '../enum/periodization-type.enum';
+import { ExerciseService } from '../../exercise/service/exercise.service';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { Cycle } from '../../group/entity/cycle.entity';
+import { Group } from '../../group/entity/group.entity';
+import { GroupService } from '../../group/group.service';
+import { Institution } from '../../institution/entity/institution.entity';
+import { InstitutionService } from '../../institution/service/institution.service';
+import { MethodService } from '../../method/service/method.service';
+import { UserService } from '../../user/user.service';
+import { CopyComponentDto } from '../dto/copy-component.dto';
+import { CopyTrainingDto } from '../dto/copy-training.dto';
+import { CreateTrainingDto } from '../dto/create-training.dto';
 import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
+import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
+import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
+import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import {
   CompletedTrainingComponent,
   CompletedTrainingExercise,
 } from '../entity/completed-training.entity';
-import { ExerciseService } from '../../exercise/service/exercise.service';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { Training } from '../entity/training.entity';
+import { Workload } from '../entity/workload.entity';
+import { PeriodizationType } from '../enum/periodization-type.enum';
+import { SetStatus } from '../enum/set-status.enum';
+import { TrainingRepository } from '../repository/training.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
-import { LogMethod } from '../../common/decorator/log-method.decorator';
-import { NotFoundError } from 'rxjs';
+import { PeriodizationService } from './periodization.service';
+import { TrainingPlanService } from './training-plan.service';
+import { WorkloadService } from './workload.service';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -1037,8 +1037,6 @@ export class TrainingService implements Permission<Training, Institution> {
       },
       input.exercises,
     );
-
-    console.log('result:', result);
 
     // update stats
     const stats = this.trainingPlanService.calculateCompletedTrainingStats(
