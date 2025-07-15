@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ApiUtil } from '@/common/service/util/api.util';
 import { UserController } from '@/controller/user/user.controller';
 import Loading from '../components/loading/loading';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';

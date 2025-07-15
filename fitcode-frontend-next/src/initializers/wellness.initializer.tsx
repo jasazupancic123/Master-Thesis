@@ -6,41 +6,43 @@ import Loading from '../components/loading/loading';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { notFound } from 'next/navigation';
 import { ChildrenProps } from '@/common/type/props.type';
+import { WellnessProvider } from '@/store/wellness-provider';
 import {
-  WellnessProvider,
-  WellnessProviderProps,
-} from '@/store/wellness-provider';
+  getCachedWellness,
+  setCachedWellness,
+} from '../session-cache/wellness.session-cache';
+import { Wellness } from '@/controller/user/type/wellness.type';
 
 export default function WellnessInitializer({ children }: ChildrenProps) {
-  const [state, setState] = useState<WellnessProviderProps | null>(null);
+  const [wellness, setWellness] = useState<Wellness | null>(
+    getCachedWellness()
+  );
   const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
     async function init() {
+      if (wellness) return; // already cached
+
       try {
         const profile = await UserController.findMe();
-        if (!profile) return <div>Unauthorized</div>;
+        if (!profile) return;
 
         const role = profile.customClaims.role[0];
         if (![UserRole.ATHLETE].includes(role)) return notFound();
 
-        const wellness = await UserController.getMyMeta();
-
-        const context: WellnessProviderProps = {
-          wellness,
-        };
-
-        setState(context);
+        const fetchedWellness = await UserController.getMyMeta();
+        setCachedWellness(fetchedWellness);
+        setWellness(fetchedWellness);
       } catch (e) {
         setUnauthorized(true);
       }
     }
 
     init();
-  }, []);
+  }, [wellness]);
 
-  if (!state) return <Loading text="Loading..." />;
+  if (!wellness) return <Loading text="Loading..." />;
   if (unauthorized) return <Loading text="Unauthorized" />;
 
-  return <WellnessProvider {...state}>{children}</WellnessProvider>;
+  return <WellnessProvider wellness={wellness}>{children}</WellnessProvider>;
 }
