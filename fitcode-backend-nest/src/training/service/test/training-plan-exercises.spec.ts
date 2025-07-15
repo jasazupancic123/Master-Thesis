@@ -1,26 +1,32 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
+import { AttributeService } from '../../../attribute/service/attribute.service';
+import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
 import { CommonModule } from '../../../common/common.module';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { TrainingPlanService } from '../training-plan.service';
 import { ComponentService } from '../../../component/component.service';
+import {
+  IntType,
+  ParamType,
+  VolType,
+  VolWorkSetType,
+} from '../../../component/enum/param.enum';
+import { validationSchema } from '../../../config/environment-validation-schema';
+import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '../../../exercise/service/exercise.service';
+import { FirebaseService } from '../../../firebase/firebase.service';
+import { InstitutionService } from '../../../institution/service/institution.service';
+import { Method } from '../../../method/entity/method.entity';
+import { WorkloadRepository } from '../../../training/repository/workload.repository';
 import {
   generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
 } from '../../mock/training.stub';
-import { createMock } from '@golevelup/ts-jest';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
-import { Method } from '../../../method/entity/method.entity';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
+import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('validateTrainingExerciseValues', () => {
   let service: TrainingPlanService;
@@ -93,21 +99,21 @@ describe('validateTrainingExerciseValues', () => {
         exercises: [
           generateTrainingExercise({
             sets: [
-              generateExerciseSet(1, 'custom', [
+              generateExerciseSet(1, [
                 {
-                  field: 'vol1',
-                  value: '12',
-                  selected: 'rep',
+                  field: ParamType.VolWorkSets,
+                  selected: VolWorkSetType.Set,
+                  value: 3,
                 },
                 {
-                  field: 'int1',
-                  value: '20',
-                  selected: '',
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: 12,
                 },
                 {
-                  field: 'volWorkSets',
-                  value: '3',
-                  selected: 'set',
+                  field: ParamType.IntWork1,
+                  selected: IntType.Kg,
+                  value: 20,
                 },
               ]),
             ],

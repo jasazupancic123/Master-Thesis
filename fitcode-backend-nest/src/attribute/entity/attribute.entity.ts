@@ -37,6 +37,13 @@ export class Attribute {
   required?: boolean;
 
   @IsString()
+  @ApiPropertyOptional()
+  @IsNotEmpty()
+  @IsOptional()
+  @Expose()
+  description?: string;
+
+  @IsString()
   @IsOptional()
   @ApiPropertyOptional()
   @Expose()

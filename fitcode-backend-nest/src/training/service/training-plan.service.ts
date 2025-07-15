@@ -7,39 +7,39 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { addMinutes, subMinutes } from 'date-fns';
+import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
+import { Institution } from '../..//institution/entity/institution.entity';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
+import { Attribute } from '../../attribute/entity/attribute.entity';
+import { AttributeService } from '../../attribute/service/attribute.service';
+import { CommonService } from '../../common/service/common.service';
 import { Update } from '../../common/type/entity.type';
+import { User } from '../../common/type/firebase-auth.type';
 import { TrainingComponentRef } from '../../common/type/firestore.type';
-import { TrainingComponent } from '../entity/training-component.entity';
-import { Training } from '../entity/training.entity';
-import { Component } from '../../component/entity/component.entity';
-import { Exercise } from '../../exercise/entity/exercise.entity';
 import { Wrapper } from '../../common/type/wrapper.type';
-import { ExerciseService } from '../../exercise/service/exercise.service';
 import { ComponentService } from '../../component/component.service';
 import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
-import { Attribute } from '../../attribute/entity/attribute.entity';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import { ParamType, VolWorkSetType } from '../../component/enum/param.enum';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { AttributeService } from '../../attribute/service/attribute.service';
-import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
-import { Method } from '../../method/entity/method.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
-import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
-import { PeriodizationType } from '../enum/periodization-type.enum';
-import { CommonService } from '../../common/service/common.service';
-import { User } from '../../common/type/firebase-auth.type';
+import { Component } from '../../component/entity/component.entity';
+import { ParamType, VolWorkSetType } from '../../component/enum/param.enum';
+import { Exercise } from '../../exercise/entity/exercise.entity';
+import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '../../exercise/service/exercise.service';
 import { InstitutionService } from '../../institution/service/institution.service';
-import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
-import { Institution } from '../..//institution/entity/institution.entity';
+import { Method } from '../../method/entity/method.entity';
+import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
 import {
   CompletedTrainingComponent,
   CompletedTrainingExercise,
 } from '../entity/completed-training.entity';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { Training } from '../entity/training.entity';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 
 @Injectable()
 export class TrainingPlanService {
@@ -536,8 +536,6 @@ export class TrainingPlanService {
 
       for (const s of tComponent.supersets)
         for (const tExercise of s.exercises) {
-          if (tExercise.params.length > 0) continue; // already populated
-
           const exercise = exercises.find((e) => e.id === tExercise.id)!;
           if (!exercise) continue;
 
@@ -554,9 +552,6 @@ export class TrainingPlanService {
       for (const subgroup of tComponent.subgroups)
         for (const s of subgroup.supersets)
           for (const tExercise of s.exercises) {
-            if (tExercise.params.length > 0 || tExercise.sets.length > 0)
-              continue; // already populated
-
             const exercise = exercises.find((e) => e.id === tExercise.id)!;
             if (!exercise) continue;
 
@@ -659,21 +654,6 @@ export class TrainingPlanService {
       paramValuesL: paramValuesLR,
       paramValuesR: paramValuesLR,
     }));
-  }
-
-  isEqualSet(prescribedSet: ExerciseSet, completedSet: ExerciseSet) {
-    const prescribedFields = prescribedSet.paramValuesL
-      .map((pv) => pv.field)
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-
-    const completedFields = completedSet.paramValuesL
-      .map((pv) => pv.field)
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-
-    return (
-      prescribedSet.setNumber === completedSet.setNumber &&
-      this.commonService.array.equals(prescribedFields, completedFields)
-    );
   }
 
   createWarmupAndCooldown(

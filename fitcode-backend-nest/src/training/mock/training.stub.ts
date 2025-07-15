@@ -1,25 +1,29 @@
-import { v4 } from 'uuid';
-import { Training } from '../entity/training.entity';
+import { Paramtype } from '@nestjs/common';
 import { addDays, addHours } from 'date-fns';
-import { TrainingComponent } from '../entity/training-component.entity';
+import { v4 } from 'uuid';
 import {
   generateRandomColor,
   generateRandomName,
 } from '../../../test/common/utils/random.util';
-import { Superset } from '../entity/superset.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
-import { Subgroup } from '../entity/subgroup.entity';
+import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { getTime } from '../../common/service/util/date.util';
-import { ExerciseSet } from '../entity/exercise-set.entity';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
-import { AttributeValue } from 'src/attribute/entity/attribute-value.entity';
 import {
-  ALL_PARAM_VALUES,
-  PARTIAL_PARAM_VALUES,
-} from '../constant/param-values.constant';
+  IntType,
+  ParamType,
+  VolType,
+  VolWorkSetType,
+} from '../../component/enum/param.enum';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import { Subgroup } from '../entity/subgroup.entity';
+import { Superset } from '../entity/superset.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { Training } from '../entity/training.entity';
+import { ValidParams } from '../interface/param-to-selected.interface';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
   return {
@@ -86,46 +90,178 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
 
 export function generateTrainingExercise(
   data?: Partial<TrainingExercise>,
-  options?: {
-    partialSet?: boolean;
-  },
 ): TrainingExercise {
   return {
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     params: data?.params || [],
-    sets: data?.sets || [
-      generateExerciseSet(1, options?.partialSet ? 'partial' : 'full'),
-      generateExerciseSet(2, options?.partialSet ? 'partial' : 'full'),
-      generateExerciseSet(3, options?.partialSet ? 'partial' : 'full'),
-    ],
+    sets: data?.sets || [],
     attributes: data?.attributes || [],
     periodized: data?.periodized || false,
   };
 }
 
 /**
- * @param setNumber - set number, start with 1
- * @param mode - if full (by default), all possible attribute values for exercise params (see `PARAMS` constant in training constants) will be assigned, if 'partial', then only a few
- * @param paramValues - custom param values if provided, overrides any previous changes
- * @returns
+ * @param setNumber - The number of the set.
+ * @param params - An array of tuples where each tuple contains
+ * a parameter type and its value. Each tuple should be of the
+ * form [VolWorkSetType | VolType | IntType, number].
  */
-export function generateExerciseSet(
+export function generateExerciseSet<T extends ValidParams>(
   setNumber: number,
-  mode: 'partial' | 'full' | 'custom' = 'full',
-  paramValues?: AttributeValue[],
+  params: T[],
 ): ExerciseSet {
-  if (mode === 'custom' && !paramValues)
-    throw new Error(
-      'You provided "custom" mode for exercise set, you need to pass in custom paramValues',
-    );
+  const paramValues = params.map((param) => {
+    const { field, selected, value } = param;
 
-  const generatedParamValues =
-    mode === 'partial' ? PARTIAL_PARAM_VALUES : ALL_PARAM_VALUES;
+    switch (selected) {
+      case VolWorkSetType.Set:
+        return generateSetsStub(value);
+      case VolType.Rep:
+        return generateRepsStub(value, field);
+      case VolType.Time:
+        return generateTimeStub(value, field);
+      case VolType.Dist:
+        return generateDistanceStub(value, field);
+      case IntType.Kg:
+        return generateKgStub(value, field);
+      case IntType.Bw:
+        return generateBwStub(value, field);
+      case IntType.Rm:
+        return generateRmStub(value, field);
+      case IntType.Tempo:
+        return generateTempoStub(value, field);
+      case IntType.Eff:
+        return generateEffStub(value, field);
+      case IntType.Mas:
+        return generateMasStub(value, field);
+      case IntType.Hrmax:
+        return generateHrmaxStub(value, field);
+      default:
+        throw new Error(`Unknown selected type: ${selected}`);
+    }
+  });
 
   return {
     setNumber,
-    paramValuesL: paramValues || generatedParamValues,
-    paramValuesR: paramValues || generatedParamValues,
+    paramValuesL: paramValues,
+    paramValuesR: paramValues,
+  };
+}
+
+export function generateSetsStub(sets: number): AttributeValue {
+  return {
+    field: ParamType.VolWorkSets,
+    selected: VolWorkSetType.Set,
+    value: sets.toString(),
+  };
+}
+
+export function generateRepsStub(
+  reps: number,
+  field: ParamType.VolWork1 | ParamType.VolWork2 | ParamType.VolRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: VolType.Rep,
+    value: reps.toString(),
+  };
+}
+
+export function generateTimeStub(
+  time: number,
+  field: ParamType.VolWork1 | ParamType.VolWork2 | ParamType.VolRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: VolType.Time,
+    value: time.toString(),
+  };
+}
+
+export function generateDistanceStub(
+  distance: number,
+  field: ParamType.VolWork1 | ParamType.VolWork2 | ParamType.VolRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: VolType.Dist,
+    value: distance.toString(),
+  };
+}
+export function generateKgStub(
+  kg: number,
+  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: IntType.Kg,
+    value: kg.toString(),
+  };
+}
+
+export function generateBwStub(
+  bw: number,
+  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: IntType.Bw,
+    value: bw.toString(),
+  };
+}
+
+export function generateRmStub(
+  rm: number,
+  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: IntType.Rm,
+    value: rm.toString(),
+  };
+}
+
+export function generateTempoStub(
+  tempo: number,
+  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: `${IntType.Tempo}:${tempo.toString()}`,
+    value: tempo.toString(),
+  };
+}
+
+export function generateEffStub(
+  eff: number,
+  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: `${IntType.Eff}:${eff.toString()}`,
+    value: eff.toString(),
+  };
+}
+
+export function generateMasStub(
+  mas: number,
+  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: IntType.Mas.toString(),
+    value: mas.toString(),
+  };
+}
+
+export function generateHrmaxStub(
+  hrmax: number,
+  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
+): AttributeValue {
+  return {
+    field,
+    selected: IntType.Hrmax.toString(),
+    value: hrmax.toString(),
   };
 }
