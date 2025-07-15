@@ -19,7 +19,6 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import toast from 'react-hot-toast';
 
 export async function handleUpdateMultipleTrainings(state: {
-  token: string;
   setTrainings: SetState<TrainingInfo[]>;
   training: Training | undefined;
   setTraining: SetState<Training | undefined>;
@@ -35,7 +34,6 @@ export async function handleUpdateMultipleTrainings(state: {
   setDetectedChanges: SetState<boolean>;
 }) {
   const {
-    token,
     setTrainings,
     training,
     setTraining,
@@ -60,7 +58,6 @@ export async function handleUpdateMultipleTrainings(state: {
     router,
     () =>
       TrainingController.batchUpdate(
-        token,
         { groupId: group.id, cycleId: cycle!.id },
         [training],
         customAthleteWorkloads

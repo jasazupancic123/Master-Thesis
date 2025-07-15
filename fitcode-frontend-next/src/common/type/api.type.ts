@@ -1,6 +1,5 @@
 export type FetchOptions = {
   method?: string;
-  token?: string;
   body?: object;
   query?: Query;
   formData?: FormData;

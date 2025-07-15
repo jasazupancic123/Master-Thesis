@@ -20,7 +20,7 @@ export default function AddInstitutionDashboard() {
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const { token, setInstitutions, refetchUsers } = useDashboard();
+  const { setInstitutions, refetchUsers } = useDashboard();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -41,7 +41,7 @@ export default function AddInstitutionDashboard() {
     handleApiRequest(
       router,
       () =>
-        InstitutionController.create(token, {
+        InstitutionController.create({
           name,
           imageUrl,
           ownerId: owner.uid,

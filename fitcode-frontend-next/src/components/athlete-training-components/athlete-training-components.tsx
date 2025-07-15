@@ -179,8 +179,8 @@ export default function AthleteTrainingComponents(
         width="100%"
         sx={{
           backgroundColor: c.completedMembersIds.includes(profile.uid)
-            ? '#2f3940'
-            : '#404c54',
+            ? theme.palette.background.dark
+            : theme.palette.background.paper,
           py: 1,
           borderTopRightRadius: i === 0 ? 5 : 0,
           borderBottomRightRadius: i === arr.length - 1 ? 5 : 0,
@@ -214,9 +214,7 @@ export default function AthleteTrainingComponents(
           variant="h6"
           sx={{
             textTransform: 'uppercase',
-            color: c.completedMembersIds.includes(profile.uid)
-              ? 'rgba(228, 236, 233, 0.5)'
-              : 'rgb(228, 236, 233)',
+            color: theme.palette.text.primary,
             textAlign: 'center',
             cursor: 'pointer',
             overflow: 'hidden',

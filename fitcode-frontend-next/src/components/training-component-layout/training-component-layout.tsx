@@ -30,7 +30,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const { training, trainingComponent, day } = props;
 
   const {
-    token,
     filter,
     setTrainings,
     components: allComponents,
@@ -224,7 +223,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               override: true,
             },
             {
-              token,
               router,
               allComponents,
               allExercises,

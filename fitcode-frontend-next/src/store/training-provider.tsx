@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './auth-provider';
 import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { SetState } from '@/common/type/state.type';
@@ -14,8 +8,11 @@ import {
   ExerciseOrTraining,
   ExerciseTrainingView,
 } from '@/common/type/exercise-or-training.type';
+import { User } from '@/controller/user/type/user.type';
+import { Training } from '@/controller/training/type/training.type';
+import { ChildrenProps } from '@/common/type/props.type';
 
-interface TrainingContextType {
+interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
   trainingInProgress: AthleteTrainingInProgress | null;
   setTrainingInProgress: SetState<AthleteTrainingInProgress | null>;
@@ -24,11 +21,20 @@ interface TrainingContextType {
   isLoaded: boolean;
 }
 
+export interface TrainingProviderProps {
+  profile: User;
+  trainings: Training[];
+}
+
 const TrainingContext = createContext<TrainingContextType | undefined>(
   undefined
 );
 
-export const TrainingProvider = ({ children }: { children: ReactNode }) => {
+export const TrainingProvider = (
+  props: TrainingProviderProps & ChildrenProps
+) => {
+  const { children, profile, trainings } = props;
+
   const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
     useState<AthleteTrainingInProgress | null>(null);
@@ -78,6 +84,8 @@ export const TrainingProvider = ({ children }: { children: ReactNode }) => {
   return (
     <TrainingContext.Provider
       value={{
+        profile,
+        trainings,
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,

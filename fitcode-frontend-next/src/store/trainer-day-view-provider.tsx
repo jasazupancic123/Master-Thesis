@@ -32,16 +32,8 @@ export function TrainerDayViewProvider(
   props: GroupContextProps & ChildrenProps
 ) {
   const router = useRouter();
-  const {
-    token,
-    children,
-    components,
-    exercises,
-    cycle,
-    dateFrom,
-    dateTo,
-    group,
-  } = props;
+  const { children, components, exercises, cycle, dateFrom, dateTo, group } =
+    props;
 
   // filtering selected component exercises
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
@@ -100,7 +92,7 @@ export function TrainerDayViewProvider(
     async function fetchMembers() {
       handleApiRequest(
         router,
-        () => InstitutionController.findAthletes(token, group.institutionId),
+        () => InstitutionController.findAthletes(group.institutionId),
         (members) => setMembers(members),
         undefined
       );

@@ -25,7 +25,6 @@ import TrainingInProgressSuperset from '../training-in-progress-superset/trainin
 
 interface TrainingInProgressProps {
   profile: User;
-  token: string;
   setView: SetState<ExerciseOrTraining>;
   setTrainings: SetState<Training[]>;
   setAllTrainings: SetState<Training[]>;
@@ -43,7 +42,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setView,
   } = useTraining();
 
-  const { profile, token, setTrainings, setAllTrainings } = props;
+  const { profile, setTrainings, setAllTrainings } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
     Superset | undefined
@@ -211,7 +210,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                   trainingInProgress,
                   setTrainingInProgress,
                   user,
-                  token,
                   router,
                   setTrainings,
                   setAllTrainings,
@@ -241,7 +239,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             trainingInProgress,
             setTrainingInProgress,
             user,
-            token,
             router,
             setTrainings,
             setAllTrainings,

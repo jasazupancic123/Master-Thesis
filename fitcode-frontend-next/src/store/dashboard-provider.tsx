@@ -8,12 +8,10 @@ import { Group } from '@/controller/group/type/group.type';
 import { Institution } from '@/controller/institution/type/institution.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { User } from '@/controller/user/type/user.type';
-import { url } from 'inspector';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 interface DashboardContextProps {
   role: UserRole[];
-  token: string;
   profile: User;
   institutions: Institution[];
   setInstitutions: SetState<Institution[]>;
@@ -33,7 +31,6 @@ export interface DashboardPageProps {
   selectedInstitution: Institution | null;
   role: UserRole[];
   users: User[];
-  token: string;
   profile: User;
 }
 
@@ -44,7 +41,6 @@ export const useDashboard = () => useContext(DashboardContext)!;
 export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   const {
     role,
-    token,
     profile,
     users: propsUsers,
     institutions: propsInstitutions,
@@ -71,14 +67,10 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     setData: setUsers,
   } = useFetch<User[]>(`${BACKEND_API_BASE_URL}/user`, {
     method: 'GET',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
   });
 
   const value: DashboardContextProps = {
     role,
-    token,
     profile,
     refetchUsers: refetch,
     users,

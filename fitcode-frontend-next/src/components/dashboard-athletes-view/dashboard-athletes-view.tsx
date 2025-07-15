@@ -34,7 +34,6 @@ export default function AthletesView() {
   const router = useRouter();
 
   const {
-    token,
     users,
     profile,
     selectedGroup,
@@ -70,7 +69,7 @@ export default function AthletesView() {
     handleApiRequest(
       router,
       () =>
-        InstitutionController.addAthletes(token, selectedInstitution.id, {
+        InstitutionController.addAthletes(selectedInstitution.id, {
           athleteIds,
         }),
       (institution) => {

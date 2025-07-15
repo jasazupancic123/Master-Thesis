@@ -10,7 +10,7 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { CustomClaims } from '@/controller/user/type/custom-claims.type';
 import { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
-import { User } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
@@ -37,11 +37,32 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
   const [profile, setProfile] = useState<UserEntity>({} as UserEntity);
 
   const [role, setRole] = useState<UserRole[]>([]);
-  const [_token, setToken] = useLocalStorage<string | null>(
-    FIREBASE_COOKIE_NAME,
-    null
-  );
   const [hasJustLoggedIn, setHasJustLoggedIn] = useState<boolean>(true);
+
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, initUser);
+  //   return unsubscribe;
+  // }, []);
+
+  // async function initUser(user: User | null): Promise<void> {
+  //   if (user) {
+  //     // user logged in
+  //     const tokenResult = await user.getIdTokenResult(true);
+  //     const profile = await UserController.findProfile(tokenResult.token);
+  //     const claims = tokenResult.claims as unknown as CustomClaims;
+  //     setProfile(profile);
+  //     setUser({ ...user });
+  //     setRole(claims.role || []);
+  //     setToken(tokenResult.token);
+  //   } else {
+  //     // user logged out
+  //     setUser(null);
+  //     setRole([]);
+  //     setToken(null);
+  //   }
+
+  //   setLoading(false);
+  // }
 
   useEffect(
     () =>
@@ -49,23 +70,21 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         if (user) {
           // user logged in
           const token = await user.getIdTokenResult();
-          const profile = await UserController.findProfile(token.token);
+          const profile = await UserController.findProfile();
           const claims = token.claims as unknown as CustomClaims;
 
           setProfile(profile);
           setUser(user);
           setRole(claims.role || []);
-          setToken(token.token);
         } else {
           // user logged out
           setUser(null);
           setRole([]);
-          setToken(null);
         }
 
         setLoading(false);
       }),
-    [setToken]
+    []
   );
 
   async function logout(): Promise<void> {
@@ -74,7 +93,6 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
     router.push(LINK_INDEX.href);
     setUser(null);
     setRole([]);
-    setToken(null);
     await new Promise((resolve) => setTimeout(resolve, 5000)); //wait for 5 sec, then set
     setHasJustLoggedIn(true);
   }
@@ -92,7 +110,7 @@ export const AuthProvider = ({ children }: ChildrenProps) => {
         setProfile,
       }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

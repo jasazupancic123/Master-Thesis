@@ -26,7 +26,6 @@ export default function RegisterUsersDashboard(
 
   const router = useRouter();
   const {
-    token,
     profile,
     users,
     refetchUsers,
@@ -68,7 +67,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainers(token, selectedInstitution.id, {
+          InstitutionController.addTrainers(selectedInstitution.id, {
             trainerIds: [user.uid],
           }),
         () => {
@@ -99,7 +98,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthletes(token, selectedInstitution.id, {
+          InstitutionController.addAthletes(selectedInstitution.id, {
             athleteIds: [user.uid],
           }),
         () => {
@@ -136,7 +135,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainers(token, selectedInstitution.id, {
+          InstitutionController.addTrainers(selectedInstitution.id, {
             trainerIds: [existingUser.uid],
           }),
         () => {
@@ -167,7 +166,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthletes(token, selectedInstitution.id, {
+          InstitutionController.addAthletes(selectedInstitution.id, {
             athleteIds: [existingUser.uid],
           }),
         () => {

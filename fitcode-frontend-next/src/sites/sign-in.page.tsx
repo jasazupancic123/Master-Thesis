@@ -45,7 +45,6 @@ export default function SignInPage() {
   const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [_, setToken] = useLocalStorage(FIREBASE_COOKIE_NAME, '');
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -55,7 +54,6 @@ export default function SignInPage() {
       const tokenResult = await result.user.getIdTokenResult();
 
       const role = tokenResult.claims.role as UserRole;
-      setToken(tokenResult.token);
       commonService.browser.setClientCookie(
         FIREBASE_COOKIE_NAME,
         tokenResult.token,

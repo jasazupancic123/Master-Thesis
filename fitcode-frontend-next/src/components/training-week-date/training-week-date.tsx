@@ -55,8 +55,8 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const router = useRouter();
   const theme = useTheme();
   const screenSize = useScreenSize();
+  
   const {
-    token,
     group,
     cycle,
     trainings,
@@ -128,7 +128,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                 handleClickDateCell(
                   { date, period },
                   {
-                    token,
                     router,
                     group,
                     cycle,

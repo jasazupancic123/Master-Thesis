@@ -35,7 +35,6 @@ export default function TrainerDayView() {
   const router = useRouter();
 
   const {
-    token,
     group,
     cycle,
     components,
@@ -131,7 +130,6 @@ export default function TrainerDayView() {
       router,
       () =>
         TrainingController.findByDayAndPeriod(
-          token,
           day.date.toDate(),
           selectedPeriod,
           group.id
@@ -153,15 +151,12 @@ export default function TrainerDayView() {
           methods
         );
         setTraining(mapped);
+        setLoading(false);
       },
       undefined,
       undefined
     );
   }, [day, selectedPeriod]);
-
-  useEffect(() => {
-    setLoading(false);
-  }, [training]);
 
   useEffect(() => {
     const fetchWorkloads = async () => {
@@ -193,7 +188,6 @@ export default function TrainerDayView() {
         router,
         () =>
           TrainingController.findAthleteGroupWorkloads(
-            token,
             group.id,
             uniqueExerciseIds,
             selectedAthlete.uid
@@ -232,7 +226,6 @@ export default function TrainerDayView() {
               sx={{ mx: 0, cursor: 'pointer' }}
               onClick={() =>
                 handleUpdateMultipleTrainings({
-                  token,
                   setTrainings,
                   training,
                   setTraining,
@@ -271,7 +264,6 @@ export default function TrainerDayView() {
               }}
               onClick={() => {
                 handleUpdateMultipleTrainings({
-                  token,
                   setTrainings,
                   training,
                   setTraining,

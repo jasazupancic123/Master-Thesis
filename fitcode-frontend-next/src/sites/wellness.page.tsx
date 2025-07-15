@@ -8,12 +8,11 @@ import { UserController } from '@/controller/user/user.controller';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { handleApiRequest } from '@/common/type/state.type';
 import toast from 'react-hot-toast';
-import { Wellness } from '@/controller/user/type/wellness.type';
+import { useWellness } from '@/store/wellness-provider';
 
-export type SubmitWellnessInput = Parameters<typeof UserController.saveMeta>[1];
+export type SubmitWellnessInput = Parameters<typeof UserController.saveMeta>[0];
 
 export async function submitWellness(
-  token: string,
   input: SubmitWellnessInput,
   state: {
     router: AppRouterInstance;
@@ -23,7 +22,7 @@ export async function submitWellness(
 
   handleApiRequest(
     router,
-    () => UserController.saveMeta(token, input),
+    () => UserController.saveMeta(input),
     (_wellness) => {
       toast.success('Successfully submitted wellness');
     },
@@ -32,13 +31,8 @@ export async function submitWellness(
   );
 }
 
-export type WellnessPageProps = {
-  token: string;
-  wellness: Wellness;
-};
-
-export default function WellnessPage(props: WellnessPageProps) {
-  const { token, wellness } = props;
+export default function WellnessPage() {
+  const { wellness } = useWellness();
   const screenSize = useScreenSize();
   const router = useRouter();
 
@@ -47,7 +41,7 @@ export default function WellnessPage(props: WellnessPageProps) {
       <UserWellnessForm
         initialData={wellness}
         onSubmit={(data) =>
-          submitWellness(token, { date: new Date(), ...data }, { router })
+          submitWellness({ date: new Date(), ...data }, { router })
         }
         disabled={false}
         setDisabled={() => {}}

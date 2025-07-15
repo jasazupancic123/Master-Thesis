@@ -23,7 +23,6 @@ import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 export default function TrainerCycleView() {
   const {
-    token,
     group,
     components,
     exercises: allExercises,
@@ -367,7 +366,6 @@ export default function TrainerCycleView() {
                   }
                   addTrainingComponent={(trainingId, input) => {
                     handleAddTrainingComponents(
-                      token,
                       { trainingId, ...input },
                       {
                         router,
@@ -381,7 +379,6 @@ export default function TrainerCycleView() {
                   }}
                   deleteTrainingComponent={(trainingId, componentId) =>
                     handleDeleteTrainingComponent(
-                      token,
                       { trainingId, componentId },
                       {
                         router,

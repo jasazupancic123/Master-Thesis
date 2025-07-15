@@ -26,15 +26,8 @@ import TrainingComponentLayout from '../training-component-layout/training-compo
 import { useTheme } from '@mui/material';
 
 export default function TrainingCard(props: TrainingCardProps) {
-  const {
-    token,
-    trainings,
-    cycle,
-    setTrainings,
-    components,
-    exercises,
-    methods,
-  } = useGroup();
+  const { trainings, cycle, setTrainings, components, exercises, methods } =
+    useGroup();
 
   const {
     training: selectedTraining,
@@ -287,7 +280,6 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate) return;
                   setJustClickedOnCopyDate(true);
                   handleCopyTraining(
-                    token,
                     { newDate, period: selectedPeriod },
                     {
                       router,
@@ -336,7 +328,6 @@ export default function TrainingCard(props: TrainingCardProps) {
                   if (!newDate) return;
 
                   handleCopyTraining(
-                    token,
                     { newDate, period: selectedPeriod },
                     {
                       router,

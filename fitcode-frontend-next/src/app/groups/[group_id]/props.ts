@@ -24,7 +24,6 @@ import { Institution } from '@/controller/institution/type/institution.type';
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
 export interface GroupIdPageProps {
-  token: string;
   userId: string;
   group: Group;
   institution: Institution;

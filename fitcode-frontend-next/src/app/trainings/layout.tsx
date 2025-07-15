@@ -5,23 +5,24 @@ import Box from '@mui/material/Box';
 import SidebarAthlete from '@/components/sidebar-athlete/sidebar-athlete';
 import { ChildrenProps } from '@/common/type/props.type';
 import { AthleteProvider } from '@/store/athlete-provider';
-import { TrainingProvider, useTraining } from '@/store/training-provider';
+import { useTraining } from '@/store/training-provider';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import TrainingsInitializer from '@/initializers/trainings.initializer';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
     <Box bgcolor="background.default" minHeight="100vh">
       <AthleteProvider>
-        <TrainingProvider>
-          <TrainingContent>{children}</TrainingContent>
-        </TrainingProvider>
+        <TrainingsInitializer>
+          <TrainingContent> {children}</TrainingContent>
+        </TrainingsInitializer>
       </AthleteProvider>
     </Box>
   );
 }
 
 function TrainingContent({ children }: ChildrenProps) {
-  const { view } = useTraining(); // ✅ Call the hook inside a component
+  const { view } = useTraining();
 
   return (
     <>
