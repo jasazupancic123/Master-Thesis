@@ -54,6 +54,7 @@ export default function SignInPage() {
 
       toast.success('Logged in successfully');
       router.replace(mapper[role].href);
+      router.refresh();
     } catch (e: any) {
       toast.error(e.message);
     }

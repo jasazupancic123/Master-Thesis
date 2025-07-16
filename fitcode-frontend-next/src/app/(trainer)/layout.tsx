@@ -9,7 +9,6 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
 import { MainProvider, MainProviderProps } from '@/store/main-provider';
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
 
 export default async function Layout({ children }: ChildrenProps) {
   const cookieStore = await cookies();
@@ -17,7 +16,6 @@ export default async function Layout({ children }: ChildrenProps) {
   if (!token) return <Loading text="Unauthorized" />;
 
   const profile = await UserController.findMe(token);
-  console.log('profile', profile);
   if (!profile) return <Loading text="Unauthorized" />;
 
   const roles = profile.customClaims.role;
