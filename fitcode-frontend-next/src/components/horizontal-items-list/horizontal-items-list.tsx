@@ -18,6 +18,7 @@ interface HorizontalItemsListProps {
   yearView?: boolean;
   alertOnChange?: boolean;
   dashboardView?: boolean;
+  dashboardInstitutionsView?: boolean;
 }
 
 export default function HorizontalItemsList(props: HorizontalItemsListProps) {
@@ -33,11 +34,11 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     yearView,
     checkIsSameValue,
     dashboardView,
+    dashboardInstitutionsView,
   } = props;
 
-  const { detectedChanges, setDetectedChanges } = dashboardView
-    ? useDashboard()
-    : useGroup();
+  const { detectedChanges, setDetectedChanges } =
+    dashboardView || dashboardInstitutionsView ? useDashboard() : useGroup();
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -149,22 +150,31 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                 textAlign="center"
                 sx={{
                   fontSize: isSameValue ? '13px' : '12px',
-                  fontWeight: dashboardView ? 400 : 250,
+                  fontWeight:
+                    dashboardView || dashboardInstitutionsView ? 400 : 250,
                   p: isSameValue ? 0.5 : 0,
-                  minWidth: isSameValue || dashboardView ? '50px' : undefined,
+                  minWidth:
+                    isSameValue || dashboardView || dashboardInstitutionsView
+                      ? '50px'
+                      : undefined,
                   m: 0,
                   border: isSameValue
                     ? `1px solid ${theme.palette.primary.main}`
                     : undefined,
-                  borderRadius: isSameValue || dashboardView ? 1.5 : 0,
+                  borderRadius:
+                    isSameValue || dashboardView || dashboardInstitutionsView
+                      ? 1.5
+                      : 0,
                   color:
-                    isSameValue && !dashboardView
+                    isSameValue && !dashboardView && !dashboardInstitutionsView
                       ? theme.palette.primary.main
                       : undefined,
-                  py: dashboardView ? 1.5 : 0,
-                  backgroundColor: dashboardView
-                    ? theme.palette.background.light
-                    : undefined,
+                  py: dashboardView || dashboardInstitutionsView ? 1.5 : 0,
+                  px: dashboardInstitutionsView ? 1.5 : 0,
+                  backgroundColor:
+                    dashboardView || dashboardInstitutionsView
+                      ? theme.palette.background.light
+                      : undefined,
                 }}
               >
                 {cycleView ? (
@@ -182,6 +192,8 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                   ))
                 ) : dashboardView ? (
                   getShortGroupName(item.label)
+                ) : dashboardInstitutionsView ? (
+                  item.label.toUpperCase()
                 ) : isSameValue ? (
                   <>
                     {item.sublabel || ''}

@@ -17,6 +17,7 @@ import {
   ChatRounded,
   Dashboard,
   Groups,
+  PersonAdd,
   PersonAddAlt1,
   TrendingUp,
 } from '@mui/icons-material';
@@ -26,6 +27,7 @@ import {
   DASHBOARD_PROGRESS,
   DASHBOARD_MAIN,
   DASHBOARD_REGISTER_USERS,
+  DASHBOARD_INSTITUTION,
 } from '@/common/constant/dashboard-views-constant';
 
 export function link(
@@ -100,6 +102,11 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
 };
 
 export const LINK_DASHBOARD_HOME = link('Home', DASHBOARD_MAIN, <Groups />);
+export const LINK_DASHBOARD_INSTITUTION = link(
+  'Home',
+  DASHBOARD_INSTITUTION,
+  <PersonAdd />
+);
 export const LINK_DASHBOARD_PROGRESS = link(
   'Progress',
   DASHBOARD_PROGRESS,
@@ -118,6 +125,7 @@ export const LINK_ADD_INSTITUTION = link(
 
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole[]) => ({
   home: LINK_DASHBOARD_HOME,
+  institution: LINK_DASHBOARD_INSTITUTION,
   athletes: LINK_DASHBOARD_PROGRESS,
   exercises: LINK_EXERCISES_DASHBOARD_NAVIGATION,
   addInstitution: role.includes(UserRole.ADMIN)

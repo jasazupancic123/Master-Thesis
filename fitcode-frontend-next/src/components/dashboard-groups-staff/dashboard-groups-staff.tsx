@@ -40,7 +40,6 @@ export default function DashboardStaffGroupsCycles(
 
   const {
     token,
-    users,
     profile,
     selectedInstitution,
     setSelectedInstitution,
