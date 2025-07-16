@@ -7,7 +7,6 @@ import { AuthProvider } from '@/store/auth-provider';
 import ThemeRegistry from '@/store/theme-registry';
 import { ScreenSizeProvider } from '@/store/screen-size-provider';
 import { ChildrenProps } from '@/common/type/props.type';
-import { TrainingProvider } from '@/store/training-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 

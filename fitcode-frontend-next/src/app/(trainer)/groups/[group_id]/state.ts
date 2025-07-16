@@ -11,7 +11,6 @@ export async function handleSaveGroup(
   cycle: Cycle | undefined,
   setCycle: SetState<Cycle | undefined>,
   setDetectedChanges: SetState<boolean>,
-  token: string,
   router: AppRouterInstance,
   setGroup: SetState<Group>
 ) {
@@ -25,7 +24,7 @@ export async function handleSaveGroup(
   handleApiRequest(
     router,
     () =>
-      GroupController.update(token, selectedGroup.id, {
+      GroupController.update(selectedGroup.id, {
         cycles: selectedGroup.cycles,
       }),
     (group) => {

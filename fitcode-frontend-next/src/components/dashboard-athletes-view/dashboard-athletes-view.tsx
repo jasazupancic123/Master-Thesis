@@ -27,20 +27,17 @@ import DashboardAthlete from '../dashboard-athlete/dashboard-athlete';
 import { isManager } from '@/common/service/util/firebase-auth.util';
 import RegisterUsersDashboard from '../dashboard-register-users-modal/dashboard-register-users-modal';
 import { GroupService } from '@/controller/group/group.service';
+import { useMain } from '@/store/main-provider';
 
 export default function AthletesView() {
   const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
 
-  const {
-    token,
-    users,
-    profile,
-    selectedGroup,
-    selectedInstitution,
-    setSelectedInstitution,
-  } = useDashboard();
+  const { users, profile } = useMain();
+
+  const { selectedGroup, selectedInstitution, setSelectedInstitution } =
+    useDashboard();
 
   const role = profile?.customClaims?.role || [];
 
@@ -70,7 +67,7 @@ export default function AthletesView() {
     handleApiRequest(
       router,
       () =>
-        InstitutionController.addAthletes(token, selectedInstitution.id, {
+        InstitutionController.addAthletes(selectedInstitution.id, {
           athleteIds,
         }),
       (institution) => {

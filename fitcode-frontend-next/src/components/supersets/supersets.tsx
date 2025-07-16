@@ -16,6 +16,7 @@ import { handleAddExerciseToSupersetComponent } from './state';
 import { useTheme } from '@mui/material';
 import { SupersetsProvider, useSupersets } from '@/store/supersets-provider';
 import { SetState } from '@/common/type/state.type';
+import { useMain } from '@/store/main-provider';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;
@@ -35,7 +36,8 @@ export default function Supersets(props: SupersetsProps) {
     setExpandedExercisesView,
   } = props;
 
-  const { exercises: allExercises, setDetectedChanges } = useGroup();
+  const { exercises: allExercises } = useMain();
+  const { setDetectedChanges } = useGroup();
 
   const {
     training,

@@ -25,6 +25,7 @@ interface Props {
   handleSetNumberChange?: (value: number) => void;
   min?: number;
   max?: number;
+  athleteView?: boolean;
 }
 
 export function ExerciseParam(props: Props) {
@@ -44,9 +45,13 @@ export function ExerciseParam(props: Props) {
     exercise: propsExercise,
     min,
     max,
+    athleteView,
   } = props;
 
-  const { setDetectedChanges } = useGroup();
+  const { setDetectedChanges } =
+    athleteView || !useGroup()
+      ? { setDetectedChanges: undefined }
+      : (useGroup() ?? {});
 
   const nestedOption = param.options?.find((o) =>
     value.selected.includes(o.field)
@@ -91,7 +96,7 @@ export function ExerciseParam(props: Props) {
             value={value.selected.split(':')[0]}
             onChange={(e) => {
               onOptionChange(e.target.value as string);
-              setDetectedChanges(true);
+              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
             }}
           >
             <MenuItem
@@ -167,7 +172,7 @@ export function ExerciseParam(props: Props) {
             value={value.value}
             onChange={(e) => {
               onSubOptionChange(e.target.value as string);
-              setDetectedChanges(true);
+              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
             }}
           >
             {nestedOption?.options?.map((value) => (
@@ -208,7 +213,7 @@ export function ExerciseParam(props: Props) {
                   e.target.value = min.toString();
               }
               onSubOptionChange(e.target.value as string);
-              setDetectedChanges(true);
+              if (!athleteView && setDetectedChanges) setDetectedChanges(true);
             }}
             onBlur={(e) => {
               if (

@@ -28,6 +28,7 @@ import { Institution } from '@/controller/institution/type/institution.type';
 import DashboardStaffGroupsCycles from '@/components/dashboard-staff-groups-cycles/dashboard-staff-groups-cycles';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
+import { useMain } from '@/store/main-provider';
 
 interface DashboardPageProps {
   view: string;
@@ -37,10 +38,9 @@ export default function DashboardPage(props: DashboardPageProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const { profile } = useMain();
+
   const {
-    users,
-    token,
-    profile,
     institutions,
     selectedInstitution,
     setSelectedInstitution,
@@ -49,6 +49,8 @@ export default function DashboardPage(props: DashboardPageProps) {
     selectedGroup,
     setSelectedGroup,
   } = useDashboard();
+
+  if (!profile) return null;
 
   const { view } = props;
 
@@ -63,7 +65,6 @@ export default function DashboardPage(props: DashboardPageProps) {
     if (!selectedInstitution || selectedInstitution.groups) return;
     const fetchGroups = async () => {
       const groups = await GroupController.findAllByInstitution(
-        token,
         selectedInstitution.id
       );
 
@@ -91,7 +92,7 @@ export default function DashboardPage(props: DashboardPageProps) {
 
     handleApiRequest(
       router,
-      () => GroupController.batchUpdate(token, { groups: inputs }),
+      () => GroupController.batchUpdate({ groups: inputs }),
       () => {
         /* const newGroup = groups.find((g) => g.id === selectedGroup?.id);
         if (newGroup) {
@@ -239,7 +240,7 @@ export default function DashboardPage(props: DashboardPageProps) {
                 width={screenSize.isSmallerThanLaptop ? '100%' : '50%'}
                 margin="auto"
               >
-                <DashboardChat profile={profile} />
+                <DashboardChat />
               </Box>
             </Box>
           ) : (
@@ -266,7 +267,7 @@ export default function DashboardPage(props: DashboardPageProps) {
                 />
               </Grid2>
               <Grid2 size={3}>
-                <DashboardChat profile={profile} />
+                <DashboardChat />
               </Grid2>
             </Grid2>
           )
@@ -310,7 +311,7 @@ export default function DashboardPage(props: DashboardPageProps) {
 
           handleApiRequest(
             router,
-            () => GroupController.create(token, input),
+            () => GroupController.create(input),
             (group) => {
               setSelectedInstitution({
                 ...selectedInstitution,

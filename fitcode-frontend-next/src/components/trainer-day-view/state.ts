@@ -39,7 +39,6 @@ import { TrainingInfo } from '@/controller/training/type/training-info.type';
 import { totalmem } from 'os';
 
 export async function handleCopyTraining(
-  token: string,
   input: {
     newDate: Dayjs;
     period: string;
@@ -101,7 +100,7 @@ export async function handleCopyTraining(
 
   handleApiRequest(
     router,
-    () => TrainingController.copy(token, training.id, { from, to }),
+    () => TrainingController.copy(training.id, { from, to }),
     (copiedTraining) => {
       const mappedCopiedTraining =
         TrainingService.mapComponentsExercisesMethods(

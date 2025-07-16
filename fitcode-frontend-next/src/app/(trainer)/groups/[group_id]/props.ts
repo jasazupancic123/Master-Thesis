@@ -24,23 +24,15 @@ import { Institution } from '@/controller/institution/type/institution.type';
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 
 export interface GroupIdPageProps {
-  token: string;
-  userId: string;
   group: Group;
   institution: Institution;
-  users: User[];
-  components: Component[];
-  attributes: Attribute[];
-  exercises: Exercise[];
   groups: Group[];
   trainings: TrainingInfo[];
-  methods: Method[];
 }
 
 export type GroupContextProps = GroupIdPageProps & {
   filter: GroupDateFilter;
   setFilter: SetState<GroupDateFilter>;
-  setUsers: SetState<User[]>;
   group: Group;
   setGroup: SetState<Group>;
   institution: Institution;
@@ -65,7 +57,6 @@ export type TrainerDayViewContextProps = {
   setTraining: SetStateNullable<Training>;
   selectedPeriod: 'AM' | 'PM'; // selected period for the training
   setSelectedPeriod: SetState<'AM' | 'PM'>;
-  exercises: Exercise[];
   component: TrainingComponent | undefined; // selected training component
   setComponent: SetStateNullable<TrainingComponent>;
   selectedExercises: TrainingExercise[]; // selected exercises in the component

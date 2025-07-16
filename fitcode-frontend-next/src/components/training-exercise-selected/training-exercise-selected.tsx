@@ -2,13 +2,9 @@
 
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import {
-  Superset,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
-import { Dispatch, SetStateAction, useEffect } from 'react';
 import {
   Line,
   LineChart,

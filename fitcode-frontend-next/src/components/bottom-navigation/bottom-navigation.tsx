@@ -36,7 +36,7 @@ export default function BottomNavigation({
       }}
       showLabels
       sx={{
-        backgroundColor: 'rgb(25, 39, 58)',
+        backgroundColor: theme.palette.background.default,
         height: screenSize.isLandscapeMobile ? '45px' : '50px',
         width: '100%',
         '& .Mui-selected': {

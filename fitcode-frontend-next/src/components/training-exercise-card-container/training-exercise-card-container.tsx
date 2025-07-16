@@ -1,11 +1,8 @@
 'use client';
 
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import {
-  Superset,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { useEffect, useState } from 'react';
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
 import { useGroup } from '@/store/group-provider';
 import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
@@ -16,7 +13,6 @@ import {
 import { isBefore } from 'date-fns';
 import { Dimensions } from '@/common/type/dimensions.type';
 import TrainignExerciseSelected from '../training-exercise-selected/training-exercise-selected';
-import { SetState } from '@/common/type/state.type';
 import { useSupersets } from '@/store/supersets-provider';
 
 interface TrainingExerciseCardContainerProps {

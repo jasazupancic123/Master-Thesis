@@ -8,32 +8,31 @@ import { useAthlete } from '@/store/athlete-provider';
 import { useAuth } from '@/store/auth-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import { Training } from '@/controller/training/type/training.type';
 import { Box, Stack, Typography } from '@mui/material';
 import { endOfDay, startOfDay } from 'date-fns';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
-import { User } from '@/controller/user/type/user.type';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 
-export type TrainingPageProps = {
-  userId: string;
-  token: string;
-  profile: User;
-  trainings: Training[];
-};
-
-export default function TrainingPage(props: TrainingPageProps) {
+export default function TrainingPage() {
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const router = useRouter();
 
-  const { profile, token, trainings: allTrainingsProps } = props;
+  const { profile } = useMain();
+  const {
+    view,
+    setView,
+    trainings: allTrainingsProps,
+    clearTrainingState,
+    trainingInProgress,
+    isLoaded,
+  } = useTraining();
+
   const { selectedDate } = useAthlete();
   const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
 
@@ -43,10 +42,6 @@ export default function TrainingPage(props: TrainingPageProps) {
       commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
     )
   );
-
-  const { view, setView } = useTraining();
-
-  const { clearTrainingState, trainingInProgress, isLoaded } = useTraining();
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -168,8 +163,6 @@ export default function TrainingPage(props: TrainingPageProps) {
                         training.cooldown,
                       ]}
                       training={training}
-                      profile={profile}
-                      token={token}
                     />
                   </Stack>
                 </Box>
@@ -181,8 +174,6 @@ export default function TrainingPage(props: TrainingPageProps) {
     )
   ) : (
     <TrainingInProgress
-      profile={profile}
-      token={token}
       setView={setView}
       setTrainings={setTrainings}
       setAllTrainings={setAllTrainings}

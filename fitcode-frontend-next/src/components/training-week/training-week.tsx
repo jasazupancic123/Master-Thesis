@@ -1,4 +1,3 @@
-import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -7,15 +6,15 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { TrainingCycleViewWeekProps } from '../training-cycle-view-week/type';
 import MyModal from '../modal/modal';
-import { Training } from '@/controller/training/type/training.type';
 import { useTheme } from '@mui/material';
 import TrainingWeekDates from '../training-week-date/training-week-date';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { useMain } from '@/store/main-provider';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const { components } = useGroup();
+  const { components } = useMain();
 
   const {
     index,
