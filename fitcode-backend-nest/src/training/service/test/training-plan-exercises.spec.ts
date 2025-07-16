@@ -103,17 +103,17 @@ describe('validateTrainingExerciseValues', () => {
                 {
                   field: ParamType.VolWorkSets,
                   selected: VolWorkSetType.Set,
-                  value: 3,
+                  value: '3',
                 },
                 {
                   field: ParamType.VolWork1,
                   selected: VolType.Rep,
-                  value: 12,
+                  value: '12',
                 },
                 {
                   field: ParamType.IntWork1,
                   selected: IntType.Kg,
-                  value: 20,
+                  value: '20',
                 },
               ]),
             ],

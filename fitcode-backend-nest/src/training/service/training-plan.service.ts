@@ -15,7 +15,10 @@ import { AttributeService } from '../../attribute/service/attribute.service';
 import { CommonService } from '../../common/service/common.service';
 import { Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
-import { TrainingComponentRef } from '../../common/type/firestore.type';
+import {
+  TrainingComponentRef,
+  UserRef,
+} from '../../common/type/firestore.type';
 import { Wrapper } from '../../common/type/wrapper.type';
 import { ComponentService } from '../../component/component.service';
 import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
@@ -30,13 +33,13 @@ import { ExerciseAttributeValueRepository } from '../../exercise/repository/exer
 import { ExerciseService } from '../../exercise/service/exercise.service';
 import { InstitutionService } from '../../institution/service/institution.service';
 import { Method } from '../../method/entity/method.entity';
-import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
 import {
   CompletedTrainingComponent,
   CompletedTrainingExercise,
 } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
@@ -72,19 +75,27 @@ export class TrainingPlanService {
   }
 
   getTrainingComponents(training: Training) {
-    const components = training.components;
-    components.unshift(training.warmup);
-    components.push(training.cooldown);
-    return components;
+    const { warmup, cooldown, components } = training;
+
+    // add warmup and cooldown if their reference does not exist yet
+    const withWarmup = warmup
+      ? [warmup, ...components.filter((c) => c !== warmup)]
+      : components;
+
+    const full = cooldown
+      ? [...withWarmup.filter((c) => c !== cooldown), cooldown]
+      : withWarmup;
+
+    return full;
   }
 
   getAddComponentsQuery(
     training: Training,
     input: Update<TrainingComponent>[],
-  ): [Partial<Training>, Training] {
+  ): [Update<Training>, Training] {
     const lastComponent = training.components[training.components.length - 1];
 
-    const query: Partial<Training> = {
+    const query: Update<Training> = {
       components: [
         ...training.components,
         ...input.map((c) => ({
@@ -109,16 +120,41 @@ export class TrainingPlanService {
   getDeleteComponentQuery(
     training: Training,
     ref: TrainingComponentRef,
-  ): [Partial<Training>, Training] {
+  ): [Update<Training>, Training] {
     const updatedComponents = training.components.filter(
       (c) => c.id !== ref.componentId,
     );
 
-    const query = {
-      components: updatedComponents,
+    const query: Update<Training> = { components: updatedComponents };
+    training.components = updatedComponents;
+
+    return [query, training];
+  }
+
+  getAddCompletedMemberQuery(
+    training: Training,
+    ref: { componentId: string; uid: string },
+  ): [Update<Training>, Training] {
+    const { componentId, uid } = ref;
+
+    // add completed member to the component
+    const trainingComponents = this.getTrainingComponents(training);
+    const component = this.findComponentOrFail(training, componentId);
+    component.completedMembersIds.push(uid);
+
+    // check if training is completed and update accordingly
+    const completedMembersIds = training.completedMembersIds || [];
+    if (this.isTrainingCompleted(training, uid))
+      if (!completedMembersIds.includes(uid)) {
+        completedMembersIds.push(uid); // athlete completed the training
+        training.completedMembersIds = completedMembersIds;
+      }
+
+    const query: Update<Training> = {
+      components: trainingComponents,
+      completedMembersIds,
     };
 
-    training.components = updatedComponents;
     return [query, training];
   }
 
@@ -164,7 +200,7 @@ export class TrainingPlanService {
   createFutureTrainingStats(
     components: TrainingComponent[],
     numTotalTrainingMembers: number,
-  ): GroupWorkloadStats[] {
+  ): TrainingExerciseAverageStats[] {
     const createdFutureStats = [] as {
       totalIntensity: number;
       totalVolume: number;
@@ -280,50 +316,57 @@ export class TrainingPlanService {
    * @param completedStats - CompletedStats of existing training in database
    * @param completedExercises - New completed exercises values from athlete
    */
-  calculateCompletedTrainingStats(
-    completedStats: GroupWorkloadStats[],
+  calculateTrainingStats(
+    trainingComponentId: string,
+    completedStats: TrainingExerciseAverageStats[],
     completedExercises: CompletedTrainingExercise[],
   ) {
+    const stats: TrainingExerciseAverageStats[] = completedStats.filter(
+      (s) => s.rootComponentId === trainingComponentId,
+    );
+
     for (const completedExercise of completedExercises) {
-      const avgFutureStats = completedStats.find(
-        (avg) => avg.exerciseId === completedExercise.id,
+      const trainingExerciseAverageStats: TrainingExerciseAverageStats =
+        completedStats.find(
+          (avg) => avg.exerciseId === completedExercise.id,
+        ) || {
+          exerciseId: completedExercise.id,
+          rootComponentId: trainingComponentId,
+          numMembers: 0,
+          intensity: 0,
+          volume: 0,
+        };
+
+      trainingExerciseAverageStats.intensity = this.calculateFieldAverage(
+        ParamType.IntWork1,
+        completedExercise.sets,
       );
 
-      const intensitiesL = completedExercise.sets
-        .flatMap((set) => set.paramValuesL)
-        .filter((p) => p.field === ParamType.IntWork1);
+      trainingExerciseAverageStats.volume = this.calculateFieldAverage(
+        ParamType.VolWork1,
+        completedExercise.sets,
+      );
 
-      const intensitiesR = completedExercise.sets
-        .flatMap((set) => set.paramValuesR)
-        .filter((p) => p.field === ParamType.IntWork1);
-
-      const avgIntensity =
-        (intensitiesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-          intensitiesL.length +
-          intensitiesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-            intensitiesR.length) /
-        2;
-
-      const volumesL = completedExercise.sets
-        .flatMap((set) => set.paramValuesL)
-        .filter((p) => p.field === ParamType.VolWork1);
-
-      const volumesR = completedExercise.sets
-        .flatMap((set) => set.paramValuesR)
-        .filter((p) => p.field === ParamType.VolWork1);
-
-      const avgVolume =
-        (volumesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-          volumesL.length +
-          volumesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-            volumesR.length) /
-        2;
-
-      avgFutureStats.intensity = avgIntensity;
-      avgFutureStats.volume = avgVolume;
+      trainingExerciseAverageStats.numMembers += 1;
+      stats.push(trainingExerciseAverageStats);
     }
 
-    return completedStats;
+    return stats.map((s) => {
+      s.intensity = parseFloat(s.intensity.toFixed(2));
+      s.volume = parseFloat(s.volume.toFixed(2));
+      return s;
+    });
+  }
+
+  private calculateFieldAverage(field: ParamType, sets: ExerciseSet[]): number {
+    const values = sets.flatMap((s) =>
+      s.paramValuesL.concat(s.paramValuesR).filter((p) => p.field === field),
+    );
+
+    if (!values.length) return 0;
+
+    const sum = values.reduce((acc, curr) => acc + parseFloat(curr.value), 0);
+    return sum / values.length;
   }
 
   isTrainingCompleted(training: Training, userId: string) {
@@ -708,19 +751,5 @@ export class TrainingPlanService {
     warmup.to = trainingComponents[0].from;
     cooldown.from = cooldownFrom;
     cooldown.to = addMinutes(cooldownFrom, 5);
-  }
-
-  private isTrainingComponent(
-    trainingComponent: TrainingComponent | CompletedTrainingComponent,
-  ): trainingComponent is TrainingComponent {
-    return (trainingComponent as TrainingComponent).supersets ? true : false;
-  }
-
-  private isCompletedTrainingComponent(
-    trainingComponent: TrainingComponent | CompletedTrainingComponent,
-  ): trainingComponent is CompletedTrainingComponent {
-    return (trainingComponent as CompletedTrainingComponent).exercises
-      ? true
-      : false;
   }
 }

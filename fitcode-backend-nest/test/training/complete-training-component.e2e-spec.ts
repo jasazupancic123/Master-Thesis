@@ -4,11 +4,9 @@ import { addDays, addMinutes, subDays } from 'date-fns';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
+import { FirestoreEntity } from '../../src/common/type/entity.type';
 import { ComponentService } from '../../src/component/component.service';
-import {
-  DEFAULT_PARAMS_KEY,
-  PARAMS,
-} from '../../src/component/constant/param.constant';
+import { DEFAULT_PARAMS_KEY } from '../../src/component/constant/param.constant';
 import { Component } from '../../src/component/entity/component.entity';
 import {
   IntType,
@@ -26,7 +24,6 @@ import { GroupService } from '../../src/group/group.service';
 import { generateCycleStub } from '../../src/group/mock/cycle.stub';
 import { InstitutionService } from '../../src/institution/service/institution.service';
 import { Training } from '../../src/training/entity/training.entity';
-import { ValidParams } from '../../src/training/interface/param-to-selected.interface';
 import { generateCompletedTrainingExerciseStub } from '../../src/training/mock/completed-training.stub';
 import {
   generateExerciseSet,
@@ -36,6 +33,8 @@ import {
   generateTrainingStub,
 } from '../../src/training/mock/training.stub';
 import { TrainingService } from '../../src/training/service/training.service';
+import { WorkloadService } from '../../src/training/service/workload.service';
+import { TestUser } from '../common/type/auth.type';
 import { TestInstitution } from '../common/type/entity.type';
 import { createAthleteUserAndToken } from '../common/utils/auth.util';
 import {
@@ -46,6 +45,18 @@ import {
   deleteUsers,
 } from '../common/utils/data.util';
 
+const C1_COMPONENT_PARAMS = generateComponentParamsStub([
+  ParamType.VolWorkSets,
+  ParamType.VolWork1,
+  ParamType.IntWork1,
+]);
+
+const C2_COMPONENT_PARAMS = generateComponentParamsStub([
+  ParamType.VolWorkSets,
+  ParamType.VolWork2,
+  ParamType.VolRec1,
+]);
+
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
@@ -54,6 +65,7 @@ describe('Complete training component (e2e)', () => {
   let trainingService: TrainingService;
   let groupService: GroupService;
   let institutionService: InstitutionService;
+  let workloadService: WorkloadService;
 
   /**
    * First component has component params VolWorkSets, VolWork1, IntWork1
@@ -67,6 +79,8 @@ describe('Complete training component (e2e)', () => {
   let leaf1: Component;
   let leaf2: Component;
 
+  let athlete1: TestUser;
+  let athlete2: TestUser;
   let institution: TestInstitution;
   let group: Group;
 
@@ -98,30 +112,19 @@ describe('Complete training component (e2e)', () => {
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
+    workloadService = moduleFixture.get(WorkloadService);
 
     component1 = await componentService.create(
       generateComponentStub({
         id: 'c1',
-        params: {
-          [DEFAULT_PARAMS_KEY]: generateComponentParamsStub([
-            ParamType.VolWorkSets,
-            ParamType.VolWork1,
-            ParamType.IntWork1,
-          ]),
-        },
+        params: { [DEFAULT_PARAMS_KEY]: C1_COMPONENT_PARAMS },
       }),
     );
 
     component2 = await componentService.create(
       generateComponentStub({
         id: 'c2',
-        params: {
-          [DEFAULT_PARAMS_KEY]: generateComponentParamsStub([
-            ParamType.VolWorkSets,
-            ParamType.VolWork2,
-            ParamType.VolRec1,
-          ]),
-        },
+        params: { [DEFAULT_PARAMS_KEY]: C2_COMPONENT_PARAMS },
       }),
     );
 
@@ -133,7 +136,13 @@ describe('Complete training component (e2e)', () => {
       generateComponentStub({ id: 'leaf2', parentId: 'c2' }),
     );
 
-    institution = await createInstitution(institutionService);
+    athlete1 = global.athlete;
+    athlete2 = await createAthleteUserAndToken(firebase);
+
+    institution = await createInstitution(institutionService, {
+      athletes: [athlete1, athlete2],
+    });
+
     group = await createGroupWithCycles(groupService, institution);
     group = await groupService.update(
       global.trainer,
@@ -157,13 +166,30 @@ describe('Complete training component (e2e)', () => {
       generateExerciseStub({ name: 'Deadlift L2', componentIds: [leaf2.id] }),
     ]);
 
-    training = await trainingService.create(
+    training = await createTraining();
+  });
+
+  afterAll(async () => {
+    await Promise.all([
+      deleteCollection(firebase, 'TRAINING'),
+      deleteCollection(firebase, 'EXERCISE'),
+      deleteDoc(firebase, 'GROUP', group.id),
+      deleteDoc(firebase, 'INSTITUTION', institution.id),
+      deleteCollection(firebase, 'COMPONENT'),
+      deleteUsers(firebase, [athlete2]),
+    ]);
+
+    await app.close();
+  });
+
+  async function createTraining(): Promise<Training> {
+    const training = await trainingService.create(
       global.trainer,
       generateTrainingStub({
         institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[0].id,
-        membersIds: [global.athlete.uid],
+        membersIds: [athlete1.uid, athlete2.uid],
         components: [
           generateTrainingComponent({
             from: new Date(),
@@ -177,7 +203,7 @@ describe('Complete training component (e2e)', () => {
       }),
     );
 
-    training = await trainingService.update(
+    return await trainingService.update(
       global.trainer,
       { trainingId: training.id },
       {
@@ -218,19 +244,7 @@ describe('Complete training component (e2e)', () => {
         ],
       },
     );
-  });
-
-  afterAll(async () => {
-    await Promise.all([
-      deleteCollection(firebase, 'TRAINING'),
-      deleteCollection(firebase, 'EXERCISE'),
-      deleteDoc(firebase, 'GROUP', group.id),
-      deleteDoc(firebase, 'INSTITUTION', institution.id),
-      deleteCollection(firebase, 'COMPONENT'),
-    ]);
-
-    await app.close();
-  });
+  }
 
   function url(trainingId: string, componentId: string) {
     return `/training/${trainingId}/component/${componentId}/complete`;
@@ -239,7 +253,7 @@ describe('Complete training component (e2e)', () => {
   it('should throw error if training not found', async () => {
     const response = await request(app.getHttpServer())
       .patch(url('invalid-training-id', 'component-id'))
-      .set('Authorization', `Bearer ${global.athlete.token}`)
+      .set('Authorization', `Bearer ${athlete1.token}`)
       .send({});
 
     expect(response.status).toBe(400);
@@ -253,7 +267,7 @@ describe('Complete training component (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .patch(url(trainingTomorrow.id, 'component-id'))
-      .set('Authorization', `Bearer ${global.athlete.token}`)
+      .set('Authorization', `Bearer ${athlete1.token}`)
       .send({});
 
     expect(response.status).toBe(409);
@@ -269,7 +283,7 @@ describe('Complete training component (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .patch(url(trainingYesterday.id, 'component-id'))
-      .set('Authorization', `Bearer ${global.athlete.token}`)
+      .set('Authorization', `Bearer ${athlete1.token}`)
       .send({});
 
     expect(response.status).toBe(409);
@@ -281,7 +295,7 @@ describe('Complete training component (e2e)', () => {
   it('should throw error if training component does not exist', async () => {
     const response = await request(app.getHttpServer())
       .patch(url(training.id, 'component-id'))
-      .set('Authorization', `Bearer ${global.athlete.token}`)
+      .set('Authorization', `Bearer ${athlete1.token}`)
       .send({});
 
     expect(response.status).toBe(404);
@@ -331,19 +345,6 @@ describe('Complete training component (e2e)', () => {
   });
 
   describe('Create Workloads', () => {
-    const c1ValidExerciseParamValues: ValidParams[] = [
-      {
-        field: ParamType.VolWork1,
-        selected: VolType.Rep,
-        value: 10,
-      },
-      {
-        field: ParamType.IntWork1,
-        selected: IntType.Kg,
-        value: 60,
-      },
-    ];
-
     it.each([
       ['empty array', { correctExercise: 'Squat L1', supersetIndex: 1 }, []],
       [
@@ -406,9 +407,9 @@ describe('Complete training component (e2e)', () => {
       async (_, { correctExercise, supersetIndex }, exercises) => {
         const response = await request(app.getHttpServer())
           .patch(url(training.id, component1.id))
-          .set('Authorization', `Bearer ${global.athlete.token}`)
+          .set('Authorization', `Bearer ${athlete1.token}`)
           .send({
-            userId: global.athlete.uid,
+            userId: athlete1.uid,
             exercises,
           });
 
@@ -432,15 +433,7 @@ describe('Complete training component (e2e)', () => {
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 0,
-            sets: [
-              generateExerciseSet(1, [
-                {
-                  field: ParamType.VolWork1,
-                  selected: VolType.Rep,
-                  value: 10,
-                },
-              ]),
-            ], // incomplete (IntWork1 is missing)
+            sets: [generateExerciseSet(1, [C1_COMPONENT_PARAMS[1]])], // incomplete (IntWork1 is missing)
           }),
         ],
       ],
@@ -455,17 +448,23 @@ describe('Complete training component (e2e)', () => {
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 0,
-            sets: [generateExerciseSet(1, c1ValidExerciseParamValues)],
+            generateValidSetsOptions: {
+              componentParams: C1_COMPONENT_PARAMS,
+            },
           }),
           generateCompletedTrainingExerciseStub({
             id: 'bench-l1',
             supersetIndex: 0,
-            sets: [generateExerciseSet(1, c1ValidExerciseParamValues)],
+            generateValidSetsOptions: {
+              componentParams: C1_COMPONENT_PARAMS,
+            },
           }),
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 1,
-            sets: [generateExerciseSet(1, c1ValidExerciseParamValues)],
+            generateValidSetsOptions: {
+              componentParams: C1_COMPONENT_PARAMS,
+            },
           }),
           generateCompletedTrainingExerciseStub({
             id: 'deadlift-l1',
@@ -475,7 +474,7 @@ describe('Complete training component (e2e)', () => {
                 {
                   field: ParamType.IntWork1,
                   selected: IntType.Kg,
-                  value: 60,
+                  value: '60',
                 },
               ]), // incomplete (VolWork1 is missing)
             ],
@@ -491,9 +490,9 @@ describe('Complete training component (e2e)', () => {
       ) => {
         const response = await request(app.getHttpServer())
           .patch(url(training.id, component1.id))
-          .set('Authorization', `Bearer ${global.athlete.token}`)
+          .set('Authorization', `Bearer ${athlete1.token}`)
           .send({
-            userId: global.athlete.uid,
+            userId: athlete1.uid,
             exercises,
           });
 
@@ -504,31 +503,40 @@ describe('Complete training component (e2e)', () => {
       },
     );
 
-    it('should successfully create all workloads (even for ignored sets)', async () => {
+    it('should successfully create all workloads and update training stats and completed members', async () => {
       const exercises = [
         generateCompletedTrainingExerciseStub({
           id: 'squat-l1',
           supersetIndex: 0,
-          sets: [generateExerciseSet(1, [])],
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
         }),
         generateCompletedTrainingExerciseStub({
           id: 'bench-l1',
           supersetIndex: 0,
-          sets: [generateExerciseSet(1, [])],
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
         }),
         generateCompletedTrainingExerciseStub({
           id: 'squat-l1',
           supersetIndex: 1,
-          sets: [generateExerciseSet(1, [])],
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
         }),
         generateCompletedTrainingExerciseStub({
           id: 'deadlift-l1',
           supersetIndex: 1,
-          sets: [generateExerciseSet(1, [])],
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
         }),
       ];
 
-      /* const response = await request(app.getHttpServer())
+      const spy = jest.spyOn(workloadService, 'createForTrainingComponent');
+      const response = await request(app.getHttpServer())
         .patch(url(training.id, component1.id))
         .set('Authorization', `Bearer ${athlete.token}`)
         .send({
@@ -536,9 +544,113 @@ describe('Complete training component (e2e)', () => {
           exercises,
         });
 
-      console */
+      const spyResult = await spy.mock.results[0].value;
+      expect(response.status).toBe(200);
+      expect(spyResult).toEqual(
+        expect.objectContaining({
+          successCount: 12, // 4 exercises * 3 sets each
+          failureCount: 0,
+        }),
+      );
+
+      const dbTraining = await firebase.firestore
+        .collection(FirestoreCollection.TRAINING)
+        .doc(training.id)
+        .get()
+        .then((doc) =>
+          firebase.serialize(doc.data() as FirestoreEntity<Training>),
+        );
+
+      const completedComponent = dbTraining.components.find(
+        (c) => c.id === component1.id,
+      );
+
+      expect(completedComponent.completedMembersIds).toHaveLength(1);
+      expect(completedComponent.completedMembersIds).toContain(athlete.uid);
+      expect(dbTraining.stats).toHaveLength(4); // 4 exercises
+      expect(dbTraining.completedMembersIds).toHaveLength(0);
+
+      await Promise.all([
+        deleteCollection(firebase, 'TRAINING_WORKLOAD'),
+        deleteDoc(firebase, 'TRAINING', training.id),
+      ]);
     });
   });
 
-  it('should successfully complete training component and update necessary relations', async () => {});
+  it.each([
+    [global.athlete.token, 'You have already completed this component'], // athlete1 throws error, this is the same athlete
+    [trainer.token, 'Athlete already completed this component'],
+  ])(
+    'should throw error if athlete already completed the component',
+    async (token, message) => {
+      training = await createTraining();
+
+      const exercises = [
+        generateCompletedTrainingExerciseStub({
+          id: 'squat-l1',
+          supersetIndex: 0,
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
+        }),
+        generateCompletedTrainingExerciseStub({
+          id: 'bench-l1',
+          supersetIndex: 0,
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
+        }),
+        generateCompletedTrainingExerciseStub({
+          id: 'squat-l1',
+          supersetIndex: 1,
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
+        }),
+        generateCompletedTrainingExerciseStub({
+          id: 'deadlift-l1',
+          supersetIndex: 1,
+          generateValidSetsOptions: {
+            componentParams: C1_COMPONENT_PARAMS,
+          },
+        }),
+      ];
+
+      const response1 = await request(app.getHttpServer())
+        .patch(url(training.id, component1.id))
+        .set('Authorization', `Bearer ${athlete1.token}`)
+        .send({
+          userId: athlete1.uid,
+          exercises,
+        });
+
+      expect(response1.status).toBe(200);
+
+      const response2 = await request(app.getHttpServer())
+        .patch(url(training.id, component1.id))
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          userId: athlete1.uid,
+          exercises,
+        });
+
+      expect(response2.status).toBe(409);
+      expect(response2.body.message).toBe(message);
+
+      await Promise.all([
+        deleteCollection(firebase, 'TRAINING_WORKLOAD'),
+        deleteDoc(firebase, 'TRAINING', training.id),
+      ]);
+    },
+  );
+
+  it('should update training stats when multiple athletes complete the same component', async () => {});
+
+  it('should update stats correctly if one exercise is in multiple supersets', async () => {});
+
+  it('should update stats correctly if multiple components are completed', async () => {});
+
+  it('should successfully complete training component for user', async () => {});
+
+  it('should successfully complete training when all users complete all components', async () => {});
 });
