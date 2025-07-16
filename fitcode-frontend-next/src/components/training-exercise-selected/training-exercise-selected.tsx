@@ -40,17 +40,8 @@ export default function TrainignExerciseSelected(
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const {
-    selectedExercise,
-    setSelectedExercise,
-    setOpenVideoPlayerModal,
-    setsNumbers,
-    setSetsNumbers,
-    expandedExercisesView,
-    setExpandedExercisesView,
-  } = useSupersets();
-  const { selectedAthlete, supersets, setSupersets } =
-    useTrainerDayViewContext();
+  const { setSelectedExercise } = useSupersets();
+  const { selectedAthlete } = useTrainerDayViewContext();
   const { group } = useGroup();
 
   const {
@@ -77,7 +68,6 @@ export default function TrainignExerciseSelected(
       sx={{
         m: 0,
         p: 0,
-        pt: 1,
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
       }}

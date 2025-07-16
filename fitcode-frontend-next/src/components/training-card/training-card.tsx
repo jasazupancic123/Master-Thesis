@@ -120,8 +120,7 @@ export default function TrainingCard(props: TrainingCardProps) {
               sx={{
                 height: 22,
                 maxHeight: 22,
-                width: 150,
-                maxWidth: 150,
+                minWidth: 150,
                 position: 'absolute',
                 left: '50%',
                 transform: 'translateX(-50%)',
@@ -132,7 +131,16 @@ export default function TrainingCard(props: TrainingCardProps) {
                 px: screenSize.isMobile ? 2 : 4,
               }}
             >
-              {selectedSubgroup?.subgroup ? (
+              {selectedAthlete ? (
+                <Typography
+                  textAlign="center"
+                  variant="body2"
+                  fontSize={12}
+                  sx={{ pb: 0.5, color: theme.palette.background.lightText }}
+                >
+                  {selectedAthlete.displayName}
+                </Typography>
+              ) : selectedSubgroup?.subgroup ? (
                 <TextField
                   value={selectedSubgroup.subgroup.name}
                   variant="standard"
