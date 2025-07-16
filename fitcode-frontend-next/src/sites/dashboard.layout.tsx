@@ -2,7 +2,7 @@ import { ChildrenProps } from '@/common/type/props.type';
 import DashboardSidebar from '@/components/dashboard-sidebar/dashboard-sidebar';
 import { Box, Container } from '@mui/material';
 
-export default async function DashboardLayout({ children }: ChildrenProps) {
+export default function DashboardLayout({ children }: ChildrenProps) {
   const styles = {
     bgcolor: 'background.default',
     minHeight: `calc(100vh - ${64}px)`,

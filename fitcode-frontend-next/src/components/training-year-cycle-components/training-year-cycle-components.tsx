@@ -12,6 +12,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { CommonService } from '@/common/service/common.service';
 import { Target } from '@/controller/target/type/target.type';
 import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 
@@ -27,7 +28,8 @@ export default function CycleComponents(props: CycleComponentsProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { setGroup, components, setDetectedChanges } = useGroup();
+  const { components } = useMain();
+  const { setGroup, setDetectedChanges } = useGroup();
 
   const parentComponents = components
     .filter((component) => component.parentId === null)

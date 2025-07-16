@@ -16,17 +16,15 @@ import React, { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
 import { addMinutes } from 'date-fns';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainerWeekView() {
   const theme = useTheme();
+  const { components, exercises, methods } = useMain();
+
   const {
-    token,
-    components,
-    exercises,
-    methods,
     cycle,
     trainings,
     setTrainings,
@@ -148,7 +146,7 @@ export default function TrainerWeekView() {
                           await handleApiRequest(
                             router,
                             () =>
-                              TrainingController.update(token, training.id, {
+                              TrainingController.update(training.id, {
                                 components: input.components?.map((c) => ({
                                   ...c,
                                   from: new Date(c.from),

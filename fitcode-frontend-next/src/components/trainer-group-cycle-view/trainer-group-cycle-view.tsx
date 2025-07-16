@@ -20,20 +20,12 @@ import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list'
 import { GroupService } from '@/controller/group/group.service';
 import { MoreVert } from '@mui/icons-material';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { useMain } from '@/store/main-provider';
 
 export default function TrainerCycleView() {
-  const {
-    token,
-    group,
-    components,
-    exercises: allExercises,
-    methods,
-    cycle,
-    setCycle,
-    setTrainings,
-    setDateFrom,
-    setDateTo,
-  } = useGroup();
+  const { components, exercises: allExercises, methods } = useMain();
+  const { group, cycle, setCycle, setTrainings, setDateFrom, setDateTo } =
+    useGroup();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -367,7 +359,6 @@ export default function TrainerCycleView() {
                   }
                   addTrainingComponent={(trainingId, input) => {
                     handleAddTrainingComponents(
-                      token,
                       { trainingId, ...input },
                       {
                         router,
@@ -381,7 +372,6 @@ export default function TrainerCycleView() {
                   }}
                   deleteTrainingComponent={(trainingId, componentId) =>
                     handleDeleteTrainingComponent(
-                      token,
                       { trainingId, componentId },
                       {
                         router,

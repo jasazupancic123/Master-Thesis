@@ -19,13 +19,14 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { useMain } from '@/store/main-provider';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const screenSize = useScreenSize();
   const { selectedExercisesIds, setSelectedExercisesIds, component } = props;
+  const { exercises: allExercises } = useMain();
   const {
     filteredExercises: exercises,
-    exercises: allExercises,
     setPagination,
     search,
     setSearch,

@@ -76,7 +76,7 @@ export class InstitutionController {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: true, memberIds: body.trainerIds, trainers: false },
+      { add: true, memberIds: body.trainerIds, trainers: true },
     );
   }
 
@@ -90,7 +90,7 @@ export class InstitutionController {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: false, memberIds: body.trainerIds, trainers: false },
+      { add: false, memberIds: body.trainerIds, trainers: true },
     );
   }
 }

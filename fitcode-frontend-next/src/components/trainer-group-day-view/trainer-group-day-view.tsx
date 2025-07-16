@@ -24,6 +24,7 @@ import {
   handleUpdateMultipleTrainings,
 } from './state';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { useMain } from '@/store/main-provider';
 
 dayjs.extend(weekOfYear);
 
@@ -34,18 +35,15 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const { components, exercises, methods } = useMain();
   const {
-    token,
     group,
     cycle,
-    components,
-    exercises,
     setTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
     setCycle,
-    methods,
   } = useGroup();
 
   const {
@@ -131,7 +129,6 @@ export default function TrainerDayView() {
       router,
       () =>
         TrainingController.findByDayAndPeriod(
-          token,
           day.date.toDate(),
           selectedPeriod,
           group.id
@@ -153,15 +150,12 @@ export default function TrainerDayView() {
           methods
         );
         setTraining(mapped);
+        setLoading(false);
       },
       undefined,
       undefined
     );
   }, [day, selectedPeriod]);
-
-  useEffect(() => {
-    setLoading(false);
-  }, [training]);
 
   useEffect(() => {
     const fetchWorkloads = async () => {
@@ -193,7 +187,6 @@ export default function TrainerDayView() {
         router,
         () =>
           TrainingController.findAthleteGroupWorkloads(
-            token,
             group.id,
             uniqueExerciseIds,
             selectedAthlete.uid
@@ -232,7 +225,6 @@ export default function TrainerDayView() {
               sx={{ mx: 0, cursor: 'pointer' }}
               onClick={() =>
                 handleUpdateMultipleTrainings({
-                  token,
                   setTrainings,
                   training,
                   setTraining,
@@ -271,7 +263,6 @@ export default function TrainerDayView() {
               }}
               onClick={() => {
                 handleUpdateMultipleTrainings({
-                  token,
                   setTrainings,
                   training,
                   setTraining,

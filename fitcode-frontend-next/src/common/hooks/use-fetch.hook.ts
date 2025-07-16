@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { ApiUtil } from '../service/util/api.util';
 
 type UseFetchOptions = RequestInit & {
   skip?: boolean; // if true, won't auto-fetch
@@ -14,6 +15,17 @@ export function useFetch<T = unknown>(url: string, options?: UseFetchOptions) {
     setError(null);
 
     try {
+      const token = await ApiUtil.getFreshIdToken();
+      if (!token) throw new Error('Unauthorized');
+
+      // add headers to options
+      options = {
+        ...options,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      };
+
       const response = await fetch(url, options);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);

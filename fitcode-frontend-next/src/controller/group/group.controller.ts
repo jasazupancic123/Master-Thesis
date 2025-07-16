@@ -5,32 +5,28 @@ import { Group } from './type/group.type';
 const api = CommonService.instance.api;
 
 export class GroupController {
-  static async findAll(token: string) {
-    return api.get<Group[]>('/group', { token });
+  static async findAll() {
+    return api.get<Group[]>('/group');
   }
 
-  static async findById(token: string, groupId: string) {
-    return api.get<Group>(`/group/${groupId}`, { token });
+  static async findById(groupId: string) {
+    return api.get<Group>(`/group/${groupId}`);
   }
 
-  static async findAllByInstitution(token: string, institutionId: string) {
-    return api.get<Group[]>(`/group/institution/${institutionId}`, { token });
+  static async findAllByInstitution(institutionId: string) {
+    return api.get<Group[]>(`/group/institution/${institutionId}`);
   }
 
-  static async create(
-    token: string,
-    body: {
-      name: string;
-      ownerId: string;
-      membersIds: string[];
-      institutionId: string;
-    }
-  ) {
-    return api.post<Group>('/group', body, { token });
+  static async create(body: {
+    name: string;
+    ownerId: string;
+    membersIds: string[];
+    institutionId: string;
+  }) {
+    return api.post<Group>('/group', body);
   }
 
   static async update(
-    token: string,
     groupId: string,
     body: {
       name?: string;
@@ -39,25 +35,22 @@ export class GroupController {
       cycles?: Cycle[];
     }
   ): Promise<Group> {
-    return api.patch<Group>(`/group/${groupId}`, body, { token });
+    return api.patch<Group>(`/group/${groupId}`, body);
   }
 
-  static async batchUpdate(
-    token: string,
-    body: {
-      groups: {
-        id: string;
-        ownerId?: string;
-        name?: string;
-        membersIds?: string[];
-        cycles?: Cycle[];
-      }[];
-    }
-  ) {
-    return api.patch<void>(`/group/update/batch`, body, { token });
+  static async batchUpdate(body: {
+    groups: {
+      id: string;
+      ownerId?: string;
+      name?: string;
+      membersIds?: string[];
+      cycles?: Cycle[];
+    }[];
+  }) {
+    return api.patch<void>(`/group/update/batch`, body);
   }
 
-  static async delete(token: string, groupId: string) {
-    return api.delete<{}>(`/group/${groupId}`, { token });
+  static async delete(groupId: string) {
+    return api.delete<{}>(`/group/${groupId}`);
   }
 }

@@ -5,7 +5,6 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import {
   ExerciseSet,
-  Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
@@ -276,6 +275,7 @@ export default function TrainingExerciseCardCollapsedSets(
                 >
                   {['L', 'R'].map((lOrR) => (
                     <ExerciseParam
+                      key={`${param.field}-${lOrR}`}
                       param={param}
                       value={
                         param.field === ParamType.VolWorkSets

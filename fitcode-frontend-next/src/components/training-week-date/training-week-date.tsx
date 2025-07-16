@@ -19,6 +19,7 @@ import { AddTrainingComponents } from '../trainer-cycle-view/type';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
 import { Day } from '@/common/service/util/date.util';
 import { useTheme } from '@mui/material';
+import { useMain } from '@/store/main-provider';
 
 interface TrainingWeekDatesProps {
   week: dayjs.Dayjs[];
@@ -55,17 +56,9 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
   const router = useRouter();
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const {
-    token,
-    group,
-    cycle,
-    trainings,
-    components,
-    setCycle,
-    setTrainings,
-    exercises: allExercises,
-    methods,
-  } = useGroup();
+
+  const { components, exercises: allExercises, methods } = useMain();
+  const { group, cycle, trainings, setCycle, setTrainings } = useGroup();
 
   const {
     week,
@@ -128,7 +121,6 @@ export default function TrainingWeekDates(props: TrainingWeekDatesProps) {
                 handleClickDateCell(
                   { date, period },
                   {
-                    token,
                     router,
                     group,
                     cycle,

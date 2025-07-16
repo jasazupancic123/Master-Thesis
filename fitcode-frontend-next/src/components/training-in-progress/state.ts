@@ -16,7 +16,6 @@ export const handleFinishTraining = async (state: {
   trainingInProgress: AthleteTrainingInProgress | null;
   setTrainingInProgress: SetState<AthleteTrainingInProgress | null>;
   user: User | null;
-  token: string;
   router: AppRouterInstance;
   setTrainings: SetState<Training[]>;
   setAllTrainings: SetState<Training[]>;
@@ -28,7 +27,6 @@ export const handleFinishTraining = async (state: {
     trainingInProgress,
     setTrainingInProgress,
     user,
-    token,
     router,
     setTrainings,
     setAllTrainings,
@@ -44,7 +42,6 @@ export const handleFinishTraining = async (state: {
     router,
     () =>
       TrainingController.finishComponent(
-        token,
         trainingInProgress.training.id,
         user.uid,
         trainingInProgress.selectedComponent.id,

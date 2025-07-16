@@ -8,24 +8,24 @@ import { useAuth } from '@/store/auth-provider';
 import { Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Logo from '../logo/logo';
 import { Drawer } from '../group-sidebar/style';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import React from 'react';
-import { useDashboard } from '@/store/dashboard-provider';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useMain } from '@/store/main-provider';
 
 export function DashboardDesktopSidebar() {
   const pathname = usePathname();
 
-  const { role } = useDashboard();
+  const { profile } = useMain();
   const { logout } = useAuth();
+
+  const role = profile.customClaims.role || [];
 
   return (
     <Drawer

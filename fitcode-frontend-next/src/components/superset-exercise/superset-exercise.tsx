@@ -31,20 +31,11 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
     setMenuExercise,
     anchorEl,
     setAnchorEl,
-    setOpenVideoPlayerModal,
-    setsNumbers,
-    setSetsNumbers,
     expandedExercisesView,
-    setExpandedExercisesView,
   } = useSupersets();
-  const {
-    training,
-    component,
-    supersets,
-    selectedExercises,
-    setSelectedExercises,
-    setSupersets,
-  } = useTrainerDayViewContext();
+
+  const { training, component, selectedExercises, setSelectedExercises } =
+    useTrainerDayViewContext();
 
   const handleMenuClick = (event: any) => {
     setAnchorEl(event.currentTarget);

@@ -22,6 +22,7 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { isBefore } from 'date-fns';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { useMain } from '@/store/main-provider';
 
 interface TrainingComponentExpandedProps {
   training: Training;
@@ -36,15 +37,13 @@ export default function TrainingComponentHeaderMenu(
   const screenSize = useScreenSize();
 
   const {
-    token,
-    detectedChanges,
-    setDetectedChanges,
-    trainings,
-    setTrainings,
     methods: allMethods,
     components: allComponents,
     exercises: allExercises,
-  } = useGroup();
+  } = useMain();
+
+  const { detectedChanges, setDetectedChanges, trainings, setTrainings } =
+    useGroup();
 
   const {
     setTraining,
@@ -402,7 +401,7 @@ export default function TrainingComponentHeaderMenu(
           handleApiRequest(
             router,
             () =>
-              TrainingController.periodize(token, {
+              TrainingController.periodize({
                 baseTrainingId: training.id,
                 componentId: component.id,
                 periodizationType:

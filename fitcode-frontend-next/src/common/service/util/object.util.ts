@@ -1,3 +1,11 @@
+export type WithUndefined<T> = {
+  [K in keyof T]: T[K] | undefined;
+};
+
+export type WithNull<T> = {
+  [K in keyof T]: T[K] | null;
+};
+
 export class ObjectUtil {
   /**
    * Nests the object to a nested object.

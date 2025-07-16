@@ -22,10 +22,9 @@ import {
 } from '@/common/type/exercise-or-training.type';
 import { handleFinishTraining } from './state';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
+import { useMain } from '@/store/main-provider';
 
 interface TrainingInProgressProps {
-  profile: User;
-  token: string;
   setView: SetState<ExerciseOrTraining>;
   setTrainings: SetState<Training[]>;
   setAllTrainings: SetState<Training[]>;
@@ -36,6 +35,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const { profile } = useMain();
+
   const {
     clearTrainingState,
     trainingInProgress,
@@ -43,7 +44,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setView,
   } = useTraining();
 
-  const { profile, token, setTrainings, setAllTrainings } = props;
+  const { setTrainings, setAllTrainings } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
     Superset | undefined
@@ -211,7 +212,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                   trainingInProgress,
                   setTrainingInProgress,
                   user,
-                  token,
                   router,
                   setTrainings,
                   setAllTrainings,
@@ -241,7 +241,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             trainingInProgress,
             setTrainingInProgress,
             user,
-            token,
             router,
             setTrainings,
             setAllTrainings,
