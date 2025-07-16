@@ -17,6 +17,7 @@ export default async function Layout({ children }: ChildrenProps) {
   if (!token) return <Loading text="Unauthorized" />;
 
   const profile = await UserController.findMe(token);
+  console.log('profile', profile);
   if (!profile) return <Loading text="Unauthorized" />;
 
   const roles = profile.customClaims.role;
