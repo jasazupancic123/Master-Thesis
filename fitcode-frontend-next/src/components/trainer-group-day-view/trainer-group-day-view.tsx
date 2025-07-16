@@ -8,7 +8,7 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { CopyAll, Delete, Save } from '@mui/icons-material';
-import { IconButton, Tooltip } from '@mui/material';
+import { Divider, IconButton, Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -207,8 +207,38 @@ export default function TrainerDayView() {
   }, [selectedAthlete]);
 
   return (
-    <Box position="relative">
-      {/* Save button */}
+    <Box
+      position="relative"
+      sx={{
+        maxWidth: MAX_WIDTH,
+        minHeight: 'calc(100vh - 50px)',
+        mx: 'auto',
+        overflowY: 'none',
+      }}
+    >
+      {!screenSize.isSmallerThanLaptop && (
+        <>
+          <Divider
+            orientation="vertical"
+            sx={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              zIndex: 1200,
+            }}
+          />
+          <Divider
+            orientation="vertical"
+            sx={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              zIndex: 1200,
+            }}
+          />
+        </>
+      )}
+
       <Box
         justifyContent="flex-end"
         alignItems="center"
@@ -332,7 +362,6 @@ export default function TrainerDayView() {
           </IconButton>
         </Tooltip>
       </Box>
-
       <Box
         display="flex"
         flexDirection="column"
@@ -369,7 +398,6 @@ export default function TrainerDayView() {
           <TrainingMembers isSticky={isSticky} />
         </Box>
       </Box>
-
       <Box
         display="flex"
         flexDirection="column"
@@ -388,7 +416,6 @@ export default function TrainerDayView() {
           }}
         />
       </Box>
-
       {/* Trainings for the day */}
       <Box maxWidth={MAX_WIDTH} mx="auto">
         <GroupTrainerDayViewTrainings day={day} loading={loading} />

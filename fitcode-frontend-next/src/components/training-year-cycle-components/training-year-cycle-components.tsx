@@ -13,6 +13,7 @@ import { CommonService } from '@/common/service/common.service';
 import { Target } from '@/controller/target/type/target.type';
 import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
 import { useMain } from '@/store/main-provider';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 
 const commonService = CommonService.instance;
 
@@ -89,64 +90,10 @@ export default function CycleComponents(props: CycleComponentsProps) {
       <Box
         width="100%"
         sx={{
-          height: 22,
-          backgroundColor: theme.palette.background.paper,
-          position: 'absolute',
+          backgroundColor: theme.palette.background.dark,
+          height: '5px',
         }}
       />
-      <Box
-        width="88%"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          ml: '7.175%',
-          height: 22,
-          backgroundColor: theme.palette.background.paper,
-          position: 'relative',
-        }}
-      >
-        {sortedCycles.map((cycle, i) => {
-          const sliderPropety = sliderProperties[i];
-          if (!sliderPropety) return null;
-
-          // parse number from string
-          const width = sliderPropety.width;
-          const centerPosition = sliderPropety.centerPosition;
-
-          return (
-            <div
-              key={cycle.id}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                position: 'absolute',
-                left: centerPosition,
-                transform: 'translateX(-50%)',
-                width: width,
-                maxWidth: width,
-                gap: 4.5,
-              }}
-            >
-              <Typography
-                sx={{
-                  textAlign: 'center',
-                  fontSize: 12,
-                  fontWeight: 400,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  maxWidth: '100%',
-                  color: theme.palette.text.primary,
-                  zIndex: 1000,
-                }}
-              >
-                {`${cycle.name}`}
-              </Typography>
-            </div>
-          );
-        })}
-      </Box>
       {parentComponents.toReversed().map((component) => {
         const IconComponent = commonService.navigation.getComponentIcon(
           component.name
