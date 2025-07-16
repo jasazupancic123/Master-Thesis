@@ -11,12 +11,13 @@ import { InstitutionService } from '@/controller/institution/institution.service
 import { useScreenSize } from '@/store/screen-size-provider';
 import { CommonService } from '@/common/service/common.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 const firebaseService = commonService.firebase;
 
 export default function AddInstitutionDashboard() {
-  const { users } = useDashboard();
+  const { users } = useMain();
   const router = useRouter();
   const screenSize = useScreenSize();
 

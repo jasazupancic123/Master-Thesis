@@ -4,18 +4,26 @@ import { useEffect, useState } from 'react';
 import { UserController } from '@/controller/user/user.controller';
 import Loading from '../components/loading/loading';
 import { ChildrenProps } from '@/common/type/props.type';
-import { ProfileContextProps, ProfileProvider } from '@/store/profile-provider';
+import { ProfileProvider } from '@/store/profile-provider';
+import { User } from '@/controller/user/type/user.type';
+import {
+  getCachedProfile,
+  setCachedProfile,
+} from '@/session-cache/profile.session-cache';
 
 export default function ProfileInitializer({ children }: ChildrenProps) {
-  const [state, setState] = useState<ProfileContextProps | null>(null);
+  const [user, setUser] = useState<User | null>(getCachedProfile());
   const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
     async function init() {
       try {
-        const user = await UserController.findMe();
+        if (user) return; // already cached
 
-        setState({ user });
+        const fetchedUser = await UserController.findMe();
+
+        setCachedProfile(fetchedUser);
+        setUser(fetchedUser);
       } catch (e) {
         setUnauthorized(true);
       }
@@ -24,8 +32,8 @@ export default function ProfileInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!state) return <Loading text="Loading..." />;
+  if (!user) return <Loading text="Loading..." />;
   if (unauthorized) return <Loading text="Unauthorized" />;
 
-  return <ProfileProvider {...state}>{children}</ProfileProvider>;
+  return <ProfileProvider user={user}>{children}</ProfileProvider>;
 }

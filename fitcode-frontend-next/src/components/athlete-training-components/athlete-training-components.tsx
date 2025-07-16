@@ -19,12 +19,12 @@ import { SetState } from '@/common/type/state.type';
 import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import AthleteTrainingExercise from '../athlete-training-exercise/athlete-training-exercise';
+import { useMain } from '@/store/main-provider';
 
 interface AthleteTrainingComponentsProps {
   components: TrainingComponent[];
   training: Training;
   supersets: Superset[];
-  profile: User;
   setOpenAreYouSureModal: SetState<boolean>;
   setOpenVideoPlayerModal: SetState<boolean>;
   setVideoUrl: SetState<string>;
@@ -40,11 +40,12 @@ export default function AthleteTrainingComponents(
     components,
     training,
     supersets,
-    profile,
     setOpenAreYouSureModal,
     setOpenVideoPlayerModal,
     setVideoUrl,
   } = props;
+
+  const { profile } = useMain();
   const { trainingInProgress, setTrainingInProgress } = useTraining();
 
   const [selectedSuperset, setSelectedSuperset] = useState<Superset | null>(

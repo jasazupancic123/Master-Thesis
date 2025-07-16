@@ -1,4 +1,4 @@
-import TrainingPage from '../../sites/training.page';
+import TrainingPage from '../../../sites/training.page';
 
 export default function Page() {
   return <TrainingPage />;

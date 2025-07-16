@@ -11,6 +11,7 @@ import { CommonService } from '@/common/service/common.service';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import MyModal from '../modal/modal';
 import { User } from '@/controller/user/type/user.type';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 const firebaseService = commonService.firebase;
@@ -25,13 +26,10 @@ export default function RegisterUsersDashboard(
   const { registerRole } = props;
 
   const router = useRouter();
-  const {
-    profile,
-    users,
-    refetchUsers,
-    selectedInstitution,
-    setSelectedInstitution,
-  } = useDashboard();
+
+  const { users } = useMain();
+  const { refetchUsers, selectedInstitution, setSelectedInstitution } =
+    useDashboard();
 
   const [formData, setFormData] = useState({
     displayName: '',

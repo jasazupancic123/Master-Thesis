@@ -6,21 +6,17 @@ import { ChildrenProps } from '@/common/type/props.type';
 import { SetState } from '@/common/type/state.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Institution } from '@/controller/institution/type/institution.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { User } from '@/controller/user/type/user.type';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { useMain } from './main-provider';
 
 interface DashboardContextProps {
-  role: UserRole[];
-  profile: User;
   institutions: Institution[];
   setInstitutions: SetState<Institution[]>;
   selectedInstitution: Institution | null;
   setSelectedInstitution: SetState<Institution | null>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
-  users: User[] | null;
-  setUsers: SetState<User[] | null>;
   selectedGroup: Group | null;
   setSelectedGroup: SetState<Group | null>;
   refetchUsers: () => void;
@@ -29,9 +25,6 @@ interface DashboardContextProps {
 export interface DashboardPageProps {
   institutions: Institution[];
   selectedInstitution: Institution | null;
-  role: UserRole[];
-  users: User[];
-  profile: User;
 }
 
 const DashboardContext = createContext<DashboardContextProps | null>(null);
@@ -40,15 +33,10 @@ export const useDashboard = () => useContext(DashboardContext)!;
 
 export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   const {
-    role,
-    profile,
-    users: propsUsers,
     institutions: propsInstitutions,
     selectedInstitution: propsSelectedInstitution,
     children,
   } = props;
-
-  // const [users, setUsers] = useState<User[]>(propsUsers);
 
   const [institutions, setInstitutions] =
     useState<Institution[]>(propsInstitutions);
@@ -61,20 +49,24 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
       : null
   );
 
+  const { setUsers } = useMain();
+
   const {
-    data: users,
+    data: fetchedUsers,
     refetch,
-    setData: setUsers,
+    setData,
   } = useFetch<User[]>(`${BACKEND_API_BASE_URL}/user`, {
     method: 'GET',
   });
 
+  useEffect(() => {
+    if (fetchedUsers) {
+      setUsers(fetchedUsers);
+    }
+  }, [fetchedUsers, setUsers]);
+
   const value: DashboardContextProps = {
-    role,
-    profile,
     refetchUsers: refetch,
-    users,
-    setUsers,
     institutions,
     setInstitutions,
     selectedInstitution,

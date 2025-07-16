@@ -4,24 +4,27 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import GroupsIcon from '@mui/icons-material/Groups';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
-import Logo from '../logo/logo';
 import SelectInputHorizontal from '../select-input-horizontal/select-input-horizontal';
 import { AppBar } from '../group-sidebar/style';
 import { Institution } from '@/controller/institution/type/institution.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import React from 'react';
 import { useDashboard } from '@/store/dashboard-provider';
 import { DashboardDesktopSidebar } from '../dashboard-sidebar-desktop/dashboard-sidebar-desktop';
 import { DashboardMobileSidebar } from '../dashboard-sidebar-mobile/dashboard-sidebar-mobile';
 import { useTheme } from '@mui/material';
 import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import { useMain } from '@/store/main-provider';
 
 export default function DashboardSidebar() {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const { role, institutions, selectedInstitution, setSelectedInstitution } =
+  const { profile } = useMain();
+
+  const { institutions, selectedInstitution, setSelectedInstitution } =
     useDashboard();
+
+  const role = profile.customClaims.role;
 
   return (
     <Box sx={{ width: !screenSize.isMobile ? 50 : undefined }}>

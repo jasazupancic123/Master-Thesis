@@ -1,10 +1,10 @@
 import { handleApiRequest } from '@/common/type/state.type';
-import { useGroup } from '@/store/group-provider';
 import { UserController } from '@/controller/user/user.controller';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useMain } from '@/store/main-provider';
 
 const EMPTY_MEMBER = {
   email: '',
@@ -15,7 +15,7 @@ const EMPTY_MEMBER = {
 
 export default function RegisterMembersModal() {
   const router = useRouter();
-  const { setUsers } = useGroup();
+  const { setUsers } = useMain();
   const [member, setMember] = useState(EMPTY_MEMBER);
 
   async function handleRegisterMember() {

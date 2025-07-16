@@ -12,6 +12,7 @@ import React from 'react';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useRouter, usePathname } from 'next/navigation';
 import { ILink } from '@/common/type/link.type';
+import { useMain } from '@/store/main-provider';
 
 export function DashboardMobileSidebar() {
   const screenSize = useScreenSize();
@@ -19,8 +20,10 @@ export function DashboardMobileSidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { role } = useDashboard();
+  const { profile } = useMain();
   const { logout } = useAuth();
+
+  const role = profile.customClaims.role || [];
 
   const handleClick = (link: ILink, isSignOut = false) => {
     if (isSignOut) {

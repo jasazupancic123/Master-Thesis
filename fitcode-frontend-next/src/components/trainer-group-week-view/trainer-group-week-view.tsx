@@ -16,15 +16,15 @@ import React, { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
 import { addMinutes } from 'date-fns';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 
 export default function TrainerWeekView() {
   const theme = useTheme();
+  const { components, exercises, methods } = useMain();
+
   const {
-    components,
-    exercises,
-    methods,
     cycle,
     trainings,
     setTrainings,

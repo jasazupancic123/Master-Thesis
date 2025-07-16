@@ -18,11 +18,11 @@ import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import AthleteTrainingComponents from '../athlete-training-components/athlete-training-components';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import { useMain } from '@/store/main-provider';
 
 type AthleteTrainingExerciseCardProps = {
   components: TrainingComponent[];
   training: Training;
-  profile: User;
 };
 
 export default function AthleteTrainingExerciseCard(
@@ -30,7 +30,8 @@ export default function AthleteTrainingExerciseCard(
 ) {
   const theme = useTheme();
   const router = useRouter();
-  const { components, training, profile } = props;
+  const { profile } = useMain();
+  const { components, training } = props;
   const screenSize = useScreenSize();
 
   const { trainingInProgress, setTrainingInProgress, setView } = useTraining();
@@ -75,7 +76,6 @@ export default function AthleteTrainingExerciseCard(
               components={components}
               training={training}
               supersets={supersets || []}
-              profile={profile}
               setOpenAreYouSureModal={setOpenAreYouSureModal}
               setOpenVideoPlayerModal={setOpenVideoPlayerModal}
               setVideoUrl={setVideoUrl}

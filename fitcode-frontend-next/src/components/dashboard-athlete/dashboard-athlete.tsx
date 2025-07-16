@@ -10,6 +10,7 @@ import { InstitutionController } from '@/controller/institution/institution.cont
 import { InstitutionService } from '@/controller/institution/institution.service';
 import toast from 'react-hot-toast';
 import { isManager } from '@/common/service/util/firebase-auth.util';
+import { useMain } from '@/store/main-provider';
 
 interface DashboardAthleteProps {
   athlete: User;
@@ -23,9 +24,9 @@ export default function DashboardAthlete(props: DashboardAthleteProps) {
 
   const { athlete, selectedUser, setSelectedUser } = props;
 
+  const { users, profile } = useMain();
+
   const {
-    users,
-    profile,
     selectedInstitution,
     setSelectedInstitution,
     selectedGroup,

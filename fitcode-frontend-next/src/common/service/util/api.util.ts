@@ -38,13 +38,14 @@ export class ApiUtil {
   async fetch<T>(url: string, options?: FetchOptions): Promise<T> {
     const {
       method = 'GET',
+      token,
       body,
       query,
       formData,
       cacheTimeInMs,
     } = options || {};
 
-    const freshToken = await ApiUtil.getFreshIdToken();
+    const freshToken = token ?? (await ApiUtil.getFreshIdToken());
 
     const res = await fetch(
       `${BACKEND_API_BASE_URL}${url}${this.query(query)}`,
@@ -76,7 +77,7 @@ export class ApiUtil {
 
   async get<T>(
     url: string,
-    options?: Pick<FetchOptions, 'query' | 'cacheTimeInMs'>
+    options?: Pick<FetchOptions, 'token' | 'query' | 'cacheTimeInMs'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'GET' });
   }
@@ -84,7 +85,7 @@ export class ApiUtil {
   async post<T>(
     url: string,
     body: object,
-    options?: Pick<FetchOptions, 'query' | 'formData'>
+    options?: Pick<FetchOptions, 'token' | 'query' | 'formData'>
   ): Promise<T> {
     return await this.fetch<T>(url, {
       ...(options || {}),
@@ -96,14 +97,14 @@ export class ApiUtil {
   async patch<T>(
     url: string,
     body: object,
-    options?: Pick<FetchOptions, 'query' | 'formData'>
+    options?: Pick<FetchOptions, 'token' | 'query' | 'formData'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'PATCH', body });
   }
 
   async delete<T>(
     url: string,
-    options?: Pick<FetchOptions, 'query' | 'body'>
+    options?: Pick<FetchOptions, 'token' | 'query' | 'body'>
   ): Promise<T> {
     return this.fetch<T>(url, { ...(options || {}), method: 'DELETE' });
   }

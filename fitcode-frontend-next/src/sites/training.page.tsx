@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 
@@ -22,10 +23,10 @@ export default function TrainingPage() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
+  const { profile } = useMain();
   const {
     view,
     setView,
-    profile,
     trainings: allTrainingsProps,
     clearTrainingState,
     trainingInProgress,
@@ -162,7 +163,6 @@ export default function TrainingPage() {
                         training.cooldown,
                       ]}
                       training={training}
-                      profile={profile}
                     />
                   </Stack>
                 </Box>
@@ -174,7 +174,6 @@ export default function TrainingPage() {
     )
   ) : (
     <TrainingInProgress
-      profile={profile}
       setView={setView}
       setTrainings={setTrainings}
       setAllTrainings={setAllTrainings}

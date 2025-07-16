@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { useChart } from '@/store/chart-provider';
+import { useMain } from '@/store/main-provider';
 
 const data = [
   { name: 'A', intensity: 50, volume: 80 },
@@ -25,7 +25,7 @@ const data = [
 
 export default function ChartPage() {
   const screenSize = useScreenSize();
-  const { components, exercises } = useChart();
+  const { components, exercises } = useMain();
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setRange(newValue as number[]);

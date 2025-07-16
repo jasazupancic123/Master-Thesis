@@ -13,6 +13,7 @@ import { GroupController } from '@/controller/group/group.controller';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
+import { useMain } from '@/store/main-provider';
 
 interface GroupAthletesCardProps {
   group: Group;
@@ -25,13 +26,13 @@ export default function GroupAthletesCard(props: GroupAthletesCardProps) {
 
   const screenSize = useScreenSize();
   const router = useRouter();
+
+  const { users, profile } = useMain();
   const {
-    profile,
     selectedGroup,
     setSelectedGroup,
     selectedInstitution,
     setSelectedInstitution,
-    users,
     setDetectedChanges,
   } = useDashboard();
 
