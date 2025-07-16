@@ -1,4 +1,3 @@
-import { Paramtype } from '@nestjs/common';
 import { addDays, addHours } from 'date-fns';
 import { v4 } from 'uuid';
 import {
@@ -7,23 +6,19 @@ import {
 } from '../../../test/common/utils/random.util';
 import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
 import { getTime } from '../../common/service/util/date.util';
+import { PARAMS } from '../../component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
 } from '../../component/constant/warmup-cooldown.constant';
-import {
-  IntType,
-  ParamType,
-  VolType,
-  VolWorkSetType,
-} from '../../component/enum/param.enum';
+import { ComponentParam } from '../../component/entity/component-param.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
 import { Superset } from '../entity/superset.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
-import { ValidParams } from '../interface/param-to-selected.interface';
+import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
   return {
@@ -101,46 +96,37 @@ export function generateTrainingExercise(
   };
 }
 
-/**
- * @param setNumber - The number of the set.
- * @param params - An array of tuples where each tuple contains
- * a parameter type and its value. Each tuple should be of the
- * form [VolWorkSetType | VolType | IntType, number].
- */
-export function generateExerciseSet<T extends ValidParams>(
+export function generateExerciseSet(setNumber: number): ExerciseSet;
+export function generateExerciseSet(
   setNumber: number,
-  params: T[],
-): ExerciseSet {
-  const paramValues = params.map((param) => {
-    const { field, selected, value } = param;
+  paramValues: AttributeValue[],
+): ExerciseSet;
+export function generateExerciseSet(
+  setNumber: number,
+  componentParams: ComponentParam[],
+): ExerciseSet;
+/**
+ * Generates an ExerciseSet object. If paramValuesOrComponentParams is not provided,
+ * it generates random parameter values for the set, else it uses the provided values
+ * by generating them from component parameters or using the provided AttributeValue
+ * array as is.
 
-    switch (selected) {
-      case VolWorkSetType.Set:
-        return generateSetsStub(value);
-      case VolType.Rep:
-        return generateRepsStub(value, field);
-      case VolType.Time:
-        return generateTimeStub(value, field);
-      case VolType.Dist:
-        return generateDistanceStub(value, field);
-      case IntType.Kg:
-        return generateKgStub(value, field);
-      case IntType.Bw:
-        return generateBwStub(value, field);
-      case IntType.Rm:
-        return generateRmStub(value, field);
-      case IntType.Tempo:
-        return generateTempoStub(value, field);
-      case IntType.Eff:
-        return generateEffStub(value, field);
-      case IntType.Mas:
-        return generateMasStub(value, field);
-      case IntType.Hrmax:
-        return generateHrmaxStub(value, field);
-      default:
-        throw new Error(`Unknown selected type: ${selected}`);
-    }
-  });
+ * @param setNumber - the number of the set
+ * @param paramValues - array of AttributeValue objects for the set or componentParams
+ * - array of ComponentParam objects to generate AttributeValues from
+ */
+export function generateExerciseSet(
+  setNumber: number,
+  paramValuesOrComponentParams?: AttributeValue[] | ComponentParam[],
+): ExerciseSet {
+  const paramValues = !paramValuesOrComponentParams
+    ? generateParamAttributeValuesFromComponentParams(PARAMS, true)
+    : isAttributeValueArray(paramValuesOrComponentParams)
+      ? paramValuesOrComponentParams
+      : generateParamAttributeValuesFromComponentParams(
+          paramValuesOrComponentParams,
+          true,
+        );
 
   return {
     setNumber,
@@ -149,119 +135,8 @@ export function generateExerciseSet<T extends ValidParams>(
   };
 }
 
-export function generateSetsStub(sets: number): AttributeValue {
-  return {
-    field: ParamType.VolWorkSets,
-    selected: VolWorkSetType.Set,
-    value: sets.toString(),
-  };
-}
-
-export function generateRepsStub(
-  reps: number,
-  field: ParamType.VolWork1 | ParamType.VolWork2 | ParamType.VolRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: VolType.Rep,
-    value: reps.toString(),
-  };
-}
-
-export function generateTimeStub(
-  time: number,
-  field: ParamType.VolWork1 | ParamType.VolWork2 | ParamType.VolRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: VolType.Time,
-    value: time.toString(),
-  };
-}
-
-export function generateDistanceStub(
-  distance: number,
-  field: ParamType.VolWork1 | ParamType.VolWork2 | ParamType.VolRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: VolType.Dist,
-    value: distance.toString(),
-  };
-}
-export function generateKgStub(
-  kg: number,
-  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: IntType.Kg,
-    value: kg.toString(),
-  };
-}
-
-export function generateBwStub(
-  bw: number,
-  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: IntType.Bw,
-    value: bw.toString(),
-  };
-}
-
-export function generateRmStub(
-  rm: number,
-  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: IntType.Rm,
-    value: rm.toString(),
-  };
-}
-
-export function generateTempoStub(
-  tempo: number,
-  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: `${IntType.Tempo}:${tempo.toString()}`,
-    value: tempo.toString(),
-  };
-}
-
-export function generateEffStub(
-  eff: number,
-  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: `${IntType.Eff}:${eff.toString()}`,
-    value: eff.toString(),
-  };
-}
-
-export function generateMasStub(
-  mas: number,
-  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: IntType.Mas.toString(),
-    value: mas.toString(),
-  };
-}
-
-export function generateHrmaxStub(
-  hrmax: number,
-  field: ParamType.IntWork1 | ParamType.IntWork2 | ParamType.IntRec1,
-): AttributeValue {
-  return {
-    field,
-    selected: IntType.Hrmax.toString(),
-    value: hrmax.toString(),
-  };
+function isAttributeValueArray(
+  arr: AttributeValue[] | ComponentParam[],
+): arr is AttributeValue[] {
+  return (arr[0] as AttributeValue)?.value !== undefined;
 }

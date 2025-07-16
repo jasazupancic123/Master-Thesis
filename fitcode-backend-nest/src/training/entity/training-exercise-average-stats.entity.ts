@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsString, IsNotEmpty, IsInt, IsNumber } from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class GroupWorkloadStats {
+export class TrainingExerciseAverageStats {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

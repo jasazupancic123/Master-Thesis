@@ -1024,6 +1024,13 @@ export class TrainingService implements Permission<Training, Institution> {
       training.institution,
     );
 
+    if (trainingComponent.completedMembersIds.includes(athlete.uid))
+      throw new ConflictException(
+        this.firebaseService.isAthlete(user)
+          ? `You have already completed this component`
+          : `Athlete already completed this component`,
+      );
+
     // create workloads
     const result = await this.workloadService.createForTrainingComponent(
       trainingComponent,
@@ -1039,33 +1046,25 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // update stats
-    const stats = this.trainingPlanService.calculateCompletedTrainingStats(
+    const stats = this.trainingPlanService.calculateTrainingStats(
+      trainingComponent.id,
       training.stats,
       input.exercises,
     );
 
     // mark user as completed (for component and training)
+    const [addCompletedMembersQuery, updatedTraining] =
+      this.trainingPlanService.getAddCompletedMemberQuery(training, {
+        componentId,
+        uid: athlete.uid,
+      });
+
     await this.trainingRepository.updateDoc(trainingId, {
-      components: [
-        ...training.components.map((tc) =>
-          tc.id === componentId
-            ? {
-                ...tc,
-                completedMembersIds: [...tc.completedMembersIds, athlete.uid], // athlete completed the component
-              }
-            : tc,
-        ),
-      ],
-      completedMembersIds: this.trainingPlanService.isTrainingCompleted(
-        training,
-        athlete.uid,
-      )
-        ? [...training.completedMembersIds, athlete.uid] // athlete completed the training
-        : training.completedMembersIds,
-      stats: [...(training.stats || []), ...stats],
+      stats,
+      ...addCompletedMembersQuery,
     });
 
-    return training;
+    return updatedTraining;
   }
 
   async addComponents(
@@ -1187,6 +1186,8 @@ export class TrainingService implements Permission<Training, Institution> {
         throw new UnauthorizedException(
           `Athlete ${found.displayName || found.email} cannot view institution ${institution.name}`,
         );
+
+    return found;
   }
 
   private getFromAndToDates(components: TrainingComponent[]): {

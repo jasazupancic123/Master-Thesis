@@ -330,31 +330,6 @@ export class WorkloadService {
                   exerciseName,
                   supersetIndex,
                 });
-              /* for (const field of added) {
-                  const param = PARAMS.find((p) => p.field === field);
-                  const selectedField = prescribedSet.paramValuesL.find(
-                    (p) => p.field === field,
-                  )?.selected;
-
-                  if (param && selectedField) {
-                    const selected = param.options?.find(
-                      (o) => o.field === selectedField.split(':')[0],
-                    );
-
-                    const paramName = (
-                      param.description || param.name
-                    ).toLowerCase();
-
-                    const selectedName = (
-                      selected.description || selected.name
-                    ).toLowerCase();
-
-                    if (selected)
-                      throw new BadRequestException(
-                        `You have to complete parameter ${paramName} (${selectedName}) in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
-                      );
-                  }
-                } */
 
               if (removed.length)
                 this.checkParamDifference(removed, 'remove', {
@@ -362,31 +337,6 @@ export class WorkloadService {
                   exerciseName,
                   supersetIndex,
                 });
-              /* for (const field of removed) {
-                  const param = PARAMS.find((p) => p.field === field);
-                  const selectedField = prescribedSet.paramValuesL.find(
-                    (p) => p.field === field,
-                  )?.selected;
-
-                  if (param && selectedField) {
-                    const selected = param.options?.find(
-                      (o) => o.field === selectedField.split(':')[0],
-                    );
-
-                    const paramName = (
-                      param.description || param.name
-                    ).toLowerCase();
-
-                    const selectedName = (
-                      selected.description || selected.name
-                    ).toLowerCase();
-
-                    if (selected)
-                      throw new BadRequestException(
-                        `You have to remove parameter ${paramName} (${selectedName}) in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
-                      );
-                  }
-                } */
 
               const completedWorkload = this.getCompletedWorkload(completedSet);
               const workloadValue: WorkloadValue = {

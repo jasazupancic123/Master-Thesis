@@ -8,10 +8,10 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { BaseEntity } from '../../common/entity/base.entity';
-import { TrainingComponent } from './training-component.entity';
-import { Wellness } from '../../user/entity/wellness.entity';
-import { GroupWorkloadStats } from './average-workload-values.entity';
 import { Institution } from '../../institution/entity/institution.entity';
+import { Wellness } from '../../user/entity/wellness.entity';
+import { TrainingComponent } from './training-component.entity';
+import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';
 
 export class Training extends BaseEntity {
   @IsString()
@@ -60,16 +60,16 @@ export class Training extends BaseEntity {
   copiedFromId?: string; // if this training is copied from another training
 
   @ValidateNested({ each: true })
-  @Type(() => GroupWorkloadStats)
+  @Type(() => TrainingExerciseAverageStats)
   @ApiProperty()
   @Expose()
-  stats: GroupWorkloadStats[]; // average group workload stats
+  stats: TrainingExerciseAverageStats[]; // average intensity and volume stats for each exercise in the training
 
   @ValidateNested({ each: true })
-  @Type(() => GroupWorkloadStats)
+  @Type(() => TrainingExerciseAverageStats)
   @ApiProperty()
   @Expose()
-  futureStats: GroupWorkloadStats[]; // average future group workload stats
+  futureStats: TrainingExerciseAverageStats[]; // average future group workload stats
 
   @IsDate()
   @ApiProperty()

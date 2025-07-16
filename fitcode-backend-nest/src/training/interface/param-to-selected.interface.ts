@@ -18,7 +18,7 @@ export type ParamToSelectedMap = {
 type ParamSelectedValue<T extends ParamType> = {
   field: T;
   selected: ParamToSelectedMap[T];
-  value: number;
+  value?: number;
 };
 
 export type ValidParams = {

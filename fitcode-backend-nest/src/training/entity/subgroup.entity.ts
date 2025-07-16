@@ -10,9 +10,9 @@ import {
 } from 'class-validator';
 import { ColorEntity } from '../../common/entity/color.entity';
 import { IdEntity } from '../../common/entity/id.entity';
-import { Superset } from './superset.entity';
-import { GroupWorkloadStats } from './average-workload-values.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
+import { Superset } from './superset.entity';
+import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';
 
 export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @IsString()
@@ -41,8 +41,8 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   periodizationType?: PeriodizationType;
 
   @ValidateNested({ each: true })
-  @Type(() => GroupWorkloadStats)
+  @Type(() => TrainingExerciseAverageStats)
   @ApiProperty()
   @Expose()
-  futureStats: GroupWorkloadStats[]; // average future workload stats
+  futureStats: TrainingExerciseAverageStats[]; // average future workload stats
 }
