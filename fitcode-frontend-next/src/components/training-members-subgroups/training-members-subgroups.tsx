@@ -57,7 +57,6 @@ export default function TrainingMembersSubgroup(
     selectedSubgroup,
     selectedAthlete,
     setSelectedAthlete,
-    showAthleteReport,
     setShowAthleteReport,
   } = useTrainerDayViewContext();
 

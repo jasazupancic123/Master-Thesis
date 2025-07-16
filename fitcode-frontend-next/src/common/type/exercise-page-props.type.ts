@@ -8,7 +8,6 @@ export interface ExercisePageProps {
   exercises: Exercise[];
   attributes: Attribute[];
   components: Component[];
-  profile: User;
 }
 
 export interface ExerciseContextProps extends ExercisePageProps {

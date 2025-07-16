@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { UserController } from '@/controller/user/user.controller';
 import Loading from '../components/loading/loading';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { notFound } from 'next/navigation';
 import { ChildrenProps } from '@/common/type/props.type';
 import { WellnessProvider } from '@/store/wellness-provider';
 import {
@@ -12,6 +10,8 @@ import {
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
 import { Wellness } from '@/controller/user/type/wellness.type';
+import { useMain } from '@/store/main-provider';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export default function WellnessInitializer({ children }: ChildrenProps) {
   const [wellness, setWellness] = useState<Wellness | null>(
@@ -19,17 +19,17 @@ export default function WellnessInitializer({ children }: ChildrenProps) {
   );
   const [unauthorized, setUnauthorized] = useState(false);
 
+  const { profile } = useMain();
+
   useEffect(() => {
     async function init() {
+      const roles = profile.customClaims.role;
+
+      if (!roles.includes(UserRole.ATHLETE)) return setUnauthorized(true);
+
       if (wellness) return; // already cached
 
       try {
-        const profile = await UserController.findMe();
-        if (!profile) return;
-
-        const role = profile.customClaims.role[0];
-        if (![UserRole.ATHLETE].includes(role)) return notFound();
-
         const fetchedWellness = await UserController.getMyMeta();
         setCachedWellness(fetchedWellness);
         setWellness(fetchedWellness);

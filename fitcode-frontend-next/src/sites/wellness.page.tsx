@@ -8,7 +8,6 @@ import { UserController } from '@/controller/user/user.controller';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { handleApiRequest } from '@/common/type/state.type';
 import toast from 'react-hot-toast';
-import { useWellness } from '@/store/wellness-provider';
 import { Wellness } from '@/controller/user/type/wellness.type';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
 

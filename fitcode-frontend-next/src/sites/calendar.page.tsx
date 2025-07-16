@@ -11,10 +11,12 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, ToolbarProps } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import CustomToolbar from '../components/calendar-custom-toolbar/calendar-custom-toolbar';
-import { fetchAthleteTrainings, handleNavigate } from '../app/calendar/state';
-import '@/app/calendar/styles.css';
+import {
+  fetchAthleteTrainings,
+  handleNavigate,
+} from '../app/(athlete)/calendar/state';
+import '@/app/(athlete)/calendar/styles.css';
 import { CalendarEvent } from '../common/type/calendar-event-type';
-import { ApiUtil } from '@/common/service/util/api.util';
 
 const commonService = CommonService.instance;
 

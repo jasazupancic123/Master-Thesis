@@ -3,18 +3,15 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import BorderColor from '../border-color/border-color';
 import { useState, useRef, useEffect } from 'react';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { useMain } from '@/store/main-provider';
 
 type Message = {
   sender: User | null;
   message: string;
 };
 
-interface DashboardChatProps {
-  profile: User;
-}
-
-export default function DashboardChat(props: DashboardChatProps) {
-  const { profile } = props;
+export default function DashboardChat() {
+  const { profile } = useMain();
 
   const screenSize = useScreenSize();
 
@@ -37,7 +34,7 @@ export default function DashboardChat(props: DashboardChatProps) {
   const [newMessage, setNewMessage] = useState('');
 
   const handleSendMessage = () => {
-    if (!newMessage.trim()) return; 
+    if (!newMessage.trim()) return;
 
     setMessages((prevMessages) => [
       ...prevMessages,

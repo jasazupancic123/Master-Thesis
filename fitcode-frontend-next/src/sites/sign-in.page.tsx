@@ -21,21 +21,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { FormEvent } from 'react';
 import toast from 'react-hot-toast';
-import { useLocalStorage } from 'usehooks-ts';
 import { useTheme } from '@mui/material';
-
-// const mapper = {
-//   [UserRole.ATHLETE]: LINK_TRAININGS,
-//   [UserRole.TRAINER]: LINK_GROUPS,
-//   [UserRole.MANAGER]: LINK_GROUPS,
-//   [UserRole.ADMIN]: LINK_USERS,
-// };
 
 const mapper = {
   [UserRole.ATHLETE]: LINK_TRAININGS,
   [UserRole.TRAINER]: LINK_DASHBOARD,
   [UserRole.MANAGER]: LINK_DASHBOARD,
-  [UserRole.ADMIN]: LINK_USERS,
+  [UserRole.ADMIN]: LINK_DASHBOARD,
 };
 
 const commonService = CommonService.instance;

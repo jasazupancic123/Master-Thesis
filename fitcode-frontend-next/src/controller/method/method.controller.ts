@@ -4,8 +4,8 @@ import { Method } from './type/method.type';
 const api = CommonService.instance.api;
 
 export class MethodController {
-  static async findAll(): Promise<Method[]> {
-    return api.get('/method');
+  static async findAll(token?: string): Promise<Method[]> {
+    return api.get('/method', { token });
   }
 
   static async findById(id: string): Promise<Method> {

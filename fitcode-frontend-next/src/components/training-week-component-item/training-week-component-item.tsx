@@ -3,10 +3,8 @@ import { TrainingComponent } from '@/controller/training/type/training-plan.type
 import { Training } from '@/controller/training/type/training.type';
 import { Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { UpdateTrainingInput } from '../trainer-week-view/type';
 import { useGroup } from '@/store/group-provider';
 import { SetState } from '@/common/type/state.type';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainerWeekComponentItemProps {
   component: TrainingComponent;

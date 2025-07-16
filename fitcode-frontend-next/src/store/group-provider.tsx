@@ -3,7 +3,7 @@
 import {
   GroupContextProps,
   GroupIdPageProps,
-} from '@/app/groups/[group_id]/props';
+} from '@/app/(trainer)/groups/[group_id]/props';
 import { CommonService } from '@/common/service/common.service';
 import { GroupDateFilter } from '@/common/type/filter.type';
 import { ChildrenProps } from '@/common/type/props.type';
@@ -12,6 +12,7 @@ import { Group } from '@/controller/group/type/group.type';
 import { Institution } from '@/controller/institution/type/institution.type';
 import dayjs from 'dayjs';
 import { createContext, useContext, useState } from 'react';
+import { useMain } from './main-provider';
 
 const dateService = CommonService.instance.date;
 
@@ -22,17 +23,13 @@ export const useGroup = () => useContext(GroupContext)!;
 export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const {
     children,
-    userId,
-    users: allUsers,
-    components,
-    attributes,
-    exercises,
     groups,
     group: providedGroup,
     institution: providedInstitution,
     trainings: allTrainings,
-    methods,
   } = props;
+
+  const { users: allUsers } = useMain();
 
   // state for selected items
   const [filter, setFilter] = useState<GroupDateFilter>('day');
@@ -50,19 +47,11 @@ export function GroupProvider(props: GroupIdPageProps & ChildrenProps) {
   const [detectedChanges, setDetectedChanges] = useState(false);
 
   // state for arrays
-  const [users, setUsers] = useState(allUsers);
   const [trainings, setTrainings] = useState(allTrainings);
   const [filteredUsers, setFilteredUsers] = useState(allUsers);
 
   const value: GroupContextProps = {
-    userId,
-    users,
-    setUsers,
     groups,
-    components,
-    attributes,
-    exercises,
-    methods,
     filter,
     setFilter,
     institution,

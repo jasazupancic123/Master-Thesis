@@ -24,10 +24,11 @@ import { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
 import { useTheme } from '@mui/material';
+import { useMain } from '@/store/main-provider';
 
 export default function TrainingCard(props: TrainingCardProps) {
-  const { trainings, cycle, setTrainings, components, exercises, methods } =
-    useGroup();
+  const { components, exercises, methods } = useMain();
+  const { trainings, cycle, setTrainings } = useGroup();
 
   const {
     training: selectedTraining,

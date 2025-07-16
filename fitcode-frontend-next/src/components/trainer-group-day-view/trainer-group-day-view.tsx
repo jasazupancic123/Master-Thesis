@@ -24,6 +24,7 @@ import {
   handleUpdateMultipleTrainings,
 } from './state';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { useMain } from '@/store/main-provider';
 
 dayjs.extend(weekOfYear);
 
@@ -34,17 +35,15 @@ export default function TrainerDayView() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
+  const { components, exercises, methods } = useMain();
   const {
     group,
     cycle,
-    components,
-    exercises,
     setTrainings,
     setDateFrom,
     setDateTo,
     setDetectedChanges,
     setCycle,
-    methods,
   } = useGroup();
 
   const {

@@ -6,12 +6,12 @@ import { User, UserEntity } from './type/user.type';
 const api = CommonService.instance.api;
 
 export class UserController {
-  static async findAll(query?: { ids?: string[]; emails?: string[] }) {
-    return api.get<User[]>('/user', { query });
+  static async findAll(token?: string, query?: { ids?: string[]; emails?: string[] }) {
+    return api.get<User[]>('/user', { token, query });
   }
 
-  static async findMe() {
-    return api.get<User>('/user/me');
+  static async findMe(token?: string) {
+    return api.get<User>('/user/me', { token });
   }
 
   static async findProfile() {

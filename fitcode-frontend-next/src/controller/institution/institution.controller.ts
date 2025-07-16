@@ -9,8 +9,8 @@ export class InstitutionController {
     return api.get<Institution[]>('/institution');
   }
 
-  static async findById(id: string) {
-    return api.get<Institution>(`/institution/${id}`);
+  static async findById(id: string, token?: string) {
+    return api.get<Institution>(`/institution/${id}`, { token });
   }
 
   static async findAthletes(id: string) {

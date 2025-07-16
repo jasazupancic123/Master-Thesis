@@ -22,21 +22,7 @@ export default function Superset(props: SupersetComponentProps) {
 
   const screenSize = useScreenSize();
 
-  const {
-    selectedExercise,
-    setSelectedExercise,
-    menuExercise,
-    setMenuExercise,
-    anchorEl,
-    setAnchorEl,
-    setOpenVideoPlayerModal,
-    setOpenAddExerciseModal,
-    handleMenuClose,
-    setsNumbers,
-    setSetsNumbers,
-    expandedExercisesView,
-    setExpandedExercisesView,
-  } = useSupersets();
+  const { selectedExercise, setOpenAddExerciseModal } = useSupersets();
   const { setDetectedChanges } = useGroup();
   const {
     training,

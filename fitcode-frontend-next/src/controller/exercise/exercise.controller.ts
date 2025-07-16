@@ -5,8 +5,9 @@ import { ONE_HOUR_IN_MS } from '@/common/constant/time.constant';
 const api = CommonService.instance.api;
 
 export class ExerciseController {
-  static async findAllGlobal(query?: Record<string, string>) {
+  static async findAllGlobal(token?: string, query?: Record<string, string>) {
     return api.get<Exercise[]>('/exercise/global', {
+      token,
       query,
     });
   }

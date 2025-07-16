@@ -25,7 +25,6 @@ import {
   DASHBOARD_EXERCISES,
   DASHBOARD_GROUPS,
   DASHBOARD_MAIN,
-  DASHBOARD_REGISTER_USERS,
 } from '@/common/constant/dashboard-views-constant';
 
 export function link(
@@ -59,7 +58,6 @@ export const LINK_EXERCISES_DASHBOARD = link(
   '/dashboard/exercises'
 );
 export const LINK_COMPONENTS = link('Components', '/components');
-export const LINK_EXERCISES = link('Exercises', '/exercises');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
 export const LINK_DASHBOARD = link('Dashboard', '/dashboard', <HomeIcon />);
 export const LINK_TRAININGS = link(
@@ -79,20 +77,20 @@ export const LINK_CALENDAR = link(
   '/calendar',
   <CalendarTodayIcon />
 );
-export const LINK_MEMBERS = link('Members', '/members');
-export const LINK_SUBGROUPS = link('Subgroups', '/subgroups');
-export const LINK_ADD_GROUP = link('Add Group', '/add-group');
-export const LINK_SETTINGS = link('Settings', '/settings');
 export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaIcon />);
-export const LINK_GROUP_BY_ID = (id: string) => link('Group', `/groups/${id}`);
+
+export const LINK_SETTINGS = link('Settings', '/settings');
+export const LINK_GROUP_BY_ID = (id: string) =>
+  link('Group', `/groups/${id}`, <HomeIcon />);
+
 export const LINK_GROUP_DATE_RANGE_VIEW = (
   id: string,
   filter: GroupDateFilter
 ) => link('Day Trainings', `/groups/${id}/${filter}`);
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
-  home: link('Home', `/groups/${groupId}`, <HomeIcon />),
-  dashboard: link('Dashboard', `/dashboard`, <Dashboard />),
+  home: LINK_GROUP_BY_ID(groupId),
+  dashboard: LINK_DASHBOARD,
 });
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {

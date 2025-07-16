@@ -22,6 +22,7 @@ import { InstitutionController } from '@/controller/institution/institution.cont
 import { InstitutionService } from '@/controller/institution/institution.service';
 import toast from 'react-hot-toast';
 import { GroupController } from '@/controller/group/group.controller';
+import { useMain } from '@/store/main-provider';
 
 const AVATAR_SIZE = 45;
 
@@ -36,9 +37,8 @@ export default function DashboardStaffGroupsCycles(
   const theme = useTheme();
   const router = useRouter();
 
+  const { profile } = useMain();
   const {
-    users,
-    profile,
     selectedInstitution,
     setSelectedInstitution,
     selectedGroup,
