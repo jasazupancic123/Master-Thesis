@@ -99,8 +99,11 @@ export default function TrainingComponentHeaderMenu(
           ? 'center'
           : undefined
       }
-      flexDirection={screenSize.isMobile ? 'column' : undefined}
+      sx={{
+        overflowX: screenSize.isMobile ? 'scroll' : undefined,
+      }}
       mt={1.5}
+      pt={screenSize.isMobile ? 1 : undefined}
       flexWrap="nowrap"
       gap={screenSize.isSmallerThanLaptop ? 1 : 0}
     >

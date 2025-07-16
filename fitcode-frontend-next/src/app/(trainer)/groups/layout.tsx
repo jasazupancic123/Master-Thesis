@@ -17,7 +17,6 @@ export default function Layout({ children }: ChildrenProps) {
           display: 'flex',
           flexDirection: 'column',
           p: 0,
-          pb: 2,
           mx: 0,
           width: '100%',
         }}

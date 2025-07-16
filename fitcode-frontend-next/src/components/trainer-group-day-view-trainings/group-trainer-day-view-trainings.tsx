@@ -40,7 +40,6 @@ export default function GroupTrainerDayViewTrainings(
       flexDirection="column"
       alignItems="center"
       width="100%"
-      pb={15}
       sx={{
         borderBottomRightRadius: 10,
         borderBottomLeftRadius: 10,
