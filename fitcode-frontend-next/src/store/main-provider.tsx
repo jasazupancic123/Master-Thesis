@@ -6,7 +6,6 @@ import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { Component } from '@/controller/component/type/component.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Institution } from '@/controller/institution/type/institution.type';
 import { Method } from '@/controller/method/type/method.type';
 import { User } from '@/controller/user/type/user.type';
 import { createContext, useContext, useState } from 'react';
