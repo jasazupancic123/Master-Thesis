@@ -171,7 +171,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.VolWorkSets,
     name: 'Set',
-    description: 'Work sets',
+    description: 'work sets',
     type: AttributeType.Select,
     options: VOL_WORK_SET_OPTIONS,
     defaultValue: VolWorkSetType.Set,
@@ -179,7 +179,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.VolWork1,
     name: 'VO2',
-    description: 'Volume',
+    description: 'volume',
     type: AttributeType.Select,
     options: VOL_OPTIONS,
     defaultValue: VolType.Rep,
@@ -187,7 +187,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.VolWork2,
     name: 'VO2',
-    description: 'Volume',
+    description: 'volume',
     type: AttributeType.Select,
     options: VOL_OPTIONS,
     defaultValue: VolType.Rep,
@@ -195,7 +195,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.IntWork1,
     name: 'INT',
-    description: 'Intensity',
+    description: 'intensity',
     type: AttributeType.Select,
     options: INT_OPTIONS,
     defaultValue: IntType.Kg,
@@ -203,7 +203,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.IntWork2,
     name: 'INT',
-    description: 'Intensity',
+    description: 'intensity',
     type: AttributeType.Select,
     options: INT_OPTIONS,
     defaultValue: IntType.Kg,
@@ -211,7 +211,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.VolRec1,
     name: 'Rec',
-    description: 'Volume recovery',
+    description: 'volume recovery',
     type: AttributeType.Select,
     options: VOL_OPTIONS,
     defaultValue: VolType.Time,
@@ -219,7 +219,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.IntRec1,
     name: 'Rec',
-    description: 'Intensity recovery',
+    description: 'intensity recovery',
     type: AttributeType.Select,
     options: INT_OPTIONS,
     defaultValue: IntType.Eff,
