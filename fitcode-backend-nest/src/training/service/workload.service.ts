@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CollectionGroup, WriteBatch } from 'firebase-admin/firestore';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { TimestampEntity } from '../../common/entity/timestamp.entity';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CommonService } from '../../common/service/common.service';
-import { FirestoreEntity } from '../../common/type/entity.type';
+import { CollectionGroup } from 'firebase-admin/firestore';
+
+import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { TimestampEntity } from '@src/common/entity/timestamp.entity';
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { CommonService } from '@src/common/service/common.service';
+import { FirestoreEntity } from '@src/common/type/entity.type';
 import {
   BatchWriteOperation,
   CycleRef,
@@ -14,19 +15,20 @@ import {
   TrainingComponentRef,
   UserRef,
   WorkloadRef,
-} from '../../common/type/firestore.type';
-import { PARAMS } from '../../component/constant/param.constant';
-import { IntType, ParamType, VolType } from '../../component/enum/param.enum';
-import { FirebaseService } from '../../firebase/firebase.service';
+} from '@src/common/type/firestore.type';
+import { PARAMS } from '@src/component/constant/param.constant';
+import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
+import { Workload } from '../entity/workload.entity';
 import {
   CompletedWorkload,
   PrescribedWorkload,
   WorkloadValue,
 } from '../entity/workload-value.entity';
-import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { TrainingPlanService } from './training-plan.service';
@@ -359,7 +361,16 @@ export class WorkloadService {
       },
     );
 
-    return await this.firebaseService.paginateBatchWrites(operations);
+    const batch = this.firebaseService.firestore.batch();
+    operations.forEach((op) => {
+      const { operation, ref, data } = op;
+      if (operation === 'set') batch.set(ref, data, { merge: true });
+      else if (operation === 'update') batch.update(ref, data);
+    });
+
+    const results = await batch.commit();
+    return results.length; // return number of operations committed
+    // return await this.firebaseService.paginateBatchWrites(operations);
   }
 
   async deleteWorkloads(workloads: Workload[]): Promise<void> {
@@ -371,7 +382,7 @@ export class WorkloadService {
       userId: w.userId,
     }));
 
-    this.repository.deleteDocs(refs);
+    await this.repository.deleteDocs(refs);
   }
 
   getStatus(workloadValue: WorkloadValue): SetStatus {

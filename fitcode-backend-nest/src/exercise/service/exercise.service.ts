@@ -7,31 +7,33 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { CacheManagerService } from '../../cache-manager/cache-manager.service';
-import { CommonService } from '../../common/service/common.service';
-import { User } from '../../common/type/firebase-auth.type';
-import { ExerciseRef } from '../../common/type/firestore.type';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { ComponentService } from '../../component/component.service';
-import { FirebaseService } from '../../firebase/firebase.service';
+import { Query } from 'firebase-admin/firestore';
+
+import { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { Permission } from '@src/common/interface/permission.interface';
+import { CommonService } from '@src/common/service/common.service';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
+import { User } from '@src/common/type/firebase-auth.type';
+import { ExerciseRef } from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
+import { ComponentService } from '@src/component/component.service';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
+import { Component } from '@src/component/entity/component.entity';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { Institution } from '@src/institution/entity/institution.entity';
+import { InstitutionService } from '@src/institution/service/institution.service';
+
+import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
+import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
+import { CreateExerciseDto } from '../dto/create-exercise.dto';
 import { Exercise } from '../entity/exercise.entity';
+import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
 import { ExerciseRepository } from '../repository/exercise.repository';
 import { ExerciseAttributeValueRepository } from '../repository/exercise-attribute-value.repository';
-import { ExerciseAttributeValue } from '../entity/exercise-attribute-value.entity';
-import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
-import { AttributeService } from '../../attribute/service/attribute.service';
-import { Component } from '../../component/entity/component.entity';
-import { Query } from 'firebase-admin/firestore';
-import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
-import { Permission } from '../../common/interface/permission.interface';
-import { Institution } from '../../institution/entity/institution.entity';
-import { InstitutionService } from '../../institution/service/institution.service';
-import { CreateExerciseDto } from '../dto/create-exercise.dto';
-import { Attribute } from '../../attribute/entity/attribute.entity';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { CACHE_KEY_EXERCISES } from '../constant/get-exercises-cache-key.constant';
-import { LogMethod } from '../../common/decorator/log-method.decorator';
 
 @Injectable()
 export class ExerciseService implements Permission<Exercise, Institution> {

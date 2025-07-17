@@ -1,5 +1,5 @@
-import { BaseEntity } from '../entity/base.entity';
-import { User } from '../type/firebase-auth.type';
+import type { BaseEntity } from '../entity/base.entity';
+import type { User } from '../type/firebase-auth.type';
 
 export abstract class Permission<
   Entity extends BaseEntity,

@@ -1,47 +1,46 @@
-import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { TestingModule, Test } from '@nestjs/testing';
-import { AppModule } from '../../src/app.module';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
-import { ComponentService } from '../../src/component/component.service';
-import { Component } from '../../src/component/entity/component.entity';
-import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { TrainingService } from '../../src/training/service/training.service';
-import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { GroupService } from '../../src/group/group.service';
-import { Group } from '../../src/group/entity/group.entity';
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { addDays, addHours, subDays, subHours } from 'date-fns';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { ComponentService } from '@src/component/component.service';
+import {
+  DEFAULT_PARAMS_KEY,
+  PARAMS,
+  VOL_OPTIONS,
+} from '@src/component/constant/param.constant';
+import type { Component } from '@src/component/entity/component.entity';
+import { ParamType, VolType } from '@src/component/enum/param.enum';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import type { Group } from '@src/group/entity/group.entity';
+import { GroupService } from '@src/group/group.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import type { TrainingComponent } from '@src/training/entity/training-component.entity';
 import {
   generateSubgroup,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
   generateTrainingStub,
-} from '../../src/training/mock/training.stub';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
+} from '@src/training/mock/training.stub';
+import { TrainingService } from '@src/training/service/training.service';
+
+import type { TestInstitution } from '../common/type/entity.type';
 import {
   createGroupWithCycles,
   createInstitution,
   createInstitutionWithUsers,
-  deleteCollection,
   deleteDoc,
   deleteDocs,
   deleteInstitution,
 } from '../common/utils/data.util';
 import { getTime } from '../common/utils/date.util';
-import {
-  DEFAULT_PARAMS_KEY,
-  PARAMS,
-  VOL_OPTIONS,
-} from '../../src/component/constant/param.constant';
-import { ParamType, VolType } from '../../src/component/enum/param.enum';
-import { TrainingComponent } from '../../src/training/entity/training-component.entity';
-import { WorkloadService } from '../../src/training/service/workload.service';
-import { SetStatus } from '../../src/training/enum/set-status.enum';
-import { Workload } from '../../src/training/entity/workload.entity';
-import { InstitutionService } from '../../src/institution/service/institution.service';
-import { TestInstitution } from '../common/type/entity.type';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
@@ -50,7 +49,6 @@ describe('Create Training (e2e)', () => {
   let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
-  let workloadService: WorkloadService;
   let institutionService: InstitutionService;
 
   let institution: TestInstitution;
@@ -70,7 +68,6 @@ describe('Create Training (e2e)', () => {
     exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
-    workloadService = moduleFixture.get(WorkloadService);
     institutionService = moduleFixture.get(InstitutionService);
 
     component = await componentService.create(generateComponentStub());
@@ -93,7 +90,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({ groupId: 'invalid-group-id' });
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(404);
@@ -108,7 +105,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(404);
@@ -123,7 +120,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(404);
@@ -138,7 +135,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -156,7 +153,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${athlete.token}`)
+        .set('Authorization', `Bearer ${global.athlete.token}`)
         .send(training);
 
       expect(response.status).toBe(401);
@@ -177,7 +174,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -200,7 +197,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -234,7 +231,7 @@ describe('Create Training (e2e)', () => {
 
       const trainingIds = (
         await Promise.all(
-          trainings.map((t) => trainingService.create(trainer, t)),
+          trainings.map((t) => trainingService.create(global.trainer, t)),
         )
       ).map((t) => t.id);
 
@@ -252,7 +249,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -272,7 +269,7 @@ describe('Create Training (e2e)', () => {
       async (from) => {
         const trainingId = (
           await trainingService.create(
-            trainer,
+            global.trainer,
             generateTrainingStub({
               groupId: group.id,
               cycleId: group.cycles[1].id,
@@ -301,7 +298,7 @@ describe('Create Training (e2e)', () => {
 
         const response = await request(app.getHttpServer())
           .post('/training')
-          .set('Authorization', `Bearer ${trainer.token}`)
+          .set('Authorization', `Bearer ${global.trainer.token}`)
           .send(training);
 
         expect(response.status).toBe(400);
@@ -334,7 +331,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(404);
@@ -389,7 +386,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(409);
@@ -417,7 +414,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -449,7 +446,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -484,7 +481,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -523,7 +520,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(409);
@@ -565,7 +562,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(409);
@@ -592,8 +589,8 @@ describe('Create Training (e2e)', () => {
             id: component.id,
             supersets: [generateSuperset()],
             subgroups: [
-              generateSubgroup({ membersIds: [athlete.uid] }),
-              generateSubgroup({ membersIds: [athlete.uid] }),
+              generateSubgroup({ membersIds: [global.athlete.uid] }),
+              generateSubgroup({ membersIds: [global.athlete.uid] }),
             ],
           }),
         ],
@@ -601,7 +598,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(409);
@@ -640,7 +637,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -871,7 +868,7 @@ describe('Create Training (e2e)', () => {
     it('should fail to add components if training does not exist', async () => {
       const response = await request(app.getHttpServer())
         .post('/training/invalid-training-id/component')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({ components: [generateTrainingComponent()] });
 
       expect(response.status).toBe(400);
@@ -880,7 +877,7 @@ describe('Create Training (e2e)', () => {
 
     it('should fail to add components if user is not allowed to edit training', async () => {
       const training = await trainingService.create(
-        trainer,
+        global.trainer,
         generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
@@ -895,7 +892,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post(`/training/${training.id}/component`)
-        .set('Authorization', `Bearer ${athlete.token}`)
+        .set('Authorization', `Bearer ${global.athlete.token}`)
         .send({
           components: [generateTrainingComponent({})],
         });
@@ -929,7 +926,7 @@ describe('Create Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post(`/training/${training.id}/component`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({ components: [generateTrainingComponent()] });
 
       expect(response.status).toBe(400);
@@ -944,7 +941,7 @@ describe('Create Training (e2e)', () => {
   it('should successfully add training components', async () => {
     const newComponent = await componentService.create(generateComponentStub());
     const training = await trainingService.create(
-      trainer,
+      global.trainer,
       generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
@@ -959,7 +956,7 @@ describe('Create Training (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post(`/training/${training.id}/component`)
-      .set('Authorization', `Bearer ${trainer.token}`)
+      .set('Authorization', `Bearer ${global.trainer.token}`)
       .send({
         components: [generateTrainingComponent({ id: newComponent.id })],
       });
@@ -977,7 +974,7 @@ describe('Create Training (e2e)', () => {
   it('should successfully delete training component', async () => {
     const newComponent = await componentService.create(generateComponentStub());
     const training = await trainingService.create(
-      trainer,
+      global.trainer,
       generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
@@ -1000,7 +997,7 @@ describe('Create Training (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .delete(`/training/${training.id}/component/${newComponent.id}`)
-      .set('Authorization', `Bearer ${trainer.token}`);
+      .set('Authorization', `Bearer ${global.trainer.token}`);
 
     expect(response.status).toBe(200);
     expect(response.body.id).toBe(training.id);
@@ -1014,7 +1011,7 @@ describe('Create Training (e2e)', () => {
 
   it('should delete training when training has no more components', async () => {
     const training = await trainingService.create(
-      trainer,
+      global.trainer,
       generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
@@ -1029,13 +1026,13 @@ describe('Create Training (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .delete(`/training/${training.id}/component/${component.id}`)
-      .set('Authorization', `Bearer ${trainer.token}`);
+      .set('Authorization', `Bearer ${global.trainer.token}`);
 
     expect(response.status).toBe(200);
     expect(response.body.id).toBe(training.id);
     expect(response.body.components).toHaveLength(0);
 
-    const trainings = await trainingService.findAll(trainer);
+    const trainings = await trainingService.findAll(global.trainer);
     expect(trainings).toHaveLength(0);
 
     await Promise.all([deleteDoc(firebase, 'TRAINING', training.id)]);

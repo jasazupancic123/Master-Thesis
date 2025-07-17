@@ -1,15 +1,26 @@
-import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  IntersectionType,
+} from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
-import { IsDate, ValidateNested } from 'class-validator';
-import { ColorEntity } from '../../common/entity/color.entity';
-import { IdEntity } from '../../common/entity/id.entity';
+import {
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+
+import { ColorEntity } from '@src/common/entity/color.entity';
+import { IdEntity } from '@src/common/entity/id.entity';
+import { Target } from '@src/target/entity/target.entity';
+import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
+
+import { CopiedFrom } from './copied-from.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
-import { CopiedFrom } from './copied-from.entity';
-import { Target } from '../../target/entity/target.entity';
-import { PeriodizationType } from '../../training/enum/periodization-type.enum';
 
 export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsDate()

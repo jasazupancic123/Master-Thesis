@@ -1,6 +1,7 @@
+import { generateRandomName } from '@test/common/utils/random.util';
 import { v4 } from 'uuid';
-import { generateRandomName } from '../../../test/common/utils/random.util';
-import { Component } from '../entity/component.entity';
+
+import type { Component } from '../entity/component.entity';
 
 export function generateComponentStub(data?: Partial<Component>): Component {
   const id = data?.id || v4();

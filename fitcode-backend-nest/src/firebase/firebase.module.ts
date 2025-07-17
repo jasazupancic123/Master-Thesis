@@ -1,8 +1,9 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import { CommonService } from '../common/service/common.service';
 import { FirebaseService } from './firebase.service';
 import { FIREBASE_ADMIN, getFirebaseClient } from './get-firebase-client';
-import { ConfigService } from '@nestjs/config';
-import { CommonService } from '../common/service/common.service';
 
 @Global()
 @Module({})
@@ -16,7 +17,7 @@ export class FirebaseModule {
           inject: [ConfigService, CommonService],
           useFactory: async (
             configService: ConfigService,
-            commonService: CommonService,
+            // commonService: CommonService,
           ) => {
             const credential = JSON.parse(
               configService.get('FIREBASE_CREDENTIALS'),

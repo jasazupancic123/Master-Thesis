@@ -1,8 +1,9 @@
-import { IsInt, IsObject, IsOptional, IsPositive } from 'class-validator';
-import { Expose, Transform } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginateOptions } from '../type/orm.type';
 import { BadRequestException } from '@nestjs/common';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Transform } from 'class-transformer';
+import { IsInt, IsObject, IsOptional, IsPositive } from 'class-validator';
+
+import { PaginateOptions } from '../type/orm.type';
 
 export class PaginateDto<T> implements PaginateOptions<T> {
   @IsObject()
@@ -23,7 +24,7 @@ export class PaginateDto<T> implements PaginateOptions<T> {
         throw new Error();
 
       return { field: result[0], value: result[1] };
-    } catch (e) {
+    } catch (_e) {
       throw new BadRequestException(
         'Invalid orderBy query, use `orderBy=field:asc|desc`',
       );

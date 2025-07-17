@@ -1,5 +1,6 @@
-import { Attribute } from '../../attribute/entity/attribute.entity';
-import { AttributeType } from '../../common/enum/attribute-type.enum';
+import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+
 import {
   IntType,
   ParamType,

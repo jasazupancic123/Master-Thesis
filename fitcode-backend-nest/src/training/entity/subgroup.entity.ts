@@ -8,8 +8,10 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ColorEntity } from '../../common/entity/color.entity';
-import { IdEntity } from '../../common/entity/id.entity';
+
+import { ColorEntity } from '@src/common/entity/color.entity';
+import { IdEntity } from '@src/common/entity/id.entity';
+
 import { PeriodizationType } from '../enum/periodization-type.enum';
 import { Superset } from './superset.entity';
 import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';

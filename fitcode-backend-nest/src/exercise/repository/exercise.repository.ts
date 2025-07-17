@@ -4,12 +4,14 @@ import {
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
-import { FirebaseService } from '../../firebase/firebase.service';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { CommonService } from '@src/common/service/common.service';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
+import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { Exercise } from '../entity/exercise.entity';
-import { CommonService } from '../../common/service/common.service';
 
 @Injectable()
 export class ExerciseRepository

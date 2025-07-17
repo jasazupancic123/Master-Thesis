@@ -1,3 +1,6 @@
+import { PickType } from '@nestjs/mapped-types';
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsNumber,
@@ -5,9 +8,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
-import { PickType } from '@nestjs/mapped-types';
+
 import { TrainingExercise } from './training-exercise.entity';
 
 export class CompletedTrainingExercise extends PickType(TrainingExercise, [

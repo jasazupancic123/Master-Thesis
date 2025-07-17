@@ -1,41 +1,42 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { addDays, addMinutes, subDays } from 'date-fns';
 import * as request from 'supertest';
-import { AppModule } from '../../src/app.module';
-import { FirestoreCollection } from '../../src/common/enum/firestore-collection.enum';
-import { FirestoreEntity } from '../../src/common/type/entity.type';
-import { ComponentService } from '../../src/component/component.service';
-import { DEFAULT_PARAMS_KEY } from '../../src/component/constant/param.constant';
-import { Component } from '../../src/component/entity/component.entity';
-import {
-  IntType,
-  ParamType,
-  VolType,
-} from '../../src/component/enum/param.enum';
-import { generateComponentParamsStub } from '../../src/component/mock/component-param.stub';
-import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { Exercise } from '../../src/exercise/entity/exercise.entity';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { Group } from '../../src/group/entity/group.entity';
-import { GroupService } from '../../src/group/group.service';
-import { generateCycleStub } from '../../src/group/mock/cycle.stub';
-import { InstitutionService } from '../../src/institution/service/institution.service';
-import { Training } from '../../src/training/entity/training.entity';
-import { generateCompletedTrainingExerciseStub } from '../../src/training/mock/completed-training.stub';
+
+import { AppModule } from '@src/app.module';
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import type { FirestoreEntity } from '@src/common/type/entity.type';
+import { ComponentService } from '@src/component/component.service';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
+import type { Component } from '@src/component/entity/component.entity';
+import { IntType, ParamType } from '@src/component/enum/param.enum';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
+import type { Exercise } from '@src/exercise/entity/exercise.entity';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import type { Group } from '@src/group/entity/group.entity';
+import { GroupService } from '@src/group/group.service';
+import { generateCycleStub } from '@src/group/mock/cycle.stub';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Training } from '@src/training/entity/training.entity';
+import type { Workload } from '@src/training/entity/workload.entity';
+import { generateCompletedTrainingExerciseStub } from '@src/training/mock/completed-training.stub';
 import {
   generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
   generateTrainingStub,
-} from '../../src/training/mock/training.stub';
-import { TrainingService } from '../../src/training/service/training.service';
-import { WorkloadService } from '../../src/training/service/workload.service';
-import { TestUser } from '../common/type/auth.type';
-import { TestInstitution } from '../common/type/entity.type';
+} from '@src/training/mock/training.stub';
+import { TrainingService } from '@src/training/service/training.service';
+import { WorkloadService } from '@src/training/service/workload.service';
+
+import { TestDbService } from '../common/db/test-db.service';
+import type { TestUser } from '../common/type/auth.type';
+import type { TestInstitution } from '../common/type/entity.type';
 import { createAthleteUserAndToken } from '../common/utils/auth.util';
 import {
   createGroupWithCycles,
@@ -57,8 +58,65 @@ const C2_COMPONENT_PARAMS = generateComponentParamsStub([
   ParamType.VolRec1,
 ]);
 
+const C1_VALID_COMPLETED_EXERCISES = [
+  generateCompletedTrainingExerciseStub({
+    id: 'squat-l1',
+    supersetIndex: 0,
+    generateValidSetsOptions: {
+      componentParams: C1_COMPONENT_PARAMS,
+    },
+  }),
+  generateCompletedTrainingExerciseStub({
+    id: 'bench-l1',
+    supersetIndex: 0,
+    generateValidSetsOptions: {
+      componentParams: C1_COMPONENT_PARAMS,
+    },
+  }),
+  generateCompletedTrainingExerciseStub({
+    id: 'squat-l1',
+    supersetIndex: 1,
+    generateValidSetsOptions: {
+      componentParams: C1_COMPONENT_PARAMS,
+    },
+  }),
+  generateCompletedTrainingExerciseStub({
+    id: 'deadlift-l1',
+    supersetIndex: 1,
+    generateValidSetsOptions: {
+      componentParams: C1_COMPONENT_PARAMS,
+    },
+  }),
+];
+
+const _C2_VALID_COMPLETED_EXERCISES = [
+  generateCompletedTrainingExerciseStub({
+    id: 'bench-l2',
+    supersetIndex: 0,
+    generateValidSetsOptions: {
+      componentParams: C2_COMPONENT_PARAMS,
+    },
+  }),
+  generateCompletedTrainingExerciseStub({
+    id: 'deadlift-l2',
+    supersetIndex: 0,
+    generateValidSetsOptions: {
+      componentParams: C2_COMPONENT_PARAMS,
+    },
+  }),
+  generateCompletedTrainingExerciseStub({
+    id: 'squat-l2',
+    supersetIndex: 1,
+    generateValidSetsOptions: {
+      componentParams: C2_COMPONENT_PARAMS,
+    },
+  }),
+];
+
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;
+  let db: TestDbService;
+
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
@@ -113,6 +171,8 @@ describe('Complete training component (e2e)', () => {
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
     workloadService = moduleFixture.get(WorkloadService);
+
+    db = new TestDbService(firebase);
 
     component1 = await componentService.create(
       generateComponentStub({
@@ -183,6 +243,8 @@ describe('Complete training component (e2e)', () => {
   });
 
   async function createTraining(): Promise<Training> {
+    await deleteCollection(firebase, 'TRAINING');
+
     const training = await trainingService.create(
       global.trainer,
       generateTrainingStub({
@@ -249,6 +311,10 @@ describe('Complete training component (e2e)', () => {
   function url(trainingId: string, componentId: string) {
     return `/training/${trainingId}/component/${componentId}/complete`;
   }
+
+  it('should work', async () => {
+    expect(db).toBeDefined();
+  });
 
   it('should throw error if training not found', async () => {
     const response = await request(app.getHttpServer())
@@ -504,124 +570,53 @@ describe('Complete training component (e2e)', () => {
     );
 
     it('should successfully create all workloads and update training stats and completed members', async () => {
-      const exercises = [
-        generateCompletedTrainingExerciseStub({
-          id: 'squat-l1',
-          supersetIndex: 0,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-        generateCompletedTrainingExerciseStub({
-          id: 'bench-l1',
-          supersetIndex: 0,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-        generateCompletedTrainingExerciseStub({
-          id: 'squat-l1',
-          supersetIndex: 1,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-        generateCompletedTrainingExerciseStub({
-          id: 'deadlift-l1',
-          supersetIndex: 1,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-      ];
-
       const spy = jest.spyOn(workloadService, 'createForTrainingComponent');
       const response = await request(app.getHttpServer())
         .patch(url(training.id, component1.id))
-        .set('Authorization', `Bearer ${athlete.token}`)
+        .set('Authorization', `Bearer ${global.athlete.token}`)
         .send({
-          userId: athlete.uid,
-          exercises,
+          userId: global.athlete.uid,
+          exercises: C1_VALID_COMPLETED_EXERCISES,
         });
 
       const spyResult = await spy.mock.results[0].value;
       expect(response.status).toBe(200);
-      expect(spyResult).toEqual(
-        expect.objectContaining({
-          successCount: 12, // 4 exercises * 3 sets each
-          failureCount: 0,
-        }),
-      );
+      expect(spyResult).toEqual(12); // 4 exercises * 3 sets each
 
-      const dbTraining = await firebase.firestore
-        .collection(FirestoreCollection.TRAINING)
-        .doc(training.id)
-        .get()
-        .then((doc) =>
-          firebase.serialize(doc.data() as FirestoreEntity<Training>),
-        );
+      const dbTraining = await db.trainings.getDoc(training.id);
 
       const completedComponent = dbTraining.components.find(
         (c) => c.id === component1.id,
       );
 
       expect(completedComponent.completedMembersIds).toHaveLength(1);
-      expect(completedComponent.completedMembersIds).toContain(athlete.uid);
-      expect(dbTraining.stats).toHaveLength(4); // 4 exercises
+      expect(completedComponent.completedMembersIds).toContain(
+        global.athlete.uid,
+      );
+      expect(dbTraining.stats).toHaveLength(3); // 4 exercises but only 3 unique
       expect(dbTraining.completedMembersIds).toHaveLength(0);
 
-      await Promise.all([
-        deleteCollection(firebase, 'TRAINING_WORKLOAD'),
-        deleteDoc(firebase, 'TRAINING', training.id),
-      ]);
+      const workloads = await db.workloads.getAllByTrainingId(training.id);
+      expect(workloads).toHaveLength(12); // 4 exercises * 3 sets
+
+      await Promise.all([deleteCollection(firebase, 'TRAINING_WORKLOAD')]);
     });
   });
 
   it.each([
     [global.athlete.token, 'You have already completed this component'], // athlete1 throws error, this is the same athlete
-    [trainer.token, 'Athlete already completed this component'],
+    [global.trainer.token, 'Athlete already completed this component'],
   ])(
     'should throw error if athlete already completed the component',
     async (token, message) => {
       training = await createTraining();
-
-      const exercises = [
-        generateCompletedTrainingExerciseStub({
-          id: 'squat-l1',
-          supersetIndex: 0,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-        generateCompletedTrainingExerciseStub({
-          id: 'bench-l1',
-          supersetIndex: 0,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-        generateCompletedTrainingExerciseStub({
-          id: 'squat-l1',
-          supersetIndex: 1,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-        generateCompletedTrainingExerciseStub({
-          id: 'deadlift-l1',
-          supersetIndex: 1,
-          generateValidSetsOptions: {
-            componentParams: C1_COMPONENT_PARAMS,
-          },
-        }),
-      ];
 
       const response1 = await request(app.getHttpServer())
         .patch(url(training.id, component1.id))
         .set('Authorization', `Bearer ${athlete1.token}`)
         .send({
           userId: athlete1.uid,
-          exercises,
+          exercises: C1_VALID_COMPLETED_EXERCISES,
         });
 
       expect(response1.status).toBe(200);
@@ -631,20 +626,74 @@ describe('Complete training component (e2e)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           userId: athlete1.uid,
-          exercises,
+          exercises: C1_VALID_COMPLETED_EXERCISES,
         });
 
       expect(response2.status).toBe(409);
       expect(response2.body.message).toBe(message);
 
-      await Promise.all([
-        deleteCollection(firebase, 'TRAINING_WORKLOAD'),
-        deleteDoc(firebase, 'TRAINING', training.id),
-      ]);
+      await Promise.all([deleteCollection(firebase, 'TRAINING_WORKLOAD')]);
     },
   );
 
-  it('should update training stats when multiple athletes complete the same component', async () => {});
+  it('should update training stats when multiple athletes complete the same component', async () => {
+    training = await createTraining();
+
+    const response1 = await request(app.getHttpServer())
+      .patch(url(training.id, component1.id))
+      .set('Authorization', `Bearer ${athlete1.token}`)
+      .send({
+        userId: athlete1.uid,
+        exercises: C1_VALID_COMPLETED_EXERCISES,
+      });
+
+    expect(response1.status).toBe(200);
+
+    const response2 = await request(app.getHttpServer())
+      .patch(url(training.id, component1.id))
+      .set('Authorization', `Bearer ${athlete2.token}`)
+      .send({
+        userId: athlete2.uid,
+        exercises: C1_VALID_COMPLETED_EXERCISES,
+      });
+
+    expect(response2.status).toBe(200);
+
+    const dbTraining = await firebase.firestore
+      .collection(FirestoreCollection.TRAINING)
+      .doc(training.id)
+      .get()
+      .then((doc) =>
+        firebase.serialize(doc.data() as FirestoreEntity<Training>),
+      );
+
+    const completedComponent = dbTraining.components.find(
+      (c) => c.id === component1.id,
+    );
+
+    expect(completedComponent.completedMembersIds).toHaveLength(2);
+    expect(completedComponent.completedMembersIds).toContain(athlete1.uid);
+    expect(completedComponent.completedMembersIds).toContain(athlete2.uid);
+    expect(dbTraining.stats).toHaveLength(3); // 4 exercises but only 3 unique
+    expect(dbTraining.completedMembersIds).toHaveLength(0);
+
+    const workloads = await firebase.firestore
+      .collection(FirestoreCollection.TRAINING_WORKLOAD)
+      .where('trainingId', '==', training.id)
+      .get()
+      .then((snapshot) =>
+        snapshot.docs.map((doc) =>
+          firebase.serialize(doc.data() as FirestoreEntity<Workload>),
+        ),
+      );
+
+    expect(workloads).toHaveLength(24); // 12 * 2 athletes
+
+    await Promise.all([
+      deleteCollection(firebase, 'TRAINING_WORKLOAD'),
+      deleteDoc(firebase, 'TRAINING', training.id),
+    ]);
+  });
 
   it('should update stats correctly if one exercise is in multiple supersets', async () => {});
 
@@ -653,4 +702,6 @@ describe('Complete training component (e2e)', () => {
   it('should successfully complete training component for user', async () => {});
 
   it('should successfully complete training when all users complete all components', async () => {});
+
+  it('should successfully complete training component for athlete with custom workloads', async () => {});
 });

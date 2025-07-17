@@ -4,15 +4,17 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { MethodRepository } from '../repository/method.repository';
 import { Query } from 'firebase-admin/firestore';
-import { User } from '../../common/type/firebase-auth.type';
-import { Method } from '../entity/method.entity';
-import { MethodRef } from '../../common/type/firestore.type';
-import { Create } from '../../common/type/entity.type';
-import { CacheManagerService } from '../../cache-manager/cache-manager.service';
+
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { Create } from '@src/common/type/entity.type';
+import { User } from '@src/common/type/firebase-auth.type';
+import { MethodRef } from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { CACHE_KEY_METHODS } from '../constant/cache.constant';
+import { Method } from '../entity/method.entity';
+import { MethodRepository } from '../repository/method.repository';
 
 @Injectable()
 export class MethodService {

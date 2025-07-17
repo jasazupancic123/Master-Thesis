@@ -1,19 +1,7 @@
-import { generateRandomNumber } from '../../../test/common/utils/random.util';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { PARAMS } from '../../component/constant/param.constant';
-import { ComponentParam } from '../../component/entity/component-param.entity';
-import {
-  IntType,
-  ParamType,
-  VolType,
-  VolWorkSetType,
-} from '../../component/enum/param.enum';
-import { CompletedTrainingExercise } from '../entity/completed-training.entity';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import {
-  ParamToSelectedMap,
-  ValidParams,
-} from '../interface/param-to-selected.interface';
+import type { ComponentParam } from '@src/component/entity/component-param.entity';
+
+import type { CompletedTrainingExercise } from '../entity/completed-training.entity';
+import type { ExerciseSet } from '../entity/exercise-set.entity';
 import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
 export function generateCompletedTrainingExerciseStub(

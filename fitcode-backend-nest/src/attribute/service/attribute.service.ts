@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { AttributeRepository } from '../repository/attribute.repository';
-import { Attribute } from '../entity/attribute.entity';
-import { Create } from '../../common/type/entity.type';
-import { AttributeValue } from '../entity/attribute-value.entity';
-import { AttributeType } from '../../common/enum/attribute-type.enum';
-import { CacheManagerService } from '../../cache-manager/cache-manager.service';
+
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { Create } from '@src/common/type/entity.type';
+
 import { CACHE_KEY_ATTRIBUTES } from '../constant/cache.constant';
+import { Attribute } from '../entity/attribute.entity';
+import { AttributeValue } from '../entity/attribute-value.entity';
+import { AttributeRepository } from '../repository/attribute.repository';
 
 @Injectable()
 export class AttributeService {

@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
-import { WellnessRepository } from './repository/wellness.repository';
+
 import { UserRepository } from './repository/user.repository';
+import { WellnessRepository } from './repository/wellness.repository';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 

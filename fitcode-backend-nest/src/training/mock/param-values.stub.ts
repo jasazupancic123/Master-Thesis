@@ -1,14 +1,16 @@
-import { generateRandomNumber } from '../../../test/common/utils/random.util';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { PARAMS } from '../../component/constant/param.constant';
-import { ComponentParam } from '../../component/entity/component-param.entity';
+import { generateRandomNumber } from '@test/common/utils/random.util';
+
+import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { PARAMS } from '@src/component/constant/param.constant';
+import type { ComponentParam } from '@src/component/entity/component-param.entity';
+import type { ParamType } from '@src/component/enum/param.enum';
 import {
   IntType,
-  ParamType,
   VolType,
   VolWorkSetType,
-} from '../../component/enum/param.enum';
-import {
+} from '@src/component/enum/param.enum';
+
+import type {
   ParamToSelectedMap,
   ValidParams,
 } from '../interface/param-to-selected.interface';

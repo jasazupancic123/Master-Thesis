@@ -1,6 +1,6 @@
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { IdEntity } from '../entity/id.entity';
-import { TimestampEntity } from '../entity/timestamp.entity';
+import type { Timestamp } from 'firebase-admin/firestore';
+
+import type { TimestampEntity } from '../entity/timestamp.entity';
 
 // Base Firestore type mapping
 type FirestoreType<T> = T extends Date

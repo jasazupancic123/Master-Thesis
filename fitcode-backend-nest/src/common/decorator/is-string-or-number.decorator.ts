@@ -1,7 +1,8 @@
-import { registerDecorator, ValidationArguments, ValidationOptions } from 'class-validator';
+import type { ValidationArguments, ValidationOptions } from 'class-validator';
+import { registerDecorator } from 'class-validator';
 
 export function IsStringOrNumber(validationOptions?: ValidationOptions) {
-  return function(object: Record<string, any>, propertyName: string) {
+  return function (object: Record<string, unknown>, propertyName: string) {
     registerDecorator({
       name: 'isStringOrNumber',
       target: object.constructor,
@@ -9,7 +10,7 @@ export function IsStringOrNumber(validationOptions?: ValidationOptions) {
       constraints: [],
       options: validationOptions,
       validator: {
-        validate(value: any) {
+        validate(value: unknown) {
           return typeof value === 'string' || typeof value === 'number';
         },
         defaultMessage(args: ValidationArguments): string {

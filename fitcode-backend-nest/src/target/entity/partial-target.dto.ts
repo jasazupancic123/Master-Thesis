@@ -1,9 +1,10 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PickType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { Target } from './target.entity';
-import { PickType } from '@nestjs/mapped-types';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 import { ComponentLevel } from '../enum/component-level.enum';
+import { Target } from './target.entity';
 export class PartialTarget extends PickType(Target, ['componentId'] as const) {
   @IsString()
   @IsNotEmpty()

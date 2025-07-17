@@ -2,18 +2,19 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FieldValue, Query } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
+
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
 import { Update } from '../common/type/entity.type';
 import { CustomClaims, User } from '../common/type/firebase-auth.type';
-import { WellnessRef, UserRef } from '../common/type/firestore.type';
+import { UserRef, WellnessRef } from '../common/type/firestore.type';
 import { Environment } from '../config/environment-validation-schema';
 import { FirebaseService } from '../firebase/firebase.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
-import { Wellness } from './entity/wellness.entity';
 import { UserEntity } from './entity/user.entity';
-import { WellnessRepository } from './repository/wellness.repository';
+import { Wellness } from './entity/wellness.entity';
 import { UserRepository } from './repository/user.repository';
+import { WellnessRepository } from './repository/wellness.repository';
 
 type CreateUser = Pick<User, 'email' | 'displayName'> & {
   password: string;
@@ -71,7 +72,7 @@ export class UserService {
         default:
           throw new Error('Invalid key');
       }
-    } catch (e) {
+    } catch (_e) {
       return null;
     }
   }
@@ -103,12 +104,13 @@ export class UserService {
 
   async upsert(data: CreateUser): Promise<User> {
     const { auth } = this.firebaseService;
-    const { email, password, displayName, customClaims, institutionId } = data;
+    const { email, password, displayName, customClaims /* institutionId */ } =
+      data;
 
     let user: UserRecord;
     try {
       user = await auth.getUserByEmail(email);
-    } catch (e) {
+    } catch (_) {
       this.logger.log(`Creating user (${email}, ${JSON.stringify(data)})`);
       user = await auth.createUser({ email, password, displayName });
     } finally {
@@ -217,7 +219,7 @@ export class UserService {
         collectionGroup,
         (q) => q.orderBy('date', 'desc'),
       );
-    } catch (e: any) {
+    } catch (_) {
       return [];
     }
   }

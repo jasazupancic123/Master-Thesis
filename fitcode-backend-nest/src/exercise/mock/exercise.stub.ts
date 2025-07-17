@@ -1,7 +1,8 @@
-import { generateRandomName } from '../../../test/common/utils/random.util';
-import { Exercise } from '../entity/exercise.entity';
-import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
+import { generateRandomName } from '@test/common/utils/random.util';
 import { v4 } from 'uuid';
+
+import { GLOBAL_EXERCISE_OWNER } from '../constant/global-exercise-owner.constant';
+import type { Exercise } from '../entity/exercise.entity';
 
 export function generateExerciseStub(data?: Partial<Exercise>): Exercise {
   return {

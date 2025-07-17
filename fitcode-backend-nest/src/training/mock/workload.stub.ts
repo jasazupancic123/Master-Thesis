@@ -1,11 +1,13 @@
-import { WorkloadOptions } from '../../../test/common/type/workload.type';
-import { generateRandomNumber } from '../../../test/common/utils/random.util';
-import { IntType, VolType } from '../../component/enum/param.enum';
-import {
+import type { WorkloadOptions } from '@test/common/type/workload.type';
+import { generateRandomNumber } from '@test/common/utils/random.util';
+
+import { IntType, VolType } from '@src/component/enum/param.enum';
+
+import type { Workload } from '../entity/workload.entity';
+import type {
   CompletedWorkload,
   PrescribedWorkload,
 } from '../entity/workload-value.entity';
-import { Workload } from '../entity/workload.entity';
 import { SetStatus } from '../enum/set-status.enum';
 
 export function generateWorkloadStub(data?: Partial<Workload>): Workload {

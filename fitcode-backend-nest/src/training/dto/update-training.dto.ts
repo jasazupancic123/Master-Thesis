@@ -1,9 +1,11 @@
 import { IntersectionType, PickType } from '@nestjs/mapped-types';
-import { Training } from '../entity/training.entity';
-import { ValidateNested } from 'class-validator';
-import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { IdEntity } from '../../common/entity/id.entity';
+import { Expose, Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+
+import { IdEntity } from '@src/common/entity/id.entity';
+
+import { Training } from '../entity/training.entity';
 import { Workload } from '../entity/workload.entity';
 
 export class UpdateTrainingDto extends PickType(Training, [

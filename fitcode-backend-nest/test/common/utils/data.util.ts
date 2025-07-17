@@ -1,27 +1,24 @@
-import { generateGroupStub } from '../../../src/group/mock/group.stub';
-import { GroupService } from '../../../src/group/group.service';
-import { addWeeks, addDays, subDays } from 'date-fns';
-import { generateCycleStub } from '../../../src/group/mock/cycle.stub';
-import { TestUser } from '../type/auth.type';
-import { Institution } from '../../../src/institution/entity/institution.entity';
-import { InstitutionService } from '../../../src/institution/service/institution.service';
-import { generateInstitutionStub } from '../../../src/institution/mock/institution.mock';
-import { FirestoreCollection } from '../../../src/common/enum/firestore-collection.enum';
-import { FirebaseService } from '../../../src/firebase/firebase.service';
-import { TestInstitution, TestTraining } from '../type/entity.type';
+import { addDays, addWeeks, subDays } from 'date-fns';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import type { FirestoreEntity } from '@src/common/type/entity.type';
+import type { FirebaseService } from '@src/firebase/firebase.service';
+import type { GroupService } from '@src/group/group.service';
+import { generateCycleStub } from '@src/group/mock/cycle.stub';
+import { generateGroupStub } from '@src/group/mock/group.stub';
+import type { Institution } from '@src/institution/entity/institution.entity';
+import { generateInstitutionStub } from '@src/institution/mock/institution.mock';
+import type { InstitutionService } from '@src/institution/service/institution.service';
+import type { Training } from '@src/training/entity/training.entity';
+import { generateTrainingStub } from '@src/training/mock/training.stub';
+
+import type { TestUser } from '../type/auth.type';
+import type { TestInstitution, TestTraining } from '../type/entity.type';
 import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
 } from './auth.util';
-import { Training } from '../../../src/training/entity/training.entity';
-import { generateTrainingStub } from '../../../src/training/mock/training.stub';
-import { FirestoreEntity } from '../../../src/common/type/entity.type';
-import { TrainingExercise } from '../../../src/training/entity/training-exercise.entity';
-import { Workload } from '../../../src/training/entity/workload.entity';
-import { generateWorkloadStub } from '../../../src/training/mock/workload.stub';
-import { SetStatus } from '../../../src/training/enum/set-status.enum';
-import { BatchWriteOperation } from '../../../src/common/type/firestore.type';
 
 /**
  * Creates only institution with owner and members (trainers and athletes).
@@ -186,86 +183,6 @@ export async function createTraining(
     .then((result) =>
       firebase.serialize(result.data() as FirestoreEntity<Training>),
     );
-}
-
-/**
- * Creates workloads for training in database. It doesn't use separate
- * service, but instead inserts raw data into database, so be careful.
- */
-export function createWorkloadsForTraining(
-  firebase: FirebaseService,
-  training: Training,
-  options?: {
-    completed?: boolean;
-  },
-) {
-  const membersMap: {
-    [userId: string]: {
-      exercises: (TrainingExercise & { componentId: string })[];
-    };
-  } = {};
-
-  for (const userId of training.membersIds)
-    membersMap[userId] = { exercises: [] };
-
-  for (const component of training.components) {
-    // workloads for main training group
-    for (const superset of component.supersets)
-      for (const exercise of superset.exercises)
-        for (const userId of training.membersIds)
-          membersMap[userId].exercises.push({
-            ...exercise,
-            componentId: component.id,
-          });
-
-    // workloads for subgroups
-    for (const subgroup of component.subgroups)
-      for (const superset of subgroup.supersets)
-        for (const exercise of superset.exercises)
-          for (const userId of subgroup.membersIds)
-            membersMap[userId].exercises.push({
-              ...exercise,
-              componentId: component.id,
-            });
-  }
-
-  if (Object.keys(membersMap).length !== 20)
-    console.log('not 20 mmembers, but', Object.keys(membersMap).length);
-
-  // for each member, calculate individual values for exercise user data
-  const workloads: Workload[] = [];
-  for (const userId of Object.keys(membersMap))
-    for (const exercise of membersMap[userId].exercises)
-      for (const { setNumber } of exercise.sets)
-        workloads.push(
-          generateWorkloadStub({
-            groupId: training.groupId,
-            cycleId: training.cycleId,
-            userId,
-            trainingId: training.id,
-            componentId: exercise.componentId,
-            exerciseId: exercise.id,
-            setNumber,
-            status: SetStatus.NOT_STARTED,
-            plannedAt: training.from,
-            notes: null,
-            isCustom: false,
-          }),
-        );
-
-  const operations: BatchWriteOperation<Workload>[] = [];
-  for (const workload of workloads) {
-    const ref = firebase.firestore
-      .collection(FirestoreCollection.TRAINING)
-      .doc(training.id)
-      .collection(FirestoreCollection.TRAINING_WORKLOAD)
-      .doc();
-
-    const data = firebase.buildCreateQuery<Workload>(workload);
-    operations.push({ data, ref, operation: 'set' });
-  }
-
-  return operations;
 }
 
 export async function deleteDoc(

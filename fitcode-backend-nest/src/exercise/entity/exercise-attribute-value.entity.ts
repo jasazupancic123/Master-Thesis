@@ -1,8 +1,9 @@
+import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { IntersectionType } from '@nestjs/mapped-types';
+
+import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 
 export class ExerciseAttributeValue extends IntersectionType(AttributeValue) {
   @IsString()

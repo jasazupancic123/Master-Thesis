@@ -7,14 +7,15 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
+import { UserRole } from '../user/enum/user-role.enum';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { BatchUpdateGroupsDto, UpdateGroupDto } from './dto/update-group.dto';
 import { GroupService } from './group.service';
-import { UserRole } from '../user/enum/user-role.enum';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Group')
 @Controller('group')

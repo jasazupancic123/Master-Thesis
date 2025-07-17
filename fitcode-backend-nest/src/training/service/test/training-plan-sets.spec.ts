@@ -1,32 +1,33 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { TrainingPlanService } from '../training-plan.service';
+
+import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { CommonModule } from '@src/common/common.module';
+import { ComponentService } from '@src/component/component.service';
+import type { ComponentParam } from '@src/component/entity/component-param.entity';
 import {
   IntType,
   ParamType,
   VolWorkSetType,
-} from '../../../component/enum/param.enum';
-import { ComponentParam } from '../../../component/entity/component-param.entity';
-import { AttributeValue } from '../../../attribute/entity/attribute-value.entity';
-import { createMock } from '@golevelup/ts-jest';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
+} from '@src/component/enum/param.enum';
+import { ComponentRepository } from '@src/component/repository/component.repository';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
+
+import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
-import { ComponentService } from '../../../component/component.service';
-import { ComponentRepository } from '../../../component/repository/component.repository';
 
 describe('getSetData', () => {
   let service: TrainingPlanService;
   let componentService: ComponentService;
-  let exerciseService: ExerciseService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -79,7 +80,6 @@ describe('getSetData', () => {
 
     service = moduleRef.get(TrainingPlanService);
     componentService = moduleRef.get(ComponentService);
-    exerciseService = moduleRef.get(ExerciseService);
   });
 
   it('should create correct number of sets based on VolWorkSets parameter', () => {

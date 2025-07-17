@@ -1,15 +1,17 @@
 import { BadRequestException } from '@nestjs/common';
-import { Attribute } from '../entity/attribute.entity';
-import { AttributeValue } from '../entity/attribute-value.entity';
-import { AttributeService } from './attribute.service';
-import { Test } from '@nestjs/testing';
-import { AttributeType } from '../../common/enum/attribute-type.enum';
-import { FirebaseModule } from '../../firebase/firebase.module';
 import { ConfigModule } from '@nestjs/config';
-import { CommonModule } from '../../common/common.module';
-import { validationSchema } from '../../config/environment-validation-schema';
+import { Test } from '@nestjs/testing';
+
+import { CacheManagerModule } from '@src/cache-manager/cache-manager.module';
+import { CommonModule } from '@src/common/common.module';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { FirebaseModule } from '@src/firebase/firebase.module';
+
+import type { Attribute } from '../entity/attribute.entity';
+import type { AttributeValue } from '../entity/attribute-value.entity';
 import { AttributeRepository } from '../repository/attribute.repository';
-import { CacheManagerModule } from '../../cache-manager/cache-manager.module';
+import { AttributeService } from './attribute.service';
 
 describe('AttributeService (unit)', () => {
   let service: AttributeService;

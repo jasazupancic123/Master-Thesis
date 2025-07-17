@@ -1,37 +1,37 @@
 import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { CommonModule } from '../../../common/common.module';
-import { ComponentService } from '../../../component/component.service';
+
+import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { CommonModule } from '@src/common/common.module';
+import { ComponentService } from '@src/component/component.service';
 import {
   IntType,
   ParamType,
   VolType,
   VolWorkSetType,
-} from '../../../component/enum/param.enum';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
-import { Method } from '../../../method/entity/method.entity';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
+} from '@src/component/enum/param.enum';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Method } from '@src/method/entity/method.entity';
 import {
   generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
-} from '../../mock/training.stub';
+} from '@src/training/mock/training.stub';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
+
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 
 describe('validateTrainingExerciseValues', () => {
   let service: TrainingPlanService;
-  let componentService: ComponentService;
-  let exerciseService: ExerciseService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -82,8 +82,6 @@ describe('validateTrainingExerciseValues', () => {
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
-    componentService = moduleRef.get(ComponentService);
-    exerciseService = moduleRef.get(ExerciseService);
   });
 
   const MIN_SET = 5;
