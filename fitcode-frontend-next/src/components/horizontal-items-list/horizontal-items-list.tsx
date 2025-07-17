@@ -6,8 +6,9 @@ import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useRef } from 'react';
+import { useDashboard } from '@/store/dashboard-provider';
 
-interface TrainerGroupDayViewDaysProps {
+interface HorizontalItemsListProps {
   items: { label: string; value: string; sublabel?: string }[];
   value: string;
   setValue: (value: string) => void;
@@ -16,11 +17,11 @@ interface TrainerGroupDayViewDaysProps {
   cycleView?: boolean;
   yearView?: boolean;
   alertOnChange?: boolean;
+  dashboardView?: boolean;
+  dashboardInstitutionsView?: boolean;
 }
 
-export default function HorizontalItemsList(
-  props: TrainerGroupDayViewDaysProps
-) {
+export default function HorizontalItemsList(props: HorizontalItemsListProps) {
   const SCROLL_STEP = 150; // Adjust this value as needed
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -32,11 +33,20 @@ export default function HorizontalItemsList(
     cycleView,
     yearView,
     checkIsSameValue,
+    dashboardView,
+    dashboardInstitutionsView,
   } = props;
 
-  const { detectedChanges, setDetectedChanges } = useGroup();
+  const { detectedChanges, setDetectedChanges } =
+    dashboardView || dashboardInstitutionsView ? useDashboard() : useGroup();
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const getShortGroupName = (name: string) => {
+    let finalName = name.length >= 2 ? name.slice(0, 3) : name;
+
+    return finalName.toUpperCase().trim();
+  };
 
   return (
     <Box
@@ -61,7 +71,7 @@ export default function HorizontalItemsList(
       <IconButton
         sx={{ p: 0, m: 0 }}
         onClick={() => {
-          if (cycleView) {
+          if (cycleView || dashboardView) {
             scrollContainerRef.current?.scrollBy({
               left: -SCROLL_STEP, // adjust scroll distance as needed
               behavior: 'smooth',
@@ -140,15 +150,31 @@ export default function HorizontalItemsList(
                 textAlign="center"
                 sx={{
                   fontSize: isSameValue ? '13px' : '12px',
-                  fontWeight: 250,
+                  fontWeight:
+                    dashboardView || dashboardInstitutionsView ? 400 : 250,
                   p: isSameValue ? 0.5 : 0,
-                  minWidth: isSameValue ? '50px' : undefined,
+                  minWidth:
+                    isSameValue || dashboardView || dashboardInstitutionsView
+                      ? '50px'
+                      : undefined,
                   m: 0,
                   border: isSameValue
                     ? `1px solid ${theme.palette.primary.main}`
                     : undefined,
-                  borderRadius: isSameValue ? 1.5 : 0,
-                  color: isSameValue ? theme.palette.primary.main : undefined,
+                  borderRadius:
+                    isSameValue || dashboardView || dashboardInstitutionsView
+                      ? 1.5
+                      : 0,
+                  color:
+                    isSameValue && !dashboardView && !dashboardInstitutionsView
+                      ? theme.palette.primary.main
+                      : undefined,
+                  py: dashboardView || dashboardInstitutionsView ? 1.5 : 0,
+                  px: dashboardInstitutionsView ? 1.5 : 0,
+                  backgroundColor:
+                    dashboardView || dashboardInstitutionsView
+                      ? theme.palette.background.light
+                      : undefined,
                 }}
               >
                 {cycleView ? (
@@ -164,6 +190,10 @@ export default function HorizontalItemsList(
                         index < item.label.split(' ').length - 1 && <br />}
                     </Box>
                   ))
+                ) : dashboardView ? (
+                  getShortGroupName(item.label)
+                ) : dashboardInstitutionsView ? (
+                  item.label.toUpperCase()
                 ) : isSameValue ? (
                   <>
                     {item.sublabel || ''}

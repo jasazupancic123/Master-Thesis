@@ -1,6 +1,7 @@
 import { ChildrenProps } from '@/common/type/props.type';
-import DashboardSidebar from '@/components/dashboard-sidebar/dashboard-sidebar';
+import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import { Box, Container } from '@mui/material';
+import DashboardHeader from '@/components/dashboard-header/dashboard-header';
 
 export default function DashboardLayout({ children }: ChildrenProps) {
   const styles = {
@@ -18,15 +19,21 @@ export default function DashboardLayout({ children }: ChildrenProps) {
           display: 'flex',
           flexDirection: 'column',
           p: 0,
-          px: 2,
           pb: 2,
           mx: 0,
           width: '100%',
         }}
       >
-        <Box mt="48px">
-          <Box mt="10px" display="flex" flexDirection="row" width="100%">
-            <DashboardSidebar />
+        <Box width="100%" display="flex" flexDirection="column">
+          <DashboardHeader />
+          <Box
+            width="100%"
+            display="flex"
+            maxWidth={MAX_WIDTH}
+            sx={{
+              mx: 'auto',
+            }}
+          >
             <Box
               sx={{
                 flex: 1,

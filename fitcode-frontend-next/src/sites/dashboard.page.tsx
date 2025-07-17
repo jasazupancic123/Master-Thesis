@@ -21,11 +21,12 @@ import { useDashboard } from '@/store/dashboard-provider';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import {
-  DASHBOARD_GROUPS,
+  DASHBOARD_PROGRESS,
   DASHBOARD_MAIN,
+  DASHBOARD_GROUPS,
 } from '@/common/constant/dashboard-views-constant';
 import { Institution } from '@/controller/institution/type/institution.type';
-import DashboardStaffGroupsCycles from '@/components/dashboard-staff-groups-cycles/dashboard-staff-groups-cycles';
+import DashboardStaffGroupsCycles from '@/components/dashboard-groups-staff/dashboard-groups-staff';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import { useMain } from '@/store/main-provider';
