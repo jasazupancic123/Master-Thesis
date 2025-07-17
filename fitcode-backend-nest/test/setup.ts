@@ -1,3 +1,5 @@
+import 'tsconfig-paths/register';
+
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
 

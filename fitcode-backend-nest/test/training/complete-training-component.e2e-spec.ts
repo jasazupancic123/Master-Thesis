@@ -584,7 +584,6 @@ describe('Complete training component (e2e)', () => {
       expect(spyResult).toEqual(12); // 4 exercises * 3 sets each
 
       const dbTraining = await db.trainings.getDoc(training.id);
-
       const completedComponent = dbTraining.components.find(
         (c) => c.id === component1.id,
       );
