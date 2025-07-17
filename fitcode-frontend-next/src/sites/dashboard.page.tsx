@@ -38,7 +38,6 @@ export default function DashboardPage(props: DashboardPageProps) {
   const router = useRouter();
 
   const {
-    users,
     token,
     profile,
     institutions,
@@ -49,6 +48,8 @@ export default function DashboardPage(props: DashboardPageProps) {
     selectedGroup,
     setSelectedGroup,
   } = useDashboard();
+
+  if (!profile) return null;
 
   const { view } = props;
 

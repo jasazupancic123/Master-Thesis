@@ -313,6 +313,7 @@ export default function DashboardInstitutionPage() {
 
               return (
                 <Box
+                  key={user.uid}
                   display="flex"
                   flexDirection="column"
                   gap={1}
