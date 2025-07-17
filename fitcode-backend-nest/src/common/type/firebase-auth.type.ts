@@ -1,5 +1,6 @@
-import { UserRole } from '../../user/enum/user-role.enum';
-import { UserRecord } from 'firebase-admin/lib/auth';
+import type { UserRecord } from 'firebase-admin/lib/auth';
+
+import type { UserRole } from '@src/user/enum/user-role.enum';
 
 export type CustomClaims = { role: UserRole[] };
 

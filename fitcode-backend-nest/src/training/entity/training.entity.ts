@@ -7,9 +7,11 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { BaseEntity } from '../../common/entity/base.entity';
-import { Institution } from '../../institution/entity/institution.entity';
-import { Wellness } from '../../user/entity/wellness.entity';
+
+import { BaseEntity } from '@src/common/entity/base.entity';
+import { Institution } from '@src/institution/entity/institution.entity';
+import { Wellness } from '@src/user/entity/wellness.entity';
+
 import { TrainingComponent } from './training-component.entity';
 import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';
 

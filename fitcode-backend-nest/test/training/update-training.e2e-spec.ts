@@ -1,20 +1,26 @@
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { addDays, addMinutes, subDays } from 'date-fns';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { TestingModule, Test } from '@nestjs/testing';
-import { AppModule } from '../../src/app.module';
-import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { ComponentService } from '../../src/component/component.service';
-import { Component } from '../../src/component/entity/component.entity';
-import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { TrainingService } from '../../src/training/service/training.service';
-import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { GroupService } from '../../src/group/group.service';
-import { Group } from '../../src/group/entity/group.entity';
+
+import { AppModule } from '@src/app.module';
+import { ComponentService } from '@src/component/component.service';
+import type { Component } from '@src/component/entity/component.entity';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import type { Group } from '@src/group/entity/group.entity';
+import { GroupService } from '@src/group/group.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Training } from '@src/training/entity/training.entity';
 import {
   generateTrainingComponent,
   generateTrainingStub,
-} from '../../src/training/mock/training.stub';
+} from '@src/training/mock/training.stub';
+import { TrainingService } from '@src/training/service/training.service';
+
+import type { TestInstitution } from '../common/type/entity.type';
+import { createAthleteUserAndToken } from '../common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
@@ -25,18 +31,11 @@ import {
   deleteUsers,
 } from '../common/utils/data.util';
 import { getTime } from '../common/utils/date.util';
-import { Training } from '../../src/training/entity/training.entity';
-import { addDays, addMinutes, subDays } from 'date-fns';
-import { InstitutionService } from '../../src/institution/service/institution.service';
-import { createAthleteUserAndToken } from '../common/utils/auth.util';
-import { TestInstitution } from '../common/type/entity.type';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
   let firebase: FirebaseService;
-  let attributeService: AttributeService;
   let componentService: ComponentService;
-  let exerciseService: ExerciseService;
   let trainingService: TrainingService;
   let groupService: GroupService;
   let institutionService: InstitutionService;
@@ -61,9 +60,7 @@ describe('Update Training (e2e)', () => {
     await app.init();
 
     firebase = moduleFixture.get(FirebaseService);
-    attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
-    exerciseService = moduleFixture.get(ExerciseService);
     trainingService = moduleFixture.get(TrainingService);
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
@@ -98,7 +95,7 @@ describe('Update Training (e2e)', () => {
     const to = data?.to || addMinutes(from, 60); // defaults to 9:00 two days ahead
 
     return await trainingService.create(
-      trainer,
+      global.trainer,
       generateTrainingStub({
         institutionId: institution.id,
         groupId: group.id,
@@ -113,7 +110,7 @@ describe('Update Training (e2e)', () => {
     it('should fail to update training if training id not found', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/training/invalid-id`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(training);
 
       expect(response.status).toBe(400);
@@ -122,7 +119,7 @@ describe('Update Training (e2e)', () => {
 
     it('should fail to update training if users from same institution without permission try to edit it', async () => {
       const responses = await Promise.all(
-        [athlete].map((user) =>
+        [global.athlete].map((user) =>
           request(app.getHttpServer())
             .patch(`/training/${training.id}`)
             .set('Authorization', `Bearer ${user.token}`)
@@ -159,7 +156,7 @@ describe('Update Training (e2e)', () => {
     it('should fail to update training if training is not in cycle', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({
           ...training,
           components: [
@@ -180,7 +177,7 @@ describe('Update Training (e2e)', () => {
     it('should fail to update training if training is in the past', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({
           ...training,
           components: [
@@ -201,10 +198,10 @@ describe('Update Training (e2e)', () => {
     it('should delete training if there are not any components left', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({ ...training, components: [] });
 
-      const trainings = await trainingService.findAll(trainer);
+      const trainings = await trainingService.findAll(global.trainer);
       expect(response.status).toBe(200);
       expect(trainings).toHaveLength(0);
 
@@ -219,7 +216,7 @@ describe('Update Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({
           ...training,
           components: [
@@ -244,7 +241,7 @@ describe('Update Training (e2e)', () => {
       const newAthlete = await createAthleteUserAndToken(firebase);
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({ ...training, membersIds: [newAthlete.uid] });
 
       expect(response.status).toBe(400);
@@ -276,7 +273,7 @@ describe('Update Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(data);
 
       expect(response.status).toBe(404);
@@ -293,7 +290,7 @@ describe('Update Training (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post('/training')
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send(data);
 
       expect(response.status).toBe(404);

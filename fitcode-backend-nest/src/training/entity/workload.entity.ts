@@ -1,3 +1,4 @@
+import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import {
@@ -10,9 +11,10 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { TimestampEntity } from '../../common/entity/timestamp.entity';
+
+import { TimestampEntity } from '@src/common/entity/timestamp.entity';
+
 import { SetStatus } from '../enum/set-status.enum';
-import { IntersectionType } from '@nestjs/mapped-types';
 import { CompletedWorkload, PrescribedWorkload } from './workload-value.entity';
 
 export class Workload extends IntersectionType(

@@ -1,18 +1,23 @@
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../../src/app.module';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { Component } from '../../src/component/entity/component.entity';
-import { ComponentService } from '../../src/component/component.service';
-import { generateAttributeStub } from '../../src/attribute/mock/attribute.stub';
-import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { GLOBAL_EXERCISE_OWNER } from '../../src/exercise/constant/global-exercise-owner.constant';
-import { AttributeType } from '../../src/common/enum/attribute-type.enum';
-import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
-import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
+
+import { AppModule } from '@src/app.module';
+import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
+import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { ComponentService } from '@src/component/component.service';
+import type { Component } from '@src/component/entity/component.entity';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { GLOBAL_EXERCISE_OWNER } from '@src/exercise/constant/global-exercise-owner.constant';
+import type { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+
+import type { TestInstitution } from '../common/type/entity.type';
 import {
   createInstitution,
   deleteCollection,
@@ -20,8 +25,6 @@ import {
   deleteDocs,
   deleteInstitution,
 } from '../common/utils/data.util';
-import { InstitutionService } from '../../src/institution/service/institution.service';
-import { TestInstitution } from '../common/type/entity.type';
 
 describe('Create Exercise (e2e)', () => {
   let app: INestApplication;
@@ -146,7 +149,7 @@ describe('Create Exercise (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/exercise')
-      .set('Authorization', `Bearer ${admin.token}`)
+      .set('Authorization', `Bearer ${global.admin.token}`)
       .send(exercise);
 
     expect(response.status).toBe(201);

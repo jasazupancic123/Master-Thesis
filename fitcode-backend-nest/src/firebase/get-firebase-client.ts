@@ -1,5 +1,5 @@
 import { Inject } from '@nestjs/common';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';

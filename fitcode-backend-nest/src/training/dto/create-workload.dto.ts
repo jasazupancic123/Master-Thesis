@@ -1,8 +1,9 @@
 import { PickType } from '@nestjs/mapped-types';
-import { Workload } from '../entity/workload.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type, Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+
+import { Workload } from '../entity/workload.entity';
 
 export class CreateWorkloadDto extends PickType(Workload, [
   'userId',

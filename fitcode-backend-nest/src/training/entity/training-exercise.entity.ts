@@ -1,9 +1,11 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsBoolean, ValidateNested } from 'class-validator';
-import { ColorEntity } from '../../common/entity/color.entity';
-import { IdEntity } from '../../common/entity/id.entity';
-import { Attribute } from '../../attribute/entity/attribute.entity';
+
+import { Attribute } from '@src/attribute/entity/attribute.entity';
+import { ColorEntity } from '@src/common/entity/color.entity';
+import { IdEntity } from '@src/common/entity/id.entity';
+
 import { ExerciseSet } from './exercise-set.entity';
 
 export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {

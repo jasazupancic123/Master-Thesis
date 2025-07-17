@@ -7,41 +7,37 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { addMinutes, subMinutes } from 'date-fns';
-import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
-import { Institution } from '../..//institution/entity/institution.entity';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { Attribute } from '../../attribute/entity/attribute.entity';
-import { AttributeService } from '../../attribute/service/attribute.service';
-import { CommonService } from '../../common/service/common.service';
-import { Update } from '../../common/type/entity.type';
-import { User } from '../../common/type/firebase-auth.type';
-import {
-  TrainingComponentRef,
-  UserRef,
-} from '../../common/type/firestore.type';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { ComponentService } from '../../component/component.service';
-import { DEFAULT_PARAMS_KEY } from '../../component/constant/param.constant';
+
+import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
+import { Institution } from '@src//institution/entity/institution.entity';
+import { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CommonService } from '@src/common/service/common.service';
+import { Update } from '@src/common/type/entity.type';
+import { User } from '@src/common/type/firebase-auth.type';
+import { TrainingComponentRef } from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
+import { ComponentService } from '@src/component/component.service';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
-} from '../../component/constant/warmup-cooldown.constant';
-import { Component } from '../../component/entity/component.entity';
-import { ParamType, VolWorkSetType } from '../../component/enum/param.enum';
-import { Exercise } from '../../exercise/entity/exercise.entity';
-import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
-import { ExerciseService } from '../../exercise/service/exercise.service';
-import { InstitutionService } from '../../institution/service/institution.service';
-import { Method } from '../../method/entity/method.entity';
-import {
-  CompletedTrainingComponent,
-  CompletedTrainingExercise,
-} from '../entity/completed-training.entity';
+} from '@src/component/constant/warmup-cooldown.constant';
+import { Component } from '@src/component/entity/component.entity';
+import { ParamType, VolWorkSetType } from '@src/component/enum/param.enum';
+import { Exercise } from '@src/exercise/entity/exercise.entity';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import { Method } from '@src/method/entity/method.entity';
+
+import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Training } from '../entity/training.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 
 @Injectable()
@@ -221,7 +217,7 @@ export class TrainingPlanService {
         for (const exercise of superset.exercises) {
           if (!exercise.sets.length) continue;
 
-          let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
+          const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
 
           if (!avgInt || !avgVol) continue;
 
@@ -240,7 +236,7 @@ export class TrainingPlanService {
           for (const exercise of superset.exercises) {
             if (!exercise.sets.length) continue;
 
-            let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
+            const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
 
             if (!avgInt || !avgVol) continue;
 
@@ -327,9 +323,7 @@ export class TrainingPlanService {
 
     for (const completedExercise of completedExercises) {
       const trainingExerciseAverageStats: TrainingExerciseAverageStats =
-        completedStats.find(
-          (avg) => avg.exerciseId === completedExercise.id,
-        ) || {
+        stats.find((avg) => avg.exerciseId === completedExercise.id) || {
           exerciseId: completedExercise.id,
           rootComponentId: trainingComponentId,
           numMembers: 0,
@@ -348,7 +342,14 @@ export class TrainingPlanService {
       );
 
       trainingExerciseAverageStats.numMembers += 1;
-      stats.push(trainingExerciseAverageStats);
+
+      const existingStatIndex = stats.findIndex(
+        (s) => s.exerciseId === completedExercise.id,
+      );
+
+      if (existingStatIndex !== -1)
+        stats[existingStatIndex] = trainingExerciseAverageStats;
+      else stats.push(trainingExerciseAverageStats);
     }
 
     return stats.map((s) => {

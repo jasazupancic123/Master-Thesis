@@ -1,13 +1,14 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { User } from '../common/type/firebase-auth.type';
-import { RequestUser } from '../common/decorator/request-user.decorator';
+import { ApiTags } from '@nestjs/swagger';
+
 import { Auth } from '../common/decorator/auth.decorator';
-import { InstitutionService } from './service/institution.service';
-import { CreateInstitutionDto } from './dto/create-institution.dto';
+import { RequestUser } from '../common/decorator/request-user.decorator';
+import { User } from '../common/type/firebase-auth.type';
 import { UserRole } from '../user/enum/user-role.enum';
 import { AddAthletesDto } from './dto/add-athletes.dto';
 import { AddTrainersDto } from './dto/add-trainers.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { CreateInstitutionDto } from './dto/create-institution.dto';
+import { InstitutionService } from './service/institution.service';
 
 @ApiTags('Institution')
 @Controller('institution')

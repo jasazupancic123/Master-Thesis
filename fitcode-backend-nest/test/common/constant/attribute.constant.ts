@@ -1,5 +1,5 @@
-import { AttributeType } from '../../../src/common/enum/attribute-type.enum';
-import { Attribute } from '../../../src/attribute/entity/attribute.entity';
+import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
 export const ATTRIBUTE_ENDURANCE_OPTIONS: Attribute = {
   field: 'end-opts',

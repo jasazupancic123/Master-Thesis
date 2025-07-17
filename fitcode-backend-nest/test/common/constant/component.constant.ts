@@ -1,4 +1,5 @@
-import { Component } from '../../../src/component/entity/component.entity';
+import type { Component } from '@src/component/entity/component.entity';
+
 import { ATTRIBUTE_ENDURANCE_OPTIONS } from './attribute.constant';
 
 export const COMPONENT_ENDURANCE: Omit<Component, 'children' | 'parents'> & {

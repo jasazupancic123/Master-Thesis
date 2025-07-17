@@ -1,4 +1,4 @@
-import { Component } from '../entity/component.entity';
+import type { Component } from '../entity/component.entity';
 
 export const WARMUP_COMPONENT_ID = 'warmup';
 export const COOLDOWN_COMPONENT_ID = 'cooldown';

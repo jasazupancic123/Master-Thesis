@@ -1,10 +1,11 @@
-import { v4 } from 'uuid';
-import { Cycle } from '../entity/cycle.entity';
 import {
   generateRandomColor,
   generateRandomName,
-} from '../../../test/common/utils/random.util';
+} from '@test/common/utils/random.util';
 import { endOfMonth, startOfMonth } from 'date-fns';
+import { v4 } from 'uuid';
+
+import type { Cycle } from '../entity/cycle.entity';
 
 export function generateCycleStub(data?: Partial<Cycle>): Cycle {
   return {

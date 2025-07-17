@@ -18,38 +18,38 @@ import {
   subMinutes,
 } from 'date-fns';
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
-import { NotFoundError } from 'rxjs';
-import { AttributeService } from '../../attribute/service/attribute.service';
-import { LogMethod } from '../../common/decorator/log-method.decorator';
-import { Permission } from '../../common/interface/permission.interface';
-import { CommonService } from '../../common/service/common.service';
-import { Create, Update } from '../../common/type/entity.type';
-import { User } from '../../common/type/firebase-auth.type';
+
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { LogMethod } from '@src/common/decorator/log-method.decorator';
+import { Permission } from '@src/common/interface/permission.interface';
+import { CommonService } from '@src/common/service/common.service';
+import { Create, Update } from '@src/common/type/entity.type';
+import { User } from '@src/common/type/firebase-auth.type';
 import {
-  BatchWriteOperation,
   ComponentRef,
   CycleRef,
   GroupRef,
   TrainingComponentRef,
   TrainingRef,
   UserRef,
-} from '../../common/type/firestore.type';
-import { Filter } from '../../common/type/orm.type';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { ComponentService } from '../../component/component.service';
+} from '@src/common/type/firestore.type';
+import { Filter } from '@src/common/type/orm.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
+import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
-} from '../../component/constant/warmup-cooldown.constant';
-import { ExerciseService } from '../../exercise/service/exercise.service';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { Cycle } from '../../group/entity/cycle.entity';
-import { Group } from '../../group/entity/group.entity';
-import { GroupService } from '../../group/group.service';
-import { Institution } from '../../institution/entity/institution.entity';
-import { InstitutionService } from '../../institution/service/institution.service';
-import { MethodService } from '../../method/service/method.service';
-import { UserService } from '../../user/user.service';
+} from '@src/component/constant/warmup-cooldown.constant';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { Cycle } from '@src/group/entity/cycle.entity';
+import { Group } from '@src/group/entity/group.entity';
+import { GroupService } from '@src/group/group.service';
+import { Institution } from '@src/institution/entity/institution.entity';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import { MethodService } from '@src/method/service/method.service';
+import { UserService } from '@src/user/user.service';
+
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
 import { CreateTrainingDto } from '../dto/create-training.dto';
@@ -57,12 +57,9 @@ import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
-import {
-  CompletedTrainingComponent,
-  CompletedTrainingExercise,
-} from '../entity/completed-training.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
+import { CompletedTrainingComponent } from '../entity/completed-training.entity';
 import { Training } from '../entity/training.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
 import { Workload } from '../entity/workload.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 import { SetStatus } from '../enum/set-status.enum';
@@ -132,7 +129,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const from = filter?.from ? filter.from : undefined;
     const to = filter?.to ? filter.to : undefined;
 
-    let trainings = await this.trainingRepository.getDocs((q) => {
+    const trainings = await this.trainingRepository.getDocs((q) => {
       // filter by date
       // TODO - does not work yet
       if (from && to) q = q.where('from', '>=', from).where('from', '<', to);
@@ -621,7 +618,7 @@ export class TrainingService implements Permission<Training, Institution> {
     ref: CycleRef,
     body: BatchUpdateTrainingsDto,
   ): Promise<Training[]> {
-    const { trainings: input, customAthleteWorkloads } = body;
+    const { trainings: input /* customAthleteWorkloads */ } = body;
     this.logger.log(
       `User ${user.uid} is updating ${input.length} trainings: ${JSON.stringify(input)}`,
     );
@@ -1032,7 +1029,7 @@ export class TrainingService implements Permission<Training, Institution> {
       );
 
     // create workloads
-    const result = await this.workloadService.createForTrainingComponent(
+    await this.workloadService.createForTrainingComponent(
       trainingComponent,
       {
         institutionId: training.institutionId,
@@ -1153,16 +1150,14 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async calculatePrescribedWorkloads(
-    user: User,
-    ref: TrainingRef & { athleteId: string },
-  ) {
-    const training = await this.findOneByIdOrFail(user, ref);
+  async calculatePrescribedWorkloads /* user: User,
+    ref: TrainingRef & { athleteId: string }, */() {
+    /* const training = await this.findOneByIdOrFail(user, ref);
     const athlete = await this.getAthlete(
       user,
       ref.athleteId,
       training.institution,
-    );
+    ); */
   }
 
   /**

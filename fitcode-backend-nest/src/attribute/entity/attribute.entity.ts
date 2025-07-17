@@ -9,7 +9,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { AttributeType } from '../../common/enum/attribute-type.enum';
+
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
 export class Attribute {
   @IsString()

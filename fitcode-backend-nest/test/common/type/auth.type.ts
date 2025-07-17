@@ -1,3 +1,3 @@
-import { User } from '../../../src/common/type/firebase-auth.type';
+import type { User } from '@src/common/type/firebase-auth.type';
 
 export type TestUser = User & { token: string };

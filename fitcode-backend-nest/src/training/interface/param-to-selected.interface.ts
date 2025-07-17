@@ -1,9 +1,9 @@
-import {
+import type {
   IntType,
   ParamType,
   VolType,
   VolWorkSetType,
-} from '../../component/enum/param.enum';
+} from '@src/component/enum/param.enum';
 
 export type ParamToSelectedMap = {
   [ParamType.VolWorkSets]: VolWorkSetType;

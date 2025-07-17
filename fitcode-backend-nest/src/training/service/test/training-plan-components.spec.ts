@@ -1,34 +1,36 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { TrainingPlanService } from '../training-plan.service';
-import { ComponentService } from '../../../component/component.service';
-import { generateComponentStub } from '../../../component/mock/component.stub';
-import { generateExerciseStub } from '../../../exercise/mock/exercise.stub';
-import {
-  generateSubgroup,
-  generateSuperset,
-  generateTrainingComponent,
-  generateTrainingExercise,
-} from '../../mock/training.stub';
-import { createMock } from '@golevelup/ts-jest';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
+import { addMinutes, subMinutes } from 'date-fns';
+
+import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { CommonModule } from '@src/common/common.module';
+import { ComponentService } from '@src/component/component.service';
 import {
   COOLDOWN_COMPONENT,
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT,
   WARMUP_COMPONENT_ID,
-} from '../../../component/constant/warmup-cooldown.constant';
-import { addMinutes, subMinutes } from 'date-fns';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
+} from '@src/component/constant/warmup-cooldown.constant';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import {
+  generateSubgroup,
+  generateSuperset,
+  generateTrainingComponent,
+  generateTrainingExercise,
+} from '@src/training/mock/training.stub';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
+
+import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('validateTrainingComponents', () => {
   let service: TrainingPlanService;

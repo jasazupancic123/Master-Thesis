@@ -1,21 +1,21 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { Create, Update } from '../common/type/entity.type';
-import { CommonService } from '../common/service/common.service';
-import { Filter } from '../common/type/orm.type';
-import { Component } from './entity/component.entity';
-import { ComponentRepository } from './repository/component.repository';
+
+import { Attribute } from '../attribute/entity/attribute.entity';
+import { AttributeValue } from '../attribute/entity/attribute-value.entity';
 import { CacheManagerService } from '../cache-manager/cache-manager.service';
+import { LogMethod } from '../common/decorator/log-method.decorator';
+import { AttributeType } from '../common/enum/attribute-type.enum';
+import { CommonService } from '../common/service/common.service';
+import { Create, Update } from '../common/type/entity.type';
+import { CACHE_KEY_FLAT_COMPONENTS } from './constant/cache.constant';
+import { DEFAULT_PARAMS_KEY, PARAMS } from './constant/param.constant';
 import {
   COOLDOWN_COMPONENT,
   WARMUP_COMPONENT,
 } from './constant/warmup-cooldown.constant';
-import { CACHE_KEY_FLAT_COMPONENTS } from './constant/cache.constant';
-import { AttributeValue } from '../attribute/entity/attribute-value.entity';
-import { Attribute } from '../attribute/entity/attribute.entity';
-import { AttributeType } from '../common/enum/attribute-type.enum';
-import { PARAMS, DEFAULT_PARAMS_KEY } from './constant/param.constant';
+import { Component } from './entity/component.entity';
 import { ComponentParam } from './entity/component-param.entity';
-import { LogMethod } from '../common/decorator/log-method.decorator';
+import { ComponentRepository } from './repository/component.repository';
 
 @Injectable()
 export class ComponentService {
@@ -82,7 +82,7 @@ export class ComponentService {
     return components;
   }
 
-  async findAllTree(filter?: Filter<Component>): Promise<Component[]> {
+  async findAllTree(/* filter?: Filter<Component> */): Promise<Component[]> {
     const components = await this.findAllFlat();
     return this.commonService.tree.fromArray(components, {
       idPropertyName: 'id',
@@ -170,7 +170,7 @@ export class ComponentService {
     attributeValues: AttributeValue[],
     attributes: Attribute[],
   ): ComponentParam[] {
-    let componentParams: ComponentParam[] = params[DEFAULT_PARAMS_KEY] || [];
+    const componentParams: ComponentParam[] = params[DEFAULT_PARAMS_KEY] || [];
 
     for (const condition of Object.keys(params)) {
       if (condition === DEFAULT_PARAMS_KEY) continue;

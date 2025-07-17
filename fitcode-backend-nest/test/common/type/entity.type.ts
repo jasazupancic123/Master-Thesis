@@ -1,7 +1,8 @@
-import { Training } from '../../../src/training/entity/training.entity';
-import { Institution } from '../../../src/institution/entity/institution.entity';
-import { TestUser } from './auth.type';
-import { Group } from '../../../src/group/entity/group.entity';
+import type { Group } from '@src/group/entity/group.entity';
+import type { Institution } from '@src/institution/entity/institution.entity';
+import type { Training } from '@src/training/entity/training.entity';
+
+import type { TestUser } from './auth.type';
 
 export type TestInstitution = Institution & {
   manager: TestUser;

@@ -1,6 +1,6 @@
 import { PARAMS } from '../constant/param.constant';
-import { ComponentParam } from '../entity/component-param.entity';
-import { ParamType } from '../enum/param.enum';
+import type { ComponentParam } from '../entity/component-param.entity';
+import type { ParamType } from '../enum/param.enum';
 
 /**
  * Generates a mock ComponentParam object based on the provided field.

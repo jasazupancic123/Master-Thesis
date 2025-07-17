@@ -1,38 +1,40 @@
 import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { generateExerciseAttributeValueStub } from '../../../attribute/mock/attribute-value.stub';
-import { generateAttributeStub } from '../../../attribute/mock/attribute.stub';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { CommonModule } from '../../../common/common.module';
-import { AttributeType } from '../../../common/enum/attribute-type.enum';
-import { ComponentService } from '../../../component/component.service';
+
+import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
+import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { CommonModule } from '@src/common/common.module';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { ComponentService } from '@src/component/component.service';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
   VOL_WORK_SET_OPTIONS,
-} from '../../../component/constant/param.constant';
+} from '@src/component/constant/param.constant';
 import {
   IntType,
   ParamType,
   VolWorkSetType,
-} from '../../../component/enum/param.enum';
-import { generateComponentStub } from '../../../component/mock/component.stub';
-import { ComponentRepository } from '../../../component/repository/component.repository';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { generateExerciseStub } from '../../../exercise/mock/exercise.stub';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
+} from '@src/component/enum/param.enum';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { ComponentRepository } from '@src/component/repository/component.repository';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
 import {
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
-} from '../../mock/training.stub';
+} from '@src/training/mock/training.stub';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
+
 import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
 

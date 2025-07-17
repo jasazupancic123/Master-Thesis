@@ -5,15 +5,17 @@ import {
   DocumentReference,
 } from 'firebase-admin/firestore';
 import { Query } from 'firebase-admin/lib/firestore';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import {
   FirestoreCollectionRepository,
   TrainingRef,
   WorkloadRef,
-} from '../../common/type/firestore.type';
+} from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { Workload } from '../entity/workload.entity';
 import { TrainingRepository } from './training.repository';
 
@@ -60,7 +62,7 @@ export class WorkloadRepository
       timestamps: true,
     });
 
-    this.doc(ref).set(query);
+    await this.doc(ref).set(query);
     return this.getKey(ref);
   }
 

@@ -1,10 +1,11 @@
-import {
+import type {
   CollectionReference,
   DocumentData,
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
-import { FirestoreEntity } from './entity.type';
+
+import type { FirestoreEntity } from './entity.type';
 
 export interface BatchWriteOperation<T> {
   ref: DocumentReference<DocumentData, DocumentData>;
@@ -14,7 +15,7 @@ export interface BatchWriteOperation<T> {
 }
 
 export interface FirestoreCollectionRepository<
-  Model = any,
+  Model = unknown,
   Ref = Record<string, string>,
 > {
   doc(ref: Ref): DocumentReference;
@@ -27,18 +28,18 @@ export interface FirestoreCollectionRepository<
 
   addDoc(
     ref: Ref,
-    input: Model | (Partial<Model> & Record<string, any>),
+    input: Model | (Partial<Model> & Record<string, unknown>),
   ): Promise<string>;
 
   updateDoc(
     ref: Ref,
-    input: Partial<Model> & Record<string, any>,
+    input: Partial<Model> & Record<string, unknown>,
   ): Promise<void>;
 
   deleteDoc(ref: Ref): Promise<void>;
 }
 
-export interface RootFirestoreCollectionRepository<Model = any> {
+export interface RootFirestoreCollectionRepository<Model = unknown> {
   doc(id: string): DocumentReference;
 
   collection(): CollectionReference;
@@ -48,12 +49,12 @@ export interface RootFirestoreCollectionRepository<Model = any> {
   getDoc(id: string): Promise<Model | null>;
 
   addDoc(
-    input: Model | (Partial<Model> & Record<string, any>),
+    input: Model | (Partial<Model> & Record<string, unknown>),
   ): Promise<string>;
 
   updateDoc(
     id: string,
-    input: Partial<Model> & Record<string, any>,
+    input: Partial<Model> & Record<string, unknown>,
   ): Promise<void>;
 
   deleteDoc(id: string): Promise<void>;

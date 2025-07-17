@@ -1,23 +1,25 @@
-import { addDays, addHours } from 'date-fns';
-import { v4 } from 'uuid';
 import {
   generateRandomColor,
   generateRandomName,
-} from '../../../test/common/utils/random.util';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { getTime } from '../../common/service/util/date.util';
-import { PARAMS } from '../../component/constant/param.constant';
+} from '@test/common/utils/random.util';
+import { addDays, addHours } from 'date-fns';
+import { v4 } from 'uuid';
+
+import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { getTime } from '@src/common/service/util/date.util';
+import { PARAMS } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
-} from '../../component/constant/warmup-cooldown.constant';
-import { ComponentParam } from '../../component/entity/component-param.entity';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import { Subgroup } from '../entity/subgroup.entity';
-import { Superset } from '../entity/superset.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
-import { Training } from '../entity/training.entity';
+} from '@src/component/constant/warmup-cooldown.constant';
+import type { ComponentParam } from '@src/component/entity/component-param.entity';
+
+import type { ExerciseSet } from '../entity/exercise-set.entity';
+import type { Subgroup } from '../entity/subgroup.entity';
+import type { Superset } from '../entity/superset.entity';
+import type { Training } from '../entity/training.entity';
+import type { TrainingComponent } from '../entity/training-component.entity';
+import type { TrainingExercise } from '../entity/training-exercise.entity';
 import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {

@@ -1,8 +1,9 @@
+import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsEnum, IsOptional, IsNumber, Min } from 'class-validator';
-import { VolType, IntType } from '../../component/enum/param.enum';
-import { IntersectionType } from '@nestjs/mapped-types';
+import { IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
+
+import { IntType, VolType } from '@src/component/enum/param.enum';
 
 export class PrescribedWorkload {
   /* --------------- Vol Work 1 --------------- */

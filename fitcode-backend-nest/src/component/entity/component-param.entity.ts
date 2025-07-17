@@ -1,8 +1,9 @@
 import { PickType } from '@nestjs/mapped-types';
-import { Attribute } from '../../attribute/entity/attribute.entity';
-import { IsOptional, ValidateNested } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
+import { IsOptional, ValidateNested } from 'class-validator';
+
+import { Attribute } from '@src/attribute/entity/attribute.entity';
 
 export class ComponentParam extends PickType(Attribute, [
   'field',

@@ -1,6 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
 import { Reflector } from '@nestjs/core';
+
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { AUTH_ROLES_KEY } from './role.guard';
 
 @Injectable()

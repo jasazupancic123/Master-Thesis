@@ -1,10 +1,11 @@
-import { IntersectionType, PickType } from '@nestjs/mapped-types';
-import { Training } from '../entity/training.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
-import { Subgroup } from '../entity/subgroup.entity';
+import { PickType } from '@nestjs/mapped-types';
+import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+
+import { Subgroup } from '../entity/subgroup.entity';
+import { Training } from '../entity/training.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
 
 export class TrainingComponentInfoDto extends PickType(TrainingComponent, [
   'id',

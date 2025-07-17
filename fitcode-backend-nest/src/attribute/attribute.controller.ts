@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
-import { AttributeService } from './service/attribute.service';
 import { ApiTags } from '@nestjs/swagger';
+
+import { AttributeService } from './service/attribute.service';
 
 @ApiTags('Attribute')
 @Controller('attribute')

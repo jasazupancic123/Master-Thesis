@@ -1,9 +1,11 @@
 import {
   generateRandomName,
   generateRandomString,
-} from '../../../test/common/utils/random.util';
-import { Attribute } from '../entity/attribute.entity';
-import { AttributeType } from '../../common/enum/attribute-type.enum';
+} from '@test/common/utils/random.util';
+
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+
+import type { Attribute } from '../entity/attribute.entity';
 
 export function generateAttributeStub(data?: Partial<Attribute>): Attribute {
   return {

@@ -6,9 +6,11 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { BaseEntity } from '../../common/entity/base.entity';
+
+import { BaseEntity } from '@src/common/entity/base.entity';
+import { Institution } from '@src/institution/entity/institution.entity';
+
 import { Cycle } from './cycle.entity';
-import { Institution } from '../../institution/entity/institution.entity';
 
 export class Group extends BaseEntity {
   @IsString()

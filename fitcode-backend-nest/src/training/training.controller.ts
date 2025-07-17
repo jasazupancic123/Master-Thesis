@@ -8,29 +8,29 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CommonService } from '../common/service/common.service';
+import { ApiTags } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
+import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
+import { UserRole } from '../user/enum/user-role.enum';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
+import { CopyComponentDto } from './dto/copy-component.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
+import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
+import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
+import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
+import { TrainingInfoDto } from './dto/training-info.dto';
 import {
   BatchUpdateTrainingsDto,
   UpdateSingleTrainingDto,
 } from './dto/update-training.dto';
-import { TrainingService } from './service/training.service';
-import { Workload } from './entity/workload.entity';
-import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
-import { CopyComponentDto } from './dto/copy-component.dto';
-import { plainToInstance } from 'class-transformer';
-import { TrainingInfoDto } from './dto/training-info.dto';
-import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { UserRole } from '../user/enum/user-role.enum';
 import { CompletedTrainingComponent } from './entity/completed-training.entity';
-import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
+import { TrainingService } from './service/training.service';
 
 @ApiTags('Training')
 @Controller('training')
@@ -76,13 +76,11 @@ export class TrainingController {
 
   @Get(':trainingId/athlete/:athleteId')
   @Auth()
-  async calculatePrescribedWorkloads(
-    @RequestUser() user: User,
+  async calculatePrescribedWorkloads /* @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Param('athleteId') athleteId: string,
-  ) {
-    const ref = { trainingId, athleteId };
-    return this.trainingService.calculatePrescribedWorkloads(user, ref);
+    @Param('athleteId') athleteId: string, */() {
+    /* const ref = { trainingId, athleteId };
+    return this.trainingService.calculatePrescribedWorkloads(user, ref); */
   }
 
   @Post('group/:groupId/athlete/:athleteId/workloads')
