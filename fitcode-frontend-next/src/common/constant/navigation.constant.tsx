@@ -8,23 +8,22 @@ import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
-import SettingsIcon from '@mui/icons-material/Settings';
 import SpaIcon from '@mui/icons-material/Spa';
 import { ReactNode } from 'react';
 import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
 import {
-  ChatRounded,
-  Dashboard,
   Groups,
+  PersonAdd,
   PersonAddAlt1,
   TrendingUp,
 } from '@mui/icons-material';
 import {
-  DASHBOARD_ADD_INSTITUTION,
   DASHBOARD_EXERCISES,
-  DASHBOARD_GROUPS,
+  DASHBOARD_PROGRESS,
   DASHBOARD_MAIN,
+  DASHBOARD_REGISTER_USERS,
+  DASHBOARD_INSTITUTION,
 } from '@/common/constant/dashboard-views-constant';
 
 export function link(
@@ -97,12 +96,34 @@ export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
 
+export const LINK_DASHBOARD_HOME = link('Home', DASHBOARD_MAIN, <Groups />);
+export const LINK_DASHBOARD_INSTITUTION = link(
+  'Home',
+  DASHBOARD_INSTITUTION,
+  <PersonAdd />
+);
+export const LINK_DASHBOARD_PROGRESS = link(
+  'Progress',
+  DASHBOARD_PROGRESS,
+  <TrendingUp />
+);
+export const LINK_EXERCISES_DASHBOARD_NAVIGATION = link(
+  'Exercises',
+  DASHBOARD_EXERCISES,
+  <FitnessCenterIcon />
+);
+export const LINK_ADD_INSTITUTION = link(
+  'Add Institution',
+  DASHBOARD_REGISTER_USERS,
+  <PersonAddAlt1 />
+);
+
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole[]) => ({
-  home: link('Home', DASHBOARD_MAIN, <HomeIcon />),
-  athletes: link('Progress', DASHBOARD_GROUPS, <TrendingUp />),
-  exercises: link('Exercises', DASHBOARD_EXERCISES, <FitnessCenterIcon />),
+  home: LINK_DASHBOARD_HOME,
+  institution: LINK_DASHBOARD_INSTITUTION,
+  exercises: LINK_EXERCISES_DASHBOARD_NAVIGATION,
   addInstitution: role.includes(UserRole.ADMIN)
-    ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)
+    ? LINK_ADD_INSTITUTION
     : undefined,
 });
 
@@ -140,7 +161,9 @@ export const LINKS_SIDEBAR = {
     settings: LINK_SETTINGS,
   },
   [UserRole.MANAGER]: {
-    groups: LINK_GROUPS,
+    dashboard: LINK_DASHBOARD,
+    profile: LINK_PROFILE,
+    settings: LINK_SETTINGS,
   },
   [UserRole.ADMIN]: {
     users: LINK_USERS,
