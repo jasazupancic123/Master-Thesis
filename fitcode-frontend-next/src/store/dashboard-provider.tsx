@@ -1,7 +1,10 @@
 'use client';
 
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { LINK_DASHBOARD_HOME } from '@/common/constant/navigation.constant';
+import {
+  LINK_DASHBOARD_HOME,
+  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
+} from '@/common/constant/navigation.constant';
 import { useFetch } from '@/common/hooks/use-fetch.hook';
 import { ILink } from '@/common/type/link.type';
 import { ChildrenProps } from '@/common/type/props.type';
@@ -58,7 +61,16 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   // const [users, setUsers] = useState<User[]>(propsUsers);
 
-  const [filter, setFilter] = useState<ILink>(LINK_DASHBOARD_HOME);
+  let currentFilter = LINK_DASHBOARD_HOME;
+  const url = new URL(window.location.href);
+  const lastItemInUrl = url.pathname.split('/').pop();
+  Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role)).map((link) => {
+    if (lastItemInUrl && link?.href.endsWith(lastItemInUrl)) {
+      currentFilter = link;
+    }
+  });
+
+  const [filter, setFilter] = useState<ILink>(currentFilter);
   const [institutions, setInstitutions] =
     useState<Institution[]>(propsInstitutions);
   const [selectedInstitution, setSelectedInstitution] =

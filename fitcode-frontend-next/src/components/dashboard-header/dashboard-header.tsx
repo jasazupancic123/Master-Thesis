@@ -5,9 +5,17 @@ import {
   LINK_PROFILE,
   LINK_SETTINGS,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
+  LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
-import { Menu, Save, Settings } from '@mui/icons-material';
+import {
+  KeyboardArrowDownTwoTone,
+  KeyboardArrowUpTwoTone,
+  Logout,
+  Save,
+  Settings,
+  Menu as MenuIcon,
+} from '@mui/icons-material';
 import {
   Avatar,
   Box,
@@ -16,8 +24,11 @@ import {
   List,
   ListItem,
   ListItemText,
+  MenuItem,
   ToggleButtonGroup,
   Tooltip,
+  Typography,
+  Menu,
 } from '@mui/material';
 import Link from 'next/link';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
@@ -40,12 +51,14 @@ export default function DashboardHeader() {
     setDetectedChanges,
   } = useDashboard();
 
-  const { role, profile } = useAuth();
+  const { role, profile, logout } = useAuth();
   const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
 
+  const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   return (
     <Box
@@ -70,7 +83,7 @@ export default function DashboardHeader() {
               color="inherit"
               aria-label="menu"
             >
-              <Menu />
+              <MenuIcon />
             </IconButton>
           </div>
 
@@ -78,20 +91,35 @@ export default function DashboardHeader() {
           <Drawer anchor="left" open={open} onClose={() => setOpen(false)}>
             <List sx={{ mt: 5 }}>
               {role.length &&
-                Object.values(LINKS_SIDEBAR[role[0]]).map((link, i) => {
+                [
+                  ...Object.values(LINKS_SIDEBAR[role[0]]),
+                  ...Object.values(LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS),
+                ].map((link, i) => {
                   if (!link) return null;
 
                   return (
                     <Tooltip title={link.label} placement="right" key={i}>
                       <ListItem disablePadding>
                         <Link href={link.href} passHref legacyBehavior>
-                          <Box display="flex" alignItems="center" ml={1}>
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="flex-start"
+                            ml={1}
+                            onClick={() => {
+                              if (
+                                link.href ===
+                                LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS.signout.href
+                              )
+                                logout();
+                            }}
+                          >
                             {link.href === LINK_DASHBOARD.href && (
                               <Avatar
                                 src={selectedInstitution?.imageUrl || ''}
                                 sx={{
-                                  width: 34,
-                                  height: 34,
+                                  width: 25,
+                                  height: 25,
                                 }}
                               />
                             )}
@@ -99,20 +127,22 @@ export default function DashboardHeader() {
                               <Avatar
                                 src={profile?.profileImageUrl}
                                 sx={{
-                                  width: 34,
-                                  height: 34,
+                                  width: 25,
+                                  height: 25,
                                 }}
                               />
                             )}
                             {link.href === LINK_SETTINGS.href && (
-                              <Settings sx={{ fontSize: 20, ml: 0.9 }} />
+                              <Settings sx={{ fontSize: 25 }} />
                             )}
+                            {link.href ===
+                              LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS.signout
+                                .href && <Logout sx={{ fontSize: 25 }} />}
                             <ListItemText
                               primary={link.label}
                               sx={{
                                 px: 2,
                                 py: 1,
-                                ml: link.href === LINK_SETTINGS.href ? 0.9 : 0,
                               }}
                             />
                           </Box>
@@ -131,11 +161,52 @@ export default function DashboardHeader() {
           alignItems="center"
           sx={{
             position: 'absolute',
-            left: 15,
+            left: 6,
             top: 10,
           }}
           gap={1}
         >
+          <Box
+            position="relative"
+            onClick={(event) => {
+              setAnchorEl(event.currentTarget);
+              setOpenProfileMenu(!openProfileMenu);
+            }}
+          >
+            <Avatar
+              src={profile?.profileImageUrl}
+              sx={{
+                width: 34,
+                height: 34,
+                cursor: 'pointer',
+              }}
+            />
+            <IconButton
+              sx={{
+                p: 0,
+                m: 0,
+                position: 'absolute',
+                bottom: -2,
+                right: 0,
+                backgroundColor: theme.palette.background.dark,
+                borderRadius: '50%',
+              }}
+            >
+              {!openProfileMenu ? (
+                <KeyboardArrowDownTwoTone
+                  sx={{
+                    fontSize: 15,
+                  }}
+                />
+              ) : (
+                <KeyboardArrowUpTwoTone
+                  sx={{
+                    fontSize: 15,
+                  }}
+                />
+              )}
+            </IconButton>
+          </Box>
           <Link href={LINK_DASHBOARD.href} passHref legacyBehavior>
             <Tooltip title="Dashboard">
               <Avatar
@@ -148,17 +219,6 @@ export default function DashboardHeader() {
               />
             </Tooltip>
           </Link>
-
-          <Tooltip title="Profile">
-            <Avatar
-              src={profile?.profileImageUrl}
-              sx={{
-                width: 34,
-                height: 34,
-                cursor: 'pointer',
-              }}
-            />
-          </Tooltip>
           <Tooltip title="Settings">
             <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
           </Tooltip>
@@ -240,6 +300,52 @@ export default function DashboardHeader() {
           </IconButton>
         </Tooltip>
       </Box>
+      <Menu
+        anchorEl={anchorEl}
+        open={openProfileMenu}
+        onClose={() => {
+          setOpenProfileMenu(false);
+          setAnchorEl(null);
+        }}
+        sx={{
+          left: -10,
+        }}
+      >
+        <MenuItem sx={{ px: 1 }}>
+          <Link href={LINK_PROFILE.href} passHref legacyBehavior>
+            <Box
+              width="100%"
+              display="flex"
+              alignItems="center"
+              justifyContent="flex-start"
+              gap={1}
+            >
+              <Avatar
+                src={profile?.profileImageUrl}
+                sx={{
+                  width: 25,
+                  height: 25,
+                }}
+              />
+              <Typography>Profile</Typography>
+            </Box>
+          </Link>
+        </MenuItem>
+        <MenuItem sx={{ px: 1.5 }}>
+          <Box onClick={() => logout()}>
+            <Box
+              width="100%"
+              display="flex"
+              alignItems="center"
+              justifyContent="flex-start"
+              gap={1}
+            >
+              <Logout sx={{ fontSize: 20 }} />
+              <Typography>Sign Out</Typography>
+            </Box>
+          </Box>
+        </MenuItem>
+      </Menu>
     </Box>
   );
 }

@@ -167,7 +167,9 @@ export const LINKS_SIDEBAR = {
     settings: LINK_SETTINGS,
   },
   [UserRole.MANAGER]: {
-    groups: LINK_GROUPS,
+    dashboard: LINK_DASHBOARD,
+    profile: LINK_PROFILE,
+    settings: LINK_SETTINGS,
   },
   [UserRole.ADMIN]: {
     users: LINK_USERS,
