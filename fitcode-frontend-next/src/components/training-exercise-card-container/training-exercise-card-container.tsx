@@ -25,23 +25,13 @@ interface TrainingExerciseCardContainerProps {
 export default function TrainingExerciseCardContainer(
   props: TrainingExerciseCardContainerProps
 ) {
-  const {
-    setOpenVideoPlayerModal,
-    selectedExercise,
-    setSelectedExercise,
-    setsNumbers,
-    setSetsNumbers,
-    expandedExercisesView,
-    setExpandedExercisesView,
-  } = useSupersets();
+  const { selectedExercise, setsNumbers, setSetsNumbers } = useSupersets();
   const {
     training,
     selectedAthlete,
     selectedAthleteWorkloads,
     component,
     selectedSubgroup,
-    supersets,
-    setSupersets,
   } = useTrainerDayViewContext();
   const { trainings } = useGroup();
 
