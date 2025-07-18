@@ -169,6 +169,24 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
     const sliderBounds = sliderRef.current.getBoundingClientRect();
   }, [sliderRef.current]); // Runs when the sliderRef is set
 
+  const HorizontalItems = () => {
+    return (
+      <HorizontalItemsList
+        items={yearsForSelect}
+        value={selectedYear.toString()}
+        setValue={(value) => {
+          setSelectedYear(parseInt(value, 10));
+        }}
+        onArrowClick={(direction) => {}}
+        cycleView
+        yearView
+        checkIsSameValue={(value: string) => {
+          return dayjs(value).year() === selectedYear;
+        }}
+      />
+    );
+  };
+
   return (
     <Box
       width="100%"
@@ -184,19 +202,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
       <Box width="100%" display="flex">
         {screenSize.isSmallerThanLaptop ? (
           <Box width="100%" display="flex" flexDirection="column">
-            <HorizontalItemsList
-              items={yearsForSelect}
-              value={selectedYear.toString()}
-              setValue={(value) => {
-                setSelectedYear(parseInt(value, 10));
-              }}
-              onArrowClick={(direction) => {}}
-              cycleView
-              yearView
-              checkIsSameValue={(value: string) => {
-                return dayjs(value).year() === selectedYear;
-              }}
-            />
+            <HorizontalItems />
             <Box display="flex" width="100%">
               <Box width="50%" mt={0.75}>
                 <Box display="flex" flexDirection="column">
@@ -282,19 +288,7 @@ export default function MultiCycleSliderLayout(props: MultiCycleSliderProps) {
               </Box>
             </Box>
             <Box width="50%">
-              <HorizontalItemsList
-                items={yearsForSelect}
-                value={selectedYear.toString()}
-                setValue={(value) => {
-                  setSelectedYear(parseInt(value, 10));
-                }}
-                onArrowClick={(direction) => {}}
-                cycleView
-                yearView
-                checkIsSameValue={(value: string) => {
-                  return dayjs(value).year() === selectedYear;
-                }}
-              />
+              <HorizontalItems />
             </Box>
             <Box width="25%" mt={0.75}>
               <Box

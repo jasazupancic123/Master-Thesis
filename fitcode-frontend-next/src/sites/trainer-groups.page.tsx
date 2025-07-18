@@ -3,7 +3,7 @@
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import GroupDateFilterButtonGroup from '../components/group-date-filter-button-group/group-date-filter-button-group';
+import TrainerGroupHeader from '../components/trainer-group-header/trainer-group-header';
 import GroupSidebar from '@/components/group-sidebar/group-sidebar';
 import { useScreenSize } from '@/store/screen-size-provider';
 
@@ -26,7 +26,7 @@ export default function TrainerGroupsPage() {
           pb: 1,
         }}
       >
-        <GroupDateFilterButtonGroup filter={'day'} setFilter={() => {}} />
+        <TrainerGroupHeader filter={'day'} setFilter={() => {}} />
 
         <Typography variant="h6" textAlign="center" mt={2} p={2}>
           Select a group

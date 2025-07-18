@@ -185,8 +185,8 @@ export class GroupService implements Permission<Group, Institution> {
       ids: allMembersIds,
     });
 
-    for (const group of groups)
-      this.validateMembersInInstitution(members, group.institution);
+    // for (const group of groups)
+    //   this.validateMembersInInstitution(members, group.institution);
 
     // validate cycles
     for (const group of input)

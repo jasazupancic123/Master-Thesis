@@ -1,13 +1,14 @@
 import { useGroup } from '@/store/group-provider';
-import { ArrowLeft, ArrowRight } from '@mui/icons-material';
+import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import { useScreenSize } from '@/store/screen-size-provider';
-import { useRef } from 'react';
+import { RefObject, useEffect, useLayoutEffect, useRef } from 'react';
+import { useDashboard } from '@/store/dashboard-provider';
 
-interface TrainerGroupDayViewDaysProps {
+interface HorizontalItemsListProps {
   items: { label: string; value: string; sublabel?: string }[];
   value: string;
   setValue: (value: string) => void;
@@ -16,11 +17,14 @@ interface TrainerGroupDayViewDaysProps {
   cycleView?: boolean;
   yearView?: boolean;
   alertOnChange?: boolean;
+  dashboardView?: boolean;
+  dashboardInstitutionsView?: boolean;
+  addButtonOnEnd?: boolean;
+  onButtonClick?: () => void;
+  scrollHorizontalListLeftRef?: RefObject<number>;
 }
 
-export default function HorizontalItemsList(
-  props: TrainerGroupDayViewDaysProps
-) {
+export default function HorizontalItemsList(props: HorizontalItemsListProps) {
   const SCROLL_STEP = 150; // Adjust this value as needed
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -32,11 +36,38 @@ export default function HorizontalItemsList(
     cycleView,
     yearView,
     checkIsSameValue,
+    alertOnChange,
+    dashboardView,
+    dashboardInstitutionsView,
+    addButtonOnEnd,
+    onButtonClick,
+    scrollHorizontalListLeftRef,
   } = props;
 
-  const { detectedChanges, setDetectedChanges } = useGroup();
+  const { detectedChanges, setDetectedChanges } =
+    dashboardView || dashboardInstitutionsView ? useDashboard() : useGroup();
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+
+    scrollContainerRef.current.scrollLeft =
+      scrollHorizontalListLeftRef?.current || 0;
+  }, [scrollContainerRef.current]);
+
+  const getShortGroupName = (name: string) => {
+    let finalName = name.length >= 2 ? name.slice(0, 3) : name;
+
+    return finalName.toUpperCase().trim();
+  };
+
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || !scrollHorizontalListLeftRef) return;
+
+    el.scrollLeft = scrollHorizontalListLeftRef.current;
+  }, [props.value]);
 
   return (
     <Box
@@ -61,11 +92,14 @@ export default function HorizontalItemsList(
       <IconButton
         sx={{ p: 0, m: 0 }}
         onClick={() => {
-          if (cycleView) {
+          if (cycleView || dashboardView) {
             scrollContainerRef.current?.scrollBy({
               left: -SCROLL_STEP, // adjust scroll distance as needed
               behavior: 'smooth',
             });
+            if (scrollHorizontalListLeftRef)
+              scrollHorizontalListLeftRef.current =
+                scrollContainerRef.current?.scrollLeft || 0;
             return;
           }
 
@@ -88,8 +122,9 @@ export default function HorizontalItemsList(
 
       {/* Scrollable Days */}
       <Box
-        ref={scrollContainerRef} // 👈 Add this
-        width="100%"
+        ref={scrollContainerRef}
+        width={addButtonOnEnd ? '90%' : '100%'}
+        gap={1}
         sx={{
           display: 'flex',
           overflowX: 'auto',
@@ -114,14 +149,14 @@ export default function HorizontalItemsList(
               alignItems="center"
               justifyContent="center"
               sx={{
-                px: isSameValue ? 0 : 2,
+                px: dashboardView || isSameValue ? 0 : 2,
                 pl: i === 0 ? 0 : undefined,
                 pr: i === items.length - 1 ? 0 : undefined,
                 cursor: 'pointer',
                 flex: '0 0 auto', // important so it doesn't shrink
               }}
               onClick={() => {
-                if (props.alertOnChange && detectedChanges) {
+                if (alertOnChange && detectedChanges) {
                   toast.error('Unsaved changes will be lost', {
                     icon: '⚠️',
                     duration: 2000,
@@ -131,6 +166,10 @@ export default function HorizontalItemsList(
                   return;
                 }
 
+                if (scrollHorizontalListLeftRef)
+                  scrollHorizontalListLeftRef.current =
+                    scrollContainerRef.current?.scrollLeft ?? 0;
+
                 setValue(item.value);
               }}
             >
@@ -139,16 +178,32 @@ export default function HorizontalItemsList(
                 variant="subtitle2"
                 textAlign="center"
                 sx={{
+                  minWidth:
+                    isSameValue || dashboardView || dashboardInstitutionsView
+                      ? '50px'
+                      : undefined,
                   fontSize: isSameValue ? '13px' : '12px',
-                  fontWeight: 250,
+                  fontWeight:
+                    dashboardView || dashboardInstitutionsView ? 400 : 250,
                   p: isSameValue ? 0.5 : 0,
-                  minWidth: isSameValue ? '50px' : undefined,
                   m: 0,
                   border: isSameValue
                     ? `1px solid ${theme.palette.primary.main}`
                     : undefined,
-                  borderRadius: isSameValue ? 1.5 : 0,
-                  color: isSameValue ? theme.palette.primary.main : undefined,
+                  borderRadius:
+                    isSameValue || dashboardView || dashboardInstitutionsView
+                      ? 1.5
+                      : 0,
+                  color:
+                    isSameValue && !dashboardView && !dashboardInstitutionsView
+                      ? theme.palette.primary.main
+                      : undefined,
+                  py: dashboardView || dashboardInstitutionsView ? 1.5 : 0,
+                  px: dashboardInstitutionsView ? 1.5 : 0,
+                  backgroundColor:
+                    dashboardView || dashboardInstitutionsView
+                      ? theme.palette.background.light
+                      : undefined,
                 }}
               >
                 {cycleView ? (
@@ -164,6 +219,10 @@ export default function HorizontalItemsList(
                         index < item.label.split(' ').length - 1 && <br />}
                     </Box>
                   ))
+                ) : dashboardView ? (
+                  getShortGroupName(item.label)
+                ) : dashboardInstitutionsView ? (
+                  item.label.toUpperCase()
                 ) : isSameValue ? (
                   <>
                     {item.sublabel || ''}
@@ -183,11 +242,37 @@ export default function HorizontalItemsList(
         })}
       </Box>
 
+      {addButtonOnEnd && (
+        <Box
+          width="10%"
+          display="flex"
+          sx={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '50px',
+          }}
+        >
+          <IconButton
+            sx={{
+              p: 0.8,
+              m: 0,
+              backgroundColor: theme.palette.background.light,
+              borderRadius: 1,
+            }}
+            onClick={() => {
+              onButtonClick?.();
+            }}
+          >
+            <Add fontSize="small" />
+          </IconButton>
+        </Box>
+      )}
+
       {/* Right Arrow */}
       <IconButton
         sx={{ p: 0, m: 0 }}
         onClick={() => {
-          if (cycleView) {
+          if (cycleView || dashboardView) {
             scrollContainerRef.current?.scrollBy({
               left: SCROLL_STEP, // adjust scroll distance as needed
               behavior: 'smooth',
