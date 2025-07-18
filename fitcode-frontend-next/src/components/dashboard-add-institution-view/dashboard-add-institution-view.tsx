@@ -21,7 +21,7 @@ export default function AddInstitutionDashboard() {
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const { setInstitutions, refetchUsers } = useDashboard();
+  const { setInstitutions, refetchUsers, refetchMembers } = useDashboard();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

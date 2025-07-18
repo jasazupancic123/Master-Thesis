@@ -1,0 +1,218 @@
+'use client';
+
+import { useScreenSize } from '@/store/screen-size-provider';
+import { MoreVert } from '@mui/icons-material';
+import { IconButton, Typography, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { useDashboard } from '@/store/dashboard-provider';
+import { GroupController } from '@/controller/group/group.controller';
+import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { useMain } from '@/store/main-provider';
+import { isManager } from '@/common/service/util/firebase-auth.util';
+import { ADD_GROUP } from '@/common/constant/add-group.constant';
+import { SetState } from '@/common/type/state.type';
+import { GroupService } from '@/controller/group/group.service';
+import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
+
+interface DashboardGroupsSelectProps {
+  modal: {
+    add_member: boolean;
+    add_trainer: boolean;
+    add_group: boolean;
+  };
+  setModal: SetState<{
+    add_member: boolean;
+    add_trainer: boolean;
+    add_group: boolean;
+  }>;
+}
+
+export default function DashboardGroupsSelect(
+  props: DashboardGroupsSelectProps
+) {
+  const screenSize = useScreenSize();
+  const theme = useTheme();
+  const { profile, users } = useMain();
+
+  const { selectedInstitution, selectedGroup, setSelectedGroup } =
+    useDashboard();
+
+  const { modal, setModal } = props;
+
+  const roles = profile.customClaims.role || [];
+
+  const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
+    selectedGroup?.cycles[0] || null
+  );
+
+  const scrollHorizontalListLeftRef = useRef(0);
+
+  if (!selectedInstitution) return null;
+
+  useEffect(() => {
+    async function fetchGroups() {
+      if (!selectedInstitution || selectedInstitution.groups) return;
+
+      selectedInstitution.groups = await GroupController.findAllByInstitution(
+        selectedInstitution.id
+      );
+
+      if (
+        !selectedInstitution.groups ||
+        !selectedInstitution.groups.length ||
+        (selectedGroup &&
+          !selectedInstitution.groups
+            .map((g) => g.id)
+            .includes(selectedGroup?.id))
+      ) {
+        setSelectedGroup(null);
+        setSelectedCycle(null);
+      }
+    }
+
+    fetchGroups().then();
+  }, [selectedInstitution]);
+
+  const HorizontalInput = () => {
+    return (
+      <HorizontalItemsList
+        dashboardView
+        addButtonOnEnd={isManager(roles)}
+        onButtonClick={() => {
+          setModal((prev) => ({ ...prev, add_group: true }));
+        }}
+        items={
+          (selectedInstitution?.groups || []).map((group) => ({
+            label: group.name,
+            value: group.id,
+          })) || []
+        }
+        scrollHorizontalListLeftRef={scrollHorizontalListLeftRef}
+        value={selectedGroup?.id || ''}
+        setValue={(value) => {
+          if (value === ADD_GROUP.id) {
+            setModal((prev) => ({ ...prev, add_group: true }));
+            return;
+          }
+          const group = selectedInstitution?.groups?.find(
+            (g) => g.id === value
+          );
+          if (group) {
+            setSelectedGroup(GroupService.mapMembers(group, users, true));
+            setSelectedCycle(group.cycles[0] || null);
+          } else {
+            setSelectedGroup(null);
+            setSelectedCycle(null);
+          }
+        }}
+        checkIsSameValue={(value: string) => {
+          return selectedGroup?.id === value;
+        }}
+        onArrowClick={(direction) => {}}
+      />
+    );
+  };
+
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      width="100%"
+      maxWidth={MAX_WIDTH}
+      gap={screenSize.isSmallTablet || screenSize.isMobile ? 0 : 5}
+      sx={{
+        backgroundColor: theme.palette.background.default,
+        mx: 'auto',
+      }}
+    >
+      {screenSize.isSmallTablet || screenSize.isMobile ? (
+        <>
+          <HorizontalInput />
+          <Box width="100%" sx={{ position: 'relative' }}>
+            <Box
+              width="80%"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              mt={1}
+              sx={{ mx: 'auto', mb: 1 }}
+            >
+              <Typography
+                fontWeight={600}
+                fontSize={16}
+                textAlign="center"
+                sx={{
+                  textTransform: 'uppercase',
+                }}
+              >
+                {selectedGroup?.name || 'Select A Group'}
+              </Typography>
+              <IconButton
+                sx={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                  zIndex: 1,
+                }}
+              >
+                <MoreVert fontSize="medium" />
+              </IconButton>
+            </Box>
+          </Box>
+        </>
+      ) : (
+        <Box
+          display="flex"
+          width="100%"
+          justifyContent="space-around"
+          alignItems="flex-start"
+        >
+          <Box
+            width="25%"
+            display="flex"
+            justifyContent="flex-start"
+            alignItems="center"
+            gap={1}
+            sx={{
+              mt: 1,
+            }}
+          >
+            <Box
+              sx={{
+                height: 16,
+                width: 4,
+                borderRadius: 5,
+                backgroundColor: theme.palette.primary.main,
+                ml: !screenSize.isDesktop ? 1 : 0,
+              }}
+            />
+
+            <Typography
+              fontWeight={600}
+              fontSize={16}
+              sx={{
+                textTransform: 'uppercase',
+              }}
+            >
+              {selectedGroup?.name || 'Select A Group'}
+            </Typography>
+          </Box>
+          <Box width="50%">
+            <HorizontalInput />
+          </Box>
+          <Box width="25%" display="flex" justifyContent="flex-end" mt={1}>
+            <IconButton sx={{ m: 0, p: 0 }}>
+              <MoreVert fontSize="large" />
+            </IconButton>
+          </Box>
+        </Box>
+      )}
+
+      <DashboardGroupsMembers modal={modal} setModal={setModal} />
+    </Box>
+  );
+}

@@ -14,7 +14,15 @@ export class InstitutionController {
   }
 
   static async findAthletes(id: string) {
-    return api.get<UserEntity[]>(`/institution/${id}/athletes`);
+    return api.get<UserEntity[]>(`/institution/${id}/find/athletes`);
+  }
+
+  static async findTrainers(id: string) {
+    return api.get<UserEntity[]>(`/institution/${id}/find/trainers`);
+  }
+
+  static async findAthletesAndTrainers(id: string) {
+    return api.get<UserEntity[]>(`/institution/${id}/find/all`);
   }
 
   static async create(body: {

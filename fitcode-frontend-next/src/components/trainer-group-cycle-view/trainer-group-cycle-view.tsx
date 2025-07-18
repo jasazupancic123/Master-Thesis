@@ -97,6 +97,23 @@ export default function TrainerCycleView() {
     setDateTo(dayjs(cycle.to));
   }, [cycle]);
 
+  const HorizontalItems = () => {
+    return (
+      <HorizontalItemsList
+        items={cyclesForSelect}
+        value={cycle?.id || ''}
+        setValue={(value) => {
+          setCycle(group.cycles.find((c) => c.id === value) || undefined);
+        }}
+        onArrowClick={(direction) => {}}
+        cycleView
+        checkIsSameValue={(value: string) => {
+          return value === (cycle?.id || '');
+        }}
+      />
+    );
+  };
+
   return (
     <Box
       pb={10}
@@ -122,20 +139,7 @@ export default function TrainerCycleView() {
         >
           {screenSize.isSmallerThanLaptop ? (
             <Box width="100%" display="flex" flexDirection="column">
-              <HorizontalItemsList
-                items={cyclesForSelect}
-                value={cycle?.id || ''}
-                setValue={(value) => {
-                  setCycle(
-                    group.cycles.find((c) => c.id === value) || undefined
-                  );
-                }}
-                onArrowClick={(direction) => {}}
-                cycleView
-                checkIsSameValue={(value: string) => {
-                  return value === (cycle?.id || '');
-                }}
-              />
+              <HorizontalItems />
               <Box display="flex" justifyContent="center" gap={4} mt={0.75}>
                 <Box display="flex" flexDirection="column" alignItems="center">
                   <Typography
@@ -199,20 +203,7 @@ export default function TrainerCycleView() {
             <>
               <Box width="25%" display="flex" />
               <Box width="50%" display="flex" maxHeight={67}>
-                <HorizontalItemsList
-                  items={cyclesForSelect}
-                  value={cycle?.id || ''}
-                  setValue={(value) => {
-                    setCycle(
-                      group.cycles.find((c) => c.id === value) || undefined
-                    );
-                  }}
-                  onArrowClick={(direction) => {}}
-                  cycleView
-                  checkIsSameValue={(value: string) => {
-                    return value === (cycle?.id || '');
-                  }}
-                />
+                <HorizontalItems />
               </Box>
               <Box width="25%" display="flex" justifyContent="flex-end" gap={5}>
                 <Box
