@@ -13,23 +13,13 @@ export class UpdateTrainingDto extends PickType(Training, [
   'membersIds',
   'warmup',
   'cooldown',
-  'futureStats',
-]) {}
-
-export class UpdateTrainingDtoWithId extends PickType(Training, [
-  'id',
-  'components',
-  'membersIds',
-  'warmup',
-  'cooldown',
-  'futureStats',
-]) {}
-
-export class UpdateSingleTrainingDto extends PickType(Training, [
-  'components',
-  'warmup',
-  'cooldown',
-]) {}
+]) {
+  @ValidateNested({ each: true })
+  @Type(() => Workload)
+  @ApiProperty()
+  @Expose()
+  workloads: Workload[]; // custom workloads
+}
 
 export class BatchUpdateTrainingDto extends IntersectionType(
   IdEntity,
@@ -41,11 +31,5 @@ export class BatchUpdateTrainingsDto {
   @Type(() => BatchUpdateTrainingDto)
   @ApiProperty()
   @Expose()
-  trainings: BatchUpdateTrainingDto[]; // for 2 trainings in day view on frontend
-
-  @ValidateNested({ each: true })
-  @Type(() => Workload)
-  @ApiProperty()
-  @Expose()
-  customAthleteWorkloads: Workload[]; // for custom workloads
+  trainings: BatchUpdateTrainingDto[];
 }

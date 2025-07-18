@@ -12,6 +12,7 @@ import { SetStatus } from '../enum/set-status.enum';
 
 export function generateWorkloadStub(data?: Partial<Workload>): Workload {
   return {
+    id: data?.id || null,
     institutionId: data?.institutionId,
     groupId: data?.groupId,
     cycleId: data?.cycleId,
@@ -20,10 +21,10 @@ export function generateWorkloadStub(data?: Partial<Workload>): Workload {
     componentId: data?.componentId,
     exerciseId: data?.exerciseId,
     setNumber: data?.setNumber || 1,
+    supersetIndex: data?.supersetIndex || 0,
     plannedAt: data?.plannedAt || new Date(),
     status: data?.status || SetStatus.NOT_STARTED,
     notes: data?.notes || null,
-    isCustom: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,

@@ -120,13 +120,13 @@ export class TrainingController {
       warmup: TrainingComponent;
       cooldown: TrainingComponent;
       futureStats: GroupWorkloadStats[];
-    }[],
-    customAthleteWorkloads: Workload[]
+      workloads: Workload[];
+    }[]
   ) {
     const { groupId, cycleId } = params;
     return api.patch<Training[]>(
       `/training/batch/group/${groupId}/cycle/${cycleId}`,
-      { trainings: body, customAthleteWorkloads },
+      { trainings: body },
       { token }
     );
   }

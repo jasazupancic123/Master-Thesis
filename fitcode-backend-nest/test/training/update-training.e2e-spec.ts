@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { TestDbService } from '@test/common/db/test-db.service';
 import { addDays, addMinutes, subDays } from 'date-fns';
 import * as request from 'supertest';
 
@@ -17,6 +18,7 @@ import {
   generateTrainingComponent,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
+import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
 import type { TestInstitution } from '../common/type/entity.type';
@@ -31,9 +33,12 @@ import {
   deleteUsers,
 } from '../common/utils/data.util';
 import { getTime } from '../common/utils/date.util';
+import { CreatePrescribedWorkloadDto } from '@src/training/dto/create-workload.dto';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
+  let db: TestDbService;
+
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let trainingService: TrainingService;
@@ -59,6 +64,7 @@ describe('Update Training (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
+    db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     trainingService = moduleFixture.get(TrainingService);
@@ -90,11 +96,14 @@ describe('Update Training (e2e)', () => {
     await app.close();
   });
 
-  async function createTraining(data?: Partial<Training>) {
+  async function createTraining(
+    data?: Partial<Training>,
+    workloads?: CreatePrescribedWorkloadDto[],
+  ) {
     const from = data?.from || getTime(addDays(new Date(), 2), 8, 0); // defaults to 8:00 two days ahead
     const to = data?.to || addMinutes(from, 60); // defaults to 9:00 two days ahead
 
-    return await trainingService.create(
+    let training = await trainingService.create(
       global.trainer,
       generateTrainingStub({
         institutionId: institution.id,
@@ -104,6 +113,15 @@ describe('Update Training (e2e)', () => {
         ...(data ? data : {}),
       }),
     );
+
+    if (workloads)
+      training = await trainingService.update(
+        global.trainer,
+        { trainingId: training.id },
+        { workloads },
+      );
+
+    return training;
   }
 
   describe('Update training', () => {
@@ -256,12 +274,6 @@ describe('Update Training (e2e)', () => {
 
       training = await createTraining();
     });
-
-    it('should successfully update training and create training workloads', async () => {});
-
-    it('should create new workloads if new user is added to training / training group', async () => {});
-
-    it('should not remove workloads if user is removed from training / training group', async () => {});
   });
 
   describe('Copy training', () => {
@@ -295,6 +307,73 @@ describe('Update Training (e2e)', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.message).toBe(`Group does not exist`);
+    });
+  });
+
+  describe('Custom workloads', () => {
+    it('should fail if training component is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads: [
+            generateWorkloadStub({ componentId: 'invalid-component-id' }),
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        'Invalid component provided in workload',
+      );
+    });
+
+    it('should fail if exercise does not exist', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads: [
+            generateWorkloadStub({
+              componentId: component.id,
+              exerciseId: 'invalid-exercise-id',
+            }),
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(`Exercise does not exist`);
+    });
+
+    it('should fail if exercise not prescribed in superset', async () => {
+      const exercise = await db.exercises.create({
+        ownerId: institution.id,
+        componentIds: [component.id],
+      });
+
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads: [
+            generateWorkloadStub({
+              componentId: component.id,
+              exerciseId: 'invalid-exercise-id',
+              supersetIndex: 1,
+            }),
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      /* expect(response.body.message).toBe(
+        `Exercise ${exercise.name} is not prescribed in superset ${
+          customWorkload.supersetIndex + 1
+        }`,
+      ); */
+
+      await db.exercises.delete(exercise.id);
     });
   });
 });

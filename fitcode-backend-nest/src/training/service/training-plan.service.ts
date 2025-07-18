@@ -70,19 +70,9 @@ export class TrainingPlanService {
       );
   }
 
-  getTrainingComponents(training: Training) {
+  getTrainingComponents(training: Training): TrainingComponent[] {
     const { warmup, cooldown, components } = training;
-
-    // add warmup and cooldown if their reference does not exist yet
-    const withWarmup = warmup
-      ? [warmup, ...components.filter((c) => c !== warmup)]
-      : components;
-
-    const full = cooldown
-      ? [...withWarmup.filter((c) => c !== cooldown), cooldown]
-      : withWarmup;
-
-    return full;
+    return [warmup, ...components, cooldown];
   }
 
   getAddComponentsQuery(
@@ -134,9 +124,12 @@ export class TrainingPlanService {
     const { componentId, uid } = ref;
 
     // add completed member to the component
-    const trainingComponents = this.getTrainingComponents(training);
-    const component = this.findComponentOrFail(training, componentId);
-    component.completedMembersIds.push(uid);
+    this.findComponentOrFail(training, componentId);
+    training.components = training.components.map((c) =>
+      c.id !== componentId
+        ? c
+        : { ...c, completedMembersIds: [...c.completedMembersIds, uid] },
+    );
 
     // check if training is completed and update accordingly
     const completedMembersIds = training.completedMembersIds || [];
@@ -147,8 +140,8 @@ export class TrainingPlanService {
       }
 
     const query: Update<Training> = {
-      components: trainingComponents,
       completedMembersIds,
+      components: training.components,
     };
 
     return [query, training];
@@ -190,8 +183,7 @@ export class TrainingPlanService {
   }
 
   /**
-   * @param components - Components of the training
-   * @param numTotalTrainingMembers - Total number of members in the group
+   * Used to create future training stats for upcoming training components
    */
   createFutureTrainingStats(
     components: TrainingComponent[],
@@ -309,8 +301,8 @@ export class TrainingPlanService {
   }
 
   /**
-   * @param completedStats - CompletedStats of existing training in database
-   * @param completedExercises - New completed exercises values from athlete
+   * Used to calculate average stats for completed training component exercises,
+   * by athletes, like intensity and volume.
    */
   calculateTrainingStats(
     trainingComponentId: string,
@@ -343,20 +335,20 @@ export class TrainingPlanService {
 
       trainingExerciseAverageStats.numMembers += 1;
 
-      const existingStatIndex = stats.findIndex(
+      const existingStatIndex = completedStats.findIndex(
         (s) => s.exerciseId === completedExercise.id,
       );
 
       if (existingStatIndex !== -1)
-        stats[existingStatIndex] = trainingExerciseAverageStats;
-      else stats.push(trainingExerciseAverageStats);
+        completedStats[existingStatIndex] = trainingExerciseAverageStats;
+      else completedStats.push(trainingExerciseAverageStats);
     }
 
-    return stats.map((s) => {
-      s.intensity = parseFloat(s.intensity.toFixed(2));
-      s.volume = parseFloat(s.volume.toFixed(2));
-      return s;
-    });
+    return completedStats.map((s) => ({
+      ...s,
+      intensity: parseFloat(s.intensity.toFixed(2)),
+      volume: parseFloat(s.volume.toFixed(2)),
+    }));
   }
 
   private calculateFieldAverage(field: ParamType, sets: ExerciseSet[]): number {
@@ -371,8 +363,7 @@ export class TrainingPlanService {
   }
 
   isTrainingCompleted(training: Training, userId: string) {
-    const trainingComponents = this.getTrainingComponents(training);
-    return trainingComponents.every((c) =>
+    return training.components.every((c) =>
       c.completedMembersIds.includes(userId),
     );
   }

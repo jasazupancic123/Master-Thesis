@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
@@ -15,6 +15,7 @@ import { InstitutionModule } from './institution/institution.module';
 import { MethodModule } from './method/method.module';
 import { TrainingModule } from './training/training.module';
 import { UserModule } from './user/user.module';
+import { TestDbModule } from '@test/common/db/test-db.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UserModule } from './user/user.module';
     ExerciseModule,
     GroupModule,
     TrainingModule,
+    ...(process.env.NODE_ENV === 'test' ? [TestDbModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -4,10 +4,12 @@ import type {
 } from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import type { FirestoreEntity } from '@src/common/type/entity.type';
-import type { FirebaseService } from '@src/firebase/firebase.service';
-import type { Workload } from '@src/training/entity/workload.entity';
+import { FirestoreEntity } from '@src/common/type/entity.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { Workload } from '@src/training/entity/workload.entity';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class TestWorkloadService {
   readonly collectionGroup: CollectionGroup;
 
@@ -32,5 +34,14 @@ export class TestWorkloadService {
           this.firebase.serialize(doc.data() as FirestoreEntity<Workload>),
         ),
       );
+  }
+
+  async deleteAllByTrainingId(trainingId: string): Promise<void> {
+    const collection = this.collection(trainingId);
+    const snapshot = await collection.get();
+
+    const batch = this.firebase.firestore.batch();
+    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
   }
 }

@@ -26,6 +26,7 @@ import { CommonService } from '@src/common/service/common.service';
 import { Create, Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
 import {
+  BatchWriteOperation,
   ComponentRef,
   CycleRef,
   GroupRef,
@@ -56,7 +57,7 @@ import { CreateTrainingDto } from '../dto/create-training.dto';
 import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
+import { BatchUpdateTrainingDto } from '../dto/update-training.dto';
 import { CompletedTrainingComponent } from '../entity/completed-training.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
@@ -68,6 +69,7 @@ import { WorkloadRepository } from '../repository/workload.repository';
 import { PeriodizationService } from './periodization.service';
 import { TrainingPlanService } from './training-plan.service';
 import { WorkloadService } from './workload.service';
+import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {
@@ -512,15 +514,12 @@ export class TrainingService implements Permission<Training, Institution> {
     );
   }
 
+  @LogMethod()
   async update(
     user: User,
     ref: TrainingRef,
-    input: Update<Training>,
+    input: Update<Training> & { workloads?: CreatePrescribedWorkloadDto[] },
   ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is updating training ${ref.trainingId}: ${JSON.stringify(input)}`,
-    );
-
     // validate training
     const training = await this.findOneByIdOrFail(user, ref);
     const { groupId, cycleId } = training;
@@ -588,6 +587,60 @@ export class TrainingService implements Permission<Training, Institution> {
       attributes,
     );
 
+    // validate custom workloads
+    if (input.workloads) {
+      const inputWorkloads = await this.workloadService.validateWorkloads(
+        training.id,
+        input.workloads,
+        input.components,
+      );
+
+      const existingWorkloads =
+        await this.workloadService.findAllCustomByTraining(training.id);
+
+      const operations: BatchWriteOperation<Workload>[] = [];
+      for (const inputWorkload of inputWorkloads) {
+        const existingWorkload = existingWorkloads.find(
+          (w) =>
+            w.componentId === inputWorkload.componentId &&
+            w.exerciseId === inputWorkload.exerciseId &&
+            w.userId === inputWorkload.userId &&
+            w.supersetIndex === inputWorkload.supersetIndex &&
+            w.setNumber === inputWorkload.setNumber,
+        );
+
+        if (existingWorkload)
+          operations.push({
+            operation: 'update',
+            ref: this.workloadRepository.doc(existingWorkload),
+            data: this.firebaseService.buildUpdateQuery(inputWorkload),
+          });
+        else
+          operations.push({
+            operation: 'set',
+            ref: this.workloadRepository.doc({
+              trainingId: training.id,
+              userId: inputWorkload.userId,
+              componentId: inputWorkload.componentId,
+              exerciseId: inputWorkload.exerciseId,
+              setNumber: inputWorkload.setNumber,
+              supersetIndex: inputWorkload.supersetIndex,
+            }),
+            data: this.firebaseService.buildCreateQuery<Workload>(
+              inputWorkload,
+            ),
+          });
+      }
+
+      const batch = this.firebaseService.firestore.batch();
+      for (const { operation, ref, data } of operations) {
+        if (operation === 'set') batch.set(ref, data);
+        else if (operation === 'update') batch.update(ref, data);
+      }
+
+      await batch.commit();
+    }
+
     // for future trainings, update latest meta and calculate workloads
     const wellness =
       await this.userService.getRecentWellnessForMany(membersIds);
@@ -613,16 +666,12 @@ export class TrainingService implements Permission<Training, Institution> {
     return updated;
   }
 
+  @LogMethod()
   async batchUpdate(
     user: User,
     ref: CycleRef,
-    body: BatchUpdateTrainingsDto,
+    input: BatchUpdateTrainingDto[],
   ): Promise<Training[]> {
-    const { trainings: input /* customAthleteWorkloads */ } = body;
-    this.logger.log(
-      `User ${user.uid} is updating ${input.length} trainings: ${JSON.stringify(input)}`,
-    );
-
     const { groupId, cycleId } = ref;
     const group = await this.groupService.findOneByIdOrFail(user, { groupId });
     const cycle = this.groupService.findCycleOrFail(cycleId, group);
