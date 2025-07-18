@@ -1,3 +1,4 @@
+/* eslint-disable simple-import-sort/imports */
 import 'tsconfig-paths/register';
 
 import { ConfigService } from '@nestjs/config';

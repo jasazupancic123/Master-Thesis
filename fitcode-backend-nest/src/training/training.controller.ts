@@ -27,7 +27,7 @@ import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { TrainingInfoDto } from './dto/training-info.dto';
 import {
   BatchUpdateTrainingsDto,
-  UpdateSingleTrainingDto,
+  UpdateTrainingDto,
 } from './dto/update-training.dto';
 import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { TrainingService } from './service/training.service';
@@ -132,7 +132,7 @@ export class TrainingController {
   async update(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: UpdateSingleTrainingDto,
+    @Body() body: UpdateTrainingDto,
   ) {
     const ref = { trainingId };
     return await this.trainingService.update(user, ref, body);
@@ -144,10 +144,10 @@ export class TrainingController {
     @RequestUser() user: User,
     @Param('groupId') groupId: string,
     @Param('cycleId') cycleId: string,
-    @Body() body: BatchUpdateTrainingsDto,
+    @Body() { trainings }: BatchUpdateTrainingsDto,
   ) {
     const ref = { groupId, cycleId };
-    return await this.trainingService.batchUpdate(user, ref, body);
+    return await this.trainingService.batchUpdate(user, ref, trainings);
   }
 
   @Post(':trainingId/copy')

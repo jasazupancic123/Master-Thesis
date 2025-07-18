@@ -6,7 +6,6 @@ import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
-import type { FirestoreEntity } from '@src/common/type/entity.type';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
@@ -22,7 +21,6 @@ import { GroupService } from '@src/group/group.service';
 import { generateCycleStub } from '@src/group/mock/cycle.stub';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Training } from '@src/training/entity/training.entity';
-import type { Workload } from '@src/training/entity/workload.entity';
 import { generateCompletedTrainingExerciseStub } from '@src/training/mock/completed-training.stub';
 import {
   generateExerciseSet,
@@ -89,7 +87,7 @@ const C1_VALID_COMPLETED_EXERCISES = [
   }),
 ];
 
-const _C2_VALID_COMPLETED_EXERCISES = [
+const C2_VALID_COMPLETED_EXERCISES = [
   generateCompletedTrainingExerciseStub({
     id: 'bench-l2',
     supersetIndex: 0,
@@ -164,6 +162,7 @@ describe('Complete training component (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
+    db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
@@ -171,8 +170,6 @@ describe('Complete training component (e2e)', () => {
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
     workloadService = moduleFixture.get(WorkloadService);
-
-    db = new TestDbService(firebase);
 
     component1 = await componentService.create(
       generateComponentStub({
@@ -231,7 +228,7 @@ describe('Complete training component (e2e)', () => {
 
   afterAll(async () => {
     await Promise.all([
-      deleteCollection(firebase, 'TRAINING'),
+      db.trainings.deleteCollection(),
       deleteCollection(firebase, 'EXERCISE'),
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
@@ -583,7 +580,7 @@ describe('Complete training component (e2e)', () => {
       expect(response.status).toBe(200);
       expect(spyResult).toEqual(12); // 4 exercises * 3 sets each
 
-      const dbTraining = await db.trainings.getDoc(training.id);
+      const dbTraining = await db.trainings.get(training.id);
       const completedComponent = dbTraining.components.find(
         (c) => c.id === component1.id,
       );
@@ -630,8 +627,6 @@ describe('Complete training component (e2e)', () => {
 
       expect(response2.status).toBe(409);
       expect(response2.body.message).toBe(message);
-
-      await Promise.all([deleteCollection(firebase, 'TRAINING_WORKLOAD')]);
     },
   );
 
@@ -658,14 +653,7 @@ describe('Complete training component (e2e)', () => {
 
     expect(response2.status).toBe(200);
 
-    const dbTraining = await firebase.firestore
-      .collection(FirestoreCollection.TRAINING)
-      .doc(training.id)
-      .get()
-      .then((doc) =>
-        firebase.serialize(doc.data() as FirestoreEntity<Training>),
-      );
-
+    const dbTraining = await db.trainings.get(training.id);
     const completedComponent = dbTraining.components.find(
       (c) => c.id === component1.id,
     );
@@ -676,31 +664,115 @@ describe('Complete training component (e2e)', () => {
     expect(dbTraining.stats).toHaveLength(3); // 4 exercises but only 3 unique
     expect(dbTraining.completedMembersIds).toHaveLength(0);
 
-    const workloads = await firebase.firestore
-      .collection(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('trainingId', '==', training.id)
-      .get()
-      .then((snapshot) =>
-        snapshot.docs.map((doc) =>
-          firebase.serialize(doc.data() as FirestoreEntity<Workload>),
-        ),
-      );
-
+    const workloads = await db.workloads.getAllByTrainingId(training.id);
     expect(workloads).toHaveLength(24); // 12 * 2 athletes
-
-    await Promise.all([
-      deleteCollection(firebase, 'TRAINING_WORKLOAD'),
-      deleteDoc(firebase, 'TRAINING', training.id),
-    ]);
   });
 
-  it('should update stats correctly if one exercise is in multiple supersets', async () => {});
+  it('should update stats correctly if multiple components are completed', async () => {
+    training = await createTraining();
 
-  it('should update stats correctly if multiple components are completed', async () => {});
+    // complete first component
+    const response1 = await request(app.getHttpServer())
+      .patch(url(training.id, component1.id))
+      .set('Authorization', `Bearer ${athlete1.token}`)
+      .send({
+        userId: athlete1.uid,
+        exercises: C1_VALID_COMPLETED_EXERCISES,
+      });
 
-  it('should successfully complete training component for user', async () => {});
+    expect(response1.status).toBe(200);
 
-  it('should successfully complete training when all users complete all components', async () => {});
+    // complete second component
+    const response2 = await request(app.getHttpServer())
+      .patch(url(training.id, component2.id))
+      .set('Authorization', `Bearer ${athlete1.token}`)
+      .send({
+        userId: athlete1.uid,
+        exercises: C2_VALID_COMPLETED_EXERCISES,
+      });
+
+    expect(response2.status).toBe(200);
+
+    const dbTraining = await db.trainings.get(training.id);
+    const completedComponent1 = dbTraining.components.find(
+      (c) => c.id === component1.id,
+    );
+    const completedComponent2 = dbTraining.components.find(
+      (c) => c.id === component2.id,
+    );
+
+    expect(completedComponent1.completedMembersIds).toHaveLength(1);
+    expect(completedComponent1.completedMembersIds).toContain(athlete1.uid);
+    expect(completedComponent2.completedMembersIds).toHaveLength(1);
+    expect(completedComponent2.completedMembersIds).toContain(athlete1.uid);
+    expect(dbTraining.completedMembersIds).toHaveLength(1);
+    expect(dbTraining.stats).toHaveLength(6); // 6 unique exercises across both components
+
+    const workloads = await db.workloads.getAllByTrainingId(training.id);
+    expect(workloads).toHaveLength(21); // 1 athlete * 7 exercises (total) * 3 sets
+  });
+
+  it('should successfully complete training when all users complete all components', async () => {
+    training = await createTraining();
+
+    // Complete first component for athlete1
+    const response1 = await request(app.getHttpServer())
+      .patch(url(training.id, component1.id))
+      .set('Authorization', `Bearer ${athlete1.token}`)
+      .send({
+        userId: athlete1.uid,
+        exercises: C1_VALID_COMPLETED_EXERCISES,
+      });
+
+    expect(response1.status).toBe(200);
+
+    // Complete second component for athlete1
+    const response2 = await request(app.getHttpServer())
+      .patch(url(training.id, component2.id))
+      .set('Authorization', `Bearer ${athlete1.token}`)
+      .send({
+        userId: athlete1.uid,
+        exercises: C2_VALID_COMPLETED_EXERCISES,
+      });
+
+    expect(response2.status).toBe(200);
+
+    // Complete first component for athlete2
+    const response3 = await request(app.getHttpServer())
+      .patch(url(training.id, component1.id))
+      .set('Authorization', `Bearer ${athlete2.token}`)
+      .send({
+        userId: athlete2.uid,
+        exercises: C1_VALID_COMPLETED_EXERCISES,
+      });
+
+    expect(response3.status).toBe(200);
+
+    // Complete second component for athlete2
+    const response4 = await request(app.getHttpServer())
+      .patch(url(training.id, component2.id))
+      .set('Authorization', `Bearer ${athlete2.token}`)
+      .send({
+        userId: athlete2.uid,
+        exercises: C2_VALID_COMPLETED_EXERCISES,
+      });
+
+    expect(response4.status).toBe(200);
+
+    const dbTraining = await db.trainings.get(training.id);
+    expect(dbTraining.components).toHaveLength(2);
+    expect(dbTraining.completedMembersIds).toHaveLength(2);
+    expect(dbTraining.completedMembersIds).toContain(athlete1.uid);
+    expect(dbTraining.completedMembersIds).toContain(athlete2.uid);
+    expect(dbTraining.stats).toHaveLength(6); // 6 unique exercises across both components
+    expect(dbTraining.components[0].completedMembersIds).toHaveLength(2);
+    expect(dbTraining.components[1].completedMembersIds).toHaveLength(2);
+
+    const workloads = await db.workloads.getAllByTrainingId(training.id);
+    expect(workloads).toHaveLength(42); // 2 athletes * 7 exercises (total) * 3 sets
+  });
 
   it('should successfully complete training component for athlete with custom workloads', async () => {});
+
+  it('should successfully complete training component for athlete in subgroup', async () => {});
 });

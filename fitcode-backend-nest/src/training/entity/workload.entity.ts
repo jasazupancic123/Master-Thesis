@@ -2,7 +2,6 @@ import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import {
-  IsBoolean,
   IsDate,
   IsEnum,
   IsInt,
@@ -12,16 +11,13 @@ import {
   Min,
 } from 'class-validator';
 
+import { IdEntity } from '@src/common/entity/id.entity';
 import { TimestampEntity } from '@src/common/entity/timestamp.entity';
 
 import { SetStatus } from '../enum/set-status.enum';
 import { CompletedWorkload, PrescribedWorkload } from './workload-value.entity';
 
-export class Workload extends IntersectionType(
-  TimestampEntity,
-  PrescribedWorkload,
-  CompletedWorkload,
-) {
+export class WorkloadMeta extends IdEntity {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -70,6 +66,12 @@ export class Workload extends IntersectionType(
   @Expose()
   setNumber: number;
 
+  @IsInt()
+  @Min(1)
+  @ApiProperty()
+  @Expose()
+  supersetIndex: number;
+
   @IsEnum(SetStatus)
   @ApiProperty()
   @Expose()
@@ -86,9 +88,11 @@ export class Workload extends IntersectionType(
   @ApiPropertyOptional()
   @Expose()
   notes?: string;
-
-  @IsBoolean()
-  @ApiProperty()
-  @Expose()
-  isCustom: boolean; // indicating whether workload is changed by trainer and contains only changed prescribed values, not actual completed ones
 }
+
+export class Workload extends IntersectionType(
+  TimestampEntity,
+  WorkloadMeta,
+  PrescribedWorkload,
+  CompletedWorkload,
+) {}

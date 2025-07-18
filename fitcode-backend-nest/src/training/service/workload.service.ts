@@ -2,10 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CollectionGroup } from 'firebase-admin/firestore';
 
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
-import { TimestampEntity } from '@src/common/entity/timestamp.entity';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { CommonService } from '@src/common/service/common.service';
-import { FirestoreEntity } from '@src/common/type/entity.type';
+import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import {
   BatchWriteOperation,
   CycleRef,
@@ -20,10 +19,12 @@ import { PARAMS } from '@src/component/constant/param.constant';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
+import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
-import { Workload } from '../entity/workload.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
+import { Workload, WorkloadMeta } from '../entity/workload.entity';
 import {
   CompletedWorkload,
   PrescribedWorkload,
@@ -50,25 +51,6 @@ export class WorkloadService {
     return this.repository.collection({ trainingId });
   }
 
-  /**
-   * Gets all training workload data for all trainings for a user by exercise id.
-   */
-  async findAll(ref: ExerciseRef & { userId: string }) {
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', '==', ref.userId)
-      .where('exerciseId', '==', ref.exerciseId)
-      .where('status', '!=', SetStatus.NOT_STARTED)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
-          ),
-        ),
-      );
-  }
-
   async findHistory(ref: ExerciseRef & { userId: string }) {
     return await this.firebaseService.firestore
       .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
@@ -76,51 +58,6 @@ export class WorkloadService {
       .where('exerciseId', '==', ref.exerciseId)
       .where('status', 'not-in', [SetStatus.NOT_STARTED, SetStatus.IGNORED])
       .orderBy('intWork1ValueL')
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload>,
-          ),
-        ),
-      );
-  }
-
-  async findOne(
-    trainingId: string,
-    componentId: string,
-    exerciseId: string,
-    setNumber: number,
-    userId: string,
-  ) {
-    return await this.repository
-      .collection({ trainingId })
-      .doc(
-        this.repository.getKey({
-          trainingId,
-          componentId,
-          exerciseId,
-          setNumber,
-          userId,
-        }),
-      )
-      .get()
-      .then((doc) => {
-        if (!doc.exists) return null;
-        return this.firebaseService.serialize(
-          doc.data() as FirestoreEntity<Workload>,
-        );
-      });
-  }
-
-  async findAllByTraining(trainingId: string, status?: SetStatus) {
-    const query = this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('trainingId', '==', trainingId);
-
-    const finalQuery = status ? query.where('status', '==', status) : query;
-
-    return await finalQuery
       .get()
       .then(({ docs }) =>
         docs.map((doc) =>
@@ -192,49 +129,25 @@ export class WorkloadService {
       );
   }
 
-  async findAllByMembers(membersIds: string[]): Promise<Workload[]> {
-    const collection = this.firebaseService.firestore.collectionGroup(
-      FirestoreCollection.TRAINING_WORKLOAD,
+  /**
+   * Finds all workloads for training (normally training to be planned,
+   * in the future). It will return all workloads that have been
+   * created for athletes as custom workload values that must be
+   * completed separately, not depending on the main group or
+   * subgroup prescribed training.
+   */
+  async findAllCustomByTraining(trainingId: string): Promise<Workload[]> {
+    const query = this.collection(trainingId).where(
+      'status',
+      '==',
+      SetStatus.NOT_STARTED,
     );
 
-    return await this.firebaseService.batchIn<Workload>(
-      'userId',
-      membersIds,
-      collection,
-    );
-  }
+    const snapshot = await query.get();
+    if (snapshot.empty) return [];
 
-  async findAllByUserTrainingComponentId(
-    athleteId: string,
-    trainingId: string,
-    componentId: string,
-  ): Promise<Workload[]> {
-    return await this.firebaseService.firestore
-      .collectionGroup(FirestoreCollection.TRAINING_WORKLOAD)
-      .where('userId', '==', athleteId)
-      .where('trainingId', '==', trainingId)
-      .where('componentId', '==', componentId)
-      .get()
-      .then(({ docs }) =>
-        docs.map((doc) =>
-          this.firebaseService.serialize(
-            doc.data() as FirestoreEntity<Workload & TimestampEntity>,
-          ),
-        ),
-      );
-  }
-
-  async findUnstartedWorkloads(userIds: string[]): Promise<Workload[]> {
-    const ref = this.firebaseService.firestore.collectionGroup(
-      FirestoreCollection.TRAINING_WORKLOAD,
-    );
-
-    return await this.firebaseService.batchIn<Workload>(
-      'userId',
-      userIds,
-      ref,
-      (q) => q.where('status', '==', SetStatus.NOT_STARTED),
-      { batchSize: 15 },
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
     );
   }
 
@@ -287,10 +200,20 @@ export class WorkloadService {
             );
 
           prescribedExercise.sets.forEach((prescribedSet) => {
+            const key = this.repository.getKey({
+              trainingId: ref.trainingId,
+              componentId: ref.componentId,
+              exerciseId: prescribedExercise.id,
+              supersetIndex,
+              setNumber: prescribedSet.setNumber,
+              userId: ref.uid,
+            });
+
             const prescribedWorkload =
               this.getPrescribedWorkload(prescribedSet);
 
-            const partialWorkload = {
+            const workloadMeta: WorkloadMeta = {
+              id: key,
               institutionId: ref.institutionId,
               groupId: ref.groupId,
               cycleId: ref.cycleId,
@@ -299,8 +222,9 @@ export class WorkloadService {
               componentId: ref.componentId,
               exerciseId: prescribedExercise.id,
               setNumber: prescribedSet.setNumber,
+              supersetIndex,
               plannedAt: trainingComponent.from,
-              isCustom: false,
+              status: SetStatus.IGNORED,
               notes: '',
             };
 
@@ -312,11 +236,10 @@ export class WorkloadService {
               // create workload with status IGNORED and no completed values
               operations.push({
                 operation: 'set',
-                ref: collection.doc(),
+                ref: collection.doc(key),
                 data: this.firebaseService.buildCreateQuery({
-                  ...partialWorkload,
+                  ...workloadMeta,
                   ...prescribedWorkload,
-                  status: SetStatus.IGNORED,
                 }),
               });
             else {
@@ -348,9 +271,9 @@ export class WorkloadService {
 
               operations.push({
                 operation: 'set',
-                ref: collection.doc(),
+                ref: collection.doc(key),
                 data: this.firebaseService.buildCreateQuery({
-                  ...partialWorkload,
+                  ...workloadMeta,
                   ...workloadValue,
                   status: this.getStatus(workloadValue),
                 }),
@@ -378,11 +301,118 @@ export class WorkloadService {
       trainingId: w.trainingId,
       componentId: w.componentId,
       exerciseId: w.exerciseId,
+      supersetIndex: w.supersetIndex,
       setNumber: w.setNumber,
       userId: w.userId,
     }));
 
     await this.repository.deleteDocs(refs);
+  }
+
+  async validateWorkloads(
+    trainingId: string,
+    customWorkloads: CreatePrescribedWorkloadDto[],
+    trainingComponents: TrainingComponent[],
+  ): Promise<Create<Workload>[]> {
+    if (!customWorkloads || !customWorkloads.length) return;
+
+    const allExercises =
+      await this.trainingPlanService.getAllTrainingExercises(
+        trainingComponents,
+      );
+
+    const workloads: Create<Workload>[] = [];
+    for (const customWorkload of customWorkloads) {
+      // provided workload component must exist in training components
+      const trainingComponent = trainingComponents.find(
+        (c) => c.id === customWorkload.componentId,
+      );
+
+      if (!trainingComponent)
+        throw new BadRequestException('Invalid component provided in workload');
+
+      const exercise = allExercises.find(
+        (e) => e.id === customWorkload.exerciseId,
+      );
+
+      if (!exercise) throw new BadRequestException(`Exercise does not exist`);
+
+      // find prescribed supersets (either from subgroup or main group)
+      const subgroup = trainingComponent.subgroups.find((s) =>
+        s.membersIds.includes(customWorkload.userId),
+      );
+
+      const prescribedSupersets = subgroup
+        ? subgroup.supersets
+        : trainingComponent.supersets;
+
+      // ensure that workload exercise exists in prescribed supersets
+      // find exercise by same id and superset index must also match
+      const prescribedExercises: (TrainingExercise & {
+        supersetIndex: number;
+      })[] = prescribedSupersets.flatMap((s, supersetIndex) =>
+        s.exercises.map((e) => ({ ...e, supersetIndex })),
+      );
+
+      const prescribedExercise = prescribedExercises.find(
+        (e) =>
+          e.id === customWorkload.exerciseId &&
+          e.supersetIndex === customWorkload.supersetIndex,
+      );
+
+      if (!prescribedExercise)
+        throw new BadRequestException(
+          `Exercise ${exercise.name} is not prescribed in superset ${
+            customWorkload.supersetIndex + 1
+          }`,
+        );
+
+      // ensure that all prescribed values are present in workload
+      const prescribedSet = prescribedExercise.sets.find(
+        (s) => s.setNumber === customWorkload.setNumber,
+      );
+
+      if (!prescribedSet)
+        throw new BadRequestException(
+          `Set number ${customWorkload.setNumber} is not prescribed in exercise ${exercise.name}.`,
+        );
+
+      // ensure that all custom workload values are present in prescribed set
+      const prescribedFields = prescribedSet.paramValuesL.map((p) => p.field);
+      const customFields = this.getFieldsFromWorkload(customWorkload);
+      const { added, removed } = this.commonService.array.diff(
+        prescribedFields,
+        customFields,
+      );
+
+      if (added.length)
+        this.checkParamDifference(added, 'complete', {
+          prescribedSet,
+          exerciseName: exercise.name,
+          supersetIndex: customWorkload.supersetIndex,
+        });
+
+      if (removed.length)
+        this.checkParamDifference(removed, 'remove', {
+          prescribedSet,
+          exerciseName: exercise.name,
+          supersetIndex: customWorkload.supersetIndex,
+        });
+
+      // ensure that all prescribed value types have correct values
+      for (const field of customFields)
+        this.validateFieldValue(field, customWorkload);
+
+      workloads.push({
+        id: null,
+        ...customWorkload,
+        status: SetStatus.NOT_STARTED, // meaning custom for user
+        plannedAt: trainingComponent.from,
+        trainingId,
+      });
+    }
+
+    return workloads;
   }
 
   getStatus(workloadValue: WorkloadValue): SetStatus {
@@ -716,6 +746,80 @@ export class WorkloadService {
       throw new BadRequestException(
         `You have to ${action} parameter ${paramName} (${selectedName}) in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
       );
+    }
+  }
+
+  private getFieldsFromWorkload(workload: PrescribedWorkload): ParamType[] {
+    const fields: ParamType[] = [];
+
+    if (workload.volWork1Type) fields.push(ParamType.VolWork1);
+    if (workload.volWork2Type) fields.push(ParamType.VolWork2);
+    if (workload.volRecType) fields.push(ParamType.VolRec1);
+    if (workload.intWork1Type) fields.push(ParamType.IntWork1);
+    if (workload.intWork2Type) fields.push(ParamType.IntWork2);
+    if (workload.intRecType) fields.push(ParamType.IntRec1);
+
+    return fields;
+  }
+
+  private validateFieldValue(
+    paramType: ParamType,
+    prescribedWorkload: PrescribedWorkload,
+  ) {
+    switch (paramType) {
+      case ParamType.VolWork1:
+        if (
+          prescribedWorkload.prescribedVolWork1ValueL === undefined ||
+          prescribedWorkload.prescribedVolWork1ValueL < 0
+        )
+          throw new BadRequestException(
+            `Prescribed volume work 1 value must be a non-negative number.`,
+          );
+        break;
+      case ParamType.VolWork2:
+        if (
+          prescribedWorkload.prescribedVolWork2ValueL === undefined ||
+          prescribedWorkload.prescribedVolWork2ValueL < 0
+        )
+          throw new BadRequestException(
+            `Prescribed volume work 2 value must be a non-negative number.`,
+          );
+        break;
+      case ParamType.VolRec1:
+        if (
+          prescribedWorkload.prescribedVolRecValueL === undefined ||
+          prescribedWorkload.prescribedVolRecValueL < 0
+        )
+          throw new BadRequestException(
+            `Prescribed volume recovery value must be a non-negative number.`,
+          );
+        break;
+      case ParamType.IntWork1:
+        if (
+          prescribedWorkload.prescribedIntWork1ValueL === undefined ||
+          prescribedWorkload.prescribedIntWork1ValueL < 0
+        )
+          throw new BadRequestException(
+            `Prescribed intensity work 1 value must be a non-negative number.`,
+          );
+      case ParamType.IntWork2:
+        if (
+          prescribedWorkload.prescribedIntWork2ValueL === undefined ||
+          prescribedWorkload.prescribedIntWork2ValueL < 0
+        )
+          throw new BadRequestException(
+            `Prescribed intensity work 2 value must be a non-negative number.`,
+          );
+        break;
+      case ParamType.IntRec1:
+        if (
+          prescribedWorkload.prescribedIntRecValueL === undefined ||
+          prescribedWorkload.prescribedIntRecValueL < 0
+        )
+          throw new BadRequestException(
+            `Prescribed intensity recovery value must be a non-negative number.`,
+          );
+        break;
     }
   }
 }

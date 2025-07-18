@@ -57,8 +57,7 @@ export async function handleUpdateMultipleTrainings(state: {
       TrainingController.batchUpdate(
         token,
         { groupId: group.id, cycleId: cycle!.id },
-        [training],
-        customAthleteWorkloads
+        [{ ...training, workloads: customAthleteWorkloads }]
       ),
     (newTrainings) => {
       const newTraining = newTrainings[0];

@@ -98,6 +98,6 @@ export class WorkloadRepository
   }
 
   getKey(ref: WorkloadRef) {
-    return `${ref.trainingId}-${ref.userId}-${ref.componentId}-${ref.exerciseId}-${ref.setNumber}`;
+    return `${ref.trainingId}-${ref.userId}-${ref.componentId}-${ref.exerciseId}-${ref.supersetIndex}-${ref.setNumber}`;
   }
 }
