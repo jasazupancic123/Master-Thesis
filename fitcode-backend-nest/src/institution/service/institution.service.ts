@@ -117,9 +117,8 @@ export class InstitutionService implements Permission<Institution> {
 
   async findMembers(
     ref: InstitutionRef,
-    body: { type: GetMembersType },
+    type: GetMembersType,
   ): Promise<UserEntity[]> {
-    const { type } = body;
 
     const institution = await this.getDocByIdOrFail(ref);
     const collection = this.userService.getCollection();
