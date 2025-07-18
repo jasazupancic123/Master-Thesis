@@ -8,6 +8,7 @@ import { UserRole } from '../user/enum/user-role.enum';
 import { AddAthletesDto } from './dto/add-athletes.dto';
 import { AddTrainersDto } from './dto/add-trainers.dto';
 import { CreateInstitutionDto } from './dto/create-institution.dto';
+import { GetMembersType } from './enum/institution-get-members.enum';
 import { InstitutionService } from './service/institution.service';
 
 @ApiTags('Institution')
@@ -27,10 +28,13 @@ export class InstitutionController {
     return this.institutionService.getDocByIdOrFail({ institutionId });
   }
 
-  @Get(':institutionId/athletes')
-  @Auth([UserRole.ADMIN, UserRole.TRAINER])
-  async findAthletes(@Param('institutionId') institutionId: string) {
-    return this.institutionService.findMembers({ institutionId });
+  @Get(':institutionId/find/:type')
+  @Auth([UserRole.ADMIN, UserRole.TRAINER, UserRole.MANAGER])
+  async findMembers(
+    @Param('institutionId') institutionId: string,
+    @Param('type') type: GetMembersType,
+  ) {
+    return this.institutionService.findMembers({ institutionId }, type);
   }
 
   @Post()
@@ -77,7 +81,7 @@ export class InstitutionController {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: true, memberIds: body.trainerIds, trainers: false },
+      { add: true, memberIds: body.trainerIds, trainers: true },
     );
   }
 
@@ -91,7 +95,7 @@ export class InstitutionController {
     return this.institutionService.updateMembers(
       user,
       { institutionId },
-      { add: false, memberIds: body.trainerIds, trainers: false },
+      { add: false, memberIds: body.trainerIds, trainers: true },
     );
   }
 }

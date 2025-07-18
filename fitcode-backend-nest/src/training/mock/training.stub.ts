@@ -23,6 +23,28 @@ import type { TrainingExercise } from '../entity/training-exercise.entity';
 import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
 export function generateTrainingStub(data?: Partial<Training>): Training {
+  // evenly space components in between training's from and to dates
+  const from = data?.from || getTime(addDays(new Date(), 1), 8, 0);
+  const to = data?.to || addHours(from, 2);
+
+  const components: TrainingComponent[] = data?.components || [];
+  if (components.length) {
+    const componentDuration =
+      (to.getTime() - from.getTime()) / components.length;
+
+    components.forEach((component, index) => {
+      component.from =
+        component.from || new Date(from.getTime() + index * componentDuration);
+      component.to =
+        component.to || new Date(component.from.getTime() + componentDuration);
+    });
+  }
+
+  console.log(
+    'component times:',
+    components.map((c) => `${c.from} - ${c.to}`),
+  );
+
   return {
     id: data?.id || v4(),
     createdAt: new Date(),
@@ -37,14 +59,14 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
     stats: data?.stats || [],
     futureStats: data?.futureStats || [],
     copiedFromId: data?.copiedFromId || null,
-    from: data?.from || addDays(new Date(), 1),
-    to: data?.to || addHours(addDays(new Date(), 1), 2),
+    from,
+    to,
     warmup:
       data?.warmup || generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
     cooldown:
       data?.cooldown ||
       generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
-    components: data?.components || [],
+    components,
     wellness: data?.wellness || [],
   };
 }
@@ -98,15 +120,6 @@ export function generateTrainingExercise(
   };
 }
 
-export function generateExerciseSet(setNumber: number): ExerciseSet;
-export function generateExerciseSet(
-  setNumber: number,
-  paramValues: AttributeValue[],
-): ExerciseSet;
-export function generateExerciseSet(
-  setNumber: number,
-  componentParams: ComponentParam[],
-): ExerciseSet;
 /**
  * Generates an ExerciseSet object. If paramValuesOrComponentParams is not provided,
  * it generates random parameter values for the set, else it uses the provided values
@@ -116,19 +129,45 @@ export function generateExerciseSet(
  * @param setNumber - the number of the set
  * @param paramValues - array of AttributeValue objects for the set or componentParams
  * - array of ComponentParam objects to generate AttributeValues from
+ * @param random - if true, generates random values for the set
  */
 export function generateExerciseSet(
   setNumber: number,
-  paramValuesOrComponentParams?: AttributeValue[] | ComponentParam[],
+  random?: boolean,
+): ExerciseSet;
+export function generateExerciseSet(
+  setNumber: number,
+  paramValues: AttributeValue[],
+  random?: boolean,
+): ExerciseSet;
+export function generateExerciseSet(
+  setNumber: number,
+  componentParams: ComponentParam[],
+  random?: boolean,
+): ExerciseSet;
+export function generateExerciseSet(
+  setNumber: number,
+  paramValuesOrComponentParams?: AttributeValue[] | ComponentParam[] | boolean,
+  random?: boolean,
 ): ExerciseSet {
-  const paramValues = !paramValuesOrComponentParams
-    ? generateParamAttributeValuesFromComponentParams(PARAMS, true)
-    : isAttributeValueArray(paramValuesOrComponentParams)
+  const isRandom =
+    typeof paramValuesOrComponentParams === 'boolean'
       ? paramValuesOrComponentParams
-      : generateParamAttributeValuesFromComponentParams(
-          paramValuesOrComponentParams,
-          true,
-        );
+      : random
+        ? random
+        : false;
+
+  const paramValues = !paramValuesOrComponentParams
+    ? generateParamAttributeValuesFromComponentParams(PARAMS, isRandom)
+    : typeof paramValuesOrComponentParams !== 'boolean' &&
+        isAttributeValueArray(paramValuesOrComponentParams)
+      ? paramValuesOrComponentParams
+      : typeof paramValuesOrComponentParams !== 'boolean'
+        ? generateParamAttributeValuesFromComponentParams(
+            paramValuesOrComponentParams,
+            isRandom,
+          )
+        : [];
 
   return {
     setNumber,

@@ -8,24 +8,24 @@ import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
-import SettingsIcon from '@mui/icons-material/Settings';
 import SpaIcon from '@mui/icons-material/Spa';
 import { ReactNode } from 'react';
 import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
 import {
-  ChatRounded,
-  Dashboard,
+  Add,
   Groups,
+  PersonAdd,
   PersonAddAlt1,
   TrendingUp,
 } from '@mui/icons-material';
 import {
-  DASHBOARD_ADD_INSTITUTION,
   DASHBOARD_EXERCISES,
-  DASHBOARD_GROUPS,
+  DASHBOARD_PROGRESS,
   DASHBOARD_MAIN,
   DASHBOARD_REGISTER_USERS,
+  DASHBOARD_INSTITUTION,
+  DASHBOARD_ADD_INSTITUTION,
 } from '@/common/constant/dashboard-views-constant';
 
 export function link(
@@ -59,7 +59,6 @@ export const LINK_EXERCISES_DASHBOARD = link(
   '/dashboard/exercises'
 );
 export const LINK_COMPONENTS = link('Components', '/components');
-export const LINK_EXERCISES = link('Exercises', '/exercises');
 export const LINK_GROUPS = link('Trainings', '/groups', <FitnessCenterIcon />);
 export const LINK_DASHBOARD = link('Dashboard', '/dashboard', <HomeIcon />);
 export const LINK_TRAININGS = link(
@@ -79,32 +78,54 @@ export const LINK_CALENDAR = link(
   '/calendar',
   <CalendarTodayIcon />
 );
-export const LINK_MEMBERS = link('Members', '/members');
-export const LINK_SUBGROUPS = link('Subgroups', '/subgroups');
-export const LINK_ADD_GROUP = link('Add Group', '/add-group');
-export const LINK_SETTINGS = link('Settings', '/settings');
 export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaIcon />);
-export const LINK_GROUP_BY_ID = (id: string) => link('Group', `/groups/${id}`);
+
+export const LINK_SETTINGS = link('Settings', '/settings');
+export const LINK_GROUP_BY_ID = (id: string) =>
+  link('Group', `/groups/${id}`, <HomeIcon />);
+
 export const LINK_GROUP_DATE_RANGE_VIEW = (
   id: string,
   filter: GroupDateFilter
 ) => link('Day Trainings', `/groups/${id}/${filter}`);
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS = (groupId: string) => ({
-  home: link('Home', `/groups/${groupId}`, <HomeIcon />),
-  dashboard: link('Dashboard', `/dashboard`, <Dashboard />),
+  home: LINK_GROUP_BY_ID(groupId),
+  dashboard: LINK_DASHBOARD,
 });
 
 export const LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS = {
   signout: link('Sign out', '#', <LogoutIcon />),
 };
 
+export const LINK_DASHBOARD_HOME = link('Home', DASHBOARD_MAIN, <Groups />);
+export const LINK_DASHBOARD_INSTITUTION = link(
+  'Home',
+  DASHBOARD_INSTITUTION,
+  <PersonAdd />
+);
+export const LINK_DASHBOARD_PROGRESS = link(
+  'Progress',
+  DASHBOARD_PROGRESS,
+  <TrendingUp />
+);
+export const LINK_EXERCISES_DASHBOARD_NAVIGATION = link(
+  'Exercises',
+  DASHBOARD_EXERCISES,
+  <FitnessCenterIcon />
+);
+export const LINK_ADD_INSTITUTION = link(
+  'Add Institution',
+  DASHBOARD_ADD_INSTITUTION,
+  <Add />
+);
+
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole[]) => ({
-  home: link('Home', DASHBOARD_MAIN, <HomeIcon />),
-  athletes: link('Progress', DASHBOARD_GROUPS, <TrendingUp />),
-  exercises: link('Exercises', DASHBOARD_EXERCISES, <FitnessCenterIcon />),
+  home: LINK_DASHBOARD_HOME,
+  institution: LINK_DASHBOARD_INSTITUTION,
+  exercises: LINK_EXERCISES_DASHBOARD_NAVIGATION,
   addInstitution: role.includes(UserRole.ADMIN)
-    ? link('Add Institution', DASHBOARD_ADD_INSTITUTION, <AddIcon />)
+    ? LINK_ADD_INSTITUTION
     : undefined,
 });
 
@@ -142,7 +163,9 @@ export const LINKS_SIDEBAR = {
     settings: LINK_SETTINGS,
   },
   [UserRole.MANAGER]: {
-    groups: LINK_GROUPS,
+    dashboard: LINK_DASHBOARD,
+    profile: LINK_PROFILE,
+    settings: LINK_SETTINGS,
   },
   [UserRole.ADMIN]: {
     users: LINK_USERS,

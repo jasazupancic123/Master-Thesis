@@ -5,11 +5,9 @@ import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { User } from '@/controller/user/type/user.type';
 
 export interface ExercisePageProps {
-  token: string;
   exercises: Exercise[];
   attributes: Attribute[];
   components: Component[];
-  profile: User;
 }
 
 export interface ExerciseContextProps extends ExercisePageProps {

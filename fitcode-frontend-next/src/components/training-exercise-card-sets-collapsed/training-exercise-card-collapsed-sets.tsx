@@ -5,7 +5,6 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import {
   ExerciseSet,
-  Superset,
   TrainingExercise,
 } from '@/controller/training/type/training-plan.type';
 import { useGroup } from '@/store/group-provider';
@@ -25,15 +24,13 @@ import {
 import { SetState } from '@/common/type/state.type';
 import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import { useEffect, useState } from 'react';
+import { useSupersets } from '@/store/supersets-provider';
 
 interface TrainingExerciseCardCollapsedSetsProps {
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
-  setsNumbers: { exerciseId: string; setsNumber: number }[];
-  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
   i: number | undefined;
-  setSupersets: SetState<Superset[]>;
 }
 
 export default function TrainingExerciseCardCollapsedSets(
@@ -41,15 +38,9 @@ export default function TrainingExerciseCardCollapsedSets(
 ) {
   const screenSize = useScreenSize();
 
-  const {
-    exercise,
-    setSupersets,
-    expandedSetsView,
-    setExpandedSetsView,
-    setsNumbers,
-    setSetsNumbers,
-    i,
-  } = props;
+  const { exercise, expandedSetsView, setExpandedSetsView, i } = props;
+
+  const { setsNumbers, setSetsNumbers } = useSupersets();
 
   const {
     training,
@@ -61,6 +52,7 @@ export default function TrainingExerciseCardCollapsedSets(
     customAthleteWorkloads,
     setCustomAthleteWorkloads,
     selectedExercises,
+    setSupersets,
   } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
@@ -283,6 +275,7 @@ export default function TrainingExerciseCardCollapsedSets(
                 >
                   {['L', 'R'].map((lOrR) => (
                     <ExerciseParam
+                      key={`${param.field}-${lOrR}`}
                       param={param}
                       value={
                         param.field === ParamType.VolWorkSets

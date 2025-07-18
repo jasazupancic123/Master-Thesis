@@ -1,40 +1,41 @@
 'use client';
 
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
+import {
+  LINK_DASHBOARD_HOME,
+  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
+} from '@/common/constant/navigation.constant';
 import { useFetch } from '@/common/hooks/use-fetch.hook';
+import { ILink } from '@/common/type/link.type';
 import { ChildrenProps } from '@/common/type/props.type';
 import { SetState } from '@/common/type/state.type';
 import { Group } from '@/controller/group/type/group.type';
 import { Institution } from '@/controller/institution/type/institution.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { User } from '@/controller/user/type/user.type';
-import { url } from 'inspector';
+import { User, UserEntity } from '@/controller/user/type/user.type';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useMain } from './main-provider';
 
 interface DashboardContextProps {
-  role: UserRole[];
-  token: string;
-  profile: User;
+  filter: ILink;
+  setFilter: SetState<ILink>;
   institutions: Institution[];
   setInstitutions: SetState<Institution[]>;
   selectedInstitution: Institution | null;
   setSelectedInstitution: SetState<Institution | null>;
   detectedChanges: boolean;
   setDetectedChanges: SetState<boolean>;
-  users: User[] | null;
-  setUsers: SetState<User[] | null>;
   selectedGroup: Group | null;
   setSelectedGroup: SetState<Group | null>;
   refetchUsers: () => void;
+  members: UserEntity[];
+  refetchMembers: () => void;
 }
 
 export interface DashboardPageProps {
   institutions: Institution[];
   selectedInstitution: Institution | null;
-  role: UserRole[];
-  users: User[];
-  token: string;
-  profile: User;
+  members: UserEntity[];
+  refetchMembers: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextProps | null>(null);
@@ -43,17 +44,27 @@ export const useDashboard = () => useContext(DashboardContext)!;
 
 export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
   const {
-    role,
-    token,
-    profile,
-    users: propsUsers,
     institutions: propsInstitutions,
     selectedInstitution: propsSelectedInstitution,
     children,
+    members,
+    refetchMembers,
   } = props;
 
-  // const [users, setUsers] = useState<User[]>(propsUsers);
+  const { profile } = useMain();
 
+  const roles = profile.customClaims.role || [];
+
+  let currentFilter = LINK_DASHBOARD_HOME;
+  const url = new URL(window.location.href);
+  const lastItemInUrl = url.pathname.split('/').pop();
+  Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(roles)).map((link) => {
+    if (lastItemInUrl && link?.href.endsWith(lastItemInUrl)) {
+      currentFilter = link;
+    }
+  });
+
+  const [filter, setFilter] = useState<ILink>(currentFilter);
   const [institutions, setInstitutions] =
     useState<Institution[]>(propsInstitutions);
   const [selectedInstitution, setSelectedInstitution] =
@@ -65,24 +76,26 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
       : null
   );
 
+  const { setUsers } = useMain();
+
   const {
-    data: users,
+    data: fetchedUsers,
     refetch,
-    setData: setUsers,
+    setData,
   } = useFetch<User[]>(`${BACKEND_API_BASE_URL}/user`, {
     method: 'GET',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
   });
 
+  useEffect(() => {
+    if (fetchedUsers) {
+      setUsers(fetchedUsers);
+    }
+  }, [fetchedUsers, setUsers]);
+
   const value: DashboardContextProps = {
-    role,
-    token,
-    profile,
+    filter,
+    setFilter,
     refetchUsers: refetch,
-    users,
-    setUsers,
     institutions,
     setInstitutions,
     selectedInstitution,
@@ -91,6 +104,8 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
     setDetectedChanges,
     selectedGroup,
     setSelectedGroup,
+    members,
+    refetchMembers,
   };
 
   return (

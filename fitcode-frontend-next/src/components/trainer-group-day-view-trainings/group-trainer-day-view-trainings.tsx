@@ -3,7 +3,6 @@ import { useGroup } from '@/store/group-provider';
 import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import { Day } from '@/common/service/util/date.util';
-import dayjs from 'dayjs';
 import React from 'react';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
@@ -41,7 +40,6 @@ export default function GroupTrainerDayViewTrainings(
       flexDirection="column"
       alignItems="center"
       width="100%"
-      pb={15}
       sx={{
         borderBottomRightRadius: 10,
         borderBottomLeftRadius: 10,

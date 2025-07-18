@@ -2,10 +2,9 @@
 
 import { useGroup } from '@/store/group-provider';
 import { Save } from '@mui/icons-material';
-import { Box, Divider, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { TrainingWeekViewItemProps } from '../trainer-week-view/type';
-import { useTheme } from '@mui/material';
 import TrainerWeekComponentItem from '../training-week-component-item/training-week-component-item';
 import {
   COOLDOWN_ID,
@@ -14,7 +13,7 @@ import {
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
   const { training, updateTraining } = props;
-  const { trainings, setTrainings } = useGroup();
+  const { setTrainings } = useGroup();
 
   const [isChanged, setIsChanged] = useState(false);
   const [updatedComponents, setUpdatedComponents] = useState(

@@ -10,13 +10,25 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import MyModal from '../modal/modal';
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
 import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
-import { SupersetsProps } from '../trainer-day-view/props';
 import { onDragEnd } from '../trainer-day-view/state';
 import Superset from '../superset/superset';
 import { handleAddExerciseToSupersetComponent } from './state';
 import { useTheme } from '@mui/material';
+import { SupersetsProvider, useSupersets } from '@/store/supersets-provider';
+import { SetState } from '@/common/type/state.type';
+import { useMain } from '@/store/main-provider';
+
+interface SupersetsProps {
+  openAddExerciseModal: boolean;
+  setOpenAddExerciseModal: SetState<boolean>;
+  expandedExercisesView: boolean;
+  setExpandedExercisesView: SetState<boolean>;
+}
 
 export default function Supersets(props: SupersetsProps) {
+  const screenSize = useScreenSize();
+  const theme = useTheme();
+
   const {
     openAddExerciseModal,
     setOpenAddExerciseModal,
@@ -24,10 +36,8 @@ export default function Supersets(props: SupersetsProps) {
     setExpandedExercisesView,
   } = props;
 
-  const screenSize = useScreenSize();
-  const theme = useTheme();
-
-  const { exercises: allExercises, setDetectedChanges } = useGroup();
+  const { exercises: allExercises } = useMain();
+  const { setDetectedChanges } = useGroup();
 
   const {
     training,
@@ -52,7 +62,7 @@ export default function Supersets(props: SupersetsProps) {
   const [selectedExercise, setSelectedExercise] =
     useState<TrainingExercise | null>(null);
 
-  const [setNumbers, setSetsNumbers] = useState<
+  const [setsNumbers, setSetsNumbers] = useState<
     {
       exerciseId: string;
       setsNumber: number;
@@ -65,11 +75,6 @@ export default function Supersets(props: SupersetsProps) {
     null
   );
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setMenuExercise(null);
-  };
 
   useEffect(() => {
     setSelectedExercisesIds(
@@ -104,28 +109,27 @@ export default function Supersets(props: SupersetsProps) {
     >
       <Grid2 container rowSpacing={2}>
         {/* Supersets */}
-        {supersets &&
-          supersets.map((superset, i) => (
-            <Superset
-              key={i}
-              superset={superset}
-              i={i}
-              selectedExercise={selectedExercise}
-              setSelectedExercise={setSelectedExercise}
-              menuExercise={menuExercise}
-              setMenuExercise={setMenuExercise}
-              anchorEl={anchorEl}
-              setAnchorEl={setAnchorEl}
-              setOpenVideoPlayerModal={setOpenVideoPlayerModal}
-              setOpenAddExerciseModal={setOpenAddExerciseModal}
-              handleMenuClose={handleMenuClose}
-              setSupersets={setSupersets}
-              setsNumbers={setNumbers}
-              setSetsNumbers={setSetsNumbers}
-              expandedExercisesView={expandedExercisesView}
-              setExpandedExercisesView={setExpandedExercisesView}
-            />
-          ))}
+        <SupersetsProvider
+          expandedExercisesView={expandedExercisesView}
+          setExpandedExercisesView={setExpandedExercisesView}
+          selectedExercise={selectedExercise}
+          setSelectedExercise={setSelectedExercise}
+          menuExercise={menuExercise}
+          setMenuExercise={setMenuExercise}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
+          openVideoPlayerModal={openVideoPlayerModal}
+          setOpenVideoPlayerModal={setOpenVideoPlayerModal}
+          openAddExerciseModal={openAddExerciseModal}
+          setOpenAddExerciseModal={setOpenAddExerciseModal}
+          setsNumbers={setsNumbers}
+          setSetsNumbers={setSetsNumbers}
+        >
+          {supersets &&
+            supersets.map((superset, i) => (
+              <Superset key={i} superset={superset} i={i} />
+            ))}
+        </SupersetsProvider>
 
         {/* Add new superset field */}
         {supersets.length < NUM_MAX_SUPERSETS && (

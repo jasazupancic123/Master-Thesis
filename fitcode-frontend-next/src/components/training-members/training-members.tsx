@@ -25,6 +25,7 @@ import MyModal from '../modal/modal';
 import { useTheme } from '@mui/material';
 import { handleAddMembersSubgroup } from './state';
 import TrainingMembersSubgroup from '../training-members-subgroups/training-members-subgroups';
+import { useMain } from '@/store/main-provider';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -35,7 +36,8 @@ export default function TrainingMembers(props: TrainingMembersProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { group, users, setDetectedChanges } = useGroup();
+  const { users } = useMain();
+  const { group, setDetectedChanges } = useGroup();
 
   const {
     members: groupMembers,

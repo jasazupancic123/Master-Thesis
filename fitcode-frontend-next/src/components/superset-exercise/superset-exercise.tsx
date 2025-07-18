@@ -1,6 +1,5 @@
 'use client';
 
-import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import {
@@ -11,55 +10,32 @@ import { Box, Checkbox, Grid2, IconButton, Typography } from '@mui/material';
 import { Draggable } from 'react-beautiful-dnd';
 import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';
 import { useTheme } from '@mui/material';
-import { SetState } from '@/common/type/state.type';
+import { useSupersets } from '@/store/supersets-provider';
 
 interface SupersetExerciseProps {
   exercise: TrainingExercise;
   superset: Superset;
   i: number;
   k: number;
-  selectedExercise: TrainingExercise | null;
-  setSelectedExercise: SetState<TrainingExercise | null>;
-  menuExercise: TrainingExercise | null;
-  setMenuExercise: SetState<TrainingExercise | null>;
-  anchorEl: HTMLElement | null;
-  setAnchorEl: SetState<HTMLElement | null>;
-  setOpenVideoPlayerModal: SetState<boolean>;
-  setOpenAddExerciseModal: SetState<boolean>;
-  handleMenuClose: () => void;
-  setSupersets: SetState<Superset[]>;
-  setsNumbers: { exerciseId: string; setsNumber: number }[];
-  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
-  expandedExercisesView: boolean;
-  setExpandedExercisesView: SetState<boolean>;
 }
 
 export default function SupersetExercise(props: SupersetExerciseProps) {
+  const { exercise, superset, i, k } = props;
+
+  const theme = useTheme();
+  const screenSize = useScreenSize();
+
   const {
-    exercise,
-    superset,
-    i,
-    k,
     selectedExercise,
     setSelectedExercise,
     setMenuExercise,
     anchorEl,
     setAnchorEl,
-    setOpenVideoPlayerModal,
-    setSupersets,
-    setsNumbers,
-    setSetsNumbers,
     expandedExercisesView,
-    setExpandedExercisesView,
-  } = props;
+  } = useSupersets();
 
-  const theme = useTheme();
-  const screenSize = useScreenSize();
-
-  const { supersets, selectedExercises, setSelectedExercises } =
+  const { training, component, selectedExercises, setSelectedExercises } =
     useTrainerDayViewContext();
-
-  const { training, component } = useTrainerDayViewContext();
 
   const handleMenuClick = (event: any) => {
     setAnchorEl(event.currentTarget);
@@ -183,20 +159,11 @@ export default function SupersetExercise(props: SupersetExerciseProps) {
               <TrainingExerciseCardContainer
                 supersetIndex={i}
                 exercise={exercise}
-                selectedExercise={selectedExercise}
-                setSelectedExercise={setSelectedExercise}
-                supersets={supersets}
                 superior={{
                   row: i === 0,
                   column: k === 0,
                   all: i === 0 && k === 0,
                 }}
-                setOpenVideoPlayerModal={setOpenVideoPlayerModal}
-                setSupersets={setSupersets}
-                setsNumbers={setsNumbers}
-                setSetsNumbers={setSetsNumbers}
-                expandedExercisesView={expandedExercisesView}
-                setExpandedExercisesView={setExpandedExercisesView}
               />
             </Box>
           </Box>

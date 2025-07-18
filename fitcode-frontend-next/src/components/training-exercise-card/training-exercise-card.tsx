@@ -11,13 +11,26 @@ import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-co
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import { useTheme } from '@mui/material';
 import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { useSupersets } from '@/store/supersets-provider';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  const { training, component, selectedSubgroup, setSelectedSubgroup } =
-    useTrainerDayViewContext();
+  const {
+    setSelectedExercise,
+    setOpenVideoPlayerModal,
+    setsNumbers,
+    expandedExercisesView,
+  } = useSupersets();
+
+  const {
+    training,
+    component,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    setSupersets,
+  } = useTrainerDayViewContext();
 
   const { setDetectedChanges } = useGroup();
   const { setTraining, supersets, selectedExercises } =
@@ -25,18 +38,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
   const [isInited, setIsInited] = useState(false);
 
-  const {
-    supersetIndex,
-    setSelectedExercise,
-    chartView,
-    setOpenVideoPlayerModal,
-    exercise,
-    setsNumbers,
-    setSetsNumbers,
-    setSupersets,
-    expandedExercisesView,
-    setExpandedExercisesView,
-  } = props;
+  const { supersetIndex, chartView, exercise } = props;
 
   // const [exercise, setExercise] = useState(propsExercise);
   const [expandedSetsView, setExpandedSetsView] = useState(false);
@@ -255,11 +257,8 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
         ) : !expandedSetsView ? (
           <TrainingExerciseCardCollapsedSets
             exercise={exercise}
-            setSupersets={setSupersets}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
-            setsNumbers={setsNumbers}
-            setSetsNumbers={setSetsNumbers}
             i={i}
           />
         ) : (

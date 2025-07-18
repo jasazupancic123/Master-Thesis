@@ -33,6 +33,7 @@ import {
 import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { TrainingPlanService } from './training-plan.service';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
 
 @Injectable()
 export class WorkloadService {
@@ -41,6 +42,7 @@ export class WorkloadService {
     private readonly firebaseService: FirebaseService,
     private readonly repository: WorkloadRepository,
     private readonly trainingPlanService: TrainingPlanService,
+    private readonly exerciseService: ExerciseService,
   ) {}
 
   getDoc(id: WorkloadRef) {
@@ -316,10 +318,7 @@ export class WorkloadService {
   ): Promise<Create<Workload>[]> {
     if (!customWorkloads || !customWorkloads.length) return;
 
-    const allExercises =
-      await this.trainingPlanService.getAllTrainingExercises(
-        trainingComponents,
-      );
+    const allExercises = await this.exerciseService.getAll();
 
     const workloads: Create<Workload>[] = [];
     for (const customWorkload of customWorkloads) {
@@ -374,7 +373,7 @@ export class WorkloadService {
 
       if (!prescribedSet)
         throw new BadRequestException(
-          `Set number ${customWorkload.setNumber} is not prescribed in exercise ${exercise.name}.`,
+          `Set number ${customWorkload.setNumber} is invalid for exercise ${exercise.name}`,
         );
 
       // ensure that all custom workload values are present in prescribed set
@@ -400,8 +399,8 @@ export class WorkloadService {
         });
 
       // ensure that all prescribed value types have correct values
-      for (const field of customFields)
-        this.validateFieldValue(field, customWorkload);
+      for (const field of prescribedFields)
+        this.validateFieldValue(field as ParamType, customWorkload);
 
       workloads.push({
         id: null,
@@ -730,7 +729,13 @@ export class WorkloadService {
         (p) => p.field === field,
       )?.selected;
 
-      if (!param || !selectedField) continue;
+      if (!param) continue;
+      const paramName = (param.description || param.name).toLowerCase();
+
+      if (!selectedField)
+        throw new BadRequestException(
+          `Parameter ${paramName} is not prescribed in exercise ${exerciseName} in superset ${supersetIndex + 1}`,
+        );
 
       const selected = param.options?.find(
         (o) => o.field === selectedField.split(':')[0],
@@ -738,7 +743,6 @@ export class WorkloadService {
 
       if (!selected) continue;
 
-      const paramName = (param.description || param.name).toLowerCase();
       const selectedName = (
         selected.description || selected.name
       ).toLowerCase();
@@ -766,60 +770,58 @@ export class WorkloadService {
     paramType: ParamType,
     prescribedWorkload: PrescribedWorkload,
   ) {
+    let field: ParamType;
+
     switch (paramType) {
       case ParamType.VolWork1:
         if (
           prescribedWorkload.prescribedVolWork1ValueL === undefined ||
           prescribedWorkload.prescribedVolWork1ValueL < 0
         )
-          throw new BadRequestException(
-            `Prescribed volume work 1 value must be a non-negative number.`,
-          );
+          field = paramType;
         break;
       case ParamType.VolWork2:
         if (
           prescribedWorkload.prescribedVolWork2ValueL === undefined ||
           prescribedWorkload.prescribedVolWork2ValueL < 0
         )
-          throw new BadRequestException(
-            `Prescribed volume work 2 value must be a non-negative number.`,
-          );
+          field = paramType;
         break;
       case ParamType.VolRec1:
         if (
           prescribedWorkload.prescribedVolRecValueL === undefined ||
           prescribedWorkload.prescribedVolRecValueL < 0
         )
-          throw new BadRequestException(
-            `Prescribed volume recovery value must be a non-negative number.`,
-          );
+          field = paramType;
         break;
       case ParamType.IntWork1:
         if (
           prescribedWorkload.prescribedIntWork1ValueL === undefined ||
           prescribedWorkload.prescribedIntWork1ValueL < 0
         )
-          throw new BadRequestException(
-            `Prescribed intensity work 1 value must be a non-negative number.`,
-          );
+          field = paramType;
+        break;
       case ParamType.IntWork2:
         if (
           prescribedWorkload.prescribedIntWork2ValueL === undefined ||
           prescribedWorkload.prescribedIntWork2ValueL < 0
         )
-          throw new BadRequestException(
-            `Prescribed intensity work 2 value must be a non-negative number.`,
-          );
+          field = paramType;
         break;
       case ParamType.IntRec1:
         if (
           prescribedWorkload.prescribedIntRecValueL === undefined ||
           prescribedWorkload.prescribedIntRecValueL < 0
         )
-          throw new BadRequestException(
-            `Prescribed intensity recovery value must be a non-negative number.`,
-          );
+          field = paramType;
         break;
+    }
+
+    if (field) {
+      const name = PARAMS.find((p) => p.field === field)?.description;
+      throw new BadRequestException(
+        `Prescribed ${name} value must not be empty`,
+      );
     }
   }
 }

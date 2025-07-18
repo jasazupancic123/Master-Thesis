@@ -3,7 +3,7 @@ import { Training } from '@/controller/training/type/training.type';
 
 export type UpdateTrainingInput = Parameters<
   typeof TrainingController.update
->[2];
+>[1];
 
 export type TrainingWeekViewItemProps = {
   training: Training;

@@ -19,12 +19,12 @@ import { SetState } from '@/common/type/state.type';
 import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import AthleteTrainingExercise from '../athlete-training-exercise/athlete-training-exercise';
+import { useMain } from '@/store/main-provider';
 
 interface AthleteTrainingComponentsProps {
   components: TrainingComponent[];
   training: Training;
   supersets: Superset[];
-  profile: User;
   setOpenAreYouSureModal: SetState<boolean>;
   setOpenVideoPlayerModal: SetState<boolean>;
   setVideoUrl: SetState<string>;
@@ -40,11 +40,12 @@ export default function AthleteTrainingComponents(
     components,
     training,
     supersets,
-    profile,
     setOpenAreYouSureModal,
     setOpenVideoPlayerModal,
     setVideoUrl,
   } = props;
+
+  const { profile } = useMain();
   const { trainingInProgress, setTrainingInProgress } = useTraining();
 
   const [selectedSuperset, setSelectedSuperset] = useState<Superset | null>(
@@ -179,8 +180,8 @@ export default function AthleteTrainingComponents(
         width="100%"
         sx={{
           backgroundColor: c.completedMembersIds.includes(profile.uid)
-            ? '#2f3940'
-            : '#404c54',
+            ? theme.palette.background.dark
+            : theme.palette.background.paper,
           py: 1,
           borderTopRightRadius: i === 0 ? 5 : 0,
           borderBottomRightRadius: i === arr.length - 1 ? 5 : 0,
@@ -214,9 +215,7 @@ export default function AthleteTrainingComponents(
           variant="h6"
           sx={{
             textTransform: 'uppercase',
-            color: c.completedMembersIds.includes(profile.uid)
-              ? 'rgba(228, 236, 233, 0.5)'
-              : 'rgb(228, 236, 233)',
+            color: theme.palette.text.primary,
             textAlign: 'center',
             cursor: 'pointer',
             overflow: 'hidden',

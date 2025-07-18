@@ -6,7 +6,12 @@ import { Group } from '@/controller/group/type/group.type';
 import { Method } from '@/controller/method/type/method.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
+import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import {
+  TrainingComponent,
+  TrainingExercise,
+} from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
 import { User } from '@/controller/user/type/user.type';
@@ -14,7 +19,6 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import toast from 'react-hot-toast';
 
 export async function handleUpdateMultipleTrainings(state: {
-  token: string;
   setTrainings: SetState<TrainingInfo[]>;
   training: Training | undefined;
   setTraining: SetState<Training | undefined>;
@@ -30,7 +34,6 @@ export async function handleUpdateMultipleTrainings(state: {
   setDetectedChanges: SetState<boolean>;
 }) {
   const {
-    token,
     setTrainings,
     training,
     setTraining,
@@ -55,7 +58,6 @@ export async function handleUpdateMultipleTrainings(state: {
     router,
     () =>
       TrainingController.batchUpdate(
-        token,
         { groupId: group.id, cycleId: cycle!.id },
         [{ ...training, workloads: customAthleteWorkloads }]
       ),
@@ -91,4 +93,90 @@ export async function handleUpdateMultipleTrainings(state: {
     undefined,
     'Error when updating training'
   );
+}
+
+export function deleteSelectedExercises(
+  input: {
+    selectedExercises: TrainingExercise[];
+  },
+  state: {
+    component: TrainingComponent | undefined;
+    training: Training | undefined;
+    setComponent: SetState<TrainingComponent | undefined>;
+    setTraining: SetState<Training | undefined>;
+    setSelectedExercises: SetState<TrainingExercise[]>;
+    selectedSubgroup: {
+      subgroup: Subgroup | null;
+      index: number;
+    } | null;
+    setSelectedSubgroup: SetState<{
+      subgroup: Subgroup | null;
+      index: number;
+    } | null>;
+    setDetectedChanges: SetState<boolean>;
+  }
+) {
+  const { selectedExercises } = input;
+
+  const {
+    component,
+    training,
+    setComponent,
+    setTraining,
+    setSelectedExercises,
+    selectedSubgroup,
+    setSelectedSubgroup,
+    setDetectedChanges,
+  } = state;
+
+  if (!selectedExercises.length || !component || !training) return;
+
+  const newComponent = { ...component };
+
+  if (selectedSubgroup?.subgroup) {
+    const newSubgroup = { ...selectedSubgroup.subgroup };
+    newSubgroup.supersets = (newSubgroup.supersets || []).map((s) => ({
+      ...s,
+      exercises: s.exercises.filter(
+        (e) => !selectedExercises.some((se) => se.id === e.id)
+      ),
+    }));
+
+    newSubgroup.supersets = newSubgroup.supersets.filter(
+      (s) => s.exercises.length > 0
+    );
+
+    setSelectedSubgroup((prev) =>
+      !prev
+        ? null
+        : {
+            ...prev,
+            subgroup: newSubgroup,
+          }
+    );
+    newComponent.subgroups = (newComponent.subgroups || []).map((sg) =>
+      sg.id === selectedSubgroup.subgroup?.id ? newSubgroup : sg
+    );
+  } else {
+    newComponent.supersets = newComponent.supersets?.map((s) => ({
+      ...s,
+      exercises: s.exercises.filter(
+        (e) => !selectedExercises.some((se) => se.id === e.id)
+      ),
+    }));
+
+    newComponent.supersets = newComponent.supersets?.filter(
+      (s) => s.exercises.length > 0
+    );
+  }
+
+  const newTraining = { ...training };
+  newTraining.components = newTraining.components.map((c) =>
+    c.id === component.id ? newComponent : c
+  );
+
+  setComponent(newComponent);
+  setTraining(newTraining);
+  setSelectedExercises([]);
+  setDetectedChanges(true);
 }

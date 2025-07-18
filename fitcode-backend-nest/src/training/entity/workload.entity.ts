@@ -20,19 +20,22 @@ import { CompletedWorkload, PrescribedWorkload } from './workload-value.entity';
 export class WorkloadMeta extends IdEntity {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   institutionId?: string;
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   groupId?: string;
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @Expose()
   cycleId?: string;
 
@@ -67,7 +70,7 @@ export class WorkloadMeta extends IdEntity {
   setNumber: number;
 
   @IsInt()
-  @Min(1)
+  @Min(0)
   @ApiProperty()
   @Expose()
   supersetIndex: number;

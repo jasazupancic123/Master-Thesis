@@ -12,7 +12,6 @@ const api = CommonService.instance.api;
 
 export class TrainingController {
   static async findAll(
-    token: string,
     query?: DateRange & {
       groupId?: string;
       cycleId?: string;
@@ -20,84 +19,69 @@ export class TrainingController {
     }
   ) {
     return api.get<Training[] | TrainingInfo[]>('/training', {
-      token,
       query,
     });
   }
 
-  static async findByDay(token: string, day: Date, groupId: string) {
-    return api.post<Training[]>(`/training/${groupId}/day`, { day }, { token });
+  static async findByDay(day: Date, groupId: string) {
+    return api.post<Training[]>(`/training/${groupId}/day`, { day });
   }
 
   static async findByDayAndPeriod(
-    token: string,
     day: Date,
     period: 'AM' | 'PM',
     groupId: string
   ) {
     return api.post<{ training: Training | null }>(
       `/training/${groupId}/day-period`,
-      { day, period },
-      { token }
+      { day, period }
     );
   }
 
   static async findAthleteGroupWorkloads(
-    token: string,
     groupId: string,
     exerciseIds: string[],
     userId: string
   ) {
     return api.post<CompletedFutureWorkloads>(
       `/training/group/${groupId}/athlete/${userId}/workloads`,
-      { exerciseIds },
-      { token }
+      { exerciseIds }
     );
   }
 
-  static async create(
-    token: string,
-    body: {
-      groupId: string;
-      cycleId: string;
-      components: TrainingComponent[];
-      membersIds: string[];
-      copiedFromId?: string;
-      stats: GroupWorkloadStats[];
-      futureStats: GroupWorkloadStats[];
-    }
-  ): Promise<Training> {
-    return api.post<Training>('/training', body, { token });
+  static async create(body: {
+    groupId: string;
+    cycleId: string;
+    components: TrainingComponent[];
+    membersIds: string[];
+    copiedFromId?: string;
+    stats: GroupWorkloadStats[];
+    futureStats: GroupWorkloadStats[];
+  }): Promise<Training> {
+    return api.post<Training>('/training', body);
   }
 
   static async copyComponent(
-    token: string,
     body: Pick<DateRange, 'from'> & {
       copyFromTrainingId: string;
       copyToTrainingId?: string;
       componentId: string;
     }
   ) {
-    return api.post<Training>('/training/copy/component', body, { token });
+    return api.post<Training>('/training/copy/component', body);
   }
 
-  static async periodize(
-    token: string,
-    body: {
-      baseTrainingId: string;
-      componentId: string;
-      periodizationType: PeriodizationType;
-      exerciseIds: string[];
-      subgroupId?: string;
-    }
-  ) {
-    return api.post<Training[]>('/training/periodize/trainings', body, {
-      token,
-    });
+  static async periodize(body: {
+    baseTrainingId: string;
+    componentId: string;
+    periodizationType: PeriodizationType;
+    exerciseIds: string[];
+    subgroupId?: string;
+  }) {
+    return api.post<Training[]>('/training/periodize/trainings', body);
   }
 
   static async update(
-    token: string,
     trainingId: string,
     body: Partial<
       DateRange & {
@@ -107,11 +91,10 @@ export class TrainingController {
       }
     >
   ) {
-    return api.patch<Training>(`/training/${trainingId}`, body, { token });
+    return api.patch<Training>(`/training/${trainingId}`, body);
   }
 
   static async batchUpdate(
-    token: string,
     params: { groupId: string; cycleId: string },
     body: {
       id: string;
@@ -126,21 +109,19 @@ export class TrainingController {
     const { groupId, cycleId } = params;
     return api.patch<Training[]>(
       `/training/batch/group/${groupId}/cycle/${cycleId}`,
-      { trainings: body },
-      { token }
+      { trainings: body }
     );
   }
 
   static async copy(
-    token: string,
     trainingId: string,
     body: { from: string; to: string; membersIds?: string[] }
   ) {
-    return api.post<Training>(`/training/${trainingId}/copy`, body, { token });
+    return api.post<Training>(`/training/${trainingId}/copy`, body);
   }
 
-  static async delete(token: string, trainingId: string) {
-    await api.delete<{}>(`/training/${trainingId}`, { token });
+  static async delete(trainingId: string) {
+    await api.delete<{}>(`/training/${trainingId}`);
     return null;
   }
 
@@ -160,23 +141,15 @@ export class TrainingController {
   }
 
   static async addComponents(
-    token: string,
     trainingId: string,
     body: { components: TrainingComponent[] }
   ) {
-    return api.post<Training>(`/training/${trainingId}/component`, body, {
-      token,
-    });
+    return api.post<Training>(`/training/${trainingId}/component`, body);
   }
 
-  static async deleteComponent(
-    token: string,
-    trainingId: string,
-    componentId: string
-  ) {
+  static async deleteComponent(trainingId: string, componentId: string) {
     return api.delete<Training>(
-      `/training/${trainingId}/component/${componentId}`,
-      { token }
+      `/training/${trainingId}/component/${componentId}`
     );
   }
 }

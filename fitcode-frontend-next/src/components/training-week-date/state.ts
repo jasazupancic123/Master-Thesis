@@ -30,7 +30,6 @@ export async function handleClickDateCell(
     period: string;
   },
   state: {
-    token: string;
     router: AppRouterInstance;
     group: Group;
     cycle?: Cycle;
@@ -57,7 +56,6 @@ export async function handleClickDateCell(
 ) {
   const { date, period } = input;
   const {
-    token,
     router,
     group,
     cycle,
@@ -100,7 +98,6 @@ export async function handleClickDateCell(
             component: trainingComponent!,
           },
           {
-            token,
             router,
             allComponents: components,
             allExercises,
@@ -146,7 +143,7 @@ export async function handleClickDateCell(
       handleApiRequest(
         router,
         () =>
-          TrainingController.copyComponent(token, {
+          TrainingController.copyComponent({
             copyFromTrainingId: training.id,
             componentId: newTrainingComponent.id,
             from,
@@ -190,7 +187,6 @@ export async function handleClickDateCell(
     handleAddTraining(
       { date, period: period as 'AM' | 'PM' },
       {
-        token,
         group,
         cycle,
         selected,
@@ -310,7 +306,6 @@ function handleAddTraining(
     period: 'AM' | 'PM';
   },
   state: {
-    token: string;
     group: Group;
     cycle?: Cycle;
     selected?: Component[];
@@ -329,7 +324,6 @@ function handleAddTraining(
 ) {
   const { date, period } = input;
   const {
-    token,
     group,
     cycle,
     selected,
@@ -351,7 +345,6 @@ function handleAddTraining(
   let from = setMinutes(setHours(date.toDate(), period === 'AM' ? 8 : 14), 0);
 
   handleCreateTraining(
-    token,
     {
       group,
       cycle: cycle!,

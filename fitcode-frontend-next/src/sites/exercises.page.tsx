@@ -26,13 +26,16 @@ import {
   handleDeleteExercise,
   handlePaginateExercises,
   handleUpdateExercise,
-} from '../app/dashboard/exercises/state';
+} from '@/app/(trainer)/dashboard/exercises/state';
 import FileUpload from '@/components/file-upload/file-upload';
-import { useExerciseContext } from '@/store/exercises-provider';
 import { Publish } from '@mui/icons-material';
-import { useAuth } from '@/store/auth-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import { useMain } from '@/store/main-provider';
+import {
+  COOLDOWN_ID,
+  WARMUP_ID,
+} from '@/common/constant/warmup-cooldown-ids-constants';
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',
@@ -42,12 +45,11 @@ export const DEFAULT_EXERCISE: Partial<Exercise> = {
 
 export default function ExercisesPage() {
   const {
-    token,
     components,
     attributes,
     exercises: allExercises,
     profile,
-  } = useExerciseContext();
+  } = useMain();
 
   const router = useRouter();
   const theme = useTheme();
@@ -103,7 +105,6 @@ export default function ExercisesPage() {
       }
     );
   }, [
-    token,
     components,
     search,
     exercises.length,
@@ -127,7 +128,6 @@ export default function ExercisesPage() {
           </IconButton>
         </Tooltip>
       )}
-
       <Box
         display="flex"
         justifyContent="center"
@@ -144,7 +144,9 @@ export default function ExercisesPage() {
 
         <ExerciseChips
           noSelectionLabel="All"
-          components={ComponentService.toTree(components)}
+          components={ComponentService.toTree(
+            components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID)
+          )}
           selected={selectedComponent}
           setSelected={(component) =>
             setSelectedComponent(component as Component)
@@ -177,7 +179,6 @@ export default function ExercisesPage() {
           </Tooltip>
         </Stack>
       </Box>
-
       <Stack direction="row" justifyContent="center" my={2} width="100%">
         <Pagination
           count={pagination.pages}
@@ -186,7 +187,6 @@ export default function ExercisesPage() {
           page={pagination.page}
         />
       </Stack>
-
       <Box
         display="flex"
         flexWrap="wrap"
@@ -224,7 +224,6 @@ export default function ExercisesPage() {
           </Box>
         ))}
       </Box>
-
       {/* Add Exercise Modal*/}
       {modal.add && (
         <ExerciseModal
@@ -236,7 +235,7 @@ export default function ExercisesPage() {
           setIsOpen={(isOpen) => setModal({ ...modal, add: isOpen })}
           title={'Add Exercise'}
           onConfirm={async (attributes) => {
-            handleAddExercise(token, exercise, {
+            handleAddExercise(exercise, {
               router,
               components,
               attributes,
@@ -250,7 +249,6 @@ export default function ExercisesPage() {
           }}
         />
       )}
-
       {/* Edit Exercise Modal */}
       {modal.edit && (
         <ExerciseModal
@@ -275,7 +273,7 @@ export default function ExercisesPage() {
           {...((exercise.ownerId !== 'global' ||
             roles.includes(UserRole.ADMIN)) && {
             onConfirm: async (attributes) => {
-              handleUpdateExercise(token, exercise!.id!, exercise, {
+              handleUpdateExercise(exercise!.id!, exercise, {
                 router,
                 components,
                 attributes,
@@ -292,7 +290,6 @@ export default function ExercisesPage() {
           })}
         />
       )}
-
       <MyModal
         isOpen={modal.confirmDelete}
         setIsOpen={(open) =>
@@ -301,7 +298,7 @@ export default function ExercisesPage() {
         cancelText="Cancel"
         onCancel={() => setModal((prev) => ({ ...prev, confirmDelete: false }))}
         onConfirm={async () => {
-          await handleDeleteExercise(token, exercise!.id!, {
+          await handleDeleteExercise(exercise!.id!, {
             router,
             setFilteredExercises,
             setExercises,
@@ -313,14 +310,12 @@ export default function ExercisesPage() {
           Delete exercise?
         </Typography>
       </MyModal>
-      {/* Import exercises modal */}
       <MyModal
         isOpen={modal.import}
         setIsOpen={(open) => setModal((prev) => ({ ...prev, import: open }))}
         width={screenSize.isMobile ? undefined : 500}
         onConfirm={() => {
           handleCreateManyExercises(
-            token,
             {
               exercises: importedExercises.map((exercise) => ({
                 name: exercise.name,

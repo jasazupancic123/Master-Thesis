@@ -3,6 +3,7 @@ import { DashboardReportType } from '@/common/enum/dashboard-report-type.enum';
 import { COLOR } from '@/common/constant/browser.constant';
 import DashboardReport from '../dashboard-report/dashboard-report';
 import { useDashboard } from '@/store/dashboard-provider';
+import { useMain } from '@/store/main-provider';
 
 interface ReportsContainerProps {
   index: number;
@@ -12,7 +13,8 @@ interface ReportsContainerProps {
 export default function ReportsContainer(props: ReportsContainerProps) {
   const { index, reportTypes } = props;
 
-  const { users, selectedInstitution } = useDashboard();
+  const { users } = useMain();
+  const { selectedInstitution } = useDashboard();
 
   const colors = COLOR.filter((_, i) => i % 3 === index);
   return (

@@ -1,8 +1,8 @@
-import type { INestApplication } from '@nestjs/common';
+import { Param, type INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { TestDbService } from '@test/common/db/test-db.service';
-import { addDays, addMinutes, subDays } from 'date-fns';
+import { addDays, subDays } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -15,10 +15,16 @@ import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import type { Training } from '@src/training/entity/training.entity';
 import {
+  generateExerciseSet,
+  generateSuperset,
   generateTrainingComponent,
+  generateTrainingExercise,
   generateTrainingStub,
 } from '@src/training/mock/training.stub';
-import { generateWorkloadStub } from '@src/training/mock/workload.stub';
+import {
+  generateWorkloadMetaStub,
+  generateWorkloadStub,
+} from '@src/training/mock/workload.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
 import type { TestInstitution } from '../common/type/entity.type';
@@ -33,7 +39,14 @@ import {
   deleteUsers,
 } from '../common/utils/data.util';
 import { getTime } from '../common/utils/date.util';
-import { CreatePrescribedWorkloadDto } from '@src/training/dto/create-workload.dto';
+import { Exercise } from '@src/exercise/entity/exercise.entity';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
+import {
+  COMPONENT_PARAMS_OPT1,
+  COMPONENT_PARAMS_OPT2,
+} from '@test/common/constant/component-params.constant';
+import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
+import { ParamType } from '@src/component/enum/param.enum';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;
@@ -45,7 +58,8 @@ describe('Update Training (e2e)', () => {
   let groupService: GroupService;
   let institutionService: InstitutionService;
 
-  let component: Component;
+  let component1: Component;
+  let component2: Component;
 
   // first institution
   let institution: TestInstitution;
@@ -71,7 +85,18 @@ describe('Update Training (e2e)', () => {
     groupService = moduleFixture.get(GroupService);
     institutionService = moduleFixture.get(InstitutionService);
 
-    component = await componentService.create(generateComponentStub());
+    component1 = await componentService.create(
+      generateComponentStub({
+        params: { [DEFAULT_PARAMS_KEY]: COMPONENT_PARAMS_OPT1 },
+      }),
+    );
+
+    component2 = await componentService.create(
+      generateComponentStub({
+        params: { [DEFAULT_PARAMS_KEY]: COMPONENT_PARAMS_OPT2 },
+      }),
+    );
+
     institution = await createInstitution(institutionService);
     group = await createGroupWithCycles(groupService, institution);
     training = await createTraining();
@@ -90,38 +115,24 @@ describe('Update Training (e2e)', () => {
       deleteDocs(firebase, 'GROUP', [otherGroup.id, group.id]),
       deleteInstitution(firebase, institution),
       deleteInstitution(firebase, otherInstitution),
-      deleteDoc(firebase, 'COMPONENT', component.id),
+      deleteDoc(firebase, 'COMPONENT', component1.id),
+      deleteDoc(firebase, 'COMPONENT', component2.id),
     ]);
 
     await app.close();
   });
 
-  async function createTraining(
-    data?: Partial<Training>,
-    workloads?: CreatePrescribedWorkloadDto[],
-  ) {
-    const from = data?.from || getTime(addDays(new Date(), 2), 8, 0); // defaults to 8:00 two days ahead
-    const to = data?.to || addMinutes(from, 60); // defaults to 9:00 two days ahead
-
-    let training = await trainingService.create(
-      global.trainer,
-      generateTrainingStub({
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [generateTrainingComponent({ id: component.id, from, to })],
-        ...(data ? data : {}),
-      }),
-    );
-
-    if (workloads)
-      training = await trainingService.update(
-        global.trainer,
-        { trainingId: training.id },
-        { workloads },
-      );
-
-    return training;
+  async function createTraining(data?: Partial<Training>) {
+    return await db.trainings.create({
+      ownerId: global.trainer.uid,
+      membersIds: [global.athlete.uid],
+      institutionId: institution.id,
+      groupId: group.id,
+      cycleId: group.cycles[1].id,
+      components: [generateTrainingComponent({ id: component1.id })],
+      date: data?.from,
+      ...data,
+    });
   }
 
   describe('Update training', () => {
@@ -179,7 +190,7 @@ describe('Update Training (e2e)', () => {
           ...training,
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: component1.id,
               from: getTime(addDays(new Date(), 100), 8, 0),
               to: getTime(addDays(new Date(), 100), 8, 30),
             }),
@@ -200,7 +211,7 @@ describe('Update Training (e2e)', () => {
           ...training,
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: component1.id,
               from: getTime(subDays(new Date(), 2), 8, 0),
               to: getTime(subDays(new Date(), 2), 8, 30),
             }),
@@ -239,7 +250,7 @@ describe('Update Training (e2e)', () => {
           ...training,
           components: [
             generateTrainingComponent({
-              id: component.id,
+              id: component1.id,
               from: getTime(addDays(new Date(), 2), 10, 0),
               to: getTime(addDays(new Date(), 2), 10, 30),
             }),
@@ -311,6 +322,68 @@ describe('Update Training (e2e)', () => {
   });
 
   describe('Custom workloads', () => {
+    let exercise1: Exercise;
+    let exercise2: Exercise;
+
+    beforeAll(async () => {
+      exercise1 = await db.exercises.create({
+        ownerId: global.trainer.uid,
+        componentIds: [component1.id],
+      });
+
+      exercise2 = await db.exercises.create({
+        ownerId: global.trainer.uid,
+        componentIds: [component2.id],
+      });
+
+      await db.trainings.delete(training.id);
+
+      training = await createTraining({
+        components: [
+          generateTrainingComponent({
+            id: component1.id,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({
+                    id: exercise1.id,
+                    sets: [
+                      generateExerciseSet(1, COMPONENT_PARAMS_OPT1),
+                      generateExerciseSet(2, COMPONENT_PARAMS_OPT1),
+                      generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+          generateTrainingComponent({
+            id: component2.id,
+            supersets: [
+              generateSuperset({
+                exercises: [
+                  generateTrainingExercise({
+                    id: exercise2.id,
+                    sets: [
+                      generateExerciseSet(1, COMPONENT_PARAMS_OPT2),
+                      generateExerciseSet(2, COMPONENT_PARAMS_OPT2),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+    });
+
+    afterAll(async () => {
+      await Promise.all([
+        db.exercises.delete(exercise1.id),
+        db.exercises.delete(exercise2.id),
+      ]);
+    });
+
     it('should fail if training component is invalid', async () => {
       const response = await request(app.getHttpServer())
         .patch(`/training/${training.id}`)
@@ -318,7 +391,7 @@ describe('Update Training (e2e)', () => {
         .send({
           ...training,
           workloads: [
-            generateWorkloadStub({ componentId: 'invalid-component-id' }),
+            generateWorkloadMetaStub({ componentId: 'invalid-component-id' }),
           ],
         });
 
@@ -335,8 +408,8 @@ describe('Update Training (e2e)', () => {
         .send({
           ...training,
           workloads: [
-            generateWorkloadStub({
-              componentId: component.id,
+            generateWorkloadMetaStub({
+              componentId: component1.id,
               exerciseId: 'invalid-exercise-id',
             }),
           ],
@@ -347,9 +420,10 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should fail if exercise not prescribed in superset', async () => {
-      const exercise = await db.exercises.create({
-        ownerId: institution.id,
-        componentIds: [component.id],
+      const otherExercise = await db.exercises.create({
+        name: 'Other Exercise',
+        ownerId: global.trainer.uid,
+        componentIds: [component1.id],
       });
 
       const response = await request(app.getHttpServer())
@@ -358,22 +432,257 @@ describe('Update Training (e2e)', () => {
         .send({
           ...training,
           workloads: [
-            generateWorkloadStub({
-              componentId: component.id,
-              exerciseId: 'invalid-exercise-id',
-              supersetIndex: 1,
+            generateWorkloadMetaStub({
+              componentId: component1.id,
+              exerciseId: otherExercise.id,
+              supersetIndex: 0,
             }),
           ],
         });
 
       expect(response.status).toBe(400);
-      /* expect(response.body.message).toBe(
-        `Exercise ${exercise.name} is not prescribed in superset ${
-          customWorkload.supersetIndex + 1
-        }`,
-      ); */
+      expect(response.body.message).toBe(
+        `Exercise ${otherExercise.name} is not prescribed in superset 1`,
+      );
 
-      await db.exercises.delete(exercise.id);
+      await db.exercises.delete(otherExercise.id);
+    });
+
+    it('should fail if invalid set number is provided', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads: [
+            generateWorkloadMetaStub({
+              componentId: component1.id,
+              exerciseId: exercise1.id,
+              supersetIndex: 0,
+              setNumber: 5, // Invalid set number
+            }),
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Set number 5 is invalid for exercise ${exercise1.name}`,
+      );
+    });
+
+    it.each([
+      [
+        generateComponentParamsStub([]),
+        { invalidParamText: 'You have to complete parameter volume (reps)' },
+      ],
+      [
+        generateComponentParamsStub([ParamType.VolWork1]),
+        {
+          invalidParamText:
+            'You have to complete parameter intensity (kilograms)',
+        },
+      ],
+      [
+        generateComponentParamsStub([
+          ParamType.VolWork1,
+          ParamType.IntWork1,
+          ParamType.VolWork2,
+        ]),
+        { invalidParamText: 'Parameter volume is not prescribed' },
+      ],
+    ])(
+      'should fail if there are missing parameters in custom workload',
+      async (componentParams, { invalidParamText }) => {
+        const response = await request(app.getHttpServer())
+          .patch(`/training/${training.id}`)
+          .set('Authorization', `Bearer ${global.trainer.token}`)
+          .send({
+            ...training,
+            workloads: [
+              generateWorkloadStub(
+                {
+                  componentId: component1.id,
+                  exerciseId: exercise1.id,
+                  supersetIndex: 0,
+                  setNumber: 1,
+                },
+                componentParams,
+              ),
+            ],
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.message).toBe(
+          `${invalidParamText} in exercise ${exercise1.name} in superset 1`,
+        );
+      },
+    );
+
+    it('should fail if prescribed param has no value or has negative value', async () => {
+      const workload = generateWorkloadStub(
+        {
+          componentId: component1.id,
+          exerciseId: exercise1.id,
+          supersetIndex: 0,
+          setNumber: 1,
+        },
+        generateComponentParamsStub([ParamType.VolWork1, ParamType.IntWork1]),
+      );
+
+      workload.prescribedVolWork1ValueL = undefined; // No value
+      let response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({ ...training, workloads: [workload] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Prescribed volume value must not be empty`,
+      );
+
+      workload.prescribedVolWork1ValueL = -5; // Negative value
+      response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({ ...training, workloads: [workload] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Prescribed volume value must not be empty`,
+      );
+    });
+
+    it('should update training with custom workloads', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads: [
+            generateWorkloadStub(
+              {
+                componentId: component1.id,
+                exerciseId: exercise1.id,
+                supersetIndex: 0,
+                setNumber: 1,
+              },
+              generateComponentParamsStub([
+                ParamType.VolWork1,
+                ParamType.IntWork1,
+              ]),
+              true, // random values
+            ),
+          ],
+        });
+
+      expect(response.status).toBe(200);
+
+      const workloads = await db.workloads.getAllByTrainingId(training.id);
+      expect(workloads).toHaveLength(1);
+      expect(workloads[0].componentId).toBe(component1.id);
+      expect(workloads[0].exerciseId).toBe(exercise1.id);
+      expect(workloads[0].supersetIndex).toBe(0);
+      expect(workloads[0].setNumber).toBe(1);
+
+      // prescribed values that should be defined
+      expect(workloads[0].volWork1Type).toBeDefined();
+      expect(workloads[0].prescribedVolWork1ValueL).toBeDefined();
+      expect(workloads[0].prescribedVolWork1ValueR).toBeDefined();
+
+      expect(workloads[0].intWork1Type).toBeDefined();
+      expect(workloads[0].prescribedIntWork1ValueL).toBeDefined();
+      expect(workloads[0].prescribedIntWork1ValueR).toBeDefined();
+
+      // other prescribed values should be undefined
+      expect(workloads[0].volWork2Type).toBeUndefined();
+      expect(workloads[0].prescribedVolWork2ValueL).toBeUndefined();
+      expect(workloads[0].prescribedVolWork2ValueR).toBeUndefined();
+
+      expect(workloads[0].intWork2Type).toBeUndefined();
+      expect(workloads[0].prescribedIntWork2ValueL).toBeUndefined();
+      expect(workloads[0].prescribedIntWork2ValueR).toBeUndefined();
+
+      expect(workloads[0].volRecType).toBeUndefined();
+      expect(workloads[0].prescribedVolRecValueL).toBeUndefined();
+      expect(workloads[0].prescribedVolRecValueR).toBeUndefined();
+
+      expect(workloads[0].intRecType).toBeUndefined();
+      expect(workloads[0].prescribedIntRecValueL).toBeUndefined();
+      expect(workloads[0].prescribedIntRecValueR).toBeUndefined();
+
+      await db.workloads.deleteAllByTrainingId(training.id);
+    });
+
+    it('should update training with multiple custom workloads', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads: [
+            generateWorkloadStub(
+              {
+                userId: global.athlete.uid,
+                componentId: component1.id,
+                exerciseId: exercise1.id,
+                supersetIndex: 0,
+                setNumber: 1,
+              },
+              COMPONENT_PARAMS_OPT1,
+              true, // random values
+            ),
+            generateWorkloadStub(
+              {
+                userId: global.athlete.uid,
+                componentId: component1.id,
+                exerciseId: exercise1.id,
+                supersetIndex: 0,
+                setNumber: 2,
+              },
+              COMPONENT_PARAMS_OPT1,
+              true, // random values
+            ),
+            generateWorkloadStub(
+              {
+                userId: global.athlete.uid,
+                componentId: component1.id,
+                exerciseId: exercise1.id,
+                supersetIndex: 0,
+                setNumber: 3,
+              },
+              COMPONENT_PARAMS_OPT1,
+              true, // random values
+            ),
+            generateWorkloadStub(
+              {
+                componentId: component2.id,
+                exerciseId: exercise2.id,
+                supersetIndex: 0,
+                setNumber: 1,
+              },
+              COMPONENT_PARAMS_OPT2,
+              true,
+            ),
+            generateWorkloadStub(
+              {
+                componentId: component2.id,
+                exerciseId: exercise2.id,
+                supersetIndex: 0,
+                setNumber: 2,
+              },
+              COMPONENT_PARAMS_OPT2,
+              true,
+            ),
+          ],
+        });
+
+      console.log('response: ', response.body);
+      expect(response.status).toBe(200);
+
+      const workloads = await db.workloads.getAllByTrainingId(training.id);
+      expect(workloads).toHaveLength(5);
+
+      await db.workloads.deleteAllByTrainingId(training.id);
     });
   });
 });

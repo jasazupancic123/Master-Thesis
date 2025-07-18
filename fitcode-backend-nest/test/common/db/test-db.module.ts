@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+
+import { FirebaseModule } from '@src/firebase/firebase.module';
+
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestTrainingService } from './service/test-training.service';
 import { TestWorkloadService } from './service/test-workload.service';
 import { TestDbService } from './test-db.service';
-import { FirebaseModule } from '@src/firebase/firebase.module';
 
 @Module({
   imports: [FirebaseModule.forRoot()],
