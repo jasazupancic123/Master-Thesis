@@ -25,6 +25,7 @@ import {
 } from './state';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { useMain } from '@/store/main-provider';
+import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
 
 dayjs.extend(weekOfYear);
 
@@ -216,28 +217,7 @@ export default function TrainerDayView() {
         overflowY: 'none',
       }}
     >
-      {!screenSize.isSmallerThanLaptop && (
-        <>
-          <Divider
-            orientation="vertical"
-            sx={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              zIndex: 1200,
-            }}
-          />
-          <Divider
-            orientation="vertical"
-            sx={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              zIndex: 1200,
-            }}
-          />
-        </>
-      )}
+      <VerticalLinesBorder />
 
       <Box
         justifyContent="flex-end"
@@ -390,7 +370,7 @@ export default function TrainerDayView() {
           alignItems="center"
           sx={{
             p: isSticky ? 0 : undefined,
-            py: 2,
+            py: 5,
             backgroundColor: theme.palette.background.default,
           }}
         >
@@ -404,7 +384,6 @@ export default function TrainerDayView() {
         justifyContent="center"
         maxWidth={MAX_WIDTH}
         sx={{
-          mt: 1,
           mx: 'auto',
         }}
       >

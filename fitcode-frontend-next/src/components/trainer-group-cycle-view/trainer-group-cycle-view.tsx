@@ -8,7 +8,7 @@ import { useGroup } from '@/store/group-provider';
 import { ComponentService } from '@/controller/component/component.service';
 import { Component } from '@/controller/component/type/component.type';
 import { TrainingService } from '@/controller/training/training.service';
-import { IconButton, Typography, useTheme } from '@mui/material';
+import { Divider, IconButton, Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
@@ -21,6 +21,7 @@ import { GroupService } from '@/controller/group/group.service';
 import { MoreVert } from '@mui/icons-material';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { useMain } from '@/store/main-provider';
+import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
 
 export default function TrainerCycleView() {
   const { components, exercises: allExercises, methods } = useMain();
@@ -118,10 +119,15 @@ export default function TrainerCycleView() {
     <Box
       pb={10}
       maxWidth={MAX_WIDTH}
+      position="relative"
       sx={{
         mx: 'auto',
+        minHeight: 'calc(100vh - 50px)',
+        overflowY: 'none',
       }}
     >
+      <VerticalLinesBorder />
+
       <Box
         display="flex"
         flexDirection="column"
