@@ -1,6 +1,7 @@
 import SearchIcon from '@mui/icons-material/Search';
 import { Search, SearchIconWrapper, StyledInputBase } from './style';
 import { SxProps } from '@mui/material';
+import { ChildrenProps } from '@/common/type/props.type';
 
 export type SearchBarProps = {
   placeholder: string;
@@ -8,6 +9,7 @@ export type SearchBarProps = {
   handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   maxWidth?: string;
   sx?: SxProps;
+  children?: ChildrenProps['children'];
 };
 
 export function SearchBar({
@@ -16,9 +18,13 @@ export function SearchBar({
   handleSearchChange,
   maxWidth,
   sx,
+  children,
 }: SearchBarProps) {
   return (
-    <Search maxWidth={maxWidth} sx={sx}>
+    <Search
+      maxWidth={maxWidth}
+      sx={{ ...sx, '& .MuiInputBase-root': { width: '100%' } }}
+    >
       <SearchIconWrapper>
         <SearchIcon />
       </SearchIconWrapper>
@@ -28,6 +34,7 @@ export function SearchBar({
         value={value}
         onChange={handleSearchChange}
       />
+      {children}
     </Search>
   );
 }

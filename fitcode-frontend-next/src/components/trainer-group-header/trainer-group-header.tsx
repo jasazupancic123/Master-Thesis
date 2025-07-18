@@ -18,7 +18,12 @@ import {
 } from '@mui/material';
 import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
-import { Menu, Settings } from '@mui/icons-material';
+import {
+  KeyboardArrowDownTwoTone,
+  KeyboardArrowUpTwoTone,
+  Menu,
+  Settings,
+} from '@mui/icons-material';
 import { useState } from 'react';
 import {
   LINK_DASHBOARD,
@@ -30,15 +35,14 @@ import Link from 'next/link';
 import { useAuth } from '@/store/auth-provider';
 import { useRouter } from 'next/navigation';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 
-export interface GroupDateFilterButtonGroupProps {
+export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;
   setFilter: SetState<GroupDateFilter>;
 }
 
-export default function GroupDateFilterButtonGroup(
-  props: GroupDateFilterButtonGroupProps
-) {
+export default function TrainerGroupHeader(props: TrainerGroupHeaderProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
@@ -49,6 +53,10 @@ export default function GroupDateFilterButtonGroup(
   const { institution, detectedChanges, setDetectedChanges } = useGroup();
 
   const [open, setOpen] = useState(false);
+  const [openProfileMenu, setOpenProfileMenu] = useState(false);
+  const [anchorProfileEl, setAnchorProfileEl] = useState<HTMLElement | null>(
+    null
+  );
 
   return (
     <Box
@@ -85,32 +93,44 @@ export default function GroupDateFilterButtonGroup(
                 Object.values(LINKS_SIDEBAR[role[0]]).map((link, i) => {
                   if (!link) return null;
 
+                  let Icon: React.ReactNode = null;
+
+                  switch (link.href) {
+                    case LINK_DASHBOARD.href:
+                      Icon = (
+                        <Avatar
+                          src={institution.imageUrl}
+                          sx={{
+                            width: 34,
+                            height: 34,
+                          }}
+                        />
+                      );
+                      break;
+                    case LINK_PROFILE.href:
+                      Icon = (
+                        <Avatar
+                          src={profile?.profileImageUrl}
+                          sx={{
+                            width: 34,
+                            height: 34,
+                          }}
+                        />
+                      );
+                      break;
+                    case LINK_SETTINGS.href:
+                      Icon = <Settings sx={{ fontSize: 20, ml: 0.9 }} />;
+                      break;
+                    default:
+                      Icon = null;
+                  }
+
                   return (
                     <Tooltip title={link.label} placement="right" key={i}>
                       <ListItem disablePadding>
                         <Link href={link.href} passHref legacyBehavior>
                           <Box display="flex" alignItems="center" ml={1}>
-                            {link.href === LINK_DASHBOARD.href && (
-                              <Avatar
-                                src={institution.imageUrl}
-                                sx={{
-                                  width: 34,
-                                  height: 34,
-                                }}
-                              />
-                            )}
-                            {link.href === LINK_PROFILE.href && (
-                              <Avatar
-                                src={profile?.profileImageUrl}
-                                sx={{
-                                  width: 34,
-                                  height: 34,
-                                }}
-                              />
-                            )}
-                            {link.href === LINK_SETTINGS.href && (
-                              <Settings sx={{ fontSize: 20, ml: 0.9 }} />
-                            )}
+                            {Icon}
                             <ListItemText
                               primary={link.label}
                               sx={{
@@ -135,11 +155,52 @@ export default function GroupDateFilterButtonGroup(
           alignItems="center"
           sx={{
             position: 'absolute',
-            left: 15,
+            left: screenSize.isDesktop ? 10 : 6,
             top: 10,
           }}
           gap={1}
         >
+          <Box
+            position="relative"
+            onClick={(event) => {
+              setAnchorProfileEl(event.currentTarget);
+              setOpenProfileMenu(!openProfileMenu);
+            }}
+          >
+            <Avatar
+              src={profile?.profileImageUrl}
+              sx={{
+                width: 34,
+                height: 34,
+                cursor: 'pointer',
+              }}
+            />
+            <IconButton
+              sx={{
+                p: 0,
+                m: 0,
+                position: 'absolute',
+                bottom: -2,
+                right: 0,
+                backgroundColor: theme.palette.background.dark,
+                borderRadius: '50%',
+              }}
+            >
+              {!openProfileMenu ? (
+                <KeyboardArrowDownTwoTone
+                  sx={{
+                    fontSize: 15,
+                  }}
+                />
+              ) : (
+                <KeyboardArrowUpTwoTone
+                  sx={{
+                    fontSize: 15,
+                  }}
+                />
+              )}
+            </IconButton>
+          </Box>
           <Link href={LINK_DASHBOARD.href} passHref legacyBehavior>
             <Tooltip title="Dashboard">
               <Avatar
@@ -152,17 +213,6 @@ export default function GroupDateFilterButtonGroup(
               />
             </Tooltip>
           </Link>
-
-          <Tooltip title="Profile">
-            <Avatar
-              src={profile?.profileImageUrl}
-              sx={{
-                width: 34,
-                height: 34,
-                cursor: 'pointer',
-              }}
-            />
-          </Tooltip>
           <Tooltip title="Settings">
             <Settings sx={{ fontSize: 20, cursor: 'pointer' }} />
           </Tooltip>
@@ -211,6 +261,12 @@ export default function GroupDateFilterButtonGroup(
           )}
         </ToggleButtonGroup>
       </Box>
+      <ProfileHeaderMenu
+        anchorEl={anchorProfileEl}
+        open={openProfileMenu}
+        setOpen={setOpenProfileMenu}
+        setAnchorEl={setAnchorProfileEl}
+      />
     </Box>
   );
 }

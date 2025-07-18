@@ -195,6 +195,46 @@ export default function GroupTrainerDayViewHeader(
     );
   }
 
+  const HorizontalItems = () => {
+    return (
+      <HorizontalItemsList
+        items={days}
+        value={day.date.toString()}
+        setValue={(value) => {
+          setDay({ label: '', date: dayjs(value) });
+          setDateFrom(dayjs(value).startOf('day'));
+          setDateTo(dayjs(value).endOf('day'));
+          setSelectedExercises([]);
+        }}
+        checkIsSameValue={(value: string) => {
+          return dayjs(value).isSame(dayjs(day.date), 'day');
+        }}
+        alertOnChange
+        onArrowClick={(direction) => {
+          const newDay =
+            direction === 'left'
+              ? day.date.subtract(1, 'week')
+              : day.date.add(1, 'week');
+
+          setDay({ label: '', date: newDay });
+          setDateFrom(newDay.startOf('day'));
+          setDateTo(newDay.endOf('day'));
+          setDays(
+            commonService.date.getWeekDays(newDay).map(({ label, date }) => ({
+              label,
+              value: date.toString(),
+              sublabel: commonService.date.format(date, {
+                withYear: false,
+                withMonth: false,
+                withoutDots: true,
+              }),
+            }))
+          );
+        }}
+      />
+    );
+  };
+
   return (
     <Box
       display="flex"
@@ -208,43 +248,7 @@ export default function GroupTrainerDayViewHeader(
     >
       {screenSize.isSmallTablet || screenSize.isMobile ? (
         <>
-          <HorizontalItemsList
-            items={days}
-            value={day.date.toString()}
-            setValue={(value) => {
-              setDay({ label: '', date: dayjs(value) });
-              setDateFrom(dayjs(value).startOf('day'));
-              setDateTo(dayjs(value).endOf('day'));
-              setSelectedExercises([]);
-            }}
-            checkIsSameValue={(value: string) => {
-              return dayjs(value).isSame(dayjs(day.date), 'day');
-            }}
-            alertOnChange
-            onArrowClick={(direction) => {
-              const newDay =
-                direction === 'left'
-                  ? day.date.subtract(1, 'week')
-                  : day.date.add(1, 'week');
-
-              setDay({ label: '', date: newDay });
-              setDateFrom(newDay.startOf('day'));
-              setDateTo(newDay.endOf('day'));
-              setDays(
-                commonService.date
-                  .getWeekDays(newDay)
-                  .map(({ label, date }) => ({
-                    label,
-                    value: date.toString(),
-                    sublabel: commonService.date.format(date, {
-                      withYear: false,
-                      withMonth: false,
-                      withoutDots: true,
-                    }),
-                  }))
-              );
-            }}
-          />
+          <HorizontalItems />
           <GroupCycleInfo smallDisplay />
           <PeriodSelect smallDisplay />
         </>
@@ -259,43 +263,7 @@ export default function GroupTrainerDayViewHeader(
             <PeriodSelect />
           </Box>
           <Box width="50%">
-            <HorizontalItemsList
-              items={days}
-              value={day.date.toString()}
-              setValue={(value) => {
-                setDay({ label: '', date: dayjs(value) });
-                setDateFrom(dayjs(value).startOf('day'));
-                setDateTo(dayjs(value).endOf('day'));
-                setSelectedExercises([]);
-              }}
-              checkIsSameValue={(value: string) => {
-                return dayjs(value).isSame(dayjs(day.date), 'day');
-              }}
-              alertOnChange
-              onArrowClick={(direction) => {
-                const newDay =
-                  direction === 'left'
-                    ? day.date.subtract(1, 'week')
-                    : day.date.add(1, 'week');
-
-                setDay({ label: '', date: newDay });
-                setDateFrom(newDay.startOf('day'));
-                setDateTo(newDay.endOf('day'));
-                setDays(
-                  commonService.date
-                    .getWeekDays(newDay)
-                    .map(({ label, date }) => ({
-                      label,
-                      value: date.toString(),
-                      sublabel: commonService.date.format(date, {
-                        withYear: false,
-                        withMonth: false,
-                        withoutDots: true,
-                      }),
-                    }))
-                );
-              }}
-            />
+            <HorizontalItems />
           </Box>
           <Box width="25%">
             <GroupCycleInfo />

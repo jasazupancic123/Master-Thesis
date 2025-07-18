@@ -1,62 +1,56 @@
 'use client';
 
 import { useScreenSize } from '@/store/screen-size-provider';
-import { Groups, MoreVert, PersonAddAlt, Remove } from '@mui/icons-material';
-import {
-  Avatar,
-  Grid2,
-  IconButton,
-  ToggleButton,
-  Tooltip,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { MoreVert } from '@mui/icons-material';
+import { IconButton, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { useDashboard } from '@/store/dashboard-provider';
-import { useRouter } from 'next/navigation';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { isManager } from '@/common/service/util/firebase-auth.util';
-import { InstitutionController } from '@/controller/institution/institution.controller';
-import { InstitutionService } from '@/controller/institution/institution.service';
-import toast from 'react-hot-toast';
 import { GroupController } from '@/controller/group/group.controller';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { useMain } from '@/store/main-provider';
+import { isManager } from '@/common/service/util/firebase-auth.util';
+import { ADD_GROUP } from '@/common/constant/add-group.constant';
+import { SetState } from '@/common/type/state.type';
+import { GroupService } from '@/controller/group/group.service';
+import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
 
-const AVATAR_SIZE = 45;
-
-interface DashboardStaffGroupsCyclesProps {
-  setModal: SetState<{ add_trainer: boolean; add_group: boolean }>;
+interface DashboardGroupsSelectProps {
+  modal: {
+    add_member: boolean;
+    add_trainer: boolean;
+    add_group: boolean;
+  };
+  setModal: SetState<{
+    add_member: boolean;
+    add_trainer: boolean;
+    add_group: boolean;
+  }>;
 }
 
-export default function DashboardStaffGroupsCycles(
-  props: DashboardStaffGroupsCyclesProps
+export default function DashboardGroupsSelect(
+  props: DashboardGroupsSelectProps
 ) {
   const screenSize = useScreenSize();
   const theme = useTheme();
-  const router = useRouter();
+  const { profile, users } = useMain();
 
-  const {
-    selectedInstitution,
-    setSelectedInstitution,
-    selectedGroup,
-    setSelectedGroup,
-  } = useDashboard();
+  const { selectedInstitution, selectedGroup, setSelectedGroup } =
+    useDashboard();
 
-  const { setModal } = props;
+  const { modal, setModal } = props;
 
-  const { profile } = useMain();
+  const roles = profile.customClaims.role || [];
 
   const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     selectedGroup?.cycles[0] || null
   );
 
-  if (!selectedInstitution) return null;
+  const scrollHorizontalListLeftRef = useRef(0);
 
-  const role = profile.customClaims.role || [];
+  if (!selectedInstitution) return null;
 
   useEffect(() => {
     async function fetchGroups() {
@@ -82,27 +76,43 @@ export default function DashboardStaffGroupsCycles(
     fetchGroups().then();
   }, [selectedInstitution]);
 
-  const handleRemoveTrainerFromInstitution = (trainerId: string) => {
-    if (!selectedInstitution) return;
-
-    handleApiRequest(
-      router,
-      () =>
-        InstitutionController.removeTrainers(selectedInstitution.id, {
-          trainerIds: [trainerId],
-        }),
-      (institution) => {
-        setSelectedInstitution((prev) => {
-          if (!prev) return null;
-          const updatedTrainers = prev.trainers.filter(
-            (trainer) => trainer.uid !== trainerId
+  const HorizontalInput = () => {
+    return (
+      <HorizontalItemsList
+        dashboardView
+        addButtonOnEnd={isManager(roles)}
+        onButtonClick={() => {
+          setModal((prev) => ({ ...prev, add_group: true }));
+        }}
+        items={
+          (selectedInstitution?.groups || []).map((group) => ({
+            label: group.name,
+            value: group.id,
+          })) || []
+        }
+        scrollHorizontalListLeftRef={scrollHorizontalListLeftRef}
+        value={selectedGroup?.id || ''}
+        setValue={(value) => {
+          if (value === ADD_GROUP.id) {
+            setModal((prev) => ({ ...prev, add_group: true }));
+            return;
+          }
+          const group = selectedInstitution?.groups?.find(
+            (g) => g.id === value
           );
-          return { ...prev, trainers: updatedTrainers };
-        });
-        toast.success('Trainer removed successfully');
-      },
-      undefined,
-      'Failed to remove trainer'
+          if (group) {
+            setSelectedGroup(GroupService.mapMembers(group, users, true));
+            setSelectedCycle(group.cycles[0] || null);
+          } else {
+            setSelectedGroup(null);
+            setSelectedCycle(null);
+          }
+        }}
+        checkIsSameValue={(value: string) => {
+          return selectedGroup?.id === value;
+        }}
+        onArrowClick={(direction) => {}}
+      />
     );
   };
 
@@ -113,39 +123,15 @@ export default function DashboardStaffGroupsCycles(
       justifyContent="center"
       width="100%"
       maxWidth={MAX_WIDTH}
+      gap={screenSize.isSmallTablet || screenSize.isMobile ? 0 : 5}
       sx={{
         backgroundColor: theme.palette.background.default,
+        mx: 'auto',
       }}
     >
       {screenSize.isSmallTablet || screenSize.isMobile ? (
         <>
-          <HorizontalItemsList
-            dashboardView
-            items={
-              selectedInstitution?.groups.map((group) => ({
-                label: group.name,
-                value: group.id,
-              })) || []
-            }
-            value={selectedGroup?.id || ''}
-            setValue={(value) => {
-              const group = selectedInstitution?.groups.find(
-                (g) => g.id === value
-              );
-              if (group) {
-                setSelectedGroup(group);
-                setSelectedCycle(group.cycles[0] || null);
-              } else {
-                setSelectedGroup(null);
-                setSelectedCycle(null);
-              }
-            }}
-            checkIsSameValue={(value: string) => {
-              return selectedGroup?.id === value;
-            }}
-            alertOnChange
-            onArrowClick={(direction) => {}}
-          />
+          <HorizontalInput />
           <Box width="100%" sx={{ position: 'relative' }}>
             <Box
               width="80%"
@@ -201,6 +187,7 @@ export default function DashboardStaffGroupsCycles(
                 width: 4,
                 borderRadius: 5,
                 backgroundColor: theme.palette.primary.main,
+                ml: !screenSize.isDesktop ? 1 : 0,
               }}
             />
 
@@ -215,33 +202,7 @@ export default function DashboardStaffGroupsCycles(
             </Typography>
           </Box>
           <Box width="50%">
-            <HorizontalItemsList
-              dashboardView
-              items={
-                selectedInstitution?.groups.map((group) => ({
-                  label: group.name,
-                  value: group.id,
-                })) || []
-              }
-              value={selectedGroup?.id || ''}
-              setValue={(value) => {
-                const group = selectedInstitution?.groups.find(
-                  (g) => g.id === value
-                );
-                if (group) {
-                  setSelectedGroup(group);
-                  setSelectedCycle(group.cycles[0] || null);
-                } else {
-                  setSelectedGroup(null);
-                  setSelectedCycle(null);
-                }
-              }}
-              checkIsSameValue={(value: string) => {
-                return selectedGroup?.id === value;
-              }}
-              alertOnChange
-              onArrowClick={(direction) => {}}
-            />
+            <HorizontalInput />
           </Box>
           <Box width="25%" display="flex" justifyContent="flex-end" mt={1}>
             <IconButton sx={{ m: 0, p: 0 }}>
@@ -250,6 +211,8 @@ export default function DashboardStaffGroupsCycles(
           </Box>
         </Box>
       )}
+
+      <DashboardGroupsMembers modal={modal} setModal={setModal} />
     </Box>
   );
 }

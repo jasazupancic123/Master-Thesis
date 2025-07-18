@@ -13,6 +13,7 @@ import { ReactNode } from 'react';
 import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
 import {
+  Add,
   Groups,
   PersonAdd,
   PersonAddAlt1,
@@ -24,6 +25,7 @@ import {
   DASHBOARD_MAIN,
   DASHBOARD_REGISTER_USERS,
   DASHBOARD_INSTITUTION,
+  DASHBOARD_ADD_INSTITUTION,
 } from '@/common/constant/dashboard-views-constant';
 
 export function link(
@@ -114,8 +116,8 @@ export const LINK_EXERCISES_DASHBOARD_NAVIGATION = link(
 );
 export const LINK_ADD_INSTITUTION = link(
   'Add Institution',
-  DASHBOARD_REGISTER_USERS,
-  <PersonAddAlt1 />
+  DASHBOARD_ADD_INSTITUTION,
+  <Add />
 );
 
 export const LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS = (role: UserRole[]) => ({
