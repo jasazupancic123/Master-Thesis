@@ -33,7 +33,7 @@ export class InstitutionController {
     @Param('institutionId') institutionId: string,
     @Param('type') type: GetMembersType,
   ) {
-    return this.institutionService.findMembers({ institutionId }, { type });
+    return this.institutionService.findMembers({ institutionId }, type);
   }
 
   @Post()
