@@ -178,15 +178,15 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                 variant="subtitle2"
                 textAlign="center"
                 sx={{
-                  minWidth:
-                    isSameValue || dashboardView || dashboardInstitutionsView
-                      ? '50px'
-                      : undefined,
                   fontSize: isSameValue ? '13px' : '12px',
                   fontWeight:
                     dashboardView || dashboardInstitutionsView ? 400 : 250,
                   p: isSameValue ? 0.5 : 0,
                   m: 0,
+                  minWidth:
+                    isSameValue || dashboardView || dashboardInstitutionsView
+                      ? '50px'
+                      : undefined,
                   border: isSameValue
                     ? `1px solid ${theme.palette.primary.main}`
                     : undefined,
@@ -198,8 +198,11 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
                     isSameValue && !dashboardView && !dashboardInstitutionsView
                       ? theme.palette.primary.main
                       : undefined,
-                  py: dashboardView || dashboardInstitutionsView ? 1.5 : 0,
-                  px: dashboardInstitutionsView ? 1.5 : 0,
+                  py:
+                    dashboardView || dashboardInstitutionsView
+                      ? 1.5
+                      : undefined,
+                  px: dashboardInstitutionsView ? 1.5 : undefined,
                   backgroundColor:
                     dashboardView || dashboardInstitutionsView
                       ? theme.palette.background.light

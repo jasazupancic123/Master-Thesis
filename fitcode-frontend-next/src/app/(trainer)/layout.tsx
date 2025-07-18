@@ -1,4 +1,9 @@
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import {
+  isAdmin,
+  isManager,
+  isTrainer,
+} from '@/common/service/util/firebase-auth.util';
 import { ChildrenProps } from '@/common/type/props.type';
 import Loading from '@/components/loading/loading';
 import { AttributeController } from '@/controller/attribute/attribute.controller';
@@ -20,11 +25,7 @@ export default async function Layout({ children }: ChildrenProps) {
 
   const roles = profile.customClaims.role;
 
-  if (
-    !roles.includes(UserRole.TRAINER) &&
-    !roles.includes(UserRole.MANAGER) &&
-    !roles.includes(UserRole.ADMIN)
-  )
+  if (!isTrainer(roles) && !isManager(roles) && !isAdmin(roles))
     return <Loading text="Unauthorized" />;
 
   const [users, exercises, attributes, components, methods] = await Promise.all(
