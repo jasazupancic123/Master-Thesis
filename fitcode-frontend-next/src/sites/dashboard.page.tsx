@@ -270,6 +270,7 @@ export default function DashboardPage() {
                 ...selectedInstitution,
                 groups: [...selectedInstitution.groups, group],
               });
+              setSelectedGroup(group);
               setModal({
                 add_member: false,
                 add_trainer: false,
