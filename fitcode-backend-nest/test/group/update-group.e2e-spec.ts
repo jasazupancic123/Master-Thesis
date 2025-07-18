@@ -242,6 +242,7 @@ describe('Update Group (e2e)', () => {
       const foundTrainingsBefore = await trainingService.findAll(
         global.trainer,
       );
+
       expect(foundTrainingsBefore).toHaveLength(6);
       for (const t of foundTrainingsBefore) {
         expect(t.membersIds).toHaveLength(1);

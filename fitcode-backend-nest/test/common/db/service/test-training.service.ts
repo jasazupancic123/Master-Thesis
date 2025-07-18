@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import type { CollectionReference } from 'firebase-admin/firestore';
 import { v4 } from 'uuid';
 
@@ -5,7 +6,10 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Training } from '@src/training/entity/training.entity';
-import { Injectable } from '@nestjs/common';
+import { generateTrainingStub } from '@src/training/mock/training.stub';
+import { getTime } from '@test/common/utils/date.util';
+import { addHours } from 'date-fns';
+import { TrainingComponent } from '@src/training/entity/training-component.entity';
 
 @Injectable()
 export class TestTrainingService {
@@ -27,10 +31,26 @@ export class TestTrainingService {
       });
   }
 
-  async create(input: Create<Training>): Promise<Training> {
+  async create(
+    input: Partial<Create<Training>> & {
+      ownerId: string;
+      membersIds: string[];
+      components: Omit<TrainingComponent, 'from' | 'to'>[];
+      date?: Date; // creates `from` and `to` based on this date, defaults to today at 8:00 - 9:00
+    },
+  ): Promise<Training> {
     const id = input.id || v4();
     const docRef = this.collection.doc(id);
-    await docRef.set({ ...input, id });
+
+    const from = input.from || getTime(input.date || new Date(), 8, 0);
+    const to = input.to || addHours(from, 1);
+
+    const data = this.firebase.buildCreateQuery(
+      generateTrainingStub({ ...input, id, from, to }),
+      { timestamps: true },
+    );
+
+    await docRef.set(data);
 
     return this.firebase.serialize(
       (await docRef.get()).data() as FirestoreEntity<Training>,

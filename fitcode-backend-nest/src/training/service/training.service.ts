@@ -54,6 +54,7 @@ import { UserService } from '@src/user/user.service';
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
 import { CreateTrainingDto } from '../dto/create-training.dto';
+import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
@@ -69,7 +70,6 @@ import { WorkloadRepository } from '../repository/workload.repository';
 import { PeriodizationService } from './periodization.service';
 import { TrainingPlanService } from './training-plan.service';
 import { WorkloadService } from './workload.service';
-import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 
 @Injectable()
 export class TrainingService implements Permission<Training, Institution> {

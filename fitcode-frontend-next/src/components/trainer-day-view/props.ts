@@ -30,27 +30,12 @@ export interface AddExerciseFormProps {
 export interface TrainingExerciseCardProps {
   supersetIndex: number;
   exercise: TrainingExercise;
-  selectedExercise: TrainingExercise | null;
-  setSelectedExercise: Dispatch<SetStateAction<TrainingExercise | null>>;
   chartView?: boolean;
   superior?: { row: boolean; column: boolean; all: boolean };
-  setOpenVideoPlayerModal: Dispatch<SetStateAction<boolean>>;
-  setsNumbers: { exerciseId: string; setsNumber: number }[];
-  setSetsNumbers: SetState<{ exerciseId: string; setsNumber: number }[]>;
-  setSupersets: SetState<Superset[]>;
-  expandedExercisesView: boolean;
-  setExpandedExercisesView: SetState<boolean>;
 }
 
 export interface SubgroupProps {
   showSubgroups: boolean;
-}
-
-export interface SupersetsProps {
-  openAddExerciseModal: boolean;
-  setOpenAddExerciseModal: SetState<boolean>;
-  expandedExercisesView: boolean;
-  setExpandedExercisesView: SetState<boolean>;
 }
 
 export interface SetExerciseState {

@@ -25,42 +25,27 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/store/auth-provider';
+import { useProfile } from '@/store/profile-provider';
 
 const DEFAULT_MARGIN = 1;
 
-export interface ProfilePageProps {
-  token: string;
-  user: User;
-}
+export default function ProfilePage() {
+  const {
+    user,
+    profile: profileGlobal,
+    setProfile: setProfileGlobal,
+  } = useAuth();
 
-export default function ProfilePage(props: ProfilePageProps) {
-  const { token, user } = props;
-
-  const { profile: profileGlobal, setProfile: setProfileGlobal } = useAuth();
-  const [profile, setProfile] = useState<UserEntity>({
-    ...profileGlobal,
-  } as UserEntity);
   const router = useRouter();
   const screenSize = useScreenSize();
   const theme = useTheme();
 
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchProfile = async () => {
-      try {
-        const profile = await UserController.findProfile(token);
-        if (profile) setProfile(profile);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      }
-    };
-
-    fetchProfile();
-  }, [user, token]);
+  const [profile, setProfile] = useState<UserEntity>({
+    ...profileGlobal,
+  } as UserEntity);
 
   function handleChangeProfile<K extends keyof UserEntity>(
     key: K,
@@ -86,7 +71,7 @@ export default function ProfilePage(props: ProfilePageProps) {
     handleApiRequest(
       router,
       () =>
-        UserController.updateProfile(token, {
+        UserController.updateProfile({
           sport,
           level,
           gender,
@@ -105,13 +90,18 @@ export default function ProfilePage(props: ProfilePageProps) {
     );
   }
 
+  if (!user) return null;
+
   return (
     <Box
+      width="100%"
       display="flex"
       flexDirection="column"
       alignItems="center"
       height="100vh"
-      overflow="auto"
+      sx={{
+        overflowY: 'auto',
+      }}
       pt={screenSize.isMobile || screenSize.isLandscapeMobile ? 0 : 8}
       pb={screenSize.isLandscapeMobile ? 15 : undefined}
     >

@@ -20,6 +20,7 @@ import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMembersDto } from '../dto/update-institution-members.dto';
 import { Institution } from '../entity/institution.entity';
+import { GetMembersType } from '../enum/institution-get-members.enum';
 import { InstitutionRepository } from '../repository/institution.repository';
 
 @Injectable()
@@ -116,15 +117,21 @@ export class InstitutionService implements Permission<Institution> {
     return { ...institution, ...this.commonService.object.clean(input) };
   }
 
-  async findMembers(ref: InstitutionRef): Promise<UserEntity[]> {
+  async findMembers(
+    ref: InstitutionRef,
+    type: GetMembersType,
+  ): Promise<UserEntity[]> {
     const institution = await this.getDocByIdOrFail(ref);
     const collection = this.userService.getCollection();
 
-    return this.firebaseService.batchIn(
-      'id',
-      institution.athleteIds,
-      collection,
-    );
+    const ids =
+      type === GetMembersType.ATHLETES
+        ? institution.athleteIds
+        : type === GetMembersType.TRAINERS
+          ? institution.trainerIds
+          : [...institution.athleteIds, ...institution.trainerIds];
+
+    return this.firebaseService.batchIn('id', ids, collection);
   }
 
   async updateMembers(

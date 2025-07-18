@@ -1,7 +1,7 @@
 import {
   GroupContextProps,
   TrainerDayViewContextProps,
-} from '@/app/groups/[group_id]/props';
+} from '@/app/(trainer)/groups/[group_id]/props';
 import { Pagination } from '@/common/type/paginate.type';
 import { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -21,6 +21,7 @@ import { Workload } from '@/controller/training/type/workload.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useMain } from './main-provider';
 
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);
@@ -31,17 +32,10 @@ export const useTrainerDayViewContext = () =>
 export function TrainerDayViewProvider(
   props: GroupContextProps & ChildrenProps
 ) {
+  const { children, cycle, dateFrom, dateTo, group } = props;
+
   const router = useRouter();
-  const {
-    token,
-    children,
-    components,
-    exercises,
-    cycle,
-    dateFrom,
-    dateTo,
-    group,
-  } = props;
+  const { components, exercises } = useMain();
 
   // filtering selected component exercises
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
@@ -100,7 +94,7 @@ export function TrainerDayViewProvider(
     async function fetchMembers() {
       handleApiRequest(
         router,
-        () => InstitutionController.findAthletes(token, group.institutionId),
+        () => InstitutionController.findAthletes(group.institutionId),
         (members) => setMembers(members),
         undefined
       );
@@ -142,9 +136,6 @@ export function TrainerDayViewProvider(
   }, [component, pagination.page]);
 
   const value: TrainerDayViewContextProps = {
-    exercises: exercises.map((e) => {
-      return ExerciseService.mapComponents(e, components);
-    }),
     training,
     setTraining,
     selectedPeriod,

@@ -11,19 +11,17 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, ToolbarProps } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import CustomToolbar from '../components/calendar-custom-toolbar/calendar-custom-toolbar';
-import { fetchAthleteTrainings, handleNavigate } from '../app/calendar/state';
-import '@/app/calendar/styles.css';
+import {
+  fetchAthleteTrainings,
+  handleNavigate,
+} from '../app/(athlete)/calendar/state';
+import '@/app/(athlete)/calendar/styles.css';
 import { CalendarEvent } from '../common/type/calendar-event-type';
-
-interface CalendarPageProps {
-  token: string;
-}
 
 const commonService = CommonService.instance;
 
-export default function CalendarPage(props: CalendarPageProps) {
+export default function CalendarPage() {
   const screenSize = useScreenSize();
-  const { token } = props;
 
   const router = useRouter();
   const theme = useTheme();
@@ -33,39 +31,46 @@ export default function CalendarPage(props: CalendarPageProps) {
   const [trainings, setTrainings] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+    const init = async () => {
+      const now = new Date();
+      const firstDayOfMonth = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        1
+      );
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0);
 
-    fetchAthleteTrainings(
-      token,
-      { from: firstDayOfMonth, to: lastDayOfMonth },
-      { router }
-    ).then((_trainings) => {
-      if (!_trainings) return;
-      const events = _trainings.map((training) => {
-        const componentsIcons = [];
-        for (const component of Object.values(training.components)) {
-          const IconComponent = commonService.navigation.getComponentIcon(
-            component.id
-          );
+      fetchAthleteTrainings(
+        { from: firstDayOfMonth, to: lastDayOfMonth },
+        { router }
+      ).then((_trainings) => {
+        if (!_trainings) return;
+        const events = _trainings.map((training) => {
+          const componentsIcons = [];
+          for (const component of Object.values(training.components)) {
+            const IconComponent = commonService.navigation.getComponentIcon(
+              component.id
+            );
 
-          componentsIcons.push(IconComponent);
-        }
+            componentsIcons.push(IconComponent);
+          }
 
-        return {
-          title: screenSize.isSmallerThanLaptop
-            ? dayjs(training.from).format('HH:mm')
-            : `${dayjs(training.from).format('HH:mm')}-${dayjs(training.to).format('HH:mm')}`,
-          start: new Date(training.from),
-          end: new Date(training.to),
-          icon: componentsIcons[0],
-        };
+          return {
+            title: screenSize.isSmallerThanLaptop
+              ? dayjs(training.from).format('HH:mm')
+              : `${dayjs(training.from).format('HH:mm')}-${dayjs(training.to).format('HH:mm')}`,
+            start: new Date(training.from),
+            end: new Date(training.to),
+            icon: componentsIcons[0],
+          };
+        });
+
+        setTrainings(events);
       });
+    };
 
-      setTrainings(events);
-    });
-  }, [token, screenSize.isSmallerThanLaptop, currentDate]);
+    init();
+  }, [screenSize.isSmallerThanLaptop, currentDate]);
 
   return (
     <Box

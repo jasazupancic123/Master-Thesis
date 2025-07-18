@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import type {
   CollectionGroup,
   CollectionReference,
@@ -7,7 +8,6 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { FirestoreEntity } from '@src/common/type/entity.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Workload } from '@src/training/entity/workload.entity';
-import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class TestWorkloadService {

@@ -11,6 +11,7 @@ import { CommonService } from '@/common/service/common.service';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import MyModal from '../modal/modal';
 import { User } from '@/controller/user/type/user.type';
+import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
 const firebaseService = commonService.firebase;
@@ -25,13 +26,13 @@ export default function RegisterUsersDashboard(
   const { registerRole } = props;
 
   const router = useRouter();
+
+  const { users } = useMain();
   const {
-    token,
-    profile,
-    users,
-    refetchUsers,
     selectedInstitution,
     setSelectedInstitution,
+    refetchUsers,
+    refetchMembers,
   } = useDashboard();
 
   const [formData, setFormData] = useState({
@@ -68,7 +69,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainers(token, selectedInstitution.id, {
+          InstitutionController.addTrainers(selectedInstitution.id, {
             trainerIds: [user.uid],
           }),
         () => {
@@ -99,7 +100,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthletes(token, selectedInstitution.id, {
+          InstitutionController.addAthletes(selectedInstitution.id, {
             athleteIds: [user.uid],
           }),
         () => {
@@ -136,7 +137,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addTrainers(token, selectedInstitution.id, {
+          InstitutionController.addTrainers(selectedInstitution.id, {
             trainerIds: [existingUser.uid],
           }),
         () => {
@@ -167,7 +168,7 @@ export default function RegisterUsersDashboard(
       handleApiRequest(
         router,
         () =>
-          InstitutionController.addAthletes(token, selectedInstitution.id, {
+          InstitutionController.addAthletes(selectedInstitution.id, {
             athleteIds: [existingUser.uid],
           }),
         () => {
@@ -263,6 +264,7 @@ export default function RegisterUsersDashboard(
       () => firebaseService.functions.createUserWithRole(input),
       () => {
         refetchUsers();
+        refetchMembers();
       },
       undefined,
       'Failed to register user'

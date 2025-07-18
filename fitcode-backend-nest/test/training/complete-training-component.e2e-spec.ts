@@ -43,46 +43,38 @@ import {
   deleteDoc,
   deleteUsers,
 } from '../common/utils/data.util';
-
-const C1_COMPONENT_PARAMS = generateComponentParamsStub([
-  ParamType.VolWorkSets,
-  ParamType.VolWork1,
-  ParamType.IntWork1,
-]);
-
-const C2_COMPONENT_PARAMS = generateComponentParamsStub([
-  ParamType.VolWorkSets,
-  ParamType.VolWork2,
-  ParamType.VolRec1,
-]);
+import {
+  COMPONENT_PARAMS_OPT1,
+  COMPONENT_PARAMS_OPT2,
+} from '@test/common/constant/component-params.constant';
 
 const C1_VALID_COMPLETED_EXERCISES = [
   generateCompletedTrainingExerciseStub({
     id: 'squat-l1',
     supersetIndex: 0,
     generateValidSetsOptions: {
-      componentParams: C1_COMPONENT_PARAMS,
+      componentParams: COMPONENT_PARAMS_OPT1,
     },
   }),
   generateCompletedTrainingExerciseStub({
     id: 'bench-l1',
     supersetIndex: 0,
     generateValidSetsOptions: {
-      componentParams: C1_COMPONENT_PARAMS,
+      componentParams: COMPONENT_PARAMS_OPT1,
     },
   }),
   generateCompletedTrainingExerciseStub({
     id: 'squat-l1',
     supersetIndex: 1,
     generateValidSetsOptions: {
-      componentParams: C1_COMPONENT_PARAMS,
+      componentParams: COMPONENT_PARAMS_OPT1,
     },
   }),
   generateCompletedTrainingExerciseStub({
     id: 'deadlift-l1',
     supersetIndex: 1,
     generateValidSetsOptions: {
-      componentParams: C1_COMPONENT_PARAMS,
+      componentParams: COMPONENT_PARAMS_OPT1,
     },
   }),
 ];
@@ -92,21 +84,21 @@ const C2_VALID_COMPLETED_EXERCISES = [
     id: 'bench-l2',
     supersetIndex: 0,
     generateValidSetsOptions: {
-      componentParams: C2_COMPONENT_PARAMS,
+      componentParams: COMPONENT_PARAMS_OPT2,
     },
   }),
   generateCompletedTrainingExerciseStub({
     id: 'deadlift-l2',
     supersetIndex: 0,
     generateValidSetsOptions: {
-      componentParams: C2_COMPONENT_PARAMS,
+      componentParams: COMPONENT_PARAMS_OPT2,
     },
   }),
   generateCompletedTrainingExerciseStub({
     id: 'squat-l2',
     supersetIndex: 1,
     generateValidSetsOptions: {
-      componentParams: C2_COMPONENT_PARAMS,
+      componentParams: COMPONENT_PARAMS_OPT2,
     },
   }),
 ];
@@ -174,14 +166,14 @@ describe('Complete training component (e2e)', () => {
     component1 = await componentService.create(
       generateComponentStub({
         id: 'c1',
-        params: { [DEFAULT_PARAMS_KEY]: C1_COMPONENT_PARAMS },
+        params: { [DEFAULT_PARAMS_KEY]: COMPONENT_PARAMS_OPT1 },
       }),
     );
 
     component2 = await componentService.create(
       generateComponentStub({
         id: 'c2',
-        params: { [DEFAULT_PARAMS_KEY]: C2_COMPONENT_PARAMS },
+        params: { [DEFAULT_PARAMS_KEY]: COMPONENT_PARAMS_OPT2 },
       }),
     );
 
@@ -496,7 +488,7 @@ describe('Complete training component (e2e)', () => {
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 0,
-            sets: [generateExerciseSet(1, [C1_COMPONENT_PARAMS[1]])], // incomplete (IntWork1 is missing)
+            sets: [generateExerciseSet(1, [COMPONENT_PARAMS_OPT1[1]])], // incomplete (IntWork1 is missing)
           }),
         ],
       ],
@@ -512,21 +504,21 @@ describe('Complete training component (e2e)', () => {
             id: 'squat-l1',
             supersetIndex: 0,
             generateValidSetsOptions: {
-              componentParams: C1_COMPONENT_PARAMS,
+              componentParams: COMPONENT_PARAMS_OPT1,
             },
           }),
           generateCompletedTrainingExerciseStub({
             id: 'bench-l1',
             supersetIndex: 0,
             generateValidSetsOptions: {
-              componentParams: C1_COMPONENT_PARAMS,
+              componentParams: COMPONENT_PARAMS_OPT1,
             },
           }),
           generateCompletedTrainingExerciseStub({
             id: 'squat-l1',
             supersetIndex: 1,
             generateValidSetsOptions: {
-              componentParams: C1_COMPONENT_PARAMS,
+              componentParams: COMPONENT_PARAMS_OPT1,
             },
           }),
           generateCompletedTrainingExerciseStub({

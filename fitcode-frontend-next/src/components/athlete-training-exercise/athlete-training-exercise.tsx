@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import React from 'react';
 import { ExerciseParam } from '../exercise-param/exercise-param';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { useTheme } from '@mui/material';
 
 interface AthleteTrainingExerciseProps {
   exercise: TrainingExercise;
@@ -25,6 +26,7 @@ interface AthleteTrainingExerciseProps {
 export default function AthleteTrainingExercise(
   props: AthleteTrainingExerciseProps
 ) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
 
   const {
@@ -75,7 +77,7 @@ export default function AthleteTrainingExercise(
         sx={{
           backgroundColor: exercise.exercise?.imageUrl
             ? 'transparent'
-            : '#273747',
+            : theme.palette.background.light, // Use theme color for better contrast
         }}
         py={0.5}
       >
@@ -138,7 +140,7 @@ export default function AthleteTrainingExercise(
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(38, 54, 70, 0.825)', // Darker overlay for better text contrast
+            backgroundColor: theme.palette.background.dark,
             zIndex: 0,
             opacity: 100,
           }}
@@ -189,6 +191,7 @@ export default function AthleteTrainingExercise(
                         value={value}
                         onOptionChange={(newValue) => {}}
                         onSubOptionChange={(newValue) => {}}
+                        athleteView
                       />
                     </Box>
                   );

@@ -13,7 +13,6 @@ import { User } from 'firebase/auth';
 import { SetState } from './state.type';
 
 export type CommonContextType = {
-  token: string;
   user: CustomUser;
 };
 
@@ -23,7 +22,6 @@ export type DetectChangesContextType = {
 };
 
 export type AppContextType = {
-  token: string;
   attributes: Attribute[];
   components: {
     tree: TreeComponent[];

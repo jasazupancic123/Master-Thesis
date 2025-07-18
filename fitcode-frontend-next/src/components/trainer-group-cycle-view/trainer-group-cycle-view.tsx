@@ -20,20 +20,12 @@ import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list'
 import { GroupService } from '@/controller/group/group.service';
 import { MoreVert } from '@mui/icons-material';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { useMain } from '@/store/main-provider';
 
 export default function TrainerCycleView() {
-  const {
-    token,
-    group,
-    components,
-    exercises: allExercises,
-    methods,
-    cycle,
-    setCycle,
-    setTrainings,
-    setDateFrom,
-    setDateTo,
-  } = useGroup();
+  const { components, exercises: allExercises, methods } = useMain();
+  const { group, cycle, setCycle, setTrainings, setDateFrom, setDateTo } =
+    useGroup();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
@@ -105,6 +97,23 @@ export default function TrainerCycleView() {
     setDateTo(dayjs(cycle.to));
   }, [cycle]);
 
+  const HorizontalItems = () => {
+    return (
+      <HorizontalItemsList
+        items={cyclesForSelect}
+        value={cycle?.id || ''}
+        setValue={(value) => {
+          setCycle(group.cycles.find((c) => c.id === value) || undefined);
+        }}
+        onArrowClick={(direction) => {}}
+        cycleView
+        checkIsSameValue={(value: string) => {
+          return value === (cycle?.id || '');
+        }}
+      />
+    );
+  };
+
   return (
     <Box
       pb={10}
@@ -130,20 +139,7 @@ export default function TrainerCycleView() {
         >
           {screenSize.isSmallerThanLaptop ? (
             <Box width="100%" display="flex" flexDirection="column">
-              <HorizontalItemsList
-                items={cyclesForSelect}
-                value={cycle?.id || ''}
-                setValue={(value) => {
-                  setCycle(
-                    group.cycles.find((c) => c.id === value) || undefined
-                  );
-                }}
-                onArrowClick={(direction) => {}}
-                cycleView
-                checkIsSameValue={(value: string) => {
-                  return value === (cycle?.id || '');
-                }}
-              />
+              <HorizontalItems />
               <Box display="flex" justifyContent="center" gap={4} mt={0.75}>
                 <Box display="flex" flexDirection="column" alignItems="center">
                   <Typography
@@ -207,20 +203,7 @@ export default function TrainerCycleView() {
             <>
               <Box width="25%" display="flex" />
               <Box width="50%" display="flex" maxHeight={67}>
-                <HorizontalItemsList
-                  items={cyclesForSelect}
-                  value={cycle?.id || ''}
-                  setValue={(value) => {
-                    setCycle(
-                      group.cycles.find((c) => c.id === value) || undefined
-                    );
-                  }}
-                  onArrowClick={(direction) => {}}
-                  cycleView
-                  checkIsSameValue={(value: string) => {
-                    return value === (cycle?.id || '');
-                  }}
-                />
+                <HorizontalItems />
               </Box>
               <Box width="25%" display="flex" justifyContent="flex-end" gap={5}>
                 <Box
@@ -367,7 +350,6 @@ export default function TrainerCycleView() {
                   }
                   addTrainingComponent={(trainingId, input) => {
                     handleAddTrainingComponents(
-                      token,
                       { trainingId, ...input },
                       {
                         router,
@@ -381,7 +363,6 @@ export default function TrainerCycleView() {
                   }}
                   deleteTrainingComponent={(trainingId, componentId) =>
                     handleDeleteTrainingComponent(
-                      token,
                       { trainingId, componentId },
                       {
                         router,

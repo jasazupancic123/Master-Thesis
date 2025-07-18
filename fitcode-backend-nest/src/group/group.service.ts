@@ -178,12 +178,12 @@ export class GroupService implements Permission<Group, Institution> {
 
     // validate members
     const allMembersIds = input.flatMap((i) => i.membersIds || []);
-    const members = await this.userService.findAllOrFail({
+    const _members = await this.userService.findAllOrFail({
       ids: allMembersIds,
     });
 
-    for (const group of groups)
-      this.validateMembersInInstitution(members, group.institution);
+    // for (const group of groups)
+    //   this.validateMembersInInstitution(members, group.institution);
 
     // validate cycles
     for (const group of input)

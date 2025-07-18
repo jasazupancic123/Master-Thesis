@@ -20,6 +20,8 @@ import {
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import { useTheme } from '@mui/material';
+import { SupersetsProvider } from '@/store/supersets-provider';
+import { useMain } from '@/store/main-provider';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();
@@ -29,13 +31,11 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const { training, trainingComponent, day } = props;
 
   const {
-    token,
-    filter,
-    setTrainings,
     components: allComponents,
     exercises: allExercises,
     methods: allMethods,
-  } = useGroup();
+  } = useMain();
+  const { filter, setTrainings } = useGroup();
 
   const { training: selectedTraining, component } = useTrainerDayViewContext();
 
@@ -223,7 +223,6 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
               override: true,
             },
             {
-              token,
               router,
               allComponents,
               allExercises,

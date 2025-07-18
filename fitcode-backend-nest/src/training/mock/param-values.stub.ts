@@ -14,8 +14,15 @@ import type {
   ParamToSelectedMap,
   ValidParams,
 } from '../interface/param-to-selected.interface';
+import { parseDefaultValueOrFirstOption } from './workload.stub';
 
 /**
+ * Generates an array of AttributeValues based on the provided ComponentParams.
+ * Based on the provided componentParam, like VolWorkSets, IntWork1, etc., it
+ * selects default values (because every root param is of select type) and generates
+ * AttributeValues for each param with correct selected options and values, which
+ * are either random or default.
+ *
  * @param componentParams - array of ComponentParam objects to generate AttributeValues from
  * @param random - if true, generate random values for params, else use defaults
  */
@@ -24,20 +31,14 @@ export function generateParamAttributeValuesFromComponentParams(
   random = false,
 ): AttributeValue[] {
   return componentParams.map((componentParam) => {
-    // root param, for example: VolWorkSets, IntWork1
-    const param = PARAMS.find((p) => p.field === componentParam.field);
-    if (!param)
-      throw new Error(`Param with field ${componentParam.field} not found`);
-
-    // root param is always of select type, for example: VolWorkSets -> Set, IntWork1 -> Kg
-    const selected = param.defaultValue || param.options?.[0]?.field || null;
-    if (!selected) throw new Error(`No selection for param ${param.field}`);
+    const param = PARAMS.find((p) => p.field === componentParam.field); // root param, for example: VolWorkSets, IntWork1
+    const selected = // root param is always of select type, for example: VolWorkSets -> Set, IntWork1 -> Kg
+      parseDefaultValueOrFirstOption<ParamToSelectedMap[ParamType]>(
+        componentParam,
+      );
 
     const option = param.options?.find((o) => o.field === selected);
-    if (!option)
-      throw new Error(
-        `Option with field ${selected} not found in param ${param.field}`,
-      );
+    const suboption = parseDefaultValueOrFirstOption<string>(option);
 
     if (random)
       return generateParamAttributeValue({
@@ -46,11 +47,10 @@ export function generateParamAttributeValuesFromComponentParams(
       });
 
     // edge case for effort and tempo for intensity params: IntWork1 -> Effort -> 0
-    const suboption = option.options?.[0]?.field;
     return {
       field: param.field, // for example: VolWorkSets, IntWork1
       selected: `${option.field}${suboption ? `:${suboption}` : ''}`,
-      value: option.defaultValue || option.options?.[0]?.defaultValue || '',
+      value: parseDefaultValueOrFirstOption<string>(option) || '',
     };
   });
 }
@@ -66,7 +66,7 @@ export function generateParamAttributeValue({
       selected: VolType | IntType | VolWorkSetType;
       value?: number;
     }): AttributeValue {
-  if (!value) value = generatRandomParamFieldValue(selected);
+  if (!value) value = generateRandomParamFieldValue(selected);
 
   return {
     field: field,
@@ -77,7 +77,7 @@ export function generateParamAttributeValue({
   };
 }
 
-export function generatRandomParamFieldValue(selected: string): number {
+export function generateRandomParamFieldValue(selected: string): number {
   switch (selected) {
     case VolWorkSetType.Set:
       return generateRandomNumber(3, 6);

@@ -191,7 +191,7 @@ export const PARAMS: Attribute[] = [
     description: 'volume',
     type: AttributeType.Select,
     options: VOL_OPTIONS,
-    defaultValue: VolType.Rep,
+    defaultValue: VolType.Dist,
   },
   {
     field: ParamType.IntWork1,
@@ -207,7 +207,7 @@ export const PARAMS: Attribute[] = [
     description: 'intensity',
     type: AttributeType.Select,
     options: INT_OPTIONS,
-    defaultValue: IntType.Kg,
+    defaultValue: IntType.Tempo,
   },
   {
     field: ParamType.VolRec1,

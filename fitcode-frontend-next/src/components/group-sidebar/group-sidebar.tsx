@@ -27,7 +27,7 @@ import { useState } from 'react';
 import Logo from '../logo/logo';
 import { AppBar, Drawer, DrawerHeader } from './style';
 import toast from 'react-hot-toast';
-import GroupDateFilterButtonGroup from '../group-date-filter-button-group/group-date-filter-button-group';
+import TrainerGroupHeader from '../trainer-group-header/trainer-group-header';
 import { GroupDateFilter } from '@/common/type/filter.type';
 import { SetState } from '@/common/type/state.type';
 import { useGroup } from '@/store/group-provider';
@@ -75,7 +75,7 @@ export default function GroupSidebar(props: TrainerGroupSidebarProps) {
         }}
       >
         <Box width="100%" sx={{ marginX: 'auto' }}>
-          <GroupDateFilterButtonGroup filter={filter} setFilter={setFilter} />
+          <TrainerGroupHeader filter={filter} setFilter={setFilter} />
         </Box>
       </AppBar>
 

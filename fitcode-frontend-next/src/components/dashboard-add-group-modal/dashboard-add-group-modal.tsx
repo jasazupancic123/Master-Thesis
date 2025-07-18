@@ -4,8 +4,8 @@ import MyModal from '../modal/modal';
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
 import { User } from '@/controller/user/type/user.type';
 import { useDashboard } from '@/store/dashboard-provider';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { SetState } from '@/common/type/state.type';
+import { useMain } from '@/store/main-provider';
 
 interface AddGroupModalProps {
   groupName: string;
@@ -15,7 +15,8 @@ interface AddGroupModalProps {
 }
 
 export default function AddGroupModal(props: AddGroupModalProps) {
-  const { selectedInstitution, users } = useDashboard();
+  const { users } = useMain();
+  const { selectedInstitution } = useDashboard();
 
   const { owner, setOwner, groupName, setGroupName } = props;
   const [openModal, setOpenModal] = useState(false);
@@ -67,6 +68,8 @@ export default function AddGroupModal(props: AddGroupModalProps) {
           addUserToEnd={true}
           setSingleMember={setOwner}
           singleMember={owner}
+          enableFirstShowUsers
+          enableScroll
         />
       </MyModal>
     </>

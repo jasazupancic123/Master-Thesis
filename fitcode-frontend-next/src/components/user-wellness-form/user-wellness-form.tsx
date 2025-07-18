@@ -9,19 +9,21 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useTheme } from '@mui/material';
+import { useWellness } from '@/store/wellness-provider';
 
 interface Props {
-  initialData: Wellness | null;
   onSubmit: (data: Partial<Wellness>) => void | Promise<void>;
   disabled: boolean;
   setDisabled: SetState<boolean>;
 }
 
 export default function UserWellnessForm(props: Props) {
+  const { wellness, setWellness } = useWellness();
+
   const theme = useTheme();
   const screenSize = useScreenSize();
   const [state, setState] = useState<Wellness>(() => {
-    if (props.initialData) return props.initialData;
+    if (wellness) return wellness;
 
     return {
       sleep: 5,

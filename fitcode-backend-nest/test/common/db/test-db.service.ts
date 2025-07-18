@@ -1,10 +1,11 @@
+import { Injectable } from '@nestjs/common';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { TestExerciseService } from './service/test-exercise.service';
 import { TestTrainingService } from './service/test-training.service';
 import { TestWorkloadService } from './service/test-workload.service';
-import { Injectable } from '@nestjs/common';
-import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 
 @Injectable()
 export class TestDbService {

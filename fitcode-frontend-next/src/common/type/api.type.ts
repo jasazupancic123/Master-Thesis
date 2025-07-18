@@ -1,6 +1,6 @@
 export type FetchOptions = {
   method?: string;
-  token?: string;
+  token?: string; // for authentication
   body?: object;
   query?: Query;
   formData?: FormData;

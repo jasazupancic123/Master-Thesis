@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create } from '@src/common/type/entity.type';
+import { CACHE_KEY_EXERCISES } from '@src/exercise/constant/get-exercises-cache-key.constant';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 @Injectable()
 export class TestExerciseService {
-  constructor(private readonly firebase: FirebaseService) {}
+  constructor(
+    private readonly firebase: FirebaseService,
+    private readonly cache: CacheManagerService,
+  ) {}
 
   async create(
     input: Partial<Create<Exercise>> & {
@@ -25,6 +31,7 @@ export class TestExerciseService {
       .add(query)
       .then((docRef) => this.firebase.serialize(docRef));
 
+    await this.cache.del(CACHE_KEY_EXERCISES);
     return this.firebase.serialize(query);
   }
 
