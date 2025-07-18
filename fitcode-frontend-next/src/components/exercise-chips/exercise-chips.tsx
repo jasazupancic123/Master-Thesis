@@ -19,6 +19,7 @@ import {
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { SetState } from '@/common/type/state.type';
 import { Target } from '@/controller/target/type/target.type';
+import { theme } from '@/app/style';
 
 const commonService = CommonService.instance;
 
@@ -60,10 +61,6 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
     setSelectedTargets,
   } = props;
 
-  const [anchorElMap, setAnchorElMap] = useState<
-    Record<string, HTMLElement | null>
-  >({});
-
   return (
     <Stack
       direction={direction as any}
@@ -97,37 +94,14 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                       setSelected &&
                       selectedTargets
                     ) {
-                      if (c.targets?.length === 0) {
-                        if (
-                          !selected.some((component) => component.id === c.id)
-                        ) {
-                          setSelected([...selected, c]);
-                        } else {
-                          setSelected(
-                            selected.filter(
-                              (component) => component.id !== c.id
-                            )
-                          );
-                        }
-                        return;
-                      } else if (
-                        selected.some((component) => component.id === c.id)
-                      ) {
+                      if (selected.some((component) => component.id === c.id)) {
                         setSelected(
                           selected.filter((component) => component.id !== c.id)
                         );
-                        setSelectedTargets((prev) =>
-                          prev.filter((st) => st.componentId !== c.id)
-                        );
-
-                        return;
+                      } else {
+                        setSelected([...selected, c]);
                       }
                     }
-
-                    setAnchorElMap((prev) => ({
-                      ...prev,
-                      [c.id]: e.currentTarget,
-                    }));
                     return;
                   }
 
@@ -183,130 +157,99 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
                     fontSize: screenSize.isMobile ? 20 : 30,
                   }}
                 />
-
-                {cycleView && selectedTargets && setSelectedTargets && (
-                  <FormControl
-                    sx={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)', // center over the icon
-                      width: screenSize.isMobile ? 20 : 50,
-                      height: screenSize.isMobile ? 20 : 50,
-                      zIndex: 2,
-                      '& .MuiSelect-icon': {
-                        display: 'none', // hide default chevron
-                      },
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        border: 'none', // no outline
-                      },
-                      '& fieldset': {
-                        border: 'none',
-                      },
-                    }}
-                  >
-                    <Menu
-                      anchorEl={anchorElMap[c.id]}
-                      open={Boolean(anchorElMap[c.id])}
-                      onClose={() =>
-                        setAnchorElMap((prev) => ({
-                          ...prev,
-                          [c.id]: null,
-                        }))
-                      }
-                    >
-                      <MenuItem
-                        value="none"
-                        onClick={() => {
-                          if (
-                            selectedTargets &&
-                            !selectedTargets.some(
-                              (st) => st.componentId === c.id
-                            ) &&
-                            setSelected &&
-                            Array.isArray(selected)
-                          ) {
-                            setSelected([...selected, c]);
-                            setAnchorElMap((prev) => ({
-                              ...prev,
-                              [c.id]: null,
-                            }));
-                            return;
-                          }
-
-                          setSelectedTargets?.((prev) =>
-                            prev.filter((st) => st.componentId !== c.id)
-                          );
-                          setAnchorElMap((prev) => ({
-                            ...prev,
-                            [c.id]: null,
-                          }));
-                        }}
-                      >
-                        None
-                      </MenuItem>
-                      {targets.map((target, i) => (
-                        <MenuItem
-                          key={i}
-                          selected={selectedTargets?.some(
-                            (st) =>
-                              st.componentId === c.id &&
-                              st.target.id === target.id
-                          )}
-                          onClick={() => {
-                            setSelectedTargets?.((prev) => {
-                              const existingIndex = prev.findIndex(
-                                (st) => st.componentId === c.id
-                              );
-                              if (existingIndex !== -1) {
-                                const updated = [...prev];
-                                updated[existingIndex] = {
-                                  componentId: c.id,
-                                  target,
-                                };
-                                return updated;
-                              }
-                              return [...prev, { componentId: c.id, target }];
-                            });
-
-                            if (
-                              Array.isArray(selected) &&
-                              setSelected &&
-                              !selected.some(
-                                (component) => component.id === c.id
-                              )
-                            ) {
-                              setSelected([...selected, c]);
-                            }
-
-                            setAnchorElMap((prev) => ({
-                              ...prev,
-                              [c.id]: null,
-                            }));
-                          }}
-                        >
-                          {target.name}
-                        </MenuItem>
-                      ))}
-                    </Menu>
-                  </FormControl>
-                )}
               </div>
             </Box>
-            <Typography
-              variant="caption"
-              sx={{
-                textAlign: 'center',
-                maxWidth: screenSize.isMobile ? 50 : 80,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap', // <-- 👈 key to force single line!
-                fontSize: screenSize.isMobile ? 10 : 12,
-              }}
-            >
-              {selectedTargets?.find((st) => st.componentId === c.id)?.target
-                .name || c.name}
-            </Typography>
+            {cycleView && selectedTargets && setSelectedTargets ? (
+              <Select
+                variant="standard"
+                value={
+                  selectedTargets?.find((st) => st.componentId === c.id)?.target
+                    .id || 'none'
+                }
+                onChange={(e) => {
+                  if (
+                    Array.isArray(selected) &&
+                    setSelected &&
+                    !selected.some((component) => component.id === c.id)
+                  ) {
+                    setSelected([...selected, c]);
+                  }
+
+                  const targetId = e.target.value;
+                  if (targetId === 'none') {
+                    setSelectedTargets?.((prev) =>
+                      prev.filter((st) => st.componentId !== c.id)
+                    );
+                    return;
+                  }
+
+                  const target = targets.find((t) => t.id === targetId);
+                  if (!target) return;
+
+                  setSelectedTargets?.((prev) => {
+                    const existingIndex = prev.findIndex(
+                      (st) => st.componentId === c.id
+                    );
+                    if (existingIndex !== -1) {
+                      const updated = [...prev];
+                      updated[existingIndex] = { componentId: c.id, target };
+                      return updated;
+                    }
+                    return [...prev, { componentId: c.id, target }];
+                  });
+                }}
+                sx={{
+                  minWidth: screenSize.isMobile ? 30 : 50,
+                  fontSize: screenSize.isMobile ? 10 : 12,
+                  mt: 0.5,
+                  '&.MuiInputBase-root': {
+                    mt: 0,
+                    width: screenSize.isMobile ? 50 : 90,
+                    textAlign: 'center',
+                    'svg.MuiSvgIcon-root': {
+                      fontSize: 15,
+                      color: theme.palette.text.primary,
+                    },
+                    '&.MuiInput-underline': {
+                      border: 'none', // hide underline
+                    },
+                    'div.MuiSelect-select': {
+                      pr: 1.5,
+                    },
+                  },
+                  '&.MuiInputBase-root::before': {
+                    borderBottom: 'none',
+                  },
+                  '&.MuiInputBase-root::after': {
+                    borderBottom: 'none',
+                  },
+                  '&:hover': {
+                    borderBottom: 'none',
+                  },
+                }}
+              >
+                <MenuItem value="none">{c.name}</MenuItem>
+                {targets.map((target) => (
+                  <MenuItem key={target.id} value={target.id}>
+                    {target.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : (
+              <Typography
+                variant="caption"
+                sx={{
+                  textAlign: 'center',
+                  maxWidth: screenSize.isMobile ? 50 : 80,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  fontSize: screenSize.isMobile ? 10 : 12,
+                }}
+              >
+                {c.name}
+              </Typography>
+            )}
           </Box>
         );
       })}
