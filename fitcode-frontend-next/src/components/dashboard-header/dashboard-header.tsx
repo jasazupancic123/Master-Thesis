@@ -3,15 +3,12 @@
 import {
   LINK_DASHBOARD,
   LINK_DASHBOARD_HOME,
-  LINK_DASHBOARD_INSTITUTION,
-  LINK_PROFILE,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
 } from '@/common/constant/navigation.constant';
 import {
   Delete,
   KeyboardArrowDownTwoTone,
   KeyboardArrowUpTwoTone,
-  Logout,
   Save,
   Settings,
 } from '@mui/icons-material';
@@ -42,6 +39,7 @@ import DashboardMenuMobile from '../dashboard-menu-mobile/dashboard-menu-mobile'
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
+import MyModal from '../modal/modal';
 
 export default function DashboardHeader() {
   const {
@@ -50,6 +48,7 @@ export default function DashboardHeader() {
     institutions,
     selectedInstitution,
     setSelectedInstitution,
+    selectedGroup,
     setSelectedGroup,
     detectedChanges,
     setDetectedChanges,
@@ -58,7 +57,7 @@ export default function DashboardHeader() {
 
   const roles = user.customClaims.role || [];
 
-  const { role, profile, logout } = useAuth();
+  const { role, profile } = useAuth();
   const screenSize = useScreenSize();
   const theme = useTheme();
   const router = useRouter();
@@ -70,6 +69,9 @@ export default function DashboardHeader() {
   );
   const [anchorInstitutionsEl, setAnchorInstitutionsEl] =
     useState<HTMLElement | null>(null);
+  const [modal, setModal] = useState({
+    remove_group: false,
+  });
 
   const handleSaveGroups = () => {
     if (!selectedInstitution) return;
@@ -99,7 +101,26 @@ export default function DashboardHeader() {
     );
   };
 
-  const handleDeleteSelectedGroup = () => {};
+  const handleRemoveSelectedGroup = () => {
+    if (!selectedGroup) return;
+    handleApiRequest(
+      router,
+      () => GroupController.delete(selectedGroup.id),
+      () => {
+        setSelectedGroup(null);
+        setSelectedInstitution((prev) => {
+          if (!prev) return null;
+          const updatedGroups = prev.groups.filter(
+            (g) => g.id !== selectedGroup.id
+          );
+          return { ...prev, groups: updatedGroups };
+        });
+        toast.success('Successfully deleted group');
+      },
+      undefined,
+      'Failed to delete group'
+    );
+  };
 
   return (
     <Box
@@ -280,7 +301,6 @@ export default function DashboardHeader() {
           )}
         </ToggleButtonGroup>
       </Box>
-
       <Box
         justifyContent="flex-end"
         alignItems="center"
@@ -307,7 +327,10 @@ export default function DashboardHeader() {
               <IconButton
                 sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
                 onClick={() => {
-                  handleDeleteSelectedGroup();
+                  setModal((prev) => ({
+                    ...prev,
+                    remove_group: true,
+                  }));
                 }}
               >
                 <Delete fontSize="small" />
@@ -316,12 +339,14 @@ export default function DashboardHeader() {
           </>
         )}
       </Box>
+
       <ProfileHeaderMenu
         anchorEl={anchorProfileEl}
         open={openProfileMenu}
         setOpen={setOpenProfileMenu}
         setAnchorEl={setAnchorProfileEl}
       />
+
       <Menu
         anchorEl={anchorInstitutionsEl}
         open={openInstitutionsMenu}
@@ -376,6 +401,21 @@ export default function DashboardHeader() {
           </MenuItem>
         ))}
       </Menu>
+
+      <MyModal
+        isOpen={modal.remove_group}
+        setIsOpen={(open) =>
+          setModal((prev) => ({ ...prev, remove_group: open }))
+        }
+        onCancel={() => setModal((prev) => ({ ...prev, remove_group: false }))}
+        onConfirm={() => {
+          handleRemoveSelectedGroup();
+          setModal((prev) => ({ ...prev, remove_group: false }));
+        }}
+        cancelText="Close"
+      >
+        Remove group <strong>{selectedGroup?.name}</strong>?
+      </MyModal>
     </Box>
   );
 }

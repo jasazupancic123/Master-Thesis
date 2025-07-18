@@ -1,4 +1,4 @@
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { SearchBar } from '../search-bar/search-bar';
 import { useEffect, useState } from 'react';
 import { User } from '@/controller/user/type/user.type';
@@ -138,8 +138,8 @@ export default function DashboardGroupsMembers(
             px: 2,
           }}
         >
-          {!selectedGroup?.members?.length ? (
-            <Typography>No athletes found</Typography>
+          {!selectedGroup ? (
+            <Typography>Select a group</Typography>
           ) : (
             <>
               {filteredUsers.map((user) => {
@@ -212,20 +212,22 @@ export default function DashboardGroupsMembers(
                 );
               })}
               {(isTrainer(roles) || isManager(roles)) && (
-                <IconButton
-                  sx={{
-                    width: screenSize.isMobile ? 70 : 80,
-                    height: screenSize.isMobile ? 70 : 80,
-                    //p: 3.5,
-                    m: 0,
-                    backgroundColor: theme.palette.background.light,
-                  }}
-                  onClick={() => {
-                    setModal((prev) => ({ ...prev, add_member: true }));
-                  }}
-                >
-                  <Add />
-                </IconButton>
+                <Tooltip title="Add member" placement="bottom">
+                  <IconButton
+                    sx={{
+                      width: screenSize.isMobile ? 70 : 80,
+                      height: screenSize.isMobile ? 70 : 80,
+                      //p: 3.5,
+                      m: 0,
+                      backgroundColor: theme.palette.background.light,
+                    }}
+                    onClick={() => {
+                      setModal((prev) => ({ ...prev, add_member: true }));
+                    }}
+                  >
+                    <Add />
+                  </IconButton>
+                </Tooltip>
               )}
             </>
           )}
