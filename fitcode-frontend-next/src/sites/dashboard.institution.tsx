@@ -22,7 +22,8 @@ import { useRouter } from 'next/navigation';
 import { useMain } from '@/store/main-provider';
 
 export default function DashboardInstitutionPage() {
-  const { selectedInstitution, setSelectedInstitution } = useDashboard();
+  const { selectedInstitution, setSelectedInstitution, members } =
+    useDashboard();
   const screenSize = useScreenSize();
   const router = useRouter();
 
@@ -92,6 +93,29 @@ export default function DashboardInstitutionPage() {
     );
   };
 
+  const HorizontalItems = () => {
+    return (
+      <HorizontalItemsList
+        dashboardInstitutionsView
+        items={
+          Object.values(AthletesTrainers).map((item) => ({
+            label: item,
+            value: item,
+          })) || []
+        }
+        value={selectedView}
+        setValue={(value) => {
+          setSelectedView(value as AthletesTrainers);
+        }}
+        checkIsSameValue={(value: string) => {
+          return selectedView === value;
+        }}
+        alertOnChange
+        onArrowClick={(direction) => {}}
+      />
+    );
+  };
+
   return (
     <Box
       display="flex"
@@ -107,24 +131,7 @@ export default function DashboardInstitutionPage() {
     >
       {screenSize.isSmallTablet || screenSize.isMobile ? (
         <>
-          <HorizontalItemsList
-            dashboardInstitutionsView
-            items={
-              Object.values(AthletesTrainers).map((item) => ({
-                label: item,
-                value: item,
-              })) || []
-            }
-            value={selectedView}
-            setValue={(value) => {
-              setSelectedView(value as AthletesTrainers);
-            }}
-            checkIsSameValue={(value: string) => {
-              return selectedView === value;
-            }}
-            alertOnChange
-            onArrowClick={(direction) => {}}
-          />
+          <HorizontalItems />
           <Box width="100%" sx={{ position: 'relative' }}>
             <Box
               width="80%"
@@ -204,24 +211,7 @@ export default function DashboardInstitutionPage() {
             </Typography>
           </Box>
           <Box width="50%">
-            <HorizontalItemsList
-              dashboardInstitutionsView
-              items={
-                Object.values(AthletesTrainers).map((item) => ({
-                  label: item,
-                  value: item,
-                })) || []
-              }
-              value={selectedView}
-              setValue={(value) => {
-                setSelectedView(value as AthletesTrainers);
-              }}
-              checkIsSameValue={(value: string) => {
-                return selectedView === value;
-              }}
-              alertOnChange
-              onArrowClick={(direction) => {}}
-            />
+            <HorizontalItems />
           </Box>
           <Box width="25%" display="flex" justifyContent="flex-end" mt={1}>
             <IconButton sx={{ m: 0, p: 0 }}>
@@ -231,7 +221,7 @@ export default function DashboardInstitutionPage() {
         </Box>
       )}
       <Box
-        width="100&"
+        width="100%"
         display="flex"
         gap={1}
         sx={{
@@ -253,26 +243,32 @@ export default function DashboardInstitutionPage() {
             setFilteredUsers(filtered);
             setSearch(e.target.value);
           }}
-          maxWidth={
-            screenSize.isSmallTablet || screenSize.isMobile ? '50%' : '85%'
-          }
           sx={{
+            width: screenSize.isSmallerThanLaptop
+              ? '50% !important'
+              : '33% !important',
             my: screenSize.isSmallTablet || screenSize.isMobile ? 2 : 0,
+            position: 'relative',
           }}
-        />
-        {isManager(roles) && (
-          <IconButton
-            sx={{
-              m: 0,
-              p: 0.5,
-              backgroundColor: theme.palette.background.light,
-              borderRadius: 1,
-            }}
-            onClick={() => setOpenModal(true)}
-          >
-            <Add fontSize="small" />
-          </IconButton>
-        )}
+        >
+          {isManager(roles) && (
+            <IconButton
+              sx={{
+                m: 0,
+                p: 0.5,
+                backgroundColor: theme.palette.background.light,
+                borderRadius: 1,
+                position: 'absolute',
+                right: -40,
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
+              onClick={() => setOpenModal(true)}
+            >
+              <Add fontSize="small" />
+            </IconButton>
+          )}
+        </SearchBar>
       </Box>
       <Box width="100%" display="flex" flexDirection="column">
         <Box
@@ -289,7 +285,7 @@ export default function DashboardInstitutionPage() {
           gap={screenSize.isMobile ? 4 : 6}
           sx={{
             justifyContent: 'center',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             position: 'relative',
             mt: 2,
             px: 2,
@@ -312,8 +308,6 @@ export default function DashboardInstitutionPage() {
                   flexDirection="column"
                   gap={1}
                   sx={{
-                    justifyContent: 'center',
-                    alignItems: 'center',
                     position: 'relative',
                   }}
                   onMouseEnter={() => setHoveredUser(user)}
@@ -340,8 +334,10 @@ export default function DashboardInstitutionPage() {
                   )}
                   <Avatar
                     className="avatar-border"
-                    //src={user.profileImageUrl || '/user_avatar.png'}
-                    src="/user_avatar.png"
+                    src={
+                      members.find((m) => m.id === user.uid)?.profileImageUrl ||
+                      '/user_avatar.png'
+                    }
                     sx={{
                       width: screenSize.isMobile ? 70 : 80,
                       height: screenSize.isMobile ? 70 : 80,

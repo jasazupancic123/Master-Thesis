@@ -28,8 +28,12 @@ export default function RegisterUsersDashboard(
   const router = useRouter();
 
   const { users } = useMain();
-  const { refetchUsers, selectedInstitution, setSelectedInstitution } =
-    useDashboard();
+  const {
+    selectedInstitution,
+    setSelectedInstitution,
+    refetchUsers,
+    refetchMembers,
+  } = useDashboard();
 
   const [formData, setFormData] = useState({
     displayName: '',
@@ -260,6 +264,7 @@ export default function RegisterUsersDashboard(
       () => firebaseService.functions.createUserWithRole(input),
       () => {
         refetchUsers();
+        refetchMembers();
       },
       undefined,
       'Failed to register user'

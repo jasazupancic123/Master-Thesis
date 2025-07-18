@@ -24,7 +24,7 @@ export type AddMembersModalProps = {
   addUserToEnd: boolean;
   dissableMaxWidth?: boolean;
   dashboardView?: boolean;
-  group?: Group;
+  group?: Group | null;
   selectedInstitution?: Institution | null;
   setSelectedInstitution?: SetState<Institution | null>;
   singleMember?: User | null; // for single member selection

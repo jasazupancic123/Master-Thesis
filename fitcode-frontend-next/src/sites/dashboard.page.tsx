@@ -1,45 +1,33 @@
 'use client';
 
-import { DashboardReportType } from '@/common/enum/dashboard-report-type.enum';
 import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-group-modal';
-import ReportsContainer from '@/components/dashboard-reports-container/dashboard-reports-container';
 import MyModal from '@/components/modal/modal';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { User } from '@/controller/user/type/user.type';
 import { ArrowForward, Save } from '@mui/icons-material';
-import { Fab, Grid2, Tooltip, Typography } from '@mui/material';
+import { Fab, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import DashboardChat from '@/components/dashboard-chat/dashboard-chat';
-import AthletesView from '../components/dashboard-athletes-view/dashboard-athletes-view';
 import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { redirect } from 'next/navigation';
 import { useDashboard } from '@/store/dashboard-provider';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
-import {
-  DASHBOARD_PROGRESS,
-  DASHBOARD_MAIN,
-  DASHBOARD_GROUPS,
-} from '@/common/constant/dashboard-views-constant';
 import { Institution } from '@/controller/institution/type/institution.type';
-import DashboardStaffGroupsCycles from '@/components/dashboard-groups-staff/dashboard-groups-staff';
+import DashboardGroupsSelect from '@/components/dashboard-groups-select/dashboard-groups-select';
 import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import { useMain } from '@/store/main-provider';
+import { GroupService } from '@/controller/group/group.service';
 
-interface DashboardPageProps {
-  view: string;
-}
-
-export default function DashboardPage(props: DashboardPageProps) {
+export default function DashboardPage() {
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { profile } = useMain();
+  const { profile, users } = useMain();
 
   const {
     institutions,
@@ -53,9 +41,11 @@ export default function DashboardPage(props: DashboardPageProps) {
 
   if (!profile) return null;
 
-  const { view } = props;
-
-  const [modal, setModal] = useState({ add_trainer: false, add_group: false });
+  const [modal, setModal] = useState({
+    add_member: false,
+    add_trainer: false,
+    add_group: false,
+  });
   const [groupName, setGroupName] = useState('');
   const [owner, setOwner] = useState<User | null>(null);
 
@@ -69,47 +59,15 @@ export default function DashboardPage(props: DashboardPageProps) {
         selectedInstitution.id
       );
 
+      for (let group of groups) {
+        group = GroupService.mapMembers(group, users, true);
+      }
+
       setSelectedInstitution((prev) => ({ ...prev, groups }) as Institution);
       if (groups.length) setSelectedGroup(groups[0]);
     };
     fetchGroups();
   }, [selectedInstitution]);
-
-  const handleSaveGroups = () => {
-    if (!selectedInstitution) return;
-
-    const inputs: { id: string; membersIds: string[]; ownerId: string }[] = [];
-    for (const group of selectedInstitution.groups) {
-      const membersIds = group.members
-        ? new Set([...group.membersIds, ...group.members.map((m) => m.uid)])
-        : group.membersIds;
-
-      inputs.push({
-        id: group.id,
-        ownerId: group.ownerId,
-        membersIds: Array.from(membersIds),
-      });
-    }
-
-    handleApiRequest(
-      router,
-      () => GroupController.batchUpdate({ groups: inputs }),
-      () => {
-        /* const newGroup = groups.find((g) => g.id === selectedGroup?.id);
-        if (newGroup) {
-          setSelectedGroup(newGroup);
-        } */
-        /* setSelectedInstitution({
-          ...selectedInstitution!,
-          groups: groups,
-        }); */
-        setDetectedChanges(false);
-        toast.success('Groups saved successfully');
-      },
-      undefined,
-      'Failed to save groups'
-    );
-  };
 
   if (!institutions.length) {
     return (
@@ -167,14 +125,6 @@ export default function DashboardPage(props: DashboardPageProps) {
           }}
           gap={1}
         >
-          {detectedChanges && (isManager(role) || isTrainer(role)) && (
-            <Tooltip title="Save changes" placement="top">
-              <Fab color="primary" aria-label="save" onClick={handleSaveGroups}>
-                <Save />
-              </Fab>
-            </Tooltip>
-          )}
-
           {isTrainer(role) && (
             <Tooltip title="Go to group" placement="top">
               <Fab
@@ -202,51 +152,22 @@ export default function DashboardPage(props: DashboardPageProps) {
           )}
         </Box>
 
-        <DashboardStaffGroupsCycles setModal={setModal} />
+        <DashboardGroupsSelect setModal={setModal} modal={modal} />
 
-        {view === DASHBOARD_MAIN ? (
-          screenSize.isSmallerThanLaptop ? (
-            <Box
-              display="flex"
-              flexDirection="column"
-              mt={2}
-              width="100%"
-              gap={1}
+        {/* {screenSize.isSmallerThanLaptop ? (
+          <Box
+            display="flex"
+            flexDirection="column"
+            mt={2}
+            width="100%"
+            gap={1}
+          >
+            <Grid2
+              container
+              gap={2}
+              wrap={screenSize.isTablet ? 'nowrap' : undefined}
             >
-              <Grid2
-                container
-                gap={2}
-                wrap={screenSize.isTablet ? 'nowrap' : undefined}
-              >
-                <Grid2 size={screenSize.isMobile ? 12 : 6}>
-                  <ReportsContainer
-                    index={0}
-                    reportTypes={[
-                      DashboardReportType.FLAGGED_ATHLETES,
-                      DashboardReportType.ATTENDANCE,
-                    ]}
-                  />
-                </Grid2>
-                <Grid2 size={screenSize.isMobile ? 12 : 6}>
-                  <ReportsContainer
-                    index={1}
-                    reportTypes={[
-                      DashboardReportType.CYCLE_PROGRESS,
-                      DashboardReportType.TODAYS_SESSIONS,
-                    ]}
-                  />
-                </Grid2>
-              </Grid2>
-              <Box
-                width={screenSize.isSmallerThanLaptop ? '100%' : '50%'}
-                margin="auto"
-              >
-                <DashboardChat />
-              </Box>
-            </Box>
-          ) : (
-            <Grid2 container gap={2} wrap="nowrap" mt={2}>
-              <Grid2 size={3}>
+              <Grid2 size={screenSize.isMobile ? 12 : 6}>
                 <ReportsContainer
                   index={0}
                   reportTypes={[
@@ -255,34 +176,63 @@ export default function DashboardPage(props: DashboardPageProps) {
                   ]}
                 />
               </Grid2>
-              <Grid2 size={3}>
+              <Grid2 size={screenSize.isMobile ? 12 : 6}>
                 <ReportsContainer
                   index={1}
-                  reportTypes={[DashboardReportType.CYCLE_PROGRESS]}
+                  reportTypes={[
+                    DashboardReportType.CYCLE_PROGRESS,
+                    DashboardReportType.TODAYS_SESSIONS,
+                  ]}
                 />
-              </Grid2>
-              <Grid2 size={3}>
-                <ReportsContainer
-                  index={2}
-                  reportTypes={[DashboardReportType.TODAYS_SESSIONS]}
-                />
-              </Grid2>
-              <Grid2 size={3}>
-                <DashboardChat />
               </Grid2>
             </Grid2>
-          )
+            <Box
+              width={screenSize.isSmallerThanLaptop ? '100%' : '50%'}
+              margin="auto"
+            >
+              <DashboardChat />
+            </Box>
+          </Box>
         ) : (
-          view === DASHBOARD_GROUPS && <AthletesView />
-        )}
+          <Grid2 container gap={2} wrap="nowrap" mt={2}>
+            <Grid2 size={3}>
+              <ReportsContainer
+                index={0}
+                reportTypes={[
+                  DashboardReportType.FLAGGED_ATHLETES,
+                  DashboardReportType.ATTENDANCE,
+                ]}
+              />
+            </Grid2>
+            <Grid2 size={3}>
+              <ReportsContainer
+                index={1}
+                reportTypes={[DashboardReportType.CYCLE_PROGRESS]}
+              />
+            </Grid2>
+            <Grid2 size={3}>
+              <ReportsContainer
+                index={2}
+                reportTypes={[DashboardReportType.TODAYS_SESSIONS]}
+              />
+            </Grid2>
+            <Grid2 size={3}>
+              <DashboardChat />
+            </Grid2>
+          </Grid2>
+        )} */}
       </Box>
 
       {/* Add Trainer Modal */}
       <MyModal
         isOpen={modal.add_trainer}
-        setIsOpen={(open) => setModal({ add_trainer: open, add_group: false })}
+        setIsOpen={(open) =>
+          setModal({ add_trainer: open, add_member: false, add_group: false })
+        }
         onConfirm={undefined}
-        onCancel={() => setModal({ add_trainer: false, add_group: false })}
+        onCancel={() =>
+          setModal({ add_member: false, add_trainer: false, add_group: false })
+        }
         cancelText="Close"
       >
         <RegisterUsersDashboard registerRole={UserRole.TRAINER} />
@@ -291,9 +241,11 @@ export default function DashboardPage(props: DashboardPageProps) {
       {/* Add Group Modal */}
       <MyModal
         isOpen={modal.add_group}
-        setIsOpen={(open) => setModal({ add_trainer: false, add_group: open })}
+        setIsOpen={(open) =>
+          setModal({ add_member: false, add_trainer: false, add_group: open })
+        }
         onCancel={() => {
-          setModal({ add_trainer: false, add_group: false });
+          setModal({ add_member: false, add_trainer: false, add_group: false });
           setGroupName('');
         }}
         cancelText="Close"
@@ -318,7 +270,11 @@ export default function DashboardPage(props: DashboardPageProps) {
                 ...selectedInstitution,
                 groups: [...selectedInstitution.groups, group],
               });
-              setModal({ add_trainer: false, add_group: false });
+              setModal({
+                add_member: false,
+                add_trainer: false,
+                add_group: false,
+              });
               setGroupName('');
               setDetectedChanges(false);
               toast.success('Group created successfully.');

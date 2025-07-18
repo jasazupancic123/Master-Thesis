@@ -3,6 +3,7 @@ import { FormControl, InputAdornment } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import React, { ReactNode } from 'react';
+import { useTheme } from '@mui/material';
 
 interface Props<T> {
   icon: ReactNode;
@@ -15,6 +16,7 @@ interface Props<T> {
 }
 
 export default function SelectInputHorizontal<T>(props: Props<T>) {
+  const theme = useTheme();
   const screenSize = useScreenSize();
   return (
     <FormControl
@@ -33,7 +35,14 @@ export default function SelectInputHorizontal<T>(props: Props<T>) {
         value={props.value}
         onChange={(e) => props.setValue(e.target.value as string | number)}
         startAdornment={
-          <InputAdornment position="start">{props.icon}</InputAdornment>
+          <InputAdornment
+            position="start"
+            sx={{
+              color: theme.palette.text.primary,
+            }}
+          >
+            {props.icon}
+          </InputAdornment>
         }
         native={false}
         displayEmpty
@@ -51,10 +60,13 @@ export default function SelectInputHorizontal<T>(props: Props<T>) {
           );
         }}
         sx={{
-          color: '#fff',
+          color: theme.palette.text.primary,
           '.MuiOutlinedInput-notchedOutline': { p: 0, border: 'none' },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
           '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
+          '.MuiSelect-icon': {
+            color: theme.palette.text.primary,
+          },
           p: screenSize.isMobile ? 0 : undefined,
 
           // 👇 Hides the internal <input>
