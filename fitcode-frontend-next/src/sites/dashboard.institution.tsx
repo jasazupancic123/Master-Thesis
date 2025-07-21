@@ -20,10 +20,17 @@ import { InstitutionController } from '@/controller/institution/institution.cont
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useMain } from '@/store/main-provider';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { updateUserProfile } from '@/components/dashboard-groups-members/state';
+import FileUpload from '@/components/file-upload/file-upload';
 
 export default function DashboardInstitutionPage() {
-  const { selectedInstitution, setSelectedInstitution, members } =
-    useDashboard();
+  const {
+    selectedInstitution,
+    setSelectedInstitution,
+    members,
+    refetchMembers,
+  } = useDashboard();
   const screenSize = useScreenSize();
   const router = useRouter();
 
@@ -36,11 +43,28 @@ export default function DashboardInstitutionPage() {
   const [currentUsers, setCurrentUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
-  const [openModal, setOpenModal] = useState(false);
+  const [openModal, setOpenModal] = useState({
+    add_member: false,
+    add_trainer: false,
+    add_group: false,
+    edit_athlete: false,
+  });
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editUserImageUrl, setEditUserImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const roles = profile.customClaims.role || [];
+
+  useEffect(() => {
+    if (!editUser) {
+      setEditUserImageUrl(null);
+      return;
+    }
+    setEditUserImageUrl(
+      members.find((m) => m.id === editUser.uid)?.profileImageUrl || null
+    );
+  }, [editUser]);
 
   useEffect(() => {
     const current =
@@ -263,7 +287,12 @@ export default function DashboardInstitutionPage() {
                 top: '50%',
                 transform: 'translateY(-50%)',
               }}
-              onClick={() => setOpenModal(true)}
+              onClick={() =>
+                setOpenModal({
+                  ...openModal,
+                  add_member: true,
+                })
+              }
             >
               <Add fontSize="small" />
             </IconButton>
@@ -341,6 +370,11 @@ export default function DashboardInstitutionPage() {
                     sx={{
                       width: screenSize.isMobile ? 70 : 80,
                       height: screenSize.isMobile ? 70 : 80,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      setEditUser(user);
+                      setOpenModal((prev) => ({ ...prev, edit_athlete: true }));
                     }}
                   />
                   <Typography
@@ -368,10 +402,10 @@ export default function DashboardInstitutionPage() {
         </Box>
       </Box>
       <MyModal
-        isOpen={openModal}
-        setIsOpen={(open) => setOpenModal(open)}
+        isOpen={openModal.add_member}
+        setIsOpen={(open) => setOpenModal({ ...openModal, add_member: open })}
         onConfirm={undefined}
-        onCancel={() => setOpenModal(false)}
+        onCancel={() => setOpenModal({ ...openModal, add_member: false })}
         cancelText="Close"
       >
         <RegisterUsersDashboard
@@ -380,6 +414,48 @@ export default function DashboardInstitutionPage() {
               ? UserRole.ATHLETE
               : UserRole.TRAINER
           }
+        />
+      </MyModal>
+      <MyModal
+        isOpen={openModal.edit_athlete}
+        setIsOpen={(open) =>
+          setOpenModal((prev) => ({ ...prev, edit_athlete: open }))
+        }
+        onCancel={() => {
+          setOpenModal((prev) => ({ ...prev, edit_athlete: false }));
+          setEditUserImageUrl(null);
+          setEditUser(null);
+        }}
+        onConfirm={() =>
+          updateUserProfile({
+            editUser,
+            editUserImageUrl,
+            router,
+            selectedInstitution,
+            setModal: setOpenModal,
+            setEditUserImageUrl,
+            setEditUser,
+            refetchMembers,
+          })
+        }
+        cancelText="Close"
+      >
+        <FileUpload
+          input="image"
+          label="Image"
+          initialFileUrl={editUserImageUrl || undefined}
+          sx={{
+            maxWidth: screenSize.isMobile ? 200 : 400,
+            maxHeight: screenSize.isMobile ? 150 : 300,
+            margin: 'auto',
+          }}
+          onFileUpload={async (file) => {
+            if (!editUser) return;
+
+            const path = `user/${editUser.uid}/${file.name}`;
+            const url = await FirebaseStorageUtil.uploadFile(file, path);
+            setEditUserImageUrl(url);
+          }}
         />
       </MyModal>
     </Box>

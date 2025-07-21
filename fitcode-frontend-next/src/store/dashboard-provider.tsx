@@ -28,14 +28,14 @@ interface DashboardContextProps {
   setSelectedGroup: SetState<Group | null>;
   refetchUsers: () => void;
   members: UserEntity[];
-  refetchMembers: () => void;
+  refetchMembers: (providedUrl?: string) => void;
 }
 
 export interface DashboardPageProps {
   institutions: Institution[];
   selectedInstitution: Institution | null;
   members: UserEntity[];
-  refetchMembers: () => void;
+  refetchMembers: (providedUrl?: string) => void;
 }
 
 const DashboardContext = createContext<DashboardContextProps | null>(null);
