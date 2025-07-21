@@ -10,35 +10,38 @@ export function useFetch<T = unknown>(url: string, options?: UseFetchOptions) {
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchData = useCallback(
+    async (providedUrl?: string) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const token = await ApiUtil.getFreshIdToken();
-      if (!token) throw new Error('Unauthorized');
+      try {
+        const token = await ApiUtil.getFreshIdToken();
+        if (!token) throw new Error('Unauthorized');
 
-      // add headers to options
-      options = {
-        ...options,
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      };
+        // add headers to options
+        options = {
+          ...options,
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        };
 
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const response = await fetch(providedUrl || url, options);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result: T = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
       }
-
-      const result: T = await response.json();
-      setData(result);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  }, [url, JSON.stringify(options)]); // JSON.stringify ensures proper memoization
+    },
+    [url, JSON.stringify(options)]
+  ); // JSON.stringify ensures proper memoization
 
   useEffect(() => {
     if (!options?.skip) fetchData();

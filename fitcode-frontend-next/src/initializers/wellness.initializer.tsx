@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { UserController } from '@/controller/user/user.controller';
-import Loading from '../components/loading/loading';
+import Alert from '../components/alert/alert';
 import { ChildrenProps } from '@/common/type/props.type';
 import { WellnessProvider } from '@/store/wellness-provider';
 import {
@@ -41,8 +41,8 @@ export default function WellnessInitializer({ children }: ChildrenProps) {
     init();
   }, [wellness]);
 
-  if (!wellness) return <Loading text="Loading..." />;
-  if (unauthorized) return <Loading text="Unauthorized" />;
+  if (!wellness) return <Alert type="loading" />;
+  if (unauthorized) return <Alert type="unauthorized" />;
 
   return <WellnessProvider wellness={wellness}>{children}</WellnessProvider>;
 }

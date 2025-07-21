@@ -119,7 +119,6 @@ export class InstitutionService implements Permission<Institution> {
     ref: InstitutionRef,
     type: GetMembersType,
   ): Promise<UserEntity[]> {
-
     const institution = await this.getDocByIdOrFail(ref);
     const collection = this.userService.getCollection();
 

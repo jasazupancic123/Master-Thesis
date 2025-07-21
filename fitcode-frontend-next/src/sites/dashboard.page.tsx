@@ -17,8 +17,8 @@ import { useDashboard } from '@/store/dashboard-provider';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { Institution } from '@/controller/institution/type/institution.type';
-import DashboardGroupsSelect from '@/components/dashboard-groups-select/dashboard-groups-select';
-import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
+import DashboardGroups from '@/components/dashboard-groups/dashboard-groups';
+import { isTrainer } from '@/common/service/util/firebase-auth.util';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import { useMain } from '@/store/main-provider';
 import { GroupService } from '@/controller/group/group.service';
@@ -45,6 +45,7 @@ export default function DashboardPage() {
     add_member: false,
     add_trainer: false,
     add_group: false,
+    edit_athlete: false,
   });
   const [groupName, setGroupName] = useState('');
   const [owner, setOwner] = useState<User | null>(null);
@@ -152,7 +153,7 @@ export default function DashboardPage() {
           )}
         </Box>
 
-        <DashboardGroupsSelect setModal={setModal} modal={modal} />
+        <DashboardGroups setModal={setModal} modal={modal} />
 
         {/* {screenSize.isSmallerThanLaptop ? (
           <Box
@@ -227,11 +228,21 @@ export default function DashboardPage() {
       <MyModal
         isOpen={modal.add_trainer}
         setIsOpen={(open) =>
-          setModal({ add_trainer: open, add_member: false, add_group: false })
+          setModal({
+            add_trainer: open,
+            add_member: false,
+            add_group: false,
+            edit_athlete: false,
+          })
         }
         onConfirm={undefined}
         onCancel={() =>
-          setModal({ add_member: false, add_trainer: false, add_group: false })
+          setModal({
+            add_member: false,
+            add_trainer: false,
+            add_group: false,
+            edit_athlete: false,
+          })
         }
         cancelText="Close"
       >
@@ -242,10 +253,20 @@ export default function DashboardPage() {
       <MyModal
         isOpen={modal.add_group}
         setIsOpen={(open) =>
-          setModal({ add_member: false, add_trainer: false, add_group: open })
+          setModal({
+            add_member: false,
+            add_trainer: false,
+            add_group: open,
+            edit_athlete: false,
+          })
         }
         onCancel={() => {
-          setModal({ add_member: false, add_trainer: false, add_group: false });
+          setModal({
+            add_member: false,
+            add_trainer: false,
+            add_group: false,
+            edit_athlete: false,
+          });
           setGroupName('');
         }}
         cancelText="Close"
@@ -275,6 +296,7 @@ export default function DashboardPage() {
                 add_member: false,
                 add_trainer: false,
                 add_group: false,
+                edit_athlete: false,
               });
               setGroupName('');
               setDetectedChanges(false);
