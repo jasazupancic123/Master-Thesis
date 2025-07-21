@@ -502,6 +502,9 @@ export class TrainingService implements Permission<Training, Institution> {
       ),
     );
 
+    if (filteredTrainings.length === 0)
+      throw new BadRequestException('No future trainings to periodize');
+
     const lastTraining = filteredTrainings[filteredTrainings.length - 1];
     const weeks = this.trainingPlanService.getSpacedTrainingsByWeek(
       baseTraining,

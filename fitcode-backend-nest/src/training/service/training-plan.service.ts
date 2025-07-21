@@ -187,8 +187,6 @@ export class TrainingPlanService {
 
           let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
 
-          if (!avgInt || !avgVol) continue;
-
           createdFutureStats.push({
             totalIntensity: avgInt * numMainGroupMembers,
             totalVolume: avgVol * numMainGroupMembers,
@@ -204,8 +202,6 @@ export class TrainingPlanService {
             if (!exercise.sets.length) continue;
 
             let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
-
-            if (!avgInt || !avgVol) continue;
 
             const foundFutureStat = createdFutureStats.find(
               (fs) => fs.exerciseId === exercise.id,
