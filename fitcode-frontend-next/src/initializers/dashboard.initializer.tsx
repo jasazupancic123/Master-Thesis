@@ -9,7 +9,7 @@ import DashboardLayout from '@/sites/dashboard.layout';
 import { InstitutionService } from '@/controller/institution/institution.service';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { GroupController } from '@/controller/group/group.controller';
-import Loading from '../components/loading/loading';
+import Alert from '../components/alert/alert';
 import { ChildrenProps } from '@/common/type/props.type';
 import { useMain } from '@/store/main-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
@@ -99,8 +99,8 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!state) return <Loading text="Loading..." />;
-  if (unauthorized) return <Loading text="Unauthorized" />;
+  if (!state) return <Alert type="loading" />;
+  if (unauthorized) return <Alert type="unauthorized" />;
 
   return (
     <DashboardProvider {...state}>

@@ -1,15 +1,17 @@
 'use client';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import Logo from '../logo/logo';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { redirect } from 'next/navigation';
+import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
 
-interface LoadingProps {
-  text: string;
+interface AlertProps {
+  type: 'loading' | 'unauthorized';
 }
 
-export default function Loading(props: LoadingProps) {
-  const { text } = props;
+export default function Alert(props: AlertProps) {
+  const { type } = props;
 
   const screenSize = useScreenSize();
   return (
@@ -37,9 +39,26 @@ export default function Loading(props: LoadingProps) {
       >
         <Logo version="narrow" height={100} width={150} />
       </Box>
+
       <Typography fontSize={18} fontWeight={500} textAlign="center">
-        {text}
+        {type[0].toUpperCase() + type.slice(1)}
       </Typography>
+      {type === 'unauthorized' && (
+        <Button
+          sx={{
+            position: 'absolute',
+            top: '60%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+          variant="contained"
+          onClick={() => {
+            redirect(LINK_SIGN_IN.href);
+          }}
+        >
+          Sign in
+        </Button>
+      )}
     </Box>
   );
 }

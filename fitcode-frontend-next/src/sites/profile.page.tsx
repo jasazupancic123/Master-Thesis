@@ -80,6 +80,7 @@ export default function ProfilePage() {
           lastName,
           phone,
           birthDate,
+          userId: profile.id,
         }),
       (_) => {
         setProfileGlobal(profile);
