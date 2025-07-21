@@ -307,7 +307,7 @@ export default function DashboardHeader() {
         sx={{
           position: 'absolute',
           right: screenSize.isSmallerThanLaptop ? 2 : 10,
-          top: 10,
+          top: 11,
           zIndex: 1300,
         }}
       >
@@ -315,7 +315,12 @@ export default function DashboardHeader() {
           <>
             <Tooltip title="Save groups" placement="bottom" sx={{ mx: 1 }}>
               <IconButton
-                sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
+                sx={{
+                  p: 0,
+                  m: 0,
+                  mx: screenSize.isMobile ? 0.25 : 1,
+                  cursor: 'pointer',
+                }}
                 onClick={() => {
                   handleSaveGroups();
                 }}
@@ -325,7 +330,12 @@ export default function DashboardHeader() {
             </Tooltip>
             <Tooltip title="Delete group" placement="bottom" sx={{ mx: 1 }}>
               <IconButton
-                sx={{ p: 0, m: 0, mx: 1, cursor: 'pointer' }}
+                sx={{
+                  p: 0,
+                  m: 0,
+                  mx: screenSize.isMobile ? 0.25 : 1,
+                  cursor: 'pointer',
+                }}
                 onClick={() => {
                   setModal((prev) => ({
                     ...prev,

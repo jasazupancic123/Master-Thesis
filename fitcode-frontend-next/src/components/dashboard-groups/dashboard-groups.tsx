@@ -17,22 +17,22 @@ import { SetState } from '@/common/type/state.type';
 import { GroupService } from '@/controller/group/group.service';
 import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
 
-interface DashboardGroupsSelectProps {
+interface DashboardGroupsProps {
   modal: {
     add_member: boolean;
     add_trainer: boolean;
     add_group: boolean;
+    edit_athlete: boolean;
   };
   setModal: SetState<{
     add_member: boolean;
     add_trainer: boolean;
     add_group: boolean;
+    edit_athlete: boolean;
   }>;
 }
 
-export default function DashboardGroupsSelect(
-  props: DashboardGroupsSelectProps
-) {
+export default function DashboardGroups(props: DashboardGroupsProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
   const { profile, users } = useMain();

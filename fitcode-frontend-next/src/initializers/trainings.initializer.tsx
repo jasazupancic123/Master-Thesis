@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Loading from '../components/loading/loading';
+import Alert from '../components/alert/alert';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { ChildrenProps } from '@/common/type/props.type';
@@ -51,8 +51,8 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!state) return <Loading text="Loading..." />;
-  if (unauthorized) return <Loading text="Unauthorized" />;
+  if (!state) return <Alert type="loading" />;
+  if (unauthorized) return <Alert type="unauthorized" />;
 
   return <TrainingProvider {...state}>{children}</TrainingProvider>;
 }

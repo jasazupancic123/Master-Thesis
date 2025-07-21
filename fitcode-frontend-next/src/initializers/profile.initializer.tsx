@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { UserController } from '@/controller/user/user.controller';
-import Loading from '../components/loading/loading';
+import Alert from '../components/alert/alert';
 import { ChildrenProps } from '@/common/type/props.type';
 import { ProfileProvider } from '@/store/profile-provider';
 import { User } from '@/controller/user/type/user.type';
@@ -32,8 +32,8 @@ export default function ProfileInitializer({ children }: ChildrenProps) {
     init();
   }, []);
 
-  if (!user) return <Loading text="Loading..." />;
-  if (unauthorized) return <Loading text="Unauthorized" />;
+  if (!user) return <Alert type="loading" />;
+  if (unauthorized) return <Alert type="unauthorized" />;
 
   return <ProfileProvider user={user}>{children}</ProfileProvider>;
 }

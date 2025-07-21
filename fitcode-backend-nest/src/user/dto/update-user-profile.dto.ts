@@ -1,6 +1,8 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { PickType } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { UserEntity } from '../entity/user.entity';
+import { IsNotEmpty, IsString } from 'class-validator';
+import { Expose } from 'class-transformer';
 
 export class UpdateUserProfileDto extends PartialType(
   PickType(UserEntity, [
@@ -13,4 +15,10 @@ export class UpdateUserProfileDto extends PartialType(
     'phone',
     'birthDate',
   ] as const),
-) {}
+) {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  @Expose()
+  userId: string;
+}

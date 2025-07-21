@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Loading from '../components/loading/loading';
+import Alert from '../components/alert/alert';
 import { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
 import { GroupController } from '@/controller/group/group.controller';
 import { InstitutionController } from '@/controller/institution/institution.controller';
@@ -75,8 +75,8 @@ export default function GroupInitializer({
     init();
   }, []);
 
-  if (!state) return <Loading text="Loading..." />;
-  if (unauthorized) return <Loading text="Unauthorized" />;
+  if (!state) return <Alert type="loading" />;
+  if (unauthorized) return <Alert type="unauthorized" />;
 
   return <GroupProvider {...state}>{children}</GroupProvider>;
 }
