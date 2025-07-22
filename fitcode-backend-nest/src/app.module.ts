@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TestDbModule } from '@test/common/db/test-db.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,6 +15,7 @@ import { InstitutionModule } from './institution/institution.module';
 import { MethodModule } from './method/method.module';
 import { TrainingModule } from './training/training.module';
 import { UserModule } from './user/user.module';
+import { TestDbModule } from './test-db/test-db.module';
 
 @Module({
   imports: [

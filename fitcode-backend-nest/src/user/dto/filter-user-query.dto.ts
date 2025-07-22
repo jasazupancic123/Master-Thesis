@@ -22,7 +22,7 @@ export class FilterUserQueryDto {
   @IsEnum(UserRole)
   @IsOptional()
   @IsNotEmpty()
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: UserRole })
   @Expose()
   role?: UserRole;
 }

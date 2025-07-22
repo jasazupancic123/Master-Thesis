@@ -32,7 +32,7 @@ export class CompletedTrainingComponent {
 
   @ValidateNested({ each: true })
   @Type(() => CompletedTrainingExercise)
-  @ApiProperty()
+  @ApiProperty({ type: () => CompletedTrainingExercise, isArray: true })
   @Expose()
   exercises: CompletedTrainingExercise[];
 }

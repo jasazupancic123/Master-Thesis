@@ -27,7 +27,7 @@ export class Attribute {
 
   @IsEnum(AttributeType)
   @IsString()
-  @ApiProperty()
+  @ApiProperty({ type: () => AttributeType })
   @Expose()
   type: AttributeType; // defaults to "string"
 
@@ -71,7 +71,7 @@ export class Attribute {
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => Attribute, isArray: true })
   @IsOptional()
   @Expose()
   options?: Attribute[]; // possible values for select type

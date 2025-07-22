@@ -14,13 +14,13 @@ export class ExerciseSet {
 
   @ValidateNested({ each: true })
   @Type(() => AttributeValue)
-  @ApiProperty()
+  @ApiProperty({ type: () => AttributeValue, isArray: true })
   @Expose()
   paramValuesL: AttributeValue[];
 
   @ValidateNested({ each: true })
   @Type(() => AttributeValue)
-  @ApiProperty()
+  @ApiProperty({ type: () => AttributeValue, isArray: true })
   @Expose()
   paramValuesR: AttributeValue[];
 }

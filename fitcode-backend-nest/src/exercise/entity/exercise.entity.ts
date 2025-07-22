@@ -53,7 +53,7 @@ export class Exercise extends BaseEntity {
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseAttributeValue)
-  @ApiProperty()
+  @ApiProperty({ type: () => ExerciseAttributeValue, isArray: true })
   @Expose()
   attributeValues: ExerciseAttributeValue[]; // sub collection for filtering
 

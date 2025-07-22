@@ -18,12 +18,12 @@ export class UserEntity extends BaseEntity {
   @IsEnum(SportLevel)
   @IsOptional()
   @Expose()
-  @ApiProperty({ example: SportLevel.BEGINNER })
+  @ApiProperty({ enum: SportLevel })
   level?: SportLevel;
 
   @IsEnum(Gender)
   @IsOptional()
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: Gender })
   @Expose()
   gender?: Gender;
 

@@ -19,7 +19,7 @@ export class BatchUpdateOneGroupDto extends IntersectionType(
 export class BatchUpdateGroupsDto {
   @Type(() => BatchUpdateOneGroupDto)
   @ValidateNested({ each: true })
-  @ApiProperty()
+  @ApiProperty({ type: () => BatchUpdateOneGroupDto, isArray: true })
   @Expose()
   groups: BatchUpdateOneGroupDto[];
 }

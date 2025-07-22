@@ -39,7 +39,7 @@ export class Group extends BaseEntity {
   @ValidateNested({ each: true })
   @Type(() => Cycle)
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ type: () => Cycle, isArray: true })
   @Expose()
   cycles: Cycle[]; // array
 }

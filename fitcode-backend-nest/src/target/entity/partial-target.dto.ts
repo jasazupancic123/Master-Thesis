@@ -5,6 +5,7 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ComponentLevel } from '../enum/component-level.enum';
 import { Target } from './target.entity';
+
 export class PartialTarget extends PickType(Target, ['componentId'] as const) {
   @IsString()
   @IsNotEmpty()
@@ -12,7 +13,7 @@ export class PartialTarget extends PickType(Target, ['componentId'] as const) {
   @ApiProperty()
   targetId: string;
 
-  @ApiPropertyOptional({ enum: ComponentLevel, enumName: 'ComponentLevel' })
+  @ApiPropertyOptional({ enum: ComponentLevel })
   @IsOptional()
   @IsNotEmpty()
   @IsEnum(ComponentLevel)

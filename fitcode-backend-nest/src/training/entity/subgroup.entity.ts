@@ -31,11 +31,11 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
 
   @ValidateNested({ each: true })
   @Type(() => Superset)
-  @ApiProperty()
+  @ApiProperty({ type: () => Superset, isArray: true })
   @Expose()
   supersets: Superset[];
 
-  @ApiProperty({ enum: PeriodizationType, enumName: 'PeriodizationType' })
+  @ApiProperty({ enum: PeriodizationType })
   @IsOptional()
   @IsNotEmpty()
   @IsEnum(PeriodizationType)
@@ -44,7 +44,7 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
 
   @ValidateNested({ each: true })
   @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
   @Expose()
   futureStats: TrainingExerciseAverageStats[]; // average future workload stats
 }

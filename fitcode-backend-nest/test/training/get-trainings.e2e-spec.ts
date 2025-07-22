@@ -18,7 +18,7 @@ import {
   createGroupWithCycles,
   createInstitution,
   deleteDoc,
-} from '../common/utils/data.util';
+} from '@test/common/utils/data.util';
 
 describe('Get Trainings (e2e)', () => {
   let app: INestApplication;

@@ -24,7 +24,7 @@ import {
   deleteDoc,
   deleteDocs,
   deleteInstitution,
-} from '../common/utils/data.util';
+} from '@test/common/utils/data.util';
 
 describe('Create Exercise (e2e)', () => {
   let app: INestApplication;

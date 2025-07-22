@@ -39,8 +39,8 @@ import {
   deleteDoc,
   deleteDocs,
   deleteInstitution,
-} from '../common/utils/data.util';
-import { getTime } from '../common/utils/date.util';
+} from '@test/common/utils/data.util';
+import { getTime } from '@src/common/utils/date.util';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;

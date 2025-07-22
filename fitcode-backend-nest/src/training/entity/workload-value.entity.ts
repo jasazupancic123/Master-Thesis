@@ -30,7 +30,7 @@ export class PrescribedWorkload {
   /* --------------- Vol Work 2 --------------- */
   @IsEnum(VolType)
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ enum: VolType })
   @Expose()
   volWork2Type?: VolType;
 
@@ -51,7 +51,7 @@ export class PrescribedWorkload {
   /* --------------- Vol Rec --------------- */
   @IsEnum(VolType)
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ enum: VolType })
   @Expose()
   volRecType?: VolType;
 
@@ -72,7 +72,7 @@ export class PrescribedWorkload {
   /* --------------- Int Work 1 --------------- */
   @IsEnum(IntType)
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ enum: IntType })
   @Expose()
   intWork1Type?: IntType;
 
@@ -93,7 +93,7 @@ export class PrescribedWorkload {
   /* --------------- Int Work 2 --------------- */
   @IsEnum(IntType)
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ enum: IntType })
   @Expose()
   intWork2Type?: IntType;
 
@@ -114,7 +114,7 @@ export class PrescribedWorkload {
   /* --------------- Int Rec --------------- */
   @IsEnum(IntType)
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ enum: IntType })
   @Expose()
   intRecType?: IntType;
 

@@ -9,6 +9,6 @@ import { UserRole } from '../enum/user-role.enum';
 export class CustomClaimsDto implements CustomClaims {
   @IsEnum(UserRole, { each: true })
   @Expose()
-  @ApiProperty({ example: [UserRole.ATHLETE] })
+  @ApiProperty({ enum: UserRole, isArray: true })
   role: UserRole[];
 }

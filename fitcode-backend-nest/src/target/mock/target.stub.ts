@@ -1,7 +1,7 @@
 import {
   generateRandomName,
   generateRandomString,
-} from '@test/common/utils/random.util';
+} from '@src/common/utils/random.util';
 import { v4 } from 'uuid';
 
 import type { Target } from '../entity/target.entity';

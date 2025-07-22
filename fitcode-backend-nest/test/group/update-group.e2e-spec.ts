@@ -19,7 +19,7 @@ import { TrainingService } from '@src/training/service/training.service';
 
 import type { TestUser } from '../common/type/auth.type';
 import type { TestInstitution } from '../common/type/entity.type';
-import { createAthleteUserAndToken } from '../common/utils/auth.util';
+import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
@@ -29,7 +29,7 @@ import {
   deleteDocs,
   deleteInstitution,
   deleteUsers,
-} from '../common/utils/data.util';
+} from '@test/common/utils/data.util';
 
 describe('Update Group (e2e)', () => {
   let app: INestApplication;

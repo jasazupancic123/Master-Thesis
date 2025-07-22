@@ -1,4 +1,4 @@
-import { generateRandomNumber } from '@test/common/utils/random.util';
+import { generateRandomNumber } from '@src/common/utils/random.util';
 
 import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { PARAMS } from '@src/component/constant/param.constant';

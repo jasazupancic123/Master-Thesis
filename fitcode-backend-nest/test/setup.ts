@@ -14,7 +14,7 @@ import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from './common/utils/auth.util';
+} from '@test/common/utils/auth.util';
 
 config();
 

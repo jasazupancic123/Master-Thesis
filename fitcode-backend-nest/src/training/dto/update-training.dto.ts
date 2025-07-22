@@ -16,7 +16,7 @@ export class UpdateTrainingDto extends PickType(Training, [
 ]) {
   @ValidateNested({ each: true })
   @Type(() => Workload)
-  @ApiProperty()
+  @ApiProperty({ type: () => Workload, isArray: true })
   @Expose()
   workloads: Workload[]; // custom workloads
 }
@@ -29,7 +29,7 @@ export class BatchUpdateTrainingDto extends IntersectionType(
 export class BatchUpdateTrainingsDto {
   @ValidateNested({ each: true })
   @Type(() => BatchUpdateTrainingDto)
-  @ApiProperty()
+  @ApiProperty({ type: () => BatchUpdateTrainingDto, isArray: true })
   @Expose()
   trainings: BatchUpdateTrainingDto[];
 }
