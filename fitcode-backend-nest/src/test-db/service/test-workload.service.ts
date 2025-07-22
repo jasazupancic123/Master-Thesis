@@ -14,7 +14,6 @@ import { Component } from '@src/component/entity/component.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';
 import { WorkloadValue } from '@src/training/entity/workload-value.entity';
-import { SetStatus } from '@src/training/enum/set-status.enum';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 
 @Injectable()
@@ -44,10 +43,8 @@ export class TestWorkloadService {
       );
   }
 
-  async createManyCompleted(
-    input: (Create<
-      Omit<WorkloadMeta, 'id' | 'status' | 'plannedAt' | 'componentId'>
-    > &
+  async createMany(
+    input: (Create<Omit<WorkloadMeta, 'id' | 'plannedAt' | 'componentId'>> &
       WorkloadValue & {
         component: Component;
         randomValues?: boolean;
@@ -59,7 +56,6 @@ export class TestWorkloadService {
         ...item,
         id: null,
         plannedAt: new Date(),
-        status: SetStatus.COMPLETED,
         componentId: item.component.id,
       };
 

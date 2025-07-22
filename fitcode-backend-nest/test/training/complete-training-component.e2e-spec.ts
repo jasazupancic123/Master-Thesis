@@ -31,6 +31,7 @@ import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
+import { SetStatus } from '@src/training/enum/set-status.enum';
 import { generateCompletedTrainingExerciseStub } from '@src/training/mock/completed-training.stub';
 import {
   generateSuperset,
@@ -816,7 +817,7 @@ describe('Complete training component (e2e)', () => {
   it('should successfully complete training component for athlete with custom workloads', async () => {
     training = await createTraining();
 
-    await db.workloads.createManyCompleted([
+    await db.workloads.createMany([
       {
         trainingId: training.id,
         component: component1,
@@ -825,6 +826,7 @@ describe('Complete training component (e2e)', () => {
         supersetIndex: 0,
         setNumber: 1,
         prescribedIntRecValueL: 101,
+        status: SetStatus.NOT_STARTED,
       },
       {
         trainingId: training.id,
@@ -834,6 +836,7 @@ describe('Complete training component (e2e)', () => {
         supersetIndex: 0,
         setNumber: 1,
         prescribedIntRecValueR: 98,
+        status: SetStatus.NOT_STARTED,
       },
     ]);
 

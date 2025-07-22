@@ -33,6 +33,7 @@ import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { TestDbService } from '@src/test-db/test-db.service';
 import type { Training } from '@src/training/entity/training.entity';
+import { SetStatus } from '@src/training/enum/set-status.enum';
 import {
   generateExerciseSet,
   generateSuperset,
@@ -220,7 +221,7 @@ describe('Update Training (e2e)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        'Training falls outside of the selected cycle',
+        'You cannot add or update trainings in the past',
       );
     });
 
@@ -659,7 +660,7 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should update workload if one already exists', async () => {
-      await db.workloads.createManyCompleted([
+      await db.workloads.createMany([
         {
           trainingId: training.id,
           component: component1,
@@ -668,6 +669,7 @@ describe('Update Training (e2e)', () => {
           supersetIndex: 0,
           setNumber: 1,
           randomValues: false,
+          status: SetStatus.NOT_STARTED,
         },
       ]);
 
@@ -713,7 +715,7 @@ describe('Update Training (e2e)', () => {
     });
 
     it('should update multiple workloads if some already exist', async () => {
-      await db.workloads.createManyCompleted([
+      await db.workloads.createMany([
         {
           trainingId: training.id,
           component: component1,
@@ -721,6 +723,7 @@ describe('Update Training (e2e)', () => {
           userId: global.athlete.uid,
           supersetIndex: 0,
           setNumber: 1,
+          status: SetStatus.NOT_STARTED,
         },
         {
           trainingId: training.id,
@@ -729,6 +732,7 @@ describe('Update Training (e2e)', () => {
           userId: global.athlete.uid,
           supersetIndex: 0,
           setNumber: 2,
+          status: SetStatus.NOT_STARTED,
         },
         {
           trainingId: training.id,
@@ -737,6 +741,7 @@ describe('Update Training (e2e)', () => {
           userId: global.athlete.uid,
           supersetIndex: 0,
           setNumber: 1,
+          status: SetStatus.NOT_STARTED,
         },
       ]);
 

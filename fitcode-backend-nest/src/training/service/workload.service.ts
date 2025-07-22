@@ -187,8 +187,6 @@ export class WorkloadService {
       ? subgroup.supersets
       : trainingComponent.supersets;
 
-    // TODO - fetch custom workloads in the future and map them to prescribedSupersets
-
     const collection = this.repository.collection(ref);
     const operations: BatchWriteOperation<Workload>[] = [];
 
@@ -665,6 +663,100 @@ export class WorkloadService {
       prescribedIntRecValueL: this.parseValue(intRecL),
       prescribedIntRecValueR: this.parseValue(intRecR),
     };
+  }
+
+  getExerciseSet(workload: Workload) {
+    const set: ExerciseSet = {
+      setNumber: workload.setNumber,
+      paramValuesL: [],
+      paramValuesR: [],
+    };
+
+    if (workload.volWork1Type) {
+      set.paramValuesL.push({
+        field: ParamType.VolWork1,
+        value: workload.prescribedVolWork1ValueL?.toString(),
+        selected: workload.volWork1Type,
+      });
+
+      set.paramValuesR.push({
+        field: ParamType.VolWork1,
+        value: workload.prescribedVolWork1ValueR?.toString(),
+        selected: workload.volWork1Type,
+      });
+    }
+
+    if (workload.volWork2Type) {
+      set.paramValuesL.push({
+        field: ParamType.VolWork2,
+        value: workload.prescribedVolWork2ValueL?.toString(),
+        selected: workload.volWork2Type,
+      });
+
+      set.paramValuesR.push({
+        field: ParamType.VolWork2,
+        value: workload.prescribedVolWork2ValueR?.toString(),
+        selected: workload.volWork2Type,
+      });
+    }
+
+    if (workload.volRecType) {
+      set.paramValuesL.push({
+        field: ParamType.VolRec1,
+        value: workload.prescribedVolRecValueL?.toString(),
+        selected: workload.volRecType,
+      });
+
+      set.paramValuesR.push({
+        field: ParamType.VolRec1,
+        value: workload.prescribedVolRecValueR?.toString(),
+        selected: workload.volRecType,
+      });
+    }
+
+    if (workload.intWork1Type) {
+      set.paramValuesL.push({
+        field: ParamType.IntWork1,
+        value: workload.prescribedIntWork1ValueL?.toString(),
+        selected: workload.intWork1Type,
+      });
+
+      set.paramValuesR.push({
+        field: ParamType.IntWork1,
+        value: workload.prescribedIntWork1ValueR?.toString(),
+        selected: workload.intWork1Type,
+      });
+    }
+
+    if (workload.intWork2Type) {
+      set.paramValuesL.push({
+        field: ParamType.IntWork2,
+        value: workload.prescribedIntWork2ValueL?.toString(),
+        selected: workload.intWork2Type,
+      });
+
+      set.paramValuesR.push({
+        field: ParamType.IntWork2,
+        value: workload.prescribedIntWork2ValueR?.toString(),
+        selected: workload.intWork2Type,
+      });
+    }
+
+    if (workload.intRecType) {
+      set.paramValuesL.push({
+        field: ParamType.IntRec1,
+        value: workload.prescribedIntRecValueL?.toString(),
+        selected: workload.intRecType,
+      });
+
+      set.paramValuesR.push({
+        field: ParamType.IntRec1,
+        value: workload.prescribedIntRecValueR?.toString(),
+        selected: workload.intRecType,
+      });
+    }
+
+    return set;
   }
 
   calculateIntValues(
