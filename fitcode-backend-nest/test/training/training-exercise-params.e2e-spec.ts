@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { addDays } from 'date-fns';
 
 import { AppModule } from '@src/app.module';
 import type { Attribute } from '@src/attribute/entity/attribute.entity';
@@ -43,12 +44,9 @@ import {
   deleteDoc,
   deleteInstitution,
 } from '../common/utils/data.util';
-import { TestDbService } from '@test/common/db/test-db.service';
-import { addDays } from 'date-fns';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;
-  let db: TestDbService;
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let attributeService: AttributeService;
@@ -71,7 +69,6 @@ describe('Training Exercise Params (e2e)', () => {
     await app.init();
 
     firebase = moduleFixture.get(FirebaseService);
-    db = moduleFixture.get(TestDbService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);

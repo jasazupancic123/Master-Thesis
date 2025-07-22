@@ -1,14 +1,22 @@
-import { Param, type INestApplication } from '@nestjs/common';
+import { type INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  COMPONENT_PARAMS_OPT1,
+  COMPONENT_PARAMS_OPT2,
+} from '@test/common/constant/component-params.constant';
 import { TestDbService } from '@test/common/db/test-db.service';
 import { addDays, subDays } from 'date-fns';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
 import { ComponentService } from '@src/component/component.service';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
+import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
+import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
+import type { Exercise } from '@src/exercise/entity/exercise.entity';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
@@ -39,17 +47,6 @@ import {
   deleteUsers,
 } from '../common/utils/data.util';
 import { getTime } from '../common/utils/date.util';
-import { Exercise } from '@src/exercise/entity/exercise.entity';
-import {
-  DEFAULT_PARAMS_KEY,
-  INT_OPTIONS,
-} from '@src/component/constant/param.constant';
-import {
-  COMPONENT_PARAMS_OPT1,
-  COMPONENT_PARAMS_OPT2,
-} from '@test/common/constant/component-params.constant';
-import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
-import { ParamType } from '@src/component/enum/param.enum';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;

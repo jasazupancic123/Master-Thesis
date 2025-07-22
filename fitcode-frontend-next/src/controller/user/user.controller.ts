@@ -6,7 +6,10 @@ import { User, UserEntity } from './type/user.type';
 const api = CommonService.instance.api;
 
 export class UserController {
-  static async findAll(token?: string, query?: { ids?: string[]; emails?: string[] }) {
+  static async findAll(
+    token?: string,
+    query?: { ids?: string[]; emails?: string[] }
+  ) {
     return api.get<User[]>('/user', { token, query });
   }
 
@@ -26,7 +29,7 @@ export class UserController {
     return api.patch<{}>(`/user/${id}`, input);
   }
 
-  static async updateProfile(input: Partial<UserEntity>) {
+  static async updateProfile(input: Partial<UserEntity> & { userId: string }) {
     return api.patch<{}>('/user/me/profile', input);
   }
 

@@ -1,12 +1,12 @@
+import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
+import type { Component } from '@src/component/entity/component.entity';
 import type { ComponentParam } from '@src/component/entity/component-param.entity';
+import { ParamType } from '@src/component/enum/param.enum';
 
 import type { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import type { ExerciseSet } from '../entity/exercise-set.entity';
 import { generateExerciseSet } from './training.stub';
-import { ParamType } from '@src/component/enum/param.enum';
-import { Component } from '@src/component/entity/component.entity';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
-import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 
 export function generateCompletedTrainingExerciseStub(
   component: Component,

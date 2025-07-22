@@ -1,20 +1,22 @@
-import { ComponentParam } from '@src/component/entity/component-param.entity';
-import type { Workload, WorkloadMeta } from '../entity/workload.entity';
-import { SetStatus } from '../enum/set-status.enum';
 import { v4 } from 'uuid';
-import {
-  CompletedWorkload,
-  PrescribedWorkload,
-  WorkloadValue,
-} from '../entity/workload-value.entity';
-import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
-import { generateRandomParamFieldValue } from './param-values.stub';
-import { ParamToSelectedMap } from '../interface/param-to-selected.interface';
+
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
 } from '@src/component/constant/param.constant';
-import { Component } from '@src/component/entity/component.entity';
+import type { Component } from '@src/component/entity/component.entity';
+import type { ComponentParam } from '@src/component/entity/component-param.entity';
+import type { IntType, VolType } from '@src/component/enum/param.enum';
+import { ParamType } from '@src/component/enum/param.enum';
+
+import type { Workload, WorkloadMeta } from '../entity/workload.entity';
+import type {
+  CompletedWorkload,
+  PrescribedWorkload,
+  WorkloadValue,
+} from '../entity/workload-value.entity';
+import { SetStatus } from '../enum/set-status.enum';
+import { generateRandomParamFieldValue } from './param-values.stub';
 
 export function generateWorkloadStub(
   component: Component,
@@ -32,8 +34,6 @@ export function generateWorkloadStub(
   const meta = generateWorkloadMetaStub({ ...data, componentId: component.id });
   const prescribed = generatePrescribedWorkloadStub(componentParams, random);
   const completed = generateCompletedWorkloadStub(componentParams, random);
-
-  const { id, ...rest } = data;
 
   return {
     ...meta,
@@ -79,10 +79,7 @@ export function generatePrescribedWorkloadStub(
   const w: PrescribedWorkload = {};
 
   for (const param of componentParams) {
-    const field = param.field as ParamType; // volWorkSets, int1, vol1, etc.
-    const selected =
-      parseDefaultValueOrFirstOption<ParamToSelectedMap[typeof field]>(param); // set, rep, kg, ...
-
+    const selected = parseDefaultValueOrFirstOption(param); // set, rep, kg, ...
     const value = random
       ? generateRandomParamFieldValue(selected)
       : parseOptionValueOrDefault(param, selected); // default value or first option, like "12" for reps
@@ -131,10 +128,7 @@ export function generateCompletedWorkloadStub(
   const w: CompletedWorkload = {};
 
   for (const param of componentParams) {
-    const field = param.field as ParamType; // volWorkSets, int1, vol1, etc.
-    const selected =
-      parseDefaultValueOrFirstOption<ParamToSelectedMap[typeof field]>(param); // set, rep, kg, ...
-
+    const selected = parseDefaultValueOrFirstOption(param); // set, rep, kg, ...
     const value = random
       ? generateRandomParamFieldValue(selected)
       : parseOptionValueOrDefault(param, selected); // default value or first option, like "12" for reps
