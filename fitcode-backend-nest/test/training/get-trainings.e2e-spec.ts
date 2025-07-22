@@ -1,6 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteDoc,
+} from '@test/common/utils/data.util';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -14,11 +19,6 @@ import { InstitutionService } from '@src/institution/service/institution.service
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 import type { TestInstitution } from '../common/type/entity.type';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteDoc,
-} from '@test/common/utils/data.util';
 
 describe('Get Trainings (e2e)', () => {
   let app: INestApplication;

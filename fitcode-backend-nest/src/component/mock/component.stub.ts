@@ -1,5 +1,6 @@
-import { generateRandomName } from '@src/common/utils/random.util';
 import { v4 } from 'uuid';
+
+import { generateRandomName } from '@src/common/utils/random.util';
 
 import type { Component } from '../entity/component.entity';
 

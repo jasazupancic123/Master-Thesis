@@ -1,6 +1,5 @@
-import { generateRandomNumber } from '@src/common/utils/random.util';
-
 import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { generateRandomNumber } from '@src/common/utils/random.util';
 import { PARAMS } from '@src/component/constant/param.constant';
 import type { ComponentParam } from '@src/component/entity/component-param.entity';
 import type { ParamType } from '@src/component/enum/param.enum';

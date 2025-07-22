@@ -13,9 +13,9 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { GroupModule } from './group/group.module';
 import { InstitutionModule } from './institution/institution.module';
 import { MethodModule } from './method/method.module';
+import { TestDbModule } from './test-db/test-db.module';
 import { TrainingModule } from './training/training.module';
 import { UserModule } from './user/user.module';
-import { TestDbModule } from './test-db/test-db.module';
 
 @Module({
   imports: [

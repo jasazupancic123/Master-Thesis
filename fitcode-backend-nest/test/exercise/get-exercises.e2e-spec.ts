@@ -1,6 +1,14 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  createInstitution,
+  createInstitutionWithUsers,
+  deleteCollection,
+  deleteDoc,
+  deleteDocs,
+  deleteInstitution,
+} from '@test/common/utils/data.util';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -21,14 +29,6 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 
 import type { TestInstitution } from '../common/type/entity.type';
-import {
-  createInstitution,
-  createInstitutionWithUsers,
-  deleteCollection,
-  deleteDoc,
-  deleteDocs,
-  deleteInstitution,
-} from '@test/common/utils/data.util';
 
 describe('Get Exercises (e2e)', () => {
   let app: INestApplication;

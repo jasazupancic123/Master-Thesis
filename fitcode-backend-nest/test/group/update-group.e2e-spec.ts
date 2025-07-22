@@ -1,6 +1,17 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  createInstitutionWithUsers,
+  createTraining,
+  deleteDoc,
+  deleteDocs,
+  deleteInstitution,
+  deleteUsers,
+} from '@test/common/utils/data.util';
 import { addDays, subDays } from 'date-fns';
 import * as request from 'supertest';
 
@@ -19,17 +30,6 @@ import { TrainingService } from '@src/training/service/training.service';
 
 import type { TestUser } from '../common/type/auth.type';
 import type { TestInstitution } from '../common/type/entity.type';
-import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  createInstitutionWithUsers,
-  createTraining,
-  deleteDoc,
-  deleteDocs,
-  deleteInstitution,
-  deleteUsers,
-} from '@test/common/utils/data.util';
 
 describe('Update Group (e2e)', () => {
   let app: INestApplication;

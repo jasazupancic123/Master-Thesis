@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 // NOTE - this has to be default import: https://github.com/firebase/firebase-admin-node/issues/593#issuecomment-620711067
 import admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -135,7 +134,6 @@ export const createUserWithRole = https.onCall(async (data, context) => {
       });
 
     return newUser;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e.code && e.code.includes('auth/')) {
       throw new https.HttpsError('invalid-argument', e.message, {

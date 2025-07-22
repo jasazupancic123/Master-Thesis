@@ -1,6 +1,14 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  createTraining,
+  deleteCollection,
+  deleteDoc,
+  deleteInstitution,
+} from '@test/common/utils/data.util';
 import { addDays, addMinutes } from 'date-fns';
 import * as request from 'supertest';
 
@@ -32,14 +40,6 @@ import { TrainingRepository } from '@src/training/repository/training.repository
 
 import { PERIODIZATION_TEST_VALUES } from '../common/constant/periodization.constant';
 import type { TestInstitution, TestTraining } from '../common/type/entity.type';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  createTraining,
-  deleteCollection,
-  deleteDoc,
-  deleteInstitution,
-} from '@test/common/utils/data.util';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;

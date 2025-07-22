@@ -33,7 +33,7 @@ export interface FirestoreCollectionRepository<
 
   updateDoc(
     ref: Ref,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     input: Partial<Model> & Record<string, any>,
   ): Promise<void>;
 

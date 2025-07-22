@@ -2,7 +2,6 @@ import { Logger } from '@nestjs/common';
 
 import type { User } from '../type/firebase-auth.type';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isPrimitive(val: any): boolean {
   return (
     val === null ||
@@ -13,7 +12,6 @@ function isPrimitive(val: any): boolean {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isFirebaseUser(val: any): val is User {
   return val && typeof val === 'object' && typeof val.uid === 'string';
 }
