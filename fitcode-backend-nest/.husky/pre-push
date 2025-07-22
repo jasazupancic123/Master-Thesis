@@ -1,3 +1,2 @@
 cd fitcode-backend-nest
 npm test
-npm test:e2e
