@@ -55,7 +55,3 @@ sleep 1
 kill $DEV_PID
 
 print_box "✅ Server started successfully!"
-
-print_box "🛠️ Building frontend..."
-cd ../fitcode-frontend-next || exit 1
-npm run build || exit 1
