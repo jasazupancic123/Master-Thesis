@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "prepare": "cd .. && husky fitcode-frontend-next/.husky"
+    "test": "jest"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
