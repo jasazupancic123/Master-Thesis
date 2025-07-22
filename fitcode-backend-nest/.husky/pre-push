@@ -1,2 +1,3 @@
-npm test --cwd fitcode-backend-nest/
-npm test:e2e --cwd fitcode-backend-nest/
+cd fitcode-backend-nest
+npm test
+npm test:e2e
