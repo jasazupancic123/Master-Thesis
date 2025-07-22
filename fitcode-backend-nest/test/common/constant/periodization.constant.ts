@@ -2,6 +2,17 @@ import { PeriodizationType } from '../../../src/training/enum/periodization-type
 
 export const PERIODIZATION_TEST_VALUES = [
   {
+    type: PeriodizationType.REPLICATE,
+    expected: [
+      { int: 20, vol: 12 },
+      { int: 20, vol: 12 },
+      { int: 20, vol: 12 },
+      { int: 20, vol: 12 },
+      { int: 20, vol: 12 },
+      { int: 20, vol: 12 },
+    ],
+  },
+  {
     type: PeriodizationType.LINEAR,
     expected: [
       { int: 20, vol: 12 },
@@ -48,12 +59,12 @@ export const PERIODIZATION_TEST_VALUES = [
   {
     type: PeriodizationType.WAVE,
     expected: [
-      { int: 11, vol: 5 },
-      { int: 11, vol: 5 },
-      { int: 11, vol: 5 },
-      { int: 12, vol: 3 },
-      { int: 11, vol: 5 },
-      { int: 11, vol: 5 },
+      { int: 16, vol: 5 },
+      { int: 16, vol: 5 },
+      { int: 16, vol: 5 },
+      { int: 18, vol: 3 },
+      { int: 16, vol: 5 },
+      { int: 16, vol: 5 },
     ],
   },
   {
