@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { getTime } from '@src/common/utils/date.util';
 import { addHours } from 'date-fns';
 import type { CollectionReference } from 'firebase-admin/firestore';
 import { v4 } from 'uuid';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
+import { getTime } from '@src/common/utils/date.util';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';

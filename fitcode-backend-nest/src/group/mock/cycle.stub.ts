@@ -1,9 +1,10 @@
+import { endOfMonth, startOfMonth } from 'date-fns';
+import { v4 } from 'uuid';
+
 import {
   generateRandomColor,
   generateRandomName,
 } from '@src/common/utils/random.util';
-import { endOfMonth, startOfMonth } from 'date-fns';
-import { v4 } from 'uuid';
 
 import type { Cycle } from '../entity/cycle.entity';
 

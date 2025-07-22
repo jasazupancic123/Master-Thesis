@@ -5,7 +5,6 @@ interface TreeOptions<T> {
   rootId?: string | null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TreeItem = Record<string, any>;
 
 export class TreeUtil {
@@ -39,7 +38,6 @@ export class TreeUtil {
     return roots;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   forEach<T extends TreeItem = any, Result = any>(
     items: T[],
     childrenPropertyName: keyof T,

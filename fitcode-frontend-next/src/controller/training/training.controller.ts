@@ -126,7 +126,6 @@ export class TrainingController {
   }
 
   static async completeTrainingComponent(
-    token: string,
     trainingId: string,
     userId: string,
     componentId: string,
@@ -135,8 +134,7 @@ export class TrainingController {
   ): Promise<Training> {
     return api.patch<Training>(
       `/training/${trainingId}/component/${componentId}/complete`,
-      { userId, rootComponentId, supersets },
-      { token }
+      { userId, rootComponentId, supersets }
     );
   }
 

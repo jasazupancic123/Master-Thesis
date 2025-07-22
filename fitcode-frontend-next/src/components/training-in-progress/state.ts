@@ -40,12 +40,7 @@ export const handleFinishTraining = async (state: {
   handleApiRequest(
     router,
     () =>
-<<<<<<< HEAD
       TrainingController.completeTrainingComponent(
-        token,
-=======
-      TrainingController.finishComponent(
->>>>>>> main
         trainingInProgress.training.id,
         user.uid,
         trainingInProgress.selectedComponent.id,

@@ -1,12 +1,12 @@
-import {
-  generateRandomColor,
-  generateRandomName,
-} from '@src/common/utils/random.util';
 import { addDays, addHours } from 'date-fns';
 import { v4 } from 'uuid';
 
 import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { getTime } from '@src/common/service/util/date.util';
+import {
+  generateRandomColor,
+  generateRandomName,
+} from '@src/common/utils/random.util';
 import { PARAMS } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,

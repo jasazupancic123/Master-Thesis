@@ -42,7 +42,7 @@ export interface FindOneOptions<T extends Record<string, unknown>> {
  * constant populate: NestedKey<User>[] = ['address', 'address.city']; // type safe
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export type Populate<O extends Record<string, any>> = {
   [K in Extract<keyof O, string>]: O[K] extends Array<string>
     ? K

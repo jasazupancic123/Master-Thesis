@@ -1,6 +1,17 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  createAthleteUserAndToken,
+  createManagerUserAndToken,
+  createTrainerUserAndToken,
+} from '@test/common/utils/auth.util';
+import {
+  createInstitution,
+  deleteDoc,
+  deleteInstitution,
+  deleteUsers,
+} from '@test/common/utils/data.util';
 import * as request from 'supertest';
 
 import { AppModule } from '@src/app.module';
@@ -16,18 +27,6 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Institution } from '@src/institution/entity/institution.entity';
 import { InstitutionService } from '@src/institution/service/institution.service';
-
-import {
-  createAthleteUserAndToken,
-  createManagerUserAndToken,
-  createTrainerUserAndToken,
-} from '@test/common/utils/auth.util';
-import {
-  createInstitution,
-  deleteDoc,
-  deleteInstitution,
-  deleteUsers,
-} from '@test/common/utils/data.util';
 
 describe('Update Exercise (e2e)', () => {
   let app: INestApplication;

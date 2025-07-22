@@ -1,8 +1,9 @@
+import { v4 } from 'uuid';
+
 import {
   generateRandomName,
   generateRandomString,
 } from '@src/common/utils/random.util';
-import { v4 } from 'uuid';
 
 import type { Target } from '../entity/target.entity';
 

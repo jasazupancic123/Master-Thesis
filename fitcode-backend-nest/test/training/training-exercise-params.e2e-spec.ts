@@ -1,6 +1,13 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  createGroupWithCycles,
+  createInstitution,
+  deleteCollection,
+  deleteDoc,
+  deleteInstitution,
+} from '@test/common/utils/data.util';
 import { addDays } from 'date-fns';
 
 import { AppModule } from '@src/app.module';
@@ -37,13 +44,6 @@ import { TrainingService } from '@src/training/service/training.service';
 import { ATTRIBUTE_ENDURANCE_OPTIONS } from '../common/constant/attribute.constant';
 import { COMPONENT_ENDURANCE } from '../common/constant/component.constant';
 import type { TestInstitution } from '../common/type/entity.type';
-import {
-  createGroupWithCycles,
-  createInstitution,
-  deleteCollection,
-  deleteDoc,
-  deleteInstitution,
-} from '@test/common/utils/data.util';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;

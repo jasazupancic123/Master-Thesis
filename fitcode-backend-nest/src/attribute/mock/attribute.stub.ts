@@ -1,9 +1,8 @@
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
 import {
   generateRandomName,
   generateRandomString,
 } from '@src/common/utils/random.util';
-
-import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
 import type { Attribute } from '../entity/attribute.entity';
 
