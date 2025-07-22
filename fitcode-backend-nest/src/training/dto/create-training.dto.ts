@@ -8,6 +8,5 @@ export class CreateTrainingDto extends PickType(Training, [
   'components',
   'membersIds',
   'copiedFromId',
-  'stats',
   'futureStats',
 ]) {}

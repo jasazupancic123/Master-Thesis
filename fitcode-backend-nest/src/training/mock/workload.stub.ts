@@ -5,25 +5,42 @@ import { v4 } from 'uuid';
 import {
   CompletedWorkload,
   PrescribedWorkload,
+  WorkloadValue,
 } from '../entity/workload-value.entity';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
 import { generateRandomParamFieldValue } from './param-values.stub';
 import { ParamToSelectedMap } from '../interface/param-to-selected.interface';
-import { PARAMS } from '@src/component/constant/param.constant';
+import {
+  DEFAULT_PARAMS_KEY,
+  PARAMS,
+} from '@src/component/constant/param.constant';
+import { Component } from '@src/component/entity/component.entity';
 
 export function generateWorkloadStub(
-  data?: Partial<Workload>,
-  componentParams: ComponentParam[] = [],
-  random = false,
+  component: Component,
+  data?: Partial<Omit<Workload, 'componentId'>> & {
+    defaultParamsKey?: string;
+    randomValues?: boolean;
+    customComponentParams?: ComponentParam[];
+  },
 ): Workload {
-  const meta = generateWorkloadMetaStub(data);
+  const random = data?.randomValues || false;
+  const defaultParamsKey = data?.defaultParamsKey || DEFAULT_PARAMS_KEY;
+  const componentParams =
+    data?.customComponentParams || component.params?.[defaultParamsKey] || [];
+
+  const meta = generateWorkloadMetaStub({ ...data, componentId: component.id });
   const prescribed = generatePrescribedWorkloadStub(componentParams, random);
   const completed = generateCompletedWorkloadStub(componentParams, random);
+
+  const { id, ...rest } = data;
 
   return {
     ...meta,
     ...prescribed,
     ...completed,
+    ...getPrescribedWorkloadFields(data), // override prescribed values if provided
+    ...getCompletedWorkloadFields(data), // override completed values if provided
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -163,7 +180,74 @@ export function parseOptionValueOrDefault(
   rootParam: ComponentParam,
   selectedField: string,
 ): number {
-  return +(
-    rootParam.options?.find((o) => o.field === selectedField)?.defaultValue || 0
+  const foundParam = PARAMS.find((p) => p.field === rootParam.field);
+  const foundOption = foundParam?.options?.find(
+    (o) => o.field === selectedField,
   );
+
+  return +(foundOption?.defaultValue || 0);
+}
+
+function getPrescribedWorkloadFields(data: WorkloadValue): PrescribedWorkload {
+  return {
+    ...(data.volWork1Type && { volWork1Type: data.volWork1Type }),
+    ...(data.prescribedVolWork1ValueL && {
+      prescribedVolWork1ValueL: data.prescribedVolWork1ValueL,
+    }),
+    ...(data.prescribedVolWork1ValueR && {
+      prescribedVolWork1ValueR: data.prescribedVolWork1ValueR,
+    }),
+    ...(data.volWork2Type && { volWork2Type: data.volWork2Type }),
+    ...(data.prescribedVolWork2ValueL && {
+      prescribedVolWork2ValueL: data.prescribedVolWork2ValueL,
+    }),
+    ...(data.prescribedVolWork2ValueR && {
+      prescribedVolWork2ValueR: data.prescribedVolWork2ValueR,
+    }),
+    ...(data.volRecType && { volRecType: data.volRecType }),
+    ...(data.prescribedVolRecValueL && {
+      prescribedVolRecValueL: data.prescribedVolRecValueL,
+    }),
+    ...(data.prescribedVolRecValueR && {
+      prescribedVolRecValueR: data.prescribedVolRecValueR,
+    }),
+    ...(data.intWork1Type && { intWork1Type: data.intWork1Type }),
+    ...(data.prescribedIntWork1ValueL && {
+      prescribedIntWork1ValueL: data.prescribedIntWork1ValueL,
+    }),
+    ...(data.prescribedIntWork1ValueR && {
+      prescribedIntWork1ValueR: data.prescribedIntWork1ValueR,
+    }),
+    ...(data.intWork2Type && { intWork2Type: data.intWork2Type }),
+    ...(data.prescribedIntWork2ValueL && {
+      prescribedIntWork2ValueL: data.prescribedIntWork2ValueL,
+    }),
+    ...(data.prescribedIntWork2ValueR && {
+      prescribedIntWork2ValueR: data.prescribedIntWork2ValueR,
+    }),
+    ...(data.intRecType && { intRecType: data.intRecType }),
+    ...(data.prescribedIntRecValueL && {
+      prescribedIntRecValueL: data.prescribedIntRecValueL,
+    }),
+    ...(data.prescribedIntRecValueR && {
+      prescribedIntRecValueR: data.prescribedIntRecValueR,
+    }),
+  };
+}
+
+function getCompletedWorkloadFields(data: WorkloadValue): CompletedWorkload {
+  return {
+    ...(data.volWork1ValueL && { volWork1ValueL: data.volWork1ValueL }),
+    ...(data.volWork1ValueR && { volWork1ValueR: data.volWork1ValueR }),
+    ...(data.volWork2ValueL && { volWork2ValueL: data.volWork2ValueL }),
+    ...(data.volWork2ValueR && { volWork2ValueR: data.volWork2ValueR }),
+    ...(data.volRecValueL && { volRecValueL: data.volRecValueL }),
+    ...(data.volRecValueR && { volRecValueR: data.volRecValueR }),
+    ...(data.intWork1ValueL && { intWork1ValueL: data.intWork1ValueL }),
+    ...(data.intWork1ValueR && { intWork1ValueR: data.intWork1ValueR }),
+    ...(data.intWork2ValueL && { intWork2ValueL: data.intWork2ValueL }),
+    ...(data.intWork2ValueR && { intWork2ValueR: data.intWork2ValueR }),
+    ...(data.intRecValueL && { intRecValueL: data.intRecValueL }),
+    ...(data.intRecValueR && { intRecValueR: data.intRecValueR }),
+  };
 }

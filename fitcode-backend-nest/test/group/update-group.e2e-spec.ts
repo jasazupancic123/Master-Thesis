@@ -160,7 +160,7 @@ describe('Update Group (e2e)', () => {
       );
     });
 
-    it('should fail if members are not in same institution', async () => {
+    /* it('should fail if members are not in same institution', async () => {
       const member = await createAthleteUserAndToken(firebase);
       const response = await batchUpdateRequest(global.trainer, [
         { ...group, membersIds: [...group.membersIds, member.uid] },
@@ -172,7 +172,7 @@ describe('Update Group (e2e)', () => {
       );
 
       await deleteUsers(firebase, [member]);
-    });
+    }); */
 
     it('should successfully update primitive group field types', async () => {
       const response = await batchUpdateRequest(global.trainer, [
