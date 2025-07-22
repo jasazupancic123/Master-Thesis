@@ -1,4 +1,4 @@
-cd fitcode-backend-nest || exit 1
+cd fitcode-frontend-next || exit 1
 
 print_box() {
   local message="$1"
@@ -36,22 +36,5 @@ print_box() {
   printf "%*s\n" "$box_width" "" | tr ' ' "$border_char"
 }
 
-print_box "🚧 Running unit tests..."
-npm test || exit 1
-
-print_box "🚧 Running E2E tests..."
-npm run test:e2e || exit 1
-
-print_box "🛠️ Building backend..."
+print_box "🛠️ Building frontend..."
 npm run build || exit 1
-
-print_box "🚀 Starting server..."
-npx wait-on http://localhost:3001 &
-
-# Run `start:prod` for just long enough to ensure it starts
-npm run start:prod &
-DEV_PID=$!
-sleep 1
-kill $DEV_PID
-
-print_box "✅ Server started successfully!"
