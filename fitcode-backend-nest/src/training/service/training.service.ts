@@ -18,10 +18,9 @@ import {
 import { FieldValue, Query, Timestamp } from 'firebase-admin/firestore';
 import { CacheManagerService } from '../../cache-manager/cache-manager.service';
 import { CommonService } from '../../common/service/common.service';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
+import { Create, Update } from '../../common/type/entity.type';
 import { User } from '../../common/type/firebase-auth.type';
 import {
-  BatchWriteOperation,
   ComponentRef,
   CycleRef,
   GroupRef,
@@ -48,7 +47,6 @@ import { FinishComponentDto } from '../dto/finish-component.dto';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { PeriodizationService } from './periodization.service';
-import { FindByDayDto } from '../dto/find-by-day.dto';
 import { CopyComponentDto } from '../dto/copy-component.dto';
 import { BatchUpdateTrainingsDto } from '../dto/update-training.dto';
 import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
@@ -505,6 +503,8 @@ export class TrainingService implements Permission<Training, Institution> {
     if (filteredTrainings.length === 0)
       throw new BadRequestException('No future trainings to periodize');
 
+    filteredTrainings.unshift(baseTraining);
+
     const lastTraining = filteredTrainings[filteredTrainings.length - 1];
     const weeks = this.trainingPlanService.getSpacedTrainingsByWeek(
       baseTraining,
@@ -543,7 +543,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
         if (!subgroupInComponent) continue;
 
-        numberOfSubgroupsFound++;
+        if (ft.id !== baseTraining.id) numberOfSubgroupsFound++;
 
         component = {
           ...structuredClone(baseComponent),
@@ -579,10 +579,16 @@ export class TrainingService implements Permission<Training, Institution> {
         `Selected subgroup not found in any future training`,
       );
 
+    if (periodizationType === PeriodizationType.DUP_TABLE_BASED) {
+      throw new BadRequestException(
+        'Dup Table-Based periodization is not supported yet',
+      );
+    }
+
     const periodizedTrainings =
       periodizationType !== PeriodizationType.REPLICATE
         ? (this.periodizationService.periodize(
-            subgroupId ? baseSubgroup : baseTraining,
+            subgroupId ? baseSubgroup : baseComponent,
             filteredTrainings,
             weeks,
             componentId,
@@ -635,7 +641,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // await this.firebaseService.paginateBatchWrites(operations);
 
-    periodizedTrainings.push(baseTraining);
+    // periodizedTrainings.push(baseTraining);
 
     return periodizedTrainings.sort(
       (a, b) => a.from.getTime() - b.from.getTime(),
