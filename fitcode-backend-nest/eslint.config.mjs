@@ -8,6 +8,10 @@ import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 import unusedImportsPlugin from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig([
   {
     ignores: ['node_modules/**', 'dist/**'],
@@ -17,8 +21,8 @@ export default defineConfig([
     languageOptions: {
       parser,
       parserOptions: {
-        project: '../tsconfig.json',
-        tsconfigRootDir: new URL('.', import.meta.url),
+        project: path.join(__dirname, 'tsconfig.json'),
+        tsconfigRootDir: __dirname,
         sourceType: 'module',
       },
       ecmaVersion: 'latest',

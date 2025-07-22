@@ -16,7 +16,7 @@ import {
   createTrainerUserAndToken,
 } from '@test/common/utils/auth.util';
 
-config();
+config({ quiet: true });
 
 export default async function () {
   const commonService = new CommonService();

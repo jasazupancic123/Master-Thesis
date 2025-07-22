@@ -8,7 +8,7 @@ import type { Environment } from '@src/config/environment-validation-schema';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { getFirebaseClient } from '@src/firebase/get-firebase-client';
 
-config();
+config({ quiet: true });
 
 export default async function () {
   const commonService = new CommonService();
