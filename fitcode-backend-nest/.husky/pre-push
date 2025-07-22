@@ -1,15 +1,15 @@
 cd fitcode-backend-nest || exit 1
 
-echo "✅ Running unit tests..."
+echo "🚧 Running unit tests..."
 npm test || exit 1
 
-echo "✅ Running E2E tests..."
+echo "🚧 Running E2E tests..."
 npm run test:e2e || exit 1
 
-echo "✅ Building project..."
+echo "🛠️ Building backend..."
 npm run build || exit 1
 
-echo "✅ Checking if server starts (dev)..."
+echo "🚀 Starting server..."
 npx wait-on http://localhost:3000 &
 
 START_TIMEOUT=10000 # 10 seconds

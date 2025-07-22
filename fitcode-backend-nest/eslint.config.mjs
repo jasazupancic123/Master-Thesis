@@ -107,7 +107,7 @@ export default defineConfig([
     languageOptions: {
       parser,
       parserOptions: {
-        project: './tsconfig.json',
+        project: '../tsconfig.json',
         tsconfigRootDir: new URL('.', import.meta.url),
         sourceType: 'module',
       },
