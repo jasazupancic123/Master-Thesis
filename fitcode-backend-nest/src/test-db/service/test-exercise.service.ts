@@ -43,7 +43,12 @@ export class TestExerciseService {
     await this.firebase.firestore.recursiveDelete(collectionRef);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id?: string): Promise<void> {
+    if (!id)
+      return await this.firebase.firestore.recursiveDelete(
+        this.firebase.firestore.collection(FirestoreCollection.EXERCISE),
+      );
+
     const docRef = this.firebase.firestore.doc(
       `${FirestoreCollection.EXERCISE}/${id}`,
     );

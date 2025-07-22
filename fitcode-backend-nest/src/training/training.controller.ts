@@ -76,11 +76,13 @@ export class TrainingController {
 
   @Get(':trainingId/athlete/:athleteId')
   @Auth()
-  async calculatePrescribedWorkloads /* @RequestUser() user: User,
+  async getPrescribedTraining(
+    @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Param('athleteId') athleteId: string, */() {
-    /* const ref = { trainingId, athleteId };
-    return this.trainingService.calculatePrescribedWorkloads(user, ref); */
+    @Param('athleteId') uid: string,
+  ) {
+    const ref = { trainingId, uid };
+    return await this.trainingService.getPrescribedTraining(user, ref);
   }
 
   @Post('group/:groupId/athlete/:athleteId/workloads')

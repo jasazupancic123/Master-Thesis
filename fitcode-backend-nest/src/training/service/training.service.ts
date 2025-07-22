@@ -61,8 +61,11 @@ import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { BatchUpdateTrainingDto } from '../dto/update-training.dto';
 import { CompletedTrainingComponent } from '../entity/completed-training.entity';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
+import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Workload } from '../entity/workload.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 import { SetStatus } from '../enum/set-status.enum';
@@ -1182,14 +1185,84 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async calculatePrescribedWorkloads /* user: User,
-    ref: TrainingRef & { athleteId: string }, */() {
-    /* const training = await this.findOneByIdOrFail(user, ref);
-    const athlete = await this.getAthlete(
-      user,
-      ref.athleteId,
-      training.institution,
-    ); */
+  async getPrescribedTraining(user: User, ref: TrainingRef & UserRef) {
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(user, ref.uid, training.institution);
+
+    if (
+      this.firebaseService.isTrainer(user) ||
+      this.firebaseService.isManager(user)
+    )
+      this.validateCanView(user, training, training.institution);
+
+    const customPrescribedWorkloads =
+      await this.workloadService.findAllCustomByTraining(training.id);
+
+    const newPrescribedTrainingComponents: TrainingComponent[] = [];
+    for (const trainingComponent of training.components) {
+      const newPrescribedSupersets: Superset[] = [];
+
+      // find prescribed supersets (either from subgroup or main group)
+      const subgroup = trainingComponent.subgroups.find((s) =>
+        s.membersIds.includes(ref.uid),
+      );
+
+      const prescribedSupersets = subgroup
+        ? subgroup.supersets
+        : trainingComponent.supersets;
+
+      prescribedSupersets.forEach(
+        ({ exercises: prescribedExercises }, supersetIndex) => {
+          const newPrescribedExercises: TrainingExercise[] = [];
+
+          prescribedExercises.forEach((prescribedExercise) => {
+            let newPrescribedSets: ExerciseSet[] = [];
+
+            prescribedExercise.sets.forEach((prescribedSet) => {
+              const customPrescribedWorkload = customPrescribedWorkloads.find(
+                (w) =>
+                  w.componentId === trainingComponent.id &&
+                  w.exerciseId === prescribedExercise.id &&
+                  w.supersetIndex === supersetIndex &&
+                  w.setNumber === prescribedSet.setNumber &&
+                  w.userId === athlete.uid,
+              );
+
+              const newPrescribedSet = customPrescribedWorkload
+                ? this.workloadService.getExerciseSet(customPrescribedWorkload)
+                : prescribedSet;
+
+              newPrescribedSets.push(newPrescribedSet);
+            });
+
+            // sort sets by setNumber
+            newPrescribedSets = newPrescribedSets.sort(
+              (a, b) => a.setNumber - b.setNumber,
+            );
+
+            newPrescribedExercises.push({
+              ...prescribedExercise,
+              sets: newPrescribedSets,
+            });
+          });
+
+          newPrescribedSupersets.push({
+            ...prescribedExercises,
+            exercises: newPrescribedExercises,
+          });
+        },
+      );
+
+      newPrescribedTrainingComponents.push({
+        ...trainingComponent,
+        supersets: newPrescribedSupersets,
+      });
+    }
+
+    return {
+      ...training,
+      components: newPrescribedTrainingComponents,
+    };
   }
 
   /**
