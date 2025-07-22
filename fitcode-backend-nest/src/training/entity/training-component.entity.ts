@@ -37,12 +37,12 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @Type(() => Target)
   @ValidateNested()
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => Target })
   @IsOptional()
   @Expose()
   target?: Target; // selected target id which the component uses
 
-  @ApiProperty({ enum: PeriodizationType, enumName: 'PeriodizationType' })
+  @ApiProperty({ enum: PeriodizationType })
   @IsOptional()
   @IsNotEmpty()
   @IsEnum(PeriodizationType)
@@ -58,13 +58,13 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @ValidateNested({ each: true })
   @Type(() => Superset)
-  @ApiProperty()
+  @ApiProperty({ type: () => Superset, isArray: true })
   @Expose()
   supersets: Superset[];
 
   @ValidateNested({ each: true })
   @Type(() => Subgroup)
-  @ApiProperty()
+  @ApiProperty({ type: () => Subgroup, isArray: true })
   @Expose()
   subgroups: Subgroup[];
 
@@ -75,7 +75,7 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @Type(() => CopiedFrom)
   @IsOptional()
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => CopiedFrom })
   @Expose()
   copiedFrom?: CopiedFrom; // used for copying components from other trainings
 }

@@ -43,7 +43,7 @@ import {
   deleteCollection,
   deleteDoc,
   deleteInstitution,
-} from '../common/utils/data.util';
+} from '@test/common/utils/data.util';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;

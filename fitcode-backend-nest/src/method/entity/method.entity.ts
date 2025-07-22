@@ -25,7 +25,7 @@ export class Method extends IdEntity {
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)
-  @ApiProperty()
+  @ApiProperty({ type: () => Attribute, isArray: true })
   @Expose()
   attributes: Attribute[];
 

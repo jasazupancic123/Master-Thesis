@@ -12,7 +12,7 @@ export class ComponentParam extends PickType(Attribute, [
   @ValidateNested({ each: true })
   @Type(() => ComponentParam)
   @IsOptional()
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => ComponentParam, isArray: true })
   @Expose()
   options?: ComponentParam[]; // filtered option fields from select attribute
 }

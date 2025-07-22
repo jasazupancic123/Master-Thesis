@@ -7,7 +7,7 @@ import { CreateExerciseDto } from './create-exercise.dto';
 export class CreateExercisesDto {
   @ValidateNested({ each: true })
   @Type(() => CreateExerciseDto)
-  @ApiProperty()
+  @ApiProperty({ type: () => CreateExerciseDto, isArray: true })
   @Expose()
   exercises: CreateExerciseDto[];
 }

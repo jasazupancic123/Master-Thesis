@@ -1,4 +1,4 @@
-import { generateRandomName } from '@test/common/utils/random.util';
+import { generateRandomName } from '@src/common/utils/random.util';
 import { v4 } from 'uuid';
 
 import type { Component } from '../entity/component.entity';

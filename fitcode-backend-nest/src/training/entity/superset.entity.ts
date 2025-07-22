@@ -9,7 +9,7 @@ import { TrainingExercise } from './training-exercise.entity';
 export class Superset extends ColorEntity {
   @ValidateNested({ each: true })
   @Type(() => TrainingExercise)
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingExercise, isArray: true })
   @Expose()
   exercises: TrainingExercise[];
 }

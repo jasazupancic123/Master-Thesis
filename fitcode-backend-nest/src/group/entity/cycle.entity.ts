@@ -37,7 +37,7 @@ export class Cycle extends IntersectionType(BaseEntity, ColorEntity) {
 
   @ValidateNested({ each: true })
   @Type(() => PartialTarget)
-  @ApiProperty()
+  @ApiProperty({ type: () => PartialTarget, isArray: true })
   @Expose()
   selectedTargets: PartialTarget[];
 

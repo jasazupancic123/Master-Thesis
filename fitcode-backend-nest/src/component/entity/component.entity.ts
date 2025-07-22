@@ -26,7 +26,7 @@ export class Component extends IdEntity {
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => Target, isArray: true })
   @IsOptional()
   @Expose()
   targets: Target[]; // targets which the component supports

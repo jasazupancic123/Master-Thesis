@@ -17,7 +17,7 @@ export class PeriodizeTrainingsDto {
   @Expose()
   componentId: string; // ID of the component to periodize
 
-  @ApiProperty({ enum: PeriodizationType, enumName: 'PeriodizationType' })
+  @ApiProperty({ enum: PeriodizationType })
   @IsNotEmpty()
   @IsEnum(PeriodizationType)
   @Expose()

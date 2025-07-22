@@ -1,4 +1,4 @@
-import { generateRandomString } from '@test/common/utils/random.util';
+import { generateRandomString } from '@src/common/utils/random.util';
 import { v4 } from 'uuid';
 
 import type { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';

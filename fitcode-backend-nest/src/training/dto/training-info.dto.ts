@@ -18,7 +18,7 @@ export class TrainingComponentInfoDto extends PickType(TrainingComponent, [
 ] as const) {
   @Type(() => SubgroupInfoDto)
   @ValidateNested({ each: true })
-  @ApiProperty()
+  @ApiProperty({ type: () => SubgroupInfoDto, isArray: true })
   @Expose()
   subgroups: SubgroupInfoDto[];
 }
@@ -41,19 +41,19 @@ export class TrainingInfoDto extends PickType(Training, [
 ] as const) {
   @Type(() => TrainingComponentInfoDto)
   @ValidateNested()
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingComponentInfoDto })
   @Expose()
   warmup: TrainingComponentInfoDto;
 
   @Type(() => TrainingComponentInfoDto)
   @ValidateNested()
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingComponentInfoDto })
   @Expose()
   cooldown: TrainingComponentInfoDto;
 
   @Type(() => TrainingComponentInfoDto)
   @ValidateNested({ each: true })
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingComponentInfoDto, isArray: true })
   @Expose()
   components: TrainingComponentInfoDto[];
 }

@@ -32,17 +32,17 @@ import {
 import { TrainingService } from '@src/training/service/training.service';
 import { WorkloadService } from '@src/training/service/workload.service';
 
-import { TestDbService } from '../common/db/test-db.service';
 import type { TestUser } from '../common/type/auth.type';
 import type { TestInstitution } from '../common/type/entity.type';
-import { createAthleteUserAndToken } from '../common/utils/auth.util';
+import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
   deleteCollection,
   deleteDoc,
   deleteUsers,
-} from '../common/utils/data.util';
+} from '@test/common/utils/data.util';
+import { TestDbService } from '@src/test-db/test-db.service';
 
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;

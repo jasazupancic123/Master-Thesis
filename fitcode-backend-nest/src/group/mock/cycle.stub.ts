@@ -1,7 +1,7 @@
 import {
   generateRandomColor,
   generateRandomName,
-} from '@test/common/utils/random.util';
+} from '@src/common/utils/random.util';
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { v4 } from 'uuid';
 

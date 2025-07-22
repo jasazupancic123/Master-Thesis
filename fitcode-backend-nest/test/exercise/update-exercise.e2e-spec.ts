@@ -21,13 +21,13 @@ import {
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from '../common/utils/auth.util';
+} from '@test/common/utils/auth.util';
 import {
   createInstitution,
   deleteDoc,
   deleteInstitution,
   deleteUsers,
-} from '../common/utils/data.util';
+} from '@test/common/utils/data.util';
 
 describe('Update Exercise (e2e)', () => {
   let app: INestApplication;

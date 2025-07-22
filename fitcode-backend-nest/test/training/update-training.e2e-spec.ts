@@ -5,7 +5,7 @@ import {
   COMPONENT_PARAMS_OPT1,
   COMPONENT_PARAMS_OPT2,
 } from '@test/common/constant/component-params.constant';
-import { TestDbService } from '@test/common/db/test-db.service';
+import { TestDbService } from '@src/test-db/test-db.service';
 import { addDays, subDays } from 'date-fns';
 import * as request from 'supertest';
 
@@ -36,7 +36,7 @@ import {
 import { TrainingService } from '@src/training/service/training.service';
 
 import type { TestInstitution } from '../common/type/entity.type';
-import { createAthleteUserAndToken } from '../common/utils/auth.util';
+import { createAthleteUserAndToken } from '@test/common/utils/auth.util';
 import {
   createGroupWithCycles,
   createInstitution,
@@ -45,8 +45,8 @@ import {
   deleteDocs,
   deleteInstitution,
   deleteUsers,
-} from '../common/utils/data.util';
-import { getTime } from '../common/utils/date.util';
+} from '@test/common/utils/data.util';
+import { getTime } from '@src/common/utils/date.util';
 
 describe('Update Training (e2e)', () => {
   let app: INestApplication;

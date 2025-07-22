@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getTime } from '@test/common/utils/date.util';
+import { getTime } from '@src/common/utils/date.util';
 import { addHours } from 'date-fns';
 import type { CollectionReference } from 'firebase-admin/firestore';
 import { v4 } from 'uuid';

@@ -76,7 +76,7 @@ export class WorkloadMeta extends IdEntity {
   supersetIndex: number;
 
   @IsEnum(SetStatus)
-  @ApiProperty()
+  @ApiProperty({ enum: SetStatus })
   @Expose()
   status: SetStatus;
 

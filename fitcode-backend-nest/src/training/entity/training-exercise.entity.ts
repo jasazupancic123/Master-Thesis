@@ -11,13 +11,13 @@ import { ExerciseSet } from './exercise-set.entity';
 export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {
   @ValidateNested({ each: true })
   @Type(() => Attribute)
-  @ApiProperty()
+  @ApiProperty({ type: () => Attribute, isArray: true })
   @Expose()
   params: Attribute[];
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseSet)
-  @ApiProperty()
+  @ApiProperty({ type: () => ExerciseSet, isArray: true })
   @Expose()
   sets: ExerciseSet[];
 
@@ -28,7 +28,7 @@ export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {
 
   @ValidateNested({ each: true })
   @Type(() => Attribute)
-  @ApiProperty()
+  @ApiProperty({ type: () => Attribute, isArray: true })
   @Expose()
   attributes: Attribute[];
 }

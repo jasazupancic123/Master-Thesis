@@ -63,13 +63,13 @@ export class Training extends BaseEntity {
 
   @ValidateNested({ each: true })
   @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
   @Expose()
   stats: TrainingExerciseAverageStats[]; // average intensity and volume stats for each exercise in the training
 
   @ValidateNested({ each: true })
   @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
   @Expose()
   futureStats: TrainingExerciseAverageStats[]; // average future group workload stats
 
@@ -93,19 +93,19 @@ export class Training extends BaseEntity {
 
   @ValidateNested()
   @Type(() => TrainingComponent)
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingComponent })
   @Expose()
   cooldown: TrainingComponent; // cooldown component
 
   @ValidateNested({ each: true })
   @Type(() => TrainingComponent)
-  @ApiProperty()
+  @ApiProperty({ type: () => TrainingComponent, isArray: true })
   @Expose()
   components: TrainingComponent[];
 
   @ValidateNested({ each: true })
   @Type(() => Wellness)
-  @ApiProperty()
+  @ApiProperty({ type: () => Wellness, isArray: true })
   @Expose()
   wellness: Wellness[]; // members' wellness info used to calculate workloads
 }
