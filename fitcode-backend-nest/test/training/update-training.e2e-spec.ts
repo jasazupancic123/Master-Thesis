@@ -40,7 +40,10 @@ import {
 } from '../common/utils/data.util';
 import { getTime } from '../common/utils/date.util';
 import { Exercise } from '@src/exercise/entity/exercise.entity';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
+import {
+  DEFAULT_PARAMS_KEY,
+  INT_OPTIONS,
+} from '@src/component/constant/param.constant';
 import {
   COMPONENT_PARAMS_OPT1,
   COMPONENT_PARAMS_OPT2,
@@ -499,15 +502,12 @@ describe('Update Training (e2e)', () => {
           .send({
             ...training,
             workloads: [
-              generateWorkloadStub(
-                {
-                  componentId: component1.id,
-                  exerciseId: exercise1.id,
-                  supersetIndex: 0,
-                  setNumber: 1,
-                },
-                componentParams,
-              ),
+              generateWorkloadStub(component1, {
+                exerciseId: exercise1.id,
+                supersetIndex: 0,
+                setNumber: 1,
+                customComponentParams: componentParams,
+              }),
             ],
           });
 
@@ -519,15 +519,15 @@ describe('Update Training (e2e)', () => {
     );
 
     it('should fail if prescribed param has no value or has negative value', async () => {
-      const workload = generateWorkloadStub(
-        {
-          componentId: component1.id,
-          exerciseId: exercise1.id,
-          supersetIndex: 0,
-          setNumber: 1,
-        },
-        generateComponentParamsStub([ParamType.VolWork1, ParamType.IntWork1]),
-      );
+      const workload = generateWorkloadStub(component1, {
+        exerciseId: exercise1.id,
+        supersetIndex: 0,
+        setNumber: 1,
+        customComponentParams: generateComponentParamsStub([
+          ParamType.VolWork1,
+          ParamType.IntWork1,
+        ]),
+      });
 
       workload.prescribedVolWork1ValueL = undefined; // No value
       let response = await request(app.getHttpServer())
@@ -559,25 +559,22 @@ describe('Update Training (e2e)', () => {
         .send({
           ...training,
           workloads: [
-            generateWorkloadStub(
-              {
-                componentId: component1.id,
-                exerciseId: exercise1.id,
-                supersetIndex: 0,
-                setNumber: 1,
-              },
-              generateComponentParamsStub([
+            generateWorkloadStub(component1, {
+              exerciseId: exercise1.id,
+              supersetIndex: 0,
+              setNumber: 1,
+              randomValues: true,
+              customComponentParams: generateComponentParamsStub([
                 ParamType.VolWork1,
                 ParamType.IntWork1,
               ]),
-              true, // random values
-            ),
+            }),
           ],
         });
 
       expect(response.status).toBe(200);
 
-      const workloads = await db.workloads.getAllByTrainingId(training.id);
+      const workloads = await db.workloads.getAll(training.id);
       expect(workloads).toHaveLength(1);
       expect(workloads[0].componentId).toBe(component1.id);
       expect(workloads[0].exerciseId).toBe(exercise1.id);
@@ -610,7 +607,7 @@ describe('Update Training (e2e)', () => {
       expect(workloads[0].prescribedIntRecValueL).toBeUndefined();
       expect(workloads[0].prescribedIntRecValueR).toBeUndefined();
 
-      await db.workloads.deleteAllByTrainingId(training.id);
+      await db.workloads.deleteAll(training.id);
     });
 
     it('should update training with multiple custom workloads', async () => {
@@ -620,69 +617,202 @@ describe('Update Training (e2e)', () => {
         .send({
           ...training,
           workloads: [
-            generateWorkloadStub(
-              {
-                userId: global.athlete.uid,
-                componentId: component1.id,
-                exerciseId: exercise1.id,
-                supersetIndex: 0,
-                setNumber: 1,
-              },
-              COMPONENT_PARAMS_OPT1,
-              true, // random values
-            ),
-            generateWorkloadStub(
-              {
-                userId: global.athlete.uid,
-                componentId: component1.id,
-                exerciseId: exercise1.id,
-                supersetIndex: 0,
-                setNumber: 2,
-              },
-              COMPONENT_PARAMS_OPT1,
-              true, // random values
-            ),
-            generateWorkloadStub(
-              {
-                userId: global.athlete.uid,
-                componentId: component1.id,
-                exerciseId: exercise1.id,
-                supersetIndex: 0,
-                setNumber: 3,
-              },
-              COMPONENT_PARAMS_OPT1,
-              true, // random values
-            ),
-            generateWorkloadStub(
-              {
-                componentId: component2.id,
-                exerciseId: exercise2.id,
-                supersetIndex: 0,
-                setNumber: 1,
-              },
-              COMPONENT_PARAMS_OPT2,
-              true,
-            ),
-            generateWorkloadStub(
-              {
-                componentId: component2.id,
-                exerciseId: exercise2.id,
-                supersetIndex: 0,
-                setNumber: 2,
-              },
-              COMPONENT_PARAMS_OPT2,
-              true,
-            ),
+            generateWorkloadStub(component1, {
+              userId: global.athlete.uid,
+              exerciseId: exercise1.id,
+              supersetIndex: 0,
+              setNumber: 1,
+              randomValues: true,
+            }),
+            generateWorkloadStub(component1, {
+              userId: global.athlete.uid,
+              exerciseId: exercise1.id,
+              supersetIndex: 0,
+              setNumber: 2,
+              randomValues: true,
+            }),
+            generateWorkloadStub(component1, {
+              userId: global.athlete.uid,
+              exerciseId: exercise1.id,
+              supersetIndex: 0,
+              setNumber: 3,
+              randomValues: true,
+            }),
+            generateWorkloadStub(component2, {
+              exerciseId: exercise2.id,
+              supersetIndex: 0,
+              setNumber: 1,
+              randomValues: true,
+            }),
+            generateWorkloadStub(component2, {
+              exerciseId: exercise2.id,
+              supersetIndex: 0,
+              setNumber: 2,
+              randomValues: true,
+            }),
           ],
         });
 
-      console.log('response: ', response.body);
       expect(response.status).toBe(200);
 
-      const workloads = await db.workloads.getAllByTrainingId(training.id);
+      const workloads = await db.workloads.getAll(training.id);
       expect(workloads).toHaveLength(5);
 
-      await db.workloads.deleteAllByTrainingId(training.id);
+      await db.workloads.deleteAll(training.id);
+    });
+
+    it('should update workload if one already exists', async () => {
+      await db.workloads.createManyCompleted([
+        {
+          trainingId: training.id,
+          component: component1,
+          exerciseId: exercise1.id,
+          userId: global.athlete.uid,
+          supersetIndex: 0,
+          setNumber: 1,
+          randomValues: false,
+        },
+      ]);
+
+      const existingWorkloads = await db.workloads.getAll(training.id);
+
+      expect(existingWorkloads).toHaveLength(1);
+      const existingWorkload = existingWorkloads[0];
+      expect(existingWorkload.prescribedIntWork1ValueL).toBe(20); //INT_OPTIONS[0].defaultValue,
+
+      const newWorkload = generateWorkloadStub(component1, {
+        trainingId: training.id,
+        exerciseId: exercise1.id,
+        userId: global.athlete.uid,
+        supersetIndex: 0,
+        setNumber: 1,
+      });
+
+      newWorkload.prescribedIntWork1ValueL = 22;
+
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads: [newWorkload], // this should update the existing workload
+        });
+
+      expect(response.status).toBe(200);
+
+      const updatedWorkloads = await db.workloads.getAll(training.id);
+
+      expect(updatedWorkloads).toHaveLength(1);
+
+      const updatedWorkload = updatedWorkloads[0];
+      expect(updatedWorkload.id).toBe(existingWorkload.id);
+      expect(updatedWorkload.componentId).toBe(component1.id);
+      expect(updatedWorkload.exerciseId).toBe(exercise1.id);
+      expect(updatedWorkload.supersetIndex).toBe(0);
+      expect(updatedWorkload.setNumber).toBe(1);
+      expect(updatedWorkload.prescribedIntWork1ValueL).toBe(22);
+
+      await db.workloads.deleteAll(training.id);
+    });
+
+    it('should update multiple workloads if some already exist', async () => {
+      await db.workloads.createManyCompleted([
+        {
+          trainingId: training.id,
+          component: component1,
+          exerciseId: exercise1.id,
+          userId: global.athlete.uid,
+          supersetIndex: 0,
+          setNumber: 1,
+        },
+        {
+          trainingId: training.id,
+          component: component1,
+          exerciseId: exercise1.id,
+          userId: global.athlete.uid,
+          supersetIndex: 0,
+          setNumber: 2,
+        },
+        {
+          trainingId: training.id,
+          component: component2,
+          exerciseId: exercise2.id,
+          userId: global.athlete.uid,
+          supersetIndex: 0,
+          setNumber: 1,
+        },
+      ]);
+
+      const existingWorkloads = await db.workloads.getAll(training.id);
+
+      expect(existingWorkloads).toHaveLength(3);
+
+      // change the first workload and add new ones
+      const newWorkload1 = await db.workloads.update({
+        ...generateWorkloadStub(component1, {
+          trainingId: training.id,
+          exerciseId: exercise1.id,
+          userId: global.athlete.uid,
+          supersetIndex: 0,
+          setNumber: 1,
+        }),
+        prescribedIntWork1ValueL: 25,
+      });
+
+      expect(newWorkload1.prescribedIntWork1ValueL).toBe(25);
+
+      // add remaining workloads
+      const workloads = [
+        generateWorkloadStub(component1, {
+          userId: global.athlete.uid,
+          exerciseId: exercise1.id,
+          supersetIndex: 0,
+          setNumber: 2,
+        }),
+        generateWorkloadStub(component1, {
+          userId: global.athlete.uid,
+          exerciseId: exercise1.id,
+          supersetIndex: 0,
+          setNumber: 3,
+        }),
+        generateWorkloadStub(component2, {
+          exerciseId: exercise2.id,
+          supersetIndex: 0,
+          setNumber: 2,
+        }),
+      ];
+
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          workloads,
+        });
+
+      expect(response.status).toBe(200);
+
+      const updatedWorkloads = await db.workloads.getAll(training.id);
+
+      expect(updatedWorkloads).toHaveLength(5);
+
+      const updatedWorkload1 = updatedWorkloads.find(
+        (w) => w.setNumber === 1 && w.exerciseId === exercise1.id,
+      );
+
+      expect(updatedWorkload1).toBeDefined();
+      expect(updatedWorkload1.id).toBe(newWorkload1.id);
+      expect(updatedWorkload1.prescribedIntWork1ValueL).toBe(25);
+
+      const otherWorkloads = updatedWorkloads.filter(
+        (w) => w.setNumber !== 1 || w.exerciseId !== exercise1.id,
+      );
+
+      expect(otherWorkloads).toHaveLength(4);
+      for (const workload of otherWorkloads)
+        expect(workload.prescribedIntWork1ValueL).not.toBe(25);
+
+      await db.workloads.deleteAll(training.id);
     });
   });
 });

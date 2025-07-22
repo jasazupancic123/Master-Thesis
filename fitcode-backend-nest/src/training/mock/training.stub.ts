@@ -22,28 +22,29 @@ import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
 import { generateParamAttributeValuesFromComponentParams } from './param-values.stub';
 
-export function generateTrainingStub(data?: Partial<Training>): Training {
+/**
+ * Generates a training stub with default values or overrides from the provided data.
+ * Note that in training service, `from` and `to` dates are calculated based on the
+ * provided `components` dates (training's `from` and `to` cannot be set directly).
+ * Here, we set `from` and `to` dates directly for simplicity and evenly space
+ * the components in between them.
+ */
+export function generateTrainingStub(
+  data?: Partial<Training> & { date?: Date },
+): Training {
   // evenly space components in between training's from and to dates
-  const from = data?.from || getTime(addDays(new Date(), 1), 8, 0);
+  const from = data?.from || data?.date || new Date();
   const to = data?.to || addHours(from, 2);
 
   const components: TrainingComponent[] = data?.components || [];
   if (components.length) {
-    const componentDuration =
-      (to.getTime() - from.getTime()) / components.length;
+    const duration = (to.getTime() - from.getTime()) / components.length;
 
-    components.forEach((component, index) => {
-      component.from =
-        component.from || new Date(from.getTime() + index * componentDuration);
-      component.to =
-        component.to || new Date(component.from.getTime() + componentDuration);
+    components.forEach((c, i) => {
+      c.from = new Date(from.getTime() + i * duration);
+      c.to = new Date(c.from.getTime() + duration);
     });
   }
-
-  console.log(
-    'component times:',
-    components.map((c) => `${c.from} - ${c.to}`),
-  );
 
   return {
     id: data?.id || v4(),
@@ -74,11 +75,13 @@ export function generateTrainingStub(data?: Partial<Training>): Training {
 export function generateTrainingComponent(
   data?: Partial<TrainingComponent>,
 ): TrainingComponent {
+  const from = data?.from || getTime(addDays(new Date(), 2), 8, 0);
+
   return {
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
-    to: data?.to || getTime(addDays(new Date(), 2), 8, 30),
+    to: addHours(from, 1),
     target: data?.target || null,
     periodizationType: data?.periodizationType || null,
     methodId: data?.methodId || null,
@@ -147,24 +150,27 @@ export function generateExerciseSet(
 ): ExerciseSet;
 export function generateExerciseSet(
   setNumber: number,
-  paramValuesOrComponentParams?: AttributeValue[] | ComponentParam[] | boolean,
+  paramValuesOrComponentParamsOrRandom?:
+    | AttributeValue[]
+    | ComponentParam[]
+    | boolean,
   random?: boolean,
 ): ExerciseSet {
   const isRandom =
-    typeof paramValuesOrComponentParams === 'boolean'
-      ? paramValuesOrComponentParams
+    typeof paramValuesOrComponentParamsOrRandom === 'boolean'
+      ? paramValuesOrComponentParamsOrRandom
       : random
         ? random
         : false;
 
-  const paramValues = !paramValuesOrComponentParams
+  const paramValues = !paramValuesOrComponentParamsOrRandom
     ? generateParamAttributeValuesFromComponentParams(PARAMS, isRandom)
-    : typeof paramValuesOrComponentParams !== 'boolean' &&
-        isAttributeValueArray(paramValuesOrComponentParams)
-      ? paramValuesOrComponentParams
-      : typeof paramValuesOrComponentParams !== 'boolean'
+    : typeof paramValuesOrComponentParamsOrRandom !== 'boolean' &&
+        isAttributeValueArray(paramValuesOrComponentParamsOrRandom)
+      ? paramValuesOrComponentParamsOrRandom
+      : typeof paramValuesOrComponentParamsOrRandom !== 'boolean'
         ? generateParamAttributeValuesFromComponentParams(
-            paramValuesOrComponentParams,
+            paramValuesOrComponentParamsOrRandom,
             isRandom,
           )
         : [];

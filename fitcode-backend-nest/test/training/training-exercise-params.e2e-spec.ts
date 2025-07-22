@@ -43,9 +43,12 @@ import {
   deleteDoc,
   deleteInstitution,
 } from '../common/utils/data.util';
+import { TestDbService } from '@test/common/db/test-db.service';
+import { addDays } from 'date-fns';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;
+  let db: TestDbService;
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let attributeService: AttributeService;
@@ -68,6 +71,7 @@ describe('Training Exercise Params (e2e)', () => {
     await app.init();
 
     firebase = moduleFixture.get(FirebaseService);
+    db = moduleFixture.get(TestDbService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
@@ -102,16 +106,17 @@ describe('Training Exercise Params (e2e)', () => {
     );
   }
 
-  async function createTraining(componentId: string, exerciseId: string) {
+  async function createTraining(exerciseId: string) {
     return await trainingService.create(
       global.trainer,
       generateTrainingStub({
         institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[1].id,
+        date: addDays(new Date(), 2),
         components: [
           generateTrainingComponent({
-            id: componentId,
+            id: COMPONENT_ENDURANCE.id,
             supersets: [
               generateSuperset({
                 exercises: [generateTrainingExercise({ id: exerciseId })],
@@ -126,10 +131,7 @@ describe('Training Exercise Params (e2e)', () => {
   describe('Warmup and cooldown components', () => {
     it('should not populate params', async () => {
       const exercise = await createExercise([]);
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const updated = await trainingService.update(
         global.trainer,
@@ -175,10 +177,7 @@ describe('Training Exercise Params (e2e)', () => {
   describe('Endurance select attribute params test', () => {
     it('should keep default params since no attribute values are passed to exercise', async () => {
       const exercise = await createExercise([]);
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 
@@ -215,10 +214,7 @@ describe('Training Exercise Params (e2e)', () => {
         }),
       ]);
 
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 
@@ -274,10 +270,7 @@ describe('Training Exercise Params (e2e)', () => {
         }),
       ]);
 
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 
@@ -348,10 +341,7 @@ describe('Training Exercise Params (e2e)', () => {
         }),
       ]);
 
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 

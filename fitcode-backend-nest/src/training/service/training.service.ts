@@ -33,6 +33,7 @@ import {
   TrainingComponentRef,
   TrainingRef,
   UserRef,
+  WorkloadRef,
 } from '@src/common/type/firestore.type';
 import { Filter } from '@src/common/type/orm.type';
 import { Wrapper } from '@src/common/type/wrapper.type';
@@ -296,7 +297,7 @@ export class TrainingService implements Permission<Training, Institution> {
       membersIds,
       wellness,
       completedMembersIds: [],
-      stats: input.stats || [],
+      stats: [],
       futureStats: input.futureStats || [],
       warmup,
       cooldown,
@@ -595,49 +596,20 @@ export class TrainingService implements Permission<Training, Institution> {
         input.components,
       );
 
-      const existingWorkloads =
-        await this.workloadService.findAllCustomByTraining(training.id);
-
       const operations: BatchWriteOperation<Workload>[] = [];
-      for (const inputWorkload of inputWorkloads) {
-        const existingWorkload = existingWorkloads.find(
-          (w) =>
-            w.componentId === inputWorkload.componentId &&
-            w.exerciseId === inputWorkload.exerciseId &&
-            w.userId === inputWorkload.userId &&
-            w.supersetIndex === inputWorkload.supersetIndex &&
-            w.setNumber === inputWorkload.setNumber,
-        );
+      for (const w of inputWorkloads) {
+        const ref: WorkloadRef = { ...w, trainingId: training.id };
+        w.id = this.workloadRepository.getKey(ref);
 
-        if (existingWorkload)
-          operations.push({
-            operation: 'update',
-            ref: this.workloadRepository.doc(existingWorkload),
-            data: this.firebaseService.buildUpdateQuery(inputWorkload),
-          });
-        else
-          operations.push({
-            operation: 'set',
-            ref: this.workloadRepository.doc({
-              trainingId: training.id,
-              userId: inputWorkload.userId,
-              componentId: inputWorkload.componentId,
-              exerciseId: inputWorkload.exerciseId,
-              setNumber: inputWorkload.setNumber,
-              supersetIndex: inputWorkload.supersetIndex,
-            }),
-            data: this.firebaseService.buildCreateQuery<Workload>(
-              inputWorkload,
-            ),
-          });
+        operations.push({
+          operation: 'set',
+          data: this.firebaseService.buildCreateQuery<Workload>(w),
+          ref: this.workloadRepository.doc(ref),
+        });
       }
 
       const batch = this.firebaseService.firestore.batch();
-      for (const { operation, ref, data } of operations) {
-        if (operation === 'set') batch.set(ref, data);
-        else if (operation === 'update') batch.update(ref, data);
-      }
-
+      for (const { ref, data } of operations) batch.set(ref, data);
       await batch.commit();
     }
 

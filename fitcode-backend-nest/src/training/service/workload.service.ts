@@ -169,6 +169,15 @@ export class WorkloadService {
       [trainingComponent],
     );
 
+    // custom workloads in the future that are already prescribed (and none of them is completed),
+    // that's why we can enforce type of (WorkloadMeta & PrescribedWorkload)[]
+    const customPrescribedWorkloads: (WorkloadMeta & PrescribedWorkload)[] =
+      await this.findAllByRef({
+        trainingId: ref.trainingId,
+        componentId: ref.componentId,
+        userId: ref.uid,
+      });
+
     // find prescribed supersets (either from subgroup or main group)
     const subgroup = trainingComponent.subgroups.find((s) =>
       s.membersIds.includes(ref.uid),
@@ -211,8 +220,18 @@ export class WorkloadService {
               userId: ref.uid,
             });
 
-            const prescribedWorkload =
-              this.getPrescribedWorkload(prescribedSet);
+            const customPrescribedWorkload = customPrescribedWorkloads.find(
+              (w) =>
+                w.componentId === ref.componentId &&
+                w.exerciseId === prescribedExercise.id &&
+                w.supersetIndex === supersetIndex &&
+                w.setNumber === prescribedSet.setNumber &&
+                w.userId === ref.uid,
+            );
+
+            const prescribedWorkload = customPrescribedWorkload
+              ? customPrescribedWorkload
+              : this.getPrescribedWorkload(prescribedSet);
 
             const workloadMeta: WorkloadMeta = {
               id: key,
@@ -614,7 +633,7 @@ export class WorkloadService {
   getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
     const { paramValuesL, paramValuesR } = prescribedSet;
     const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
-    const volWork1R = paramValuesL.find((p) => p.field === ParamType.VolWork1);
+    const volWork1R = paramValuesR.find((p) => p.field === ParamType.VolWork1);
     const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
     const volWork2R = paramValuesR.find((p) => p.field === ParamType.VolWork2);
     const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);

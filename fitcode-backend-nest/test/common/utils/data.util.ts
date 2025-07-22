@@ -92,8 +92,7 @@ export async function createInstitutionWithUsers(
 
 /**
  * Creates only a group and 3 cycles, one for the past week, one for the current
- * week and one for the upcomming week. Defaults to institution users. It uses
- * custom service to do so, so database contains everything necessary.
+ * week and one for the upcomming week.
  */
 export async function createGroupWithCycles(
   groupService: GroupService,
@@ -120,7 +119,7 @@ export async function createGroupWithCycles(
     membersIds: groupStub.membersIds,
   });
 
-  const start = subDays(new Date(), 7);
+  const start = subDays(new Date(), 10);
   const cycles = [
     generateCycleStub({
       from: start,

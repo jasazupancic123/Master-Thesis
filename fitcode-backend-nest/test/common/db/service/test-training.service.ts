@@ -35,7 +35,7 @@ export class TestTrainingService {
     input: Partial<Create<Training>> & {
       ownerId: string;
       membersIds: string[];
-      components: Omit<TrainingComponent, 'from' | 'to'>[];
+      components?: Omit<TrainingComponent, 'from' | 'to'>[];
       date?: Date; // creates `from` and `to` based on this date, defaults to today at 8:00 - 9:00
     },
   ): Promise<Training> {

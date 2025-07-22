@@ -164,12 +164,8 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[0].id,
-        components: [
-          generateTrainingComponent({
-            from: addDays(new Date(), 100),
-            to: addDays(new Date(), 101),
-          }),
-        ],
+        date: addDays(new Date(), 100),
+        components: [generateTrainingComponent()],
       });
 
       const response = await request(app.getHttpServer())
@@ -186,13 +182,9 @@ describe('Create Training (e2e)', () => {
     it('should fail to create new training if training is in the past', async () => {
       const training = generateTrainingStub({
         groupId: group.id,
-        cycleId: group.cycles[0].id,
-        components: [
-          generateTrainingComponent({
-            from: subDays(new Date(), 2),
-            to: subDays(new Date(), 2),
-          }),
-        ],
+        cycleId: group.cycles[1].id,
+        date: subDays(new Date(), 2),
+        components: [generateTrainingComponent()],
       });
 
       const response = await request(app.getHttpServer())
@@ -212,20 +204,14 @@ describe('Create Training (e2e)', () => {
         generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
-          components: [
-            generateTrainingComponent({
-              id: component.id,
-              from: addHours(from, 0),
-              to: addHours(from, 1),
-            }),
-          ],
+          date: from,
+          components: [generateTrainingComponent({ id: component.id })],
         }),
         generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
+          date: addHours(from, 1),
           components: [generateTrainingComponent({ id: component.id })],
-          from: addHours(from, 1),
-          to: addHours(from, 2),
         }),
       ];
 
@@ -238,13 +224,8 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            from: addHours(from, 2),
-            to: addHours(from, 3),
-          }),
-        ],
+        date: addHours(from, 2),
+        components: [generateTrainingComponent({ id: component.id })],
       });
 
       const response = await request(app.getHttpServer())
@@ -273,13 +254,8 @@ describe('Create Training (e2e)', () => {
             generateTrainingStub({
               groupId: group.id,
               cycleId: group.cycles[1].id,
-              components: [
-                generateTrainingComponent({
-                  id: component.id,
-                  from,
-                  to: addHours(from, 1),
-                }),
-              ],
+              date: from,
+              components: [generateTrainingComponent({ id: component.id })],
             }),
           )
         ).id;
@@ -287,13 +263,8 @@ describe('Create Training (e2e)', () => {
         const training = generateTrainingStub({
           groupId: group.id,
           cycleId: group.cycles[1].id,
-          components: [
-            generateTrainingComponent({
-              id: component.id,
-              from: subHours(from, 1),
-              to: addHours(from, 2),
-            }),
-          ],
+          date: subHours(from, 1),
+          components: [generateTrainingComponent({ id: component.id })],
         });
 
         const response = await request(app.getHttpServer())
@@ -468,16 +439,13 @@ describe('Create Training (e2e)', () => {
         groupId: group.id,
         cycleId: group.cycles[1].id,
         components: [
-          generateTrainingComponent({
-            id: components[0].id,
-            from: getTime(addDays(new Date(), 7), 8, 0),
-          }),
-          generateTrainingComponent({
-            id: components[1].id,
-            from: getTime(addDays(new Date(), 7), 7, 0),
-          }),
+          generateTrainingComponent({ id: components[0].id }),
+          generateTrainingComponent({ id: components[1].id }),
         ],
       });
+
+      training.components[0].from = getTime(addDays(new Date(), 2), 8, 0);
+      training.components[0].to = getTime(addDays(new Date(), 2), 9, 0);
 
       const response = await request(app.getHttpServer())
         .post('/training')
