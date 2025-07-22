@@ -339,8 +339,8 @@ export default function TrainingMembersSubgroup(
                                 ?.profileImageUrl || '/user_avatar.png'
                             }
                             sx={{
-                              width: 40,
-                              height: 40,
+                              width: 50,
+                              height: 50,
                               m: selectedAthlete === member ? 0.25 : 0.5,
                             }}
                           >

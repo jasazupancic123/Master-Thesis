@@ -13,6 +13,7 @@ import { IconButton, Tooltip } from '@mui/material';
 import Save from '@mui/icons-material/Save';
 import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
+import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
 
 export default function TrainerYearView() {
   const screenSize = useScreenSize();
@@ -28,41 +29,8 @@ export default function TrainerYearView() {
   >([]);
 
   return (
-    <Box
-      sx={{
-        backgroundColor: theme.palette.background.default,
-        width: '100%',
-        maxWidth: MAX_WIDTH,
-        mx: 'auto',
-      }}
-    >
-      {screenSize.isSmallerThanLaptop ? (
-        <IconButton
-          onClick={() =>
-            handleSaveGroup(
-              selectedGroup,
-              setSelectedGroup,
-              cycle,
-              setCycle,
-              setDetectedChanges,
-              router,
-              setGroup
-            )
-          }
-          sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
-        >
-          <Save
-            sx={{
-              mr: 0,
-              cursor: 'pointer',
-              backgroundColor: theme.palette.primary.main,
-              borderRadius: '50%',
-              p: 1,
-              fontSize: 40,
-            }}
-          />
-        </IconButton>
-      ) : (
+    <>
+      {!screenSize.isSmallerThanLaptop && (
         <Box
           justifyContent="flex-end"
           alignItems="center"
@@ -93,42 +61,83 @@ export default function TrainerYearView() {
           </Tooltip>
         </Box>
       )}
-
       <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        width="100%"
-        maxWidth="100%"
-        pb={10}
-        sx={{ overflowX: 'hidden' }}
+        position="relative"
+        sx={{
+          backgroundColor: theme.palette.background.default,
+          width: '100%',
+          maxWidth: MAX_WIDTH,
+          minHeight: 'calc(100vh - 50px)',
+          overflowY: 'none',
+          mx: 'auto',
+        }}
       >
+        <VerticalLinesBorder />
+
+        {screenSize.isSmallerThanLaptop && (
+          <IconButton
+            onClick={() =>
+              handleSaveGroup(
+                selectedGroup,
+                setSelectedGroup,
+                cycle,
+                setCycle,
+                setDetectedChanges,
+                router,
+                setGroup
+              )
+            }
+            sx={{ p: 0, ml: 2, position: 'fixed', bottom: 30, right: 30 }}
+          >
+            <Save
+              sx={{
+                mr: 0,
+                cursor: 'pointer',
+                backgroundColor: theme.palette.primary.main,
+                borderRadius: '50%',
+                p: 1,
+                fontSize: 40,
+              }}
+            />
+          </IconButton>
+        )}
+
         <Box
-          width="100%"
-          maxWidth="100%"
           display="flex"
           flexDirection="column"
           alignItems="center"
+          justifyContent="center"
+          width="100%"
+          maxWidth="100%"
+          pb={10}
+          sx={{ overflowX: 'hidden' }}
         >
-          <MultiCycleSliderLayout
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            sortedCycles={sortedCycles}
-            setSortedCycles={setSortedCycles}
-            sliderProperties={sliderProperties}
-            setSliderProperties={setSliderProperties}
-          />
-        </Box>
+          <Box
+            width="100%"
+            maxWidth="100%"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+          >
+            <MultiCycleSliderLayout
+              selectedGroup={selectedGroup}
+              setSelectedGroup={setSelectedGroup}
+              sortedCycles={sortedCycles}
+              setSortedCycles={setSortedCycles}
+              sliderProperties={sliderProperties}
+              setSliderProperties={setSliderProperties}
+            />
+          </Box>
 
-        <Box width="100%" maxWidth="100%">
-          <CycleComponents
-            sortedCycles={sortedCycles}
-            setSortedCycles={setSortedCycles}
-            sliderProperties={sliderProperties}
-          />
+          <Box width="100%" maxWidth="100%">
+            <CycleComponents
+              sortedCycles={sortedCycles}
+              setSortedCycles={setSortedCycles}
+              sliderProperties={sliderProperties}
+            />
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </>
   );
 }

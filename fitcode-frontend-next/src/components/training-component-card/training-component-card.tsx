@@ -1,6 +1,6 @@
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { TrainingComponent } from '@/controller/training/type/training-plan.type';
 import { Training } from '@/controller/training/type/training.type';

@@ -1,6 +1,10 @@
 import type { INestApplication } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import {
+  COMPONENT_PARAMS_OPT1,
+  COMPONENT_PARAMS_OPT2,
+} from '@test/common/constant/component-params.constant';
 import { addDays, addHours, subDays } from 'date-fns';
 import * as request from 'supertest';
 
@@ -39,10 +43,6 @@ import {
   deleteDoc,
   deleteUsers,
 } from '../common/utils/data.util';
-import {
-  COMPONENT_PARAMS_OPT1,
-  COMPONENT_PARAMS_OPT2,
-} from '@test/common/constant/component-params.constant';
 
 describe('Complete training component (e2e)', () => {
   let app: INestApplication;

@@ -5,12 +5,13 @@ import { ParamType } from '@src/component/enum/param.enum';
 import { DUP_SCHEDULE } from '../constant/periodization.constant';
 import type { Subgroup } from '../entity/subgroup.entity';
 import type { Training } from '../entity/training.entity';
+import type { TrainingComponent } from '../entity/training-component.entity';
 import type { TrainingExercise } from '../entity/training-exercise.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 
 export class PeriodizationService {
   periodize(
-    baseItem: Training | Subgroup,
+    baseItem: TrainingComponent | Subgroup,
     trainings: Training[],
     weeks: Training[][],
     componentId: string,
@@ -19,7 +20,7 @@ export class PeriodizationService {
     subgroupId?: string,
     subgroupName?: string,
   ): Training[] | Subgroup {
-    const baseExercises = this.getExercisesOrFail(baseItem, componentId);
+    const baseExercises = this.getExercisesOrFail(baseItem);
 
     for (const exerciseId of exerciseIds) {
       const prevIntL = [] as { setIndex: number; value: number }[];
@@ -38,7 +39,11 @@ export class PeriodizationService {
 
           // get exercises to periodize
           let exercisesList: TrainingExercise[] = [];
-          if (this.isTraining(baseItem) && !subgroupId && !subgroupName) {
+          if (
+            this.isTrainingComponent(baseItem) &&
+            !subgroupId &&
+            !subgroupName
+          ) {
             exercisesList = component.supersets.flatMap((s) => s.exercises);
           } else {
             // matching subgroup by id
@@ -258,28 +263,21 @@ export class PeriodizationService {
     return trainings;
   }
 
-  private isTraining(item: Training | Subgroup): item is Training {
-    return (item as Training).components !== undefined;
+  private isTrainingComponent(
+    item: TrainingComponent | Subgroup,
+  ): item is TrainingComponent {
+    return (item as TrainingComponent)?.from !== undefined;
   }
 
-  private getExercisesOrFail(item: Training | Subgroup, componentId: string) {
-    let exercises: TrainingExercise[];
-    const isTraining = this.isTraining(item);
-
-    if (isTraining) {
-      const component = item.components.find((c) => c.id === componentId);
-      if (!component) throw new BadRequestException('Base component not found');
-
-      exercises = component.supersets.flatMap((s) => s.exercises);
-    } else exercises = item.supersets.flatMap((s) => s.exercises);
-
+  private getExercisesOrFail(item: TrainingComponent | Subgroup) {
+    const exercises = item.supersets.flatMap((s) => s.exercises);
     if (exercises.length === 0)
       throw new BadRequestException('No exercises found in the base component');
 
     return exercises;
   }
 
-  private getPeriodizedIntVolValue(
+  getPeriodizedIntVolValue(
     type: PeriodizationType,
     baseValue: number,
     weekIndex: number,

@@ -6,22 +6,16 @@ import type {
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
-import { FirebaseService } from '@src/firebase/firebase.service';
-import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';
-import {
-  CompletedWorkload,
-  PrescribedWorkload,
-  WorkloadValue,
-} from '@src/training/entity/workload-value.entity';
 import {
   BatchWriteOperation,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
-import { Exercise } from '@src/exercise/entity/exercise.entity';
+import { Component } from '@src/component/entity/component.entity';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';
+import { WorkloadValue } from '@src/training/entity/workload-value.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
-import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
-import { Component } from '@src/component/entity/component.entity';
 
 @Injectable()
 export class TestWorkloadService {

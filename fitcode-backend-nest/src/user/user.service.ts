@@ -4,13 +4,13 @@ import { FieldValue, Query } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
-import { Update } from '../common/type/entity.type';
 import { CustomClaims, User } from '../common/type/firebase-auth.type';
 import { UserRef, WellnessRef } from '../common/type/firestore.type';
 import { Environment } from '../config/environment-validation-schema';
 import { FirebaseService } from '../firebase/firebase.service';
 import { FilterUserQueryDto } from './dto/filter-user-query.dto';
 import { UpdateUserClaimsDto } from './dto/update-user-claims.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserEntity } from './entity/user.entity';
 import { Wellness } from './entity/wellness.entity';
 import { UserRepository } from './repository/user.repository';
@@ -139,12 +139,14 @@ export class UserService {
     });
   }
 
-  async updateProfile(ref: UserRef, input: Update<UserEntity>) {
+  async updateProfile(ref: UserRef, input: UpdateUserProfileDto) {
+    const { userId } = input;
     this.logger.log(
-      `User ${ref.uid} is updating profile: ${JSON.stringify(input)}`,
+      `User ${ref.uid} is updating profile for ${userId}: ${JSON.stringify(input)}`,
     );
 
-    await this.userRepository.updateDoc(ref.uid, input);
+    delete input.userId;
+    await this.userRepository.updateDoc(userId, input);
   }
 
   async addTrainer(ref: UserRef, trainerId: string) {

@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { getTime } from '@test/common/utils/date.util';
+import { addHours } from 'date-fns';
 import type { CollectionReference } from 'firebase-admin/firestore';
 import { v4 } from 'uuid';
 
@@ -6,10 +8,8 @@ import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum'
 import { Create, FirestoreEntity } from '@src/common/type/entity.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { Training } from '@src/training/entity/training.entity';
-import { generateTrainingStub } from '@src/training/mock/training.stub';
-import { getTime } from '@test/common/utils/date.util';
-import { addHours } from 'date-fns';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
+import { generateTrainingStub } from '@src/training/mock/training.stub';
 
 @Injectable()
 export class TestTrainingService {

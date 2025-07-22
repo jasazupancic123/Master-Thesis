@@ -135,6 +135,10 @@ export default function TrainingComponentLayout(props: TrainingComponentProps) {
           </Stack>
         </Box>
 
+        {trainingComponent.id === component?.id && (
+          <Divider sx={{ p: 0, m: 0, mt: 1.8 }} />
+        )}
+
         <Collapse
           in={
             component &&

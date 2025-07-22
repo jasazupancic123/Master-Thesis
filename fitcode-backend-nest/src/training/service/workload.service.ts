@@ -17,6 +17,7 @@ import {
 } from '@src/common/type/firestore.type';
 import { PARAMS } from '@src/component/constant/param.constant';
 import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
@@ -33,7 +34,6 @@ import {
 import { SetStatus } from '../enum/set-status.enum';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { TrainingPlanService } from './training-plan.service';
-import { ExerciseService } from '@src/exercise/service/exercise.service';
 
 @Injectable()
 export class WorkloadService {
