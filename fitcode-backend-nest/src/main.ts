@@ -2,12 +2,13 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { json, urlencoded } from 'express';
+
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filter/all-exception.filter';
 import { CommonService } from './common/service/common.service';
 import { DataSetup } from './common/setup/data.setup';
 import { SwaggerSetup } from './common/setup/swagger.setup';
-import { Environment } from './config/environment-validation-schema';
+import type { Environment } from './config/environment-validation-schema';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,7 +33,11 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter.httpAdapter as any));
+  app.useGlobalFilters(
+    new AllExceptionsFilter(
+      httpAdapter.httpAdapter as unknown as HttpAdapterHost,
+    ),
+  );
 
   // setups
   new SwaggerSetup(app).setup();
@@ -44,4 +49,10 @@ async function bootstrap() {
   logger.log(`Application started on http://localhost:${port}`);
 }
 
-bootstrap().then();
+bootstrap()
+  .then()
+  .catch((error) => {
+    const logger = new Logger(bootstrap.name);
+    logger.error('Error during application bootstrap', error);
+    process.exit(1);
+  });

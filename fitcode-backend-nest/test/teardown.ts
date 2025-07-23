@@ -1,13 +1,14 @@
 import { ConfigService } from '@nestjs/config';
-import { FirebaseService } from '../src/firebase/firebase.service';
-import { Environment } from '../src/config/environment-validation-schema';
-import { CommonService } from '../src/common/service/common.service';
-import { getFirebaseClient } from '../src/firebase/get-firebase-client';
+import { deleteUsers } from '@test/common/utils/data.util';
 import { config } from 'dotenv';
-import { deleteUsers } from './common/utils/data.util';
-import { FirestoreCollection } from '../src/common/enum/firestore-collection.enum';
 
-config();
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { CommonService } from '@src/common/service/common.service';
+import type { Environment } from '@src/config/environment-validation-schema';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { getFirebaseClient } from '@src/firebase/get-firebase-client';
+
+config({ quiet: true });
 
 export default async function () {
   const commonService = new CommonService();

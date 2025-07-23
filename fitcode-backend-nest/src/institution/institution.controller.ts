@@ -1,14 +1,22 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { User } from '../common/type/firebase-auth.type';
-import { RequestUser } from '../common/decorator/request-user.decorator';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { Auth } from '../common/decorator/auth.decorator';
-import { InstitutionService } from './service/institution.service';
-import { CreateInstitutionDto } from './dto/create-institution.dto';
+import { RequestUser } from '../common/decorator/request-user.decorator';
+import { User } from '../common/type/firebase-auth.type';
 import { UserRole } from '../user/enum/user-role.enum';
 import { AddAthletesDto } from './dto/add-athletes.dto';
 import { AddTrainersDto } from './dto/add-trainers.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { GetMembersType } from './enum/institution-get-members.enum';
+import { InstitutionService } from './service/institution.service';
 
 @ApiTags('Institution')
 @Controller('institution')
@@ -31,9 +39,16 @@ export class InstitutionController {
   @Auth([UserRole.ADMIN, UserRole.TRAINER, UserRole.MANAGER])
   async findMembers(
     @Param('institutionId') institutionId: string,
-    @Param('type') type: GetMembersType,
+    @Param('type') type: string,
   ) {
-    return this.institutionService.findMembers({ institutionId }, type);
+    const getType = GetMembersType[type.toUpperCase()];
+    if (!getType)
+      throw new BadRequestException('Invalid type for fetching members');
+
+    return this.institutionService.findMembers(
+      { institutionId },
+      type as GetMembersType,
+    );
   }
 
   @Post()

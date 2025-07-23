@@ -1,25 +1,22 @@
+/* eslint-disable simple-import-sort/imports */
+import 'tsconfig-paths/register';
+
 import { ConfigService } from '@nestjs/config';
-import { FirebaseService } from '../src/firebase/firebase.service';
-import { Environment } from '../src/config/environment-validation-schema';
-import { CommonService } from '../src/common/service/common.service';
-import { getFirebaseClient } from '../src/firebase/get-firebase-client';
-import { TestUser } from './common/type/auth.type';
+import { config } from 'dotenv';
+
+import { CommonService } from '@src/common/service/common.service';
+import type { Environment } from '@src/config/environment-validation-schema';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { getFirebaseClient } from '@src/firebase/get-firebase-client';
+
 import {
   createAdminUserAndToken,
   createAthleteUserAndToken,
   createManagerUserAndToken,
   createTrainerUserAndToken,
-} from './common/utils/auth.util';
-import { config } from 'dotenv';
+} from '@test/common/utils/auth.util';
 
-declare global {
-  var athlete: TestUser;
-  var trainer: TestUser;
-  var manager: TestUser;
-  var admin: TestUser;
-}
-
-config();
+config({ quiet: true });
 
 export default async function () {
   const commonService = new CommonService();

@@ -1,4 +1,7 @@
-import { OrderByDirection, WhereFilterOp } from 'firebase-admin/lib/firestore';
+import type {
+  OrderByDirection,
+  WhereFilterOp,
+} from 'firebase-admin/lib/firestore';
 
 export interface PaginateOptions<T> {
   orderBy?: { field: keyof T; value: OrderByDirection };
@@ -6,13 +9,13 @@ export interface PaginateOptions<T> {
   pageSize?: number;
 }
 
-export interface FindManyOptions<T extends Record<string, any>> {
+export interface FindManyOptions<T extends Record<string, unknown>> {
   filter?: Filter<T>;
   paginate?: PaginateOptions<T>;
   populate?: Populate<T>[];
 }
 
-export interface FindOneOptions<T extends Record<string, any>> {
+export interface FindOneOptions<T extends Record<string, unknown>> {
   populate?: Populate<T>[];
 }
 
@@ -39,6 +42,7 @@ export interface FindOneOptions<T extends Record<string, any>> {
  * constant populate: NestedKey<User>[] = ['address', 'address.city']; // type safe
  * ```
  */
+
 export type Populate<O extends Record<string, any>> = {
   [K in Extract<keyof O, string>]: O[K] extends Array<string>
     ? K
@@ -53,7 +57,7 @@ export type Populate<O extends Record<string, any>> = {
           | Array<boolean>
           | Function
       ? never
-      : O[K] extends Array<any>
+      : O[K] extends Array<unknown>
         ?
             | K
             | `${K}.${Populate<O[K][0]> extends infer U extends string ? U : never}`
@@ -66,7 +70,7 @@ export type Populate<O extends Record<string, any>> = {
 
 export interface Condition<T> {
   field: keyof T;
-  value: any;
+  value: unknown;
   operator?: WhereFilterOp;
 }
 

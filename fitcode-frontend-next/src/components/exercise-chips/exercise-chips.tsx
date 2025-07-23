@@ -16,7 +16,7 @@ import {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { SetState } from '@/common/type/state.type';
 import { Target } from '@/controller/target/type/target.type';
 import { theme } from '@/app/style';

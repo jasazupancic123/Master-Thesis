@@ -5,7 +5,7 @@ interface TreeOptions<T> {
   rootId?: string | null;
 }
 
-type TreeItem = Record<string, any>
+type TreeItem = Record<string, any>;
 
 export class TreeUtil {
   fromArray<T extends TreeItem>(items: T[], options: TreeOptions<T>): T[] {
@@ -16,7 +16,7 @@ export class TreeUtil {
       rootId = null,
     } = options;
 
-    const map = new Map<any, T & TreeItem>();
+    const map = new Map<unknown, T & TreeItem>();
     const roots: T[] = [];
 
     // Initialize the map and add the children array to each item
@@ -28,12 +28,10 @@ export class TreeUtil {
       const itemId = item[idPropertyName];
       const parentId = item[parentIdPropertyName];
 
-      if (parentId === rootId)
-        roots.push(map.get(itemId));
+      if (parentId === rootId) roots.push(map.get(itemId));
       else {
         const parent = map.get(parentId);
-        if (parent)
-          parent[childrenPropertyName].push(map.get(itemId));
+        if (parent) parent[childrenPropertyName].push(map.get(itemId));
       }
     }
 
@@ -43,7 +41,11 @@ export class TreeUtil {
   forEach<T extends TreeItem = any, Result = any>(
     items: T[],
     childrenPropertyName: keyof T,
-    callback: (item: T, parent: T, previousResult: Result) => Result | Promise<Result>,
+    callback: (
+      item: T,
+      parent: T,
+      previousResult: Result,
+    ) => Result | Promise<Result>,
     parent: T = undefined,
     result: Result = undefined,
   ) {
@@ -51,11 +53,23 @@ export class TreeUtil {
       const cb = callback(item, parent, result);
 
       if (cb instanceof Promise)
-        cb
-          .then((result) => this.forEach(item[childrenPropertyName], childrenPropertyName, callback, item, result))
-          .catch((e) => console.error(e));
+        cb.then((result) =>
+          this.forEach(
+            item[childrenPropertyName],
+            childrenPropertyName,
+            callback,
+            item,
+            result,
+          ),
+        ).catch((e) => console.error(e));
       else
-        this.forEach(item[childrenPropertyName], childrenPropertyName, callback, item, cb);
+        this.forEach(
+          item[childrenPropertyName],
+          childrenPropertyName,
+          callback,
+          item,
+          cb,
+        );
     }
   }
 

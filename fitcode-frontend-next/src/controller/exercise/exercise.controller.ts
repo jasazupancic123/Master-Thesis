@@ -1,6 +1,5 @@
 import { CommonService } from '@/common/service/common.service';
 import { Exercise } from './type/exercise.type';
-import { ONE_HOUR_IN_MS } from '@/common/constant/time.constant';
 
 const api = CommonService.instance.api;
 

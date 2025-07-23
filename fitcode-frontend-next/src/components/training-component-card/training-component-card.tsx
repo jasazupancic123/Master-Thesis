@@ -2,7 +2,7 @@ import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Training } from '@/controller/training/type/training.type';
 import { SetState } from '@/common/type/state.type';
 import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';

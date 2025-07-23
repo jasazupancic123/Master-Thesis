@@ -1,10 +1,11 @@
+import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import { IsDate, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { BaseEntity } from '../../common/entity/base.entity';
-import { IntersectionType } from '@nestjs/mapped-types';
-import { ColorEntity } from '../../common/entity/color.entity';
-import { PartialTarget } from '../../target/entity/partial-target.dto';
+
+import { BaseEntity } from '@src/common/entity/base.entity';
+import { ColorEntity } from '@src/common/entity/color.entity';
+import { PartialTarget } from '@src/target/entity/partial-target.dto';
 
 export interface Week {
   date: Date;
@@ -36,7 +37,7 @@ export class Cycle extends IntersectionType(BaseEntity, ColorEntity) {
 
   @ValidateNested({ each: true })
   @Type(() => PartialTarget)
-  @ApiProperty()
+  @ApiProperty({ type: () => PartialTarget, isArray: true })
   @Expose()
   selectedTargets: PartialTarget[];
 

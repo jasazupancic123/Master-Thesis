@@ -7,7 +7,8 @@ import {
   setMinutes,
   startOfWeek,
 } from 'date-fns';
-import { Week } from '../../../group/entity/cycle.entity';
+
+import type { Week } from '@src/group/entity/cycle.entity';
 
 export class DateUtil {
   isBetween(date: Date, start: Date, end: Date): boolean {

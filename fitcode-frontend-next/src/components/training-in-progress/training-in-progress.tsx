@@ -2,9 +2,8 @@ import { SetState } from '@/common/type/state.type';
 import { useAuth } from '@/store/auth-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import { Superset } from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
 import { Training } from '@/controller/training/type/training.type';
-import { User } from '@/controller/user/type/user.type';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
 import { Box, Fab, Typography, Menu, MenuItem } from '@mui/material';
@@ -15,7 +14,6 @@ import MyModal from '../modal/modal';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import dayjs from 'dayjs';
 import { useTheme } from '@mui/material';
-import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import {
   ExerciseOrTraining,
   ExerciseTrainingView,
@@ -23,6 +21,7 @@ import {
 import { handleFinishTraining } from './state';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
 import { useMain } from '@/store/main-provider';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 interface TrainingInProgressProps {
   setView: SetState<ExerciseOrTraining>;
@@ -97,7 +96,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           supersets: newTrainingInProgress.supersets,
           startOfTraining: newTrainingInProgress.startOfTraining,
           supersetIndex: newTrainingInProgress.supersetIndex,
-        }) as AthleteTrainingInProgress
+        }) as TrainingInProgress
     );
   }, [trainingInProgress?.selectedComponent]);
 
@@ -109,7 +108,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
           ({
             ...prev,
             startOfTraining: dayjs(),
-          }) as AthleteTrainingInProgress
+          }) as TrainingInProgress
       );
     }
 

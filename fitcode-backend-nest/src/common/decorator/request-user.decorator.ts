@@ -1,5 +1,7 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { User } from '../type/firebase-auth.type';
+import type { ExecutionContext } from '@nestjs/common';
+import { createParamDecorator } from '@nestjs/common';
+
+import type { User } from '../type/firebase-auth.type';
 
 export const RequestUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {

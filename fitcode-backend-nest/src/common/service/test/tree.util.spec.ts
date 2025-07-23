@@ -3,7 +3,7 @@ import { TreeUtil } from '../util';
 describe('TreeUtil::Unit', () => {
   const treeUtil = new TreeUtil();
 
-  const items: { id: number; parentId: number | null; children?: any }[] = [
+  const items: { id: number; parentId: number | null; children?: unknown }[] = [
     { id: 1, parentId: null },
     { id: 2, parentId: 1 },
     { id: 3, parentId: 1 },

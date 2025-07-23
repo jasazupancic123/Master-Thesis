@@ -1,12 +1,14 @@
 import { CommonService } from '@/common/service/common.service';
 import { DateRange } from '@/common/type/date-range.type';
-import { Superset, TrainingComponent } from './type/training-plan.type';
-import { Training, TrainingStatus } from './type/training.type';
+import { Superset } from './type/superset.type';
+import { TrainingComponent } from './type/training-component.type';
+import { Training } from './type/training.type';
 import { Workload } from './type/workload.type';
 import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
 import { PeriodizationType } from './enum/periodization-type.enum';
-import { TrainingInfo } from './type/training-info.type';
-import { GroupWorkloadStats } from './type/average-workload-values.type';
+import { TrainingInfo } from './type/training.type';
+import { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
+import { CompletedTrainingComponent } from './type/completed-training.entity';
 
 const api = CommonService.instance.api;
 
@@ -38,23 +40,18 @@ export class TrainingController {
     );
   }
 
-  static async findByIdAndPopulateAthleteWorkloads(
+  static async getPrescribedTraining(
     trainingId: string,
-    componentId: string
-  ) {
-    return api.get<Training>(
-      `/training/${trainingId}/component/${componentId}`
+    userId: string
+  ): Promise<Training | null> {
+    return api.get<Training | null>(
+      `/training/${trainingId}/athlete/${userId}/prescribed`
     );
   }
 
-  static async findAthleteGroupWorkloads(
-    groupId: string,
-    exerciseIds: string[],
-    userId: string
-  ) {
-    return api.post<CompletedFutureWorkloads>(
-      `/training/group/${groupId}/athlete/${userId}/workloads`,
-      { exerciseIds }
+  static async findAthleteWorkloads(trainingId: string, userId: string) {
+    return api.get<CompletedFutureWorkloads>(
+      `/training/${trainingId}/athlete/${userId}/workloads`
     );
   }
 
@@ -64,8 +61,8 @@ export class TrainingController {
     components: TrainingComponent[];
     membersIds: string[];
     copiedFromId?: string;
-    stats: GroupWorkloadStats[];
-    futureStats: GroupWorkloadStats[];
+    stats: TrainingExerciseAverageStats[];
+    futureStats: TrainingExerciseAverageStats[];
   }): Promise<Training> {
     return api.post<Training>('/training', body);
   }
@@ -92,34 +89,15 @@ export class TrainingController {
 
   static async update(
     trainingId: string,
-    body: Partial<
-      DateRange & {
-        components: TrainingComponent[];
-        warmup: TrainingComponent;
-        cooldown: TrainingComponent;
-      }
-    >
-  ) {
-    return api.patch<Training>(`/training/${trainingId}`, body);
-  }
-
-  static async batchUpdate(
-    params: { groupId: string; cycleId: string },
-    body: {
-      id: string;
+    body: DateRange & {
       components: TrainingComponent[];
       membersIds: string[];
       warmup: TrainingComponent;
       cooldown: TrainingComponent;
-      futureStats: GroupWorkloadStats[];
-    }[],
-    customAthleteWorkloads: Workload[]
+      workloads: Workload[];
+    }
   ) {
-    const { groupId, cycleId } = params;
-    return api.patch<Training[]>(
-      `/training/batch/group/${groupId}/cycle/${cycleId}`,
-      { trainings: body, customAthleteWorkloads }
-    );
+    return api.patch<Training>(`/training/${trainingId}`, body);
   }
 
   static async copy(
@@ -134,16 +112,14 @@ export class TrainingController {
     return null;
   }
 
-  static async finishComponent(
+  static async completeTrainingComponent(
     trainingId: string,
-    userId: string,
     componentId: string,
-    rootComponentId: string,
-    supersets: Superset[]
+    body: CompletedTrainingComponent
   ): Promise<Training> {
     return api.patch<Training>(
-      `/training/${trainingId}/finish/${componentId}/component`,
-      { userId, rootComponentId, supersets }
+      `/training/${trainingId}/component/${componentId}/complete`,
+      body
     );
   }
 

@@ -1,7 +1,7 @@
 import { SetState } from '@/common/type/state.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import { Superset } from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
@@ -10,7 +10,7 @@ import { useRef, useState } from 'react';
 import MyModal from '../modal/modal';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useTheme } from '@mui/material';
-import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import TrainingInProgressExercises from '../training-in-progress-exercises/training-in-progress-exercises';
 
 interface TrainingInProgressSupersetProps {
@@ -192,15 +192,15 @@ export default function TrainingInProgressSuperset(
                 ({
                   ...prev,
                   supersetIndex: 1,
-                }) as AthleteTrainingInProgress
+                }) as TrainingInProgress
             );
           } else {
-            setTrainingInProgress((prev: AthleteTrainingInProgress | null) => {
+            setTrainingInProgress((prev: TrainingInProgress | null) => {
               if (!prev) return null;
               return {
                 ...prev,
                 supersetIndex: prev.supersetIndex + 1,
-              } as AthleteTrainingInProgress;
+              } as TrainingInProgress;
             });
           }
           setOpenNextSupersetModal(false);

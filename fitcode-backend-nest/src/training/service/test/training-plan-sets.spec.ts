@@ -1,31 +1,33 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { TrainingPlanService } from '../training-plan.service';
-import { ComponentService } from '../../../component/component.service';
+
+import type { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { CommonModule } from '@src/common/common.module';
+import { ComponentService } from '@src/component/component.service';
+import type { ComponentParam } from '@src/component/entity/component-param.entity';
 import {
   IntType,
   ParamType,
   VolWorkSetType,
-} from '../../../component/enum/param.enum';
-import { ComponentParam } from '../../../component/entity/component-param.entity';
-import { AttributeValue } from '../../../attribute/entity/attribute-value.entity';
-import { createMock } from '@golevelup/ts-jest';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
+} from '@src/component/enum/param.enum';
+import { ComponentRepository } from '@src/component/repository/component.repository';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
+
+import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('getSetData', () => {
   let service: TrainingPlanService;
   let componentService: ComponentService;
-  let exerciseService: ExerciseService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -48,9 +50,10 @@ describe('getSetData', () => {
         },
         AttributeService,
         {
-          provide: ComponentService,
-          useValue: createMock<ComponentService>(),
+          provide: ComponentRepository,
+          useValue: createMock<ComponentRepository>,
         },
+        ComponentService,
         {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
@@ -77,7 +80,6 @@ describe('getSetData', () => {
 
     service = moduleRef.get(TrainingPlanService);
     componentService = moduleRef.get(ComponentService);
-    exerciseService = moduleRef.get(ExerciseService);
   });
 
   it('should create correct number of sets based on VolWorkSets parameter', () => {
@@ -102,8 +104,8 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const params = componentService.getParamAttributes(componentParams);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(3);
     expect(result[0].setNumber).toBe(1);
@@ -132,8 +134,8 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const params = componentService.getParamAttributes(componentParams);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(1);
     expect(result[0].setNumber).toBe(1);
@@ -177,10 +179,16 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
-    const result = service.getSetData(params, paramValues);
+    const params = componentService.getParamAttributes(componentParams);
+    const result = service.getSets(params, [
+      {
+        setNumber: 1,
+        paramValuesL: paramValues,
+        paramValuesR: paramValues,
+      },
+    ]);
 
-    expect(result.length).toBe(2);
+    expect(result.length).toBe(1);
     result.forEach((set) => {
       for (const paramValues of [set.paramValuesL, set.paramValuesR])
         expect(paramValues).toEqual([
@@ -211,8 +219,8 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const params = componentService.getParamAttributes(componentParams);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(1);
 
@@ -248,8 +256,8 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const params = componentService.getParamAttributes(componentParams);
+    const result = service.getSets(params);
 
     for (const paramValues of [
       result[0].paramValuesL,
@@ -266,7 +274,7 @@ describe('getSetData', () => {
   });
 
   it('should handle empty params array', () => {
-    const result = service.getSetData([]);
+    const result = service.getSets([]);
     expect(result.length).toBe(1); // Default 1 set
     expect(result[0].paramValuesL).toEqual([]); // No params to include
     expect(result[0].paramValuesR).toEqual([]); // No params to include
@@ -280,8 +288,8 @@ describe('getSetData', () => {
       },
     ];
 
-    const params = service.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const params = componentService.getParamAttributes(componentParams);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(1);
     for (const paramValues of [result[0].paramValuesL, result[0].paramValuesR])

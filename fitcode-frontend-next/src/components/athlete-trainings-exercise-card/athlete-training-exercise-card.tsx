@@ -1,15 +1,13 @@
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import {
-  Superset,
-  TrainingComponent,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Box } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 import MyModal from '../modal/modal';
 import { useTheme } from '@mui/material';
-import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import toast from 'react-hot-toast';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -98,11 +96,13 @@ export default function AthleteTrainingExerciseCard(
           handleApiRequest(
             router,
             () =>
-              TrainingController.findByIdAndPopulateAthleteWorkloads(
+              TrainingController.getPrescribedTraining(
                 trainingInProgress.training.id,
-                trainingInProgress.selectedComponent.id
+                profile.uid
               ),
             (training) => {
+              if (!training) return;
+
               const selectedComponent = [
                 training.warmup,
                 ...training.components,
@@ -119,7 +119,7 @@ export default function AthleteTrainingExerciseCard(
                     ...prev,
                     training: training,
                     selectedComponent: selectedComponent,
-                  }) as AthleteTrainingInProgress
+                  }) as TrainingInProgress
               );
               setView(ExerciseTrainingView.TrainingView);
               setOpenAreYouSureModal(false);

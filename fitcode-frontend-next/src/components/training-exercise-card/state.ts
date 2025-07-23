@@ -1,9 +1,7 @@
-import {
-  ExerciseSet,
-  Superset,
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import ReactDOM from 'react-dom';
 import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import { Training } from '@/controller/training/type/training.type';
@@ -12,6 +10,7 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
 import { User } from '@/controller/user/type/user.type';
 import { Workload } from '@/controller/training/type/workload.type';
+import { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
 import toast from 'react-hot-toast';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 
@@ -43,6 +42,19 @@ export function handleAthleteWorkloadsChange(
   if (!selectedAthlete) return;
 
   if (updateAllSets) {
+    // if workload not in selected athlete workloads (future), add it and retunr
+    if (
+      !selectedAthleteWorkloads.futureWorkloads.some(
+        (fw) =>
+          fw.trainingId === training.id &&
+          fw.exerciseId === exercise.id &&
+          fw.userId === selectedAthlete.uid &&
+          fw.setNumber === setNumber
+      )
+    ) {
+      return;
+    }
+
     // the first set has been updated on non expanded view, update all sets
     let foundFutureWorkloads = selectedAthleteWorkloads.futureWorkloads.filter(
       (fw) =>
@@ -50,14 +62,6 @@ export function handleAthleteWorkloadsChange(
         fw.exerciseId === exercise.id &&
         fw.userId === selectedAthlete.uid
     );
-
-    if (!foundFutureWorkloads.length) {
-      toast.error("Save the training to update athlete's workloads", {
-        icon: '⚠️',
-        duration: 3000,
-      });
-      return;
-    }
 
     const perscribedFieldName = getPerscribedFieldName(param, leftOrRight);
     if (!perscribedFieldName) {

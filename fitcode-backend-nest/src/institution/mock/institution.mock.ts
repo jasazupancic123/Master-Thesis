@@ -1,6 +1,8 @@
 import { v4 } from 'uuid';
-import { Institution } from '../entity/institution.entity';
-import { generateRandomName } from '../../../test/common/utils/random.util';
+
+import { generateRandomName } from '@src/common/utils/random.util';
+
+import type { Institution } from '../entity/institution.entity';
 
 export function generateInstitutionStub(
   data?: Partial<Institution>,

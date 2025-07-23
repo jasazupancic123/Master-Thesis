@@ -1,22 +1,6 @@
-import * as request from 'supertest';
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../../src/app.module';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { Exercise } from '../../src/exercise/entity/exercise.entity';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { Component } from '../../src/component/entity/component.entity';
-import { ComponentService } from '../../src/component/component.service';
-import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
-import { AttributeService } from '../../src/attribute/service/attribute.service';
-import {
-  generateAttributeStub,
-  generateMultiselectAttribute,
-} from '../../src/attribute/mock/attribute.stub';
-import { AttributeType } from '../../src/common/enum/attribute-type.enum';
-import { InstitutionService } from '../../src/institution/service/institution.service';
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import {
   createInstitution,
   createInstitutionWithUsers,
@@ -24,8 +8,27 @@ import {
   deleteDoc,
   deleteDocs,
   deleteInstitution,
-} from '../common/utils/data.util';
-import { TestInstitution } from '../common/type/entity.type';
+} from '@test/common/utils/data.util';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import {
+  generateAttributeStub,
+  generateMultiselectAttribute,
+} from '@src/attribute/mock/attribute.stub';
+import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { ComponentService } from '@src/component/component.service';
+import type { Component } from '@src/component/entity/component.entity';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import type { Exercise } from '@src/exercise/entity/exercise.entity';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+
+import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Get Exercises (e2e)', () => {
   let app: INestApplication;
@@ -181,7 +184,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(admin, exercises)
+        await exerciseService.createMany(global.admin, exercises)
       ).map((e) => e.id);
 
       const filters: [string, number][] = [
@@ -329,7 +332,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(admin, exercises)
+        await exerciseService.createMany(global.admin, exercises)
       ).map((e) => e.id);
 
       const attributeValues = (await exerciseService.findAllGlobal()).flatMap(
@@ -464,7 +467,7 @@ describe('Get Exercises (e2e)', () => {
       ];
 
       const exerciseIds = (
-        await exerciseService.createMany(admin, exercises)
+        await exerciseService.createMany(global.admin, exercises)
       ).map((e) => e.id);
 
       const attributeValues = (await exerciseService.findAllGlobal()).flatMap(

@@ -7,5 +7,7 @@ export interface Attribute {
   required?: boolean;
   unit?: string; // kg, lbs, ...
   defaultValue?: string;
+  min?: number; // minimum value for range
+  max?: number; // maximum value for range
   options?: Attribute[]; // possible values for select type
 }
