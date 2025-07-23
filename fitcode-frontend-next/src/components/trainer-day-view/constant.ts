@@ -1,6 +1,6 @@
 import { AfterSet } from '@/controller/component/type/after-set.type';
 import { MainSet } from '@/controller/component/type/main-set.type';
-import { GroupWorkloadStats } from '@/controller/training/type/average-workload-values.type';
+import { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { User } from '@/controller/user/type/user.type';
 
@@ -29,7 +29,7 @@ export const ABSENT_SUBGRUP_ID = 'absent';
 
 export const DEFAULT_SUBGROUP = (
   availableMembers: User[],
-  stats: GroupWorkloadStats[]
+  stats: TrainingExerciseAverageStats[]
 ): Subgroup => ({
   id: DEFAULT_SUBGROUP_ID,
   name: 'Main Group',

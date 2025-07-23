@@ -2,11 +2,11 @@ import { ComponentModalAction } from '@/common/enum/component-modal-action.const
 import { Box, Typography } from '@mui/material';
 import { useState } from 'react';
 import TrainingComponentCalendar from '../training-component-calendar/training-component-calendar';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Day } from '@/common/service/util/date.util';
 import { SetState } from '@/common/type/state.type';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 import ComponentPeriodization from '../component-periodization/component-periodization';
 import { useTheme } from '@mui/material';
 
@@ -91,7 +91,10 @@ export default function ComponentActionsModal(
                 action === item.value ? theme.palette.primary.main : 'inherit',
               fontWeight: action === item.value ? 'bold' : 'normal',
               cursor: 'pointer',
-              backgroundColor: action === item.value ? theme.palette.primary.main : 'transparent',
+              backgroundColor:
+                action === item.value
+                  ? theme.palette.primary.main
+                  : 'transparent',
               py: 0.5,
             }}
           >

@@ -1,8 +1,9 @@
-import { ClassConstructor, plainToInstance } from 'class-transformer';
-
-import { PaginateOptions } from '../../type/orm.type';
 import { BadRequestException } from '@nestjs/common';
-import { WhereFilterOp } from 'firebase-admin/firestore';
+import type { ClassConstructor } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
+import type { WhereFilterOp } from 'firebase-admin/firestore';
+
+import type { PaginateOptions } from '@src/common/type/orm.type';
 
 export class GenericUtil {
   serializeToDto<T, V extends Array<unknown>>(
@@ -27,7 +28,7 @@ export function parseQueryArray(value: string): string[] {
 
   try {
     return value.split(',') || [];
-  } catch (e) {
+  } catch (_e) {
     throw new BadRequestException(
       'Invalid query value, must be a comma-separated string',
     );
@@ -43,7 +44,7 @@ export function parseQueryCondition(condition: string) {
 
   try {
     condition.split(':');
-  } catch (e) {
+  } catch (_e) {
     throw new BadRequestException(
       'Invalid query condition, must be in the format of ?<field>:<operator>:<value>',
     );
@@ -74,5 +75,5 @@ export function parseQueryCondition(condition: string) {
       `Invalid operator, must be one of ${operators.join(', ')}`,
     );
 
-  return { op, value } as { op: WhereFilterOp; value: any };
+  return { op, value } as { op: WhereFilterOp; value: unknown };
 }

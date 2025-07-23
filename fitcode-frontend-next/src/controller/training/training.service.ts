@@ -6,17 +6,19 @@ import { Component } from '../component/type/component.type';
 import { Exercise } from '../exercise/type/exercise.type';
 import { User } from '../user/type/user.type';
 import { Training } from './type/training.type';
-import {
-  ExerciseSet,
-  TrainingComponent,
-  TrainingComponentInfo,
-} from './type/training-plan.type';
+import { TrainingComponentInfo } from './type/training-component.type';
+import { TrainingComponent } from './type/training-component.type';
+import { ExerciseSet } from './type/exercise-set.type';
 import { IntensityVolumeValues } from './type/intensity-volume-values.type';
 import { Target } from '../target/type/target.type';
 import { Method } from '../method/type/method.type';
-import { TrainingInfo } from './type/training-info.type';
+import { TrainingInfo } from './type/training.type';
 import { Subgroup } from './type/subgroup.type';
-import { SubgroupInfo } from './type/subgroup-minimal.type';
+import { SubgroupInfo } from './type/subgroup.type';
+import { PrescribedWorkload } from './type/workload-value.type';
+import { IntType, ParamType, VolType } from '../component/enum/param.enum';
+import { AttributeValue } from '../attribute/type/attribute-value.type';
+import { Attribute } from '../attribute/type/attribute.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training;
@@ -209,5 +211,110 @@ export class TrainingService {
       id: subgroup.id,
       futureStats: subgroup.futureStats,
     };
+  }
+
+  static getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
+    const { paramValuesL, paramValuesR } = prescribedSet;
+    const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
+    const volWork1R = paramValuesR.find((p) => p.field === ParamType.VolWork1);
+    const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
+    const volWork2R = paramValuesR.find((p) => p.field === ParamType.VolWork2);
+    const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
+    const volRecR = paramValuesR.find((p) => p.field === ParamType.VolRec1);
+    const intWork1L = paramValuesL.find((p) => p.field === ParamType.IntWork1);
+    const intWork1R = paramValuesR.find((p) => p.field === ParamType.IntWork1);
+    const intWork2L = paramValuesL.find((p) => p.field === ParamType.IntWork2);
+    const intWork2R = paramValuesR.find((p) => p.field === ParamType.IntWork2);
+    const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
+    const intRecR = paramValuesR.find((p) => p.field === ParamType.IntRec1);
+
+    return {
+      volWork1Type: this.parseSelected<VolType>(volWork1L),
+      prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
+      prescribedVolWork1ValueR: this.parseValue(volWork1R) as number,
+      volWork2Type: this.parseSelected<VolType>(volWork2L),
+      prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
+      prescribedVolWork2ValueR: this.parseValue(volWork2R) as number,
+      volRecType: this.parseSelected<VolType>(volRecL),
+      prescribedVolRecValueL: this.parseValue(volRecL) as number,
+      prescribedVolRecValueR: this.parseValue(volRecR) as number,
+      intWork1Type: this.parseSelected<IntType>(intWork1L),
+      prescribedIntWork1ValueL: this.parseValue(intWork1L),
+      prescribedIntWork1ValueR: this.parseValue(intWork1R),
+      intWork2Type: this.parseSelected<IntType>(intWork2L),
+      prescribedIntWork2ValueL: this.parseValue(intWork2L),
+      prescribedIntWork2ValueR: this.parseValue(intWork2R),
+      intRecType: this.parseSelected<IntType>(intRecL),
+      prescribedIntRecValueL: this.parseValue(intRecL),
+      prescribedIntRecValueR: this.parseValue(intRecR),
+    };
+  }
+
+  static getPerscribedFieldName(
+    param: Attribute,
+    leftOrRight: 'L' | 'R'
+  ): keyof PrescribedWorkload {
+    let perscribedFieldName;
+    switch (param.field) {
+      case 'int1':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedIntWork1ValueL'
+            : 'prescribedIntWork1ValueR';
+        break;
+      case 'int2':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedIntWork2ValueL'
+            : 'prescribedIntWork2ValueR';
+        break;
+      case 'vol1':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedVolWork1ValueL'
+            : 'prescribedVolWork1ValueR';
+        break;
+      case 'vol2':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedVolWork2ValueL'
+            : 'prescribedVolWork2ValueR';
+        break;
+      case 'intRec':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedIntRecValueL'
+            : 'prescribedIntRecValueR';
+        break;
+      case 'volRec':
+        perscribedFieldName =
+          leftOrRight === 'L'
+            ? 'prescribedVolRecValueL'
+            : 'prescribedVolRecValueR';
+        break;
+      default:
+        throw new Error(
+          `Unknown param field: ${param.field}. Cannot determine prescribed field name.`
+        );
+    }
+
+    return perscribedFieldName as keyof PrescribedWorkload;
+  }
+
+  private static parseSelected<T = string>(
+    attributeValue: AttributeValue | undefined
+  ): T | undefined {
+    if (!attributeValue?.selected) return undefined;
+    return attributeValue.selected.split(':')[0] as T;
+  }
+
+  private static parseValue(
+    attributeValue: AttributeValue | undefined
+  ): number | undefined {
+    if (!attributeValue?.value) return undefined;
+    if (attributeValue?.value)
+      if (!isNaN(+attributeValue.value)) return +attributeValue.value;
+
+    return NaN;
   }
 }

@@ -1,8 +1,10 @@
-import { INestApplication, Logger } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Environment } from '../../config/environment-validation-schema';
 
-export abstract class BaseSetup<T = any> {
+import type { Environment } from '@src/config/environment-validation-schema';
+
+export abstract class BaseSetup<T = unknown> {
   protected readonly configService: ConfigService<Environment>;
   protected readonly logger: Logger;
 

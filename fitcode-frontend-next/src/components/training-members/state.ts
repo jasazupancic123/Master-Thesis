@@ -4,7 +4,7 @@ import { User } from '@/controller/user/type/user.type';
 import toast from 'react-hot-toast';
 import { handleAddSubgroup } from '../trainer-day-view/state';
 import { Training } from '@/controller/training/type/training.type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
 
 export async function handleAddMembersSubgroup(

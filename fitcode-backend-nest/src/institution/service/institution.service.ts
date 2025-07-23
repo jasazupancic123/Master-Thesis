@@ -1,25 +1,27 @@
-import { InstitutionRepository } from '../repository/institution.repository';
 import {
   BadRequestException,
   Injectable,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CommonService } from '../../common/service/common.service';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { Institution } from '../entity/institution.entity';
-import { InstitutionRef } from '../../common/type/firestore.type';
-import { User } from '../../common/type/firebase-auth.type';
-import { Create } from '../../common/type/entity.type';
-import { CreateInstitutionDto } from '../dto/create-institution.dto';
-import { UserRole } from '../../user/enum/user-role.enum';
-import { UserService } from '../../user/user.service';
 import { FieldValue } from 'firebase-admin/firestore';
-import { Permission } from '../../common/interface/permission.interface';
+
+import { Permission } from '@src/common/interface/permission.interface';
+import { CommonService } from '@src/common/service/common.service';
+import { Create } from '@src/common/type/entity.type';
+import { User } from '@src/common/type/firebase-auth.type';
+import { InstitutionRef } from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { UserEntity } from '@src/user/entity/user.entity';
+import { UserRole } from '@src/user/enum/user-role.enum';
+import { UserService } from '@src/user/user.service';
+
+import { CreateInstitutionDto } from '../dto/create-institution.dto';
 import { UpdateInstitutionDto } from '../dto/update-institution.dto';
 import { UpdateInstitutionMembersDto } from '../dto/update-institution-members.dto';
-import { UserEntity } from '../../user/entity/user.entity';
+import { Institution } from '../entity/institution.entity';
 import { GetMembersType } from '../enum/institution-get-members.enum';
+import { InstitutionRepository } from '../repository/institution.repository';
 
 @Injectable()
 export class InstitutionService implements Permission<Institution> {

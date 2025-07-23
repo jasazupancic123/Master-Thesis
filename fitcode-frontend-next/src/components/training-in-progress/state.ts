@@ -1,8 +1,8 @@
 import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { Superset } from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
 import { Training } from '@/controller/training/type/training.type';
 import toast from 'react-hot-toast';
-import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { TrainingController } from '@/controller/training/training.controller';
 import {
@@ -10,11 +10,11 @@ import {
   ExerciseTrainingView,
 } from '@/common/type/exercise-or-training.type';
 import { User } from '@firebase/auth';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { CompletedTrainingExercise } from '@/controller/training/type/completed-training.entity';
 
 export const handleFinishTraining = async (state: {
-  trainingInProgress: AthleteTrainingInProgress | null;
-  setTrainingInProgress: SetState<AthleteTrainingInProgress | null>;
+  trainingInProgress: TrainingInProgress | null;
+  setTrainingInProgress: SetState<TrainingInProgress | null>;
   user: User | null;
   router: AppRouterInstance;
   setTrainings: SetState<Training[]>;
@@ -40,15 +40,23 @@ export const handleFinishTraining = async (state: {
 
   handleApiRequest(
     router,
-    () =>
-      TrainingController.finishComponent(
+    () => {
+      const exercises: CompletedTrainingExercise[] =
+        trainingInProgress.supersets.flatMap((s, supersetIndex) =>
+          s.exercises.map((e) => ({
+            id: e.id,
+            sets: e.sets,
+            supersetIndex,
+          }))
+        );
+
+      return TrainingController.completeTrainingComponent(
         trainingInProgress.training.id,
-        user.uid,
-        trainingInProgress.selectedComponent.id,
         trainingInProgress.selectedComponent.component?.id ||
           trainingInProgress.selectedComponent.id,
-        trainingInProgress.supersets
-      ),
+        { userId: user.uid, exercises }
+      );
+    },
     (training) => {
       toast.success('Training data updated successfully');
       clearTrainingState();
@@ -60,7 +68,7 @@ export const handleFinishTraining = async (state: {
             ({
               ...prev,
               training: training,
-            }) as AthleteTrainingInProgress
+            }) as TrainingInProgress
         );
       }
       setTrainings((prev) =>

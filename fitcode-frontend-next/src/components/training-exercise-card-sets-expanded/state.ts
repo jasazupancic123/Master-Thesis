@@ -1,11 +1,9 @@
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { TrainingService } from '@/controller/training/training.service';
-import {
-  ExerciseSet,
-  Superset,
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import { updateTraining } from '../training-exercise-card/state';
 import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import { Training } from '@/controller/training/type/training.type';

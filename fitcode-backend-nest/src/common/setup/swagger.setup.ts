@@ -1,6 +1,7 @@
+import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 import { BaseSetup } from './base.setup';
-import { INestApplication } from '@nestjs/common';
 
 export class SwaggerSetup extends BaseSetup {
   constructor(app: INestApplication) {

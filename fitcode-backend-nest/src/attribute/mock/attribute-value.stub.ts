@@ -1,7 +1,9 @@
-import { generateRandomString } from '../../../test/common/utils/random.util';
-import { AttributeValue } from '../entity/attribute-value.entity';
-import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
 import { v4 } from 'uuid';
+
+import { generateRandomString } from '@src/common/utils/random.util';
+import type { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
+
+import type { AttributeValue } from '../entity/attribute-value.entity';
 
 export function generateAttributeValueStub(
   data?: Partial<AttributeValue>,

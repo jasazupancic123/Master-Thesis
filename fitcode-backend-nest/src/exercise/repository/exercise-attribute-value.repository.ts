@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { CommonService } from '../../common/service/common.service';
+import { Query } from 'firebase-admin/firestore';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { CommonService } from '@src/common/service/common.service';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import {
   ExerciseAttributeValueRef,
   ExerciseRef,
   FirestoreCollectionRepository,
-} from '../../common/type/firestore.type';
-import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
+} from '@src/common/type/firestore.type';
+import { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { ExerciseRepository } from './exercise.repository';
-import { Query } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { FirebaseService } from '../../firebase/firebase.service';
 
 @Injectable()
 export class ExerciseAttributeValueRepository

@@ -23,9 +23,11 @@ export class ObjectUtil {
   /**
    * Checks if an object is empty (has no own enumerable properties).
    */
-  isEmpty(obj: object): boolean {
+  isEmpty(obj: object | number | string): boolean {
     return obj === null || obj === undefined
       ? true
-      : Object.keys(obj).length === 0;
+      : typeof obj === 'object'
+        ? Object.keys(obj).length === 0
+        : false;
   }
 }

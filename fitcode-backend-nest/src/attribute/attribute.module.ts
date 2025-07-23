@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+
+import { AttributeController } from './attribute.controller';
 import { AttributeRepository } from './repository/attribute.repository';
 import { AttributeService } from './service/attribute.service';
-import { AttributeController } from './attribute.controller';
 
 @Module({
   controllers: [AttributeController],

@@ -1,13 +1,14 @@
-import { IdEntity } from '../../common/entity/id.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
-  IsString,
   IsNotEmpty,
   IsOptional,
+  IsString,
   ValidateNested,
 } from 'class-validator';
-import { AttributeRange } from '../../attribute/entity/attribute-range.entity';
+
+import { Attribute } from '@src/attribute/entity/attribute.entity';
+import { IdEntity } from '@src/common/entity/id.entity';
 
 export class Method extends IdEntity {
   @IsString()
@@ -23,10 +24,10 @@ export class Method extends IdEntity {
   targetId: string;
 
   @ValidateNested({ each: true })
-  @Type(() => AttributeRange)
-  @ApiProperty()
+  @Type(() => Attribute)
+  @ApiProperty({ type: () => Attribute, isArray: true })
   @Expose()
-  attributeRanges: AttributeRange[];
+  attributes: Attribute[];
 
   @IsString()
   @IsNotEmpty()

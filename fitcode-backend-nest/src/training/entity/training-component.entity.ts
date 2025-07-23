@@ -1,15 +1,26 @@
-import { ApiProperty, IntersectionType } from '@nestjs/swagger';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  IntersectionType,
+} from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
-import { IsDate, ValidateNested } from 'class-validator';
-import { ColorEntity } from '../../common/entity/color.entity';
-import { IdEntity } from '../../common/entity/id.entity';
+import {
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+
+import { ColorEntity } from '@src/common/entity/color.entity';
+import { IdEntity } from '@src/common/entity/id.entity';
+import { Target } from '@src/target/entity/target.entity';
+import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
+
+import { CopiedFrom } from './copied-from.entity';
 import { Subgroup } from './subgroup.entity';
 import { Superset } from './superset.entity';
-import { CopiedFrom } from './copied-from.entity';
-import { Target } from '../../target/entity/target.entity';
-import { PeriodizationType } from '../../training/enum/periodization-type.enum';
 
 export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   @IsDate()
@@ -26,12 +37,12 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @Type(() => Target)
   @ValidateNested()
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => Target })
   @IsOptional()
   @Expose()
   target?: Target; // selected target id which the component uses
 
-  @ApiProperty({ enum: PeriodizationType, enumName: 'PeriodizationType' })
+  @ApiProperty({ enum: PeriodizationType })
   @IsOptional()
   @IsNotEmpty()
   @IsEnum(PeriodizationType)
@@ -47,13 +58,13 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @ValidateNested({ each: true })
   @Type(() => Superset)
-  @ApiProperty()
+  @ApiProperty({ type: () => Superset, isArray: true })
   @Expose()
   supersets: Superset[];
 
   @ValidateNested({ each: true })
   @Type(() => Subgroup)
-  @ApiProperty()
+  @ApiProperty({ type: () => Subgroup, isArray: true })
   @Expose()
   subgroups: Subgroup[];
 
@@ -64,7 +75,7 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
 
   @Type(() => CopiedFrom)
   @IsOptional()
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => CopiedFrom })
   @Expose()
   copiedFrom?: CopiedFrom; // used for copying components from other trainings
 }

@@ -9,18 +9,17 @@ import {
   PartialWithFieldValue,
   Query,
   Timestamp,
-  UpdateData,
-  WriteBatch,
 } from 'firebase-admin/firestore';
 import { Storage } from 'firebase-admin/storage';
+
 import { TimestampEntity } from '../common/entity/timestamp.entity';
 import { CommonService } from '../common/service/common.service';
 import { Create, FirestoreEntity, Update } from '../common/type/entity.type';
 import { DecodedUser, User } from '../common/type/firebase-auth.type';
+import { BatchWriteOperation } from '../common/type/firestore.type';
 import { Environment } from '../config/environment-validation-schema';
 import { UserRole } from '../user/enum/user-role.enum';
 import { FirebaseClient, InjectFirebaseAdmin } from './get-firebase-client';
-import { BatchWriteOperation } from '../common/type/firestore.type';
 
 @Injectable()
 export class FirebaseService implements OnApplicationBootstrap {
@@ -146,14 +145,14 @@ export class FirebaseService implements OnApplicationBootstrap {
           chunk.forEach(({ ref, data, operation, options }) => {
             if (operation === 'set')
               batch.set(ref, data as PartialWithFieldValue<T>, options || {});
-            else batch.update(ref, data as any);
+            else batch.update(ref, data as unknown);
           });
 
           await batch.commit();
 
           successCount += chunk.length;
           chunkSuccess = true;
-        } catch (e: any) {
+        } catch (e: unknown) {
           retryAttempt++;
           if (retryAttempt > maxRetries) {
             failureCount += chunk.length;
@@ -184,7 +183,7 @@ export class FirebaseService implements OnApplicationBootstrap {
     if (obj instanceof GeoPoint)
       return { latitude: obj.latitude, longitude: obj.longitude } as T;
 
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     for (const key in obj)
       if (obj.hasOwnProperty(key)) {
         const value = obj[key];
@@ -202,7 +201,7 @@ export class FirebaseService implements OnApplicationBootstrap {
     ids?: string[];
     emails?: string[];
   }): Promise<User[]> {
-    let identifiers: UserIdentifier[] = [];
+    const identifiers: UserIdentifier[] = [];
     if (filter?.ids) for (const id of filter.ids) identifiers.push({ uid: id });
     if (filter?.emails)
       for (const email of filter.emails) identifiers.push({ email });
@@ -251,7 +250,7 @@ export class FirebaseService implements OnApplicationBootstrap {
         this.convertDatesToTimestamps(item),
       ) as FirestoreEntity<T>;
 
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     for (const key in obj)
       if (obj.hasOwnProperty(key)) {
         const value = obj[key];

@@ -1,4 +1,5 @@
 import { IntersectionType } from '@nestjs/mapped-types';
+
 import { IdEntity } from './id.entity';
 import { TimestampEntity } from './timestamp.entity';
 

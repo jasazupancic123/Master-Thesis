@@ -147,13 +147,15 @@ export default function TrainerWeekView() {
                             router,
                             () =>
                               TrainingController.update(training.id, {
-                                components: input.components?.map((c) => ({
+                                /* components: input.components?.map((c) => ({
                                   ...c,
                                   from: new Date(c.from),
                                   to: addMinutes(new Date(c.from), 30),
                                 })),
                                 warmup: training.warmup,
-                                cooldown: training.cooldown,
+                                cooldown: training.cooldown, */
+                                ...training,
+                                workloads: [],
                               }),
                             (training) => {
                               const mapped =

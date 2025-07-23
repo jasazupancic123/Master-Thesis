@@ -1,5 +1,5 @@
 import { SetState } from '@/common/type/state.type';
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { createContext, useContext, useState } from 'react';
 import { ChildrenProps } from '@/common/type/props.type';
 

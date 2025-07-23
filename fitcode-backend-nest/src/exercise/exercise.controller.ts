@@ -8,6 +8,8 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
@@ -15,7 +17,6 @@ import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { CreateExercisesDto } from './dto/create-exercises.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { ExerciseService } from './service/exercise.service';
-import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Exercise')
 @Controller('exercise')
