@@ -180,7 +180,13 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(params, paramValues);
+    const result = service.getSets(params, [
+      {
+        setNumber: 1,
+        paramValuesL: paramValues,
+        paramValuesR: paramValues,
+      },
+    ]);
 
     expect(result.length).toBe(2);
     result.forEach((set) => {
