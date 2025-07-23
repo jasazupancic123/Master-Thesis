@@ -103,8 +103,6 @@ export default function AthleteTrainingExerciseCard(
             (training) => {
               if (!training) return;
 
-              console.log('imported training:', training.components);
-
               const selectedComponent = [
                 training.warmup,
                 ...training.components,

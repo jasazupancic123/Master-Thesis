@@ -52,9 +52,6 @@ export function handleAthleteWorkloadsChange(
           fw.setNumber === setNumber
       )
     ) {
-      console.log('param:', param, 'value:', newValue);
-      const newFutureWorkload: PrescribedWorkload = {};
-
       return;
     }
 
