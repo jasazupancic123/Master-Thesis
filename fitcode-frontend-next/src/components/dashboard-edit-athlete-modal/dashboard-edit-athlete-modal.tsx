@@ -1,52 +1,64 @@
-'use client';
-
-import { SPORTS } from '@/common/constant/sport.constant';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import FileUpload from '@/components/file-upload/file-upload';
+import { handleApiRequest, SetState } from '@/common/type/state.type';
+import MyModal from '../modal/modal';
+import { useEffect, useState } from 'react';
+import { User, UserEntity } from '@/controller/user/type/user.type';
+import { useDashboard } from '@/store/dashboard-provider';
+import { updateUserProfile } from '../dashboard-groups-members/state';
 import { useScreenSize } from '@/store/screen-size-provider';
-import { Gender } from '@/controller/user/enum/gender.enum';
-import { SportLevel } from '@/controller/user/enum/sport-level.enum';
-import { UserEntity } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
+import { useRouter } from 'next/navigation';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import FileUpload from '../file-upload/file-upload';
 import {
-  Avatar,
   Box,
-  Button,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Select,
   TextField,
-  useTheme,
 } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { UserController } from '@/controller/user/user.controller';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/store/auth-provider';
-import { ArrowBack } from '@mui/icons-material';
+import { Gender } from '@/controller/user/enum/gender.enum';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import { SPORTS } from '@/common/constant/sport.constant';
+import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+
+interface DashboardEditAthleteModalProps {
+  isOpen: boolean;
+  setModal: SetState<{
+    add_member: boolean;
+    add_trainer: boolean;
+    add_group: boolean;
+    edit_athlete: boolean;
+  }>;
+  editUser: User | null;
+  setEditUser: SetState<User | null>;
+}
 
 const DEFAULT_MARGIN = 1;
 
-export default function ProfilePage() {
-  const {
-    user,
-    profile: profileGlobal,
-    setProfile: setProfileGlobal,
-  } = useAuth();
+export default function DashboardEditAthleteModal(
+  props: DashboardEditAthleteModalProps
+) {
+  const { selectedInstitution, members, refetchMembers } = useDashboard();
 
-  const router = useRouter();
   const screenSize = useScreenSize();
-  const theme = useTheme();
+  const router = useRouter();
 
-  const [profile, setProfile] = useState<UserEntity>({
-    ...profileGlobal,
-  } as UserEntity);
+  const { isOpen, setModal, editUser, setEditUser } = props;
+  const [editedProfile, setEditedProfile] = useState(false);
+
+  const [profile, setProfile] = useState<UserEntity | undefined>(undefined);
+
+  useEffect(() => {
+    if (!editUser) return;
+
+    const member = members.find((m) => m.id === editUser.uid);
+    setProfile(member);
+  }, [editUser]);
 
   function handleChangeProfile<K extends keyof UserEntity>(
     key: K,
@@ -54,6 +66,7 @@ export default function ProfilePage() {
   ) {
     const newProfile = { ...profile, [key]: value };
     setProfile(newProfile as UserEntity);
+    setEditedProfile(true);
   }
 
   async function handleSaveProfile() {
@@ -84,70 +97,73 @@ export default function ProfilePage() {
           userId: profile.id,
         }),
       (_) => {
-        setProfileGlobal(profile);
-        toast.success('Profile updated successfully');
+        refetchMembers();
+        toast.success('Athlete updated successfully');
       },
       undefined,
-      'Failed to update profile'
+      'Failed to update athlete'
     );
   }
 
-  if (!user) return null;
-
   return (
-    <Box
-      width="100%"
-      height="100vh"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="space-between"
-      pb={2}
+    <MyModal
+      isOpen={isOpen}
+      setIsOpen={(open) =>
+        setModal((prev) => ({ ...prev, edit_athlete: open }))
+      }
+      onCancel={() => {
+        setModal((prev) => ({ ...prev, edit_athlete: false }));
+        setEditedProfile(false);
+        setEditUser(null);
+      }}
+      onConfirm={
+        editedProfile
+          ? () =>
+              updateUserProfile({
+                editUser,
+                router,
+                selectedInstitution,
+                profile,
+                setModal,
+                setEditedProfile,
+                setEditUser,
+                refetchMembers,
+              })
+          : undefined
+      }
+      cancelText="Close"
     >
-      <Box
-        width="100%"
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        sx={{
-          overflowY: 'auto',
-        }}
-        pt={screenSize.isMobile || screenSize.isLandscapeMobile ? 0 : 8}
-        pb={screenSize.isLandscapeMobile ? 15 : undefined}
-      >
-        <Box
-          width="100%"
-          display="flex"
-          minHeight={50}
-          justifyContent="flex-start"
-          alignItems="center"
-        >
-          <IconButton
-            sx={{ p: 0, m: 0 }}
-            onClick={() => router.back()} // goes back to the previous URL
-          >
-            <ArrowBack />
-          </IconButton>
-        </Box>
+      <Box display="flex" flexDirection="column" gap={2}>
         <FileUpload
           input="image"
-          label="Upload Profile Image"
+          label="Image"
           initialFileUrl={profile?.profileImageUrl || undefined}
-          sx={{ width: 200, margin: 'auto', height: 150 }}
-          dissableBorder
+          dissableBorder={
+            profile?.profileImageUrl !== undefined &&
+            profile?.profileImageUrl !== null
+          }
           makeRound
+          sx={{
+            maxWidth: screenSize.isMobile ? 200 : 400,
+            maxHeight: screenSize.isMobile ? 150 : 300,
+            margin: 'auto',
+          }}
           onFileUpload={async (file) => {
-            const path = `user/${user.uid}/${file.name}`;
+            if (!editUser) return;
+
+            const path = `user/${editUser.uid}/${file.name}`;
             const url = await FirebaseStorageUtil.uploadFile(file, path);
-            const newProfile = { ...profile, profileImageUrl: url };
-            setProfile(newProfile as UserEntity);
+            setProfile((prev) =>
+              !prev
+                ? undefined
+                : {
+                    ...prev,
+                    profileImageUrl: url,
+                  }
+            );
+            setEditedProfile(true);
           }}
         />
-
-        {/* <Button variant="contained" color="primary" sx={{ my: DEFAULT_MARGIN }}>
-        Upload Photo
-      </Button> */}
-
         {/* First & Last Name - Ensuring Equal Width */}
         <Box
           display="flex"
@@ -156,18 +172,18 @@ export default function ProfilePage() {
           gap={DEFAULT_MARGIN}
         >
           <TextField
-            label={!profile.firstName ? 'First Name' : undefined}
+            label={!profile?.firstName ? 'First Name' : undefined}
             variant="outlined"
             sx={{ flex: 1 }}
-            value={profile?.firstName}
+            value={profile?.firstName || ''}
             onChange={(e) => handleChangeProfile('firstName', e.target.value)}
           />
 
           <TextField
-            label={!profile.lastName ? 'Last Name' : undefined}
+            label={!profile?.lastName ? 'Last Name' : undefined}
             variant="outlined"
             sx={{ flex: 1 }}
-            value={profile?.lastName}
+            value={profile?.lastName || ''}
             onChange={(e) => handleChangeProfile('lastName', e.target.value)}
           />
         </Box>
@@ -213,8 +229,7 @@ export default function ProfilePage() {
         {/* Phone Number Input */}
         <TextField
           label={!profile?.phone ? 'Phone Number' : undefined}
-          value={profile?.phone}
-          variant="outlined"
+          value={profile?.phone || ''}
           type="tel" // Triggers numeric keyboard on mobile
           inputProps={{ pattern: '[0-9]*' }}
           sx={{ width: '100%', my: DEFAULT_MARGIN }}
@@ -230,7 +245,7 @@ export default function ProfilePage() {
           <FormControl sx={{ flex: 1 }}>
             <InputLabel>Sport</InputLabel>
             <Select
-              value={profile?.sport}
+              value={profile?.sport || ''}
               label="Sport"
               onChange={(e) => handleChangeProfile('sport', e.target.value)}
             >
@@ -262,14 +277,6 @@ export default function ProfilePage() {
           </FormControl>
         </Box>
       </Box>
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ my: DEFAULT_MARGIN }}
-        onClick={handleSaveProfile}
-      >
-        Save Profile
-      </Button>
-    </Box>
+    </MyModal>
   );
 }
