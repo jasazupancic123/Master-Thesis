@@ -1,24 +1,20 @@
 import { GroupDateFilter } from '@/common/type/filter.type';
 import { Pagination } from '@/common/type/paginate.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Method } from '@/controller/method/type/method.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
 import { Group } from '@/controller/group/type/group.type';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import {
-  Superset,
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
+import { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
 import { User, UserEntity } from '@/controller/user/type/user.type';
 import { Dayjs } from 'dayjs';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 import { Institution } from '@/controller/institution/type/institution.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };

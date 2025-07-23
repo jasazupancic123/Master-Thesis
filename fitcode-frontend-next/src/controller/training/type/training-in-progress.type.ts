@@ -1,8 +1,9 @@
 import { Dayjs } from 'dayjs';
-import { Superset, TrainingComponent } from './training-plan.type';
+import { Superset } from './superset.type';
+import { TrainingComponent } from './training-component.type';
 import { Training } from './training.type';
 
-export type AthleteTrainingInProgress = {
+export type TrainingInProgress = {
   training: Training;
   selectedComponent: TrainingComponent;
   supersets: Superset[];

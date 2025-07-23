@@ -57,7 +57,6 @@ import { CopyTrainingDto } from '../dto/copy-training.dto';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
-import { FindAthleteGroupWorkloads } from '../dto/find-workload.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { BatchUpdateTrainingDto } from '../dto/update-training.dto';
 import { CompletedTrainingComponent } from '../entity/completed-training.entity';
@@ -68,7 +67,6 @@ import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { Workload } from '../entity/workload.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
-import { SetStatus } from '../enum/set-status.enum';
 import { TrainingRepository } from '../repository/training.repository';
 import { WorkloadRepository } from '../repository/workload.repository';
 import { PeriodizationService } from './periodization.service';
@@ -197,26 +195,18 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   @LogMethod()
-  async findAthleteGroupWorkloads(
+  async findAthleteWorkloads(
     user: User,
-    ref: GroupRef & UserRef,
-    input: FindAthleteGroupWorkloads,
+    ref: TrainingRef & UserRef,
   ): Promise<{ completedWorkloads: Workload[]; futureWorkloads: Workload[] }> {
-    const workloads = await this.workloadService.findAllByRef({
-      userId: ref.uid,
-      groupId: ref.groupId,
-      exerciseIds: input.exerciseIds,
-    });
+    const training = await this.findOneByIdOrFail(user, ref);
+    const athlete = await this.getAthlete(user, ref.uid, training.institution);
 
-    const completedWorkloads = workloads.filter(
-      (w) => w.status !== SetStatus.NOT_STARTED,
+    const workloads = await this.workloadService.getDocs(ref, (q) =>
+      q.where('userId', '==', athlete.uid),
     );
 
-    const futureWorkloads = workloads.filter(
-      (w) => w.status === SetStatus.NOT_STARTED,
-    );
-
-    return { completedWorkloads, futureWorkloads };
+    return { completedWorkloads: [], futureWorkloads: workloads };
   }
 
   @LogMethod()

@@ -1,9 +1,7 @@
 import { COLOR } from '@/common/constant/browser.constant';
-import {
-  Superset,
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import toast from 'react-hot-toast';
 import {
   NUM_MAX_EXERCISES_PER_SUPERSET,
@@ -20,7 +18,7 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Pagination } from '@/common/type/paginate.type';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 
 export function handleAddExerciseToSupersetComponent(
   input: {

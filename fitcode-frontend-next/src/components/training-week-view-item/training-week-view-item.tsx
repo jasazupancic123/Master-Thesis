@@ -67,11 +67,11 @@ export default function TrainingItem(props: TrainingWeekViewItemProps) {
       {isChanged && (
         <IconButton
           onClick={() => {
-            updateTraining(training, {
+            /* updateTraining(training, {
               from: training.from,
               to: training.to,
               components: updatedComponents,
-            });
+            }); */
 
             setIsChanged(false);
           }}

@@ -15,7 +15,7 @@ import { IdEntity } from '@src/common/entity/id.entity';
 import { TimestampEntity } from '@src/common/entity/timestamp.entity';
 
 import { SetStatus } from '../enum/set-status.enum';
-import { CompletedWorkload, PrescribedWorkload } from './workload-value.entity';
+import { WorkloadValue } from './workload-value.entity';
 
 export class WorkloadMeta extends IdEntity {
   @IsString()
@@ -96,6 +96,5 @@ export class WorkloadMeta extends IdEntity {
 export class Workload extends IntersectionType(
   TimestampEntity,
   WorkloadMeta,
-  PrescribedWorkload,
-  CompletedWorkload,
+  WorkloadValue,
 ) {}

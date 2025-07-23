@@ -3,10 +3,8 @@ import { Box, Grid2, IconButton } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
-import {
-  ExerciseSet,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import { useGroup } from '@/store/group-provider';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { TrainingService } from '@/controller/training/training.service';
@@ -18,18 +16,21 @@ import {
 } from '@/controller/component/enum/param.enum';
 import {
   getLAndRValues,
-  handleAthleteWorkloadsChange,
   updateTraining,
 } from '../training-exercise-card/state';
 import { SetState } from '@/common/type/state.type';
 import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
 import { useEffect, useState } from 'react';
 import { useSupersets } from '@/store/supersets-provider';
+import { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
+import { v4 } from 'uuid';
 
 interface TrainingExerciseCardCollapsedSetsProps {
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
+  supersetIndex: number;
   i: number | undefined;
 }
 
@@ -38,7 +39,8 @@ export default function TrainingExerciseCardCollapsedSets(
 ) {
   const screenSize = useScreenSize();
 
-  const { exercise, expandedSetsView, setExpandedSetsView, i } = props;
+  const { exercise, supersetIndex, expandedSetsView, setExpandedSetsView, i } =
+    props;
 
   const { setsNumbers, setSetsNumbers } = useSupersets();
 
@@ -391,23 +393,79 @@ export default function TrainingExerciseCardCollapsedSets(
 
                         // update only selected athletes workloads
                         if (selectedAthlete) {
-                          handleAthleteWorkloadsChange(
-                            {
-                              exercise,
-                              setNumber: 1,
-                              param,
-                              newValue: newValue as string,
-                              leftOrRight: lOrR as 'L' | 'R',
-                            },
-                            {
-                              training,
-                              selectedAthleteWorkloads,
-                              setCustomAthleteWorkloads,
-                              selectedAthlete,
-                              customAthleteWorkloads,
-                            },
-                            true
-                          );
+                          for (const set of exercise.sets) {
+                            const existingWorkload =
+                              selectedAthleteWorkloads.futureWorkloads.find(
+                                (w) =>
+                                  w.componentId === component.id &&
+                                  w.exerciseId === exercise.id &&
+                                  w.supersetIndex === supersetIndex &&
+                                  w.setNumber === set.setNumber &&
+                                  w.userId === selectedAthlete.uid
+                              );
+
+                            const newCustomWorkload =
+                              existingWorkload ||
+                              TrainingService.getPrescribedWorkload(set);
+
+                            const fieldName =
+                              TrainingService.getPerscribedFieldName(
+                                param,
+                                lOrR as 'L' | 'R'
+                              );
+
+                            // edit the field that was changed
+                            newCustomWorkload[fieldName] =
+                              +newValue as unknown as undefined;
+
+                            // add the new workload to the custom athlete workloads
+                            setCustomAthleteWorkloads((prev) => {
+                              const existingIndex = prev.findIndex(
+                                (w) =>
+                                  w.componentId === component.id &&
+                                  w.exerciseId === exercise.id &&
+                                  w.supersetIndex === supersetIndex &&
+                                  w.setNumber === set.setNumber &&
+                                  w.userId === selectedAthlete.uid
+                              );
+
+                              if (existingIndex !== -1) {
+                                const newWorkloads = [...prev];
+                                newWorkloads[existingIndex] = {
+                                  ...newWorkloads[existingIndex],
+                                  [fieldName]:
+                                    +newValue as unknown as undefined,
+                                };
+
+                                return newWorkloads;
+                              }
+
+                              // if not found, add a new workload
+                              return [
+                                ...prev,
+                                {
+                                  ...newCustomWorkload,
+                                  id: v4(),
+                                  componentId: component.id,
+                                  exerciseId: exercise.id,
+                                  supersetIndex: supersetIndex,
+                                  setNumber: set.setNumber,
+                                  userId: selectedAthlete.uid,
+                                  institutionId: undefined,
+                                  groupId: undefined,
+                                  cycleId: undefined,
+                                  trainingId: training.id,
+                                  status: SetStatus.NOT_STARTED,
+                                  notes: '',
+                                  createdAt: new Date(),
+                                  updatedAt: new Date(),
+                                  plannedAt: component.from,
+                                  deletedAt: undefined,
+                                },
+                              ];
+                            });
+                          }
+
                           return;
                         }
 

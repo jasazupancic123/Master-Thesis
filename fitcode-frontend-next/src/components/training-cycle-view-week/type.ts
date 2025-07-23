@@ -3,9 +3,9 @@ import { Component } from '@/controller/component/type/component.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Dayjs } from 'dayjs';
 import { AddTrainingComponents } from '../trainer-cycle-view/type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Target } from '@/controller/target/type/target.type';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 import { Day } from '@/common/service/util/date.util';
 
 export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {

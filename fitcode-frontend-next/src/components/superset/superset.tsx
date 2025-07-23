@@ -5,7 +5,7 @@ import BorderColor from '@/components/border-color/border-color';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Superset as SupersetClass } from '@/controller/training/type/training-plan.type';
+import { Superset as SupersetClass } from '@/controller/training/type/superset.type';
 import { Box, Grid2, Stack, Typography } from '@mui/material';
 import { Droppable } from 'react-beautiful-dnd';
 import { handleDeleteSuperset } from '../trainer-day-view/state';

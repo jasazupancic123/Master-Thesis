@@ -14,11 +14,11 @@ import dayjs, { Dayjs } from 'dayjs';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
 import { AddTrainingComponents } from './type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Method } from '@/controller/method/type/method.type';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 
 export async function handleCreateTraining(
   input: {

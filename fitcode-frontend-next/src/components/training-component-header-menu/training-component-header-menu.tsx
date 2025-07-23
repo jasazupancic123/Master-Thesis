@@ -21,7 +21,7 @@ import { TrainingService } from '@/controller/training/training.service';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { isBefore } from 'date-fns';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useMain } from '@/store/main-provider';
 
 interface TrainingComponentExpandedProps {

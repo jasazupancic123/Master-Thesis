@@ -577,7 +577,7 @@ export class TrainingPlanService {
           );
 
           tExercise.params = this.componentService.getParamAttributes(params);
-          tExercise.sets = this.getSetData(tExercise.params);
+          tExercise.sets = this.getSets(tExercise.params, tExercise.sets);
         }
 
       for (const subgroup of tComponent.subgroups)
@@ -593,7 +593,7 @@ export class TrainingPlanService {
             );
 
             tExercise.params = this.componentService.getParamAttributes(params);
-            tExercise.sets = this.getSetData(tExercise.params);
+            tExercise.sets = this.getSets(tExercise.params, tExercise.sets);
           }
     }
   }
@@ -662,10 +662,7 @@ export class TrainingPlanService {
       }
   }
 
-  getSetData(
-    params: Attribute[],
-    paramValues?: AttributeValue[],
-  ): ExerciseSet[] {
+  getSets(params: Attribute[], existingSets?: ExerciseSet[]): ExerciseSet[] {
     const sets = +(
       params
         .find((p) => p.field === ParamType.VolWorkSets)
@@ -675,16 +672,38 @@ export class TrainingPlanService {
 
     params = params.filter((p) => p.field !== ParamType.VolWorkSets);
 
-    const paramValuesLR = this.attributeService.getParamValues(
-      params,
-      paramValues,
-    );
+    if (!existingSets || !existingSets.length) {
+      // generate sets with default values
+      const generatedParamValues = this.attributeService.getParamValues(params);
 
-    return Array.from({ length: sets }).map((_, i) => ({
-      setNumber: i + 1,
-      paramValuesL: paramValuesLR,
-      paramValuesR: paramValuesLR,
-    }));
+      return Array.from({ length: sets }).map((_, i) => ({
+        setNumber: i + 1,
+        paramValuesL: generatedParamValues,
+        paramValuesR: generatedParamValues,
+      }));
+    }
+
+    // validate existing sets
+    const validSets: ExerciseSet[] = [];
+    for (const existingSet of existingSets) {
+      const validParamValuesL = this.attributeService.validate(
+        existingSet.paramValuesL,
+        params,
+      );
+
+      const validParamValuesR = this.attributeService.validate(
+        existingSet.paramValuesR,
+        params,
+      );
+
+      validSets.push({
+        ...existingSet,
+        paramValuesL: validParamValuesL,
+        paramValuesR: validParamValuesR,
+      });
+    }
+
+    return validSets;
   }
 
   createWarmupAndCooldown(

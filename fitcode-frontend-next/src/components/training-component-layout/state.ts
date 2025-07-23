@@ -1,10 +1,8 @@
 import toast from 'react-hot-toast';
 import { handleApiRequest, SetState } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import {
-  TrainingComponent,
-  TrainingComponentInfo,
-} from '@/controller/training/type/training-plan.type';
+import { TrainingComponentInfo } from '@/controller/training/type/training-component.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { TrainingService } from '@/controller/training/training.service';
 import { Training } from '@/controller/training/type/training.type';
 import { addMinutes } from 'date-fns';
@@ -14,7 +12,7 @@ import { Component } from '@/controller/component/type/component.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Day } from '@/common/service/util/date.util';
 import dayjs from 'dayjs';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 import { CopiedFrom } from '@/controller/training/type/copied-from.type';
 
 export async function handleCopyComponentApiRequest(

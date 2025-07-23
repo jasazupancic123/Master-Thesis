@@ -22,13 +22,9 @@ import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
 import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
-import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { TrainingInfoDto } from './dto/training-info.dto';
-import {
-  BatchUpdateTrainingsDto,
-  UpdateTrainingDto,
-} from './dto/update-training.dto';
+import { UpdateTrainingDto } from './dto/update-training.dto';
 import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { TrainingService } from './service/training.service';
 
@@ -74,7 +70,7 @@ export class TrainingController {
     );
   }
 
-  @Get(':trainingId/athlete/:athleteId')
+  @Get(':trainingId/athlete/:athleteId/prescribed')
   @Auth()
   async getPrescribedTraining(
     @RequestUser() user: User,
@@ -85,19 +81,17 @@ export class TrainingController {
     return await this.trainingService.getPrescribedTraining(user, ref);
   }
 
-  @Post('group/:groupId/athlete/:athleteId/workloads')
+  @Get(':trainingId/athlete/:athleteId/workloads')
   @Auth()
-  async findAthleteGroupWorkloads(
+  async findAthleteWorkloads(
     @RequestUser() user: User,
-    @Param('groupId') groupId: string,
+    @Param('trainingId') trainingId: string,
     @Param('athleteId') athleteId: string,
-    @Body() body: FindAthleteGroupWorkloads,
   ) {
-    return await this.trainingService.findAthleteGroupWorkloads(
-      user,
-      { groupId, uid: athleteId },
-      body,
-    );
+    return await this.trainingService.findAthleteWorkloads(user, {
+      trainingId,
+      uid: athleteId,
+    });
   }
 
   @Post()
@@ -138,18 +132,6 @@ export class TrainingController {
   ) {
     const ref = { trainingId };
     return await this.trainingService.update(user, ref, body);
-  }
-
-  @Patch('batch/group/:groupId/cycle/:cycleId')
-  @Auth()
-  async batchUpdate(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Body() { trainings }: BatchUpdateTrainingsDto,
-  ) {
-    const ref = { groupId, cycleId };
-    return await this.trainingService.batchUpdate(user, ref, trainings);
   }
 
   @Post(':trainingId/copy')

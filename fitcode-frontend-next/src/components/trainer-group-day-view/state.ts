@@ -7,11 +7,9 @@ import { Method } from '@/controller/method/type/method.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
-import {
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Workload } from '@/controller/training/type/workload.type';
 import { User } from '@/controller/user/type/user.type';
@@ -57,13 +55,11 @@ export async function handleUpdateMultipleTrainings(state: {
   await handleApiRequest(
     router,
     () =>
-      TrainingController.batchUpdate(
-        { groupId: group.id, cycleId: cycle!.id },
-        [{ ...training, workloads: customAthleteWorkloads }]
-      ),
-    (newTrainings) => {
-      const newTraining = newTrainings[0];
-
+      TrainingController.update(training.id, {
+        ...training,
+        workloads: customAthleteWorkloads,
+      }),
+    (newTraining) => {
       const mapped = TrainingService.mapComponentsExercisesMethods(
         newTraining,
         components,

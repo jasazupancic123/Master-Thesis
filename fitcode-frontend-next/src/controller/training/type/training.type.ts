@@ -1,10 +1,13 @@
 import { DateRange } from '@/common/type/date-range.type';
-import { BaseEntity, TimestampEntity } from '@/common/type/entity.type';
+import { BaseEntity } from '@/common/type/entity.type';
 import { Wellness } from '@/controller/user/type/wellness.type';
 import { User } from '@/controller/user/type/user.type';
-import { SetStatus } from '../enum/set-status.enum';
-import { TrainingComponent } from './training-plan.type';
-import { GroupWorkloadStats } from './average-workload-values.type';
+import {
+  TrainingComponent,
+  TrainingComponentInfo,
+} from './training-component.type';
+import { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
+import { Institution } from '@/controller/institution/type/institution.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
@@ -18,17 +21,24 @@ export type Training = BaseEntity &
     warmup: TrainingComponent;
     cooldown: TrainingComponent;
     components: TrainingComponent[];
-    stats: GroupWorkloadStats[];
-    futureStats: GroupWorkloadStats[];
+    stats: TrainingExerciseAverageStats[];
+    futureStats: TrainingExerciseAverageStats[];
     wellness: Wellness[];
 
     // mapped properties
     members?: User[];
+    institution?: Institution;
   };
 
-export type TrainingStatus = TimestampEntity & {
-  userId: string;
-  trainingId: string;
-  componentId: string;
-  status: SetStatus;
-};
+export type TrainingInfo = BaseEntity &
+  Required<DateRange> & {
+    institutionId?: string;
+    groupId?: string;
+    cycleId?: string;
+    copiedFromId?: string;
+    warmup: TrainingComponentInfo;
+    cooldown: TrainingComponentInfo;
+    components: TrainingComponentInfo[];
+    stats: TrainingExerciseAverageStats[];
+    futureStats: TrainingExerciseAverageStats[];
+  };

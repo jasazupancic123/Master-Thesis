@@ -101,7 +101,7 @@ describe('Get prescribed training (e2e)', () => {
   });
 
   function url(trainingId: string) {
-    return `/training/${trainingId}/athlete/${global.athlete.uid}`;
+    return `/training/${trainingId}/athlete/${global.athlete.uid}/prescribed`;
   }
 
   it('should get prescribed training for athlete for main group', async () => {
