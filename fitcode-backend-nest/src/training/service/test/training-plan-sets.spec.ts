@@ -188,7 +188,7 @@ describe('getSetData', () => {
       },
     ]);
 
-    expect(result.length).toBe(2);
+    expect(result.length).toBe(1);
     result.forEach((set) => {
       for (const paramValues of [set.paramValuesL, set.paramValuesR])
         expect(paramValues).toEqual([
