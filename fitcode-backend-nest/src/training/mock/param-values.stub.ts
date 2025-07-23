@@ -37,7 +37,6 @@ export function generateParamAttributeValuesFromComponentParams(
       );
 
     const option = param.options?.find((o) => o.field === selected);
-    const suboption = parseDefaultValueOrFirstOption<string>(option);
 
     if (random)
       return generateParamAttributeValue({
@@ -48,7 +47,7 @@ export function generateParamAttributeValuesFromComponentParams(
     // edge case for effort and tempo for intensity params: IntWork1 -> Effort -> 0
     return {
       field: param.field, // for example: VolWorkSets, IntWork1
-      selected: `${option.field}${suboption ? `:${suboption}` : ''}`,
+      selected: option.field, // for example: Set, Kg
       value: parseDefaultValueOrFirstOption<string>(option) || '',
     };
   });

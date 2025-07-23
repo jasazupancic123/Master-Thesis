@@ -221,7 +221,7 @@ describe('Update Training (e2e)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        'You cannot add or update trainings in the past',
+        'Training falls outside of the selected cycle',
       );
     });
 
