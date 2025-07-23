@@ -119,7 +119,6 @@ export function generateTrainingExercise(
     params: data?.params || [],
     sets: data?.sets || [],
     attributes: data?.attributes || [],
-    periodized: data?.periodized || false,
   };
 }
 

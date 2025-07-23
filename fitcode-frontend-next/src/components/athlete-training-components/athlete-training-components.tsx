@@ -1,11 +1,9 @@
 import { COLOR } from '@/common/constant/browser.constant';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import {
-  Superset,
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { CheckCircle } from '@mui/icons-material';
 import SportsIcon from '@mui/icons-material/Sports';
 import { Box, IconButton, Tooltip } from '@mui/material';
@@ -14,7 +12,7 @@ import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
 import BorderColor from '../border-color/border-color';
 import { useTheme } from '@mui/material';
-import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { SetState } from '@/common/type/state.type';
 import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
@@ -197,7 +195,7 @@ export default function AthleteTrainingComponents(
               training: training,
               selectedComponent: c,
               userId: profile.uid,
-            } as AthleteTrainingInProgress);
+            } as TrainingInProgress);
           } else {
             setTrainingInProgress(
               (prev) =>
@@ -206,7 +204,7 @@ export default function AthleteTrainingComponents(
                   training: training,
                   selectedComponent: c,
                   userId: profile.uid,
-                }) as AthleteTrainingInProgress
+                }) as TrainingInProgress
             );
           }
         }}

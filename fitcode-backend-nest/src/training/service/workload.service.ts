@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CollectionGroup } from 'firebase-admin/firestore';
+import { CollectionGroup, Query } from 'firebase-admin/firestore';
 
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
@@ -12,6 +12,7 @@ import {
   GroupRef,
   InstitutionRef,
   TrainingComponentRef,
+  TrainingRef,
   UserRef,
   WorkloadRef,
 } from '@src/common/type/firestore.type';
@@ -47,6 +48,16 @@ export class WorkloadService {
 
   getDoc(id: WorkloadRef) {
     return this.repository.doc(id);
+  }
+
+  async getDocs(
+    ref: TrainingRef,
+    query: (ref: Query) => Query = (ref) => ref,
+  ): Promise<Workload[]> {
+    const snapshot = await query(this.repository.collection(ref)).get();
+    return snapshot.docs.map((doc) =>
+      this.firebaseService.serialize(doc.data() as FirestoreEntity<Workload>),
+    );
   }
 
   collection(trainingId: string) {
@@ -333,7 +344,7 @@ export class WorkloadService {
     customWorkloads: CreatePrescribedWorkloadDto[],
     trainingComponents: TrainingComponent[],
   ): Promise<Create<Workload>[]> {
-    if (!customWorkloads || !customWorkloads.length) return;
+    if (!customWorkloads || !customWorkloads.length) return [];
 
     const allExercises = await this.exerciseService.getAll();
 

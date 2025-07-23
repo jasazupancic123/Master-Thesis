@@ -1,7 +1,7 @@
 'use client';
 
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useEffect, useState } from 'react';
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
 import { useGroup } from '@/store/group-provider';
@@ -61,7 +61,7 @@ export default function TrainingExerciseCardContainer(
       });
     } else {
       component?.supersets?.forEach((superset) => {
-        superset.exercises.forEach((exercise) => {
+        superset.exercises?.forEach((exercise) => {
           const setsNumber = exercise.sets.length;
           newSetsNumbers.push({
             exerciseId: exercise.id,

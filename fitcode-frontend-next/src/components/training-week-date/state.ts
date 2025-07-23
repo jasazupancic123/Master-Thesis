@@ -15,14 +15,14 @@ import { COLORS } from '@/common/constant/color.constant';
 import { handleCopyComponentApiRequest } from '../training-component-layout/state';
 import { Group } from '@/controller/group/type/group.type';
 import { Cycle } from '@/controller/group/type/cycle.type';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Method } from '@/controller/method/type/method.type';
 import { Target } from '@/controller/target/type/target.type';
 import { Component } from '@/controller/component/type/component.type';
 import { Day } from '@/common/service/util/date.util';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 
 export async function handleClickDateCell(
   input: {

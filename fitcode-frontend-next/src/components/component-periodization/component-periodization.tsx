@@ -1,8 +1,6 @@
 import { useGroup } from '@/store/group-provider';
-import {
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { Fragment, useEffect, useState } from 'react';
@@ -16,7 +14,7 @@ import toast from 'react-hot-toast';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { Target } from '@/controller/target/type/target.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 
 interface ComponentPeriodizationProps {
   selectedComponent: TrainingComponent;

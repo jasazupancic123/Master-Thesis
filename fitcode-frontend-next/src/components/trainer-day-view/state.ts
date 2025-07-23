@@ -10,10 +10,8 @@ import { Cycle } from '@/controller/group/type/cycle.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
 import { Subgroup } from '@/controller/training/type/subgroup.type';
-import {
-  Superset,
-  TrainingComponent,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Training } from '@/controller/training/type/training.type';
 import { User } from '@/controller/user/type/user.type';
 import dayjs, { Dayjs } from 'dayjs';
@@ -29,13 +27,13 @@ import {
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
 import { Workload } from '@/controller/training/type/workload.type';
-import { GroupWorkloadStats } from '@/controller/training/type/average-workload-values.type';
+import { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
 import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
 import { isBefore } from 'date-fns';
 import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
 import { Method } from '@/controller/method/type/method.type';
 import { Day } from '@/common/service/util/date.util';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 import { totalmem } from 'os';
 
 export async function handleCopyTraining(
@@ -311,7 +309,7 @@ export async function handleAddSubgroup(state: {
 
   if (!training || !component) return;
 
-  const stats: GroupWorkloadStats[] = [];
+  const stats: TrainingExerciseAverageStats[] = [];
   for (const superset of component.supersets) {
     for (const exercise of superset.exercises) {
       const intensityVolumeValue = TrainingService.getIntensityVolumeValues(
@@ -381,13 +379,8 @@ export function handleDeleteSubgroup(
   }
 ) {
   const { subgroupId } = input;
-  const {
-    training,
-    setTraining,
-    component,
-    setComponent,
-    setDetectedChanges,
-  } = state;
+  const { training, setTraining, component, setComponent, setDetectedChanges } =
+    state;
   if (!training || !component) return;
 
   setDetectedChanges(true);
@@ -1096,7 +1089,8 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
       const validIntensityValues = workloads
         .map((w) =>
           groupedWorkload === groupedCompletedWorkloads
-            ? w.intWork1Value
+            ? // ? w.intWork1Value
+              0
             : w.prescribedIntWork1ValueL
         )
         .filter((v) => v !== undefined)
@@ -1105,7 +1099,8 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
       const validVolumeValues = workloads
         .map((w) =>
           groupedWorkload === groupedCompletedWorkloads
-            ? w.volWork1Value
+            ? // ? w.volWork1Value
+              0
             : w.prescribedVolWork1ValueL
         )
         .filter((v) => v !== undefined)

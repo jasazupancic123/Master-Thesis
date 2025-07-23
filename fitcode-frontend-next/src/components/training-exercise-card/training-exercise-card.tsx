@@ -10,7 +10,7 @@ import { updateTraining } from './state';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import { useTheme } from '@mui/material';
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useSupersets } from '@/store/supersets-provider';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
@@ -259,6 +259,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
+            supersetIndex={supersetIndex}
             i={i}
           />
         ) : (

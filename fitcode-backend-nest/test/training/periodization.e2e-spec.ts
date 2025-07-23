@@ -94,7 +94,6 @@ describe('Periodization functions (e2e)', () => {
               exercises: [
                 generateTrainingExercise({
                   id: exercises[0].id,
-                  periodized: false,
                   sets: [
                     generateExerciseSet(1),
                     generateExerciseSet(2),
@@ -103,7 +102,6 @@ describe('Periodization functions (e2e)', () => {
                 }),
                 generateTrainingExercise({
                   id: exercises[1].id,
-                  periodized: false,
                   sets: [
                     generateExerciseSet(1),
                     generateExerciseSet(2),
@@ -112,7 +110,6 @@ describe('Periodization functions (e2e)', () => {
                 }),
                 generateTrainingExercise({
                   id: exercises[2].id,
-                  periodized: false,
                   sets: [
                     generateExerciseSet(1),
                     generateExerciseSet(2),
@@ -134,7 +131,6 @@ describe('Periodization functions (e2e)', () => {
                         exercises: [
                           generateTrainingExercise({
                             id: exercises[0].id,
-                            periodized: false,
                             sets: [
                               generateExerciseSet(1),
                               generateExerciseSet(2),
@@ -143,7 +139,6 @@ describe('Periodization functions (e2e)', () => {
                           }),
                           generateTrainingExercise({
                             id: exercises[1].id,
-                            periodized: false,
                             sets: [
                               generateExerciseSet(1),
                               generateExerciseSet(2),
@@ -152,7 +147,6 @@ describe('Periodization functions (e2e)', () => {
                           }),
                           generateTrainingExercise({
                             id: exercises[2].id,
-                            periodized: false,
                             sets: [
                               generateExerciseSet(1),
                               generateExerciseSet(2),

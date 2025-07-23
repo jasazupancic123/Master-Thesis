@@ -8,7 +8,7 @@ import { TrainingCycleViewWeekProps } from '../training-cycle-view-week/type';
 import MyModal from '../modal/modal';
 import { useTheme } from '@mui/material';
 import TrainingWeekDates from '../training-week-date/training-week-date';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 import { useMain } from '@/store/main-provider';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {

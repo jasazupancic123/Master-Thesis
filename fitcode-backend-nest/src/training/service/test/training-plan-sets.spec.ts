@@ -105,7 +105,7 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(3);
     expect(result[0].setNumber).toBe(1);
@@ -135,7 +135,7 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(1);
     expect(result[0].setNumber).toBe(1);
@@ -180,7 +180,7 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSetData(params, paramValues);
+    const result = service.getSets(params, paramValues);
 
     expect(result.length).toBe(2);
     result.forEach((set) => {
@@ -214,7 +214,7 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(1);
 
@@ -251,7 +251,7 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const result = service.getSets(params);
 
     for (const paramValues of [
       result[0].paramValuesL,
@@ -268,7 +268,7 @@ describe('getSetData', () => {
   });
 
   it('should handle empty params array', () => {
-    const result = service.getSetData([]);
+    const result = service.getSets([]);
     expect(result.length).toBe(1); // Default 1 set
     expect(result[0].paramValuesL).toEqual([]); // No params to include
     expect(result[0].paramValuesR).toEqual([]); // No params to include
@@ -283,7 +283,7 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSetData(params);
+    const result = service.getSets(params);
 
     expect(result.length).toBe(1);
     for (const paramValues of [result[0].paramValuesL, result[0].paramValuesR])
