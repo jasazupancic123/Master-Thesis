@@ -8,7 +8,6 @@ import {
   ExerciseOrTraining,
   ExerciseTrainingView,
 } from '@/common/type/exercise-or-training.type';
-import { User } from '@/controller/user/type/user.type';
 import { Training } from '@/controller/training/type/training.type';
 import { ChildrenProps } from '@/common/type/props.type';
 

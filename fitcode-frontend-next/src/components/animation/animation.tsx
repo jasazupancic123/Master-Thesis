@@ -2,6 +2,7 @@ import { Box, LinearProgress } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { useScreenSize } from '@/store/screen-size-provider';
 import Image from 'next/image';
+import Logo from '../logo/logo';
 
 interface AnimationProps {
   text: string;
@@ -47,7 +48,8 @@ export default function Animation(props: AnimationProps) {
         zIndex: 100000,
       }}
     >
-      <video
+      <Logo version="narrow" height={100} width={150} />
+      {/* <video
         style={{
           backgroundColor: 'transparent',
           mixBlendMode: 'normal',
@@ -58,7 +60,7 @@ export default function Animation(props: AnimationProps) {
         muted
         width={screenSize.isMobile ? '100%' : '33%'}
         src="/fitcode_animation.mp4"
-      />
+      /> */}
       <div className="flex flex-col items-center justify-center h-screen bg-gray-800">
         <p className="text-gray-300 text-lg font-bold tracking-wider uppercase mb-2">
           {props.text}

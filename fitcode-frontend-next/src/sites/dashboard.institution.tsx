@@ -23,6 +23,7 @@ import { useMain } from '@/store/main-provider';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { updateUserProfile } from '@/components/dashboard-groups-members/state';
 import FileUpload from '@/components/file-upload/file-upload';
+import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 
 export default function DashboardInstitutionPage() {
   const {
@@ -43,7 +44,7 @@ export default function DashboardInstitutionPage() {
   const [currentUsers, setCurrentUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
-  const [openModal, setOpenModal] = useState({
+  const [modal, setModal] = useState({
     add_member: false,
     add_trainer: false,
     add_group: false,
@@ -288,8 +289,8 @@ export default function DashboardInstitutionPage() {
                 transform: 'translateY(-50%)',
               }}
               onClick={() =>
-                setOpenModal({
-                  ...openModal,
+                setModal({
+                  ...modal,
                   add_member: true,
                 })
               }
@@ -374,7 +375,7 @@ export default function DashboardInstitutionPage() {
                     }}
                     onClick={() => {
                       setEditUser(user);
-                      setOpenModal((prev) => ({ ...prev, edit_athlete: true }));
+                      setModal((prev) => ({ ...prev, edit_athlete: true }));
                     }}
                   />
                   <Typography
@@ -402,10 +403,10 @@ export default function DashboardInstitutionPage() {
         </Box>
       </Box>
       <MyModal
-        isOpen={openModal.add_member}
-        setIsOpen={(open) => setOpenModal({ ...openModal, add_member: open })}
+        isOpen={modal.add_member}
+        setIsOpen={(open) => setModal({ ...modal, add_member: open })}
         onConfirm={undefined}
-        onCancel={() => setOpenModal({ ...openModal, add_member: false })}
+        onCancel={() => setModal({ ...modal, add_member: false })}
         cancelText="Close"
       >
         <RegisterUsersDashboard
@@ -416,48 +417,12 @@ export default function DashboardInstitutionPage() {
           }
         />
       </MyModal>
-      <MyModal
-        isOpen={openModal.edit_athlete}
-        setIsOpen={(open) =>
-          setOpenModal((prev) => ({ ...prev, edit_athlete: open }))
-        }
-        onCancel={() => {
-          setOpenModal((prev) => ({ ...prev, edit_athlete: false }));
-          setEditUserImageUrl(null);
-          setEditUser(null);
-        }}
-        onConfirm={() =>
-          updateUserProfile({
-            editUser,
-            editUserImageUrl,
-            router,
-            selectedInstitution,
-            setModal: setOpenModal,
-            setEditUserImageUrl,
-            setEditUser,
-            refetchMembers,
-          })
-        }
-        cancelText="Close"
-      >
-        <FileUpload
-          input="image"
-          label="Image"
-          initialFileUrl={editUserImageUrl || undefined}
-          sx={{
-            maxWidth: screenSize.isMobile ? 200 : 400,
-            maxHeight: screenSize.isMobile ? 150 : 300,
-            margin: 'auto',
-          }}
-          onFileUpload={async (file) => {
-            if (!editUser) return;
-
-            const path = `user/${editUser.uid}/${file.name}`;
-            const url = await FirebaseStorageUtil.uploadFile(file, path);
-            setEditUserImageUrl(url);
-          }}
-        />
-      </MyModal>
+      <DashboardEditAthleteModal
+        isOpen={modal.edit_athlete}
+        setModal={setModal}
+        editUser={editUser}
+        setEditUser={setEditUser}
+      />
     </Box>
   );
 }
