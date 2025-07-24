@@ -146,7 +146,7 @@ describe('Complete training component (e2e)', () => {
 
   afterAll(async () => {
     await Promise.all([
-      db.trainings.deleteCollection(),
+      db.trainings.delete(),
       deleteCollection(firebase, 'EXERCISE'),
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
@@ -158,9 +158,9 @@ describe('Complete training component (e2e)', () => {
   });
 
   async function createTraining(): Promise<Training> {
-    await db.trainings.deleteCollection();
+    if (training) await db.trainings.delete(training.id);
 
-    const training = await trainingService.create(
+    const newTraining = await trainingService.create(
       global.trainer,
       generateTrainingStub({
         groupId: group.id,
@@ -176,7 +176,7 @@ describe('Complete training component (e2e)', () => {
 
     return await trainingService.update(
       global.trainer,
-      { trainingId: training.id },
+      { trainingId: newTraining.id },
       {
         components: [
           generateTrainingComponent({
@@ -642,8 +642,6 @@ describe('Complete training component (e2e)', () => {
 
     const workloads = await db.workloads.getAll(training.id);
     expect(workloads).toHaveLength(24); // 12 * 2 athletes
-
-    await db.workloads.deleteAll(training.id);
   });
 
   it('should update stats correctly if multiple components are completed', async () => {

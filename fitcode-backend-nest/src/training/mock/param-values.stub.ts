@@ -2,7 +2,7 @@ import type { AttributeValue } from '@src/attribute/entity/attribute-value.entit
 import { generateRandomNumber } from '@src/common/utils/random.util';
 import { PARAMS } from '@src/component/constant/param.constant';
 import type { ComponentParam } from '@src/component/entity/component-param.entity';
-import type { ParamType } from '@src/component/enum/param.enum';
+import { ParamType } from '@src/component/enum/param.enum';
 import {
   IntType,
   VolType,
@@ -29,28 +29,30 @@ export function generateParamAttributeValuesFromComponentParams(
   componentParams: ComponentParam[],
   random = false,
 ): AttributeValue[] {
-  return componentParams.map((componentParam) => {
-    const param = PARAMS.find((p) => p.field === componentParam.field); // root param, for example: VolWorkSets, IntWork1
-    const selected = // root param is always of select type, for example: VolWorkSets -> Set, IntWork1 -> Kg
-      parseDefaultValueOrFirstOption<ParamToSelectedMap[ParamType]>(
-        componentParam,
-      );
+  return componentParams
+    .filter((p) => p.field !== ParamType.VolWorkSets) // special case, skip it
+    .map((componentParam) => {
+      const param = PARAMS.find((p) => p.field === componentParam.field); // root param, for example: VolWorkSets, IntWork1
+      const selected = // root param is always of select type, for example: VolWorkSets -> Set, IntWork1 -> Kg
+        parseDefaultValueOrFirstOption<ParamToSelectedMap[ParamType]>(
+          componentParam,
+        );
 
-    const option = param.options?.find((o) => o.field === selected);
+      const option = param.options?.find((o) => o.field === selected);
 
-    if (random)
-      return generateParamAttributeValue({
-        field: param.field as ParamType,
-        selected: option.field as ParamToSelectedMap[ParamType],
-      });
+      if (random)
+        return generateParamAttributeValue({
+          field: param.field as ParamType,
+          selected: option.field as ParamToSelectedMap[ParamType],
+        });
 
-    // edge case for effort and tempo for intensity params: IntWork1 -> Effort -> 0
-    return {
-      field: param.field, // for example: VolWorkSets, IntWork1
-      selected: option.field, // for example: Set, Kg
-      value: parseDefaultValueOrFirstOption<string>(option) || '',
-    };
-  });
+      // edge case for effort and tempo for intensity params: IntWork1 -> Effort -> 0
+      return {
+        field: param.field, // for example: VolWorkSets, IntWork1
+        selected: option.field, // for example: Set, Kg
+        value: parseDefaultValueOrFirstOption<string>(option) || '',
+      };
+    });
 }
 
 export function generateParamAttributeValue({
