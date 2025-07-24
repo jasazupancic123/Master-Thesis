@@ -126,7 +126,11 @@ export class TrainingService implements Permission<Training, Institution> {
     return training;
   }
 
-  async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
+  async findAll(
+    user: User,
+    filter?: Filter<Training>,
+    options?: { limit?: number },
+  ): Promise<Training[]> {
     return await this.trainingRepository.getDocs((q) => {
       // filter by roles
       if (
@@ -148,40 +152,10 @@ export class TrainingService implements Permission<Training, Institution> {
         q = q.where('to', '<=', Timestamp.fromDate(new Date(filter.to)));
 
       q = q.orderBy('from', 'asc');
+      if (options?.limit) q = q.limit(options.limit);
       return q;
     });
   }
-
-  /* @LogMethod()
-  async findByDayAndPeriod(
-    user: User,
-    ref: GroupRef,
-    input: FindByDayAndPeriodDto,
-  ): Promise<{ training: Training | null }> {
-    const { groupId } = ref;
-    const { day, period } = input;
-    const startOfDayDate = startOfDay(day);
-    const endOfDayDate = endOfDay(day);
-
-    // validate group
-    await this.groupService.findOneByIdOrFail(user, ref);
-
-    // find trainings
-    const trainings = await this.trainingRepository.getDocs((q) => {
-      q = q.where('groupId', '==', groupId);
-      q = q.where('from', '>=', startOfDayDate);
-      q = q.where('to', '<=', endOfDayDate);
-      if (period === 'AM')
-        q = q.where('from', '<', addHours(startOfDayDate, 12));
-      else if (period === 'PM')
-        q = q.where('from', '>=', addHours(startOfDayDate, 12));
-      return q;
-    });
-
-    const training = trainings && trainings.length ? trainings[0] : null;
-
-    return { training };
-  } */
 
   @LogMethod()
   async findAthleteWorkloads(
@@ -306,6 +280,7 @@ export class TrainingService implements Permission<Training, Institution> {
     };
   }
 
+  @LogMethod()
   async periodize(user: User, input: PeriodizeTrainingsDto) {
     const {
       baseTrainingId,
@@ -314,10 +289,6 @@ export class TrainingService implements Permission<Training, Institution> {
       exerciseIds,
       subgroupId,
     } = input;
-
-    this.logger.log(
-      `User ${user.uid} is periodizing trainings: ${JSON.stringify(input)}`,
-    );
 
     this.trainingPlanService.checkPeriodizationType(periodizationType);
     if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(componentId))
@@ -342,13 +313,14 @@ export class TrainingService implements Permission<Training, Institution> {
     const mainTarget = baseComponent.target;
     if (baseSubgroup) baseSubgroup.periodizationType = periodizationType;
 
-    const possibleTrainings = await this.trainingRepository.getDocs((q) =>
-      q
-        .where('groupId', '==', baseTraining.groupId)
-        .where('cycleId', '==', baseTraining.cycleId)
-        .where('from', '>', baseTraining.from)
-        .orderBy('from', 'asc')
-        .limit(50),
+    const possibleTrainings = await this.findAll(
+      user,
+      {
+        groupId: baseTraining.groupId,
+        cycleId: baseTraining.cycleId,
+        from: baseTraining.to, // start from next training
+      },
+      { limit: 50 },
     );
 
     // target can be null/undefined, then just get the trainings without a target
