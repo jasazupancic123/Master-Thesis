@@ -25,21 +25,6 @@ export class TrainingController {
     });
   }
 
-  static async findByDay(day: Date, groupId: string) {
-    return api.post<Training[]>(`/training/${groupId}/day`, { day });
-  }
-
-  static async findByDayAndPeriod(
-    day: Date,
-    period: 'AM' | 'PM',
-    groupId: string
-  ) {
-    return api.post<{ training: Training | null }>(
-      `/training/${groupId}/day-period`,
-      { day, period }
-    );
-  }
-
   static async getPrescribedTraining(
     trainingId: string,
     userId: string

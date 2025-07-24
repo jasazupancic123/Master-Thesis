@@ -9,7 +9,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import {
-  addHours,
   addMinutes,
   endOfDay,
   isBefore,
@@ -29,7 +28,6 @@ import {
   BatchWriteOperation,
   ComponentRef,
   CycleRef,
-  GroupRef,
   TrainingComponentRef,
   TrainingRef,
   UserRef,
@@ -56,7 +54,6 @@ import { CopyComponentDto } from '../dto/copy-component.dto';
 import { CopyTrainingDto } from '../dto/copy-training.dto';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
-import { FindByDayAndPeriodDto } from '../dto/find-by-day-period-dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
 import { BatchUpdateTrainingDto } from '../dto/update-training.dto';
 import { CompletedTrainingComponent } from '../entity/completed-training.entity';
@@ -130,14 +127,7 @@ export class TrainingService implements Permission<Training, Institution> {
   }
 
   async findAll(user: User, filter?: Filter<Training>): Promise<Training[]> {
-    const from = filter?.from ? filter.from : undefined;
-    const to = filter?.to ? filter.to : undefined;
-
-    const trainings = await this.trainingRepository.getDocs((q) => {
-      // filter by date
-      // TODO - does not work yet
-      if (from && to) q = q.where('from', '>=', from).where('from', '<', to);
-
+    return await this.trainingRepository.getDocs((q) => {
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
@@ -151,19 +141,18 @@ export class TrainingService implements Permission<Training, Institution> {
       if (filter?.groupId) q = q.where('groupId', '==', filter.groupId);
       if (filter?.cycleId) q = q.where('cycleId', '==', filter.cycleId);
 
+      // filter by date
+      if (filter?.from)
+        q = q.where('from', '>=', Timestamp.fromDate(new Date(filter.from)));
+      if (filter?.to)
+        q = q.where('to', '<=', Timestamp.fromDate(new Date(filter.to)));
+
       q = q.orderBy('from', 'asc');
       return q;
     });
-
-    /* if (from && to)
-      trainings = trainings.filter((t) =>
-        this.commonService.date.isBetween(t.from, from, to),
-      ); */
-
-    return trainings;
   }
 
-  @LogMethod()
+  /* @LogMethod()
   async findByDayAndPeriod(
     user: User,
     ref: GroupRef,
@@ -192,7 +181,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const training = trainings && trainings.length ? trainings[0] : null;
 
     return { training };
-  }
+  } */
 
   @LogMethod()
   async findAthleteWorkloads(

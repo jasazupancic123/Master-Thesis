@@ -26,6 +26,7 @@ import {
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { useMain } from '@/store/main-provider';
 import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import { Training } from '@/controller/training/type/training.type';
 
 dayjs.extend(weekOfYear);
 
@@ -126,18 +127,28 @@ export default function TrainerDayView() {
   }, [component]);
 
   useEffect(() => {
+    let from: Date, to: Date;
+    if (selectedPeriod === 'AM') {
+      from = day.date.startOf('day').toDate();
+      to = day.date.startOf('day').add(12, 'hours').toDate();
+    } else {
+      from = day.date.startOf('day').add(12, 'hours').toDate();
+      to = day.date.endOf('day').toDate();
+    }
+
     handleApiRequest(
       router,
       () =>
-        TrainingController.findByDayAndPeriod(
-          day.date.toDate(),
-          selectedPeriod,
-          group.id
-        ),
-      (response) => {
+        TrainingController.findAll({
+          groupId: group.id,
+          cycleId: cycle?.id,
+          from,
+          to,
+        }),
+      (trainings) => {
         setComponent(undefined);
 
-        const foundTraining = response.training;
+        const foundTraining = trainings?.[0];
         if (!foundTraining) {
           setTraining(undefined);
           setLoading(false);
@@ -150,7 +161,8 @@ export default function TrainerDayView() {
           exercises,
           methods
         );
-        setTraining(mapped);
+
+        setTraining(mapped as Training);
         setLoading(false);
       },
       undefined,
