@@ -1,8 +1,8 @@
-import { Superset } from '@/controller/training/type/training-plan.type';
 import Box from '@mui/material/Box/Box';
 import BorderColor from '../border-color/border-color';
 import { COLOR } from '@/common/constant/browser.constant';
 import AthleteTrainingExerciseCollapsed from '../athlete-training-exercise-collapsed/athlete-training-exercise-collapsed';
+import { Superset } from '@/controller/training/type/superset.type';
 
 interface AthleteSupersetProps {
   superset: Superset;

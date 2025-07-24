@@ -7,24 +7,26 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Create } from '../common/type/entity.type';
+import { startOfDay } from 'date-fns';
+import { WriteBatch } from 'firebase-admin/firestore';
+
+import { LogMethod } from '../common/decorator/log-method.decorator';
+import { Permission } from '../common/interface/permission.interface';
 import { CommonService } from '../common/service/common.service';
+import { Create } from '../common/type/entity.type';
 import { User } from '../common/type/firebase-auth.type';
 import { GroupRef, InstitutionRef } from '../common/type/firestore.type';
 import { Wrapper } from '../common/type/wrapper.type';
 import { FirebaseService } from '../firebase/firebase.service';
+import { Institution } from '../institution/entity/institution.entity';
+import { InstitutionService } from '../institution/service/institution.service';
 import { TrainingService } from '../training/service/training.service';
 import { UserService } from '../user/user.service';
+import { CreateGroupDto } from './dto/create-group.dto';
+import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
 import { Cycle } from './entity/cycle.entity';
 import { Group } from './entity/group.entity';
 import { GroupRepository } from './repository/group.repository';
-import { InstitutionService } from '../institution/service/institution.service';
-import { Institution } from '../institution/entity/institution.entity';
-import { WriteBatch } from 'firebase-admin/firestore';
-import { Permission } from '../common/interface/permission.interface';
-import { CreateGroupDto } from './dto/create-group.dto';
-import { BatchUpdateOneGroupDto, UpdateGroupDto } from './dto/update-group.dto';
-import { startOfDay } from 'date-fns';
 
 @Injectable()
 export class GroupService implements Permission<Group, Institution> {
@@ -84,11 +86,9 @@ export class GroupService implements Permission<Group, Institution> {
     );
   }
 
+  @LogMethod()
   async create(user: User, input: CreateGroupDto): Promise<Group> {
     const { name, membersIds, institutionId, ownerId } = input;
-    this.logger.log(
-      `User ${user.uid} is creating group: ${JSON.stringify(input)}`,
-    );
 
     // validate
     const institution = await this.institutionService.getDocByIdOrFail(input);
@@ -116,15 +116,12 @@ export class GroupService implements Permission<Group, Institution> {
     } as Group;
   }
 
+  @LogMethod()
   async update(
     user: User,
     ref: GroupRef,
     input: UpdateGroupDto,
   ): Promise<Group> {
-    this.logger.log(
-      `User ${user.uid} is updating group: ${JSON.stringify(input)}`,
-    );
-
     // validate
     const group = await this.findOneByIdOrFail(user, ref);
     const institution = await this.institutionService.getDocByIdOrFail(group);
@@ -181,7 +178,7 @@ export class GroupService implements Permission<Group, Institution> {
 
     // validate members
     const allMembersIds = input.flatMap((i) => i.membersIds || []);
-    const members = await this.userService.findAllOrFail({
+    const _members = await this.userService.findAllOrFail({
       ids: allMembersIds,
     });
 
@@ -227,7 +224,7 @@ export class GroupService implements Permission<Group, Institution> {
       this.firebaseService.buildUpdateQuery<Group>({
         ...input,
         cycles: input.cycles?.map((c) => {
-          const { weeks, ...cycle } = c;
+          const { weeks: _, ...cycle } = c;
           return cycle;
         }),
       }),

@@ -1,5 +1,6 @@
-import { AttributeType } from '../../common/enum/attribute-type.enum';
-import { Attribute } from '../../attribute/entity/attribute.entity';
+import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+
 import {
   IntType,
   ParamType,
@@ -23,6 +24,7 @@ export const VOL_OPTIONS: Attribute[] = [
   {
     field: VolType.Rep,
     name: 'Rep',
+    description: 'reps',
     type: AttributeType.Number,
     options: [],
     defaultValue: '12',
@@ -30,6 +32,7 @@ export const VOL_OPTIONS: Attribute[] = [
   {
     field: VolType.Time,
     name: 'Time',
+    description: 'time',
     type: AttributeType.Number,
     options: [],
     defaultValue: '30',
@@ -37,6 +40,7 @@ export const VOL_OPTIONS: Attribute[] = [
   {
     field: VolType.Dist,
     name: 'Dist',
+    description: 'distance',
     type: AttributeType.Number,
     options: [],
     defaultValue: '30',
@@ -47,6 +51,7 @@ export const INT_OPTIONS: Attribute[] = [
   {
     field: IntType.Kg,
     name: 'KG',
+    description: 'kilograms',
     unit: 'kg',
     type: AttributeType.Number,
     options: [],
@@ -55,6 +60,7 @@ export const INT_OPTIONS: Attribute[] = [
   {
     field: IntType.Bw,
     name: 'BW',
+    description: 'body weight',
     unit: '%',
     type: AttributeType.Number,
     options: [],
@@ -63,6 +69,7 @@ export const INT_OPTIONS: Attribute[] = [
   {
     field: IntType.Rm,
     name: 'RM',
+    description: 'rep max',
     type: AttributeType.Number,
     options: [],
     defaultValue: '10',
@@ -70,6 +77,7 @@ export const INT_OPTIONS: Attribute[] = [
   {
     field: IntType.Mas,
     name: 'MAS',
+    description: 'max aerobic speed',
     unit: '%',
     type: AttributeType.Number,
     options: [],
@@ -78,6 +86,7 @@ export const INT_OPTIONS: Attribute[] = [
   {
     field: IntType.Hrmax,
     name: 'HRMax',
+    description: 'maximum heart rate',
     unit: '%',
     type: AttributeType.Number,
     options: [],
@@ -86,6 +95,7 @@ export const INT_OPTIONS: Attribute[] = [
   {
     field: IntType.Tempo,
     name: 'Tempo',
+    description: 'tempo',
     type: AttributeType.Select,
     defaultValue: '0',
     options: [
@@ -122,6 +132,7 @@ export const INT_OPTIONS: Attribute[] = [
   {
     field: IntType.Eff,
     name: 'Eff',
+    description: 'effort',
     type: AttributeType.Select,
     defaultValue: '0',
     options: [
@@ -161,6 +172,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.VolWorkSets,
     name: 'Set',
+    description: 'work sets',
     type: AttributeType.Select,
     options: VOL_WORK_SET_OPTIONS,
     defaultValue: VolWorkSetType.Set,
@@ -168,6 +180,7 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.VolWork1,
     name: 'VO2',
+    description: 'volume',
     type: AttributeType.Select,
     options: VOL_OPTIONS,
     defaultValue: VolType.Rep,
@@ -175,13 +188,15 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.VolWork2,
     name: 'VO2',
+    description: 'volume',
     type: AttributeType.Select,
     options: VOL_OPTIONS,
-    defaultValue: VolType.Rep,
+    defaultValue: VolType.Dist,
   },
   {
     field: ParamType.IntWork1,
     name: 'INT',
+    description: 'intensity',
     type: AttributeType.Select,
     options: INT_OPTIONS,
     defaultValue: IntType.Kg,
@@ -189,13 +204,15 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.IntWork2,
     name: 'INT',
+    description: 'intensity',
     type: AttributeType.Select,
     options: INT_OPTIONS,
-    defaultValue: IntType.Kg,
+    defaultValue: IntType.Tempo,
   },
   {
     field: ParamType.VolRec1,
     name: 'Rec',
+    description: 'volume recovery',
     type: AttributeType.Select,
     options: VOL_OPTIONS,
     defaultValue: VolType.Time,
@@ -203,8 +220,9 @@ export const PARAMS: Attribute[] = [
   {
     field: ParamType.IntRec1,
     name: 'Rec',
+    description: 'intensity recovery',
     type: AttributeType.Select,
     options: INT_OPTIONS,
-    defaultValue: VolType.Time,
+    defaultValue: IntType.Eff,
   },
 ];

@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsDate, IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsOptional } from 'class-validator';
 
 export class DateFilterDto {
   @ApiPropertyOptional()

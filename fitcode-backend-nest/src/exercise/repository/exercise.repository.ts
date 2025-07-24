@@ -4,17 +4,23 @@ import {
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
-import { FirebaseService } from '../../firebase/firebase.service';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { CommonService } from '@src/common/service/common.service';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
+import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { Exercise } from '../entity/exercise.entity';
 
 @Injectable()
 export class ExerciseRepository
   implements RootFirestoreCollectionRepository<Exercise>
 {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly commonService: CommonService,
+  ) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -78,5 +84,19 @@ export class ExerciseRepository
     return this.firebaseService.firestore.collection(
       FirestoreCollection.EXERCISE,
     );
+  }
+
+  async slug(name: string): Promise<string> {
+    const slug = this.commonService.string.slug(name);
+    const snapshot = await this.getDoc(slug);
+
+    if (snapshot) {
+      // slug already exists, add number to the end
+      const lastNumberMatch = slug.match(/\d+$/);
+      const number = lastNumberMatch ? +lastNumberMatch[0] : 0;
+      return `${slug}-${number + 1}`;
+    }
+
+    return slug;
   }
 }

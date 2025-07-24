@@ -1,24 +1,26 @@
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
-import { ComponentService } from '../../component/component.service';
-import { Component } from '../../component/entity/component.entity';
-import { Exercise } from '../../exercise/entity/exercise.entity';
-import { ExerciseService } from '../../exercise/service/exercise.service';
-import { FirebaseService } from '../../firebase/firebase.service';
-import { GroupService } from '../../group/group.service';
-import { SportLevel } from '../../user/enum/sport-level.enum';
-import { UserRole } from '../../user/enum/user-role.enum';
-import { UserRepository } from '../../user/repository/user.repository';
-import { UserService } from '../../user/user.service';
+
+import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
+import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { ComponentService } from '@src/component/component.service';
+import type { Component } from '@src/component/entity/component.entity';
+import type { Exercise } from '@src/exercise/entity/exercise.entity';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { GroupService } from '@src/group/group.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Method } from '@src/method/entity/method.entity';
+import { MethodService } from '@src/method/service/method.service';
+import { SportLevel } from '@src/user/enum/sport-level.enum';
+import { UserRole } from '@src/user/enum/user-role.enum';
+import { UserRepository } from '@src/user/repository/user.repository';
+import { UserService } from '@src/user/user.service';
+
 import { FirestoreCollection } from '../enum/firestore-collection.enum';
-import { User } from '../type/firebase-auth.type';
+import type { User } from '../type/firebase-auth.type';
 import { BaseSetup } from './base.setup';
-import { Attribute } from '../../attribute/entity/attribute.entity';
-import { AttributeService } from '../../attribute/service/attribute.service';
-import { MethodService } from '../../method/service/method.service';
-import { Method } from '../../method/entity/method.entity';
-import { InstitutionService } from '../../institution/service/institution.service';
-import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
 
 export class DataSetup extends BaseSetup {
   private readonly firebaseService: FirebaseService;
@@ -171,14 +173,14 @@ export class DataSetup extends BaseSetup {
     }
 
     await Promise.all(
-      createdUsers.map((user) => {
+      createdUsers.map(async (user) => {
         const u = data.find((u) => u.email === user.email);
-        userRepository.addDoc({
+        await userRepository.addDoc({
           id: user.uid,
           level: (u?.level as SportLevel) || SportLevel.BEGINNER,
         });
 
-        this.userService.addOrUpdateWellness(
+        await this.userService.addOrUpdateWellness(
           { uid: user.uid, date: new Date() },
           {
             userId: user.uid,

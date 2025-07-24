@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { User } from '../common/type/firebase-auth.type';
-import { RequestUser } from '../common/decorator/request-user.decorator';
-import { Auth } from '../common/decorator/auth.decorator';
-import { MethodService } from './service/method.service';
-import { Create } from '../common/type/entity.type';
-import { Method } from './entity/method.entity';
 import { ApiTags } from '@nestjs/swagger';
+
+import { Auth } from '../common/decorator/auth.decorator';
+import { RequestUser } from '../common/decorator/request-user.decorator';
+import { Create } from '../common/type/entity.type';
+import { User } from '../common/type/firebase-auth.type';
+import { Method } from './entity/method.entity';
+import { MethodService } from './service/method.service';
 
 @ApiTags('Method')
 @Controller('method')
@@ -14,16 +15,13 @@ export class MethodController {
 
   @Get()
   @Auth()
-  async findAll(@RequestUser() user: User) {
+  async findAll() {
     return this.methodService.findAll();
   }
 
   @Get(':methodId')
   @Auth()
-  async findById(
-    @RequestUser() user: User,
-    @Param('methodId') methodId: string,
-  ) {
+  async findById(@Param('methodId') methodId: string) {
     return this.methodService.findOneOrFail({ methodId });
   }
 

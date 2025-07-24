@@ -1,9 +1,7 @@
 import { COLOR } from '@/common/constant/browser.constant';
-import {
-  Superset,
-  TrainingComponent,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import toast from 'react-hot-toast';
 import {
   NUM_MAX_EXERCISES_PER_SUPERSET,
@@ -20,7 +18,7 @@ import { Subgroup } from '@/controller/training/type/subgroup.type';
 import { SetState, SetStateNullable } from '@/common/type/state.type';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Pagination } from '@/common/type/paginate.type';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 
 export function handleAddExerciseToSupersetComponent(
   input: {
@@ -93,24 +91,24 @@ export function handleAddExerciseToSupersetComponent(
           .map((p) => {
             if (p.field === 'volWorkSets') return undefined;
 
-            let attributeRange = method?.attributeRanges.find(
+            let attribute = method?.attributes.find(
               (ar) => ar.field === p.field
             );
-            if (attributeRange) {
-              const foundInOptions = attributeRange.options?.find(
+            if (attribute) {
+              const foundInOptions = attribute.options?.find(
                 (o) => o.field === p.defaultValue
               );
-              if (foundInOptions) attributeRange = foundInOptions;
+              if (foundInOptions) attribute = foundInOptions;
             }
 
             return {
               field: p.field,
               selected: p.defaultValue,
               value:
-                attributeRange &&
-                attributeRange.min !== undefined &&
-                attributeRange.max !== undefined
-                  ? Math.ceil((attributeRange.min + attributeRange.max) / 2)
+                attribute &&
+                attribute.min !== undefined &&
+                attribute.max !== undefined
+                  ? Math.ceil((attribute.min + attribute.max) / 2)
                   : p.options?.find((o) => o.field === p.defaultValue)?.options
                         ?.length
                     ? '0' //picks the first element in the options array
@@ -125,7 +123,7 @@ export function handleAddExerciseToSupersetComponent(
       id,
       exercise: exercise,
       periodized: false,
-      attributeRanges: component?.method?.attributeRanges || [],
+      attributes: component?.method?.attributes || [],
       params: exercise?.defaultParams || [],
       sets: exercise?.defaultParams
         ? Array.from({ length: 3 }, (_, i) => ({

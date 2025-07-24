@@ -51,8 +51,8 @@
           "field": "int2",
           "defaultValue": "eff",
           "options": [
-            { "field": "tempo", "defaultValue": "a" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "tempo", "defaultValue": "1" },
+            { "field": "eff", "defaultValue": "1" }
           ]
         },
         {
@@ -80,8 +80,8 @@
           "field": "int1",
           "defaultValue": "eff",
           "options": [
-            { "field": "tempo", "defaultValue": "a" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "tempo", "defaultValue": "1" },
+            { "field": "eff", "defaultValue": "1" }
           ]
         },
         {
@@ -304,7 +304,7 @@
         {
           "field": "int1",
           "defaultValue": "eff",
-          "options": [{ "field": "eff", "defaultValue": "mod" }]
+          "options": [{ "field": "eff", "defaultValue": "1" }]
         },
         {
           "field": "volRec",
@@ -583,7 +583,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         }
       ],
@@ -607,7 +607,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         },
         {
@@ -624,7 +624,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         }
       ],
@@ -656,7 +656,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         },
         {
@@ -665,7 +665,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         },
         {
@@ -682,7 +682,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         }
       ],
@@ -711,7 +711,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         },
         {
@@ -728,7 +728,7 @@
           "options": [
             { "field": "mas", "defaultValue": "100" },
             { "field": "hrmax", "defaultValue": "100" },
-            { "field": "eff", "defaultValue": "mod" }
+            { "field": "eff", "defaultValue": "1" }
           ]
         }
       ]

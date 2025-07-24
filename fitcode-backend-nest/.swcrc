@@ -9,7 +9,7 @@
     "parser": {
       "syntax": "typescript",
       "decorators": true,
-      "dynamicImport": true,
+      "dynamicImport": true
     },
     "transform": {
       "legacyDecorator": true,
@@ -18,5 +18,5 @@
     "keepClassNames": true,
     "baseUrl": "./"
   },
-  "minify": false,
+  "minify": false
 }

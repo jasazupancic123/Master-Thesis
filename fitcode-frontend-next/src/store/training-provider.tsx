@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './auth-provider';
-import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { SetState } from '@/common/type/state.type';
 import {
   ExerciseOrTraining,
@@ -13,8 +13,8 @@ import { ChildrenProps } from '@/common/type/props.type';
 
 interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
-  trainingInProgress: AthleteTrainingInProgress | null;
-  setTrainingInProgress: SetState<AthleteTrainingInProgress | null>;
+  trainingInProgress: TrainingInProgress | null;
+  setTrainingInProgress: SetState<TrainingInProgress | null>;
   view: ExerciseOrTraining;
   setView: SetState<ExerciseOrTraining>;
   isLoaded: boolean;
@@ -35,7 +35,7 @@ export const TrainingProvider = (
 
   const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
-    useState<AthleteTrainingInProgress | null>(null);
+    useState<TrainingInProgress | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [view, setView] = useState<ExerciseOrTraining>(
     ExerciseTrainingView.ExerciseView
@@ -53,7 +53,7 @@ export const TrainingProvider = (
     if (storedTrainingInProgress) {
       const parsedTrainingInProgress = JSON.parse(
         storedTrainingInProgress
-      ) as AthleteTrainingInProgress;
+      ) as TrainingInProgress;
       if (parsedTrainingInProgress.userId !== user?.uid) {
         clearTrainingState();
         setIsLoaded(true);

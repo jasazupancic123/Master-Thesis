@@ -1,14 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { RootFirestoreCollectionRepository } from '../../common/type/firestore.type';
-import { Method } from '../entity/method.entity';
-import { FirebaseService } from '../../firebase/firebase.service';
 import {
   CollectionReference,
   DocumentReference,
   Query,
 } from 'firebase-admin/firestore';
-import { Create, FirestoreEntity, Update } from '../../common/type/entity.type';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
+import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
+import { FirebaseService } from '@src/firebase/firebase.service';
+
+import { Method } from '../entity/method.entity';
 
 @Injectable()
 export class MethodRepository
@@ -46,7 +48,7 @@ export class MethodRepository
       targetId: input.targetId,
       ability: input.ability,
       intensity: input.intensity,
-      attributeRanges: input.attributeRanges,
+      attributes: input.attributes,
       repetition: input.repetition,
       set: input.set,
       tempo: input.tempo,
@@ -63,7 +65,7 @@ export class MethodRepository
       targetId: input.targetId,
       ability: input.ability,
       intensity: input.intensity,
-      attributeRanges: input.attributeRanges,
+      attributes: input.attributes,
       tempo: input.tempo,
       repetition: input.repetition,
       set: input.set,

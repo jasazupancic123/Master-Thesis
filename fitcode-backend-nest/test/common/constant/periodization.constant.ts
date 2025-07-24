@@ -1,4 +1,4 @@
-import { PeriodizationType } from '../../../src/training/enum/periodization-type.enum';
+import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 
 export const PERIODIZATION_TEST_VALUES = [
   {

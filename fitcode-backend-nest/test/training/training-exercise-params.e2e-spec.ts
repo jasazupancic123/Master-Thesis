@@ -1,45 +1,49 @@
-import { INestApplication } from '@nestjs/common';
-import { TestingModule, Test } from '@nestjs/testing';
-import { AppModule } from '../../src/app.module';
-import { ComponentService } from '../../src/component/component.service';
-import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { Group } from '../../src/group/entity/group.entity';
-import { GroupService } from '../../src/group/group.service';
-import { InstitutionService } from '../../src/institution/service/institution.service';
-import { TrainingService } from '../../src/training/service/training.service';
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import {
-  createInstitution,
   createGroupWithCycles,
-  deleteDoc,
+  createInstitution,
   deleteCollection,
+  deleteDoc,
   deleteInstitution,
-} from '../common/utils/data.util';
-import { COMPONENT_ENDURANCE } from '../common/constant/component.constant';
+} from '@test/common/utils/data.util';
+import { addDays } from 'date-fns';
+
+import { AppModule } from '@src/app.module';
+import type { Attribute } from '@src/attribute/entity/attribute.entity';
+import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { ComponentService } from '@src/component/component.service';
 import {
-  generateSuperset,
-  generateTrainingComponent,
-  generateTrainingExercise,
-  generateTrainingStub,
-} from '../../src/training/mock/training.stub';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
-import { ATTRIBUTE_ENDURANCE_OPTIONS } from '../common/constant/attribute.constant';
-import { AttributeService } from '../../src/attribute/service/attribute.service';
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '@src/component/constant/warmup-cooldown.constant';
+import type { Component } from '@src/component/entity/component.entity';
 import {
   IntType,
   ParamType,
   VolType,
   VolWorkSetType,
-} from '../../src/component/enum/param.enum';
-import { Attribute } from '../../src/attribute/entity/attribute.entity';
-import { Component } from '../../src/component/entity/component.entity';
-import { ExerciseAttributeValue } from '../../src/exercise/entity/exercise-attribute-value.entity';
-import { generateExerciseAttributeValueStub } from '../../src/attribute/mock/attribute-value.stub';
-import { TestInstitution } from '../common/type/entity.type';
+} from '@src/component/enum/param.enum';
+import type { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import type { Group } from '@src/group/entity/group.entity';
+import { GroupService } from '@src/group/group.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
 import {
-  COOLDOWN_COMPONENT_ID,
-  WARMUP_COMPONENT_ID,
-} from '../../src/component/constant/warmup-cooldown.constant';
+  generateSuperset,
+  generateTrainingComponent,
+  generateTrainingExercise,
+  generateTrainingStub,
+} from '@src/training/mock/training.stub';
+import { TrainingService } from '@src/training/service/training.service';
+
+import { ATTRIBUTE_ENDURANCE_OPTIONS } from '../common/constant/attribute.constant';
+import { COMPONENT_ENDURANCE } from '../common/constant/component.constant';
+import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;
@@ -94,21 +98,22 @@ describe('Training Exercise Params (e2e)', () => {
 
   async function createExercise(attributeValues: ExerciseAttributeValue[]) {
     return await exerciseService.create(
-      admin,
+      global.admin,
       generateExerciseStub({ componentIds: [leaf.id], attributeValues }),
     );
   }
 
-  async function createTraining(componentId: string, exerciseId: string) {
+  async function createTraining(exerciseId: string) {
     return await trainingService.create(
-      trainer,
+      global.trainer,
       generateTrainingStub({
         institutionId: institution.id,
         groupId: group.id,
         cycleId: group.cycles[1].id,
+        date: addDays(new Date(), 2),
         components: [
           generateTrainingComponent({
-            id: componentId,
+            id: COMPONENT_ENDURANCE.id,
             supersets: [
               generateSuperset({
                 exercises: [generateTrainingExercise({ id: exerciseId })],
@@ -123,13 +128,10 @@ describe('Training Exercise Params (e2e)', () => {
   describe('Warmup and cooldown components', () => {
     it('should not populate params', async () => {
       const exercise = await createExercise([]);
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const updated = await trainingService.update(
-        trainer,
+        global.trainer,
         { trainingId: training.id },
         {
           ...training,
@@ -172,10 +174,7 @@ describe('Training Exercise Params (e2e)', () => {
   describe('Endurance select attribute params test', () => {
     it('should keep default params since no attribute values are passed to exercise', async () => {
       const exercise = await createExercise([]);
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 
@@ -212,10 +211,7 @@ describe('Training Exercise Params (e2e)', () => {
         }),
       ]);
 
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 
@@ -271,10 +267,7 @@ describe('Training Exercise Params (e2e)', () => {
         }),
       ]);
 
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 
@@ -345,10 +338,7 @@ describe('Training Exercise Params (e2e)', () => {
         }),
       ]);
 
-      const training = await createTraining(
-        COMPONENT_ENDURANCE.id,
-        exercise.id,
-      );
+      const training = await createTraining(exercise.id);
 
       const params = training.components[0].supersets[0].exercises[0].params;
 

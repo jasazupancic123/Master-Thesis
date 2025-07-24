@@ -1,39 +1,42 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { TrainingPlanService } from '../training-plan.service';
-import { ComponentService } from '../../../component/component.service';
-import { generateComponentStub } from '../../../component/mock/component.stub';
-import { generateAttributeStub } from '../../../attribute/mock/attribute.stub';
-import { generateExerciseStub } from '../../../exercise/mock/exercise.stub';
-import { generateExerciseAttributeValueStub } from '../../../attribute/mock/attribute-value.stub';
-import {
-  IntType,
-  ParamType,
-  VolWorkSetType,
-} from '../../../component/enum/param.enum';
+
+import { generateAttributeStub } from '@src/attribute/mock/attribute.stub';
+import { generateExerciseAttributeValueStub } from '@src/attribute/mock/attribute-value.stub';
+import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { CommonModule } from '@src/common/common.module';
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
+import { ComponentService } from '@src/component/component.service';
 import {
   DEFAULT_PARAMS_KEY,
   PARAMS,
   VOL_WORK_SET_OPTIONS,
-} from '../../../component/constant/param.constant';
+} from '@src/component/constant/param.constant';
+import {
+  IntType,
+  ParamType,
+  VolWorkSetType,
+} from '@src/component/enum/param.enum';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { ComponentRepository } from '@src/component/repository/component.repository';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
 import {
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
-} from '../../mock/training.stub';
-import { AttributeType } from '../../../common/enum/attribute-type.enum';
-import { createMock } from '@golevelup/ts-jest';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
+} from '@src/training/mock/training.stub';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
+
+import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('TrainingPlanService (unit)', () => {
   let service: TrainingPlanService;
@@ -61,9 +64,10 @@ describe('TrainingPlanService (unit)', () => {
         },
         AttributeService,
         {
-          provide: ComponentService,
-          useValue: createMock<ComponentService>(),
+          provide: ComponentRepository,
+          useValue: createMock<ComponentRepository>,
         },
+        ComponentService,
         {
           provide: InstitutionService,
           useValue: createMock<InstitutionService>(),
@@ -195,6 +199,7 @@ describe('TrainingPlanService (unit)', () => {
       {
         field: ParamType.VolWorkSets,
         name: 'Set',
+        description: 'work sets',
         type: AttributeType.Select,
         defaultValue: VolWorkSetType.Set,
         options: [
@@ -210,12 +215,14 @@ describe('TrainingPlanService (unit)', () => {
       {
         field: ParamType.IntWork1,
         name: 'INT',
+        description: 'intensity',
         type: AttributeType.Select,
         defaultValue: IntType.Kg,
         options: [
           {
             field: IntType.Kg,
             name: 'KG',
+            description: 'kilograms',
             unit: 'kg',
             type: AttributeType.Number,
             defaultValue: '30',
@@ -224,6 +231,7 @@ describe('TrainingPlanService (unit)', () => {
           {
             field: IntType.Eff,
             name: 'Eff',
+            description: 'effort',
             type: AttributeType.Select,
             defaultValue: '0',
             options: [
@@ -241,12 +249,14 @@ describe('TrainingPlanService (unit)', () => {
       {
         field: ParamType.IntWork2,
         name: 'INT',
+        description: 'intensity',
         type: AttributeType.Select,
         defaultValue: IntType.Eff,
         options: [
           {
             field: IntType.Eff,
             name: 'Eff',
+            description: 'effort',
             type: AttributeType.Select,
             defaultValue: '0',
             options: [
@@ -373,12 +383,14 @@ describe('TrainingPlanService (unit)', () => {
       {
         field: ParamType.IntWork1,
         name: 'INT',
+        description: 'intensity',
         type: AttributeType.Select,
         defaultValue: IntType.Kg,
         options: [
           {
             field: IntType.Kg,
             name: 'KG',
+            description: 'kilograms',
             unit: 'kg',
             type: AttributeType.Number,
             defaultValue: '20',

@@ -1,7 +1,7 @@
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
 import { Box, Stack, Typography } from '@mui/material';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTheme } from '@mui/material';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 interface AthleteTrainingExerciseCollapsedProps {
   exercise: TrainingExercise;

@@ -1,11 +1,13 @@
-import { ParamType } from '../../component/enum/param.enum';
-import { Training } from '../entity/training.entity';
-import { PeriodizationType } from '../enum/periodization-type.enum';
 import { BadRequestException } from '@nestjs/common';
+
+import { ParamType } from '@src/component/enum/param.enum';
+
 import { DUP_SCHEDULE } from '../constant/periodization.constant';
-import { Subgroup } from '../entity/subgroup.entity';
-import { TrainingExercise } from '../entity/training-exercise.entity';
-import { TrainingComponent } from '../entity/training-component.entity';
+import type { Subgroup } from '../entity/subgroup.entity';
+import type { Training } from '../entity/training.entity';
+import type { TrainingComponent } from '../entity/training-component.entity';
+import type { TrainingExercise } from '../entity/training-exercise.entity';
+import { PeriodizationType } from '../enum/periodization-type.enum';
 
 export class PeriodizationService {
   periodize(
@@ -21,11 +23,11 @@ export class PeriodizationService {
     const baseExercises = this.getExercisesOrFail(baseItem);
 
     for (const exerciseId of exerciseIds) {
-      let prevIntL = [] as { setIndex: number; value: number }[];
-      let prevVolL = [] as { setIndex: number; value: number }[];
+      const prevIntL = [] as { setIndex: number; value: number }[];
+      const prevVolL = [] as { setIndex: number; value: number }[];
 
-      let prevIntR = [] as { setIndex: number; value: number }[];
-      let prevVolR = [] as { setIndex: number; value: number }[];
+      const prevIntR = [] as { setIndex: number; value: number }[];
+      const prevVolR = [] as { setIndex: number; value: number }[];
 
       for (const week of weeks) {
         for (const training of week) {
@@ -65,12 +67,12 @@ export class PeriodizationService {
           const baseExercise = baseExercises.find((e) => e.id === exerciseId);
           if (!baseExercise) continue;
 
-          let startInts: {
+          const startInts: {
             exerciseId: string;
             leftOrRight: 'L' | 'R';
             value: number;
           }[] = [];
-          let startVols: {
+          const startVols: {
             exerciseId: string;
             leftOrRight: 'L' | 'R';
             value: number;
@@ -79,7 +81,7 @@ export class PeriodizationService {
           const readinessFactor = Math.random() * 0.2 + 0.9; // Simulate readiness factor between 0.9 and 1.1
           for (const set of baseExercise.sets) {
             for (const paramValues of [set.paramValuesL, set.paramValuesR]) {
-              let leftOrRight =
+              const leftOrRight =
                 paramValues === set.paramValuesL ? 'L' : ('R' as 'L' | 'R');
 
               const baseInt =
@@ -268,10 +270,7 @@ export class PeriodizationService {
   }
 
   private getExercisesOrFail(item: TrainingComponent | Subgroup) {
-    let exercises: TrainingExercise[];
-
-    exercises = item.supersets.flatMap((s) => s.exercises);
-
+    const exercises = item.supersets.flatMap((s) => s.exercises);
     if (exercises.length === 0)
       throw new BadRequestException('No exercises found in the base component');
 

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 import { PeriodizationType } from '../enum/periodization-type.enum';
 
 export class PeriodizeTrainingsDto {
@@ -16,7 +17,7 @@ export class PeriodizeTrainingsDto {
   @Expose()
   componentId: string; // ID of the component to periodize
 
-  @ApiProperty({ enum: PeriodizationType, enumName: 'PeriodizationType' })
+  @ApiProperty({ enum: PeriodizationType })
   @IsNotEmpty()
   @IsEnum(PeriodizationType)
   @Expose()

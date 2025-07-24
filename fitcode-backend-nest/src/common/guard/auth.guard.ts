@@ -1,6 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { FirebaseService } from '../../firebase/firebase.service';
 import { Reflector } from '@nestjs/core';
+
+import { FirebaseService } from '@src/firebase/firebase.service';
+
 import { AUTH_ROLES_KEY } from './role.guard';
 
 @Injectable()
@@ -23,8 +25,10 @@ export class AuthGuard implements CanActivate {
 
     const token = authorization.slice(7);
     const verified = await this.firebaseService.auth.verifyIdToken(token);
+
     context.switchToHttp().getRequest().user =
       await this.firebaseService.findUserById(verified.uid);
+
     return true;
   }
 }

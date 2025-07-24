@@ -2,10 +2,8 @@
 
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import {
-  Superset,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { Box, Checkbox, Grid2, IconButton, Typography } from '@mui/material';
 import { Draggable } from 'react-beautiful-dnd';
 import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';

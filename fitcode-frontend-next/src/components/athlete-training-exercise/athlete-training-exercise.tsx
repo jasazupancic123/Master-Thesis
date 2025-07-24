@@ -1,7 +1,5 @@
-import {
-  Superset,
-  TrainingExercise,
-} from '@/controller/training/type/training-plan.type';
+import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Box, IconButton, Tooltip } from '@mui/material';

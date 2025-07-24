@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 import { handleCopyComponentApiRequest } from './state';
 import TrainingComponentCard from '../training-component-card/training-component-card';
 import TrainingComponentMenu from '../training-component-menu/training-component-menu';
-import { TrainingInfo } from '@/controller/training/type/training-info.type';
+import { TrainingInfo } from '@/controller/training/type/training.type';
 import ComponentActionsModal from '../component-actions-modal/component-actions-modal';
 import {
   COOLDOWN_ID,

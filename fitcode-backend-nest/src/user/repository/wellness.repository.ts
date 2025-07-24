@@ -6,13 +6,15 @@ import {
   QueryDocumentSnapshot,
   Timestamp,
 } from 'firebase-admin/firestore';
-import { FirestoreCollection } from '../../common/enum/firestore-collection.enum';
-import { CommonService } from '../../common/service/common.service';
+
+import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { CommonService } from '@src/common/service/common.service';
 import {
   FirestoreCollectionRepository,
-  WellnessRef,
   UserRef,
-} from '../../common/type/firestore.type';
+  WellnessRef,
+} from '@src/common/type/firestore.type';
+
 import { Wellness } from '../entity/wellness.entity';
 import { UserRepository } from './user.repository';
 

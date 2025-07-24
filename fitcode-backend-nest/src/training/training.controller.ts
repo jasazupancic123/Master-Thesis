@@ -8,29 +8,25 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CommonService } from '../common/service/common.service';
+import { ApiTags } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
+import { CommonService } from '../common/service/common.service';
 import { User } from '../common/type/firebase-auth.type';
+import { UserRole } from '../user/enum/user-role.enum';
 import { AddTrainingComponentsDto } from './dto/add-training-components.dto';
+import { CopyComponentDto } from './dto/copy-component.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import {
-  BatchUpdateTrainingsDto,
-  UpdateSingleTrainingDto,
-} from './dto/update-training.dto';
-import { TrainingService } from './service/training.service';
-import { FinishComponentDto } from './dto/finish-component.dto';
-import { Workload } from './entity/workload.entity';
-import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
-import { FindByDayDto } from './dto/find-by-day.dto';
-import { CopyComponentDto } from './dto/copy-component.dto';
-import { plainToInstance } from 'class-transformer';
-import { TrainingInfoDto } from './dto/training-info.dto';
-import { FindAthleteGroupWorkloads } from './dto/find-workload.dto';
-import { ApiTags } from '@nestjs/swagger';
 import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
+import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
+import { TrainingInfoDto } from './dto/training-info.dto';
+import { UpdateTrainingDto } from './dto/update-training.dto';
+import { CompletedTrainingComponent } from './entity/completed-training.entity';
+import { TrainingService } from './service/training.service';
 
 @ApiTags('Training')
 @Controller('training')
@@ -67,36 +63,35 @@ export class TrainingController {
     @Param('groupId') groupId: string,
     @Body() body: FindByDayAndPeriodDto,
   ) {
-    return await this.trainingService.findByDayAndPeriod(user, { groupId }, body);
-  }
-
-  @Get(':trainingId/component/:componentId')
-  @Auth()
-  async findByIdAndPopulateAthleteWorkloads(
-    @RequestUser() user: User,
-    @Param('trainingId') trainingId: string,
-    @Param('componentId') componentId: string,
-  ) {
-    const ref = { trainingId, componentId };
-    return await this.trainingService.findByIdAndPopulateAthleteWorkloads(
+    return await this.trainingService.findByDayAndPeriod(
       user,
-      ref,
-    );
-  }
-
-  @Post('group/:groupId/athlete/:athleteId/workloads')
-  @Auth()
-  async findAthleteGroupWorkloads(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('athleteId') athleteId: string,
-    @Body() body: FindAthleteGroupWorkloads,
-  ) {
-    return await this.trainingService.findAthleteGroupWorkloads(
-      user,
-      { groupId, uid: athleteId },
+      { groupId },
       body,
     );
+  }
+
+  @Get(':trainingId/athlete/:athleteId/prescribed')
+  @Auth()
+  async getPrescribedTraining(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('athleteId') uid: string,
+  ) {
+    const ref = { trainingId, uid };
+    return await this.trainingService.getPrescribedTraining(user, ref);
+  }
+
+  @Get(':trainingId/athlete/:athleteId/workloads')
+  @Auth()
+  async findAthleteWorkloads(
+    @RequestUser() user: User,
+    @Param('trainingId') trainingId: string,
+    @Param('athleteId') athleteId: string,
+  ) {
+    return await this.trainingService.findAthleteWorkloads(user, {
+      trainingId,
+      uid: athleteId,
+    });
   }
 
   @Post()
@@ -110,6 +105,7 @@ export class TrainingController {
   }
 
   @Post('/copy/component')
+  @Auth()
   async copyComponent(
     @RequestUser() user: User,
     @Body()
@@ -119,6 +115,7 @@ export class TrainingController {
   }
 
   @Post('/periodize/trainings')
+  @Auth()
   async periodize(
     @RequestUser() user: User,
     @Body() body: PeriodizeTrainingsDto,
@@ -131,22 +128,10 @@ export class TrainingController {
   async update(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
-    @Body() body: UpdateSingleTrainingDto,
+    @Body() body: UpdateTrainingDto,
   ) {
     const ref = { trainingId };
     return await this.trainingService.update(user, ref, body);
-  }
-
-  @Patch('batch/group/:groupId/cycle/:cycleId')
-  @Auth()
-  async batchUpdate(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Param('cycleId') cycleId: string,
-    @Body() body: BatchUpdateTrainingsDto,
-  ) {
-    const ref = { groupId, cycleId };
-    return await this.trainingService.batchUpdate(user, ref, body);
   }
 
   @Post(':trainingId/copy')
@@ -171,16 +156,20 @@ export class TrainingController {
     return {};
   }
 
-  @Patch(':trainingId/finish/:componentId/component')
-  @Auth()
-  async finishComponent(
+  @Patch(':trainingId/component/:componentId/complete')
+  @Auth([UserRole.MANAGER, UserRole.TRAINER, UserRole.ATHLETE])
+  async completeTrainingComponent(
     @RequestUser() user: User,
     @Param('trainingId') trainingId: string,
     @Param('componentId') componentId: string,
-    @Body() body: FinishComponentDto,
+    @Body() body: CompletedTrainingComponent,
   ) {
     const ref = { trainingId, componentId };
-    return await this.trainingService.finishComponent(user, ref, body);
+    return await this.trainingService.completeTrainingComponent(
+      user,
+      ref,
+      body,
+    );
   }
 
   @Post(':trainingId/component')

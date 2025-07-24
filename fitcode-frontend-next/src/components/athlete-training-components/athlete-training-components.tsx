@@ -1,7 +1,9 @@
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
-import { Box, Collapse, IconButton } from '@mui/material';
+import { useTraining } from '@/store/training-provider';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { Box, IconButton, Collapse } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material';
+import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { SetState } from '@/common/type/state.type';
 import { Training } from '@/controller/training/type/training.type';
 import { CommonService } from '@/common/service/common.service';
@@ -11,8 +13,6 @@ import toast from 'react-hot-toast';
 import { handleApiRequest } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { useTraining } from '@/store/training-provider';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/auth-provider';
 import { Check } from '@mui/icons-material';
@@ -163,24 +163,31 @@ export default function AthleteTrainingComponents(
         cancelText="Cancel"
         onCancel={() => setModal(false)}
         onConfirm={() => {
+          if (!user) {
+            toast.error('Authentication error.');
+            return;
+          }
+
           if (!selectedComponent) {
             toast.error('No component selected.');
+            return;
+          }
+
+          if (selectedComponent.completedMembersIds.includes(user.uid)) {
+            toast.error('You have already completed this component.');
             return;
           }
 
           handleApiRequest(
             router,
             () =>
-              TrainingController.findByIdAndPopulateAthleteWorkloads(
-                training.id,
-                selectedComponent.id
-              ),
+              TrainingController.getPrescribedTraining(training.id, user.uid),
             (training) => {
               setTrainingInProgress({
                 training: training,
                 selectedComponent: selectedComponent,
-                userId: user?.uid,
-              } as AthleteTrainingInProgress);
+                userId: user.uid,
+              } as TrainingInProgress);
               setView(ExerciseTrainingView.TrainingView);
               setModal(false);
             },

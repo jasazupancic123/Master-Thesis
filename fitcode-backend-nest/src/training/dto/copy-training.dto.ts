@@ -1,5 +1,7 @@
 import { IntersectionType, PartialType, PickType } from '@nestjs/mapped-types';
-import { DateRangeDto } from '../../common/dto/date-range.dto';
+
+import { DateRangeDto } from '@src/common/dto/date-range.dto';
+
 import { CreateTrainingDto } from './create-training.dto';
 
 export class CopyTrainingDto extends IntersectionType(

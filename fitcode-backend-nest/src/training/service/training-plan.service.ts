@@ -7,41 +7,38 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { addMinutes, subMinutes } from 'date-fns';
-import { Update } from '../../common/type/entity.type';
-import { TrainingComponentRef } from '../../common/type/firestore.type';
-import { TrainingComponent } from '../entity/training-component.entity';
-import { Training } from '../entity/training.entity';
-import { Component } from '../../component/entity/component.entity';
-import { Exercise } from '../../exercise/entity/exercise.entity';
-import { Wrapper } from '../../common/type/wrapper.type';
-import { ExerciseService } from '../../exercise/service/exercise.service';
-import { ComponentService } from '../../component/component.service';
-import {
-  DEFAULT_PARAMS_KEY,
-  PARAMS,
-} from '../../component/constant/param.constant';
-import { ComponentParam } from '../../component/entity/component-param.entity';
-import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
-import { Attribute } from '../../attribute/entity/attribute.entity';
-import { AttributeType } from '../../common/enum/attribute-type.enum';
-import { ExerciseSet } from '../entity/exercise-set.entity';
-import { ParamType, VolWorkSetType } from '../../component/enum/param.enum';
-import { AttributeValue } from '../../attribute/entity/attribute-value.entity';
-import { AttributeService } from '../../attribute/service/attribute.service';
-import { ExerciseAttributeValueRepository } from '../../exercise/repository/exercise-attribute-value.repository';
+
+import { GLOBAL_EXERCISE_OWNER } from '@src//exercise/constant/global-exercise-owner.constant';
+import { Institution } from '@src//institution/entity/institution.entity';
+import { Attribute } from '@src/attribute/entity/attribute.entity';
+import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CommonService } from '@src/common/service/common.service';
+import { Update } from '@src/common/type/entity.type';
+import { User } from '@src/common/type/firebase-auth.type';
+import { TrainingComponentRef } from '@src/common/type/firestore.type';
+import { Wrapper } from '@src/common/type/wrapper.type';
+import { ComponentService } from '@src/component/component.service';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT_ID,
   WARMUP_COMPONENT_ID,
-} from '../../component/constant/warmup-cooldown.constant';
-import { Method } from '../../method/entity/method.entity';
+} from '@src/component/constant/warmup-cooldown.constant';
+import { Component } from '@src/component/entity/component.entity';
+import { ParamType, VolWorkSetType } from '@src/component/enum/param.enum';
+import { Exercise } from '@src/exercise/entity/exercise.entity';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import { Method } from '@src/method/entity/method.entity';
+
+import { CompletedTrainingExercise } from '../entity/completed-training.entity';
+import { ExerciseSet } from '../entity/exercise-set.entity';
+import { Training } from '../entity/training.entity';
+import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
-import { GroupWorkloadStats } from '../entity/average-workload-values.entity';
+import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
-import { CommonService } from '../../common/service/common.service';
-import { User } from '../../common/type/firebase-auth.type';
-import { InstitutionService } from '../../institution/service/institution.service';
-import { GLOBAL_EXERCISE_OWNER } from '../..//exercise/constant/global-exercise-owner.constant';
-import { Institution } from '../..//institution/entity/institution.entity';
 
 @Injectable()
 export class TrainingPlanService {
@@ -73,17 +70,18 @@ export class TrainingPlanService {
       );
   }
 
-  getTrainingComponents(training: Training) {
-    return [training.warmup, ...training.components, training.cooldown];
+  getTrainingComponents(training: Training): TrainingComponent[] {
+    const { warmup, cooldown, components } = training;
+    return [warmup, ...components, cooldown];
   }
 
   getAddComponentsQuery(
     training: Training,
     input: Update<TrainingComponent>[],
-  ): [Partial<Training>, Training] {
+  ): [Update<Training>, Training] {
     const lastComponent = training.components[training.components.length - 1];
 
-    const query: Partial<Training> = {
+    const query: Update<Training> = {
       components: [
         ...training.components,
         ...input.map((c) => ({
@@ -108,16 +106,44 @@ export class TrainingPlanService {
   getDeleteComponentQuery(
     training: Training,
     ref: TrainingComponentRef,
-  ): [Partial<Training>, Training] {
+  ): [Update<Training>, Training] {
     const updatedComponents = training.components.filter(
       (c) => c.id !== ref.componentId,
     );
 
-    const query = {
-      components: updatedComponents,
+    const query: Update<Training> = { components: updatedComponents };
+    training.components = updatedComponents;
+
+    return [query, training];
+  }
+
+  getAddCompletedMemberQuery(
+    training: Training,
+    ref: { componentId: string; uid: string },
+  ): [Update<Training>, Training] {
+    const { componentId, uid } = ref;
+
+    // add completed member to the component
+    this.findComponentOrFail(training, componentId);
+    training.components = training.components.map((c) =>
+      c.id !== componentId
+        ? c
+        : { ...c, completedMembersIds: [...c.completedMembersIds, uid] },
+    );
+
+    // check if training is completed and update accordingly
+    const completedMembersIds = training.completedMembersIds || [];
+    if (this.isTrainingCompleted(training, uid))
+      if (!completedMembersIds.includes(uid)) {
+        completedMembersIds.push(uid); // athlete completed the training
+        training.completedMembersIds = completedMembersIds;
+      }
+
+    const query: Update<Training> = {
+      completedMembersIds,
+      components: training.components,
     };
 
-    training.components = updatedComponents;
     return [query, training];
   }
 
@@ -147,24 +173,22 @@ export class TrainingPlanService {
     training: Training,
     componentId: string,
   ): TrainingComponent {
-    const foundComponent = training.components.find(
-      (c) => c.id === componentId,
-    );
+    const trainingComponents = this.getTrainingComponents(training);
+    const foundComponent = trainingComponents.find((c) => c.id === componentId);
 
     if (!foundComponent)
-      throw new NotFoundException(`Component with id ${componentId} not found`);
+      throw new NotFoundException(`Training component not found`);
 
     return foundComponent;
   }
 
   /**
-   * @param components - Components of the training
-   * @param numTotalTrainingMembers - Total number of members in the group
+   * Used to create future training stats for upcoming training components
    */
   createFutureTrainingStats(
     components: TrainingComponent[],
     numTotalTrainingMembers: number,
-  ): GroupWorkloadStats[] {
+  ): TrainingExerciseAverageStats[] {
     const createdFutureStats = [] as {
       totalIntensity: number;
       totalVolume: number;
@@ -185,7 +209,7 @@ export class TrainingPlanService {
         for (const exercise of superset.exercises) {
           if (!exercise.sets.length) continue;
 
-          let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
+          const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
 
           createdFutureStats.push({
             totalIntensity: avgInt * numMainGroupMembers,
@@ -196,12 +220,13 @@ export class TrainingPlanService {
           });
         }
       }
+
       for (const subgroup of component.subgroups) {
         for (const superset of subgroup.supersets) {
           for (const exercise of superset.exercises) {
             if (!exercise.sets.length) continue;
 
-            let { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
+            const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
 
             const foundFutureStat = createdFutureStats.find(
               (fs) => fs.exerciseId === exercise.id,
@@ -272,55 +297,69 @@ export class TrainingPlanService {
   }
 
   /**
-   * @param completedStats - CompletedStats of existing training in database
-   * @param exercises - New completed exercises values from athlete
+   * Used to calculate average stats for completed training component exercises,
+   * by athletes, like intensity and volume.
    */
-  calculateCompletedTrainingStats(
-    completedStats: GroupWorkloadStats[],
-    exercises: TrainingExercise[],
+  calculateTrainingStats(
+    trainingComponentId: string,
+    completedStats: TrainingExerciseAverageStats[],
+    completedExercises: CompletedTrainingExercise[],
   ) {
-    for (const exercise of exercises) {
-      const avgFutureStats = completedStats.find(
-        (avg) => avg.exerciseId === exercise.id,
+    const stats: TrainingExerciseAverageStats[] = completedStats.filter(
+      (s) => s.rootComponentId === trainingComponentId,
+    );
+
+    for (const completedExercise of completedExercises) {
+      const trainingExerciseAverageStats: TrainingExerciseAverageStats =
+        stats.find((avg) => avg.exerciseId === completedExercise.id) || {
+          exerciseId: completedExercise.id,
+          rootComponentId: trainingComponentId,
+          numMembers: 0,
+          intensity: 0,
+          volume: 0,
+        };
+
+      trainingExerciseAverageStats.intensity = this.calculateFieldAverage(
+        ParamType.IntWork1,
+        completedExercise.sets,
       );
 
-      const intensitiesL = exercise.sets
-        .flatMap((set) => set.paramValuesL)
-        .filter((p) => p.field === ParamType.IntWork1);
-      const intensitiesR = exercise.sets
-        .flatMap((set) => set.paramValuesR)
-        .filter((p) => p.field === ParamType.IntWork1);
+      trainingExerciseAverageStats.volume = this.calculateFieldAverage(
+        ParamType.VolWork1,
+        completedExercise.sets,
+      );
 
-      const avgIntensity =
-        (intensitiesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-          intensitiesL.length +
-          intensitiesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-            intensitiesR.length) /
-        2;
+      trainingExerciseAverageStats.numMembers += 1;
 
-      const volumesL = exercise.sets
-        .flatMap((set) => set.paramValuesL)
-        .filter((p) => p.field === ParamType.VolWork1);
-      const volumesR = exercise.sets
-        .flatMap((set) => set.paramValuesR)
-        .filter((p) => p.field === ParamType.VolWork1);
+      const existingStatIndex = completedStats.findIndex(
+        (s) => s.exerciseId === completedExercise.id,
+      );
 
-      const avgVolume =
-        (volumesL.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-          volumesL.length +
-          volumesR.reduce((sum, p) => sum + parseFloat(p.value), 0) /
-            volumesR.length) /
-        2;
-
-      avgFutureStats.intensity = avgIntensity;
-      avgFutureStats.volume = avgVolume;
+      if (existingStatIndex !== -1)
+        completedStats[existingStatIndex] = trainingExerciseAverageStats;
+      else completedStats.push(trainingExerciseAverageStats);
     }
 
-    return completedStats;
+    return completedStats.map((s) => ({
+      ...s,
+      intensity: parseFloat(s.intensity.toFixed(2)),
+      volume: parseFloat(s.volume.toFixed(2)),
+    }));
   }
 
-  isTrainingCompleted(userId: string, trainingComponents: TrainingComponent[]) {
-    return trainingComponents.every((c) =>
+  private calculateFieldAverage(field: ParamType, sets: ExerciseSet[]): number {
+    const values = sets.flatMap((s) =>
+      s.paramValuesL.concat(s.paramValuesR).filter((p) => p.field === field),
+    );
+
+    if (!values.length) return 0;
+
+    const sum = values.reduce((acc, curr) => acc + parseFloat(curr.value), 0);
+    return sum / values.length;
+  }
+
+  isTrainingCompleted(training: Training, userId: string) {
+    return training.components.every((c) =>
       c.completedMembersIds.includes(userId),
     );
   }
@@ -349,6 +388,15 @@ export class TrainingPlanService {
         throw new BadRequestException(
           `Component ${component.name} cannot be selected for training`,
         );
+
+      // validate method
+      if (curr.methodId) {
+        const method = allMethods.find((m) => m.id === curr.methodId);
+        if (!method)
+          throw new NotFoundException(
+            'Method not found for training component',
+          );
+      }
 
       // check duplicates
       if (duplicates.has(curr.id))
@@ -392,15 +440,16 @@ export class TrainingPlanService {
     if (!method)
       throw new NotFoundException('Method not found for training component');
 
-    if (!method.attributeRanges.length) return; // no values to validate
+    if (!method.attributes.length) return; // no values to validate
 
     const exercises = trainingComponent.supersets.flatMap((s) => s.exercises);
+    const sets = exercises.flatMap(
+      (e: TrainingExercise | CompletedTrainingExercise) => e.sets,
+    );
 
-    for (const exercise of exercises) {
-      for (const set of exercise.sets) {
-        this.validateParamValues(method, set.paramValuesL);
-        this.validateParamValues(method, set.paramValuesR);
-      }
+    for (const set of sets) {
+      this.validateMethodParamValues(method, set.paramValuesL);
+      this.validateMethodParamValues(method, set.paramValuesR);
     }
   }
 
@@ -474,32 +523,31 @@ export class TrainingPlanService {
       );
   }
 
-  private validateParamValues(method: Method, paramValues: AttributeValue[]) {
-    for (const paramValue of paramValues) {
-      let attributeRange = method.attributeRanges.find(
-        (ar) => ar.field === paramValue.field,
-      );
-      if (!attributeRange) continue;
+  private validateMethodParamValues(
+    method: Method,
+    paramValues: AttributeValue[],
+  ) {
+    for (const { field, value, selected } of paramValues) {
+      let attribute = method.attributes.find((a) => a.field === field);
+      if (!attribute) continue;
 
-      const foundInOptions = attributeRange.options.find(
-        (o) => o.field === paramValue.selected,
+      const foundInOptions = attribute.options.find(
+        (o) => o.field === selected,
       );
-      if (foundInOptions) attributeRange = foundInOptions;
 
-      if (attributeRange.min !== undefined) {
-        if (parseFloat(paramValue.value) < attributeRange.min) {
+      if (foundInOptions) attribute = foundInOptions;
+
+      if (!this.commonService.object.isEmpty(attribute.min))
+        if (parseFloat(value) < attribute.min)
           throw new BadRequestException(
-            `Value for ${paramValue.field} cannot be less than ${attributeRange.min}`,
+            `Value for ${field} cannot be less than ${attribute.min}`,
           );
-        }
-      }
-      if (attributeRange.max !== undefined) {
-        if (parseFloat(paramValue.value) > attributeRange.max) {
+
+      if (!this.commonService.object.isEmpty(attribute.max))
+        if (parseFloat(value) > attribute.max)
           throw new BadRequestException(
-            `Value for ${paramValue.field} cannot be greater than ${attributeRange.max}`,
+            `Value for ${field} cannot be greater than ${attribute.max}`,
           );
-        }
-      }
     }
   }
 
@@ -519,39 +567,33 @@ export class TrainingPlanService {
 
       for (const s of tComponent.supersets)
         for (const tExercise of s.exercises) {
-          if (tExercise.params.length > 0 || tExercise.sets.length > 0)
-            continue; // already populated
-
           const exercise = exercises.find((e) => e.id === tExercise.id)!;
           if (!exercise) continue;
 
-          const params = this.getComponentParamAttributes(
+          const params = this.componentService.getComponentParamAttributes(
             componentParams,
             exercise.attributeValues,
             attributes,
           );
 
-          tExercise.params = this.getParamAttributes(params);
-          tExercise.sets = this.getSetData(tExercise.params);
+          tExercise.params = this.componentService.getParamAttributes(params);
+          tExercise.sets = this.getSets(tExercise.params, tExercise.sets);
         }
 
       for (const subgroup of tComponent.subgroups)
         for (const s of subgroup.supersets)
           for (const tExercise of s.exercises) {
-            if (tExercise.params.length > 0 || tExercise.sets.length > 0)
-              continue; // already populated
-
             const exercise = exercises.find((e) => e.id === tExercise.id)!;
             if (!exercise) continue;
 
-            const params = this.getComponentParamAttributes(
+            const params = this.componentService.getComponentParamAttributes(
               componentParams,
               exercise.attributeValues,
               attributes,
             );
 
-            tExercise.params = this.getParamAttributes(params);
-            tExercise.sets = this.getSetData(tExercise.params);
+            tExercise.params = this.componentService.getParamAttributes(params);
+            tExercise.sets = this.getSets(tExercise.params, tExercise.sets);
           }
     }
   }
@@ -620,10 +662,7 @@ export class TrainingPlanService {
       }
   }
 
-  getSetData(
-    params: Attribute[],
-    paramValues?: AttributeValue[],
-  ): ExerciseSet[] {
+  getSets(params: Attribute[], existingSets?: ExerciseSet[]): ExerciseSet[] {
     const sets = +(
       params
         .find((p) => p.field === ParamType.VolWorkSets)
@@ -633,169 +672,38 @@ export class TrainingPlanService {
 
     params = params.filter((p) => p.field !== ParamType.VolWorkSets);
 
-    const paramValuesLR = this.getTrainingExerciseParamValues(
-      params,
-      paramValues,
-    );
+    if (!existingSets || !existingSets.length) {
+      // generate sets with default values
+      const generatedParamValues = this.attributeService.getParamValues(params);
 
-    return Array.from({ length: sets }).map((_, i) => ({
-      setNumber: i + 1,
-      paramValuesL: paramValuesLR,
-      paramValuesR: paramValuesLR,
-    }));
-  }
+      return Array.from({ length: sets }).map((_, i) => ({
+        setNumber: i + 1,
+        paramValuesL: generatedParamValues,
+        paramValuesR: generatedParamValues,
+      }));
+    }
 
-  getParamAttributes(componentParams: ComponentParam[]) {
-    const selectedAttributes: Attribute[] = [];
-    for (const param of componentParams) {
-      const attribute = PARAMS.find((a) => a.field === param.field);
-      if (!attribute) continue;
+    // validate existing sets
+    const validSets: ExerciseSet[] = [];
+    for (const existingSet of existingSets) {
+      const validParamValuesL = this.attributeService.validate(
+        existingSet.paramValuesL,
+        params,
+      );
 
-      const options: Attribute[] = [];
-      if (attribute.options?.length > 0) {
-        // if hardcoded param has options, but component param does not, select all options by default
-        const paramOptions = param.options ? param.options : attribute.options;
-        options.push(
-          ...this.mapOptionsRecursively(paramOptions, attribute.options),
-        );
-      }
+      const validParamValuesR = this.attributeService.validate(
+        existingSet.paramValuesR,
+        params,
+      );
 
-      selectedAttributes.push({
-        ...attribute,
-        options,
-        defaultValue: param.defaultValue || attribute.defaultValue,
+      validSets.push({
+        ...existingSet,
+        paramValuesL: validParamValuesL,
+        paramValuesR: validParamValuesR,
       });
     }
 
-    return selectedAttributes;
-  }
-
-  getComponentParamAttributes(
-    params: { [condition: string]: ComponentParam[] },
-    attributeValues: ExerciseAttributeValue[],
-    attributes: Attribute[],
-  ): ComponentParam[] {
-    let componentParams: ComponentParam[] = params[DEFAULT_PARAMS_KEY] || [];
-
-    for (const condition of Object.keys(params)) {
-      if (condition === DEFAULT_PARAMS_KEY) continue;
-
-      const [field, operator, value] = condition.split(':'); // e.g. "field:eq:value"
-      const attrVal = attributeValues.find((a) => a.field === field);
-      const attribute = attributes.find((a) => a.field === field)!;
-
-      if (attribute && !attrVal && operator === '!')
-        // case for empty value and operator ! (value does not exist)
-        return params[condition];
-
-      if (!attribute || !attrVal) continue;
-
-      switch (operator) {
-        case 'eq': // equality check
-          if (
-            attribute.type === AttributeType.Number &&
-            parseFloat(attrVal.value) === parseFloat(value)
-          )
-            // number
-            return params[condition];
-          else if (attrVal.value === value)
-            // string
-            return params[condition];
-
-          break;
-        case 'like': // string inclusion
-          if (
-            attribute.type === AttributeType.String &&
-            attrVal.value.includes(value)
-          )
-            // string
-            return params[condition];
-
-          break;
-        case 'gt': // greater than
-          if (
-            attribute.type === AttributeType.Number &&
-            parseFloat(attrVal.value) > parseFloat(value)
-          )
-            // number
-            return params[condition];
-
-          break;
-        case 'lt': // less than
-          if (
-            attribute.type === AttributeType.Number &&
-            parseFloat(attrVal.value) < parseFloat(value)
-          )
-            // number
-            return params[condition];
-
-          break;
-        case 'gte': // greater than or equal
-          if (
-            attribute.type === AttributeType.Number &&
-            parseFloat(attrVal.value) >= parseFloat(value)
-          )
-            // number
-            return params[condition];
-
-          break;
-        case 'lte': // Less than or equal
-          if (
-            attribute.type === AttributeType.Number &&
-            parseFloat(attrVal.value) <= parseFloat(value)
-          )
-            // number
-            return params[condition];
-
-          break;
-        case 'range': // range check
-          if (attribute.type === AttributeType.Number) {
-            // number
-            const [min, max] = value.split('-').map(parseFloat);
-            const numericValue = parseFloat(attrVal.value);
-            if (numericValue >= min && numericValue <= max)
-              return params[condition];
-          }
-
-          break;
-        case 'selected': // select attribute
-          if (attribute.type !== AttributeType.Select)
-            throw new BadRequestException(
-              'Operator "selected" can only be used with select attribute types',
-            );
-
-          // single select with only values as options
-          const option = (attribute.options || []).find(
-            (o) => o.field === attrVal.value,
-          );
-
-          if (
-            option &&
-            option.type === AttributeType.Value &&
-            value === attrVal.value
-          )
-            return params[condition];
-        case '!': // boolean false value
-          if (
-            attribute.type === AttributeType.Boolean &&
-            attrVal.value === 'false'
-          )
-            // boolean
-            return params[condition];
-
-          break;
-        // default case for boolean or no operator (just check if the field exists)
-        default:
-          if (
-            (attribute.type === AttributeType.Boolean ||
-              attribute.type === AttributeType.Value) &&
-            (attrVal.value === 'true' || !attrVal.value)
-          )
-            return params[condition];
-      }
-    }
-
-    return componentParams;
+    return validSets;
   }
 
   createWarmupAndCooldown(
@@ -850,229 +758,5 @@ export class TrainingPlanService {
     warmup.to = trainingComponents[0].from;
     cooldown.from = cooldownFrom;
     cooldown.to = addMinutes(cooldownFrom, 5);
-  }
-
-  /**
-   * Populates param values data for training exercise. If no param values are provided, it
-   * takes default values from params.
-   *
-   * @example
-   * ```ts
-   * const params = [
-   *  {
-   *     field: 'field',
-   *     type: 'select',
-   *     defaultValue: 'opt-2',
-   *     options: [
-   *       {
-   *         field: 'opt-1',
-   *         type: 'value',
-   *         defaultValue: 'opt-1',
-   *       },
-   *       {
-   *         field: 'opt-2',
-   *         type: 'value',
-   *         defaultValue: 'opt-2',
-   *       },
-   *     ]
-   *   },
-   *   {
-   *     field: 'str',
-   *     type: 'string',
-   *     defaultValue: 'example',
-   *   }
-   * ]
-   *
-   * const paramValues = [
-   *   {
-   *     field: 'str',
-   *     selected: 'str',
-   *     value: 'test'
-   *   }
-   * ]
-   *
-   * const values = getTrainingExerciseParamValues(params, paramValues)
-   * => [
-   *   {
-   *     field: 'field',
-   *     selected: 'opt-2',
-   *     value: 'opt-2'
-   *   },
-   *   {
-   *     field: 'str',
-   *     selected: 'str',
-   *     value: 'test'
-   *   },
-   * ]
-   * ```
-   */
-  private getTrainingExerciseParamValues(
-    params: Attribute[],
-    paramValues?: AttributeValue[],
-  ) {
-    const values: AttributeValue[] = [];
-
-    for (const param of params) {
-      const { selected, value } = this.populateDefaultSelectedValue(param);
-      const providedParamValue = paramValues?.find(
-        (v) => v.field === param.field,
-      );
-
-      values.push(
-        providedParamValue
-          ? providedParamValue
-          : { field: param.field, selected, value },
-      );
-    }
-
-    return this.attributeService.validate(values, params);
-  }
-
-  /**
-   * `ComponentParam` is a partial attribute, which enables
-   * selecting different sub-parameters for different exercises
-   * from hardcoded parameters. For example, hardcoded volumen
-   * options are rep, time and distance, and by using `ComponentParam`,
-   * we can choose only a subset of those options, and this applies
-   * for nested options also.
-   */
-  private mapOptionsRecursively(
-    paramOptions: ComponentParam[],
-    attributeOptions: Attribute[],
-  ): Attribute[] {
-    if (!paramOptions) return [];
-    const mappedOptions: Attribute[] = [];
-
-    for (const paramOption of paramOptions) {
-      const attributeOption = attributeOptions.find(
-        (o) => o.field === paramOption.field,
-      );
-
-      if (!attributeOption) continue;
-
-      // recursively map nested options
-      const nestedOptions: Attribute[] = [];
-      if (attributeOption.options?.length > 0) {
-        nestedOptions.push(
-          ...this.mapOptionsRecursively(
-            paramOption.options || attributeOption.options,
-            attributeOption.options,
-          ),
-        );
-      }
-
-      mappedOptions.push({
-        ...attributeOption,
-        options: nestedOptions,
-        defaultValue: paramOption.defaultValue || attributeOption.defaultValue,
-      });
-    }
-
-    return mappedOptions;
-  }
-
-  /**
-   * Populates default selected value and attribute value based on whether defaultValue
-   * is provided, else it selects the first possible option in options array.
-   *
-   * @example
-   * ```ts
-   * const param = {
-   *   field: 'field',
-   *   type: 'select',
-   *   defaultValue: 'opt-2',
-   *   options: [
-   *     {
-   *       field: 'opt-1',
-   *       type: 'value',
-   *       defaultValue: 'opt-1',
-   *     },
-   *     {
-   *       field: 'opt-2',
-   *       type: 'value',
-   *       defaultValue: 'opt-2',
-   *     },
-   *   ]
-   * }
-   *
-   * const result = populateDefaultSelectedAndValue(param)
-   * => {
-   *   field: 'field',
-   *   selected: 'opt-2',
-   *   value: 'opt-2'
-   * }
-   * ```
-   *
-   * @example
-   * ```ts
-   * const param = {
-   *   field: 'field',
-   *   type: 'select',
-   *   options: [
-   *     {
-   *       field: 'opt-1',
-   *       type: 'value',
-   *     },
-   *     {
-   *       field: 'opt-2',
-   *       type: 'value',
-   *     },
-   *   ]
-   * }
-   *
-   * const result = populateDefaultSelectedAndValue(param)
-   * => {
-   *   field: 'field',
-   *   selected: 'opt-1',
-   *   value: 'opt-1'
-   * }
-   * ```
-   */
-  private populateDefaultSelectedValue(param: Attribute): {
-    selected: string;
-    value: string;
-  } {
-    if (
-      param.type !== AttributeType.Select &&
-      param.type !== AttributeType.Multiselect
-    ) {
-      return {
-        selected: '',
-        value: param.defaultValue || '',
-      };
-    }
-
-    let selectedPath = '';
-    let currentOptions = param.options || [];
-    let currentAttribute = param;
-    let value = '';
-
-    while (currentOptions && currentOptions.length > 0) {
-      let selectedOption: Attribute;
-
-      if (currentAttribute.defaultValue) {
-        selectedOption =
-          currentOptions.find(
-            (opt) => opt.field === currentAttribute.defaultValue,
-          ) || currentOptions[0];
-      } else selectedOption = currentOptions[0];
-
-      selectedPath = selectedPath
-        ? `${selectedPath}:${selectedOption.field}`
-        : selectedOption.field;
-
-      if (!selectedOption.options || selectedOption.options.length === 0) {
-        value = selectedOption.defaultValue || '';
-        break;
-      }
-
-      currentAttribute = selectedOption;
-      currentOptions = selectedOption.options;
-    }
-
-    return {
-      selected: selectedPath,
-      value: value,
-    };
   }
 }

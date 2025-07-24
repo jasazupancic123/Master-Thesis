@@ -1,8 +1,10 @@
 import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
-import { UserRole } from '../../user/enum/user-role.enum';
-import { AuthGuard } from '../guard/auth.guard';
-import { RoleGuard, AUTH_ROLES_KEY } from '../guard/role.guard';
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
+
+import type { UserRole } from '@src/user/enum/user-role.enum';
+
+import { AuthGuard } from '../guard/auth.guard';
+import { AUTH_ROLES_KEY, RoleGuard } from '../guard/role.guard';
 
 export function Auth(roles: UserRole[] = []) {
   return applyDecorators(

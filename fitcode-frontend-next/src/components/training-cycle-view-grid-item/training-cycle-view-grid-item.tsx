@@ -5,10 +5,8 @@ import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import React, { useEffect, useRef, useState } from 'react';
 import { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
-import {
-  TrainingComponent,
-  TrainingComponentInfo,
-} from '@/controller/training/type/training-plan.type';
+import { TrainingComponentInfo } from '@/controller/training/type/training-component.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useGroup } from '@/store/group-provider';
 import toast from 'react-hot-toast';
 

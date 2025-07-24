@@ -1,22 +1,23 @@
+import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import {
-  IsBoolean,
   IsDate,
   IsEnum,
   IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   Min,
 } from 'class-validator';
-import { TimestampEntity } from '../../common/entity/timestamp.entity';
+
+import { IdEntity } from '@src/common/entity/id.entity';
+import { TimestampEntity } from '@src/common/entity/timestamp.entity';
+
 import { SetStatus } from '../enum/set-status.enum';
-import { IntersectionType } from '@nestjs/mapped-types';
 import { WorkloadValue } from './workload-value.entity';
 
-export class Workload extends IntersectionType(TimestampEntity, WorkloadValue) {
+export class WorkloadMeta extends IdEntity {
   @IsString()
   @IsNotEmpty()
   @ApiPropertyOptional()
@@ -68,8 +69,14 @@ export class Workload extends IntersectionType(TimestampEntity, WorkloadValue) {
   @Expose()
   setNumber: number;
 
-  @IsEnum(SetStatus)
+  @IsInt()
+  @Min(0)
   @ApiProperty()
+  @Expose()
+  supersetIndex: number;
+
+  @IsEnum(SetStatus)
+  @ApiProperty({ enum: SetStatus })
   @Expose()
   status: SetStatus;
 
@@ -84,9 +91,10 @@ export class Workload extends IntersectionType(TimestampEntity, WorkloadValue) {
   @ApiPropertyOptional()
   @Expose()
   notes?: string;
-
-  @IsBoolean()
-  @ApiProperty()
-  @Expose()
-  isPersonalized: boolean;
 }
+
+export class Workload extends IntersectionType(
+  TimestampEntity,
+  WorkloadMeta,
+  WorkloadValue,
+) {}

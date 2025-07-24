@@ -6,7 +6,7 @@ import {
 import { SetState } from '@/common/type/state.type';
 import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useTheme } from '@mui/material';
 import { useGroup } from '@/store/group-provider';
 

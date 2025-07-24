@@ -1,48 +1,45 @@
-import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { TestingModule, Test } from '@nestjs/testing';
-import { AppModule } from '../../src/app.module';
-import { ComponentService } from '../../src/component/component.service';
-import { Component } from '../../src/component/entity/component.entity';
-import { generateComponentStub } from '../../src/component/mock/component.stub';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { ExerciseService } from '../../src/exercise/service/exercise.service';
-import { GroupService } from '../../src/group/group.service';
-import { Group } from '../../src/group/entity/group.entity';
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import {
   createGroupWithCycles,
   createInstitution,
-  createInstitutionWithUsers,
   createTraining,
   deleteCollection,
   deleteDoc,
   deleteInstitution,
-  deleteUsers,
-} from '../common/utils/data.util';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
+} from '@test/common/utils/data.util';
+import { addDays, addMinutes } from 'date-fns';
+import * as request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import { ComponentService } from '@src/component/component.service';
+import type { Component } from '@src/component/entity/component.entity';
+import { ParamType } from '@src/component/enum/param.enum';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import type { Exercise } from '@src/exercise/entity/exercise.entity';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import type { Group } from '@src/group/entity/group.entity';
+import { GroupService } from '@src/group/group.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Target } from '@src/target/entity/target.entity';
+import { generateTargetStub } from '@src/target/mock/target.stub';
+import type { ExerciseSet } from '@src/training/entity/exercise-set.entity';
+import type { Training } from '@src/training/entity/training.entity';
+import { PeriodizationType } from '@src/training/enum/periodization-type.enum';
 import {
-  generateTrainingComponent,
-  generateSuperset,
-  generateTrainingExercise,
   generateExerciseSet,
   generateSubgroup,
-} from '../../src/training/mock/training.stub';
-import { Training } from '../../src/training/entity/training.entity';
-import { addDays, addMinutes } from 'date-fns';
-import { Exercise } from '../../src/exercise/entity/exercise.entity';
-import { ParamType } from '../../src/component/enum/param.enum';
-import { ExerciseSet } from '../../src/training/entity/exercise-set.entity';
-import { InstitutionService } from '../../src/institution/service/institution.service';
-import { TestInstitution, TestTraining } from '../common/type/entity.type';
-import { Target } from '../../src/target/entity/target.entity';
-import { generateTargetStub } from '../../src/target/mock/target.stub';
+  generateSuperset,
+  generateTrainingComponent,
+  generateTrainingExercise,
+} from '@src/training/mock/training.stub';
+import { TrainingRepository } from '@src/training/repository/training.repository';
+
 import { PERIODIZATION_TEST_VALUES } from '../common/constant/periodization.constant';
-import { PeriodizationType } from '../../src/training/enum/periodization-type.enum';
-import { TrainingService } from '../../src/training/service/training.service';
-import { TrainingRepository } from '../../src/training/repository/training.repository';
-import { createAthleteUserAndToken } from '../common/utils/auth.util';
-import { WorkloadRepository } from '../../src/training/repository/workload.repository';
-import { TestUser } from '../common/type/auth.type';
+import type { TestInstitution, TestTraining } from '../common/type/entity.type';
 
 describe('Periodization functions (e2e)', () => {
   let app: INestApplication;
@@ -50,9 +47,7 @@ describe('Periodization functions (e2e)', () => {
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
   let institutionService: InstitutionService;
-  let trainingService: TrainingService;
   let trainingRepository: TrainingRepository;
-  let workloadRepository: WorkloadRepository;
   let groupService: GroupService;
 
   let institution: TestInstitution;
@@ -99,29 +94,26 @@ describe('Periodization functions (e2e)', () => {
               exercises: [
                 generateTrainingExercise({
                   id: exercises[0].id,
-                  periodized: false,
                   sets: [
-                    generateExerciseSet({ setNumber: 1 }),
-                    generateExerciseSet({ setNumber: 2 }),
-                    generateExerciseSet({ setNumber: 3 }),
+                    generateExerciseSet(1),
+                    generateExerciseSet(2),
+                    generateExerciseSet(3),
                   ],
                 }),
                 generateTrainingExercise({
                   id: exercises[1].id,
-                  periodized: false,
                   sets: [
-                    generateExerciseSet({ setNumber: 1 }),
-                    generateExerciseSet({ setNumber: 2 }),
-                    generateExerciseSet({ setNumber: 3 }),
+                    generateExerciseSet(1),
+                    generateExerciseSet(2),
+                    generateExerciseSet(3),
                   ],
                 }),
                 generateTrainingExercise({
                   id: exercises[2].id,
-                  periodized: false,
                   sets: [
-                    generateExerciseSet({ setNumber: 1 }),
-                    generateExerciseSet({ setNumber: 2 }),
-                    generateExerciseSet({ setNumber: 3 }),
+                    generateExerciseSet(1),
+                    generateExerciseSet(2),
+                    generateExerciseSet(3),
                   ],
                 }),
               ],
@@ -139,29 +131,26 @@ describe('Periodization functions (e2e)', () => {
                         exercises: [
                           generateTrainingExercise({
                             id: exercises[0].id,
-                            periodized: false,
                             sets: [
-                              generateExerciseSet({ setNumber: 1 }),
-                              generateExerciseSet({ setNumber: 2 }),
-                              generateExerciseSet({ setNumber: 3 }),
+                              generateExerciseSet(1),
+                              generateExerciseSet(2),
+                              generateExerciseSet(3),
                             ],
                           }),
                           generateTrainingExercise({
                             id: exercises[1].id,
-                            periodized: false,
                             sets: [
-                              generateExerciseSet({ setNumber: 1 }),
-                              generateExerciseSet({ setNumber: 2 }),
-                              generateExerciseSet({ setNumber: 3 }),
+                              generateExerciseSet(1),
+                              generateExerciseSet(2),
+                              generateExerciseSet(3),
                             ],
                           }),
                           generateTrainingExercise({
                             id: exercises[2].id,
-                            periodized: false,
                             sets: [
-                              generateExerciseSet({ setNumber: 1 }),
-                              generateExerciseSet({ setNumber: 2 }),
-                              generateExerciseSet({ setNumber: 3 }),
+                              generateExerciseSet(1),
+                              generateExerciseSet(2),
+                              generateExerciseSet(3),
                             ],
                           }),
                         ],
@@ -187,9 +176,7 @@ describe('Periodization functions (e2e)', () => {
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
     institutionService = moduleFixture.get(InstitutionService);
-    trainingService = moduleFixture.get(TrainingService);
     trainingRepository = moduleFixture.get(TrainingRepository);
-    workloadRepository = moduleFixture.get(WorkloadRepository);
     groupService = moduleFixture.get(GroupService);
 
     [targetStrength, targetPower, targetPlyometric] = [
@@ -275,7 +262,7 @@ describe('Periodization functions (e2e)', () => {
         if (type === PeriodizationType.DUP_TABLE_BASED) {
           const response = await request(app.getHttpServer())
             .post(`/training/periodize/trainings`)
-            .set('Authorization', `Bearer ${trainer.token}`)
+            .set('Authorization', `Bearer ${global.trainer.token}`)
             .send({
               baseTrainingId: baseTraining.id,
               componentId: component.id,
@@ -314,7 +301,7 @@ describe('Periodization functions (e2e)', () => {
 
         const response = await request(app.getHttpServer())
           .post(`/training/periodize/trainings`)
-          .set('Authorization', `Bearer ${trainer.token}`)
+          .set('Authorization', `Bearer ${global.trainer.token}`)
           .send({
             baseTrainingId: baseTraining.id,
             componentId: component.id,
@@ -410,18 +397,6 @@ describe('Periodization functions (e2e)', () => {
       const foundTrainings = await trainingRepository.getDocs();
       expect(foundTrainings).toHaveLength(NUM_TRAININGS + 1); // one base training
 
-      // NOTE - takes too long
-      // const allWorkloadOperations = foundTrainings.flatMap((t) =>
-      //   createWorkloadsForTraining(firebase, t),
-      // );
-
-      // await firebase.paginateBatchWrites(allWorkloadOperations);
-
-      // const foundWorkloads = await workloadRepository.getAllDocs();
-      // expect(foundWorkloads).toHaveLength(
-      //   (NUM_TRAININGS + 1) * (NUM_USERS + 1) * 3 * 3,
-      // ); // 3 exercises, 3 sets
-
       const response = await request(app.getHttpServer())
         .post(`/training/periodize/trainings`)
         .set('Authorization', `Bearer ${institution.trainers[0].token}`)
@@ -456,7 +431,7 @@ describe('Periodization functions (e2e)', () => {
 
       const response = await request(app.getHttpServer())
         .post(`/training/periodize/trainings`)
-        .set('Authorization', `Bearer ${trainer.token}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({
           baseTrainingId: trainings[0].id,
           componentId: component.id,
@@ -479,7 +454,7 @@ describe('Periodization functions (e2e)', () => {
         if (type === PeriodizationType.DUP_TABLE_BASED) {
           const response = await request(app.getHttpServer())
             .post(`/training/periodize/trainings`)
-            .set('Authorization', `Bearer ${trainer.token}`)
+            .set('Authorization', `Bearer ${global.trainer.token}`)
             .send({
               baseTrainingId: baseTraining.id,
               componentId: component.id,
@@ -512,7 +487,7 @@ describe('Periodization functions (e2e)', () => {
 
         const response = await request(app.getHttpServer())
           .post(`/training/periodize/trainings`)
-          .set('Authorization', `Bearer ${trainer.token}`)
+          .set('Authorization', `Bearer ${global.trainer.token}`)
           .send({
             baseTrainingId: baseTraining.id,
             componentId: component.id,

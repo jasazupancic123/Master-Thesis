@@ -4,11 +4,13 @@ import {
   IsBoolean,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { AttributeType } from '../../common/enum/attribute-type.enum';
+
+import { AttributeType } from '@src/common/enum/attribute-type.enum';
 
 export class Attribute {
   @IsString()
@@ -25,7 +27,7 @@ export class Attribute {
 
   @IsEnum(AttributeType)
   @IsString()
-  @ApiProperty()
+  @ApiProperty({ type: () => AttributeType })
   @Expose()
   type: AttributeType; // defaults to "string"
 
@@ -34,6 +36,13 @@ export class Attribute {
   @ApiPropertyOptional()
   @Expose()
   required?: boolean;
+
+  @IsString()
+  @ApiPropertyOptional()
+  @IsNotEmpty()
+  @IsOptional()
+  @Expose()
+  description?: string;
 
   @IsString()
   @IsOptional()
@@ -48,9 +57,21 @@ export class Attribute {
   @Expose()
   defaultValue?: string;
 
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  min?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  @Expose()
+  max?: number;
+
   @ValidateNested({ each: true })
   @Type(() => Attribute)
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => Attribute, isArray: true })
   @IsOptional()
   @Expose()
   options?: Attribute[]; // possible values for select type
