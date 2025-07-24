@@ -1231,21 +1231,33 @@ export class TrainingService implements Permission<Training, Institution> {
             );
 
             newPrescribedExercises.push({
-              ...prescribedExercise,
+              id: prescribedExercise.id,
+              color: prescribedExercise.color,
+              params: prescribedExercise.params,
+              attributes: prescribedExercise.attributes,
               sets: newPrescribedSets,
             });
           });
 
           newPrescribedSupersets.push({
-            ...prescribedExercises,
+            color: trainingComponent.color,
             exercises: newPrescribedExercises,
           });
         },
       );
 
       newPrescribedTrainingComponents.push({
-        ...trainingComponent,
+        id: trainingComponent.id,
+        from: trainingComponent.from,
+        to: trainingComponent.to,
+        color: trainingComponent.color,
+        copiedFrom: trainingComponent.copiedFrom,
+        target: trainingComponent.target,
+        methodId: trainingComponent.methodId,
+        periodizationType: trainingComponent.periodizationType,
         supersets: newPrescribedSupersets,
+        completedMembersIds: [],
+        subgroups: [],
       });
     }
 

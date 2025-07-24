@@ -17,7 +17,7 @@ export default function Animation(props: AnimationProps) {
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((prevProgress) =>
-        prevProgress >= 100 ? 10 : prevProgress + 1
+        prevProgress >= 100 ? 10 : prevProgress + 10
       );
     }, 50);
 
