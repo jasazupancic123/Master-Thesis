@@ -14,6 +14,8 @@ import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import { AthleteTrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useTraining } from '@/store/training-provider';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/store/auth-provider';
+import { Check } from '@mui/icons-material';
 
 const commonService = CommonService.instance;
 
@@ -44,55 +46,102 @@ export default function AthleteTrainingComponents(
     timeout,
   } = props;
 
-  const { trainingInProgress, setTrainingInProgress, setView } = useTraining();
+  const { setTrainingInProgress, setView } = useTraining();
+  const { user } = useAuth();
 
   const theme = useTheme();
   const router = useRouter();
 
   return (
-    <Box width="100%" display="flex" flexDirection="column" gap={1}>
+    <Box
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      gap={1}
+    >
       <Box
         width="100%"
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        gap={4}
         sx={{
-          overflow: 'auto',
+          overflowX: 'auto',
         }}
       >
-        {components.map((component) => {
-          const IconComponent = commonService.navigation.getComponentIcon(
-            component.id
-          );
+        <Box
+          display="inline-flex"
+          justifyContent="center"
+          alignItems="center"
+          gap={4}
+          sx={{
+            minWidth: '100%',
+          }}
+        >
+          {components.map((component) => {
+            const IconComponent = commonService.navigation.getComponentIcon(
+              component.id
+            );
 
-          return (
-            <Box key={component.id}>
-              <IconButton
-                sx={{ m: 0 }}
-                onClick={() => {
-                  setShowSupersets(true);
-                  setSelectedComponent(component);
-                }}
-              >
-                <IconComponent
-                  sx={{
-                    fontSize: 26,
-                    cursor: 'pointer',
-                    color:
-                      selectedComponent?.id === component.id
-                        ? theme.palette.primary.main
-                        : undefined,
+            return (
+              <Box key={component.id} minWidth="48px">
+                <IconButton
+                  sx={[
+                    user && component.completedMembersIds.includes(user.uid)
+                      ? {
+                          opacity: 0.5,
+                          position: 'relative',
+                          backgroundColor:
+                            selectedComponent?.id === component.id
+                              ? theme.palette.background.light
+                              : theme.palette.background.dark,
+                        }
+                      : {},
+                    {
+                      m: 0,
+                    },
+                  ]}
+                  onClick={() => {
+                    setShowSupersets(true);
+                    setSelectedComponent(component);
                   }}
-                />
-              </IconButton>
-            </Box>
-          );
-        })}
+                >
+                  <IconComponent
+                    sx={{
+                      fontSize: 26,
+                      cursor: 'pointer',
+                      color:
+                        selectedComponent?.id === component.id
+                          ? theme.palette.primary.main
+                          : undefined,
+                    }}
+                  />
+                  {user && component.completedMembersIds.includes(user.uid) && (
+                    <Check
+                      sx={{
+                        position: 'absolute',
+                        bottom: 2,
+                        right: 0,
+                        color: theme.palette.primary.main,
+                        fontSize: 16,
+                      }}
+                    />
+                  )}
+                </IconButton>
+              </Box>
+            );
+          })}
+        </Box>
       </Box>
 
       <Collapse in={showSupersets} timeout={timeout}>
-        <Box width="100%" display="flex" flexDirection="column" gap={2}>
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          gap={2}
+          maxWidth={600}
+          sx={{
+            mx: 'auto',
+          }}
+        >
           {!selectedComponent?.supersets.length ? (
             <Typography textAlign="center" sx={{ fontSize: 12 }}>
               No supersets available
@@ -127,14 +176,11 @@ export default function AthleteTrainingComponents(
                 selectedComponent.id
               ),
             (training) => {
-              setTrainingInProgress(
-                (prev) =>
-                  ({
-                    ...prev,
-                    training: training,
-                    selectedComponent: selectedComponent,
-                  }) as AthleteTrainingInProgress
-              );
+              setTrainingInProgress({
+                training: training,
+                selectedComponent: selectedComponent,
+                userId: user?.uid,
+              } as AthleteTrainingInProgress);
               setView(ExerciseTrainingView.TrainingView);
               setModal(false);
             },

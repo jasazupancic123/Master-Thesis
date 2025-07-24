@@ -4,16 +4,12 @@ import { CommonService } from '@/common/service/common.service';
 import Animation from '@/components/animation/animation';
 import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
-import { useAthlete } from '@/store/athlete-provider';
 import { useAuth } from '@/store/auth-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import { Box, Stack, Typography } from '@mui/material';
-import { endOfDay, startOfDay } from 'date-fns';
-import dayjs from 'dayjs';
+import { Box, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material';
-import { CheckCircle } from '@mui/icons-material';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import { useMain } from '@/store/main-provider';
 import { CompletedPlanned } from '@/common/enum/past-future.enum';
@@ -34,15 +30,10 @@ export default function TrainingPage() {
     isLoaded,
   } = useTraining();
 
-  const { selectedDate } = useAthlete();
   const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
 
   const [allTrainings, setAllTrainings] = useState([...allTrainingsProps]);
-  const [trainings, setTrainings] = useState(() =>
-    allTrainings.filter(({ from }) =>
-      commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
-    )
-  );
+  const [trainings, setTrainings] = useState([...allTrainingsProps]);
   const [completedOrPlanned, setCompletedOrPlanned] =
     useState<CompletedPlanned>(CompletedPlanned.PLANNED);
 
@@ -58,20 +49,6 @@ export default function TrainingPage() {
       clearTrainingState();
     }
   }, [isLoaded]);
-
-  useEffect(() => {
-    if (!selectedDate) return;
-
-    setTrainings(
-      allTrainings.filter(({ from }) =>
-        commonService.date.isBetween(
-          from,
-          startOfDay(selectedDate.toDate()),
-          endOfDay(selectedDate.toDate())
-        )
-      )
-    );
-  }, [selectedDate]);
 
   useEffect(() => {
     setAllTrainings((prev) => {
@@ -133,13 +110,7 @@ export default function TrainingPage() {
           )}
         </Box>
         <Box pb={6}>
-          {[
-            ...trainings,
-            ...trainings,
-            ...trainings,
-            ...trainings,
-            ...trainings,
-          ].map((training) => (
+          {trainings.map((training) => (
             <AthleteTrainingCard key={training.id} training={training} />
           ))}
         </Box>
