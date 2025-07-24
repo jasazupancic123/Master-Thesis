@@ -1,31 +1,37 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { validationSchema } from '../../../config/environment-validation-schema';
-import { TrainingPlanService } from '../training-plan.service';
-import { ComponentService } from '../../../component/component.service';
+
+import { AttributeRepository } from '@src/attribute/repository/attribute.repository';
+import { AttributeService } from '@src/attribute/service/attribute.service';
+import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
+import { CommonModule } from '@src/common/common.module';
+import { ComponentService } from '@src/component/component.service';
+import {
+  IntType,
+  ParamType,
+  VolType,
+  VolWorkSetType,
+} from '@src/component/enum/param.enum';
+import { validationSchema } from '@src/config/environment-validation-schema';
+import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
+import { ExerciseService } from '@src/exercise/service/exercise.service';
+import { FirebaseService } from '@src/firebase/firebase.service';
+import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Method } from '@src/method/entity/method.entity';
 import {
   generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
-} from '../../mock/training.stub';
-import { createMock } from '@golevelup/ts-jest';
-import { AttributeService } from '../../../attribute/service/attribute.service';
-import { ExerciseService } from '../../../exercise/service/exercise.service';
-import { ExerciseAttributeValueRepository } from '../../../exercise/repository/exercise-attribute-value.repository';
-import { AttributeRepository } from '../../../attribute/repository/attribute.repository';
-import { Method } from '../../../method/entity/method.entity';
-import { FirebaseService } from '../../../firebase/firebase.service';
-import { WorkloadRepository } from '../../../training/repository/workload.repository';
+} from '@src/training/mock/training.stub';
+import { WorkloadRepository } from '@src/training/repository/workload.repository';
+
+import { TrainingPlanService } from '../training-plan.service';
 import { WorkloadService } from '../workload.service';
-import { CacheManagerService } from '../../../cache-manager/cache-manager.service';
-import { InstitutionService } from '../../../institution/service/institution.service';
 
 describe('validateTrainingExerciseValues', () => {
   let service: TrainingPlanService;
-  let componentService: ComponentService;
-  let exerciseService: ExerciseService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -76,8 +82,6 @@ describe('validateTrainingExerciseValues', () => {
     }).compile();
 
     service = moduleRef.get(TrainingPlanService);
-    componentService = moduleRef.get(ComponentService);
-    exerciseService = moduleRef.get(ExerciseService);
   });
 
   const MIN_SET = 5;
@@ -93,42 +97,23 @@ describe('validateTrainingExerciseValues', () => {
         exercises: [
           generateTrainingExercise({
             sets: [
-              generateExerciseSet({
-                paramValuesL: [
-                  {
-                    field: 'vol1',
-                    value: '12',
-                    selected: 'rep',
-                  },
-                  {
-                    field: 'int1',
-                    value: '20',
-                    selected: '',
-                  },
-                  {
-                    field: 'volWorkSets',
-                    value: '3',
-                    selected: 'set',
-                  },
-                ],
-                paramValuesR: [
-                  {
-                    field: 'vol1',
-                    value: '12',
-                    selected: 'rep',
-                  },
-                  {
-                    field: 'int1',
-                    value: '20',
-                    selected: '',
-                  },
-                  {
-                    field: 'volWorkSets',
-                    value: '3',
-                    selected: 'set',
-                  },
-                ],
-              }),
+              generateExerciseSet(1, [
+                {
+                  field: ParamType.VolWorkSets,
+                  selected: VolWorkSetType.Set,
+                  value: '3',
+                },
+                {
+                  field: ParamType.VolWork1,
+                  selected: VolType.Rep,
+                  value: '12',
+                },
+                {
+                  field: ParamType.IntWork1,
+                  selected: IntType.Kg,
+                  value: '20',
+                },
+              ]),
             ],
           }),
         ],
@@ -141,7 +126,7 @@ describe('validateTrainingExerciseValues', () => {
       id: 'm1',
       name: 'Method1',
       ability: 'Ability1',
-      attributeRanges: [
+      attributes: [
         {
           field: 'vol1',
           defaultValue: 'rep',
@@ -166,7 +151,7 @@ describe('validateTrainingExerciseValues', () => {
       id: 'm2',
       name: 'Method2',
       ability: 'Ability2',
-      attributeRanges: [
+      attributes: [
         {
           field: 'vol1',
           defaultValue: 'rep',

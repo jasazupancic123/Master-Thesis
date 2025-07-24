@@ -1,9 +1,5 @@
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import {
-  Superset,
-  TrainingComponent,
-} from '@/controller/training/type/training-plan.type';
 import { Avatar, Box, Divider, IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
@@ -19,6 +15,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '@/store/auth-provider';
 import dayjs from 'dayjs';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { Superset } from '@/controller/training/type/superset.type';
 
 type AthleteTrainingCardProps = {
   training: Training;

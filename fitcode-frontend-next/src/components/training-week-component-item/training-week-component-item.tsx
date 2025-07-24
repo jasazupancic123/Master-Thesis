@@ -1,5 +1,5 @@
 import { theme } from '@/app/style';
-import { TrainingComponent } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Training } from '@/controller/training/type/training.type';
 import { Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';

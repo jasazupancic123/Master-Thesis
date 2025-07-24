@@ -1,9 +1,11 @@
 import { v4 } from 'uuid';
-import { Target } from '../entity/target.entity';
+
 import {
   generateRandomName,
   generateRandomString,
-} from '../../../test/common/utils/random.util';
+} from '@src/common/utils/random.util';
+
+import type { Target } from '../entity/target.entity';
 
 export function generateTargetStub(data?: Partial<Target>): Target {
   return {

@@ -3,7 +3,7 @@ import { Box, Grid2, IconButton } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { ExerciseParam } from '../exercise-param/exercise-param';
-import { TrainingExercise } from '@/controller/training/type/training-plan.type';
+import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import toast from 'react-hot-toast';
@@ -13,6 +13,9 @@ import {
 } from '../training-exercise-card/state';
 import { SetState } from '@/common/type/state.type';
 import { updateExerciseAttributeValues } from './state';
+import { SetStatus } from '@/controller/training/enum/set-status.enum';
+import { TrainingService } from '@/controller/training/training.service';
+import { v4 } from 'uuid';
 
 interface TrainingExerciseCarExpandedSetsProps {
   exercise: TrainingExercise;
@@ -140,7 +143,7 @@ export default function TrainingExerciseCardExpandedSets(
 
                   let min: number | undefined;
                   let max: number | undefined;
-                  const attributeRange = exercise.attributeRanges.find(
+                  const attributeRange = exercise.attributes.find(
                     (ar) => ar.field === param.field
                   );
                   if (attributeRange) {
@@ -178,22 +181,77 @@ export default function TrainingExerciseCardExpandedSets(
 
                             // update only selected athletes workloads
                             if (selectedAthlete) {
-                              handleAthleteWorkloadsChange(
-                                {
-                                  exercise,
-                                  setNumber: set.setNumber,
+                              const existingWorkload =
+                                selectedAthleteWorkloads.futureWorkloads.find(
+                                  (w) =>
+                                    w.componentId === component.id &&
+                                    w.exerciseId === exercise.id &&
+                                    w.supersetIndex === supersetIndex &&
+                                    w.setNumber === set.setNumber &&
+                                    w.userId === selectedAthlete.uid
+                                );
+
+                              const newCustomWorkload =
+                                existingWorkload ||
+                                TrainingService.getPrescribedWorkload(set);
+
+                              const fieldName =
+                                TrainingService.getPerscribedFieldName(
                                   param,
-                                  newValue: newValue as string,
-                                  leftOrRight: lOrR as 'L' | 'R',
-                                },
-                                {
-                                  training,
-                                  selectedAthleteWorkloads,
-                                  setCustomAthleteWorkloads,
-                                  selectedAthlete,
-                                  customAthleteWorkloads,
+                                  lOrR as 'L' | 'R'
+                                );
+
+                              // edit the field that was changed
+                              newCustomWorkload[fieldName] =
+                                +newValue as unknown as undefined;
+
+                              // add the new workload to the custom athlete workloads
+                              setCustomAthleteWorkloads((prev) => {
+                                const existingIndex = prev.findIndex(
+                                  (w) =>
+                                    w.componentId === component.id &&
+                                    w.exerciseId === exercise.id &&
+                                    w.supersetIndex === supersetIndex &&
+                                    w.setNumber === set.setNumber &&
+                                    w.userId === selectedAthlete.uid
+                                );
+
+                                if (existingIndex !== -1) {
+                                  const newWorkloads = [...prev];
+                                  newWorkloads[existingIndex] = {
+                                    ...newWorkloads[existingIndex],
+                                    [fieldName]:
+                                      +newValue as unknown as undefined,
+                                  };
+
+                                  return newWorkloads;
                                 }
-                              );
+
+                                // if not found, add a new workload
+                                return [
+                                  ...prev,
+                                  {
+                                    ...newCustomWorkload,
+                                    id: v4(),
+                                    componentId: component.id,
+                                    exerciseId: exercise.id,
+                                    supersetIndex: supersetIndex,
+                                    setNumber: set.setNumber,
+                                    userId: selectedAthlete.uid,
+                                    institutionId: undefined,
+                                    groupId: undefined,
+                                    cycleId: undefined,
+                                    trainingId: training.id,
+                                    status: SetStatus.NOT_STARTED,
+                                    notes: '',
+                                    createdAt: new Date(),
+                                    updatedAt: new Date(),
+                                    plannedAt: component.from,
+                                    deletedAt: undefined,
+                                  },
+                                ];
+                              });
+
                               return;
                             }
 

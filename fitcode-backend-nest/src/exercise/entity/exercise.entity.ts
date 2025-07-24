@@ -6,9 +6,10 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { BaseEntity } from '../../common/entity/base.entity';
-import { ExerciseAttributeValue } from '../../exercise/entity/exercise-attribute-value.entity';
-import { Attribute } from '../../attribute/entity/attribute.entity';
+
+import { Attribute } from '@src/attribute/entity/attribute.entity';
+import { BaseEntity } from '@src/common/entity/base.entity';
+import { ExerciseAttributeValue } from '@src/exercise/entity/exercise-attribute-value.entity';
 
 export class Exercise extends BaseEntity {
   @IsString()
@@ -52,7 +53,7 @@ export class Exercise extends BaseEntity {
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseAttributeValue)
-  @ApiProperty()
+  @ApiProperty({ type: () => ExerciseAttributeValue, isArray: true })
   @Expose()
   attributeValues: ExerciseAttributeValue[]; // sub collection for filtering
 

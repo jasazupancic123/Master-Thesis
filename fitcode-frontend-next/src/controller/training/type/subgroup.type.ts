@@ -1,7 +1,7 @@
 import { ColorEntity, IdEntity } from '@/common/type/entity.type';
 import { User } from '@/controller/user/type/user.type';
-import { Superset } from './training-plan.type';
-import { GroupWorkloadStats } from './average-workload-values.type';
+import { Superset } from './superset.type';
+import { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 
 export type Subgroup = IdEntity &
@@ -9,9 +9,13 @@ export type Subgroup = IdEntity &
     name: string;
     membersIds: string[];
     supersets: Superset[];
-    futureStats: GroupWorkloadStats[]; // completed is stored on training only
     periodizationType?: PeriodizationType;
+    futureStats: TrainingExerciseAverageStats[]; // completed is stored on training only
 
     // mapped properties
     members?: User[];
   };
+
+export type SubgroupInfo = IdEntity & {
+  futureStats: TrainingExerciseAverageStats[]; // completed is stored on training only
+};

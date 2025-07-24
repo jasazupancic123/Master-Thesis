@@ -9,7 +9,7 @@ import {
 } from '@mui/icons-material';
 import { Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { DoNotDisturb } from '@mui/icons-material';
-import { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-plan.type';
+import { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-component.type';
 import { Training } from '@/controller/training/type/training.type';
 import {
   COOLDOWN_ID,

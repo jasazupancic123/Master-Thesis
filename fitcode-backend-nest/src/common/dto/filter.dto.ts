@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { validateSync, IsOptional, IsArray } from 'class-validator';
+import { IsArray, IsOptional, validateSync } from 'class-validator';
 
 /**
  * Base DTO class for filtering.
@@ -12,7 +12,7 @@ export class BaseFilterDto {
   ids?: string[];
 
   static fromQuery<T extends object>(
-    query: Record<string, any>,
+    query: Record<string, unknown>,
     type: new () => T,
   ): T {
     const instance = plainToInstance(type, query, {

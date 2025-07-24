@@ -1,17 +1,13 @@
+import type { INestApplication } from '@nestjs/common';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
-import { TestingModule, Test } from '@nestjs/testing';
-import { AppModule } from '../../src/app.module';
-import { AttributeService } from '../../src/attribute/service/attribute.service';
-import { ComponentService } from '../../src/component/component.service';
-import { FirebaseService } from '../../src/firebase/firebase.service';
-import { generateExerciseStub } from '../../src/exercise/mock/exercise.stub';
+
+import { AppModule } from '@src/app.module';
+import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 
 describe('Create Many Exercises (e2e)', () => {
   let app: INestApplication;
-  let firebaseService: FirebaseService;
-  let attributeService: AttributeService;
-  let componentService: ComponentService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -20,10 +16,6 @@ describe('Create Many Exercises (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-
-    firebaseService = moduleFixture.get(FirebaseService);
-    attributeService = moduleFixture.get(AttributeService);
-    componentService = moduleFixture.get(ComponentService);
   });
 
   afterAll(async () => app.close());
@@ -37,7 +29,7 @@ describe('Create Many Exercises (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .post(`/exercise/many`)
-      .set('Authorization', `Bearer ${admin.token}`)
+      .set('Authorization', `Bearer ${global.admin.token}`)
       .send({ exercises });
 
     expect(response.status).toBe(400);

@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { IdEntity } from '../../common/entity/id.entity';
+
+import { IdEntity } from '@src/common/entity/id.entity';
+import { Target } from '@src/target/entity/target.entity';
+
 import { ComponentParam } from './component-param.entity';
-import { Target } from '../../target/entity/target.entity';
 
 export class Component extends IdEntity {
   @IsString()
@@ -24,7 +26,7 @@ export class Component extends IdEntity {
 
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => Target, isArray: true })
   @IsOptional()
   @Expose()
   targets: Target[]; // targets which the component supports

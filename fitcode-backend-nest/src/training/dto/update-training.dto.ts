@@ -1,9 +1,11 @@
 import { IntersectionType, PickType } from '@nestjs/mapped-types';
-import { Training } from '../entity/training.entity';
-import { ValidateNested } from 'class-validator';
-import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { IdEntity } from '../../common/entity/id.entity';
+import { Expose, Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+
+import { IdEntity } from '@src/common/entity/id.entity';
+
+import { Training } from '../entity/training.entity';
 import { Workload } from '../entity/workload.entity';
 
 export class UpdateTrainingDto extends PickType(Training, [
@@ -11,23 +13,13 @@ export class UpdateTrainingDto extends PickType(Training, [
   'membersIds',
   'warmup',
   'cooldown',
-  'futureStats',
-]) {}
-
-export class UpdateTrainingDtoWithId extends PickType(Training, [
-  'id',
-  'components',
-  'membersIds',
-  'warmup',
-  'cooldown',
-  'futureStats',
-]) {}
-
-export class UpdateSingleTrainingDto extends PickType(Training, [
-  'components',
-  'warmup',
-  'cooldown',
-]) {}
+]) {
+  @ValidateNested({ each: true })
+  @Type(() => Workload)
+  @ApiProperty({ type: () => Workload, isArray: true })
+  @Expose()
+  workloads: Workload[]; // custom workloads
+}
 
 export class BatchUpdateTrainingDto extends IntersectionType(
   IdEntity,
@@ -37,13 +29,7 @@ export class BatchUpdateTrainingDto extends IntersectionType(
 export class BatchUpdateTrainingsDto {
   @ValidateNested({ each: true })
   @Type(() => BatchUpdateTrainingDto)
-  @ApiProperty()
+  @ApiProperty({ type: () => BatchUpdateTrainingDto, isArray: true })
   @Expose()
-  trainings: BatchUpdateTrainingDto[]; // for 2 trainings in day view on frontend
-
-  @ValidateNested({ each: true })
-  @Type(() => Workload)
-  @ApiProperty()
-  @Expose()
-  customAthleteWorkloads: Workload[]; // for custom workloads
+  trainings: BatchUpdateTrainingDto[];
 }
