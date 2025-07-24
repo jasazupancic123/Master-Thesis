@@ -45,15 +45,18 @@ export const TrainingProvider = (
 
   useEffect(() => {
     if (!user) return;
+
     const storedTrainingInProgress = localStorage.getItem(
       STORED_TRAINING_IN_PROGRESS
     );
+    
     if (storedTrainingInProgress) {
       const parsedTrainingInProgress = JSON.parse(
         storedTrainingInProgress
       ) as AthleteTrainingInProgress;
       if (parsedTrainingInProgress.userId !== user?.uid) {
         clearTrainingState();
+        setIsLoaded(true);
         return;
       }
       setTrainingInProgress(parsedTrainingInProgress);

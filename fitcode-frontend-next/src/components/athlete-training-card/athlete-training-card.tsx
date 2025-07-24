@@ -17,6 +17,8 @@ import {
   ArrowForwardRounded,
   MoreVert,
 } from '@mui/icons-material';
+import { useAuth } from '@/store/auth-provider';
+import dayjs from 'dayjs';
 
 type AthleteTrainingCardProps = {
   training: Training;
@@ -26,16 +28,15 @@ const TIMEOUT = 400; // ms
 
 export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
   const { profile } = useMain();
+  const { trainingInProgress } = useTraining();
+  const { user } = useAuth();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const [modal, setModal] = useState(false);
-
   const { training } = props;
 
-  const { trainingInProgress } = useTraining();
-
+  const [modal, setModal] = useState(false);
   const [supersets, setSupersets] = useState<Superset[]>();
   const [selectedComponent, setSelectedComponent] =
     useState<TrainingComponent | null>(null);
@@ -73,7 +74,7 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
 
-    const durationText = `${hours > 0 ? `${hours}H ` : ''}${minutes}min`;
+    const durationText = `${hours > 0 ? `${hours}h ` : ''}${minutes}min`;
     return durationText;
   };
 
@@ -88,6 +89,18 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
     );
   };
 
+  const checkIsActiveTraining = () => {
+    const now = dayjs();
+    const from = dayjs(training.from);
+
+    const isNowAM = now.hour() < 12;
+    const isTrainingAM = from.hour() < 12;
+
+    return isNowAM === isTrainingAM && now.isSame(from, 'day');
+  };
+
+  const isActiveTraining = checkIsActiveTraining();
+
   return (
     <>
       <Box
@@ -98,9 +111,40 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
           px: 2,
           py: 2,
           backgroundColor: theme.palette.background.default,
+          border: isActiveTraining
+            ? `1px solid ${theme.palette.primary.main}`
+            : 'none',
+          position: isActiveTraining ? 'relative' : undefined,
         }}
         gap={1.5}
       >
+        {isActiveTraining && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              backgroundColor: theme.palette.primary.main,
+              borderBottomLeftRadius: 40,
+              borderBottomRightRadius: 40,
+              px: 2,
+              zIndex: 1,
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                color: theme.palette.background.light,
+              }}
+            >
+              Active
+            </Typography>
+          </Box>
+        )}
+
         <Box
           width="100%"
           display="flex"
@@ -254,23 +298,26 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
               {!showSupersets ? <ArrowDropDown /> : <ArrowDropUp />}
             </IconButton>
           </Box>
-          {selectedComponent && showSupersets && (
-            <IconButton
-              sx={{
-                p: 0.5,
-                m: 0,
-                position: 'absolute',
-                right: 0,
-                bottom: -6,
-                backgroundColor: theme.palette.primary.main,
-              }}
-              onClick={() => {
-                setModal(true);
-              }}
-            >
-              <ArrowForwardRounded fontSize="small" />
-            </IconButton>
-          )}
+          {selectedComponent &&
+            showSupersets &&
+            user &&
+            !selectedComponent.completedMembersIds.includes(user.uid) && (
+              <IconButton
+                sx={{
+                  p: 0.5,
+                  m: 0,
+                  position: 'absolute',
+                  right: 0,
+                  bottom: -6,
+                  backgroundColor: theme.palette.primary.main,
+                }}
+                onClick={() => {
+                  setModal(true);
+                }}
+              >
+                <ArrowForwardRounded fontSize="small" />
+              </IconButton>
+            )}
         </Box>
       </Box>
       <Divider
