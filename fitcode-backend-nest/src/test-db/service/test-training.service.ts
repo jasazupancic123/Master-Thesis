@@ -61,8 +61,15 @@ export class TestTrainingService {
     if (!trainingId)
       return this.firebase.firestore.recursiveDelete(this.collection);
 
-    const docRef = this.collection.doc(trainingId);
-    await docRef.delete();
+    // delete workloads
+    await this.firebase.firestore.recursiveDelete(
+      this.collection
+        .doc(trainingId)
+        .collection(FirestoreCollection.TRAINING_WORKLOAD),
+    );
+
+    // delete training document
+    await this.collection.doc(trainingId).delete();
   }
 
   async deleteCollection(): Promise<void> {
