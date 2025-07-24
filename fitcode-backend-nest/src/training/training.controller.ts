@@ -21,7 +21,6 @@ import { CopyComponentDto } from './dto/copy-component.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
 import { TrainingInfoDto } from './dto/training-info.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
@@ -54,20 +53,6 @@ export class TrainingController {
     return filter.minimal
       ? plainToInstance(TrainingInfoDto, trainings)
       : trainings;
-  }
-
-  @Post('/:groupId/day-period')
-  @Auth()
-  async findByDayAndPeriod(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Body() body: FindByDayAndPeriodDto,
-  ) {
-    return await this.trainingService.findByDayAndPeriod(
-      user,
-      { groupId },
-      body,
-    );
   }
 
   @Get(':trainingId/athlete/:athleteId/prescribed')
