@@ -15,31 +15,12 @@ import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { GroupController } from '@/controller/group/group.controller';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import dayjs from 'dayjs';
-import { Pagination } from '@/common/type/paginate.type';
 
 export default function TrainingsInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<TrainingProviderProps | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
 
   const { profile, exercises, components, methods } = useMain();
-
-  const PAGE_SIZE = 20;
-
-  const [plannedTrainingsPagination, setPlannedTrainingsPagination] =
-    useState<Pagination>({
-      page: 1,
-      pageSize: PAGE_SIZE,
-      pages: 1,
-      total: 0,
-    });
-
-  const [completedTrainingsPagination, setCompletedTrainingsPagination] =
-    useState<Pagination>({
-      page: 1,
-      pageSize: PAGE_SIZE,
-      pages: 1,
-      total: 0,
-    });
 
   useEffect(() => {
     async function init() {
@@ -51,36 +32,6 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
         const [trainings] = await Promise.all([TrainingController.findAll()]);
         // kak fetchat institucije in grupe
         // naj fetcham vse treninge al naj mamo paginacijo?
-
-        const compareDate =
-          dayjs().hour() < 12
-            ? dayjs().startOf('day')
-            : dayjs().set('hour', 12);
-
-        // sort by ascending date
-        const plannedTrainings = trainings
-          .filter((t) => {
-            if (
-              dayjs(t.from).isAfter(compareDate) ||
-              dayjs(t.from).isSame(compareDate)
-            ) {
-              return t;
-            }
-          })
-          .sort((a, b) => {
-            return dayjs(a.from).diff(dayjs(b.from));
-          });
-
-        // sort by descending date
-        const completedTrainings = trainings
-          .filter((t) => {
-            if (dayjs(t.from).isBefore(compareDate)) {
-              return t;
-            }
-          })
-          .sort((a, b) => {
-            return dayjs(b.from).diff(dayjs(a.from));
-          });
 
         const mappedTrainings: Training[] = await Promise.all(
           (trainings as Training[]).map(async (t) => {
@@ -101,10 +52,39 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
           })
         );
 
-        console.log('mappedTrainings', mappedTrainings);
+        const compareDate =
+          dayjs().hour() < 12
+            ? dayjs().startOf('day')
+            : dayjs().set('hour', 12);
+
+        // sort by ascending date
+        const plannedTrainings = mappedTrainings
+          .filter((t) => {
+            if (
+              dayjs(t.from).isAfter(compareDate) ||
+              dayjs(t.from).isSame(compareDate)
+            ) {
+              return t;
+            }
+          })
+          .sort((a, b) => {
+            return dayjs(a.from).diff(dayjs(b.from));
+          });
+
+        // sort by descending date
+        const completedTrainings = mappedTrainings
+          .filter((t) => {
+            if (dayjs(t.from).isBefore(compareDate)) {
+              return t;
+            }
+          })
+          .sort((a, b) => {
+            return dayjs(b.from).diff(dayjs(a.from));
+          });
 
         const context: TrainingProviderProps = {
-          trainings: mappedTrainings,
+          plannedTrainings,
+          completedTrainings,
         };
 
         setState(context);

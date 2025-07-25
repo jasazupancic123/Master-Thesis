@@ -14,10 +14,7 @@ import { useAuth } from '@/store/auth-provider';
 import { Settings } from '@mui/icons-material';
 import { useTheme } from '@mui/material';
 import Link from 'next/link';
-import {
-  LINK_PROFILE,
-  LINK_TRAININGS,
-} from '@/common/constant/navigation.constant';
+import { LINK_PROFILE } from '@/common/constant/navigation.constant';
 
 export default function AthleteHeader() {
   const { selectedDate, setSelectedDate, filter } = useAthlete();
@@ -66,7 +63,11 @@ export default function AthleteHeader() {
             transform: 'translateX(-50%)',
           }}
         >
-          <Logo width={screenSize.isGigaSmall ? 40 : 52} height={screenSize.isGigaSmall ? 27 : 35} version="narrow" />
+          <Logo
+            width={screenSize.isGigaSmall ? 40 : 52}
+            height={screenSize.isGigaSmall ? 27 : 35}
+            version="narrow"
+          />
         </Box>
 
         <Box
@@ -101,7 +102,7 @@ export default function AthleteHeader() {
               <Settings
                 sx={{
                   width: screenSize.isGigaSmall ? 25 : 30,
-                  height: screenSize.isGigaSmall ? 25 :30,
+                  height: screenSize.isGigaSmall ? 25 : 30,
                 }}
               />
             </IconButton>

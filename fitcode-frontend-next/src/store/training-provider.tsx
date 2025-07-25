@@ -21,7 +21,8 @@ interface TrainingContextType extends TrainingProviderProps {
 }
 
 export interface TrainingProviderProps {
-  trainings: Training[];
+  plannedTrainings: Training[];
+  completedTrainings: Training[];
 }
 
 const TrainingContext = createContext<TrainingContextType | undefined>(
@@ -31,7 +32,7 @@ const TrainingContext = createContext<TrainingContextType | undefined>(
 export const TrainingProvider = (
   props: TrainingProviderProps & ChildrenProps
 ) => {
-  const { children, trainings } = props;
+  const { children, plannedTrainings, completedTrainings } = props;
 
   const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
@@ -49,7 +50,7 @@ export const TrainingProvider = (
     const storedTrainingInProgress = localStorage.getItem(
       STORED_TRAINING_IN_PROGRESS
     );
-    
+
     if (storedTrainingInProgress) {
       const parsedTrainingInProgress = JSON.parse(
         storedTrainingInProgress
@@ -85,7 +86,8 @@ export const TrainingProvider = (
   return (
     <TrainingContext.Provider
       value={{
-        trainings,
+        plannedTrainings,
+        completedTrainings,
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,

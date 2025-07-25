@@ -134,7 +134,7 @@ export default function ProfilePage() {
           label="Upload Profile Image"
           initialFileUrl={profile?.profileImageUrl || undefined}
           sx={{ width: 200, margin: 'auto', height: 150 }}
-          dissableBorder
+          dissableBorder={profile?.profileImageUrl ? true : false}
           makeRound
           onFileUpload={async (file) => {
             const path = `user/${user.uid}/${file.name}`;
