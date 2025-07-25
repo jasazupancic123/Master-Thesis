@@ -28,7 +28,7 @@ export default function ProfileHeaderMenu(props: ProfileHeaderMenuProps) {
       }}
     >
       <MenuItem sx={{ px: 1 }}>
-        <Link href={LINK_PROFILE.href} passHref legacyBehavior>
+        <Link href={LINK_PROFILE.href} passHref>
           <Box
             width="100%"
             display="flex"
