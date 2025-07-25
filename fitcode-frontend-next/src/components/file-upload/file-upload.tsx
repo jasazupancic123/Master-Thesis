@@ -10,6 +10,10 @@ interface Props {
   input: 'image' | 'video' | 'csv';
   initialFileUrl?: string;
   sx?: SxProps;
+  makeRound?: boolean;
+  dissableBorder?: boolean;
+  width?: number;
+  height?: number;
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -103,6 +107,7 @@ export default function FileUpload(props: Props) {
           width: '100%',
           height: !preview.error && preview.url ? undefined : '100%',
         }}
+        dissableBorder={props.dissableBorder}
       >
         <Box
           width="100%"
@@ -147,8 +152,12 @@ export default function FileUpload(props: Props) {
                 src={preview.url}
                 alt="Image Preview"
                 style={{
-                  objectFit: 'contain',
-                  height: 140,
+                  width: props.width || 140,
+                  height: props.height || 140,
+                  objectFit: 'cover',
+                  borderRadius: props.makeRound ? '50%' : undefined,
+                  overflow: 'hidden', // ensures overflow is hidden
+                  display: 'block',
                 }}
                 onError={() => {
                   setPreview((prev) => ({ ...prev, error: 'Invalid image' }));
@@ -172,6 +181,7 @@ function DragAndDropPlaceholder(props: {
   children: ReactNode;
   onClick: () => void;
   sx?: SxProps;
+  dissableBorder?: boolean;
 }) {
   return (
     <Box
@@ -180,7 +190,7 @@ function DragAndDropPlaceholder(props: {
       onClick={props.onClick}
       sx={{
         ...props.sx,
-        border: '1px dashed grey',
+        border: props.dissableBorder ? 'none' : '1px dashed grey',
         cursor: 'pointer',
       }}
     >

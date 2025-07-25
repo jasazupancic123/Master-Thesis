@@ -14,9 +14,13 @@ import slugify from 'slugify';
 import { GroupDateFilter } from '../type/filter.type';
 import {
   Add,
+  BarChartOutlined,
+  CalendarTodayOutlined,
+  FitnessCenterOutlined,
   Groups,
   PersonAdd,
   PersonAddAlt1,
+  SpaOutlined,
   TrendingUp,
 } from '@mui/icons-material';
 import {
@@ -64,10 +68,9 @@ export const LINK_DASHBOARD = link('Dashboard', '/dashboard', <HomeIcon />);
 export const LINK_TRAININGS = link(
   'Trainings',
   '/trainings',
-  <FitnessCenterIcon />
+  <FitnessCenterOutlined />
 );
-export const LINK_CHART = link('Chart', '/chart', <BarChartIcon />);
-export const LINK_META = link('Wellness', '/wellness', <SpaIcon />);
+export const LINK_CHART = link('Chart', '/chart', <BarChartOutlined />);
 export const LINK_TRAINING = link(
   'Training',
   '/training',
@@ -76,9 +79,9 @@ export const LINK_TRAINING = link(
 export const LINK_CALENDAR = link(
   'Calendar',
   '/calendar',
-  <CalendarTodayIcon />
+  <CalendarTodayOutlined />
 );
-export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaIcon />);
+export const LINK_WELLNESS = link('Wellness', '/wellness', <SpaOutlined />);
 
 export const LINK_SETTINGS = link('Settings', '/settings');
 export const LINK_GROUP_BY_ID = (id: string) =>
@@ -151,11 +154,10 @@ export const LINKS_NAVBAR = {
 
 export const LINKS_SIDEBAR = {
   [UserRole.ATHLETE]: {
-    groups: LINK_TRAININGS,
+    trainings: LINK_TRAININGS,
     calendar: LINK_CALENDAR,
     chart: LINK_CHART,
-    wellness: LINK_META,
-    profile: LINK_PROFILE,
+    wellness: LINK_WELLNESS,
   },
   [UserRole.TRAINER]: {
     dashboard: LINK_DASHBOARD,

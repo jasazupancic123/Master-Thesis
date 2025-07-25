@@ -1,19 +1,21 @@
 import { ChildrenProps } from '@/common/type/props.type';
-import SidebarAthlete from '@/components/sidebar-athlete/sidebar-athlete';
-import { AthleteProvider } from '@/store/athlete-provider';
+import AthleteHeader from '@/components/athlete-header/athlete-header';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
 export default function Layout({ children }: ChildrenProps) {
   return (
-    <Box bgcolor="background.paper" minHeight="100vh" padding={0} height="100%">
-      <AthleteProvider>
-        <SidebarAthlete />
+    <Box
+      bgcolor="background.default"
+      minHeight="100vh"
+      padding={0}
+      height="100%"
+    >
+      <AthleteHeader />
 
-        <Container component="main" maxWidth="lg" sx={{ padding: 0 }}>
-          <Box>{children}</Box>
-        </Container>
-      </AthleteProvider>
+      <Container component="main" maxWidth="lg" sx={{ padding: 0 }}>
+        <Box>{children}</Box>
+      </Container>
     </Box>
   );
 }

@@ -10,8 +10,8 @@ import { AttributeController } from '@/controller/attribute/attribute.controller
 import { ComponentController } from '@/controller/component/component.controller';
 import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { MethodController } from '@/controller/method/method.controller';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { UserController } from '@/controller/user/user.controller';
+import { AthleteProvider } from '@/store/athlete-provider';
 import { MainProvider, MainProviderProps } from '@/store/main-provider';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -49,5 +49,9 @@ export default async function Layout({ children }: ChildrenProps) {
     methods,
   };
 
-  return <MainProvider {...context}>{children}</MainProvider>;
+  return (
+    <MainProvider {...context}>
+      <AthleteProvider>{children}</AthleteProvider>
+    </MainProvider>
+  );
 }
