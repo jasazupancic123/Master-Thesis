@@ -153,9 +153,11 @@ export class InstitutionService implements Permission<Institution> {
       throw new UnauthorizedException('You cannot edit this institution');
 
     // filter out duplicates
-    memberIds = trainers
-      ? memberIds.filter((id) => !institution.trainerIds.includes(id))
-      : memberIds.filter((id) => !institution.athleteIds.includes(id));
+    if (add) {
+      memberIds = trainers
+        ? memberIds.filter((id) => !institution.trainerIds.includes(id))
+        : memberIds.filter((id) => !institution.athleteIds.includes(id));
+    }
 
     await this.userService.findAllOrFail({
       ids: memberIds,
