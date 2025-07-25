@@ -122,7 +122,7 @@ export default function DashboardMenuMobile() {
               return (
                 <Tooltip title={link.label} placement="right" key={i}>
                   <ListItem disablePadding>
-                    <Link href={link.href} passHref legacyBehavior>
+                    <Link href={link.href} passHref>
                       <Box
                         display="flex"
                         alignItems="center"

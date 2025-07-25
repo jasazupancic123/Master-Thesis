@@ -45,6 +45,7 @@ export default function DashboardPage() {
     add_member: false,
     add_trainer: false,
     add_group: false,
+    add_member_via_csv: false,
     edit_athlete: false,
   });
   const [groupName, setGroupName] = useState('');
@@ -232,6 +233,7 @@ export default function DashboardPage() {
             add_trainer: open,
             add_member: false,
             add_group: false,
+            add_member_via_csv: false,
             edit_athlete: false,
           })
         }
@@ -241,6 +243,7 @@ export default function DashboardPage() {
             add_member: false,
             add_trainer: false,
             add_group: false,
+            add_member_via_csv: false,
             edit_athlete: false,
           })
         }
@@ -257,6 +260,7 @@ export default function DashboardPage() {
             add_member: false,
             add_trainer: false,
             add_group: open,
+            add_member_via_csv: false,
             edit_athlete: false,
           })
         }
@@ -265,6 +269,7 @@ export default function DashboardPage() {
             add_member: false,
             add_trainer: false,
             add_group: false,
+            add_member_via_csv: false,
             edit_athlete: false,
           });
           setGroupName('');
@@ -296,6 +301,7 @@ export default function DashboardPage() {
                 add_member: false,
                 add_trainer: false,
                 add_group: false,
+                add_member_via_csv: false,
                 edit_athlete: false,
               });
               setGroupName('');

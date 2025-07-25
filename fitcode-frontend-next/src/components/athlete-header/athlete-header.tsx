@@ -77,7 +77,7 @@ export default function AthleteHeader() {
           gap={1}
         >
           <Tooltip title={user?.email}>
-            <Link href={LINK_PROFILE.href} passHref legacyBehavior>
+            <Link href={LINK_PROFILE.href} passHref>
               <Avatar
                 className="avatar-border"
                 src={avatarSrc || '/user_avatar.png'} // Path to the image in the public folder
