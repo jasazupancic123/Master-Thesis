@@ -69,7 +69,7 @@ export function DashboardDesktopSidebar() {
                       : undefined,
                   }}
                 >
-                  <Link href={link.href} passHref legacyBehavior>
+                  <Link href={link.href} passHref>
                     <ListItemButton
                       component="a"
                       disableRipple
