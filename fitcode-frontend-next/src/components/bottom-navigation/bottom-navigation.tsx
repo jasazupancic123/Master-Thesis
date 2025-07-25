@@ -10,18 +10,11 @@ import {
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { useTheme } from '@mui/material';
+import { useAthlete } from '@/store/athlete-provider';
 
-interface BottomNavigationProps {
-  index: number;
-  setIndex: (index: number) => void;
-  mapper: string[];
-}
+export default function BottomNavigation() {
+  const { filter, setFilter } = useAthlete();
 
-export default function BottomNavigation({
-  index,
-  setIndex,
-  mapper,
-}: BottomNavigationProps) {
   const theme = useTheme();
   const screenSize = useScreenSize();
   const router = useRouter();
@@ -29,14 +22,19 @@ export default function BottomNavigation({
 
   return (
     <BN
-      value={index}
-      onChange={(_, newValue) => {
-        setIndex(newValue);
-        router.push(mapper[newValue]);
+      value={filter}
+      onChange={(_, valueIndex) => {
+        const newValue = Object.values(LINKS_SIDEBAR[UserRole.ATHLETE])[
+          valueIndex
+        ];
+        if (!newValue) return;
+
+        setFilter(newValue);
+        router.push(newValue.href);
       }}
       showLabels
       sx={{
-        backgroundColor: theme.palette.background.default,
+        backgroundColor: theme.palette.background.light,
         height: screenSize.isLandscapeMobile ? '45px' : '50px',
         width: '100%',
         '& .Mui-selected': {
@@ -54,17 +52,17 @@ export default function BottomNavigation({
                 )
               : link.icon
           }
+          label={link.label}
           sx={{
-            color: index === i ? theme.palette.primary.main : '#fff',
+            color:
+              filter.href === link.href ? theme.palette.primary.main : '#fff',
             minWidth: '48px', // Reduce the minimum width
             padding: '4px', // Reduce padding
             '& .MuiBottomNavigationAction-root': {
               minWidth: '48px', // Override MUI default min-width
             },
             '& .MuiSvgIcon-root': {
-              fontSize: screenSize.isLandscapeMobile
-                ? '24px !important'
-                : '27.5px !important', // Force smaller icon
+              fontSize: '24px !important',
             },
           }}
         />

@@ -8,6 +8,8 @@ import {
 } from './training-component.type';
 import { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
 import { Institution } from '@/controller/institution/type/institution.type';
+import { Cycle } from '@/controller/group/type/cycle.type';
+import { Group } from '@/controller/group/type/group.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
@@ -26,8 +28,10 @@ export type Training = BaseEntity &
     wellness: Wellness[];
 
     // mapped properties
-    members?: User[];
     institution?: Institution;
+    group?: Group;
+    cycle?: Cycle;
+    members?: User[];
   };
 
 export type TrainingInfo = BaseEntity &
