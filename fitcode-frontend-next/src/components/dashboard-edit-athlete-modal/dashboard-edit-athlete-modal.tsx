@@ -18,7 +18,6 @@ import {
 } from '@mui/material';
 import { UserController } from '@/controller/user/user.controller';
 import toast from 'react-hot-toast';
-import { useAuth } from '@/store/auth-provider';
 import { Gender } from '@/controller/user/enum/gender.enum';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -32,6 +31,7 @@ interface DashboardEditAthleteModalProps {
     add_member: boolean;
     add_trainer: boolean;
     add_group: boolean;
+    add_member_via_csv: boolean;
     edit_athlete: boolean;
   }>;
   editUser: User | null;
@@ -161,7 +161,7 @@ export default function DashboardEditAthleteModal(
                     profileImageUrl: url,
                   }
             );
-            setEditedProfile(true);
+            if (profile) setEditedProfile(true);
           }}
         />
         {/* First & Last Name - Ensuring Equal Width */}

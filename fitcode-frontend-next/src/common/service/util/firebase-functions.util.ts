@@ -21,7 +21,7 @@ export class FirebaseFunctionsUtil {
           case 'auth/invalid-email':
           case 'auth/invalid-password':
           case 'auth/weak-password':
-            throw new Error('Email or password is incorrect');
+            // throw new Error('Email or password is incorrect');
           case 'auth/email-already-exists':
             throw new Error('Email already exists');
           case 'auth/app-deleted':

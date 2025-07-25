@@ -18,12 +18,14 @@ interface DashboardGroupsMembersProps {
     add_member: boolean;
     add_trainer: boolean;
     add_group: boolean;
+    add_member_via_csv: boolean;
     edit_athlete: boolean;
   };
   setModal: SetState<{
     add_member: boolean;
     add_trainer: boolean;
     add_group: boolean;
+    add_member_via_csv: boolean;
     edit_athlete: boolean;
   }>;
 }

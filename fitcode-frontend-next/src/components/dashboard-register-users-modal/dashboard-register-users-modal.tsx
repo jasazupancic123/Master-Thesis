@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TextField, Button, Typography, Box, Stack } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Stack,
+  CircularProgress,
+} from '@mui/material';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 import toast from 'react-hot-toast';
 import { handleApiRequest } from '@/common/type/state.type';
@@ -43,6 +50,7 @@ export default function RegisterUsersDashboard(
   });
   const [openModal, setOpenModal] = useState(false);
   const [existingUser, setExistingUser] = useState<User | null>(null);
+  const [isUploadingMembers, setIsUploadingMembers] = useState(false);
 
   // refetch users and update institution's athletes or trainers
   useEffect(() => {
@@ -51,8 +59,10 @@ export default function RegisterUsersDashboard(
       !formData.email ||
       !formData.password ||
       !formData.confirmPassword
-    )
+    ) {
+      setIsUploadingMembers(false);
       return;
+    }
 
     const user = users?.find((user) => user.email === formData.email);
 
@@ -63,7 +73,10 @@ export default function RegisterUsersDashboard(
       confirmPassword: '',
     });
 
-    if (!user || !selectedInstitution) return;
+    if (!user || !selectedInstitution) {
+      setIsUploadingMembers(false);
+      return;
+    }
 
     if (registerRole === UserRole.TRAINER) {
       handleApiRequest(
@@ -128,6 +141,8 @@ export default function RegisterUsersDashboard(
         'Failed to register athlete'
       );
     }
+
+    setIsUploadingMembers(false);
   }, [users]);
 
   const handleAddExistingUser = () => {
@@ -251,13 +266,7 @@ export default function RegisterUsersDashboard(
       return;
     }
 
-    toast.error(
-      `Registering ${registerRole[0].toUpperCase() + registerRole.slice(1)}...`,
-      {
-        icon: '⚠️',
-        duration: 2000,
-      }
-    );
+    setIsUploadingMembers(true);
 
     handleApiRequest(
       router,
@@ -266,7 +275,9 @@ export default function RegisterUsersDashboard(
         refetchUsers();
         refetchMembers();
       },
-      undefined,
+      () => {
+        setIsUploadingMembers(false);
+      },
       'Failed to register user'
     );
   };
@@ -338,6 +349,28 @@ export default function RegisterUsersDashboard(
         User with email "{existingUser?.email}" already exists. Do you want to
         add them to the institution?
       </MyModal>
+
+      {isUploadingMembers && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          width="100vw"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          sx={{
+            zIndex: 130000,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <CircularProgress size={24} />
+          <Typography fontSize={20}>Registering...</Typography>
+        </Box>
+      )}
     </>
   );
 }
