@@ -48,7 +48,7 @@ export class TrainingRepository
   }
 
   async updateDoc(id: string, input: Update<Training>) {
-    const query = this.firebaseService.buildUpdateQuery<Training>(input);
+    const query = this.getUpdateQuery(input);
     await this.doc(id).update(query);
   }
 
@@ -64,5 +64,10 @@ export class TrainingRepository
     return this.firebaseService.firestore.collection(
       FirestoreCollection.TRAINING,
     );
+  }
+
+  getUpdateQuery(input: Update<Training>): FirestoreEntity<Partial<Training>> {
+    const { institution, futureStats, wellness, ...rest } = input;
+    return this.firebaseService.buildUpdateQuery<Training>(rest);
   }
 }

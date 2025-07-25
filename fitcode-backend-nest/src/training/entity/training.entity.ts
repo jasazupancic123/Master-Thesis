@@ -61,18 +61,6 @@ export class Training extends BaseEntity {
   @Expose()
   copiedFromId?: string; // if this training is copied from another training
 
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
-  @Expose()
-  stats: TrainingExerciseAverageStats[]; // average intensity and volume stats for each exercise in the training
-
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
-  @Expose()
-  futureStats: TrainingExerciseAverageStats[]; // average future group workload stats
-
   @IsDate()
   @ApiProperty()
   @Expose()
@@ -84,6 +72,12 @@ export class Training extends BaseEntity {
   @Expose()
   @Transform(({ value }) => new Date(value))
   to: Date;
+
+  @ValidateNested({ each: true })
+  @Type(() => TrainingExerciseAverageStats)
+  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
+  @Expose()
+  stats: TrainingExerciseAverageStats[]; // average intensity and volume stats for each exercise in the training
 
   @ValidateNested()
   @Type(() => TrainingComponent)
@@ -103,9 +97,7 @@ export class Training extends BaseEntity {
   @Expose()
   components: TrainingComponent[];
 
-  @ValidateNested({ each: true })
-  @Type(() => Wellness)
-  @ApiProperty({ type: () => Wellness, isArray: true })
-  @Expose()
+  // virtual properties
+  futureStats: TrainingExerciseAverageStats[]; // average future group workload stats
   wellness: Wellness[]; // members' wellness info used to calculate workloads
 }
