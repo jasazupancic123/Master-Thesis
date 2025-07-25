@@ -27,7 +27,6 @@ import { User } from '@src/common/type/firebase-auth.type';
 import {
   BatchWriteOperation,
   ComponentRef,
-  CycleRef,
   TrainingComponentRef,
   TrainingRef,
   UserRef,
@@ -55,7 +54,6 @@ import { CopyTrainingDto } from '../dto/copy-training.dto';
 import { CreateTrainingDto } from '../dto/create-training.dto';
 import { CreatePrescribedWorkloadDto } from '../dto/create-workload.dto';
 import { PeriodizeTrainingsDto } from '../dto/periodize-training.dto';
-import { BatchUpdateTrainingDto } from '../dto/update-training.dto';
 import { CompletedTrainingComponent } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Superset } from '../entity/superset.entity';
@@ -433,7 +431,7 @@ export class TrainingService implements Permission<Training, Institution> {
 
     // update futureStats of baseTraining
     baseTraining.futureStats =
-      this.trainingPlanService.createFutureTrainingStats(
+      this.trainingPlanService.calculatePrescribedTrainingStats(
         [baseComponent],
         baseTraining.membersIds.length,
       );
@@ -451,7 +449,7 @@ export class TrainingService implements Permission<Training, Institution> {
       const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
 
-      t.futureStats = this.trainingPlanService.createFutureTrainingStats(
+      t.futureStats = this.trainingPlanService.calculatePrescribedTrainingStats(
         [component],
         t.membersIds.length,
       );
@@ -578,142 +576,23 @@ export class TrainingService implements Permission<Training, Institution> {
       await batch.commit();
     }
 
-    // for future trainings, update latest meta and calculate workloads
-    const wellness =
-      await this.userService.getRecentWellnessForMany(membersIds);
-
-    const updated = {
+    await this.trainingRepository.updateDoc(ref.trainingId, input);
+    return {
       ...training,
       ...this.commonService.object.clean(input),
-      futureStats: this.trainingPlanService.createFutureTrainingStats(
+      futureStats: this.trainingPlanService.calculatePrescribedTrainingStats(
         input.components,
         membersIds.length,
       ),
     };
-
-    const trainingDocRef = this.trainingRepository.doc(ref.trainingId);
-    const updateTrainingQuery = this.firebaseService.buildUpdateQuery<Training>(
-      { ...input, wellness },
-    );
-
-    const batch = this.firebaseService.firestore.batch();
-    batch.update(trainingDocRef, updateTrainingQuery);
-    await batch.commit();
-
-    return updated;
   }
 
   @LogMethod()
-  async batchUpdate(
-    user: User,
-    ref: CycleRef,
-    input: BatchUpdateTrainingDto[],
-  ): Promise<Training[]> {
-    const { groupId, cycleId } = ref;
-    const group = await this.groupService.findOneByIdOrFail(user, { groupId });
-    const cycle = this.groupService.findCycleOrFail(cycleId, group);
-
-    let institution: Institution | null = null;
-    if (group.institutionId)
-      institution = await this.institutionService.getDoc({
-        institutionId: group.institutionId,
-      });
-
-    this.validateCanEdit(user, { ownerId: user.uid } as Training, institution);
-    const methods = await this.methodService.findAll();
-    const updated = [] as Training[];
-
-    for (const data of input) {
-      // validate training
-      const training = await this.findOneByIdOrFail(
-        user,
-        { trainingId: data.id },
-        { skipInstitution: true },
-      );
-
-      const { from, to } = this.getFromAndToDates(data.components);
-      this.validateIsDateInCycle(from, cycle);
-      this.validateIsDateInFuture(from);
-      await this.validateOverlap(
-        from,
-        to,
-        groupId,
-        cycleId,
-        training.institutionId,
-        training.id,
-      );
-
-      // validate components & exercises
-      const attributes = await this.attributeService.findAll();
-      const components = await this.componentService.findAllFlat();
-      const membersIds = data.membersIds || training.membersIds;
-      await this.userService.findAllOrFail({ ids: membersIds });
-
-      const exercises = await this.trainingPlanService.getAllTrainingExercises(
-        data.components,
-      );
-
-      this.trainingPlanService.updateWarmupAndCooldownTimes(
-        data.warmup,
-        data.cooldown,
-        data.components,
-      );
-
-      this.trainingPlanService.validateTrainingComponents(
-        exercises,
-        membersIds,
-        [data.warmup, ...data.components, data.cooldown],
-        components,
-        methods,
-      );
-
-      // populate exercise params from components
-      this.trainingPlanService.populateTrainingExerciseParams(
-        data.components,
-        components,
-        exercises,
-        attributes,
-      );
-
-      // for future trainings, update latest meta and calculate workloads
-      const wellness =
-        await this.userService.getRecentWellnessForMany(membersIds);
-
-      const updatedTraining: Training = {
-        ...training,
-        ...this.commonService.object.clean(data),
-        futureStats: this.trainingPlanService.createFutureTrainingStats(
-          data.components,
-          membersIds.length,
-        ),
-      };
-
-      updated.push(updatedTraining);
-
-      const trainingDocRef = this.trainingRepository.doc(data.id);
-      const updateTrainingQuery =
-        this.firebaseService.buildUpdateQuery<Training>({
-          ...data,
-          wellness,
-        });
-
-      const batch = this.firebaseService.firestore.batch();
-      batch.update(trainingDocRef, updateTrainingQuery);
-      await batch.commit();
-    }
-
-    return updated;
-  }
-
   async copy(
     user: User,
     ref: TrainingRef,
     input: CopyTrainingDto,
   ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is copying training ${ref.trainingId}: ${JSON.stringify(input)}`,
-    );
-
     const training = await this.findOneByIdOrFail(user, ref);
     const { groupId, cycleId } = training;
     const group = await this.groupService.findOneByIdOrFail(user, { groupId });
@@ -1029,7 +908,7 @@ export class TrainingService implements Permission<Training, Institution> {
     );
 
     // update stats
-    const stats = this.trainingPlanService.calculateTrainingStats(
+    const stats = this.trainingPlanService.recalculateCompletedTrainingStats(
       trainingComponent.id,
       training.stats,
       input.exercises,

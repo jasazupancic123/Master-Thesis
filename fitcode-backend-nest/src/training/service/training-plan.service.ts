@@ -183,179 +183,119 @@ export class TrainingPlanService {
   }
 
   /**
-   * Used to create future training stats for upcoming training components
+   * Based on prescribed training, this method calculates average stats
+   * for intensity and volume for each exercise in the training components
+   * for all users in main group and subgroups.
    */
-  createFutureTrainingStats(
+  calculatePrescribedTrainingStats(
     components: TrainingComponent[],
-    numTotalTrainingMembers: number,
+    numMembersTraining: number,
   ): TrainingExerciseAverageStats[] {
-    const createdFutureStats = [] as {
-      totalIntensity: number;
-      totalVolume: number;
-      totalNumMembers: number;
-      exerciseId: string;
-      rootComponentId: string;
-    }[];
+    const stats: TrainingExerciseAverageStats[] = [];
 
     for (const component of components) {
-      const numMembersInSubgroups = component.subgroups.reduce(
-        (sum, subgroup) => sum + subgroup.membersIds.length,
-        0,
-      );
-      const numMainGroupMembers =
-        numTotalTrainingMembers - numMembersInSubgroups;
+      const numMembersMainGroup = // all members in training - members in all subgroups
+        numMembersTraining -
+        component.subgroups.reduce((sum, s) => sum + s.membersIds.length, 0);
+      if (numMembersMainGroup <= 0) continue; // skip if no members in main group
 
       for (const superset of component.supersets) {
-        for (const exercise of superset.exercises) {
-          if (!exercise.sets.length) continue;
+        for (const { id, sets } of superset.exercises) {
+          const { intensity, volume } = this.getAverageIntVol(sets);
+          const foundStat = stats.find((s) => s.exerciseId === id);
 
-          const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
-
-          createdFutureStats.push({
-            totalIntensity: avgInt * numMainGroupMembers,
-            totalVolume: avgVol * numMainGroupMembers,
-            totalNumMembers: numMainGroupMembers,
-            exerciseId: exercise.id,
-            rootComponentId: component.id,
-          });
+          if (foundStat) {
+            foundStat.intensity += intensity * numMembersMainGroup;
+            foundStat.volume += volume * numMembersMainGroup;
+            foundStat.numMembers += numMembersMainGroup;
+          } else {
+            stats.push({
+              intensity: intensity * numMembersMainGroup,
+              volume: volume * numMembersMainGroup,
+              numMembers: numMembersMainGroup,
+              exerciseId: id,
+              rootComponentId: component.id,
+            });
+          }
         }
       }
 
       for (const subgroup of component.subgroups) {
+        const numMembersSubgroup = subgroup.membersIds.length;
+        if (numMembersSubgroup === 0) continue; // skip empty subgroups
+
         for (const superset of subgroup.supersets) {
-          for (const exercise of superset.exercises) {
-            if (!exercise.sets.length) continue;
+          for (const { id, sets } of superset.exercises) {
+            const { intensity, volume } = this.getAverageIntVol(sets);
+            const foundMain = stats.find((s) => s.exerciseId === id);
 
-            const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
-
-            const foundFutureStat = createdFutureStats.find(
-              (fs) => fs.exerciseId === exercise.id,
-            );
-
-            if (foundFutureStat) {
-              foundFutureStat.totalIntensity +=
-                avgInt * subgroup.membersIds.length;
-              foundFutureStat.totalVolume +=
-                avgVol * subgroup.membersIds.length;
-              foundFutureStat.totalNumMembers += subgroup.membersIds.length;
-            } else {
-              createdFutureStats.push({
-                totalIntensity: avgInt * subgroup.membersIds.length,
-                totalVolume: avgVol * subgroup.membersIds.length,
-                totalNumMembers: subgroup.membersIds.length,
-                exerciseId: exercise.id,
+            if (foundMain) {
+              // "append" subgroup stats to main group stats to avoid duplicates
+              foundMain.intensity += intensity * numMembersSubgroup;
+              foundMain.volume += volume * numMembersSubgroup;
+              foundMain.numMembers += numMembersSubgroup;
+            } else
+              // create new stats for subgroup exercise
+              stats.push({
+                intensity: intensity * numMembersSubgroup,
+                volume: volume * numMembersSubgroup,
+                numMembers: numMembersSubgroup,
+                exerciseId: id,
                 rootComponentId: component.id,
               });
-            }
           }
         }
       }
     }
 
-    return createdFutureStats.map((fs) => {
-      const avgIntensity = fs.totalIntensity / fs.totalNumMembers;
-      const avgVolume = fs.totalVolume / fs.totalNumMembers;
-
-      return {
-        exerciseId: fs.exerciseId,
-        rootComponentId: fs.rootComponentId,
-        numMembers: fs.totalNumMembers,
-        intensity: avgIntensity,
-        volume: avgVolume,
-      };
+    return stats.map((s) => {
+      const intensity = s.intensity / s.numMembers; // average intensity
+      const volume = s.volume / s.numMembers; // average volume
+      return { ...s, intensity, volume };
     });
   }
 
-  private getAvgIntVolValues(exercise: TrainingExercise) {
-    let avgInt = 0;
-    let avgVol = 0;
-    for (const exerciseSet of exercise.sets) {
-      const intL = exerciseSet.paramValuesL.find(
-        (p) => p.field === ParamType.IntWork1,
-      );
-      const intR = exerciseSet.paramValuesR.find(
-        (p) => p.field === ParamType.IntWork1,
-      );
-
-      const volL = exerciseSet.paramValuesL.find(
-        (p) => p.field === ParamType.VolWork1,
-      );
-      const volR = exerciseSet.paramValuesR.find(
-        (p) => p.field === ParamType.VolWork1,
-      );
-
-      if (!intL || !intR || !volL || !volR) continue;
-
-      avgInt += (parseFloat(intL.value) + parseFloat(intR.value)) / 2;
-      avgVol += (parseFloat(volL.value) + parseFloat(volR.value)) / 2;
-    }
-
-    return {
-      avgInt: avgInt / exercise.sets.length,
-      avgVol: avgVol / exercise.sets.length,
-    };
-  }
-
   /**
-   * Used to calculate average stats for completed training component exercises,
-   * by athletes, like intensity and volume.
+   * Called when athlete completes training component, used to recalculate average
+   * stats for exercises.
    */
-  calculateTrainingStats(
+  recalculateCompletedTrainingStats(
     trainingComponentId: string,
-    completedStats: TrainingExerciseAverageStats[],
-    completedExercises: CompletedTrainingExercise[],
+    completedStats: TrainingExerciseAverageStats[], // existing training stats
+    completedExercises: CompletedTrainingExercise[], // completed exercises by athlete
   ) {
     const stats: TrainingExerciseAverageStats[] = completedStats.filter(
       (s) => s.rootComponentId === trainingComponentId,
     );
 
-    for (const completedExercise of completedExercises) {
-      const trainingExerciseAverageStats: TrainingExerciseAverageStats =
-        stats.find((avg) => avg.exerciseId === completedExercise.id) || {
-          exerciseId: completedExercise.id,
+    for (const { id, sets } of completedExercises) {
+      const { intensity, volume } = this.getAverageIntVol(sets);
+      const foundStat =
+        stats.find((s) => s.exerciseId === id) ||
+        completedStats.find((s) => s.exerciseId === id); // it's possible that one exercise is completed in multiple supersets
+
+      if (foundStat) {
+        // update existing stat
+        foundStat.intensity += intensity;
+        foundStat.volume += volume;
+        foundStat.numMembers += 1;
+      } else {
+        // create new stat for completed exercise
+        completedStats.push({
+          intensity,
+          volume,
+          numMembers: 1,
+          exerciseId: id,
           rootComponentId: trainingComponentId,
-          numMembers: 0,
-          intensity: 0,
-          volume: 0,
-        };
-
-      trainingExerciseAverageStats.intensity = this.calculateFieldAverage(
-        ParamType.IntWork1,
-        completedExercise.sets,
-      );
-
-      trainingExerciseAverageStats.volume = this.calculateFieldAverage(
-        ParamType.VolWork1,
-        completedExercise.sets,
-      );
-
-      trainingExerciseAverageStats.numMembers += 1;
-
-      const existingStatIndex = completedStats.findIndex(
-        (s) => s.exerciseId === completedExercise.id,
-      );
-
-      if (existingStatIndex !== -1)
-        completedStats[existingStatIndex] = trainingExerciseAverageStats;
-      else completedStats.push(trainingExerciseAverageStats);
+        });
+      }
     }
 
-    return completedStats.map((s) => ({
-      ...s,
-      intensity: parseFloat(s.intensity.toFixed(2)),
-      volume: parseFloat(s.volume.toFixed(2)),
-    }));
-  }
-
-  private calculateFieldAverage(field: ParamType, sets: ExerciseSet[]): number {
-    const values = sets.flatMap((s) =>
-      s.paramValuesL.concat(s.paramValuesR).filter((p) => p.field === field),
-    );
-
-    if (!values.length) return 0;
-
-    const sum = values.reduce((acc, curr) => acc + parseFloat(curr.value), 0);
-    return sum / values.length;
+    return completedStats.map((s) => {
+      const intensity = parseFloat(s.intensity.toFixed(2));
+      const volume = parseFloat(s.volume.toFixed(2));
+      return { ...s, intensity, volume };
+    });
   }
 
   isTrainingCompleted(training: Training, userId: string) {
@@ -521,34 +461,6 @@ export class TrainingPlanService {
       throw new BadRequestException(
         'Dup Table Based periodization is not supported yet',
       );
-  }
-
-  private validateMethodParamValues(
-    method: Method,
-    paramValues: AttributeValue[],
-  ) {
-    for (const { field, value, selected } of paramValues) {
-      let attribute = method.attributes.find((a) => a.field === field);
-      if (!attribute) continue;
-
-      const foundInOptions = attribute.options.find(
-        (o) => o.field === selected,
-      );
-
-      if (foundInOptions) attribute = foundInOptions;
-
-      if (!this.commonService.object.isEmpty(attribute.min))
-        if (parseFloat(value) < attribute.min)
-          throw new BadRequestException(
-            `Value for ${field} cannot be less than ${attribute.min}`,
-          );
-
-      if (!this.commonService.object.isEmpty(attribute.max))
-        if (parseFloat(value) > attribute.max)
-          throw new BadRequestException(
-            `Value for ${field} cannot be greater than ${attribute.max}`,
-          );
-    }
   }
 
   populateTrainingExerciseParams(
@@ -758,5 +670,87 @@ export class TrainingPlanService {
     warmup.to = trainingComponents[0].from;
     cooldown.from = cooldownFrom;
     cooldown.to = addMinutes(cooldownFrom, 5);
+  }
+
+  private validateMethodParamValues(
+    method: Method,
+    paramValues: AttributeValue[],
+  ) {
+    for (const { field, value, selected } of paramValues) {
+      let attribute = method.attributes.find((a) => a.field === field);
+      if (!attribute) continue;
+
+      const foundInOptions = attribute.options.find(
+        (o) => o.field === selected,
+      );
+
+      if (foundInOptions) attribute = foundInOptions;
+
+      if (!this.commonService.object.isEmpty(attribute.min))
+        if (parseFloat(value) < attribute.min)
+          throw new BadRequestException(
+            `Value for ${field} cannot be less than ${attribute.min}`,
+          );
+
+      if (!this.commonService.object.isEmpty(attribute.max))
+        if (parseFloat(value) > attribute.max)
+          throw new BadRequestException(
+            `Value for ${field} cannot be greater than ${attribute.max}`,
+          );
+    }
+  }
+
+  /**
+   * Calculates average intensity and volume for a list of sets.
+   * It takes into account both left and right param values.
+   * If there are no sets, it returns 0 for both intensity and volume.
+   */
+  private getAverageIntVol(
+    sets: ExerciseSet[],
+  ): Pick<TrainingExerciseAverageStats, 'intensity' | 'volume'> {
+    const averages = this.calculateParamTypeAverages(sets);
+
+    const intensity = parseFloat(averages[ParamType.IntWork1].toFixed(2));
+    const volume = parseFloat(averages[ParamType.VolWork1].toFixed(2));
+
+    return { intensity, volume };
+  }
+
+  private calculateParamTypeAverages(
+    sets: ExerciseSet[],
+  ): Record<ParamType, number> {
+    const sums: Record<ParamType, number> = {} as any;
+    const counts: Record<ParamType, number> = {} as any;
+
+    // initialize sums and counts for each ParamType
+    Object.values(ParamType).forEach((param) => {
+      sums[param] = 0;
+      counts[param] = 0;
+    });
+
+    // iterate through sets and calculate sums and counts
+    for (const set of sets) {
+      for (const { field, value } of set.paramValuesL.concat(
+        set.paramValuesR,
+      )) {
+        if (sums.hasOwnProperty(field)) {
+          sums[field] += parseFloat(value);
+          counts[field] += 1;
+        }
+      }
+    }
+
+    // calculate averages
+    const averages: Record<ParamType, number> = {} as any;
+    Object.keys(sums).forEach((field: ParamType) => {
+      averages[field] = counts[field] ? sums[field] / counts[field] : 0;
+    });
+
+    // round averages to 2 decimal places
+    Object.keys(averages).forEach((field: ParamType) => {
+      averages[field] = parseFloat(averages[field].toFixed(2));
+    });
+
+    return averages;
   }
 }
