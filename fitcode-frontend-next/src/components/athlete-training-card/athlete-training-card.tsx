@@ -1,4 +1,3 @@
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
 import { Avatar, Box, Divider, IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -30,7 +29,6 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
   const { user } = useAuth();
 
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const { training } = props;
 

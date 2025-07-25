@@ -86,7 +86,8 @@ export default function AthleteTrainingComponents(
                   sx={[
                     user && component.completedMembersIds.includes(user.uid)
                       ? {
-                          opacity: 0.5,
+                          opacity:
+                            selectedComponent?.id !== component.id ? 0.5 : 1,
                           position: 'relative',
                           backgroundColor:
                             selectedComponent?.id === component.id
