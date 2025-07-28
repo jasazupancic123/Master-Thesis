@@ -69,6 +69,7 @@ export class TrainingComponent extends IntersectionType(IdEntity, ColorEntity) {
   subgroups: Subgroup[];
 
   @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @ApiProperty()
   @Expose()
   completedMembersIds: string[]; // members who completed the training

@@ -13,17 +13,11 @@ export class TrainingExercise extends IntersectionType(IdEntity, ColorEntity) {
   @Type(() => Attribute)
   @ApiProperty({ type: () => Attribute, isArray: true })
   @Expose()
-  params: Attribute[];
+  params: Attribute[]; // inferred from root component
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseSet)
   @ApiProperty({ type: () => ExerciseSet, isArray: true })
   @Expose()
   sets: ExerciseSet[];
-
-  @ValidateNested({ each: true })
-  @Type(() => Attribute)
-  @ApiProperty({ type: () => Attribute, isArray: true })
-  @Expose()
-  attributes: Attribute[];
 }
