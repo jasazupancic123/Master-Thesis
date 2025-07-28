@@ -68,7 +68,6 @@ export function generateTrainingStub(
       data?.cooldown ||
       generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
     components,
-    wellness: data?.wellness || [],
   };
 }
 
@@ -118,7 +117,6 @@ export function generateTrainingExercise(
     color: data?.color || generateRandomColor(),
     params: data?.params || [],
     sets: data?.sets || [],
-    attributes: data?.attributes || [],
   };
 }
 

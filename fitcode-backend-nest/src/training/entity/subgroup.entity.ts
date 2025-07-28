@@ -46,5 +46,5 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @Type(() => TrainingExerciseAverageStats)
   @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
   @Expose()
-  futureStats: TrainingExerciseAverageStats[]; // average future workload stats
+  futureStats?: TrainingExerciseAverageStats[]; // average future workload stats
 }

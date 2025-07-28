@@ -13,6 +13,7 @@ import { Institution } from '@src//institution/entity/institution.entity';
 import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { AttributeService } from '@src/attribute/service/attribute.service';
+import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
@@ -34,11 +35,17 @@ import { Method } from '@src/method/entity/method.entity';
 
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
+import { Subgroup } from '../entity/subgroup.entity';
+import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
+import {
+  UpdateSuperset,
+  UpdateTrainingComponent,
+} from '../interface/update-training.interface';
 
 @Injectable()
 export class TrainingPlanService {
@@ -148,7 +155,10 @@ export class TrainingPlanService {
   }
 
   async getAllTrainingExercises(
-    trainingComponents: TrainingComponent[],
+    trainingComponents: DeepPick<
+      TrainingComponent,
+      'supersets.exercises.id' | 'subgroups.supersets.exercises.id'
+    >[],
   ): Promise<Exercise[]> {
     const trainingExercises = trainingComponents.flatMap((c) => [
       ...c.supersets.flatMap((s) => s.exercises),
@@ -305,22 +315,35 @@ export class TrainingPlanService {
   }
 
   validateTrainingComponents(
-    exercises: Exercise[],
+    existingTraining: Training | null,
+    newTrainingComponents: UpdateTrainingComponent[],
     trainingMemberIds: string[],
-    trainingComponents: TrainingComponent[],
-    allComponents: Component[],
-    allMethods: Method[],
-  ) {
-    if (!trainingComponents.map((tc) => tc.id).includes(WARMUP_COMPONENT_ID))
+    data: {
+      exercises: Exercise[];
+      components: Component[];
+      methods: Method[];
+      attributes: Attribute[];
+    },
+  ): TrainingComponent[] {
+    const { components, methods } = data;
+
+    if (!newTrainingComponents.map((tc) => tc.id).includes(WARMUP_COMPONENT_ID))
       throw new BadRequestException('Training must have warmup component');
 
-    if (!trainingComponents.map((tc) => tc.id).includes(COOLDOWN_COMPONENT_ID))
+    if (
+      !newTrainingComponents.map((tc) => tc.id).includes(COOLDOWN_COMPONENT_ID)
+    )
       throw new BadRequestException('Training must have cooldown component');
 
+    const validTrainingComponents: TrainingComponent[] = [];
     const duplicates = new Set<string>();
-    for (let i = 0; i < trainingComponents.length; i++) {
-      const curr = trainingComponents[i];
-      const component = allComponents.find((c) => c.id === curr.id);
+
+    for (let i = 0; i < newTrainingComponents.length; i++) {
+      const curr = newTrainingComponents[i];
+      const component = components.find((c) => c.id === curr.id);
+      const existingTrainingComponent = existingTraining?.components?.find(
+        (c) => c.id === curr.id,
+      );
 
       // validate components are valid
       if (!component) throw new NotFoundException('Component does not exist');
@@ -331,7 +354,7 @@ export class TrainingPlanService {
 
       // validate method
       if (curr.methodId) {
-        const method = allMethods.find((m) => m.id === curr.methodId);
+        const method = methods.find((m) => m.id === curr.methodId);
         if (!method)
           throw new NotFoundException(
             'Method not found for training component',
@@ -344,10 +367,10 @@ export class TrainingPlanService {
       duplicates.add(component.id);
 
       // validate training component times
-      const next = trainingComponents[i + 1];
+      const next = newTrainingComponents[i + 1];
       if (next) {
-        const nextComponent = allComponents.find((c) => c.id === next.id);
-        if (i < trainingComponents.length - 1 && nextComponent)
+        const nextComponent = components.find((c) => c.id === next.id);
+        if (i < newTrainingComponents.length - 1 && nextComponent)
           if (curr.from >= next.from)
             throw new BadRequestException(
               `Component ${component.name} has to start before ${nextComponent.name}`,
@@ -355,42 +378,25 @@ export class TrainingPlanService {
       }
 
       // validate supersets and subgroups
-      this.validateSupersets(curr, exercises);
-      this.validateSubgroups(trainingMemberIds, curr);
-      this.validateTrainingExerciseValues(curr, allMethods);
+      const supersets = this.validateSupersets(curr, curr.supersets, data);
+      const subgroups = this.validateSubgroups(curr, trainingMemberIds, data);
+
+      if (![WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(curr.id))
+        validTrainingComponents.push({
+          ...curr,
+          supersets,
+          subgroups,
+          completedMembersIds:
+            existingTrainingComponent?.completedMembersIds || [],
+        });
     }
 
-    if (
-      trainingComponents.filter(
-        (tc) => ![WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tc.id),
-      ).length > 5
-    )
+    if (validTrainingComponents.length > 5)
       throw new ConflictException(
         'You can only have up to 5 components per training',
       );
-  }
 
-  validateTrainingExerciseValues(
-    trainingComponent: TrainingComponent,
-    methods: Method[],
-  ) {
-    if (!trainingComponent.methodId) return; // no method to validate
-
-    const method = methods.find((m) => m.id === trainingComponent.methodId);
-    if (!method)
-      throw new NotFoundException('Method not found for training component');
-
-    if (!method.attributes.length) return; // no values to validate
-
-    const exercises = trainingComponent.supersets.flatMap((s) => s.exercises);
-    const sets = exercises.flatMap(
-      (e: TrainingExercise | CompletedTrainingExercise) => e.sets,
-    );
-
-    for (const set of sets) {
-      this.validateMethodParamValues(method, set.paramValuesL);
-      this.validateMethodParamValues(method, set.paramValuesR);
-    }
+    return validTrainingComponents;
   }
 
   /**
@@ -464,7 +470,10 @@ export class TrainingPlanService {
   }
 
   populateTrainingExerciseParams(
-    trainingComponents: TrainingComponent[],
+    trainingComponents: DeepPick<
+      TrainingComponent,
+      'id' | 'supersets.exercises' | 'subgroups.supersets.exercises'
+    >[],
     components: Component[],
     exercises: Exercise[], // populate exercise attributes
     attributes: Attribute[],
@@ -510,32 +519,81 @@ export class TrainingPlanService {
     }
   }
 
-  validateSupersets(component: TrainingComponent, exercises: Exercise[]) {
-    if (component.supersets.length > 8)
+  validateSupersets(
+    trainingComponent: UpdateTrainingComponent,
+    newSupersets: UpdateSuperset[],
+    data: {
+      components: Component[];
+      exercises: Exercise[];
+      attributes: Attribute[];
+      methods: Method[];
+    },
+  ): Superset[] {
+    const { components, exercises, attributes, methods } = data;
+
+    if (newSupersets.length > 8)
       throw new ConflictException(
         'You can only have up to 8 supersets per training component',
       );
 
-    const supersets = [
-      ...component.supersets,
-      ...component.subgroups.flatMap((s) => s.supersets),
-    ];
+    const component = components.find((c) => c.id === trainingComponent.id)!;
+    const root = this.componentService.getRoot(component, components);
+    const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
-    for (const superset of supersets) {
+    const validSupersets: Superset[] = [];
+    for (const superset of newSupersets) {
       if (superset.exercises.length > 4)
         throw new ConflictException(
           'You can only have up to 4 exercises per superset',
         );
 
       // don't check exercises for warmup and cooldown
-      if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(component.id))
+      if (
+        [WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(
+          trainingComponent.id,
+        )
+      )
         continue;
 
       // validate exercises
+      const validTrainingExercises: TrainingExercise[] = [];
       for (const trainingExercise of superset.exercises) {
         const exercise = exercises.find((e) => e.id === trainingExercise.id);
         if (!exercise)
           throw new NotFoundException('Training exercise not found');
+
+        // first time, populate training exercise params and sets
+        const params = this.componentService.getComponentParamAttributes(
+          componentParams,
+          exercise.attributeValues,
+          attributes,
+        );
+
+        const paramAttributes =
+          this.componentService.getParamAttributes(params);
+
+        const sets = this.getSets(paramAttributes, trainingExercise.sets);
+        const method = methods.find(
+          (m) => m.id === trainingComponent.methodId,
+        )!;
+
+        if (trainingComponent.methodId && !method)
+          throw new NotFoundException(
+            'Method not found for training component',
+          );
+
+        if (method?.attributes?.length > 0)
+          for (const set of sets) {
+            this.validateMethodParamValues(method, set.paramValuesL);
+            this.validateMethodParamValues(method, set.paramValuesR);
+          }
+
+        validTrainingExercises.push({
+          id: trainingExercise.id,
+          color: trainingExercise.color,
+          params: paramAttributes,
+          sets,
+        });
 
         // NOTE - currently disabled, as we can add exercises to any component
         /* const exerciseComponentLeaf = allComponents.find(
@@ -552,15 +610,33 @@ export class TrainingPlanService {
             `Exercise ${exercise.name} cannot be part of selected component`,
           ); */
       }
+
+      validSupersets.push({
+        color: superset.color,
+        exercises: validTrainingExercises,
+      });
     }
+
+    return validSupersets;
   }
 
-  validateSubgroups(trainingMemberIds: string[], component: TrainingComponent) {
+  validateSubgroups(
+    trainingComponent: UpdateTrainingComponent,
+    trainingMemberIds: string[],
+    data: {
+      components: Component[];
+      exercises: Exercise[];
+      attributes: Attribute[];
+      methods: Method[];
+    },
+  ): Subgroup[] {
     // validate all subgroups have unique members (one member cannot be in multiple subgroups)
     const trainingMemberIdsSet = new Set(trainingMemberIds);
     const membersIdsSet = new Set<string>();
 
-    for (const subgroup of component.subgroups)
+    const validSubgroups: Subgroup[] = [];
+    for (const subgroup of trainingComponent.subgroups) {
+      // validate members
       for (const userId of subgroup.membersIds) {
         if (!trainingMemberIdsSet.has(userId))
           throw new ConflictException('Invalid member');
@@ -572,6 +648,23 @@ export class TrainingPlanService {
 
         membersIdsSet.add(userId);
       }
+
+      // validate supersets
+      const validSupersets = this.validateSupersets(
+        trainingComponent,
+        subgroup.supersets,
+        data,
+      );
+
+      validSubgroups.push({
+        id: subgroup.id,
+        name: subgroup.name,
+        membersIds: subgroup.membersIds,
+        supersets: validSupersets,
+      });
+    }
+
+    return validSubgroups;
   }
 
   getSets(params: Attribute[], existingSets?: ExerciseSet[]): ExerciseSet[] {
@@ -621,7 +714,7 @@ export class TrainingPlanService {
   createWarmupAndCooldown(
     from: Date,
     to: Date,
-    components: TrainingComponent[],
+    components: Pick<TrainingComponent, 'from' | 'to'>[],
   ): { warmup: TrainingComponent; cooldown: TrainingComponent } {
     let cooldownFrom = to;
     if (components.length) {
@@ -654,9 +747,9 @@ export class TrainingPlanService {
   }
 
   updateWarmupAndCooldownTimes(
-    warmup: TrainingComponent,
-    cooldown: TrainingComponent,
-    trainingComponents: TrainingComponent[],
+    warmup: Pick<TrainingComponent, 'from' | 'to'>,
+    cooldown: Pick<TrainingComponent, 'from' | 'to'>,
+    trainingComponents: Pick<TrainingComponent, 'from' | 'to'>[],
   ): void {
     let cooldownFrom = trainingComponents[trainingComponents.length - 1].to;
     if (trainingComponents.length)

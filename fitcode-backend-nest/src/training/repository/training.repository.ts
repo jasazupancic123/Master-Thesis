@@ -6,6 +6,7 @@ import {
 } from 'firebase-admin/firestore';
 
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
+import { CommonService } from '@src/common/service/common.service';
 import { Create, FirestoreEntity, Update } from '@src/common/type/entity.type';
 import { RootFirestoreCollectionRepository } from '@src/common/type/firestore.type';
 import { FirebaseService } from '@src/firebase/firebase.service';
@@ -16,7 +17,10 @@ import { Training } from '../entity/training.entity';
 export class TrainingRepository
   implements RootFirestoreCollectionRepository<Training>
 {
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly commonService: CommonService,
+  ) {}
 
   async getDocs(
     query: (query: Query) => Query = (query) => query,
@@ -67,7 +71,7 @@ export class TrainingRepository
   }
 
   getUpdateQuery(input: Update<Training>): FirestoreEntity<Partial<Training>> {
-    const { institution, futureStats, wellness, ...rest } = input;
+    const { institution, futureStats, ...rest } = input;
     return this.firebaseService.buildUpdateQuery<Training>(rest);
   }
 }

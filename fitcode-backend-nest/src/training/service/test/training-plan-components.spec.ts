@@ -8,6 +8,7 @@ import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
 import { ComponentService } from '@src/component/component.service';
+import { PARAMS } from '@src/component/constant/param.constant';
 import {
   COOLDOWN_COMPONENT,
   COOLDOWN_COMPONENT_ID,
@@ -110,6 +111,13 @@ describe('validateTrainingComponents', () => {
     generateExerciseStub({ id: 'e5', componentIds: ['leaf3'] }),
   ];
 
+  const data = {
+    exercises: [],
+    components,
+    methods: [],
+    attributes: [],
+  };
+
   beforeEach(() => {
     jest
       .spyOn(componentService, 'leafsFromFlat')
@@ -126,13 +134,7 @@ describe('validateTrainingComponents', () => {
     const trainingComponents = [generateTrainingComponent({ id: 'c1' })];
 
     expect(() =>
-      service.validateTrainingComponents(
-        [],
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
+      service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow('Training must have warmup component');
   });
 
@@ -143,13 +145,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        [],
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
+      service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow('Training must have cooldown component');
   });
 
@@ -161,13 +157,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        [],
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
+      service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow('Component does not exist');
   });
 
@@ -186,13 +176,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        [],
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
+      service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow(`Component Leaf 1 cannot be selected for training`);
   });
 
@@ -214,13 +198,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        [],
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
+      service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow(`Duplicate component Component 1`);
   });
 
@@ -240,13 +218,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        [],
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
+      service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow(`Component Component 1 has to start before Component 2`);
   });
 
@@ -317,11 +289,10 @@ describe('validateTrainingComponents', () => {
 
     expect(() =>
       service.validateTrainingComponents(
-        [],
-        memberIds,
+        null,
         trainingComponents,
-        components,
-        [],
+        memberIds,
+        data,
       ),
     ).toThrow('Invalid member');
   });
@@ -350,11 +321,10 @@ describe('validateTrainingComponents', () => {
 
     expect(() =>
       service.validateTrainingComponents(
-        [],
-        memberIds,
+        null,
         trainingComponents,
-        components,
-        [],
+        memberIds,
+        data,
       ),
     ).toThrow('Member cannot be part of multiple subgroups simultaneously');
   });
@@ -379,13 +349,7 @@ describe('validateTrainingComponents', () => {
     ];
 
     expect(() =>
-      service.validateTrainingComponents(
-        [],
-        [],
-        trainingComponents,
-        components,
-        [],
-      ),
+      service.validateTrainingComponents(null, trainingComponents, [], data),
     ).toThrow('You can only have up to 5 components per training');
   });
 
@@ -424,13 +388,21 @@ describe('validateTrainingComponents', () => {
       }),
     ];
 
+    const data = {
+      exercises: exercises.filter((e) => e.id !== 'e5'), // remove invalid exercise
+      components,
+      methods: [],
+      attributes: [],
+    };
+
+    jest.spyOn(componentService, 'getParamAttributes').mockReturnValue(PARAMS);
+
     expect(() =>
       service.validateTrainingComponents(
-        exercises.filter((e) => e.id !== 'e5'), // remove invalid exercise
-        ['m1'],
+        null,
         trainingComponents,
-        components,
-        [],
+        ['m1'],
+        data,
       ),
     ).not.toThrow();
   });

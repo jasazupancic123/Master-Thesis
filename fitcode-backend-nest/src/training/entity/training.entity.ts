@@ -10,7 +10,6 @@ import {
 
 import { BaseEntity } from '@src/common/entity/base.entity';
 import { Institution } from '@src/institution/entity/institution.entity';
-import { Wellness } from '@src/user/entity/wellness.entity';
 
 import { TrainingComponent } from './training-component.entity';
 import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';
@@ -51,6 +50,8 @@ export class Training extends BaseEntity {
   membersIds: string[]; // all members of the group
 
   @ApiProperty()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @Expose()
   completedMembersIds: string[]; // members who completed the training
 
@@ -98,6 +99,5 @@ export class Training extends BaseEntity {
   components: TrainingComponent[];
 
   // virtual properties
-  futureStats: TrainingExerciseAverageStats[]; // average future group workload stats
-  wellness: Wellness[]; // members' wellness info used to calculate workloads
+  futureStats?: TrainingExerciseAverageStats[]; // average future group workload stats
 }
