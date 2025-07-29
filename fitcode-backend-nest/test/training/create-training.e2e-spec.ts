@@ -26,6 +26,7 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { TestDbService } from '@src/test-db/test-db.service';
 import {
   generateSuperset,
   generateTrainingComponent,
@@ -38,6 +39,7 @@ import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Create Training (e2e)', () => {
   let app: INestApplication;
+  let db: TestDbService;
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let exerciseService: ExerciseService;
@@ -57,6 +59,7 @@ describe('Create Training (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
+    db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
     componentService = moduleFixture.get(ComponentService);
     exerciseService = moduleFixture.get(ExerciseService);
@@ -519,6 +522,10 @@ describe('Create Training (e2e)', () => {
         expect(response.body.membersIds).toEqual([global.athlete.uid]);
         expect(response.body.components).toHaveLength(1);
         expect(response.body.components[0].supersets).toHaveLength(0);
+        expect(response.body.futureStats).toEqual([]);
+
+        const dbTraining = await db.trainings.get(response.body.id);
+        expect(dbTraining.futureStats).not.toBeDefined();
 
         await Promise.all([
           deleteDocs(firebase, 'EXERCISE', [globalExercise.id, exercise.id]),
@@ -692,7 +699,7 @@ describe('Create Training (e2e)', () => {
     expect(response.body.id).toBe(training.id);
     expect(response.body.components).toHaveLength(0);
 
-    const trainings = await trainingService.findAll(global.trainer);
+    const trainings = await db.trainings.getAll();
     expect(trainings).toHaveLength(0);
 
     await Promise.all([deleteDoc(firebase, 'TRAINING', training.id)]);

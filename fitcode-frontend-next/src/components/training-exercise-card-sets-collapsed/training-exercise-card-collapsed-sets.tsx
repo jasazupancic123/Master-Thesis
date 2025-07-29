@@ -25,8 +25,11 @@ import { useSupersets } from '@/store/supersets-provider';
 import { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { v4 } from 'uuid';
+import { useMain } from '@/store/main-provider';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 interface TrainingExerciseCardCollapsedSetsProps {
+  component: TrainingComponent;
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
@@ -43,6 +46,8 @@ export default function TrainingExerciseCardCollapsedSets(
     props;
 
   const { setsNumbers, setSetsNumbers } = useSupersets();
+
+  const { methods } = useMain();
 
   const {
     training,
@@ -158,13 +163,17 @@ export default function TrainingExerciseCardCollapsedSets(
 
               let min: number | undefined;
               let max: number | undefined;
-              const attributeRange = exercise.attributes.find(
-                (ar) => ar.field === param.field
+
+              const method = methods.find((m) => m.id === component.methodId);
+              const attributeRange = method?.attributes.find(
+                (a) => a.field === param.field
               );
+
               if (attributeRange) {
                 const foundInOptions = attributeRange.options?.find(
                   (option) => option.field === valueL.selected
                 );
+
                 if (foundInOptions) {
                   if (foundInOptions.field === VolWorkSetType.Set) {
                     if (

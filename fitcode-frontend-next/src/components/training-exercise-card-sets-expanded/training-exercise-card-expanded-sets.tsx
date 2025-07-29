@@ -16,8 +16,11 @@ import { updateExerciseAttributeValues } from './state';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { TrainingService } from '@/controller/training/training.service';
 import { v4 } from 'uuid';
+import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useMain } from '@/store/main-provider';
 
 interface TrainingExerciseCarExpandedSetsProps {
+  component: TrainingComponent;
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
@@ -28,6 +31,8 @@ export default function TrainingExerciseCardExpandedSets(
   props: TrainingExerciseCarExpandedSetsProps
 ) {
   const screenSize = useScreenSize();
+
+  const { methods } = useMain();
 
   const {
     training,
@@ -143,13 +148,20 @@ export default function TrainingExerciseCardExpandedSets(
 
                   let min: number | undefined;
                   let max: number | undefined;
-                  const attributeRange = exercise.attributes.find(
-                    (ar) => ar.field === param.field
+
+                  const method = methods.find(
+                    (m) => m.id === component.methodId
                   );
+
+                  const attributeRange = method?.attributes.find(
+                    (a) => a.field === param.field
+                  );
+
                   if (attributeRange) {
                     const foundInOptions = attributeRange.options?.find(
                       (option) => option.field === valueL.selected
                     );
+
                     if (foundInOptions) {
                       min = foundInOptions.min;
                       max = foundInOptions.max;
