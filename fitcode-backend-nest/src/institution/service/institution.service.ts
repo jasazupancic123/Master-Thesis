@@ -139,7 +139,8 @@ export class InstitutionService implements Permission<Institution> {
     ref: InstitutionRef,
     input: UpdateInstitutionMembersDto,
   ): Promise<Institution> {
-    const { add, trainers, memberIds } = input;
+    const { add, trainers } = input;
+    let { memberIds } = input;
 
     this.logger.log(
       `User ${user.uid} is ${add ? 'adding' : 'removing'} ${trainers ? 'trainers' : 'athletes'} to institution ${ref.institutionId}: ${JSON.stringify(
@@ -151,6 +152,13 @@ export class InstitutionService implements Permission<Institution> {
     if (!this.canEdit(user, institution))
       throw new UnauthorizedException('You cannot edit this institution');
 
+    // filter out duplicates
+    if (add) {
+      memberIds = trainers
+        ? memberIds.filter((id) => !institution.trainerIds.includes(id))
+        : memberIds.filter((id) => !institution.athleteIds.includes(id));
+    }
+
     await this.userService.findAllOrFail({
       ids: memberIds,
       role: trainers ? UserRole.TRAINER : UserRole.ATHLETE,
@@ -159,10 +167,12 @@ export class InstitutionService implements Permission<Institution> {
     const membersField = trainers ? 'trainerIds' : 'athleteIds';
     const firebaseAction = add ? 'arrayUnion' : 'arrayRemove';
 
-    const docRef = this.repository.collection().doc(institution.id);
-    await docRef.update({
-      [membersField]: FieldValue[firebaseAction](...memberIds),
-    });
+    if (memberIds.length) {
+      const docRef = this.repository.collection().doc(institution.id);
+      await docRef.update({
+        [membersField]: FieldValue[firebaseAction](...memberIds),
+      });
+    }
 
     return {
       ...institution,

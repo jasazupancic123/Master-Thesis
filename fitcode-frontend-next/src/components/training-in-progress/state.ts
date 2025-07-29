@@ -18,7 +18,6 @@ export const handleFinishTraining = async (state: {
   user: User | null;
   router: AppRouterInstance;
   setTrainings: SetState<Training[]>;
-  setAllTrainings: SetState<Training[]>;
   clearTrainingState: () => void;
   setSelectedSuperset: SetState<Superset | undefined>;
   setView: SetState<ExerciseOrTraining>;
@@ -29,7 +28,6 @@ export const handleFinishTraining = async (state: {
     user,
     router,
     setTrainings,
-    setAllTrainings,
     clearTrainingState,
     setView,
     setSelectedSuperset,
@@ -74,15 +72,12 @@ export const handleFinishTraining = async (state: {
       setTrainings((prev) =>
         prev.map((t) => {
           if (t.id === training.id) {
-            return training; // Update the training data
-          }
-          return t;
-        })
-      );
-      setAllTrainings((prev) =>
-        prev.map((t) => {
-          if (t.id === training.id) {
-            return training; // Update the training data
+            return {
+              group: t.group,
+              institution: t.institution,
+              cycle: t.cycle,
+              ...training,
+            }; // Update the training data
           }
           return t;
         })

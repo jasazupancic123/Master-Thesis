@@ -1,47 +1,108 @@
 'use client';
 
 import { CommonService } from '@/common/service/common.service';
-import Animation from '@/components/animation/animation';
-import AthleteTrainingExerciseCard from '@/components/athlete-trainings-exercise-card/athlete-training-exercise-card';
+import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
-import { useAthlete } from '@/store/athlete-provider';
 import { useAuth } from '@/store/auth-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import { Box, Stack, Typography } from '@mui/material';
-import { endOfDay, startOfDay } from 'date-fns';
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material';
-import { CheckCircle } from '@mui/icons-material';
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import { useMain } from '@/store/main-provider';
+import { CompletedPlanned } from '@/common/enum/past-future.enum';
+import { Pagination } from '@/common/type/paginate.type';
+import { Training } from '@/controller/training/type/training.type';
 
+const PAGE_SIZE = 3;
 const commonService = CommonService.instance;
 
 export default function TrainingPage() {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const { profile } = useMain();
   const {
     view,
     setView,
-    trainings: allTrainingsProps,
+    plannedTrainings,
+    completedTrainings,
     clearTrainingState,
     trainingInProgress,
     isLoaded,
   } = useTraining();
 
-  const { selectedDate } = useAthlete();
   const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
 
-  const [allTrainings, setAllTrainings] = useState([...allTrainingsProps]);
-  const [trainings, setTrainings] = useState(() =>
-    allTrainings.filter(({ from }) =>
-      commonService.date.isBetween(from, startOfDay(from), endOfDay(from))
-    )
+  const [filteredPlannedTrainings, setFilteredPlannedTrainings] = useState<
+    Training[]
+  >([]);
+  const [filteredCompletedTrainings, setFilteredCompletedTrainings] = useState<
+    Training[]
+  >([]);
+
+  const [filter, setFilter] = useState<CompletedPlanned>(
+    CompletedPlanned.PLANNED
   );
+
+  const [loading, setLoading] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const [plannedTrainingsPagination, setPlannedTrainingsPagination] =
+    useState<Pagination>({
+      page: 0,
+      pageSize: PAGE_SIZE,
+      pages: Math.ceil(plannedTrainings.length / PAGE_SIZE),
+      total: plannedTrainings.length,
+    });
+  const [completedTrainingsPagination, setCompletedTrainingsPagination] =
+    useState<Pagination>({
+      page: 0,
+      pageSize: PAGE_SIZE,
+      pages: Math.ceil(completedTrainings.length / PAGE_SIZE),
+      total: completedTrainings.length,
+    });
+  const [hasMorePlanned, setHasMorePlanned] = useState(true);
+  const [hasMoreCompleted, setHasMoreCompleted] = useState(true);
+
+  useEffect(() => {
+    if (loading || view === ExerciseTrainingView.TrainingView) return;
+
+    if (
+      (filter === CompletedPlanned.PLANNED && !hasMorePlanned) ||
+      (filter === CompletedPlanned.COMPLETED && !hasMoreCompleted)
+    )
+      return;
+
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setLoading(true);
+          await handlePaginateTrainings();
+          setLoading(false);
+        }
+      },
+      {
+        root: containerRef.current,
+        threshold: 1.0,
+      }
+    );
+
+    const sentinel = sentinelRef.current;
+    if (sentinel) observer.observe(sentinel);
+
+    return () => {
+      if (sentinel) observer.unobserve(sentinel);
+    };
+  }, [
+    loading,
+    filteredPlannedTrainings.length,
+    filteredCompletedTrainings.length,
+    filter,
+    view,
+  ]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -56,127 +117,125 @@ export default function TrainingPage() {
     }
   }, [isLoaded]);
 
-  useEffect(() => {
-    if (!selectedDate) return;
+  const handlePaginateTrainings = async () => {
+    await commonService.generic.sleep(1);
 
-    setTrainings(
-      allTrainings.filter(({ from }) =>
-        commonService.date.isBetween(
-          from,
-          startOfDay(selectedDate.toDate()),
-          endOfDay(selectedDate.toDate())
-        )
-      )
-    );
-  }, [selectedDate]);
+    const allTrainings =
+      filter === CompletedPlanned.PLANNED
+        ? plannedTrainings
+        : completedTrainings;
 
-  useEffect(() => {
-    setAllTrainings((prev) => {
-      const newTrainings = prev.map((training) => {
-        trainings.map((t) => {
-          if (t.id === training.id) {
-            training = t;
-          }
-        });
-        return training;
-      });
-      return newTrainings;
+    const currentPagination =
+      filter === CompletedPlanned.PLANNED
+        ? plannedTrainingsPagination
+        : completedTrainingsPagination;
+
+    const { page, pageSize, total } = currentPagination;
+
+    const nextPage = page + 1;
+    const totalPages = Math.ceil(allTrainings.length / pageSize);
+
+    if (nextPage > totalPages) {
+      if (filter === CompletedPlanned.PLANNED) setHasMorePlanned(false);
+      else setHasMoreCompleted(false);
+      return;
+    }
+
+    const newTrainings = commonService.generic.paginate(allTrainings, {
+      page: nextPage,
+      pageSize,
     });
-  }, [trainings]);
+
+    const updatedPagination: Pagination = {
+      page: nextPage,
+      pageSize,
+      total: allTrainings.length,
+      pages: totalPages,
+    };
+
+    if (newTrainings.length < pageSize) {
+      if (filter === CompletedPlanned.PLANNED) setHasMorePlanned(false);
+      else setHasMoreCompleted(false);
+    }
+
+    if (filter === CompletedPlanned.PLANNED) {
+      setFilteredPlannedTrainings((prev) => [...prev, ...newTrainings]);
+      setPlannedTrainingsPagination(updatedPagination);
+    } else {
+      setFilteredCompletedTrainings((prev) => [...prev, ...newTrainings]);
+      setCompletedTrainingsPagination(updatedPagination);
+    }
+  };
 
   return view === ExerciseTrainingView.ExerciseView ? (
-    hasJustLoggedIn === true ? (
-      <Animation
-        text="CHECKING YOUR TRAINING PLAN"
-        onEnd={() => setHasJustLoggedIn(false)}
-      />
-    ) : trainings.length === 0 ? (
-      <Typography
-        variant="h6"
-        sx={{ pt: 2, textAlign: 'center', width: '100%' }}
+    <Box display="flex" flexDirection="column" width="100%">
+      <Box
+        display="flex"
+        justifyContent="space-evenly"
+        sx={{
+          backgroundColor: theme.palette.background.light,
+          py: 1,
+        }}
       >
-        No training scheduled
-      </Typography>
-    ) : (
-      <Box mt={2} pb={10}>
-        {trainings.map((training) => (
-          <Box
-            key={training.id}
-            display="flex"
-            flexDirection="column"
-            alignItems="flex-start"
-            pb={2}
-            px={screenSize.isLandscapeMobile ? 4 : 1}
-          >
-            <Box
-              display="flex"
+        {[CompletedPlanned.COMPLETED, CompletedPlanned.PLANNED].map((type) => (
+          <Box key={type} display="flex" flexDirection="column">
+            <Typography
               sx={{
-                borderTopLeftRadius: 10,
-                borderTopRightRadius: 10,
-                backgroundColor: training.completedMembersIds.includes(
-                  profile.uid
-                )
-                  ? theme.palette.primary.dark
-                  : theme.palette.primary.main,
+                fontWeight: 'bold',
+                fontSize: 12,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
               }}
-              alignItems="center"
-              py={0.5}
-              px={2}
-              gap={1}
+              onClick={() => {
+                setFilter(type);
+              }}
             >
-              <Typography variant="body2">
-                {dayjs(training.from).format('A')}
-              </Typography>
-              <Typography variant="body2">
-                {dayjs(training.from).format('HH:MM')}
-              </Typography>
-
-              {training.completedMembersIds.includes(profile.uid) && (
-                <CheckCircle
-                  sx={{
-                    color: theme.palette.primary.light,
-                  }}
-                />
-              )}
-            </Box>
-            <Stack sx={{ borderRadius: 2, width: '100%' }}>
+              {type}
+            </Typography>
+            {type === filter && (
               <Box
-                display="flex"
-                width="100%"
-                justifyContent="center"
-                alignItems={!training ? 'center' : undefined}
-                flexDirection="column"
-              >
-                <Box
-                  width="100%"
-                  sx={{
-                    borderRadius: 2,
-                    pt: 0,
-                  }}
-                >
-                  {/* Components */}
-                  <Stack spacing={3}>
-                    <AthleteTrainingExerciseCard
-                      components={[
-                        training.warmup,
-                        ...training.components,
-                        training.cooldown,
-                      ]}
-                      training={training}
-                    />
-                  </Stack>
-                </Box>
-              </Box>
-            </Stack>
+                sx={{
+                  width: '100%',
+                  height: 2,
+                  borderRadius: 2,
+                  backgroundColor: theme.palette.primary.main,
+                }}
+              />
+            )}
           </Box>
         ))}
       </Box>
-    )
+      <Box
+        ref={containerRef}
+        sx={{
+          height: 'calc(100vh - 100px)',
+          overflowY: 'auto',
+          pb: 6,
+        }}
+      >
+        {(filter === CompletedPlanned.PLANNED
+          ? filteredPlannedTrainings
+          : filteredCompletedTrainings
+        ).map((training) => (
+          <AthleteTrainingCard key={training.id} training={training} />
+        ))}
+
+        <Box ref={sentinelRef} height={'1px'} />
+
+        {loading && (
+          <Box display="flex" justifyContent="center" py={2}>
+            <CircularProgress size={24} />
+          </Box>
+        )}
+      </Box>
+    </Box>
   ) : (
     <TrainingInProgress
-      setView={setView}
-      setTrainings={setTrainings}
-      setAllTrainings={setAllTrainings}
+      setTrainings={
+        filter === CompletedPlanned.PLANNED
+          ? setFilteredPlannedTrainings
+          : setFilteredCompletedTrainings
+      }
     />
   );
 }
