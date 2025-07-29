@@ -130,7 +130,7 @@ export class TrainingService implements Permission<Training, Institution> {
     filter?: Filter<Training>,
     options?: { limit?: number },
   ): Promise<Training[]> {
-    const trainings = await this.trainingRepository.getDocs((q) => {
+    return await this.trainingRepository.getDocs((q) => {
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
@@ -154,16 +154,6 @@ export class TrainingService implements Permission<Training, Institution> {
       if (options?.limit) q = q.limit(options.limit);
       return q;
     });
-
-    trainings.forEach((training) => {
-      training.futureStats =
-        this.trainingPlanService.calculatePrescribedTrainingStats(
-          training.components,
-          training.membersIds.length,
-        );
-    });
-
-    return trainings;
   }
 
   @LogMethod()
@@ -250,7 +240,7 @@ export class TrainingService implements Permission<Training, Institution> {
       membersIds,
       completedMembersIds: [],
       stats: [],
-      futureStats: input.futureStats || [],
+      // futureStats: input.futureStats || [],
       warmup,
       cooldown,
       components: trainingComponents.map((c) => ({
@@ -427,11 +417,11 @@ export class TrainingService implements Permission<Training, Institution> {
         : filteredTrainings;
 
     // update futureStats of baseTraining
-    baseTraining.futureStats =
+    /* baseTraining.futureStats =
       this.trainingPlanService.calculatePrescribedTrainingStats(
         [baseComponent],
         baseTraining.membersIds.length,
-      );
+      ); */
 
     await this.trainingRepository.updateDoc(baseTrainingId, {
       components: baseTraining.components.map((c) =>
@@ -446,10 +436,10 @@ export class TrainingService implements Permission<Training, Institution> {
       const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
 
-      t.futureStats = this.trainingPlanService.calculatePrescribedTrainingStats(
+      /* t.futureStats = this.trainingPlanService.calculatePrescribedTrainingStats(
         [component],
         t.membersIds.length,
-      );
+      ); */
 
       /* operations.push({
         ref: this.trainingRepository.doc(t.id),
@@ -500,7 +490,6 @@ export class TrainingService implements Permission<Training, Institution> {
       await this.trainingRepository.deleteDoc(ref.trainingId);
       return {
         ...training,
-        futureStats: [],
         completedMembersIds: [],
       };
     }
@@ -590,10 +579,10 @@ export class TrainingService implements Permission<Training, Institution> {
     return {
       ...training,
       ...updateTraining,
-      futureStats: this.trainingPlanService.calculatePrescribedTrainingStats(
+      /* futureStats: this.trainingPlanService.calculatePrescribedTrainingStats(
         trainingComponents,
         membersIds.length,
-      ),
+      ), */
     };
   }
 
@@ -656,7 +645,7 @@ export class TrainingService implements Permission<Training, Institution> {
       membersIds: training.membersIds,
       completedMembersIds: [],
       stats: training.stats || [],
-      futureStats: training.futureStats || [],
+      // futureStats: training.futureStats || [],
       components: training.components.map((c, i) => {
         const from = addMinutes(startOfHour(input.from), i * 30);
         const to = addMinutes(from, 30);
@@ -755,13 +744,13 @@ export class TrainingService implements Permission<Training, Institution> {
     if (!trainingTo) {
       // create a new training if it does not exist with the copied component
       // calculate new future stats
-      const futureStats = trainingFrom.futureStats.filter(
+      /* const futureStats = trainingFrom.futureStats.filter(
         (fs) => fs.rootComponentId === componentId,
-      );
+      ); */
 
       return await this.create(user, {
         ...trainingFrom,
-        futureStats,
+        // futureStats,
         components: [
           {
             ...trainingComponent,

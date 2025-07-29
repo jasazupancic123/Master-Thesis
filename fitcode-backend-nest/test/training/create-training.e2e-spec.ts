@@ -522,7 +522,7 @@ describe('Create Training (e2e)', () => {
         expect(response.body.membersIds).toEqual([global.athlete.uid]);
         expect(response.body.components).toHaveLength(1);
         expect(response.body.components[0].supersets).toHaveLength(0);
-        expect(response.body.futureStats).toEqual([]);
+        expect(response.body.futureStats).not.toBeDefined();
 
         const dbTraining = await db.trainings.get(response.body.id);
         expect(dbTraining.futureStats).not.toBeDefined();

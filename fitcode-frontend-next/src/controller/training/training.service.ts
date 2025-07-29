@@ -19,6 +19,7 @@ import { PrescribedWorkload } from './type/workload-value.type';
 import { IntType, ParamType, VolType } from '../component/enum/param.enum';
 import { AttributeValue } from '../attribute/type/attribute-value.type';
 import { Attribute } from '../attribute/type/attribute.type';
+import { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
 
 export class TrainingService {
   static mapComponents(item: Training, components: Component[]): Training;
@@ -162,6 +163,11 @@ export class TrainingService {
   static convertFromTrainingToTrainingMinimal(
     training: Training
   ): TrainingInfo {
+    training.futureStats = this.calculatePrescribedTrainingStats(
+      training.components,
+      training.membersIds.length
+    );
+
     return {
       id: training.id,
       from: training.from,
@@ -301,6 +307,102 @@ export class TrainingService {
     return perscribedFieldName as keyof PrescribedWorkload;
   }
 
+  /**
+   * Based on prescribed training, this method calculates average stats
+   * for intensity and volume for each exercise in the training components
+   * for all users in main group and subgroups.
+   */
+  static calculatePrescribedTrainingStats(
+    components: TrainingComponent[],
+    numMembersTraining: number
+  ): TrainingExerciseAverageStats[] {
+    const stats: TrainingExerciseAverageStats[] = [];
+
+    for (const component of components) {
+      const numMembersMainGroup = // all members in training - members in all subgroups
+        numMembersTraining -
+        component.subgroups.reduce((sum, s) => sum + s.membersIds.length, 0);
+      if (numMembersMainGroup <= 0) continue; // skip if no members in main group
+
+      for (const superset of component.supersets) {
+        for (const { id, sets } of superset.exercises) {
+          const { intensity, volume } = this.getAverageIntVol(sets);
+          const foundStat = stats.find((s) => s.exerciseId === id);
+
+          if (foundStat) {
+            foundStat.intensity += intensity * numMembersMainGroup;
+            foundStat.volume += volume * numMembersMainGroup;
+            foundStat.numMembers += numMembersMainGroup;
+          } else {
+            stats.push({
+              intensity: intensity * numMembersMainGroup,
+              volume: volume * numMembersMainGroup,
+              numMembers: numMembersMainGroup,
+              exerciseId: id,
+              rootComponentId: component.id,
+            });
+          }
+        }
+      }
+
+      for (const subgroup of component.subgroups) {
+        const numMembersSubgroup = subgroup.membersIds.length;
+        if (numMembersSubgroup === 0) continue; // skip empty subgroups
+
+        const subgroupStats: TrainingExerciseAverageStats[] = [];
+        for (const superset of subgroup.supersets) {
+          for (const { id, sets } of superset.exercises) {
+            const { intensity, volume } = this.getAverageIntVol(sets);
+
+            const foundMain = stats.find((s) => s.exerciseId === id);
+            const foundSubgroup = subgroupStats.find(
+              (s) => s.exerciseId === id && s.rootComponentId === component.id
+            );
+
+            let subgroupStat: TrainingExerciseAverageStats | undefined;
+            if (foundMain) {
+              // "append" subgroup stats to main group stats to avoid duplicates
+              foundMain.intensity += intensity * numMembersSubgroup;
+              foundMain.volume += volume * numMembersSubgroup;
+              foundMain.numMembers += numMembersSubgroup;
+              subgroupStat = foundMain;
+            } else {
+              // create new stats for subgroup exercise
+              subgroupStat = {
+                intensity: intensity * numMembersSubgroup,
+                volume: volume * numMembersSubgroup,
+                numMembers: numMembersSubgroup,
+                exerciseId: id,
+                rootComponentId: component.id,
+              };
+
+              stats.push(subgroupStat);
+            }
+
+            // add subgroup stats to subgroupStats array
+            if (foundSubgroup) {
+              foundSubgroup.intensity += subgroupStat.intensity;
+              foundSubgroup.volume += subgroupStat.volume;
+              foundSubgroup.numMembers += subgroupStat.numMembers;
+            } else subgroupStats.push(subgroupStat);
+          }
+        }
+
+        subgroup.futureStats = subgroupStats.map((s) => {
+          const intensity = s.intensity / s.numMembers;
+          const volume = s.volume / s.numMembers;
+          return { ...s, intensity, volume };
+        });
+      }
+    }
+
+    return stats.map((s) => {
+      const intensity = s.intensity / s.numMembers; // average intensity
+      const volume = s.volume / s.numMembers; // average volume
+      return { ...s, intensity, volume };
+    });
+  }
+
   private static parseSelected<T = string>(
     attributeValue: AttributeValue | undefined
   ): T | undefined {
@@ -316,5 +418,63 @@ export class TrainingService {
       if (!isNaN(+attributeValue.value)) return +attributeValue.value;
 
     return NaN;
+  }
+
+  /**
+   * Calculates average intensity and volume for a list of sets.
+   * It takes into account both left and right param values.
+   * If there are no sets, it returns 0 for both intensity and volume.
+   */
+  private static getAverageIntVol(
+    sets: ExerciseSet[]
+  ): Pick<TrainingExerciseAverageStats, 'intensity' | 'volume'> {
+    const averages = this.calculateParamTypeAverages(sets);
+
+    const intensity = parseFloat(averages[ParamType.IntWork1].toFixed(2));
+    const volume = parseFloat(averages[ParamType.VolWork1].toFixed(2));
+
+    return { intensity, volume };
+  }
+
+  private static calculateParamTypeAverages(
+    sets: ExerciseSet[]
+  ): Record<ParamType, number> {
+    const sums: Record<ParamType, number> = {} as any;
+    const counts: Record<ParamType, number> = {} as any;
+
+    // initialize sums and counts for each ParamType
+    Object.values(ParamType).forEach((param) => {
+      sums[param] = 0;
+      counts[param] = 0;
+    });
+
+    // iterate through sets and calculate sums and counts
+    for (const set of sets) {
+      for (const { field, value } of set.paramValuesL.concat(
+        set.paramValuesR
+      )) {
+        if (sums.hasOwnProperty(field)) {
+          sums[field as ParamType] += parseFloat(value);
+          counts[field as ParamType] += 1;
+        }
+      }
+    }
+
+    // calculate averages
+    const averages: Record<ParamType, number> = {} as any;
+    Object.keys(sums).forEach((field) => {
+      averages[field as ParamType] = counts[field as ParamType]
+        ? sums[field as ParamType] / counts[field as ParamType]
+        : 0;
+    });
+
+    // round averages to 2 decimal places
+    Object.keys(averages).forEach((field) => {
+      averages[field as ParamType] = parseFloat(
+        averages[field as ParamType].toFixed(2)
+      );
+    });
+
+    return averages;
   }
 }

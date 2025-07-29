@@ -160,9 +160,14 @@ export default function TrainerDayView() {
           components,
           exercises,
           methods
+        ) as Training;
+
+        mapped.futureStats = TrainingService.calculatePrescribedTrainingStats(
+          mapped.components,
+          mapped.membersIds.length
         );
 
-        setTraining(mapped as Training);
+        setTraining(mapped);
         setLoading(false);
       },
       undefined,

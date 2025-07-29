@@ -20,7 +20,6 @@ export class CreateTrainingDto extends PickType(Training, [
   'cycleId',
   'membersIds',
   'copiedFromId',
-  'futureStats',
 ]) {
   @ValidateNested({ each: true })
   @Type(() => CreateTrainingComponentDto)

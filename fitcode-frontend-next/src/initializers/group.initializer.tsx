@@ -39,7 +39,6 @@ export default function GroupInitializer({
         )
           return setUnauthorized(true);
 
-        const minimal = 1; // fetch minimal trainings if defined
         const groupId = (await params).group_id;
         const group = await GroupController.findById(groupId);
         if (!group) return notFound();
@@ -47,17 +46,24 @@ export default function GroupInitializer({
         const [groups, institution, trainings] = await Promise.all([
           GroupController.findAll(),
           InstitutionController.findById(group.institutionId),
-          TrainingController.findAll({ groupId, minimal }),
+          TrainingController.findAll({ groupId }),
         ]);
 
-        const mappedTrainings = trainings.map((t) =>
-          TrainingService.mapComponentsExercisesMethods(
+        const mappedTrainings = trainings.map((t) => {
+          t = TrainingService.mapComponentsExercisesMethods(
             t,
             components,
             exercises,
             methods
-          )
-        );
+          );
+
+          t.futureStats = TrainingService.calculatePrescribedTrainingStats(
+            t.components,
+            t.membersIds.length
+          );
+
+          return t;
+        });
 
         const context: GroupIdPageProps = {
           group,

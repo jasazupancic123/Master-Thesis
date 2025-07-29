@@ -81,8 +81,6 @@ export async function handleCreateTraining(
         cycleId: cycle.id,
         components: selectedComponents,
         membersIds: [],
-        stats: [],
-        futureStats: [],
       }),
     (training) => {
       const mapped = TrainingService.mapComponentsExercisesMethods(
