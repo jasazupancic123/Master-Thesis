@@ -256,6 +256,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           <></>
         ) : !expandedSetsView ? (
           <TrainingExerciseCardCollapsedSets
+            component={component}
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
@@ -264,6 +265,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           />
         ) : (
           <TrainingExerciseCardExpandedSets
+            component={component}
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}

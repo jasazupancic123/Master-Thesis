@@ -130,7 +130,7 @@ export class TrainingService implements Permission<Training, Institution> {
     filter?: Filter<Training>,
     options?: { limit?: number },
   ): Promise<Training[]> {
-    return await this.trainingRepository.getDocs((q) => {
+    const trainings = await this.trainingRepository.getDocs((q) => {
       // filter by roles
       if (
         this.firebaseService.isTrainer(user) ||
@@ -154,6 +154,16 @@ export class TrainingService implements Permission<Training, Institution> {
       if (options?.limit) q = q.limit(options.limit);
       return q;
     });
+
+    trainings.forEach((training) => {
+      training.futureStats =
+        this.trainingPlanService.calculatePrescribedTrainingStats(
+          training.components,
+          training.membersIds.length,
+        );
+    });
+
+    return trainings;
   }
 
   @LogMethod()
