@@ -19,6 +19,10 @@ import * as request from 'supertest';
 import { AppModule } from '@src/app.module';
 import { ComponentService } from '@src/component/component.service';
 import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
+import {
+  COOLDOWN_COMPONENT_ID,
+  WARMUP_COMPONENT_ID,
+} from '@src/component/constant/warmup-cooldown.constant';
 import type { Component } from '@src/component/entity/component.entity';
 import { IntType, ParamType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
@@ -178,6 +182,9 @@ describe('Complete training component (e2e)', () => {
       global.trainer,
       { trainingId: newTraining.id },
       {
+        membersIds: [athlete1.uid, athlete2.uid],
+        warmup: generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
+        cooldown: generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
         components: [
           generateTrainingComponent({
             id: component1.id,

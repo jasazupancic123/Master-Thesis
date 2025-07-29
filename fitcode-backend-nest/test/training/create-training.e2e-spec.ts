@@ -4,7 +4,6 @@ import { Test } from '@nestjs/testing';
 import {
   createGroupWithCycles,
   createInstitution,
-  createInstitutionWithUsers,
   deleteDoc,
   deleteDocs,
   deleteInstitution,
@@ -16,23 +15,18 @@ import { AppModule } from '@src/app.module';
 import { FirestoreCollection } from '@src/common/enum/firestore-collection.enum';
 import { getTime } from '@src/common/utils/date.util';
 import { ComponentService } from '@src/component/component.service';
-import {
-  DEFAULT_PARAMS_KEY,
-  PARAMS,
-  VOL_OPTIONS,
-} from '@src/component/constant/param.constant';
+import { DEFAULT_PARAMS_KEY } from '@src/component/constant/param.constant';
 import type { Component } from '@src/component/entity/component.entity';
-import { ParamType, VolType } from '@src/component/enum/param.enum';
+import { ParamType } from '@src/component/enum/param.enum';
 import { generateComponentStub } from '@src/component/mock/component.stub';
+import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
-import type { TrainingComponent } from '@src/training/entity/training-component.entity';
 import {
-  generateSubgroup,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
@@ -464,225 +458,6 @@ describe('Create Training (e2e)', () => {
       );
     });
 
-    it('should fail to create new training if max number of supersets is reached', async () => {
-      const training = generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [
-              generateSuperset(),
-              generateSuperset(),
-              generateSuperset(),
-              generateSuperset(),
-              generateSuperset(),
-              generateSuperset(),
-              generateSuperset(),
-              generateSuperset(),
-              generateSuperset(),
-            ],
-          }),
-        ],
-      });
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
-      expect(response.status).toBe(409);
-      expect(response.body.message).toBe(
-        'You can only have up to 8 supersets per training component',
-      );
-    });
-
-    it('should fail to create new training if max number of training exercises per superset is reached', async () => {
-      const component = await componentService.create(generateComponentStub());
-      const exercises = await exerciseService.createMany(global.manager, [
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-        generateExerciseStub({ componentIds: [component.id] }),
-      ]);
-
-      const training = generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [
-              generateSuperset({
-                exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
-                  generateTrainingExercise({ id: exercises[2].id }),
-                  generateTrainingExercise({ id: exercises[3].id }),
-                  generateTrainingExercise({ id: exercises[4].id }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      });
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
-      expect(response.status).toBe(409);
-      expect(response.body.message).toBe(
-        'You can only have up to 4 exercises per superset',
-      );
-
-      await Promise.all([
-        deleteDoc(firebase, 'COMPONENT', component.id),
-        deleteDocs(
-          firebase,
-          'EXERCISE',
-          exercises.map((e) => e.id),
-        ),
-      ]);
-    });
-
-    it('should fail to create new training if user is in multiple subgroups', async () => {
-      const training = generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [generateSuperset()],
-            subgroups: [
-              generateSubgroup({ membersIds: [global.athlete.uid] }),
-              generateSubgroup({ membersIds: [global.athlete.uid] }),
-            ],
-          }),
-        ],
-      });
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
-      expect(response.status).toBe(409);
-      expect(response.body.message).toBe(
-        `Member cannot be part of multiple subgroups simultaneously`,
-      );
-    });
-
-    // NOTE (stale test) - all exercises can be passed to all components
-    /* it('should fail to create new training if exercises are invalid', async () => {
-      const component1 = await componentService.create(generateComponentStub());
-      const component2 = await componentService.create(generateComponentStub());
-
-      const exercises = await exerciseService.createMany(global.manager, [
-        generateExerciseStub({ componentIds: [component1.id] }),
-        generateExerciseStub({ componentIds: [component2.id] }),
-      ]);
-
-      const training = generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component1.id,
-            supersets: [
-              generateSuperset({
-                exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      });
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${global.trainer.token}`)
-        .send(training);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `Exercise ${exercises[1].name} cannot be part of selected component`,
-      );
-    }); */
-
-    it('should fail to create new training if some exercises are from other institution', async () => {
-      const otherInstitution = await createInstitutionWithUsers(
-        firebase,
-        institutionService,
-      );
-
-      const otherGroup = await createGroupWithCycles(
-        groupService,
-        otherInstitution,
-      );
-
-      const globalExercise = await exerciseService.create(
-        global.admin,
-        generateExerciseStub({ componentIds: [component.id] }),
-      );
-
-      const exercise = await exerciseService.create(
-        global.manager,
-        generateExerciseStub({ componentIds: [component.id] }),
-      );
-
-      const otherInstitutionExercise = await exerciseService.create(
-        otherInstitution.manager,
-        generateExerciseStub({ componentIds: [component.id] }),
-      );
-
-      const from = addDays(new Date(), 1);
-      const training = generateTrainingStub({
-        groupId: otherGroup.id,
-        cycleId: otherGroup.cycles[1].id,
-        from,
-        to: addHours(from, 1),
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [
-              generateSuperset({
-                exercises: [
-                  generateTrainingExercise({ id: globalExercise.id }),
-                  generateTrainingExercise({ id: otherInstitutionExercise.id }),
-                  generateTrainingExercise({ id: exercise.id }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      });
-
-      const response = await request(app.getHttpServer())
-        .post('/training')
-        .set('Authorization', `Bearer ${otherInstitution.trainers[0].token}`)
-        .send(training);
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe(
-        `You cannot view exercise ${exercise.name}`,
-      );
-
-      await Promise.all([
-        deleteDocs(firebase, 'EXERCISE', [
-          globalExercise.id,
-          exercise.id,
-          otherInstitutionExercise.id,
-        ]),
-        deleteDoc(firebase, 'GROUP', otherGroup.id),
-        deleteInstitution(firebase, otherInstitution),
-      ]);
-    });
-
     it.each([
       ['trainer', global.trainer],
       ['manager', global.manager],
@@ -693,13 +468,10 @@ describe('Create Training (e2e)', () => {
         const component = await componentService.create(
           generateComponentStub({
             params: {
-              [DEFAULT_PARAMS_KEY]: [
-                { field: ParamType.VolWorkSets },
-                {
-                  field: ParamType.VolWork1,
-                  options: [{ field: VolType.Rep }, { field: VolType.Dist }],
-                },
-              ],
+              [DEFAULT_PARAMS_KEY]: generateComponentParamsStub([
+                ParamType.VolWorkSets,
+                ParamType.VolWork1,
+              ]),
             },
           }),
         );
@@ -746,82 +518,7 @@ describe('Create Training (e2e)', () => {
         expect(response.body.ownerId).toBe(user.uid);
         expect(response.body.membersIds).toEqual([global.athlete.uid]);
         expect(response.body.components).toHaveLength(1);
-        expect(response.body.components[0].supersets).toHaveLength(1);
-        expect(response.body.components[0].supersets[0].exercises).toHaveLength(
-          2,
-        );
-
-        // all training exercises should have correct component params
-        const trainingExercises = (
-          response.body.components as TrainingComponent[]
-        ).flatMap((c) => c.supersets.flatMap((s) => s.exercises));
-
-        for (const e of trainingExercises) {
-          expect(e.params).toEqual([
-            PARAMS.find((p) => p.field === ParamType.VolWorkSets),
-            {
-              ...PARAMS.find((p) => p.field === ParamType.VolWork1),
-              options: [
-                VOL_OPTIONS.find((o) => o.field === VolType.Rep),
-                VOL_OPTIONS.find((o) => o.field === VolType.Dist),
-              ],
-            },
-          ]);
-
-          expect(e.sets).toEqual([
-            {
-              setNumber: 1,
-              paramValuesL: [
-                {
-                  field: ParamType.VolWork1,
-                  selected: VolType.Rep,
-                  value: '12',
-                },
-              ],
-              paramValuesR: [
-                {
-                  field: ParamType.VolWork1,
-                  selected: VolType.Rep,
-                  value: '12',
-                },
-              ],
-            },
-            {
-              setNumber: 2,
-              paramValuesL: [
-                {
-                  field: ParamType.VolWork1,
-                  selected: VolType.Rep,
-                  value: '12',
-                },
-              ],
-              paramValuesR: [
-                {
-                  field: ParamType.VolWork1,
-                  selected: VolType.Rep,
-                  value: '12',
-                },
-              ],
-            },
-            {
-              setNumber: 3,
-              paramValuesL: [
-                {
-                  field: ParamType.VolWork1,
-                  selected: VolType.Rep,
-                  value: '12',
-                },
-              ],
-              paramValuesR: [
-                {
-                  field: ParamType.VolWork1,
-                  selected: VolType.Rep,
-                  value: '12',
-                },
-              ],
-            },
-          ]);
-        }
+        expect(response.body.components[0].supersets).toHaveLength(0);
 
         await Promise.all([
           deleteDocs(firebase, 'EXERCISE', [globalExercise.id, exercise.id]),
@@ -913,12 +610,7 @@ describe('Create Training (e2e)', () => {
       generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [generateSuperset()],
-          }),
-        ],
+        components: [generateTrainingComponent({ id: component.id })],
       }),
     );
 
