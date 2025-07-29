@@ -244,7 +244,7 @@ describe('Complete training component (e2e)', () => {
       .send({});
 
     expect(response.status).toBe(409);
-    expect(response.body.message).toBe('You cannot start this training');
+    expect(response.body.message).toBe('You cannot complete this training');
 
     await db.trainings.delete(trainingTomorrow.id);
   });
@@ -262,7 +262,7 @@ describe('Complete training component (e2e)', () => {
       .send({});
 
     expect(response.status).toBe(409);
-    expect(response.body.message).toBe('You cannot start this training');
+    expect(response.body.message).toBe('You cannot complete this training');
 
     await db.trainings.delete(trainingYesterday.id);
   });

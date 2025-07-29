@@ -2,13 +2,13 @@
 
 import SelectInput from '@/components/select-input/select-input';
 import { Component } from '@/controller/component/type/component.type';
-import { User } from '@/controller/user/type/user.type';
 import { Box, Slider, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useMain } from '@/store/main-provider';
+import { useTheme } from '@mui/material';
 
 const data = [
   { name: 'A', intensity: 50, volume: 80 },
@@ -24,12 +24,13 @@ const data = [
 ];
 
 export default function ChartPage() {
+  const theme = useTheme();
   const screenSize = useScreenSize();
+
   const { components, exercises } = useMain();
+
   const [range, setRange] = useState<number[]>([1, 10]); // Example range
-  const handleChange = (_event: Event, newValue: number | number[]) => {
-    setRange(newValue as number[]);
-  };
+
   const [parentComponents, setParentComponents] = useState(
     components?.filter((component) => component.parentId === null)
   );
@@ -41,8 +42,9 @@ export default function ChartPage() {
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [exercise, setExercise] = useState<Exercise | null>(null);
 
-  //re-render when parentComponent changes
-  useEffect(() => {}, [parentComponent]);
+  const handleChange = (_event: Event, newValue: number | number[]) => {
+    setRange(newValue as number[]);
+  };
 
   return (
     <Box
@@ -54,6 +56,7 @@ export default function ChartPage() {
         justifyContent: 'center',
         px: screenSize.isMobile ? 1 : 0,
         pb: screenSize.isLandscapeMobile ? 12 : 0,
+        backgroundColor: theme.palette.background.default,
       }}
     >
       <Box

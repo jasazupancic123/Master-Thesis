@@ -24,10 +24,9 @@ export default function RootLayout({ children }: ChildrenProps) {
             <AuthProvider>
               <ScreenSizeProvider>{children}</ScreenSizeProvider>
             </AuthProvider>
-            <Toaster />
+            <Toaster position="bottom-center" />
           </ThemeRegistry>
         </AppRouterCacheProvider>
-        <Toaster />
       </body>
     </html>
   );
