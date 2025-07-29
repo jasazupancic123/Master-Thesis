@@ -211,17 +211,6 @@ export class TrainingService implements Permission<Training, Institution> {
         inputComponents,
       );
 
-    // validate components & exercises
-    /* const exercises = await this.trainingPlanService.getAllTrainingExercises(
-      inputComponents,
-    );
-
-    await Promise.all(
-      exercises.map((exercise) =>
-        this.trainingPlanService.validateCanViewExercise(user, exercise),
-      ),
-    ); */
-
     const components = await this.componentService.findAllFlat();
     const methods = await this.methodService.findAll();
     const membersIds = group ? group.membersIds : input.membersIds;
@@ -238,15 +227,6 @@ export class TrainingService implements Permission<Training, Institution> {
           attributes: [],
         },
       );
-
-    // populate exercise params from components
-    /* const attributes = await this.attributeService.findAll();
-    this.trainingPlanService.populateTrainingExerciseParams(
-      trainingComponents,
-      components,
-      [],
-      attributes,
-    ); */
 
     const data: Create<Training> = {
       id: null,
@@ -844,11 +824,7 @@ export class TrainingService implements Permission<Training, Institution> {
     this.logger.log(`User ${user.uid} is removing training ${ref.trainingId}`);
 
     const training = await this.findOneByIdOrFail(user, ref);
-    const institution = await this.institutionService.getDoc({
-      institutionId: training.institutionId,
-    });
-
-    this.validateCanEdit(user, training, institution);
+    this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
 
     await this.trainingRepository.deleteDoc(ref.trainingId);
@@ -947,22 +923,19 @@ export class TrainingService implements Permission<Training, Institution> {
     const methods = await this.methodService.findAll();
     const attributes = await this.attributeService.findAll();
 
-    const trainingComponents = [...training.components, ...input];
     const exercises =
-      await this.trainingPlanService.getAllTrainingExercises(
-        trainingComponents,
-      );
+      await this.trainingPlanService.getAllTrainingExercises(input);
 
     this.trainingPlanService.updateWarmupAndCooldownTimes(
       training.warmup,
       training.cooldown,
-      trainingComponents,
+      input,
     );
 
     const validTrainingComponents =
       this.trainingPlanService.validateTrainingComponents(
         training,
-        [training.warmup, ...trainingComponents, training.cooldown],
+        [training.warmup, ...input, training.cooldown],
         training.membersIds,
         { exercises, components, methods, attributes },
       );

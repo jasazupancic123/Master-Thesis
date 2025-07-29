@@ -16,11 +16,14 @@ import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';
 import { WorkloadValue } from '@src/training/entity/workload-value.entity';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 
+import { AbstractTestChangeLogService } from './abstract-test-change-log.service';
+
 @Injectable()
-export class TestWorkloadService {
+export class TestWorkloadService extends AbstractTestChangeLogService<Workload> {
   readonly collectionGroup: CollectionGroup;
 
-  constructor(private readonly firebase: FirebaseService) {
+  constructor(protected readonly firebase: FirebaseService) {
+    super(firebase);
     this.collectionGroup = this.firebase.firestore.collectionGroup(
       FirestoreCollection.TRAINING_WORKLOAD,
     );
@@ -62,18 +65,18 @@ export class TestWorkloadService {
       const id = this.getKey(workload);
       workload.id = id;
 
-      return {
-        operation: 'set',
-        ref: this.collection(item.trainingId).doc(id),
-        data: this.firebase.buildCreateQuery<Workload>(
-          generateWorkloadStub(item.component, {
-            ...workload,
-            randomValues: item.randomValues,
-            defaultParamsKey: item.defaultParamsKey,
-          }),
-          { timestamps: true },
-        ),
-      };
+      const ref = this.collection(item.trainingId).doc(id);
+      const query = this.firebase.buildCreateQuery<Workload>(
+        generateWorkloadStub(item.component, {
+          ...workload,
+          randomValues: item.randomValues,
+          defaultParamsKey: item.defaultParamsKey,
+        }),
+        { timestamps: true },
+      );
+
+      this.trackCreate(ref);
+      return { operation: 'set', ref, data: query };
     });
 
     await this.firebase.paginateBatchWrites(operations);
