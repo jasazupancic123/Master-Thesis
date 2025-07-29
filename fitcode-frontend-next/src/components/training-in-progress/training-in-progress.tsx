@@ -1,6 +1,5 @@
 import { SetState } from '@/common/type/state.type';
 import { useAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
 import { Superset } from '@/controller/training/type/superset.type';
 import { Training } from '@/controller/training/type/training.type';
@@ -14,24 +13,18 @@ import MyModal from '../modal/modal';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import dayjs from 'dayjs';
 import { useTheme } from '@mui/material';
-import {
-  ExerciseOrTraining,
-  ExerciseTrainingView,
-} from '@/common/type/exercise-or-training.type';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import { handleFinishTraining } from './state';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
 import { useMain } from '@/store/main-provider';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 interface TrainingInProgressProps {
-  setView: SetState<ExerciseOrTraining>;
   setTrainings: SetState<Training[]>;
-  setAllTrainings: SetState<Training[]>;
 }
 
 export default function TrainingInProgress(props: TrainingInProgressProps) {
   const theme = useTheme();
-  const screenSize = useScreenSize();
   const router = useRouter();
 
   const { profile } = useMain();
@@ -43,7 +36,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setView,
   } = useTraining();
 
-  const { setTrainings, setAllTrainings } = props;
+  const { setTrainings } = props;
 
   const [selectedSuperset, setSelectedSuperset] = useState<
     Superset | undefined
@@ -61,18 +54,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
 
     const newTrainingInProgress = { ...trainingInProgress };
     if (!newTrainingInProgress.supersets) {
-      let usersSupersets = undefined;
-      for (const subgroup of newTrainingInProgress.selectedComponent
-        .subgroups) {
-        if (subgroup.membersIds.includes(profile.uid)) {
-          usersSupersets = subgroup.supersets;
-          break;
-        }
-      }
-      if (!usersSupersets)
-        usersSupersets = newTrainingInProgress.selectedComponent.supersets; //default group
-
-      newTrainingInProgress.supersets = usersSupersets;
+      newTrainingInProgress.supersets =
+        newTrainingInProgress.selectedComponent.supersets;
     }
 
     if (!newTrainingInProgress.startOfTraining) {
@@ -89,11 +72,19 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         ]
       );
 
+    const componentIndex = newTrainingInProgress.training.components.findIndex(
+      (c) => c.id === newTrainingInProgress.selectedComponent?.id
+    );
+
+    if (componentIndex === -1) return;
+    const component = newTrainingInProgress.training.components[componentIndex];
+
     setTrainingInProgress(
       (prev) =>
         ({
           ...prev,
-          supersets: newTrainingInProgress.supersets,
+          selectedComponent: component,
+          supersets: component.supersets,
           startOfTraining: newTrainingInProgress.startOfTraining,
           supersetIndex: newTrainingInProgress.supersetIndex,
         }) as TrainingInProgress
@@ -213,7 +204,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                   user,
                   router,
                   setTrainings,
-                  setAllTrainings,
                   clearTrainingState,
                   setSelectedSuperset,
                   setView,
@@ -242,7 +232,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             user,
             router,
             setTrainings,
-            setAllTrainings,
             clearTrainingState,
             setSelectedSuperset,
             setView,

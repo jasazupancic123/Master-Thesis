@@ -224,28 +224,18 @@ export default function TrainerDayView() {
   }, [selectedAthlete]);
 
   return (
-    <Box
-      position="relative"
-      sx={{
-        maxWidth: MAX_WIDTH,
-        minHeight: 'calc(100vh - 50px)',
-        mx: 'auto',
-        overflowY: 'none',
-      }}
-    >
-      <VerticalLinesBorder />
-
-      <Box
-        justifyContent="flex-end"
-        alignItems="center"
-        sx={{
-          position: 'absolute',
-          right: screenSize.isSmallerThanLaptop ? 2 : 10,
-          top: screenSize.isSmallerThanLaptop ? -38 : -43,
-          zIndex: 1300,
-        }}
-      >
-        {!screenSize.isSmallerThanLaptop ? (
+    <Box width="100%" position="relative">
+      {!screenSize.isSmallerThanLaptop && (
+        <Box
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{
+            position: 'absolute',
+            right: screenSize.isSmallerThanLaptop ? 2 : 10,
+            top: screenSize.isSmallerThanLaptop ? -38 : -43,
+            zIndex: 1300,
+          }}
+        >
           <Tooltip title="Save training" placement="bottom" sx={{ mx: 1 }}>
             <IconButton
               sx={{ mx: 0, cursor: 'pointer' }}
@@ -270,150 +260,215 @@ export default function TrainerDayView() {
               <Save fontSize="small" />
             </IconButton>
           </Tooltip>
-        ) : (
-          <Box
-            display="flex"
-            sx={{
-              p: 0,
-              ml: 2,
-              position: 'fixed',
-              bottom: 20,
-              right: 20,
-              zIndex: 1000,
-            }}
-          >
-            <IconButton
-              sx={{
-                p: 0,
-                m: 0,
-              }}
-              onClick={() => {
-                handleUpdateMultipleTrainings({
-                  setTrainings,
-                  training,
-                  setTraining,
-                  group,
-                  cycle,
-                  router,
-                  customAthleteWorkloads,
-                  setCustomAthleteWorkloads,
-                  components,
-                  exercises,
-                  methods,
-                  setSelectedAthlete,
-                  setDetectedChanges,
-                });
-              }}
-            >
-              <Save
-                sx={{
-                  cursor: 'pointer',
-                  backgroundColor: theme.palette.primary.main,
-                  borderRadius: '50%',
-                  p: 1,
-                  fontSize: 40,
-                }}
-              />
-            </IconButton>
-          </Box>
-        )}
 
-        <IconButton
-          sx={{
-            mx: 0,
-            m: screenSize.isSmallerThanLaptop ? 0 : undefined,
-            p: screenSize.isSmallerThanLaptop ? 0 : undefined,
-            cursor: 'pointer',
-          }}
-        >
-          <CopyAll fontSize="small" />
-        </IconButton>
-
-        <Tooltip title="Delete selected exercises" placement="bottom">
           <IconButton
             sx={{
+              mx: 0,
               m: screenSize.isSmallerThanLaptop ? 0 : undefined,
               p: screenSize.isSmallerThanLaptop ? 0 : undefined,
               cursor: 'pointer',
             }}
-            onClick={() => {
-              deleteSelectedExercises(
-                {
-                  selectedExercises,
-                },
-                {
-                  component,
-                  training,
-                  setComponent,
-                  setTraining,
-                  setSelectedExercises,
-                  selectedSubgroup,
-                  setSelectedSubgroup,
-                  setDetectedChanges,
-                }
-              );
+          >
+            <CopyAll fontSize="small" />
+          </IconButton>
+
+          <Tooltip title="Delete selected exercises" placement="bottom">
+            <IconButton
+              sx={{
+                m: screenSize.isSmallerThanLaptop ? 0 : undefined,
+                p: screenSize.isSmallerThanLaptop ? 0 : undefined,
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                deleteSelectedExercises(
+                  {
+                    selectedExercises,
+                  },
+                  {
+                    component,
+                    training,
+                    setComponent,
+                    setTraining,
+                    setSelectedExercises,
+                    selectedSubgroup,
+                    setSelectedSubgroup,
+                    setDetectedChanges,
+                  }
+                );
+              }}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
+      <Box
+        position="relative"
+        sx={{
+          maxWidth: MAX_WIDTH,
+          minHeight: 'calc(100vh - 50px)',
+          mx: 'auto',
+          overflowY: 'none',
+        }}
+      >
+        <VerticalLinesBorder />
+
+        {screenSize.isSmallerThanLaptop && (
+          <Box
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{
+              position: 'absolute',
+              right: screenSize.isSmallerThanLaptop ? 2 : 10,
+              top: screenSize.isSmallerThanLaptop ? -38 : -43,
+              zIndex: 1300,
             }}
           >
-            <Delete fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        width="100%"
-        sx={{
-          borderBottomRightRadius: !training || !cycle ? 0 : 10,
-          borderBottomLeftRadius: !training || !cycle ? 0 : 10,
-          bgcolor: 'background.default',
-        }}
-        justifyContent="space-evenly"
-      >
-        {/* Header with day and week selection */}
-        <GroupTrainerDayViewHeader
-          day={day}
-          setDay={setDay}
-          days={days}
-          setDays={setDays}
-          week={week}
-        />
+            <Box
+              display="flex"
+              sx={{
+                p: 0,
+                ml: 2,
+                position: 'fixed',
+                bottom: 20,
+                right: 20,
+                zIndex: 1000,
+              }}
+            >
+              <IconButton
+                sx={{
+                  p: 0,
+                  m: 0,
+                }}
+                onClick={() => {
+                  handleUpdateMultipleTrainings({
+                    setTrainings,
+                    training,
+                    setTraining,
+                    group,
+                    cycle,
+                    router,
+                    customAthleteWorkloads,
+                    setCustomAthleteWorkloads,
+                    components,
+                    exercises,
+                    methods,
+                    setSelectedAthlete,
+                    setDetectedChanges,
+                  });
+                }}
+              >
+                <Save
+                  sx={{
+                    cursor: 'pointer',
+                    backgroundColor: theme.palette.primary.main,
+                    borderRadius: '50%',
+                    p: 1,
+                    fontSize: 40,
+                  }}
+                />
+              </IconButton>
+            </Box>
+
+            <IconButton
+              sx={{
+                mx: 0,
+                m: screenSize.isSmallerThanLaptop ? 0 : undefined,
+                p: screenSize.isSmallerThanLaptop ? 0 : undefined,
+                cursor: 'pointer',
+              }}
+            >
+              <CopyAll fontSize="small" />
+            </IconButton>
+
+            <Tooltip title="Delete selected exercises" placement="bottom">
+              <IconButton
+                sx={{
+                  m: screenSize.isSmallerThanLaptop ? 0 : undefined,
+                  p: screenSize.isSmallerThanLaptop ? 0 : undefined,
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  deleteSelectedExercises(
+                    {
+                      selectedExercises,
+                    },
+                    {
+                      component,
+                      training,
+                      setComponent,
+                      setTraining,
+                      setSelectedExercises,
+                      selectedSubgroup,
+                      setSelectedSubgroup,
+                      setDetectedChanges,
+                    }
+                  );
+                }}
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+
         <Box
           display="flex"
-          flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
-          maxWidth={MAX_WIDTH}
-          justifyContent="center"
+          flexDirection="column"
           alignItems="center"
-          sx={{
-            p: isSticky ? 0 : undefined,
-            py: 5,
-            backgroundColor: theme.palette.background.default,
-          }}
-        >
-          {/* Training members */}
-          <TrainingMembers isSticky={isSticky} />
-        </Box>
-      </Box>
-      <Box
-        display="flex"
-        flexDirection="column"
-        justifyContent="center"
-        maxWidth={MAX_WIDTH}
-        sx={{
-          mx: 'auto',
-        }}
-      >
-        <Box
           width="100%"
           sx={{
-            backgroundColor: theme.palette.background.dark,
-            height: '5px',
+            borderBottomRightRadius: !training || !cycle ? 0 : 10,
+            borderBottomLeftRadius: !training || !cycle ? 0 : 10,
+            bgcolor: 'background.default',
           }}
-        />
-      </Box>
-      {/* Trainings for the day */}
-      <Box maxWidth={MAX_WIDTH} mx="auto">
-        <GroupTrainerDayViewTrainings day={day} loading={loading} />
+          justifyContent="space-evenly"
+        >
+          {/* Header with day and week selection */}
+          <GroupTrainerDayViewHeader
+            day={day}
+            setDay={setDay}
+            days={days}
+            setDays={setDays}
+            week={week}
+          />
+          <Box
+            display="flex"
+            flexDirection={screenSize.isSmallerThanLaptop ? 'column' : 'row'}
+            maxWidth={MAX_WIDTH}
+            justifyContent="center"
+            alignItems="center"
+            sx={{
+              p: isSticky ? 0 : undefined,
+              py: 5,
+              backgroundColor: theme.palette.background.default,
+            }}
+          >
+            {/* Training members */}
+            <TrainingMembers isSticky={isSticky} />
+          </Box>
+        </Box>
+        <Box
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          maxWidth={MAX_WIDTH}
+          sx={{
+            mx: 'auto',
+          }}
+        >
+          <Box
+            width="100%"
+            sx={{
+              backgroundColor: theme.palette.background.dark,
+              height: '5px',
+            }}
+          />
+        </Box>
+        {/* Trainings for the day */}
+        <Box maxWidth={MAX_WIDTH} mx="auto">
+          <GroupTrainerDayViewTrainings day={day} loading={loading} />
+        </Box>
       </Box>
     </Box>
   );

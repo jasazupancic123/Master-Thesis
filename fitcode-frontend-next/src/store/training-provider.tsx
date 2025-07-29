@@ -8,9 +8,9 @@ import {
   ExerciseOrTraining,
   ExerciseTrainingView,
 } from '@/common/type/exercise-or-training.type';
-import { User } from '@/controller/user/type/user.type';
 import { Training } from '@/controller/training/type/training.type';
 import { ChildrenProps } from '@/common/type/props.type';
+import { TrainingController } from '@/controller/training/training.controller';
 
 interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
@@ -22,7 +22,8 @@ interface TrainingContextType extends TrainingProviderProps {
 }
 
 export interface TrainingProviderProps {
-  trainings: Training[];
+  plannedTrainings: Training[];
+  completedTrainings: Training[];
 }
 
 const TrainingContext = createContext<TrainingContextType | undefined>(
@@ -32,7 +33,7 @@ const TrainingContext = createContext<TrainingContextType | undefined>(
 export const TrainingProvider = (
   props: TrainingProviderProps & ChildrenProps
 ) => {
-  const { children, trainings } = props;
+  const { children, plannedTrainings, completedTrainings } = props;
 
   const STORED_TRAINING_IN_PROGRESS = 'fitcodeTrainingInProgress';
   const [trainingInProgress, setTrainingInProgress] =
@@ -46,18 +47,23 @@ export const TrainingProvider = (
 
   useEffect(() => {
     if (!user) return;
+
     const storedTrainingInProgress = localStorage.getItem(
       STORED_TRAINING_IN_PROGRESS
     );
+
     if (storedTrainingInProgress) {
       const parsedTrainingInProgress = JSON.parse(
         storedTrainingInProgress
       ) as TrainingInProgress;
+
       if (parsedTrainingInProgress.userId !== user?.uid) {
         clearTrainingState();
+        setIsLoaded(true);
         return;
       }
-      setTrainingInProgress(parsedTrainingInProgress);
+
+      setTrainingInProgress({ ...parsedTrainingInProgress });
     }
 
     setIsLoaded(true);
@@ -83,7 +89,8 @@ export const TrainingProvider = (
   return (
     <TrainingContext.Provider
       value={{
-        trainings,
+        plannedTrainings,
+        completedTrainings,
         clearTrainingState,
         trainingInProgress,
         setTrainingInProgress,

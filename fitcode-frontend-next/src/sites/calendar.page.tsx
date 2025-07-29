@@ -82,7 +82,7 @@ export default function CalendarPage() {
         color: theme.palette.background.paper,
         alignItems: 'center',
         justifyContent: 'center',
-        m: screenSize.isMobile ? 1 : undefined,
+        mx: screenSize.isMobile ? 1 : undefined,
         pb: 10,
         overflowY: 'scroll',
       }}

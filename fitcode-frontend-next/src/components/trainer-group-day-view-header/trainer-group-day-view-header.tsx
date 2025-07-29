@@ -209,6 +209,7 @@ export default function GroupTrainerDayViewHeader(
         checkIsSameValue={(value: string) => {
           return dayjs(value).isSame(dayjs(day.date), 'day');
         }}
+        dayView
         alertOnChange
         onArrowClick={(direction) => {
           const newDay =
