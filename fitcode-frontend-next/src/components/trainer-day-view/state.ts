@@ -108,6 +108,12 @@ export async function handleCopyTraining(
           methods
         );
 
+      mappedCopiedTraining.futureStats =
+        TrainingService.calculatePrescribedTrainingStats(
+          mappedCopiedTraining.components,
+          mappedCopiedTraining.membersIds.length
+        );
+
       setTrainings((prev) =>
         [...prev, mappedCopiedTraining].sort(
           (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()

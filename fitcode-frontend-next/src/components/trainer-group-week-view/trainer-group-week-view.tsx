@@ -166,6 +166,12 @@ export default function TrainerWeekView() {
                                   methods
                                 );
 
+                              mapped.futureStats =
+                                TrainingService.calculatePrescribedTrainingStats(
+                                  mapped.components,
+                                  mapped.membersIds.length
+                                );
+
                               setTrainings((prev) =>
                                 prev.map((t) =>
                                   t.id === training.id ? mapped : t

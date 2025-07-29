@@ -420,6 +420,14 @@ export default function TrainingComponentHeaderMenu(
                   allExercises,
                   allMethods
                 );
+
+                pt.futureStats =
+                  TrainingService.calculatePrescribedTrainingStats(
+                    pt.components,
+                    pt.membersIds.length
+                  );
+
+                return pt;
               });
 
               const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>

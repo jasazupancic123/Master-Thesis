@@ -35,6 +35,7 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
             exercises,
             methods
           );
+
           return t;
         });
 

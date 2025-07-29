@@ -20,7 +20,7 @@ export class TrainingController {
       minimal?: number; // cannot be boolean, so just use number
     }
   ) {
-    return api.get<Training[] | TrainingInfo[]>('/training', {
+    return api.get<Training[]>('/training', {
       query,
     });
   }
@@ -46,8 +46,6 @@ export class TrainingController {
     components: TrainingComponent[];
     membersIds: string[];
     copiedFromId?: string;
-    stats: TrainingExerciseAverageStats[];
-    futureStats: TrainingExerciseAverageStats[];
   }): Promise<Training> {
     return api.post<Training>('/training', body);
   }
