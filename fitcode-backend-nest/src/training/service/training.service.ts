@@ -846,7 +846,7 @@ export class TrainingService implements Permission<Training, Institution> {
         endOfDay(new Date()),
       )
     )
-      throw new ConflictException('You cannot start this training');
+      throw new ConflictException('You cannot complete this training');
 
     const trainingComponent = this.trainingPlanService.findComponentOrFail(
       training,

@@ -14,6 +14,7 @@ interface HorizontalItemsListProps {
   setValue: (value: string) => void;
   checkIsSameValue: (value: string) => boolean;
   onArrowClick?: (direction: 'left' | 'right') => void;
+  dayView?: boolean;
   cycleView?: boolean;
   yearView?: boolean;
   alertOnChange?: boolean;
@@ -33,6 +34,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
     items,
     setValue,
     onArrowClick,
+    dayView,
     cycleView,
     yearView,
     checkIsSameValue,
@@ -124,7 +126,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
       <Box
         ref={scrollContainerRef}
         width={addButtonOnEnd ? '90%' : '100%'}
-        gap={1}
+        gap={dayView ? 0 : 1}
         sx={{
           display: 'flex',
           overflowX: 'auto',
@@ -132,7 +134,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
           '&::-webkit-scrollbar': {
             display: 'none',
           },
-          mx: 1, // optional spacing between arrows and days
+          mx: dayView ? 0 : 1,
           justifyContent: items.length <= 3 ? 'space-around' : 'space-between',
           flexGrow: screenSize.isMobile ? 1 : undefined,
         }}

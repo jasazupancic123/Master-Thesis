@@ -4,8 +4,14 @@ import { theme } from '@/app/style';
 import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import { useDashboard } from '@/store/dashboard-provider';
-import { Add, MoreVert, Remove } from '@mui/icons-material';
-import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { Add, FileUploadOutlined, MoreVert, Remove } from '@mui/icons-material';
+import {
+  Avatar,
+  Box,
+  CircularProgress,
+  IconButton,
+  Typography,
+} from '@mui/material';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
 import { useEffect, useState } from 'react';
@@ -20,9 +26,12 @@ import { InstitutionController } from '@/controller/institution/institution.cont
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useMain } from '@/store/main-provider';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { updateUserProfile } from '@/components/dashboard-groups-members/state';
+import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 import FileUpload from '@/components/file-upload/file-upload';
+import { CommonService } from '@/common/service/common.service';
+
+const commonService = CommonService.instance;
+const firebaseService = commonService.firebase;
 
 export default function DashboardInstitutionPage() {
   const {
@@ -30,11 +39,12 @@ export default function DashboardInstitutionPage() {
     setSelectedInstitution,
     members,
     refetchMembers,
+    refetchUsers,
   } = useDashboard();
   const screenSize = useScreenSize();
   const router = useRouter();
 
-  const { profile } = useMain();
+  const { profile, users } = useMain();
 
   const [selectedView, setSelectedView] = useState<AthletesTrainers>(
     AthletesTrainers.ATHLETES
@@ -43,16 +53,19 @@ export default function DashboardInstitutionPage() {
   const [currentUsers, setCurrentUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
-  const [openModal, setOpenModal] = useState({
+  const [modal, setModal] = useState({
     add_member: false,
     add_trainer: false,
     add_group: false,
+    add_member_via_csv: false,
     edit_athlete: false,
   });
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editUserImageUrl, setEditUserImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [csvUserEmails, setCsvUserEmails] = useState<string[]>([]);
+  const [isUploadingMembers, setIsUploadingMembers] = useState(false);
 
   const roles = profile.customClaims.role || [];
 
@@ -79,6 +92,104 @@ export default function DashboardInstitutionPage() {
     setFilteredUsers(current);
     setLoading(false);
   }, [selectedView, selectedInstitution]);
+
+  useEffect(() => {
+    if (!selectedInstitution || !csvUserEmails.length) return;
+
+    const newUsers = [] as User[];
+
+    for (const email of csvUserEmails) {
+      if (!email) continue;
+
+      const user = users.find((user) => user.email === email.toLowerCase());
+      if (!user) continue;
+
+      newUsers.push(user);
+    }
+
+    const athletes = newUsers
+      .filter((user) => user.customClaims.role.includes(UserRole.ATHLETE))
+      .filter((user) => !selectedInstitution?.athleteIds?.includes(user.uid));
+
+    const trainers = newUsers
+      .filter((user) => user.customClaims.role.includes(UserRole.TRAINER))
+      .filter((user) => !selectedInstitution?.trainerIds?.includes(user.uid));
+
+    if (!trainers.length && !athletes.length) {
+      toast.error('No new users to add');
+
+      setCsvUserEmails([]);
+      setIsUploadingMembers(false);
+      return;
+    }
+
+    if (trainers.length) {
+      handleApiRequest(
+        router,
+        () =>
+          InstitutionController.addTrainers(selectedInstitution.id, {
+            trainerIds: trainers.map((user) => user.uid),
+          }),
+        () => {
+          setSelectedInstitution((prev) => {
+            if (!prev) return prev;
+
+            const updatedTrainerIds = prev.trainerIds
+              ? [...prev.trainerIds, ...trainers.map((user) => user.uid)]
+              : trainers.map((user) => user.uid);
+
+            const updatedTrainers = prev.trainers
+              ? [...prev.trainers, ...trainers]
+              : [...trainers];
+
+            return {
+              ...prev,
+              trainers: updatedTrainers,
+              trainerIds: updatedTrainerIds,
+            };
+          });
+        },
+        undefined,
+        'Failed to register trainers'
+      );
+    }
+
+    if (athletes.length) {
+      handleApiRequest(
+        router,
+        () =>
+          InstitutionController.addAthletes(selectedInstitution.id, {
+            athleteIds: athletes.map((user) => user.uid),
+          }),
+        () => {
+          setSelectedInstitution((prev) => {
+            if (!prev) return prev;
+
+            const updatedAthleteIds = prev.athleteIds
+              ? [...prev.athleteIds, ...athletes.map((user) => user.uid)]
+              : athletes.map((user) => user.uid);
+
+            const updatedAthletes = prev.athletes
+              ? [...prev.athletes, ...athletes]
+              : [...athletes];
+
+            return {
+              ...prev,
+              athletes: updatedAthletes,
+              athleteIds: updatedAthleteIds,
+            };
+          });
+        },
+        undefined,
+        'Failed to register athletes'
+      );
+    }
+
+    toast.success('Successfully added users');
+
+    setCsvUserEmails([]);
+    setIsUploadingMembers(false);
+  }, [users]);
 
   const handleRemoveUser = (userId: string, view: AthletesTrainers) => {
     if (!selectedInstitution) return;
@@ -115,6 +226,68 @@ export default function DashboardInstitutionPage() {
       undefined,
       `Failed to remove ${view[0].toUpperCase() + view.slice(1, view.length - 1).toLowerCase()}`
     );
+  };
+
+  const handleCsvFileUpload = async (file: File) => {
+    setIsUploadingMembers(true);
+
+    const text = await file.text();
+    const rows = text.split('\n').filter((row) => row);
+
+    rows.forEach((row, i) => {
+      let [displayName, email, password, role] = row.split(',');
+
+      displayName = displayName.trim();
+      email = email.trim();
+      password = password.trim();
+      role = role.trim();
+
+      if (!displayName || !email || !password || !role) {
+        toast.error(`Row ${i + 1} is missing required fields`);
+        return;
+      }
+
+      if (![UserRole.ATHLETE, UserRole.TRAINER].includes(role as UserRole)) {
+        toast.error(`Row ${i + 1} has an invalid role: ${role}`);
+        return;
+      }
+
+      const input = {
+        displayName,
+        email,
+        password,
+        role: role as UserRole,
+      };
+
+      // user already exists
+      if (users.some((user) => user.email === email)) {
+        setCsvUserEmails((prev) => [...prev, email]);
+
+        if (i === rows.length - 1) {
+          refetchUsers();
+          refetchMembers(selectedInstitution?.id);
+        }
+
+        return;
+      }
+
+      handleApiRequest(
+        router,
+        () => firebaseService.functions.createUserWithRole(input),
+        () => {
+          setCsvUserEmails((prev) => [...prev, email]);
+
+          if (i === rows.length - 1) {
+            refetchUsers();
+            refetchMembers(selectedInstitution?.id);
+          }
+        },
+        () => {
+          setIsUploadingMembers(false);
+        },
+        `Failed to register user ${email} at row ${i + 1}`
+      );
+    });
   };
 
   const HorizontalItems = () => {
@@ -276,26 +449,49 @@ export default function DashboardInstitutionPage() {
           }}
         >
           {isManager(roles) && (
-            <IconButton
+            <Box
+              display="flex"
+              gap={1.5}
               sx={{
-                m: 0,
-                p: 0.5,
-                backgroundColor: theme.palette.background.light,
-                borderRadius: 1,
                 position: 'absolute',
-                right: -40,
+                right: -80,
                 top: '50%',
                 transform: 'translateY(-50%)',
               }}
-              onClick={() =>
-                setOpenModal({
-                  ...openModal,
-                  add_member: true,
-                })
-              }
             >
-              <Add fontSize="small" />
-            </IconButton>
+              <IconButton
+                sx={{
+                  m: 0,
+                  p: 0.5,
+                  backgroundColor: theme.palette.background.light,
+                  borderRadius: 1,
+                }}
+                onClick={() =>
+                  setModal({
+                    ...modal,
+                    add_member: true,
+                  })
+                }
+              >
+                <Add fontSize="small" />
+              </IconButton>
+              <IconButton
+                sx={{
+                  m: 0,
+                  p: 0.5,
+                  backgroundColor: theme.palette.background.light,
+                  borderRadius: 1,
+                }}
+                onClick={() =>
+                  setModal({
+                    ...modal,
+                    add_member_via_csv: true,
+                  })
+                }
+              >
+                <FileUploadOutlined fontSize="small" />
+              </IconButton>
+            </Box>
           )}
         </SearchBar>
       </Box>
@@ -374,7 +570,7 @@ export default function DashboardInstitutionPage() {
                     }}
                     onClick={() => {
                       setEditUser(user);
-                      setOpenModal((prev) => ({ ...prev, edit_athlete: true }));
+                      setModal((prev) => ({ ...prev, edit_athlete: true }));
                     }}
                   />
                   <Typography
@@ -402,10 +598,10 @@ export default function DashboardInstitutionPage() {
         </Box>
       </Box>
       <MyModal
-        isOpen={openModal.add_member}
-        setIsOpen={(open) => setOpenModal({ ...openModal, add_member: open })}
+        isOpen={modal.add_member}
+        setIsOpen={(open) => setModal({ ...modal, add_member: open })}
         onConfirm={undefined}
-        onCancel={() => setOpenModal({ ...openModal, add_member: false })}
+        onCancel={() => setModal({ ...modal, add_member: false })}
         cancelText="Close"
       >
         <RegisterUsersDashboard
@@ -417,47 +613,48 @@ export default function DashboardInstitutionPage() {
         />
       </MyModal>
       <MyModal
-        isOpen={openModal.edit_athlete}
-        setIsOpen={(open) =>
-          setOpenModal((prev) => ({ ...prev, edit_athlete: open }))
-        }
-        onCancel={() => {
-          setOpenModal((prev) => ({ ...prev, edit_athlete: false }));
-          setEditUserImageUrl(null);
-          setEditUser(null);
-        }}
-        onConfirm={() =>
-          updateUserProfile({
-            editUser,
-            editUserImageUrl,
-            router,
-            selectedInstitution,
-            setModal: setOpenModal,
-            setEditUserImageUrl,
-            setEditUser,
-            refetchMembers,
-          })
-        }
+        isOpen={modal.add_member_via_csv}
+        setIsOpen={(open) => setModal({ ...modal, add_member_via_csv: open })}
+        onConfirm={undefined}
+        onCancel={() => setModal({ ...modal, add_member_via_csv: false })}
         cancelText="Close"
       >
         <FileUpload
-          input="image"
-          label="Image"
-          initialFileUrl={editUserImageUrl || undefined}
-          sx={{
-            maxWidth: screenSize.isMobile ? 200 : 400,
-            maxHeight: screenSize.isMobile ? 150 : 300,
-            margin: 'auto',
-          }}
+          label="CSV of users"
+          input="csv"
           onFileUpload={async (file) => {
-            if (!editUser) return;
-
-            const path = `user/${editUser.uid}/${file.name}`;
-            const url = await FirebaseStorageUtil.uploadFile(file, path);
-            setEditUserImageUrl(url);
+            handleCsvFileUpload(file);
           }}
         />
       </MyModal>
+      <DashboardEditAthleteModal
+        isOpen={modal.edit_athlete}
+        setModal={setModal}
+        editUser={editUser}
+        setEditUser={setEditUser}
+      />
+
+      {isUploadingMembers && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          width="100vw"
+          height="100vh"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          sx={{
+            zIndex: 130000,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <CircularProgress size={24} />
+          <Typography fontSize={20}>Registering...</Typography>
+        </Box>
+      )}
     </Box>
   );
 }

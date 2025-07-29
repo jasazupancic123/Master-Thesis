@@ -32,7 +32,7 @@ export default function AddInstitutionDashboard() {
   useEffect(() => {
     if (!name || !imageUrl || !email) return;
 
-    const owner = users?.find((user) => user.email === email);
+    const owner = users.find((user) => user.email === email.toLowerCase());
 
     if (!owner) {
       toast.error('Institution not registered correctly');
@@ -140,6 +140,7 @@ export default function AddInstitutionDashboard() {
             variant="outlined"
             type="email"
             fullWidth
+            inputProps={{ style: { textTransform: 'lowercase' } }}
             onChange={(e) => setEmail(e.target.value)}
           />
         </FormControl>

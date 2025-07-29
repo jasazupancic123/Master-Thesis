@@ -1,241 +1,207 @@
-import { COLOR } from '@/common/constant/browser.constant';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { CheckCircle } from '@mui/icons-material';
-import SportsIcon from '@mui/icons-material/Sports';
-import { Box, IconButton, Tooltip } from '@mui/material';
-import CardContent from '@mui/material/CardContent';
+import { Box, IconButton, Collapse } from '@mui/material';
 import Typography from '@mui/material/Typography';
-import React, { useEffect, useState } from 'react';
-import BorderColor from '../border-color/border-color';
 import { useTheme } from '@mui/material';
 import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { SetState } from '@/common/type/state.type';
 import { Training } from '@/controller/training/type/training.type';
-import { User } from '@/controller/user/type/user.type';
-import AthleteTrainingExercise from '../athlete-training-exercise/athlete-training-exercise';
-import { useMain } from '@/store/main-provider';
+import { CommonService } from '@/common/service/common.service';
+import AthleteSuperset from '../athlete-superset/athlete-superset';
+import MyModal from '../modal/modal';
+import toast from 'react-hot-toast';
+import { handleApiRequest } from '@/common/type/state.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/store/auth-provider';
+import { Check } from '@mui/icons-material';
+
+const commonService = CommonService.instance;
 
 interface AthleteTrainingComponentsProps {
-  components: TrainingComponent[];
   training: Training;
-  supersets: Superset[];
-  setOpenAreYouSureModal: SetState<boolean>;
-  setOpenVideoPlayerModal: SetState<boolean>;
-  setVideoUrl: SetState<string>;
+  components: TrainingComponent[];
+  selectedComponent: TrainingComponent | null;
+  setSelectedComponent: SetState<TrainingComponent | null>;
+  showSupersets: boolean;
+  setShowSupersets: SetState<boolean>;
+  modal: boolean;
+  setModal: SetState<boolean>;
+  timeout: number;
 }
 
 export default function AthleteTrainingComponents(
   props: AthleteTrainingComponentsProps
 ) {
-  const theme = useTheme();
-  const screenSize = useScreenSize();
-
   const {
-    components,
     training,
-    supersets,
-    setOpenAreYouSureModal,
-    setOpenVideoPlayerModal,
-    setVideoUrl,
+    components,
+    selectedComponent,
+    setSelectedComponent,
+    showSupersets,
+    setShowSupersets,
+    modal,
+    setModal,
+    timeout,
   } = props;
 
-  const { profile } = useMain();
-  const { trainingInProgress, setTrainingInProgress } = useTraining();
+  const { setTrainingInProgress, setView } = useTraining();
+  const { user } = useAuth();
 
-  const [selectedSuperset, setSelectedSuperset] = useState<Superset | null>(
-    null
-  );
-  const [selectedExercises, setSelectedExercises] = useState<
-    TrainingExercise[]
-  >([]);
+  const theme = useTheme();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!selectedSuperset) return;
-    const newExercises = selectedSuperset.exercises;
-    setSelectedExercises(newExercises);
-    if (!newExercises || newExercises.length === 0) return;
-
-    //TODO()
-  }, [selectedSuperset]);
-
-  return components.map((c, i, arr) =>
-    c.id === trainingInProgress?.selectedComponent?.id &&
-    training.id === trainingInProgress?.training?.id ? (
+  return (
+    <Box
+      width="100%"
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      gap={1}
+    >
       <Box
-        key={c.id}
-        display="flex"
-        flexDirection="column"
+        width="100%"
         sx={{
-          p: 0,
-          pt: 0.5,
-          m: 0,
-          border: `1px solid ${theme.palette.primary.main}`,
-          backgroundColor: 'background.paper',
+          overflowX: 'auto',
         }}
       >
         <Box
-          width="100%"
-          key={`${c.id}`}
+          display="inline-flex"
+          justifyContent="center"
+          alignItems="center"
+          gap={4}
           sx={{
-            py: 1,
-            position: 'relative',
+            minWidth: '100%',
           }}
         >
-          <Tooltip
-            title={c.id[0].toUpperCase() + c.id.slice(1)}
-            placement="top"
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                textTransform: 'uppercase',
-                color: theme.palette.primary.main,
-                textAlign: 'center !important',
-                cursor: 'pointer',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                px: 7,
-                maxWidth: '100%', // Adjust width as needed
-              }}
-              onClick={() => {
-                setTrainingInProgress(null);
-              }}
-            >
-              {c.id}
-            </Typography>
-          </Tooltip>
-          <IconButton
-            sx={{
-              p: 0,
-              m: 0,
-              position: 'absolute',
-              top: 7,
-              left: 12,
-            }}
-            onClick={() => setOpenAreYouSureModal(true)}
-          >
-            <SportsIcon sx={{ fontSize: 35 }} />
-          </IconButton>
-        </Box>
-        <CardContent
-          sx={{
-            px: 2,
-            pt: 0.5,
-          }}
-        >
-          <Box display="flex" flexDirection="column" gap={2}>
-            {supersets?.map((superset, i) => (
-              <Box
-                key={`superset-${trainingInProgress?.selectedComponent.id}-${i}`}
-                display="flex"
-                flexDirection="column"
-                gap={0.25}
-              >
-                <BorderColor
-                  color={COLOR[i % COLOR.length]}
-                  applyMargin
-                  marginValue={superset.exercises.length === 0 ? '3px' : '2px'}
-                />
-
-                {superset.exercises.map((exercise, exerciseIndex) => (
-                  <AthleteTrainingExercise
-                    key={`${exercise.id}-${exerciseIndex}`}
-                    exercise={exercise}
-                    exerciseIndex={exerciseIndex}
-                    superset={superset}
-                    selectedSuperset={selectedSuperset}
-                    setSelectedSuperset={setSelectedSuperset}
-                    selectedExercises={selectedExercises}
-                    setSelectedExercises={setSelectedExercises}
-                    setOpenVideoPlayerModal={setOpenVideoPlayerModal}
-                    setVideoUrl={setVideoUrl}
-                  />
-                ))}
-
-                {superset.exercises.length === 0 && (
-                  <BorderColor
-                    color={COLOR[i % COLOR.length]}
-                    lower
-                    applyMargin
-                    marginValue={
-                      superset.exercises.length === 0 ? '3px' : '5px'
-                    }
-                  />
-                )}
-              </Box>
-            ))}
-          </Box>
-        </CardContent>
-      </Box>
-    ) : (
-      <Box
-        key={`${c.id}`}
-        width="100%"
-        sx={{
-          backgroundColor: c.completedMembersIds.includes(profile.uid)
-            ? theme.palette.background.dark
-            : theme.palette.background.paper,
-          py: 1,
-          borderTopRightRadius: i === 0 ? 5 : 0,
-          borderBottomRightRadius: i === arr.length - 1 ? 5 : 0,
-          borderBottomLeftRadius: i === arr.length - 1 ? 5 : 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        onClick={() => {
-          if (c.completedMembersIds.includes(profile.uid)) return;
-          if (!trainingInProgress) {
-            setTrainingInProgress({
-              training: training,
-              selectedComponent: c,
-              userId: profile.uid,
-            } as TrainingInProgress);
-          } else {
-            setTrainingInProgress(
-              (prev) =>
-                ({
-                  ...prev,
-                  training: training,
-                  selectedComponent: c,
-                  userId: profile.uid,
-                }) as TrainingInProgress
+          {components.map((component) => {
+            const IconComponent = commonService.navigation.getComponentIcon(
+              component.id
             );
+
+            return (
+              <Box key={component.id} minWidth="48px">
+                <IconButton
+                  sx={[
+                    user && component.completedMembersIds.includes(user.uid)
+                      ? {
+                          opacity:
+                            selectedComponent?.id !== component.id ? 0.5 : 1,
+                          position: 'relative',
+                          backgroundColor:
+                            selectedComponent?.id === component.id
+                              ? theme.palette.background.light
+                              : theme.palette.background.dark,
+                        }
+                      : {},
+                    {
+                      m: 0,
+                    },
+                  ]}
+                  onClick={() => {
+                    setShowSupersets(true);
+                    setSelectedComponent(component);
+                  }}
+                >
+                  <IconComponent
+                    sx={{
+                      fontSize: 26,
+                      cursor: 'pointer',
+                      color:
+                        selectedComponent?.id === component.id
+                          ? theme.palette.primary.main
+                          : undefined,
+                    }}
+                  />
+                  {user && component.completedMembersIds.includes(user.uid) && (
+                    <Check
+                      sx={{
+                        position: 'absolute',
+                        bottom: 2,
+                        right: 0,
+                        color: theme.palette.primary.main,
+                        fontSize: 16,
+                      }}
+                    />
+                  )}
+                </IconButton>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+
+      <Collapse in={showSupersets} timeout={timeout}>
+        <Box
+          width="100%"
+          display="flex"
+          flexDirection="column"
+          gap={2}
+          maxWidth={600}
+          sx={{
+            mx: 'auto',
+          }}
+        >
+          {!selectedComponent?.supersets.length ? (
+            <Typography textAlign="center" sx={{ fontSize: 12 }}>
+              No supersets available
+            </Typography>
+          ) : (
+            selectedComponent.supersets.map((superset, i) => (
+              <AthleteSuperset
+                superset={superset}
+                supersetIndex={i}
+                key={`superset-${i}`}
+              />
+            ))
+          )}
+        </Box>
+      </Collapse>
+      <MyModal
+        isOpen={modal}
+        setIsOpen={(open) => setModal(open)}
+        cancelText="Cancel"
+        onCancel={() => setModal(false)}
+        onConfirm={() => {
+          if (!user) {
+            toast.error('Authentication error.');
+            return;
           }
+
+          if (!selectedComponent) {
+            toast.error('No component selected.');
+            return;
+          }
+
+          if (selectedComponent.completedMembersIds.includes(user.uid)) {
+            toast.error('You have already completed this component.');
+            return;
+          }
+
+          handleApiRequest(
+            router,
+            () =>
+              TrainingController.getPrescribedTraining(training.id, user.uid),
+            (training) => {
+              setTrainingInProgress({
+                training: training,
+                selectedComponent: selectedComponent,
+                userId: user.uid,
+              } as TrainingInProgress);
+
+              setView(ExerciseTrainingView.TrainingView);
+              setModal(false);
+            },
+            undefined,
+            'Failed to start training'
+          );
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            textTransform: 'uppercase',
-            color: theme.palette.text.primary,
-            textAlign: 'center',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            px: 1,
-            maxWidth: '100%', // Adjust width as needed
-          }}
-        >
-          {c.id}
+        <Typography variant="h6" sx={{ width: '100%', textAlign: 'center' }}>
+          Start <b>{selectedComponent?.component?.name || 'training'}</b>?
         </Typography>
-        <CheckCircle
-          sx={{
-            position: 'absolute',
-            right: 10,
-            color: theme.palette.primary.main,
-            display: c.completedMembersIds.includes(profile.uid)
-              ? undefined
-              : 'none',
-          }}
-        />
-      </Box>
-    )
+      </MyModal>
+    </Box>
   );
 }

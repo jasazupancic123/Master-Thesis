@@ -227,7 +227,7 @@ export default function DashboardHeader() {
               </IconButton>
             </Box>
           ) : (
-            <Link href={LINK_DASHBOARD.href} passHref legacyBehavior>
+            <Link href={LINK_DASHBOARD.href} passHref>
               <Tooltip title="Dashboard">
                 <Avatar
                   src={selectedInstitution?.imageUrl || ''}
@@ -375,7 +375,6 @@ export default function DashboardHeader() {
           <Link
             href={LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role).home.href}
             passHref
-            legacyBehavior
           >
             <Typography>Dashboard</Typography>
           </Link>

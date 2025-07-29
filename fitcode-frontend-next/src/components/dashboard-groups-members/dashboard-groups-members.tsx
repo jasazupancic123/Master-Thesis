@@ -11,22 +11,21 @@ import MyModal from '../modal/modal';
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
 import { SetState } from '@/common/type/state.type';
 import { useMain } from '@/store/main-provider';
-import FileUpload from '../file-upload/file-upload';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { useRouter } from 'next/navigation';
-import { updateUserProfile } from './state';
+import DashboardEditAthleteModal from '../dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
 
 interface DashboardGroupsMembersProps {
   modal: {
     add_member: boolean;
     add_trainer: boolean;
     add_group: boolean;
+    add_member_via_csv: boolean;
     edit_athlete: boolean;
   };
   setModal: SetState<{
     add_member: boolean;
     add_trainer: boolean;
     add_group: boolean;
+    add_member_via_csv: boolean;
     edit_athlete: boolean;
   }>;
 }
@@ -48,25 +47,13 @@ export default function DashboardGroupsMembers(
 
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const router = useRouter();
 
   const { modal, setModal } = props;
 
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [hoveredUser, setHoveredUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [editUserImageUrl, setEditUserImageUrl] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    if (!editUser) {
-      setEditUserImageUrl(null);
-      return;
-    }
-    setEditUserImageUrl(
-      members.find((m) => m.id === editUser.uid)?.profileImageUrl || null
-    );
-  }, [editUser]);
 
   useEffect(() => {
     if (!selectedGroup) {
@@ -279,48 +266,12 @@ export default function DashboardGroupsMembers(
           enableScroll
         />
       </MyModal>
-      <MyModal
+      <DashboardEditAthleteModal
         isOpen={modal.edit_athlete}
-        setIsOpen={(open) =>
-          setModal((prev) => ({ ...prev, edit_athlete: open }))
-        }
-        onCancel={() => {
-          setModal((prev) => ({ ...prev, edit_athlete: false }));
-          setEditUserImageUrl(null);
-          setEditUser(null);
-        }}
-        onConfirm={() =>
-          updateUserProfile({
-            editUser,
-            editUserImageUrl,
-            router,
-            selectedInstitution,
-            setModal,
-            setEditUserImageUrl,
-            setEditUser,
-            refetchMembers,
-          })
-        }
-        cancelText="Close"
-      >
-        <FileUpload
-          input="image"
-          label="Image"
-          initialFileUrl={editUserImageUrl || undefined}
-          sx={{
-            maxWidth: screenSize.isMobile ? 200 : 400,
-            maxHeight: screenSize.isMobile ? 150 : 300,
-            margin: 'auto',
-          }}
-          onFileUpload={async (file) => {
-            if (!editUser) return;
-
-            const path = `user/${editUser.uid}/${file.name}`;
-            const url = await FirebaseStorageUtil.uploadFile(file, path);
-            setEditUserImageUrl(url);
-          }}
-        />
-      </MyModal>
+        setModal={setModal}
+        editUser={editUser}
+        setEditUser={setEditUser}
+      />
     </>
   );
 }
