@@ -1,4 +1,4 @@
-import { BaseEntity } from '@/common/type/entity.type';
+import { BaseEntity, IdEntity } from '@/common/type/entity.type';
 import { Cycle } from './cycle.type';
 import { User } from '@/controller/user/type/user.type';
 
@@ -11,4 +11,19 @@ export type Group = BaseEntity & {
 
   // mapped properties
   members?: User[];
+};
+
+export type CreateGroup = Pick<
+  Group,
+  'institutionId' | 'name' | 'ownerId' | 'membersIds'
+>;
+
+export type UpdateGroup = Partial<
+  Pick<Group, 'ownerId' | 'name' | 'membersIds' | 'cycles'>
+>;
+
+export type BatchUpdateOneGroup = IdEntity & UpdateGroup;
+
+export type BatchUpdateGroups = {
+  groups: BatchUpdateOneGroup[];
 };

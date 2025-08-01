@@ -12,7 +12,7 @@ export default function Layout({ children }: ChildrenProps) {
   return (
     <Box bgcolor="background.default" minHeight="100vh">
       <TrainingsInitializer>
-        <TrainingContent> {children}</TrainingContent>
+        <TrainingContent>{children}</TrainingContent>
       </TrainingsInitializer>
     </Box>
   );

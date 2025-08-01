@@ -1,27 +1,24 @@
-import pluginJs from '@eslint/js';
-import pluginNext from '@next/eslint-plugin-next';
-import importPlugin from 'eslint-plugin-import';
-import pluginReact from 'eslint-plugin-react';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import { FlatCompat } from '@eslint/eslintrc';
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
-  { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
-  { languageOptions: { globals: globals.browser } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
-  importPlugin.flatConfigs.recommended,
-  pluginNext.configs.recommended,
-  {
-    rules: {
-      'import/order': [
-        'error',
-        {
-          groups: ['builtin', ['sibling', 'parent'], 'index', 'object'],
-        },
-      ],
+const compat = new FlatCompat({
+  // import.meta.dirname is available after Node.js v20.11.0
+  baseDirectory: import.meta.dirname,
+});
+
+const eslintConfig = [
+  ...compat.config({
+    ignorePatterns: [
+      '**/dist/**',
+      '**/node_modules/**',
+      'src/app/model-testing/**',
+    ],
+    extends: ['next'],
+    settings: {
+      next: {
+        rootDir: 'fitcode-frontend-next',
+      },
     },
-  },
+  }),
 ];
+
+export default eslintConfig;

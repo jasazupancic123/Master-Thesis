@@ -60,17 +60,15 @@ export async function handleUpdateMultipleTrainings(state: {
         workloads: customAthleteWorkloads,
       }),
     (newTraining) => {
-      const mapped = TrainingService.mapComponentsExercisesMethods(
-        newTraining,
+      TrainingService.mapData(newTraining, {
         components,
         exercises,
-        methods
-      );
+        methods,
+      });
 
-      const minimalTraining =
-        TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+      const minimalTraining = TrainingService.trainingToInfo(newTraining);
 
-      setTraining(mapped);
+      setTraining(newTraining);
 
       setTrainings((prev) =>
         prev.map((t) => {

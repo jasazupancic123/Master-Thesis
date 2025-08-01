@@ -524,9 +524,6 @@ describe('Create Training (e2e)', () => {
         expect(response.body.components[0].supersets).toHaveLength(0);
         expect(response.body.futureStats).not.toBeDefined();
 
-        const dbTraining = await db.trainings.get(response.body.id);
-        expect(dbTraining.futureStats).not.toBeDefined();
-
         await Promise.all([
           deleteDocs(firebase, 'EXERCISE', [globalExercise.id, exercise.id]),
           deleteDoc(firebase, 'COMPONENT', component.id),

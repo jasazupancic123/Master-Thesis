@@ -46,7 +46,6 @@ export const createUserWithRole = https.onCall(async (data, context) => {
           updatedAt: admin.firestore.Timestamp.now(),
           deletedAt: null,
           groupsIds: [],
-          trainersIds: [],
         });
 
       return newUser;
@@ -119,19 +118,13 @@ export const createUserWithRole = https.onCall(async (data, context) => {
         );
     }
 
-    await admin
-      .firestore()
-      .collection(Collection.USERS)
-      .doc(newUser.uid)
-      .set({
-        id: newUser.uid,
-        createdAt: admin.firestore.Timestamp.now(),
-        updatedAt: admin.firestore.Timestamp.now(),
-        deletedAt: null,
-        groupsIds: [],
-        trainersIds: [],
-        institutionIds: institutionId ? [institutionId] : [],
-      });
+    await admin.firestore().collection(Collection.USERS).doc(newUser.uid).set({
+      id: newUser.uid,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      deletedAt: null,
+      groupsIds: [],
+    });
 
     return newUser;
   } catch (e: any) {

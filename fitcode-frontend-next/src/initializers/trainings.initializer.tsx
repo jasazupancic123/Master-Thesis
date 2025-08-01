@@ -34,18 +34,16 @@ export default function TrainingsInitializer({ children }: ChildrenProps) {
         // naj fetcham vse treninge al naj mamo paginacijo?
         const mappedTrainings: Training[] = await Promise.all(
           (trainings as Training[]).map(async (t) => {
-            t = TrainingService.mapComponentsExercisesMethods(
-              t,
-              components,
-              exercises,
-              methods
-            );
+            TrainingService.mapData(t, { components, exercises, methods });
+
             t.institution = t.institutionId
               ? await InstitutionController.findById(t.institutionId)
               : undefined;
+
             t.group = t.groupId
               ? await GroupController.findById(t.groupId)
               : undefined;
+
             t.cycle = t.group?.cycles[0] || undefined;
             return t;
           })

@@ -1,15 +1,19 @@
 import { CommonService } from '@/common/service/common.service';
 import { UserRole } from './enum/user-role.enum';
-import { Wellness } from './type/wellness.type';
-import { User, UserEntity } from './type/user.type';
+import { CreateWellness, Wellness } from './type/wellness.type';
+import {
+  AddAthlete,
+  FilterUsers,
+  UpdateProfile,
+  User,
+  UserEntity,
+} from './type/user.type';
+import { CustomClaims } from './type/custom-claims.type';
 
 const api = CommonService.instance.api;
 
 export class UserController {
-  static async findAll(
-    token?: string,
-    query?: { ids?: string[]; emails?: string[] }
-  ) {
+  static async findAll(token?: string, query?: FilterUsers) {
     return api.get<User[]>('/user', { token, query });
   }
 
@@ -25,11 +29,11 @@ export class UserController {
     return api.get<User>(`/user/${id}`);
   }
 
-  static async updateClaims(id: string, input: { role: UserRole[] }) {
+  static async updateClaims(id: string, input: CustomClaims) {
     return api.patch<{}>(`/user/${id}`, input);
   }
 
-  static async updateProfile(input: Partial<UserEntity> & { userId: string }) {
+  static async updateProfile(input: UpdateProfile) {
     return api.patch<{}>('/user/me/profile', input);
   }
 
@@ -37,15 +41,11 @@ export class UserController {
     return api.get<Wellness>('/user/me/meta');
   }
 
-  static async saveMeta(body: Omit<Wellness, 'userId'>) {
+  static async saveMeta(body: CreateWellness) {
     return api.post<Wellness>('/user/me/meta', body);
   }
 
-  static async addAthlete(input: {
-    email: string;
-    displayName: string;
-    password: string;
-  }) {
+  static async addAthlete(input: AddAthlete) {
     return api.post<User>('/user/athlete/add', input);
   }
 }

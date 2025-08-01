@@ -76,12 +76,10 @@ export default function DashboardInitializer({ children }: ChildrenProps) {
             selectedInstitution.id
           );
 
-          for (let group of groups) {
-            group = GroupService.mapMembers(group, users, true);
-          }
+          for (let group of groups)
+            group = GroupService.mapMembers(group, users);
 
           selectedInstitution.groups = groups;
-
           setInstitutionId(selectedInstitution.id); //this triggers member fetch
         }
 

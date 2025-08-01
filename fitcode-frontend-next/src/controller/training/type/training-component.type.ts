@@ -5,8 +5,8 @@ import { Method } from '@/controller/method/type/method.type';
 import { Target } from '@/controller/target/type/target.type';
 import { PeriodizationType } from '../enum/periodization-type.enum';
 import { CopiedFrom } from './copied-from.type';
-import { Subgroup, SubgroupInfo } from './subgroup.type';
-import { Superset } from './superset.type';
+import { Subgroup, SubgroupInfo, UpdateSubgroup } from './subgroup.type';
+import { Superset, UpdateSuperset } from './superset.type';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
@@ -36,3 +36,22 @@ export type TrainingComponentInfo = IdEntity &
     component?: Component;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
   };
+
+export type CreateTrainingComponent = Pick<
+  TrainingComponent,
+  'id' | 'from' | 'to' | 'target' | 'methodId'
+>;
+
+export type UpdateTrainingComponent = Pick<
+  TrainingComponent,
+  'id' | 'color' | 'from' | 'to' | 'target' | 'periodizationType' | 'methodId'
+> & {
+  supersets: UpdateSuperset[];
+  subgroups: UpdateSubgroup[];
+};
+
+export type CopyComponent = Pick<DateRange, 'from'> & {
+  componentId: string;
+  copyFromTrainingId: string;
+  copyToTrainingId?: string;
+};

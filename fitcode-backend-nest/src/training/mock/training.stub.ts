@@ -58,7 +58,6 @@ export function generateTrainingStub(
     ownerId: data?.ownerId || global.trainer.uid,
     membersIds: data?.membersIds || [global.athlete.uid],
     stats: data?.stats || [],
-    futureStats: data?.futureStats || [],
     copiedFromId: data?.copiedFromId || null,
     from,
     to,
@@ -105,7 +104,6 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     periodizationType: data?.periodizationType || null,
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
-    futureStats: data?.futureStats || [],
   };
 }
 

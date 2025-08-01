@@ -12,3 +12,8 @@ export type TrainingExercise = IdEntity &
     // mapped properties
     exercise?: Exercise;
   };
+
+export type UpdateTrainingExercise = Pick<
+  TrainingExercise,
+  'id' | 'color' | 'sets'
+>;

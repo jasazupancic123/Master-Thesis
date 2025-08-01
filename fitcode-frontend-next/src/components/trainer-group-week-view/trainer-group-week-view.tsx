@@ -158,23 +158,16 @@ export default function TrainerWeekView() {
                                 workloads: [],
                               }),
                             (training) => {
-                              const mapped =
-                                TrainingService.mapComponentsExercisesMethods(
-                                  training,
-                                  components,
-                                  exercises,
-                                  methods
-                                );
-
-                              mapped.futureStats =
-                                TrainingService.calculatePrescribedTrainingStats(
-                                  mapped.components,
-                                  mapped.membersIds.length
-                                );
+                              TrainingService.mapData(training, {
+                                components,
+                                exercises,
+                                methods,
+                                prescribedStats: true,
+                              });
 
                               setTrainings((prev) =>
                                 prev.map((t) =>
-                                  t.id === training.id ? mapped : t
+                                  t.id === training.id ? training : t
                                 )
                               );
 

@@ -16,6 +16,7 @@ import { useAuth } from '@/store/auth-provider';
 import dayjs from 'dayjs';
 import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Superset } from '@/controller/training/type/superset.type';
+import { TrainingService } from '@/controller/training/training.service';
 
 type AthleteTrainingCardProps = {
   training: Training;
@@ -45,20 +46,21 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
 
   useEffect(() => {
     if (!trainingInProgress || !trainingInProgress.selectedComponent) return;
-    let usersSupersets = undefined;
-    for (const subgroup of trainingInProgress.selectedComponent.subgroups) {
-      if (subgroup.membersIds.includes(profile.uid)) {
-        usersSupersets = subgroup.supersets;
-        break;
-      }
-    }
-    if (!usersSupersets) {
-      usersSupersets = trainingInProgress.selectedComponent.supersets; //default group
-    }
-    setSupersets(usersSupersets);
-  }, [trainingInProgress?.selectedComponent]);
 
-  useEffect(() => {}, [supersets]);
+    setSupersets(
+      TrainingService.getPrescribedSupersetsByUser(
+        profile.uid,
+        training.components.find(
+          (c) => c.id === trainingInProgress.selectedComponent?.id
+        ) || trainingInProgress.selectedComponent!
+      )
+    );
+  }, [
+    profile.uid,
+    training.components,
+    trainingInProgress,
+    trainingInProgress?.selectedComponent,
+  ]);
 
   const getDurationText = () => {
     const from = new Date(training.from);
@@ -74,11 +76,11 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
     return durationText;
   };
 
-  const getNumExercises = () => {
+  const getNumExercises = (userId: string) => {
     return components.reduce(
       (acc, component) =>
         acc +
-        component.supersets
+        TrainingService.getPrescribedSupersetsByUser(userId, component)
           .map((s) => s.exercises.length)
           .reduce((a, b) => a + b, 0),
       0
@@ -246,7 +248,7 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
                 fontWeight: 'bold',
               }}
             >
-              {getNumExercises()}
+              {getNumExercises(profile.uid)}
             </Typography>
           </Box>
         </Box>

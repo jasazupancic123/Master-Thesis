@@ -39,8 +39,6 @@ export default function DashboardPage() {
     setSelectedGroup,
   } = useDashboard();
 
-  if (!profile) return null;
-
   const [modal, setModal] = useState({
     add_member: false,
     add_trainer: false,
@@ -51,7 +49,7 @@ export default function DashboardPage() {
   const [groupName, setGroupName] = useState('');
   const [owner, setOwner] = useState<User | null>(null);
 
-  const role = profile.customClaims.role || [];
+  const role = profile?.customClaims?.role || [];
 
   useEffect(() => {
     // fetch groups when selected institution changes
@@ -61,15 +59,15 @@ export default function DashboardPage() {
         selectedInstitution.id
       );
 
-      for (let group of groups) {
-        group = GroupService.mapMembers(group, users, true);
-      }
+      for (let group of groups) group = GroupService.mapMembers(group, users);
 
       setSelectedInstitution((prev) => ({ ...prev, groups }) as Institution);
       if (groups.length) setSelectedGroup(groups[0]);
     };
     fetchGroups();
   }, [selectedInstitution]);
+
+  if (!profile) return null;
 
   if (!institutions.length) {
     return (

@@ -7,10 +7,7 @@ import { TrainingExercise } from '@/controller/training/type/training-exercise.t
 import { useGroup } from '@/store/group-provider';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import toast from 'react-hot-toast';
-import {
-  getLAndRValues,
-  handleAthleteWorkloadsChange,
-} from '../training-exercise-card/state';
+import { getLAndRValues } from '../training-exercise-card/state';
 import { SetState } from '@/common/type/state.type';
 import { updateExerciseAttributeValues } from './state';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
@@ -180,6 +177,7 @@ export default function TrainingExerciseCardExpandedSets(
                     >
                       {['L', 'R'].map((lOrR) => (
                         <ExerciseParam
+                          key={`${param.field}-${lOrR}`}
                           showOptions={set.setNumber === 1 && lOrR === 'L'}
                           disableOptions
                           disableSets
