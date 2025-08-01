@@ -34,7 +34,6 @@ import { ChartWorkloadData } from '@/controller/training/type/chart-workload-dat
 import { Method } from '@/controller/method/type/method.type';
 import { Day } from '@/common/service/util/date.util';
 import { TrainingInfo } from '@/controller/training/type/training.type';
-import { totalmem } from 'os';
 
 export async function handleCopyTraining(
   input: {
@@ -87,35 +86,19 @@ export async function handleCopyTraining(
     .set('second', 0)
     .toString();
 
-  const to = newDate
-    .set('year', newDate.year())
-    .set('month', newDate.month())
-    .set('date', newDate.date())
-    .set('hour', pair.end)
-    .set('minute', 0)
-    .set('second', 0)
-    .toString();
-
   handleApiRequest(
     router,
-    () => TrainingController.copy(training.id, { from, to }),
+    () => TrainingController.copy(training.id, { from: new Date(from) }),
     (copiedTraining) => {
-      const mappedCopiedTraining =
-        TrainingService.mapComponentsExercisesMethods(
-          copiedTraining,
-          components,
-          exercises,
-          methods
-        );
-
-      mappedCopiedTraining.futureStats =
-        TrainingService.calculatePrescribedTrainingStats(
-          mappedCopiedTraining.components,
-          mappedCopiedTraining.membersIds.length
-        );
+      TrainingService.mapData(copiedTraining, {
+        components,
+        exercises,
+        methods,
+        prescribedStats: true,
+      });
 
       setTrainings((prev) =>
-        [...prev, mappedCopiedTraining].sort(
+        [...prev, copiedTraining].sort(
           (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
         )
       );

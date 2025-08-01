@@ -1,5 +1,10 @@
 import { CommonService } from '@/common/service/common.service';
-import { Institution } from './type/institution.type';
+import {
+  AddAthletesToInstitution,
+  AddTrainersToInstitution,
+  CreateInstitution,
+  Institution,
+} from './type/institution.type';
 import { UserEntity } from '../user/type/user.type';
 
 const api = CommonService.instance.api;
@@ -21,21 +26,13 @@ export class InstitutionController {
     return api.get<UserEntity[]>(`/institution/${id}/find/trainers`);
   }
 
-  static async findAthletesAndTrainers(id: string) {
-    return api.get<UserEntity[]>(`/institution/${id}/find/all`);
-  }
-
-  static async create(body: {
-    ownerId: string;
-    name: string;
-    imageUrl: string;
-  }) {
+  static async create(body: CreateInstitution) {
     return api.post<Institution>('/institution', body);
   }
 
   static async addAthletes(
     institutionId: string,
-    body: { athleteIds: string[] }
+    body: AddAthletesToInstitution
   ) {
     return api.post<Institution>(
       `/institution/${institutionId}/athletes`,
@@ -45,7 +42,7 @@ export class InstitutionController {
 
   static async removeAthletes(
     institutionId: string,
-    body: { athleteIds: string[] }
+    body: AddAthletesToInstitution
   ) {
     return api.post<Institution>(
       `/institution/${institutionId}/athletes/delete`,
@@ -55,7 +52,7 @@ export class InstitutionController {
 
   static async addTrainers(
     institutionId: string,
-    body: { trainerIds: string[] }
+    body: AddTrainersToInstitution
   ) {
     return api.post<Institution>(
       `/institution/${institutionId}/trainers`,
@@ -65,7 +62,7 @@ export class InstitutionController {
 
   static async removeTrainers(
     institutionId: string,
-    body: { trainerIds: string[] }
+    body: AddTrainersToInstitution
   ) {
     return api.post<Institution>(
       `/institution/${institutionId}/trainers/delete`,

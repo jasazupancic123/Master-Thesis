@@ -97,7 +97,4 @@ export class Training extends BaseEntity {
   @ApiProperty({ type: () => TrainingComponent, isArray: true })
   @Expose()
   components: TrainingComponent[];
-
-  // virtual properties
-  futureStats?: TrainingExerciseAverageStats[]; // average future group workload stats
 }

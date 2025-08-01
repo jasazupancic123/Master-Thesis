@@ -155,19 +155,14 @@ export default function TrainerDayView() {
           return;
         }
 
-        const mapped = TrainingService.mapComponentsExercisesMethods(
-          foundTraining,
+        TrainingService.mapData(foundTraining, {
           components,
           exercises,
-          methods
-        ) as Training;
+          methods,
+          prescribedStats: true,
+        });
 
-        mapped.futureStats = TrainingService.calculatePrescribedTrainingStats(
-          mapped.components,
-          mapped.membersIds.length
-        );
-
-        setTraining(mapped);
+        setTraining(foundTraining);
         setLoading(false);
       },
       undefined,

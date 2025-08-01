@@ -414,24 +414,18 @@ export default function TrainingComponentHeaderMenu(
               }),
             (periodizedTrainings) => {
               periodizedTrainings.map((pt) => {
-                TrainingService.mapComponentsExercisesMethods(
-                  pt,
-                  allComponents,
-                  allExercises,
-                  allMethods
-                );
-
-                pt.futureStats =
-                  TrainingService.calculatePrescribedTrainingStats(
-                    pt.components,
-                    pt.membersIds.length
-                  );
+                TrainingService.mapData(pt, {
+                  components: allComponents,
+                  exercises: allExercises,
+                  methods: allMethods,
+                  prescribedStats: true,
+                });
 
                 return pt;
               });
 
               const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>
-                TrainingService.convertFromTrainingToTrainingMinimal(t)
+                TrainingService.trainingToInfo(t)
               );
 
               setTrainings((prev) =>

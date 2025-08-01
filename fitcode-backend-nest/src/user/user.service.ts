@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FieldValue, Query } from 'firebase-admin/firestore';
+import { Query } from 'firebase-admin/firestore';
 import { UserRecord } from 'firebase-admin/lib/auth';
 
 import { FirestoreCollection } from '../common/enum/firestore-collection.enum';
@@ -147,18 +147,6 @@ export class UserService {
 
     delete input.userId;
     await this.userRepository.updateDoc(userId, input);
-  }
-
-  async addTrainer(ref: UserRef, trainerId: string) {
-    await this.userRepository.doc(ref.uid).update({
-      trainersIds: FieldValue.arrayUnion(trainerId),
-    });
-  }
-
-  async removeTrainer(ref: UserRef, trainerId: string) {
-    await this.userRepository.doc(ref.uid).update({
-      trainersIds: FieldValue.arrayRemove(trainerId),
-    });
   }
 
   async addAthlete(user: User, input: Omit<CreateUser, 'customClaims'>) {

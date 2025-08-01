@@ -59,19 +59,6 @@ export default function Page() {
       valueOptions: ALL_ROLES,
     },
     {
-      field: 'level',
-      valueGetter: (_, row) => row.customClaims?.level,
-      valueSetter: (newValue, row) => {
-        row.customClaims = { ...row.customClaims, level: newValue };
-        return row;
-      },
-      headerName: 'Level',
-      width: 150,
-      editable: true,
-      type: 'singleSelect',
-      valueOptions: ALL_LEVELS,
-    },
-    {
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',

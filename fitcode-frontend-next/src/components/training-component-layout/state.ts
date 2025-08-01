@@ -102,8 +102,7 @@ export async function handleCopyComponentApiRequest(
         allMethods
       );
 
-      const minimalTraining =
-        TrainingService.convertFromTrainingToTrainingMinimal(mapped);
+      const minimalTraining = TrainingService.trainingToInfo(mapped);
 
       setTrainings((prev) =>
         prev.map((t) => {

@@ -156,8 +156,7 @@ export async function handleClickDateCell(
             methods
           );
 
-          const minimalTraining =
-            TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+          const minimalTraining = TrainingService.trainingToInfo(newTraining);
 
           const sortedTrainings = [...trainings, minimalTraining].sort(
             (a, b) => {

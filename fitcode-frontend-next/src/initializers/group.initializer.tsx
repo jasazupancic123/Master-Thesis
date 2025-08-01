@@ -50,17 +50,12 @@ export default function GroupInitializer({
         ]);
 
         const mappedTrainings = trainings.map((t) => {
-          t = TrainingService.mapComponentsExercisesMethods(
-            t,
+          TrainingService.mapData(t, {
             components,
             exercises,
-            methods
-          );
-
-          t.futureStats = TrainingService.calculatePrescribedTrainingStats(
-            t.components,
-            t.membersIds.length
-          );
+            methods,
+            prescribedStats: true,
+          });
 
           return t;
         });

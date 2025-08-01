@@ -15,3 +15,24 @@ export interface Institution extends BaseEntity {
   athletes: User[];
   groups: Group[];
 }
+
+export type CreateInstitution = Pick<
+  Institution,
+  'name' | 'ownerId' | 'imageUrl'
+>;
+
+export type UpdateInstitution = Pick<Institution, 'name' | 'imageUrl'>;
+
+export type UpdateInstitutionMembers = {
+  add: boolean; // false - remove, true - add
+  trainers: boolean; // false - athletes, true - trainers
+  membersIds: string[]; // user IDs to add or remove
+};
+
+export type AddTrainersToInstitution = {
+  trainerIds: string[];
+};
+
+export type AddAthletesToInstitution = {
+  athleteIds: string[];
+};

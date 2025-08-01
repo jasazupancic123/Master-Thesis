@@ -42,9 +42,8 @@ export class TrainingRepository
 
   async addDoc(input: Create<Training>): Promise<string> {
     const { id } = this.collection().doc();
-
     const query = this.firebaseService.buildCreateQuery<Training>(
-      { ...(this.clearInput(input) as Create<Training>), id },
+      { ...input, id },
       { timestamps: true },
     );
 
@@ -53,10 +52,7 @@ export class TrainingRepository
   }
 
   async updateDoc(id: string, input: Update<Training>) {
-    const query = this.firebaseService.buildUpdateQuery<Training>(
-      this.clearInput(input) as Update<Training>,
-    );
-
+    const query = this.firebaseService.buildUpdateQuery<Training>(input);
     await this.doc(id).update(query);
   }
 
@@ -72,21 +68,5 @@ export class TrainingRepository
     return this.firebaseService.firestore.collection(
       FirestoreCollection.TRAINING,
     );
-  }
-
-  clearInput(input: Partial<Training>): Create<Training> | Update<Training> {
-    const { institution, futureStats, ...restInput } = input;
-
-    return {
-      ...restInput,
-      components: restInput.components?.map((c) => ({
-        ...c,
-        supersets: c.supersets,
-        subgroups: c.subgroups?.map((sg) => {
-          const { futureStats, ...restSubgroup } = sg;
-          return restSubgroup;
-        }),
-      })),
-    };
   }
 }

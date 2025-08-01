@@ -14,7 +14,6 @@ import { IdEntity } from '@src/common/entity/id.entity';
 
 import { PeriodizationType } from '../enum/periodization-type.enum';
 import { Superset } from './superset.entity';
-import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';
 
 export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @IsString()
@@ -41,10 +40,4 @@ export class Subgroup extends IntersectionType(IdEntity, ColorEntity) {
   @IsEnum(PeriodizationType)
   @Expose()
   periodizationType?: PeriodizationType;
-
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
-  @Expose()
-  futureStats?: TrainingExerciseAverageStats[]; // average future workload stats
 }

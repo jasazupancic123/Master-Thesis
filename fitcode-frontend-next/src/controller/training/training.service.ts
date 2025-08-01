@@ -20,108 +20,81 @@ import { IntType, ParamType, VolType } from '../component/enum/param.enum';
 import { AttributeValue } from '../attribute/type/attribute-value.type';
 import { Attribute } from '../attribute/type/attribute.type';
 import { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
+import { TrainingExercise } from './type/training-exercise.type';
+import { Superset } from './type/superset.type';
+
+function isTrainingComponent(
+  item: TrainingComponent | TrainingComponentInfo
+): item is TrainingComponent {
+  return 'supersets' in item;
+}
 
 export class TrainingService {
-  static mapComponents(item: Training, components: Component[]): Training;
-  static mapComponents(
-    item: TrainingInfo,
-    components: Component[]
-  ): TrainingInfo;
-  static mapComponents(
-    item: Training | TrainingInfo,
-    components: Component[]
-  ): Training | TrainingInfo {
-    for (const tc of item.components)
-      tc.component = components.find((c) => c.id === tc.id);
+  static mapData<T extends Training | TrainingInfo>(
+    item: T,
+    data: {
+      prescribedStats?: boolean;
+      components?: Component[];
+      exercises?: Exercise[];
+      methods?: Method[];
+    }
+  ) {
+    if (data.methods)
+      for (const tc of item.components)
+        tc.method = data.methods.find((m) => m.id === tc.methodId);
 
-    item.warmup.component = components.find((c) => c.id === item.warmup.id);
-    item.cooldown.component = components.find((c) => c.id === item.cooldown.id);
+    if (data.components) {
+      for (const tc of item.components)
+        tc.component = data.components.find((c) => c.id === tc.id);
 
-    return item;
-  }
+      item.warmup.component = data.components.find(
+        (c) => c.id === item.warmup.id
+      );
 
-  private static isTrainingComponent(
-    item: TrainingComponent | TrainingComponentInfo
-  ): item is TrainingComponent {
-    return 'supersets' in item;
-  }
+      item.cooldown.component = data.components.find(
+        (c) => c.id === item.cooldown.id
+      );
+    }
 
-  static mapExercises(item: Training, exercises: Exercise[]): Training;
-  static mapExercises(item: TrainingInfo, exercises: Exercise[]): TrainingInfo;
-  static mapExercises(
-    item: Training | TrainingInfo,
-    exercises: Exercise[]
-  ): Training | TrainingInfo {
-    for (const tc of item.components) {
-      if (!this.isTrainingComponent(tc)) continue;
+    if (data.exercises) {
+      for (const tc of item.components) {
+        if (!isTrainingComponent(tc)) continue;
 
-      for (const s of tc.supersets)
-        for (const e of s.exercises) {
-          e.exercise = exercises.find(({ id }) => id === e.id);
-          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-        }
-
-      for (const subgroup of tc.subgroups)
-        for (const s of subgroup.supersets)
+        for (const s of tc.supersets)
           for (const e of s.exercises) {
-            e.exercise = exercises.find(({ id }) => id === e.id);
+            e.exercise = data.exercises.find(({ id }) => id === e.id);
+            if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+          }
+
+        for (const subgroup of tc.subgroups)
+          for (const s of subgroup.supersets)
+            for (const e of s.exercises) {
+              e.exercise = data.exercises.find(({ id }) => id === e.id);
+              if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+            }
+      }
+
+      if (isTrainingComponent(item.warmup))
+        for (const s of item.warmup.supersets)
+          for (const e of s.exercises) {
+            e.exercise = data.exercises.find(({ id }) => id === e.id);
+            if (!Array.isArray(e.params)) e.params = Object.values(e.params);
+          }
+
+      if (isTrainingComponent(item.cooldown))
+        for (const s of item.cooldown.supersets)
+          for (const e of s.exercises) {
+            e.exercise = data.exercises.find(({ id }) => id === e.id);
             if (!Array.isArray(e.params)) e.params = Object.values(e.params);
           }
     }
 
-    if (this.isTrainingComponent(item.warmup)) {
-      for (const s of item.warmup.supersets)
-        for (const e of s.exercises) {
-          e.exercise = exercises.find(({ id }) => id === e.id);
-          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-        }
-    }
-
-    if (this.isTrainingComponent(item.cooldown)) {
-      for (const s of item.cooldown.supersets)
-        for (const e of s.exercises) {
-          e.exercise = exercises.find(({ id }) => id === e.id);
-          if (!Array.isArray(e.params)) e.params = Object.values(e.params);
-        }
-    }
-
-    return item;
-  }
-
-  static mapMethods(item: Training, methods: Method[]): Training;
-  static mapMethods(item: TrainingInfo, methods: Method[]): TrainingInfo;
-  static mapMethods(
-    item: Training | TrainingInfo,
-    methods: Method[]
-  ): Training | TrainingInfo {
-    for (const tc of item.components)
-      tc.method = methods.find((m) => m.id === tc.methodId);
-
-    return item;
-  }
-
-  static mapComponentsExercisesMethods(
-    training: Training,
-    components: Component[],
-    exercises: Exercise[],
-    methods: Method[]
-  ): Training;
-  static mapComponentsExercisesMethods(
-    training: TrainingInfo,
-    components: Component[],
-    exercises: Exercise[],
-    methods: Method[]
-  ): TrainingInfo;
-  static mapComponentsExercisesMethods(
-    training: Training | TrainingInfo,
-    components: Component[],
-    exercises: Exercise[],
-    methods: Method[]
-  ): Training | TrainingInfo {
-    return this.mapExercises(
-      this.mapComponents(this.mapMethods(training, methods), components),
-      exercises
-    );
+    if (data.prescribedStats)
+      if (isTrainingComponent(item.components[0]))
+        this.mapPrescribedStats(
+          item as Training,
+          (item as Training).membersIds.length
+        );
   }
 
   static mapMembers(item: Training, users: User[]): Training {
@@ -134,6 +107,17 @@ export class TrainingService {
 
   static excludeWarmupCooldown(components: Component[]): Component[] {
     return components.filter((c) => c.id !== WARMUP_ID && c.id !== COOLDOWN_ID);
+  }
+
+  static getPrescribedSupersetsByUser(
+    userId: string,
+    component: TrainingComponent
+  ): Superset[] {
+    // check if user is in subgroups first
+    for (const subgroup of component.subgroups)
+      if (subgroup.membersIds.includes(userId)) return subgroup.supersets;
+
+    return component.supersets; // default group
   }
 
   static getIntensityVolumeValues(sets: ExerciseSet[]): IntensityVolumeValues {
@@ -160,13 +144,8 @@ export class TrainingService {
     };
   }
 
-  static convertFromTrainingToTrainingMinimal(
-    training: Training
-  ): TrainingInfo {
-    training.futureStats = this.calculatePrescribedTrainingStats(
-      training.components,
-      training.membersIds.length
-    );
+  static trainingToInfo(training: Training): TrainingInfo {
+    this.mapPrescribedStats(training, training.membersIds.length);
 
     return {
       id: training.id,
@@ -175,14 +154,10 @@ export class TrainingService {
       groupId: training.groupId,
       cycleId: training.cycleId,
       copiedFromId: training.copiedFromId,
-      warmup: this.convertFromTrainingComponentToTrainingComponentMinimal(
-        training.warmup
-      ),
-      cooldown: this.convertFromTrainingComponentToTrainingComponentMinimal(
-        training.cooldown
-      ),
+      warmup: this.componentToInfo(training.warmup),
+      cooldown: this.componentToInfo(training.cooldown),
       components: training.components.map((component) =>
-        this.convertFromTrainingComponentToTrainingComponentMinimal(component)
+        this.componentToInfo(component)
       ),
       stats: training.stats,
       futureStats: training.futureStats,
@@ -191,9 +166,7 @@ export class TrainingService {
     };
   }
 
-  static convertFromTrainingComponentToTrainingComponentMinimal(
-    component: TrainingComponent
-  ): TrainingComponentInfo {
+  static componentToInfo(component: TrainingComponent): TrainingComponentInfo {
     return {
       id: component.id,
       color: component.color,
@@ -312,13 +285,13 @@ export class TrainingService {
    * for intensity and volume for each exercise in the training components
    * for all users in main group and subgroups.
    */
-  static calculatePrescribedTrainingStats(
-    components: TrainingComponent[],
+  static mapPrescribedStats(
+    training: Training,
     numMembersTraining: number
-  ): TrainingExerciseAverageStats[] {
+  ): void {
     const stats: TrainingExerciseAverageStats[] = [];
 
-    for (const component of components) {
+    for (const component of training.components) {
       const numMembersMainGroup = // all members in training - members in all subgroups
         numMembersTraining -
         component.subgroups.reduce((sum, s) => sum + s.membersIds.length, 0);
@@ -396,7 +369,7 @@ export class TrainingService {
       }
     }
 
-    return stats.map((s) => {
+    training.futureStats = stats.map((s) => {
       const intensity = s.intensity / s.numMembers; // average intensity
       const volume = s.volume / s.numMembers; // average volume
       return { ...s, intensity, volume };

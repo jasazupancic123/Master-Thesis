@@ -244,12 +244,6 @@ export class DataSetup extends BaseSetup {
       });
 
       groupIds.push(group.id);
-
-      for (const member of members)
-        await this.userService.addTrainer(
-          { uid: member.uid },
-          this.trainer.uid,
-        );
     }
   }
 

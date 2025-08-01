@@ -9,6 +9,9 @@ import { AttributeType } from '../attribute/enum/attribute-value.enum';
 const commonService = CommonService.instance;
 
 export class ExerciseService {
+  /**
+   * Frontend filter for exercises (this will be moved )
+   */
   static filter(
     data: Exercise[],
     options: {
@@ -88,11 +91,13 @@ export class ExerciseService {
       setPagination,
     } = state;
 
-    let filtered
-    if(filter.componentsIds.includes('warmup') || filter.componentsIds.includes('cooldown')) 
-      filtered = [...exercises] // all exercises for warmup and cooldown
-    else 
-      filtered = ExerciseService.filter(exercises, filter, components);
+    let filtered;
+    if (
+      filter.componentsIds.includes('warmup') ||
+      filter.componentsIds.includes('cooldown')
+    )
+      filtered = [...exercises]; // all exercises for warmup and cooldown
+    else filtered = ExerciseService.filter(exercises, filter, components);
     const total = filtered.length;
 
     // paginate

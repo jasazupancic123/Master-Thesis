@@ -15,7 +15,6 @@ interface ScreenSizeContextType {
   isTablet: boolean;
   isSmallTablet: boolean;
   isSmallerThanLaptop: boolean;
-  isBetween: (min: number, max: number) => boolean;
 }
 
 const ScreenSizeContext = createContext<ScreenSizeContextType | undefined>(
@@ -40,10 +39,6 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
     '(min-width:1024px) and (max-width:1700px) and (max-height:1100px) and (min-aspect-ratio:4/3)'
   );
 
-  const isBetween = (min: number, max: number) => {
-    return useMediaQuery(`(min-width:${min}px) and (max-width:${max}px)`);
-  };
-
   return (
     <ScreenSizeContext.Provider
       value={{
@@ -57,7 +52,6 @@ export const ScreenSizeProvider = ({ children }: ChildrenProps) => {
         isTablet,
         isSmallTablet,
         isSmallerThanLaptop,
-        isBetween,
       }}
     >
       {children}

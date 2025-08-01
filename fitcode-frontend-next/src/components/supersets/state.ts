@@ -172,8 +172,7 @@ export function handleAddExerciseToSupersetComponent(
           ? { ...training, warmup: updatedWOrC }
           : { ...training, cooldown: updatedWOrC };
 
-      const minimalTraining =
-        TrainingService.convertFromTrainingToTrainingMinimal(updatedTraining);
+      const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
 
       setComponent(updatedWOrC);
       setTraining(updatedTraining);
@@ -201,8 +200,7 @@ export function handleAddExerciseToSupersetComponent(
           ? { ...training, warmup: updatedWOrC }
           : { ...training, cooldown: updatedWOrC };
 
-      const minimalTraining =
-        TrainingService.convertFromTrainingToTrainingMinimal(updatedTraining);
+      const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
 
       setComponent(updatedWOrC);
       setTraining(updatedTraining);
@@ -315,8 +313,7 @@ export function handleAddExerciseToSupersetComponent(
       futureStats,
     };
 
-    const minimalTraining =
-      TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+    const minimalTraining = TrainingService.trainingToInfo(newTraining);
 
     setTraining(newTraining);
     setTrainings((prev) =>

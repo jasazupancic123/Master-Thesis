@@ -103,7 +103,8 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
             (g) => g.id === value
           );
           if (group) {
-            setSelectedGroup(GroupService.mapMembers(group, users, true));
+            const mapped = GroupService.mapMembers(group, users);
+            setSelectedGroup(mapped);
             setSelectedCycle(group.cycles[0] || null);
           } else {
             setSelectedGroup(null);

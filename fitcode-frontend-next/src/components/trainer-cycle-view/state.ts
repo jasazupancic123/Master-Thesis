@@ -83,13 +83,13 @@ export async function handleCreateTraining(
         membersIds: [],
       }),
     (training) => {
-      const mapped = TrainingService.mapComponentsExercisesMethods(
-        training,
+      TrainingService.mapData(training, {
         components,
         exercises,
-        methods
-      );
-      setTrainings((prev) => [...prev, mapped]);
+        methods,
+      });
+
+      setTrainings((prev) => [...prev, training]);
       toast.success('Training created successfully');
     },
     undefined,
@@ -142,15 +142,14 @@ export async function handleAddTrainingComponents(
       }
 
       // add components to training
-      const mapped = TrainingService.mapComponentsExercisesMethods(
-        training,
+      TrainingService.mapData(training, {
         components,
         exercises,
-        methods
-      );
+        methods,
+      });
 
       setTrainings((prev) =>
-        prev.map((t) => (t.id === mapped.id ? mapped : t))
+        prev.map((t) => (t.id === training.id ? training : t))
       );
 
       toast.success(
@@ -184,19 +183,18 @@ export async function handleDeleteTrainingComponent(
     router,
     () => TrainingController.deleteComponent(trainingId, componentId),
     (training) => {
-      const mapped = TrainingService.mapComponentsExercisesMethods(
-        training,
+      TrainingService.mapData(training, {
         components,
         exercises,
-        methods
-      );
+        methods,
+      });
 
-      if (mapped.components.length === 0) {
+      if (training.components.length === 0) {
         // traning was deleted
         setTrainings((prev) => prev.filter((t) => t.id !== training.id));
       } else {
         setTrainings((prev) =>
-          prev.map((t) => (t.id === trainingId ? mapped : t))
+          prev.map((t) => (t.id === trainingId ? training : t))
         );
       }
     },

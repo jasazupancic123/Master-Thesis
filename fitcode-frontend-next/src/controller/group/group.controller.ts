@@ -1,6 +1,11 @@
 import { CommonService } from '@/common/service/common.service';
 import { Cycle } from './type/cycle.type';
-import { Group } from './type/group.type';
+import {
+  BatchUpdateGroups,
+  CreateGroup,
+  Group,
+  UpdateGroup,
+} from './type/group.type';
 
 const api = CommonService.instance.api;
 
@@ -17,36 +22,15 @@ export class GroupController {
     return api.get<Group[]>(`/group/institution/${institutionId}`);
   }
 
-  static async create(body: {
-    name: string;
-    ownerId: string;
-    membersIds: string[];
-    institutionId: string;
-  }) {
+  static async create(body: CreateGroup) {
     return api.post<Group>('/group', body);
   }
 
-  static async update(
-    groupId: string,
-    body: {
-      name?: string;
-      ownerId?: string;
-      membersIds?: string[];
-      cycles?: Cycle[];
-    }
-  ): Promise<Group> {
+  static async update(groupId: string, body: UpdateGroup): Promise<Group> {
     return api.patch<Group>(`/group/${groupId}`, body);
   }
 
-  static async batchUpdate(body: {
-    groups: {
-      id: string;
-      ownerId?: string;
-      name?: string;
-      membersIds?: string[];
-      cycles?: Cycle[];
-    }[];
-  }) {
+  static async batchUpdate(body: BatchUpdateGroups) {
     return api.patch<void>(`/group/update/batch`, body);
   }
 

@@ -27,8 +27,6 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const theme = useTheme();
   const router = useRouter();
 
-  const { profile } = useMain();
-
   const {
     clearTrainingState,
     trainingInProgress,

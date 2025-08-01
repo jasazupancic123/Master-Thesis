@@ -7,3 +7,8 @@ export interface Wellness {
   soreness?: number;
   comment?: string;
 }
+
+export type CreateWellness = Pick<
+  Wellness,
+  'date' | 'weight' | 'sleep' | 'fatigue' | 'soreness' | 'comment'
+>;

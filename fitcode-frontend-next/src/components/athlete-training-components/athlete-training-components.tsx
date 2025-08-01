@@ -16,6 +16,7 @@ import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/auth-provider';
 import { Check } from '@mui/icons-material';
+import { TrainingService } from '@/controller/training/training.service';
 
 const commonService = CommonService.instance;
 
@@ -51,6 +52,14 @@ export default function AthleteTrainingComponents(
 
   const theme = useTheme();
   const router = useRouter();
+
+  if (!user) {
+    return (
+      <Typography textAlign="center" sx={{ fontSize: 12 }}>
+        Please log in to view training components.
+      </Typography>
+    );
+  }
 
   return (
     <Box
@@ -148,7 +157,10 @@ export default function AthleteTrainingComponents(
               No supersets available
             </Typography>
           ) : (
-            selectedComponent.supersets.map((superset, i) => (
+            TrainingService.getPrescribedSupersetsByUser(
+              user.uid,
+              selectedComponent
+            ).map((superset, i) => (
               <AthleteSuperset
                 superset={superset}
                 supersetIndex={i}

@@ -339,8 +339,8 @@ export class TrainingService implements Permission<Training, Institution> {
         component = {
           ...structuredClone(baseComponent),
           id: component.id,
-          from: addMinutes(ft.from, ft.components.length * 30),
-          to: addMinutes(ft.from, ft.components.length * 30 + 30),
+          from: component.from,
+          to: component.to,
           completedMembersIds: [],
           copiedFrom: {
             lastCopiedFromTrainingId: baseTraining.id,
@@ -363,10 +363,10 @@ export class TrainingService implements Permission<Training, Institution> {
         if (ft.id !== baseTraining.id) numberOfSubgroupsFound++;
 
         component = {
-          ...structuredClone(baseComponent),
+          ...baseComponent,
           id: component.id,
-          from: addMinutes(ft.from, ft.components.length * 30),
-          to: addMinutes(ft.from, ft.components.length * 30 + 30),
+          from: component.from,
+          to: component.to,
           completedMembersIds: [],
           copiedFrom: {
             lastCopiedFromTrainingId: baseTraining.id,
@@ -375,15 +375,15 @@ export class TrainingService implements Permission<Training, Institution> {
               : baseTraining.id,
           },
           supersets: component.supersets,
-          subgroups: component.subgroups.map((sg) => {
-            if (sg.id === subgroupInComponent.id)
-              return {
-                ...structuredClone(baseSubgroup),
-                id: sg.id,
-                periodizationType: periodizationType,
-              };
-            return sg;
-          }),
+          subgroups: component.subgroups.map((sg) =>
+            sg.id === subgroupInComponent.id
+              ? {
+                  ...structuredClone(baseSubgroup),
+                  id: sg.id,
+                  periodizationType,
+                }
+              : sg,
+          ),
         };
 
         ft.components = ft.components.filter((c) => c.id !== componentId);
@@ -395,12 +395,6 @@ export class TrainingService implements Permission<Training, Institution> {
       throw new BadRequestException(
         `Selected subgroup not found in any future training`,
       );
-
-    if (periodizationType === PeriodizationType.DUP_TABLE_BASED) {
-      throw new BadRequestException(
-        'Dup Table-Based periodization is not supported yet',
-      );
-    }
 
     const periodizedTrainings =
       periodizationType !== PeriodizationType.REPLICATE
@@ -416,36 +410,16 @@ export class TrainingService implements Permission<Training, Institution> {
           ) as Training[])
         : filteredTrainings;
 
-    // update futureStats of baseTraining
-    /* baseTraining.futureStats =
-      this.trainingPlanService.calculatePrescribedTrainingStats(
-        [baseComponent],
-        baseTraining.membersIds.length,
-      ); */
-
     await this.trainingRepository.updateDoc(baseTrainingId, {
       components: baseTraining.components.map((c) =>
         c.id === componentId && !subgroupId ? { ...c, periodizationType } : c,
       ),
     });
 
-    // calculate new avg future workload values
-    // const operations: BatchWriteOperation<Training>[] = [];
     const batch = this.firebaseService.firestore.batch();
     for (const t of filteredTrainings) {
       const component = t.components.find((c) => c.id === componentId);
       if (!component) continue;
-
-      /* t.futureStats = this.trainingPlanService.calculatePrescribedTrainingStats(
-        [component],
-        t.membersIds.length,
-      ); */
-
-      /* operations.push({
-        ref: this.trainingRepository.doc(t.id),
-        data: this.firebaseService.buildUpdateQuery<Training>({ ...t }),
-        operation: 'update',
-      }); */
 
       const ref = this.trainingRepository.doc(t.id);
       batch.update(
@@ -846,7 +820,9 @@ export class TrainingService implements Permission<Training, Institution> {
         endOfDay(new Date()),
       )
     )
-      throw new ConflictException('You cannot complete this training');
+      throw new ConflictException(
+        'You cannot complete trainings that are not on the same day',
+      );
 
     const trainingComponent = this.trainingPlanService.findComponentOrFail(
       training,

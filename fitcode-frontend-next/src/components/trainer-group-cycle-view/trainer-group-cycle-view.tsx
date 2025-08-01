@@ -1,4 +1,3 @@
-import ExerciseChips from '@/components/exercise-chips/exercise-chips';
 import {
   handleAddTrainingComponents,
   handleDeleteTrainingComponent,
@@ -22,6 +21,7 @@ import { MoreVert } from '@mui/icons-material';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import { useMain } from '@/store/main-provider';
 import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import ExerciseChips from '../exercise-chips/exercise-chips';
 
 export default function TrainerCycleView() {
   const { components, exercises: allExercises, methods } = useMain();
