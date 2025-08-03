@@ -1,4 +1,4 @@
-import { ChildrenProps } from '@/common/type/props.type';
+import type { ChildrenProps } from '@/common/type/props.type';
 import GroupInitializer from '@/initializers/group.initializer';
 
 interface GroupLayoutProps extends ChildrenProps {

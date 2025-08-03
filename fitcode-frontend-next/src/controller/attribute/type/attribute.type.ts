@@ -1,4 +1,4 @@
-import { AttributeType } from '../enum/attribute-value.enum';
+import type { AttributeType } from '../enum/attribute-value.enum';
 
 export interface Attribute {
   field: string; // name of the field in the database

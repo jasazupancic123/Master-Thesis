@@ -130,25 +130,6 @@ describe('validateTrainingComponents', () => {
       });
   });
 
-  it('should throw error if there is no warmup component', () => {
-    const trainingComponents = [generateTrainingComponent({ id: 'c1' })];
-
-    expect(() =>
-      service.validateTrainingComponents(null, trainingComponents, [], data),
-    ).toThrow('Training must have warmup component');
-  });
-
-  it('should throw error if there is no cooldown component', () => {
-    const trainingComponents = [
-      generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),
-      generateTrainingComponent({ id: 'c1' }),
-    ];
-
-    expect(() =>
-      service.validateTrainingComponents(null, trainingComponents, [], data),
-    ).toThrow('Training must have cooldown component');
-  });
-
   it('should throw error if component does not exist', () => {
     const trainingComponents = [
       generateTrainingComponent({ id: WARMUP_COMPONENT_ID }),

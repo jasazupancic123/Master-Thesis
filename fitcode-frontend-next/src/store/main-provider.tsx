@@ -1,14 +1,15 @@
 'use client';
 
-import { ChildrenProps } from '@/common/type/props.type';
-import { SetState } from '@/common/type/state.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { Component } from '@/controller/component/type/component.type';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Method } from '@/controller/method/type/method.type';
-import { User } from '@/controller/user/type/user.type';
 import { createContext, useContext, useState } from 'react';
+
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { Component } from '@/controller/component/type/component.type';
+import { ExerciseService } from '@/controller/exercise/exercise.service';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Method } from '@/controller/method/type/method.type';
+import type { User } from '@/controller/user/type/user.type';
 
 export interface MainProviderProps {
   profile: User;

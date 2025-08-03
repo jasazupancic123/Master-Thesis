@@ -1,4 +1,4 @@
-import { TrainingController } from '@/controller/training/training.controller';
+import type { TrainingController } from '@/controller/training/training.controller';
 
 export type CreateTraining = Parameters<typeof TrainingController.create>[0];
 

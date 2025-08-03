@@ -1,12 +1,12 @@
-import { DateRange } from '@/common/type/date-range.type';
-import { IdEntity, ColorEntity } from '@/common/type/entity.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Method } from '@/controller/method/type/method.type';
-import { Target } from '@/controller/target/type/target.type';
-import { PeriodizationType } from '../enum/periodization-type.enum';
-import { CopiedFrom } from './copied-from.type';
-import { Subgroup, SubgroupInfo, UpdateSubgroup } from './subgroup.type';
-import { Superset, UpdateSuperset } from './superset.type';
+import type { PeriodizationType } from '../enum/periodization-type.enum';
+import type { CopiedFrom } from './copied-from.type';
+import type { Subgroup, SubgroupInfo, UpdateSubgroup } from './subgroup.type';
+import type { Superset, UpdateSuperset } from './superset.type';
+import type { DateRange } from '@/common/type/date-range.type';
+import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Method } from '@/controller/method/type/method.type';
+import type { Target } from '@/controller/target/type/target.type';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &

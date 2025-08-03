@@ -1,6 +1,9 @@
-import { CSSObject, styled, Theme } from '@mui/material/styles';
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+import type { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+import MuiAppBar from '@mui/material/AppBar';
 import MuiDrawer from '@mui/material/Drawer';
+import type { CSSObject, Theme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+
 import { DRAWER_WIDTH } from '../../common/constant/drawer_width.constant';
 
 const openedMixin = (theme: Theme): CSSObject => ({

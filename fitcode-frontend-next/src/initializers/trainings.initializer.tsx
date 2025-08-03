@@ -1,20 +1,19 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
+
 import Alert from '../components/alert/alert';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import { ChildrenProps } from '@/common/type/props.type';
-import { Training } from '@/controller/training/type/training.type';
-import {
-  TrainingProvider,
-  TrainingProviderProps,
-} from '@/store/training-provider';
-import { useMain } from '@/store/main-provider';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { ChildrenProps } from '@/common/type/props.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { InstitutionController } from '@/controller/institution/institution.controller';
-import dayjs from 'dayjs';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import type { Training } from '@/controller/training/type/training.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useMain } from '@/store/main-provider';
+import type { TrainingProviderProps } from '@/store/training-provider';
+import { TrainingProvider } from '@/store/training-provider';
 
 export default function TrainingsInitializer({ children }: ChildrenProps) {
   const [state, setState] = useState<TrainingProviderProps | null>(null);

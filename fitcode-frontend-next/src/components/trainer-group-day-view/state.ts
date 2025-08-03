@@ -1,20 +1,22 @@
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
-import { Method } from '@/controller/method/type/method.type';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import toast from 'react-hot-toast';
+
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Method } from '@/controller/method/type/method.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { TrainingInfo } from '@/controller/training/type/training.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Workload } from '@/controller/training/type/workload.type';
-import { User } from '@/controller/user/type/user.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import toast from 'react-hot-toast';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { Workload } from '@/controller/training/type/workload.type';
+import type { User } from '@/controller/user/type/user.type';
 
 export async function handleUpdateMultipleTrainings(state: {
   setTrainings: SetState<TrainingInfo[]>;

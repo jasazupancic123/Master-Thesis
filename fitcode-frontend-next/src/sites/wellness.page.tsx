@@ -1,15 +1,16 @@
 'use client';
 
-import UserWellnessForm from '@/components/user-wellness-form/user-wellness-form';
-import { useScreenSize } from '@/store/screen-size-provider';
 import Box from '@mui/material/Box';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
-import { UserController } from '@/controller/user/user.controller';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { handleApiRequest } from '@/common/type/state.type';
 import toast from 'react-hot-toast';
-import { Wellness } from '@/controller/user/type/wellness.type';
+
+import { handleApiRequest } from '@/common/type/state.type';
+import UserWellnessForm from '@/components/user-wellness-form/user-wellness-form';
+import type { Wellness } from '@/controller/user/type/wellness.type';
+import { UserController } from '@/controller/user/user.controller';
 import { setCachedWellness } from '@/session-cache/wellness.session-cache';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export type SubmitWellnessInput = Parameters<typeof UserController.saveMeta>[0];
 

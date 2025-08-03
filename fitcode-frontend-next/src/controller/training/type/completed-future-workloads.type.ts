@@ -1,4 +1,4 @@
-import { Workload } from './workload.type';
+import type { Workload } from './workload.type';
 
 export type CompletedFutureWorkloads = {
   completedWorkloads: Workload[];

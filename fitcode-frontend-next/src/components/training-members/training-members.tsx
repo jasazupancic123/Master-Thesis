@@ -1,11 +1,5 @@
 'use client';
 
-import { COLORS } from '@/common/constant/color.constant';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { User } from '@/controller/user/type/user.type';
 import {
   Avatar,
   Box,
@@ -15,17 +9,25 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
+import type { DropResult } from 'react-beautiful-dnd';
+import { DragDropContext } from 'react-beautiful-dnd';
 import toast from 'react-hot-toast';
+
+import MyModal from '../modal/modal';
+import SelectedMemberReport from '../selected-member-report/selected-member-report';
 import { DEFAULT_SUBGROUP } from '../trainer-day-view/constant';
 import { onDragEndSubgroup } from '../trainer-day-view/state';
-import SelectedMemberReport from '../selected-member-report/selected-member-report';
-import { DragDropContext, DropResult } from 'react-beautiful-dnd';
-import MyModal from '../modal/modal';
-import { useTheme } from '@mui/material';
-import { handleAddMembersSubgroup } from './state';
 import TrainingMembersSubgroup from '../training-members-subgroups/training-members-subgroups';
+import { handleAddMembersSubgroup } from './state';
+import { COLORS } from '@/common/constant/color.constant';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { User } from '@/controller/user/type/user.type';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingMembersProps {
   isSticky: boolean;
@@ -103,7 +105,7 @@ export default function TrainingMembers(props: TrainingMembersProps) {
     );
 
     setSubgroups([
-      DEFAULT_SUBGROUP(availableMembers, training.futureStats),
+      DEFAULT_SUBGROUP(availableMembers, training.prescribedStats),
       ...subgroups,
     ]);
   }, [training, component]);

@@ -1,22 +1,9 @@
-import { CommonService } from '@/common/service/common.service';
-import {
-  handleApiRequest,
-  SetState,
-  SetStateNullable,
-} from '@/common/type/state.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { User } from '@/controller/user/type/user.type';
-import dayjs, { Dayjs } from 'dayjs';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { isBefore } from 'date-fns';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+
 import {
   DEFAULT_SUBGROUP,
   DEFAULT_SUBGROUP_ID,
@@ -26,14 +13,26 @@ import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { Workload } from '@/controller/training/type/workload.type';
-import { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
-import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
-import { isBefore } from 'date-fns';
-import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
-import { Method } from '@/controller/method/type/method.type';
-import { Day } from '@/common/service/util/date.util';
-import { TrainingInfo } from '@/controller/training/type/training.type';
+import { CommonService } from '@/common/service/common.service';
+import type { Day } from '@/common/service/util/date.util';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Method } from '@/controller/method/type/method.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
+import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExerciseAverageStats } from '@/controller/training/type/training-exercise-average-stats.type';
+import type { Workload } from '@/controller/training/type/workload.type';
+import type { User } from '@/controller/user/type/user.type';
 
 export async function handleCopyTraining(
   input: {
@@ -153,12 +152,12 @@ export function onDragEndSubgroup(
   const newTraining = { ...training };
 
   if (fromSubgroup && fromSubgroup.id !== DEFAULT_SUBGROUP([], []).id) {
-    fromSubgroup.futureStats = fromSubgroup.futureStats.map((avg) => {
+    fromSubgroup.prescribedStats = fromSubgroup.prescribedStats.map((avg) => {
       avg.numMembers -= 1;
       return avg;
     });
   } else if (fromSubgroup && fromSubgroup.id === DEFAULT_SUBGROUP([], []).id) {
-    newTraining.futureStats = newTraining.futureStats.map((avg) => {
+    newTraining.prescribedStats = newTraining.prescribedStats.map((avg) => {
       if (avg.rootComponentId === component.component?.id) {
         avg.numMembers -= 1;
       }
@@ -170,7 +169,7 @@ export function onDragEndSubgroup(
     setChangedSubgroupIds((prev) => [...prev, fromSubgroup.id]);
 
   [
-    DEFAULT_SUBGROUP(availableMembers, newTraining.futureStats),
+    DEFAULT_SUBGROUP(availableMembers, newTraining.prescribedStats),
     ...updatedSubgroups,
   ].forEach((s) => {
     if (!s.membersIds) return;
@@ -179,7 +178,7 @@ export function onDragEndSubgroup(
 
   // Add member to the new subgroup
   if (destination.droppableId === DEFAULT_SUBGROUP([], []).id) {
-    newTraining.futureStats = newTraining.futureStats.map((avg) => {
+    newTraining.prescribedStats = newTraining.prescribedStats.map((avg) => {
       avg.numMembers += 1;
       return avg;
     });
@@ -197,10 +196,12 @@ export function onDragEndSubgroup(
 
     if (targetSubgroup) {
       targetSubgroup.membersIds.push(draggableId);
-      targetSubgroup.futureStats = targetSubgroup.futureStats.map((avg) => {
-        avg.numMembers += 1;
-        return avg;
-      });
+      targetSubgroup.prescribedStats = targetSubgroup.prescribedStats.map(
+        (avg) => {
+          avg.numMembers += 1;
+          return avg;
+        }
+      );
     }
 
     setAvailableMembers((prev) =>
@@ -215,7 +216,7 @@ export function onDragEndSubgroup(
     if (!prev) return null;
     return {
       ...prev,
-      futureStats: newTraining.futureStats,
+      prescribedStats: newTraining.prescribedStats,
     };
   });
 
@@ -323,7 +324,7 @@ export async function handleAddSubgroup(state: {
         ...exercise,
       })),
     })),
-    futureStats: stats,
+    prescribedStats: stats,
     membersIds: createSubgroup.membersIds || [],
   };
 
@@ -336,8 +337,8 @@ export async function handleAddSubgroup(state: {
 
   // update training's avg future workload values's numMembers
   if (updateTrainingsAvgFutureWorkload) {
-    // member was not in a subgroup before, therfore update numMembers for futureStats
-    training.futureStats = training.futureStats.map((avg) => {
+    // member was not in a subgroup before, therfore update numMembers for prescribedStats
+    training.prescribedStats = training.prescribedStats.map((avg) => {
       if (avg.rootComponentId === component.component?.id) {
         avg.numMembers -= newSubgroup.membersIds.length;
       }
@@ -395,7 +396,7 @@ export function handleDeleteSubgroup(
   const numberOfMembers = component.subgroups.find(
     (subgroup) => subgroup.id === subgroupId
   )?.membersIds.length;
-  const stats = [...training.futureStats].map((avg) => {
+  const stats = [...training.prescribedStats].map((avg) => {
     if (avg.rootComponentId === component.component?.id) {
       avg.numMembers = numberOfMembers
         ? avg.numMembers + numberOfMembers
@@ -408,7 +409,7 @@ export function handleDeleteSubgroup(
   const newTraining = {
     ...training,
     components: updatedComponents,
-    futureStats: stats,
+    prescribedStats: stats,
   };
   setTraining(newTraining);
 }
@@ -738,13 +739,13 @@ export function handleDeleteExercise(
   if (selectedSubgroup?.subgroup) {
     // update selected subgroup's supersets
     const newAvgFutureWorkloadValues =
-      selectedSubgroup.subgroup.futureStats.filter(
+      selectedSubgroup.subgroup.prescribedStats.filter(
         (avg) => avg.exerciseId !== exerciseId
       );
     const updatedSubgroup: Subgroup = {
       ...selectedSubgroup.subgroup,
       supersets: updatedSupersets,
-      futureStats: newAvgFutureWorkloadValues,
+      prescribedStats: newAvgFutureWorkloadValues,
     };
 
     const updatedComponent = {
@@ -777,14 +778,14 @@ export function handleDeleteExercise(
       c.id === component.id ? updatedComponent : c
     );
 
-    const newAvgFutureWorkloadValues = training.futureStats.filter(
+    const newAvgFutureWorkloadValues = training.prescribedStats.filter(
       (avg) => avg.exerciseId !== exerciseId
     );
 
     const newTraining: Training = {
       ...training,
       components: updatedComponents,
-      futureStats: newAvgFutureWorkloadValues,
+      prescribedStats: newAvgFutureWorkloadValues,
     };
     setTraining(newTraining);
   }
@@ -937,7 +938,7 @@ const getFormatedDate = (from: Date) => {
   let month = (date.getMonth() + 1).toString().padStart(2, '0');
   if (month[0] === '0') month = month.slice(1);
 
-  let hours = date.getHours();
+  const hours = date.getHours();
   const ampm = hours >= 12 ? 'PM' : 'AM';
 
   const formatted = `${day}.${month}. ${ampm}`;
@@ -974,13 +975,13 @@ export function prepareGroupAvgWorkloadsForChart(
   const futureWorkloadsData = [];
   for (const t of trainings) {
     if (completedWorkloadsData.find((w) => w.trainingId === t.id)) continue; // skip if already in completed workloads
-    if (!t.futureStats.find((w) => w.exerciseId === exerciseId)) continue; // skip if no future workloads for the selected exercise on this training
+    if (!t.prescribedStats.find((w) => w.exerciseId === exerciseId)) continue; // skip if no future workloads for the selected exercise on this training
 
     let totalNumMembers = 0;
     const futureData = [];
 
     // add future workloads of main group
-    for (const w of t.futureStats) {
+    for (const w of t.prescribedStats) {
       if (w.exerciseId === exerciseId && w.numMembers > 0) {
         totalNumMembers += w.numMembers;
         for (let j = 0; j < w.numMembers; j++) futureData.push(w);
@@ -993,7 +994,7 @@ export function prepareGroupAvgWorkloadsForChart(
     // add future workloads of all subgroups
     t.components.forEach((c) => {
       c.subgroups.forEach((sg) => {
-        const futureWorkload = sg.futureStats.find(
+        const futureWorkload = sg.prescribedStats.find(
           (w) => w.exerciseId === exerciseId
         );
         if (futureWorkload && futureWorkload.numMembers > 0) {
@@ -1027,7 +1028,7 @@ export function prepareGroupAvgWorkloadsForChart(
   const numOfFutureWorkloads = futureWorkloadsData.length;
   const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
 
-  let newData = [...completedWorkloadsData, ...futureWorkloadsData];
+  const newData = [...completedWorkloadsData, ...futureWorkloadsData];
 
   // sort by plannedAt
   newData.sort((a, b) => {
@@ -1048,7 +1049,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
   setMax: SetState<number>,
   setRange: SetState<number[]>
 ) {
-  let completedWorkloadsFiltered = workloads.completedWorkloads
+  const completedWorkloadsFiltered = workloads.completedWorkloads
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 
@@ -1056,9 +1057,11 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
     .filter((workload) => workload.exerciseId === exerciseId)
     .sort((a, b) => (isBefore(a.plannedAt, b.plannedAt) ? -1 : 1));
 
-  let groupedCompletedWorkloads = groupByTrainingId(completedWorkloadsFiltered);
+  const groupedCompletedWorkloads = groupByTrainingId(
+    completedWorkloadsFiltered
+  );
 
-  let groupedFutureWorkloads = groupByTrainingId(
+  const groupedFutureWorkloads = groupByTrainingId(
     futureWorkloadsFiltered,
     true,
     groupedCompletedWorkloads
@@ -1068,7 +1071,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
   const numOfFutureWorkloads = Object.keys(groupedFutureWorkloads).length;
   const numOfTotalWorkloads = numOfCompletedWorkloads + numOfFutureWorkloads;
 
-  let newData = [];
+  const newData = [];
   let i = 0;
   for (const groupedWorkload of [
     groupedCompletedWorkloads,
@@ -1109,7 +1112,7 @@ export function prepareSelectedAthleteAvgWorkloadsForChart(
       let month = (date.getMonth() + 1).toString().padStart(2, '0');
       if (month[0] === '0') month = month.slice(1);
 
-      let hours = date.getHours();
+      const hours = date.getHours();
       const ampm = hours >= 12 ? 'PM' : 'AM';
 
       // Final format: "DD MM, AM/PM"

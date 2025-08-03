@@ -1,14 +1,15 @@
-import { CommonService } from '@/common/service/common.service';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { SvgIconComponent } from '@mui/icons-material';
+import type { SvgIconComponent } from '@mui/icons-material';
 import { Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import React, { useEffect, useRef, useState } from 'react';
-import { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
-import { TrainingComponentInfo } from '@/controller/training/type/training-component.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { useGroup } from '@/store/group-provider';
 import toast from 'react-hot-toast';
+
+import type { TrainingCycleViewGridItemProps } from '../training-cycle-view-week/type';
+import { CommonService } from '@/common/service/common.service';
+import type { TrainingComponentInfo } from '@/controller/training/type/training-component.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const commonService = CommonService.instance;
 

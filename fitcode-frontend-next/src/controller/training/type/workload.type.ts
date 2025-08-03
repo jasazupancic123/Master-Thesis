@@ -1,6 +1,6 @@
-import { TimestampEntity } from '@/common/type/entity.type';
-import { SetStatus } from '../enum/set-status.enum';
-import { PrescribedWorkload, WorkloadValue } from './workload-value.type';
+import type { SetStatus } from '../enum/set-status.enum';
+import type { PrescribedWorkload, WorkloadValue } from './workload-value.type';
+import type { TimestampEntity } from '@/common/type/entity.type';
 
 export type Workload = TimestampEntity & WorkloadMeta & WorkloadValue;
 

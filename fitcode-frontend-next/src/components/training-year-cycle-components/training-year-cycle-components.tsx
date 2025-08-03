@@ -1,19 +1,19 @@
-import { SetState } from '@/common/type/state.type';
-import { useGroup } from '@/store/group-provider';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Box, Divider, Typography } from '@mui/material';
-import SelectInput from '../select-input/select-input';
+import { Box, Divider } from '@mui/material';
 import { useTheme } from '@mui/material';
+
+import SelectInput from '../select-input/select-input';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { CommonService } from '@/common/service/common.service';
-import { Target } from '@/controller/target/type/target.type';
+import type { SetState } from '@/common/type/state.type';
 import { ComponentLevel } from '@/controller/group/enum/component-level.enum';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Target } from '@/controller/target/type/target.type';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const commonService = CommonService.instance;
 

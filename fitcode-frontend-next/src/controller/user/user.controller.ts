@@ -1,14 +1,13 @@
-import { CommonService } from '@/common/service/common.service';
-import { UserRole } from './enum/user-role.enum';
-import { CreateWellness, Wellness } from './type/wellness.type';
-import {
+import type { CustomClaims } from './type/custom-claims.type';
+import type {
   AddAthlete,
   FilterUsers,
   UpdateProfile,
   User,
   UserEntity,
 } from './type/user.type';
-import { CustomClaims } from './type/custom-claims.type';
+import type { CreateWellness, Wellness } from './type/wellness.type';
+import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
 

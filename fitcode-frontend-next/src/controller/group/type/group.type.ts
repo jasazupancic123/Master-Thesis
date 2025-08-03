@@ -1,6 +1,6 @@
-import { BaseEntity, IdEntity } from '@/common/type/entity.type';
-import { Cycle } from './cycle.type';
-import { User } from '@/controller/user/type/user.type';
+import type { Cycle } from './cycle.type';
+import type { BaseEntity, IdEntity } from '@/common/type/entity.type';
+import type { User } from '@/controller/user/type/user.type';
 
 export type Group = BaseEntity & {
   institutionId: string;

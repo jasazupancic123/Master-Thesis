@@ -1,6 +1,7 @@
-import { SITE_URL } from '@/common/constant/browser.constant';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
+
+import { SITE_URL } from '@/common/constant/browser.constant';
 
 export default function Copyright() {
   return (

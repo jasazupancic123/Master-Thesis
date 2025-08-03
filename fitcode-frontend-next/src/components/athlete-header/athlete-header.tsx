@@ -1,27 +1,26 @@
 'use client';
 
-import Logo from '@/components/logo/logo';
-import { useScreenSize } from '@/store/screen-size-provider';
+import { Settings } from '@mui/icons-material';
+import { Avatar, IconButton, Tooltip, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
+import Link from 'next/link';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+
 import BottomNavigation from '../bottom-navigation/bottom-navigation';
 import Sidebar from '../sidebar/sidebar';
-import { Avatar, IconButton, Tooltip, Typography } from '@mui/material';
-import { useRouter } from 'next/navigation';
+import { LINK_PROFILE } from '@/common/constant/navigation.constant';
+import Logo from '@/components/logo/logo';
 import { useAthlete } from '@/store/athlete-provider';
 import { useAuth } from '@/store/auth-provider';
-import { Settings } from '@mui/icons-material';
-import { useTheme } from '@mui/material';
-import Link from 'next/link';
-import { LINK_PROFILE } from '@/common/constant/navigation.constant';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function AthleteHeader() {
-  const { selectedDate, setSelectedDate, filter } = useAthlete();
+  const { filter } = useAthlete();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
-  const router = useRouter();
   const { profile, user } = useAuth();
   const [avatarSrc, setAvatarSrc] = useState(profile?.profileImageUrl);
 

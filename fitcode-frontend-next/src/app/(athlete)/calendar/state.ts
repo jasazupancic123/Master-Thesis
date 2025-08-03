@@ -1,9 +1,11 @@
-import { DateRange } from '@/common/type/date-range.type';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { TrainingController } from '@/controller/training/training.controller';
 import { addMonths, subMonths } from 'date-fns';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { NavigateAction, View } from 'react-big-calendar';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { NavigateAction, View } from 'react-big-calendar';
+
+import type { DateRange } from '@/common/type/date-range.type';
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import { TrainingController } from '@/controller/training/training.controller';
 
 export function handleNavigate(
   newDate: Date,

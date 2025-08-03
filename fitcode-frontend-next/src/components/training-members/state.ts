@@ -1,11 +1,12 @@
 'use client';
 
-import { User } from '@/controller/user/type/user.type';
 import toast from 'react-hot-toast';
+
 import { handleAddSubgroup } from '../trainer-day-view/state';
-import { Training } from '@/controller/training/type/training.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { User } from '@/controller/user/type/user.type';
 
 export async function handleAddMembersSubgroup(
   input: { member: User },
@@ -39,7 +40,7 @@ export async function handleAddMembersSubgroup(
     const newSubgroup = {
       ...sameSubgroup,
       membersIds: [...sameSubgroup.membersIds, member.uid],
-      futureStats: [...sameSubgroup.futureStats].map((value) => ({
+      prescribedStats: [...sameSubgroup.prescribedStats].map((value) => ({
         ...value,
         numMembers: value.numMembers + 1,
       })),
@@ -50,7 +51,7 @@ export async function handleAddMembersSubgroup(
         ? {
             ...subgroup,
             membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-            futureStats: [...subgroup.futureStats].map((value) => ({
+            prescribedStats: [...subgroup.prescribedStats].map((value) => ({
               ...value,
               numMembers: value.numMembers - 1,
             })),
@@ -87,7 +88,7 @@ export async function handleAddMembersSubgroup(
         ? {
             ...subgroup,
             membersIds: subgroup.membersIds.filter((id) => id !== member.uid),
-            futureStats: [...subgroup.futureStats].map((value) => ({
+            prescribedStats: [...subgroup.prescribedStats].map((value) => ({
               ...value,
               numMembers: value.numMembers - 1,
             })),

@@ -1,9 +1,10 @@
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
-import { FetchOptions, Query } from '@/common/type/api.type';
 import { redirect } from 'next/navigation';
 import qs from 'qs';
+
 import { auth } from '@/common/config/firebase.config';
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
+import { LINK_SIGN_IN } from '@/common/constant/navigation.constant';
+import type { FetchOptions, Query } from '@/common/type/api.type';
 
 export class ApiUtil {
   static formatQuery(query: Query[string]): string {

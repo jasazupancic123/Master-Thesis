@@ -1,17 +1,3 @@
-import { ILink } from '@/common/type/link.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import AddIcon from '@mui/icons-material/Add';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import HomeIcon from '@mui/icons-material/Home';
-import LogoutIcon from '@mui/icons-material/Logout';
-import PeopleIcon from '@mui/icons-material/People';
-import PersonIcon from '@mui/icons-material/Person';
-import SpaIcon from '@mui/icons-material/Spa';
-import { ReactNode } from 'react';
-import slugify from 'slugify';
-import { GroupDateFilter } from '../type/filter.type';
 import {
   Add,
   BarChartOutlined,
@@ -19,18 +5,26 @@ import {
   FitnessCenterOutlined,
   Groups,
   PersonAdd,
-  PersonAddAlt1,
   SpaOutlined,
   TrendingUp,
 } from '@mui/icons-material';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PersonIcon from '@mui/icons-material/Person';
+import type { ReactNode } from 'react';
+import slugify from 'slugify';
+
+import type { GroupDateFilter } from '../type/filter.type';
 import {
-  DASHBOARD_EXERCISES,
-  DASHBOARD_PROGRESS,
-  DASHBOARD_MAIN,
-  DASHBOARD_REGISTER_USERS,
-  DASHBOARD_INSTITUTION,
   DASHBOARD_ADD_INSTITUTION,
+  DASHBOARD_EXERCISES,
+  DASHBOARD_INSTITUTION,
+  DASHBOARD_MAIN,
+  DASHBOARD_PROGRESS,
 } from '@/common/constant/dashboard-views-constant';
+import type { ILink } from '@/common/type/link.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export function link(
   label: string,

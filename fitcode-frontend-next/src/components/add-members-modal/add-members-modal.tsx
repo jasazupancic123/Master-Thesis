@@ -1,5 +1,3 @@
-import { theme } from '@/app/style';
-import { User } from '@/controller/user/type/user.type';
 import {
   Button,
   List,
@@ -9,11 +7,14 @@ import {
 } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
+
 import { SearchBar } from '../search-bar/search-bar';
+import { theme } from '@/app/style';
+import type { SetState } from '@/common/type/state.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Institution } from '@/controller/institution/type/institution.type';
+import type { User } from '@/controller/user/type/user.type';
 import { useDashboard } from '@/store/dashboard-provider';
-import { Group } from '@/controller/group/type/group.type';
-import { Institution } from '@/controller/institution/type/institution.type';
-import { SetState } from '@/common/type/state.type';
 
 export type AddMembersModalProps = {
   title?: string;

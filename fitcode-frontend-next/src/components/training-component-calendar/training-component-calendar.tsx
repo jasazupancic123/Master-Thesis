@@ -1,18 +1,18 @@
-import { SetState } from '@/common/type/state.type';
-import TrainingWeek from '@/components/training-week/training-week';
-import { useGroup } from '@/store/group-provider';
-import { Component } from '@/controller/component/type/component.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
+import InfoIcon from '@mui/icons-material/Info';
 import { Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import React, { Fragment, useEffect, useState } from 'react';
-import InfoIcon from '@mui/icons-material/Info';
-import { TrainingInfo } from '@/controller/training/type/training.type';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Day } from '@/common/service/util/date.util';
+
+import type { Day } from '@/common/service/util/date.util';
+import type { SetState } from '@/common/type/state.type';
+import TrainingWeek from '@/components/training-week/training-week';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useGroup } from '@/store/group-provider';
 
 interface TrainingComponentCalendarProps {
   trainingComponent: TrainingComponent;

@@ -1,11 +1,6 @@
 'use client';
 
 import {
-  LINK_DASHBOARD,
-  LINK_DASHBOARD_HOME,
-  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
-} from '@/common/constant/navigation.constant';
-import {
   Delete,
   KeyboardArrowDownTwoTone,
   KeyboardArrowUpTwoTone,
@@ -16,30 +11,36 @@ import {
   Avatar,
   Box,
   IconButton,
+  Menu,
   MenuItem,
   ToggleButtonGroup,
   Tooltip,
   Typography,
-  Menu,
 } from '@mui/material';
-import Link from 'next/link';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
-import FilterButton from '../filter-button/filter-button';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useAuth } from '@/store/auth-provider';
-import toast from 'react-hot-toast';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTheme } from '@mui/material';
-import { ILink } from '@/common/type/link.type';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { isAdmin } from '@/common/service/util/firebase-auth.util';
-import { useMain } from '@/store/main-provider';
+import toast from 'react-hot-toast';
+
 import DashboardMenuMobile from '../dashboard-menu-mobile/dashboard-menu-mobile';
+import FilterButton from '../filter-button/filter-button';
+import MyModal from '../modal/modal';
 import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
+import {
+  LINK_DASHBOARD,
+  LINK_DASHBOARD_HOME,
+  LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
+} from '@/common/constant/navigation.constant';
+import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import type { ILink } from '@/common/type/link.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { GroupController } from '@/controller/group/group.controller';
-import MyModal from '../modal/modal';
+import { useAuth } from '@/store/auth-provider';
+import { useDashboard } from '@/store/dashboard-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function DashboardHeader() {
   const {
@@ -283,7 +284,7 @@ export default function DashboardHeader() {
           }}
         >
           {Object.values(LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS(role)).map(
-            (val, index) => {
+            (val) => {
               if (!val) return null;
               return (
                 <FilterButton

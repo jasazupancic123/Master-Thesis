@@ -1,4 +1,4 @@
-import { ComponentLevel } from '../enum/component-level.enum';
+import type { ComponentLevel } from '../enum/component-level.enum';
 
 export type SelectedTarget = {
   componentId: string;

@@ -1,10 +1,6 @@
 'use client';
 
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { User } from '@/controller/user/type/user.type';
+import { MoreVert } from '@mui/icons-material';
 import {
   Avatar,
   Box,
@@ -15,15 +11,20 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { handleDeleteSubgroup } from '../trainer-day-view/state';
-import { Draggable, Droppable } from 'react-beautiful-dnd';
-import { MoreVert } from '@mui/icons-material';
 import { useTheme } from '@mui/material';
-import { SetState } from '@/common/type/state.type';
+import { Draggable, Droppable } from 'react-beautiful-dnd';
+
 import {
   DEFAULT_SUBGROUP,
   DEFAULT_SUBGROUP_ID,
 } from '../trainer-day-view/constant';
+import { handleDeleteSubgroup } from '../trainer-day-view/state';
+import type { SetState } from '@/common/type/state.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { User } from '@/controller/user/type/user.type';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingMembersSubgroupProps {
   subgroup: Subgroup;

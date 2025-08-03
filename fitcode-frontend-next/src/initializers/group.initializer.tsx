@@ -1,17 +1,18 @@
 'use client';
 
+import { notFound } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 import Alert from '../components/alert/alert';
-import { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
+import type { GroupIdPageProps } from '@/app/(trainer)/groups/[group_id]/props';
+import type { ChildrenProps } from '@/common/type/props.type';
 import { GroupController } from '@/controller/group/group.controller';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { TrainingController } from '@/controller/training/training.controller';
-import { notFound } from 'next/navigation';
 import { TrainingService } from '@/controller/training/training.service';
-import { GroupProvider } from '@/store/group-provider';
-import { ChildrenProps } from '@/common/type/props.type';
-import { useMain } from '@/store/main-provider';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { GroupProvider } from '@/store/group-provider';
+import { useMain } from '@/store/main-provider';
 
 interface GroupsInitializerProps extends ChildrenProps {
   params: Promise<{

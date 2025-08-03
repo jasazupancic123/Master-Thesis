@@ -1,7 +1,8 @@
-import React from 'react';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
+
 import LeftRightExerciseText from './left-right-exercise-text';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 describe('LeftRightExerciseText', () => {
   const renderWithTheme = (ui: React.ReactElement) => {

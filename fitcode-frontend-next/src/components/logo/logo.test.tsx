@@ -7,6 +7,7 @@ jest.mock('next/image', () => ({
 }));
 
 import { render, screen } from '@testing-library/react';
+
 import Logo from './logo';
 
 describe('Logo component', () => {

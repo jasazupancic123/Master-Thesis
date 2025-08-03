@@ -1,14 +1,16 @@
-import { SxProps, Tooltip } from '@mui/material';
+import type { SxProps } from '@mui/material';
+import { Tooltip } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { ArrowLeftIcon, ArrowRightIcon } from '@mui/x-date-pickers';
-import React from 'react';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTheme } from '@mui/material';
-import { useGroup } from '@/store/group-provider';
-import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
+import React from 'react';
+import toast from 'react-hot-toast';
+
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface Props {
   items: { label: string; value: string; sublabel?: string }[];

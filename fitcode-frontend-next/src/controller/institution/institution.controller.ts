@@ -1,11 +1,11 @@
-import { CommonService } from '@/common/service/common.service';
-import {
+import type { UserEntity } from '../user/type/user.type';
+import type {
   AddAthletesToInstitution,
   AddTrainersToInstitution,
   CreateInstitution,
   Institution,
 } from './type/institution.type';
-import { UserEntity } from '../user/type/user.type';
+import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
 

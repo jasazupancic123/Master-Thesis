@@ -1,10 +1,9 @@
+import type { Component } from '../component/type/component.type';
+import type { Exercise } from './type/exercise.type';
+import type { ExerciseAttributeValue } from './type/exercise-attribute-value.type';
 import { CommonService } from '@/common/service/common.service';
-import { Pagination } from '@/common/type/paginate.type';
-import { SetState } from '@/common/type/state.type';
-import { Component } from '../component/type/component.type';
-import { Exercise } from './type/exercise.type';
-import { ExerciseAttributeValue } from './type/exercise-attribute-value.type';
-import { AttributeType } from '../attribute/enum/attribute-value.enum';
+import type { Pagination } from '@/common/type/paginate.type';
+import type { SetState } from '@/common/type/state.type';
 
 const commonService = CommonService.instance;
 
@@ -18,7 +17,7 @@ export class ExerciseService {
       ids?: string[];
       componentsIds?: string[];
       name?: string;
-      attributeValues?: Record<string, any>;
+      attributeValues?: Record<string, unknown>;
     },
     components: Component[]
   ): Exercise[] {
@@ -153,7 +152,7 @@ export class ExerciseService {
    * parseAttributeValue({ a: 'b', b: 'c', c: 1 }, 'a') // => { a: "b:c:1" }
    * parseAttributeValue({ x: 'y', y: 'z', z: 100 }, 'x') // => { x: "y:z:100" }
    */
-  static parseAttributeValue<T extends Record<string, any>>(
+  static parseAttributeValue<T extends Record<string, unknown>>(
     obj: T,
     rootKey: keyof T
   ): Record<string, string> {
@@ -161,7 +160,7 @@ export class ExerciseService {
     const pathParts: string[] = [];
 
     let currentKey: string | undefined = String(rootKey);
-    let currentValue: any = obj[currentKey];
+    let currentValue: unknown = obj[currentKey];
 
     while (
       typeof currentValue === 'string' &&
@@ -195,8 +194,8 @@ export class ExerciseService {
    */
   static attributeValuesToNestedObject(
     attributeValues: ExerciseAttributeValue[]
-  ): Record<string, any> {
-    const result: Record<string, any> = {};
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
 
     for (const attr of attributeValues) {
       if (attr.selected === attr.value) {
@@ -206,7 +205,7 @@ export class ExerciseService {
 
       if (!result[attr.field]) result[attr.field] = {};
       const pathParts = attr.selected.split(':');
-      let currentLevel = result[attr.field];
+      let currentLevel = result[attr.field] as Record<string, unknown>;
 
       // Build the nested structure
       for (let i = 0; i < pathParts.length; i++) {
@@ -217,7 +216,7 @@ export class ExerciseService {
         } else {
           // Create nested level if it doesn't exist
           currentLevel[part] = currentLevel[part] || {};
-          currentLevel = currentLevel[part];
+          currentLevel = currentLevel[part] as Record<string, unknown>;
         }
       }
     }

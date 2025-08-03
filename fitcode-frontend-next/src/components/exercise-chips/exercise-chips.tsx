@@ -1,25 +1,18 @@
-import { CommonService } from '@/common/service/common.service';
-import { useScreenSize } from '@/store/screen-size-provider';
-import {
-  Box,
-  FormControl,
-  Menu,
-  MenuItem,
-  Select,
-  SxProps,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import type { SxProps } from '@mui/material';
+import { Box, MenuItem, Select, Typography } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import React, { useState } from 'react';
-import {
+import React from 'react';
+
+import { theme } from '@/app/style';
+import { CommonService } from '@/common/service/common.service';
+import type { SetState } from '@/common/type/state.type';
+import type {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { SetState } from '@/common/type/state.type';
-import { Target } from '@/controller/target/type/target.type';
-import { theme } from '@/app/style';
+import type { Target } from '@/controller/target/type/target.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const commonService = CommonService.instance;
 
@@ -63,7 +56,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
 
   return (
     <Stack
-      direction={direction as any}
+      direction={direction}
       spacing={gap !== undefined ? gap : 1}
       flexWrap="wrap"
       sx={{
@@ -87,7 +80,7 @@ export default function ExerciseChips(props: ExerciseChipsProps) {
             <Box sx={{ p: 1 }} key={c.id}>
               <div
                 key={i}
-                onClick={(e) => {
+                onClick={() => {
                   if (cycleView && setSelectedTargets) {
                     if (
                       Array.isArray(selected) &&

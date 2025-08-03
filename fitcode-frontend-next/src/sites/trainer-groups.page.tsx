@@ -3,6 +3,7 @@
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+
 import TrainerGroupHeader from '../components/trainer-group-header/trainer-group-header';
 import GroupSidebar from '@/components/group-sidebar/group-sidebar';
 import { useScreenSize } from '@/store/screen-size-provider';

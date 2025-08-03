@@ -1,20 +1,21 @@
-import { useGroup } from '@/store/group-provider';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { Fragment, useEffect, useState } from 'react';
-import TrainingWeek from '../training-week/training-week';
 import dayjs from 'dayjs';
-import SelectInput from '../select-input/select-input';
-import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
-import { Training } from '@/controller/training/type/training.type';
-import { CommonService } from '@/common/service/common.service';
+import { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+
+import SelectInput from '../select-input/select-input';
+import TrainingWeek from '../training-week/training-week';
+import { CommonService } from '@/common/service/common.service';
+import type { Target } from '@/controller/target/type/target.type';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
-import { Target } from '@/controller/target/type/target.type';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingInfo } from '@/controller/training/type/training.type';
 
 interface ComponentPeriodizationProps {
   selectedComponent: TrainingComponent;
@@ -33,19 +34,19 @@ export default function ComponentPeriodization(
 
   const { selectedExercises } = useTrainerDayViewContext();
 
-  const [allExercises, setAllExercises] = useState<TrainingExercise[]>(
+  const [allExercises, _setAllExercises] = useState<TrainingExercise[]>(
     selectedComponent.supersets.map((s) => s.exercises.map((e) => e)).flat()
   );
-  const [expandExerciseView, setExpandExerciseView] = useState(false);
+  const [expandExerciseView, _setExpandExerciseView] = useState(false);
 
-  const [allPossibleTrainings, setAllPossibleTrainings] = useState<
+  const [_allPossibleTrainings, setAllPossibleTrainings] = useState<
     TrainingInfo[]
   >([]);
   const [selectedTrainings, setSelectedTrainings] = useState<TrainingInfo[]>(
     []
   );
 
-  const [selectedTarget, setSelectedTarget] = useState(
+  const [selectedTarget, _setSelectedTarget] = useState(
     selectedComponent.target
   );
 
@@ -106,60 +107,6 @@ export default function ComponentPeriodization(
       toast.error('DUP table based periodization is not supported yet.');
       return;
     }
-
-    const excludedTrainingIds = allPossibleTrainings
-      .filter((t) => !selectedTrainings.some((st) => st.id === t.id))
-      .map((t) => t.id);
-    const exerciseIds = selectedExercises.map((e) => e.id);
-
-    // handleApiRequest(
-    //   router,
-    //   () =>
-    //     TrainingController.periodizeTrainings(token, {
-    //       baseTrainingId: training.id,
-    //       excludedTrainingIds,
-    //       componentId: selectedComponent.id,
-    //       exerciseIds,
-    //       periodizationType:
-    //         selectedComponent.periodizationType as PeriodizationType,
-    //     }),
-    //   (periodizedTrainings) => {
-    //     periodizedTrainings = periodizedTrainings.map((t) =>
-    //       TrainingService.mapComponentsExercisesMethods(
-    //         t,
-    //         components,
-    //         exercises,
-    //         methods
-    //       )
-    //     );
-
-    //     const minimalPeriodizedTrainings = periodizedTrainings.map((t) =>
-    //       TrainingService.convertFromTrainingToTrainingMinimal(t)
-    //     );
-
-    //     setTodaysTrainings((prev) =>
-    //       prev.map((t) => {
-    //         const newTraining = periodizedTrainings.find(
-    //           (nt) => nt.id === t.id
-    //         );
-    //         return newTraining ? newTraining : t;
-    //       })
-    //     );
-
-    //     setTrainings((prev) =>
-    //       prev.map((t) => {
-    //         const newTraining = minimalPeriodizedTrainings.find(
-    //           (nt) => nt.id === t.id
-    //         );
-    //         return newTraining ? newTraining : t;
-    //       })
-    //     );
-
-    //     toast.success('Trainings periodized successfully.');
-    //   },
-    //   undefined,
-    //   'Failed to periodize trainings'
-    // );
   };
 
   return (
@@ -211,7 +158,7 @@ export default function ComponentPeriodization(
                       items={[selectedTarget]}
                       itemKey={'id'}
                       itemName={'name'}
-                      setValue={(value) => {}}
+                      setValue={() => {}}
                       disabled
                       selectPadding={'0'}
                     />
@@ -302,8 +249,8 @@ export default function ComponentPeriodization(
                   index={i}
                   trainingComponent={selectedComponent}
                   week={week.map(({ date }) => dayjs(date!))}
-                  addTrainingComponent={(trainingId, input) => {}}
-                  deleteTrainingComponent={(trainingId, componentId) => {
+                  addTrainingComponent={() => {}}
+                  deleteTrainingComponent={() => {
                     return Promise.resolve();
                   }}
                   training={training}

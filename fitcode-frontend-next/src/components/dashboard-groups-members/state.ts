@@ -1,10 +1,12 @@
-import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { Institution } from '@/controller/institution/type/institution.type';
-import { User, UserEntity } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+
+import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { Institution } from '@/controller/institution/type/institution.type';
+import type { User, UserEntity } from '@/controller/user/type/user.type';
+import { UserController } from '@/controller/user/user.controller';
 
 export const updateUserProfile = async (input: {
   editUser: User | null;

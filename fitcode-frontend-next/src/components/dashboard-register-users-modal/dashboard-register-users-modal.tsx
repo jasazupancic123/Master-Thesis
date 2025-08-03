@@ -1,23 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
-  TextField,
-  Button,
-  Typography,
   Box,
-  Stack,
+  Button,
   CircularProgress,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import toast from 'react-hot-toast';
-import { handleApiRequest } from '@/common/type/state.type';
 import { useRouter } from 'next/navigation';
-import { useDashboard } from '@/store/dashboard-provider';
-import { CommonService } from '@/common/service/common.service';
-import { InstitutionController } from '@/controller/institution/institution.controller';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+
 import MyModal from '../modal/modal';
-import { User } from '@/controller/user/type/user.type';
+import { CommonService } from '@/common/service/common.service';
+import { handleApiRequest } from '@/common/type/state.type';
+import { InstitutionController } from '@/controller/institution/institution.controller';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { User } from '@/controller/user/type/user.type';
+import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
@@ -346,8 +347,8 @@ export default function RegisterUsersDashboard(
           setExistingUser(null);
         }}
       >
-        User with email "{existingUser?.email}" already exists. Do you want to
-        add them to the institution?
+        User with email &quot;{existingUser?.email}&quot; already exists. Do you
+        want to add them to the institution?
       </MyModal>
 
       {isUploadingMembers && (

@@ -31,13 +31,19 @@ import { generateParamAttributeValuesFromComponentParams } from './param-values.
  */
 export function generateTrainingStub(
   data?: Partial<Training> & { date?: Date },
+  options?: {
+    disableAutomaticallySetComponentsDates?: boolean;
+  },
 ): Training {
   // evenly space components in between training's from and to dates
   const from = data?.from || data?.date || new Date();
   const to = data?.to || addHours(from, 2);
 
   const components: TrainingComponent[] = data?.components || [];
-  if (components.length) {
+  if (
+    components.length > 0 &&
+    !options?.disableAutomaticallySetComponentsDates
+  ) {
     const duration = (to.getTime() - from.getTime()) / components.length;
 
     components.forEach((c, i) => {
@@ -79,7 +85,7 @@ export function generateTrainingComponent(
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
-    to: addHours(from, 1),
+    to: data?.to || addHours(from, 1),
     target: data?.target || null,
     periodizationType: data?.periodizationType || null,
     methodId: data?.methodId || null,

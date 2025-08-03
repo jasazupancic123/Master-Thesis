@@ -1,19 +1,20 @@
 'use client';
 
-import { LINKS_AUTH } from '@/common/constant/navigation.constant';
-import { CommonService } from '@/common/service/common.service';
-import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Grid, TextField, ThemeProvider } from '@mui/material';
+import { Grid, TextField } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { FormEvent, useState } from 'react';
+import type { FormEvent } from 'react';
+import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useTheme } from '@mui/material';
+
+import { LINKS_AUTH } from '@/common/constant/navigation.constant';
+import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
 
 export default function Page() {
   const theme = useTheme();
@@ -35,8 +36,8 @@ export default function Page() {
 
       toast.success('Account created successfully');
       router.push(LINKS_AUTH.login.href);
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e) {
+      toast.error((e as Error).message);
     }
   }
 

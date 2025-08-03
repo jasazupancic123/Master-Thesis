@@ -1,4 +1,3 @@
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import {
   CheckBox,
   CheckBoxOutlineBlank,
@@ -7,17 +6,19 @@ import {
   Visibility,
   VisibilityOff,
 } from '@mui/icons-material';
-import { Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { DoNotDisturb } from '@mui/icons-material';
-import { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
+import { Box, IconButton, Menu, MenuItem } from '@mui/material';
+
+import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { SetState } from '@/common/type/state.type';
-import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
+import type { SetState } from '@/common/type/state.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent as TrainingComponentClass } from '@/controller/training/type/training-component.type';
 import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentMenuProps {
   trainingComponent: TrainingComponentClass;

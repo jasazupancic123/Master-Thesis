@@ -1,18 +1,19 @@
+import CloseIcon from '@mui/icons-material/Close';
 import { Avatar, Box, Grid2, Slider, Typography } from '@mui/material';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { useState } from 'react';
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  Cell,
-  CartesianGrid,
 } from 'recharts';
-import { useState } from 'react';
-import CloseIcon from '@mui/icons-material/Close';
+
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface SelectedMemberReportProps {
   groupMembers: any[];

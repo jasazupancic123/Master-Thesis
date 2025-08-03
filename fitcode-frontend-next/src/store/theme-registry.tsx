@@ -1,8 +1,9 @@
 'use client';
 
-import { ThemeProvider, CssBaseline } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
+
 import { theme } from '@/app/style';
-import { ChildrenProps } from '@/common/type/props.type';
+import type { ChildrenProps } from '@/common/type/props.type';
 
 export default function ThemeRegistry({ children }: ChildrenProps) {
   return (

@@ -1,14 +1,5 @@
 'use client';
 
-import {
-  LINK_DASHBOARD,
-  LINK_TRAININGS,
-  LINKS_AUTH,
-  LINKS_NAVBAR,
-} from '@/common/constant/navigation.constant';
-import Logo from '@/components/logo/logo';
-import { useAuth } from '@/store/auth-provider';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import MenuIcon from '@mui/icons-material/Menu';
 import {
   Button,
@@ -25,6 +16,16 @@ import Typography from '@mui/material/Typography';
 import NextLink from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
+
+import {
+  LINK_DASHBOARD,
+  LINK_TRAININGS,
+  LINKS_AUTH,
+  LINKS_NAVBAR,
+} from '@/common/constant/navigation.constant';
+import Logo from '@/components/logo/logo';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useAuth } from '@/store/auth-provider';
 
 export default function HeroNavbar({ showLogin = true }) {
   const { user, logout, role } = useAuth();

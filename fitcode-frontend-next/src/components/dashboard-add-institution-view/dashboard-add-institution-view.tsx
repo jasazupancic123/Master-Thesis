@@ -1,17 +1,18 @@
-import { useDashboard } from '@/store/dashboard-provider';
 import { Box, Button, FormControl, TextField } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+
 import FileUpload from '../file-upload/file-upload';
+import { CommonService } from '@/common/service/common.service';
 import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
 import { handleApiRequest } from '@/common/type/state.type';
-import { useRouter } from 'next/navigation';
 import { InstitutionController } from '@/controller/institution/institution.controller';
 import { InstitutionService } from '@/controller/institution/institution.service';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { CommonService } from '@/common/service/common.service';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useDashboard } from '@/store/dashboard-provider';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const commonService = CommonService.instance;
 const firebaseService = commonService.firebase;
@@ -21,7 +22,7 @@ export default function AddInstitutionDashboard() {
   const router = useRouter();
   const screenSize = useScreenSize();
 
-  const { setInstitutions, refetchUsers, refetchMembers } = useDashboard();
+  const { setInstitutions, refetchUsers } = useDashboard();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

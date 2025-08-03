@@ -1,13 +1,3 @@
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import MyModal from '../modal/modal';
-import { useEffect, useState } from 'react';
-import { User, UserEntity } from '@/controller/user/type/user.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { updateUserProfile } from '../dashboard-groups-members/state';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useRouter } from 'next/navigation';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import FileUpload from '../file-upload/file-upload';
 import {
   Box,
   FormControl,
@@ -16,14 +6,23 @@ import {
   Select,
   TextField,
 } from '@mui/material';
-import { UserController } from '@/controller/user/user.controller';
-import toast from 'react-hot-toast';
-import { Gender } from '@/controller/user/enum/gender.enum';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { updateUserProfile } from '../dashboard-groups-members/state';
+import FileUpload from '../file-upload/file-upload';
+import MyModal from '../modal/modal';
 import { SPORTS } from '@/common/constant/sport.constant';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import type { SetState } from '@/common/type/state.type';
+import { Gender } from '@/controller/user/enum/gender.enum';
 import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+import type { User, UserEntity } from '@/controller/user/type/user.type';
+import { useDashboard } from '@/store/dashboard-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface DashboardEditAthleteModalProps {
   isOpen: boolean;
@@ -67,42 +66,6 @@ export default function DashboardEditAthleteModal(
     const newProfile = { ...profile, [key]: value };
     setProfile(newProfile as UserEntity);
     setEditedProfile(true);
-  }
-
-  async function handleSaveProfile() {
-    if (!profile) return;
-    const {
-      sport,
-      level,
-      gender,
-      profileImageUrl,
-      firstName,
-      lastName,
-      phone,
-      birthDate,
-    } = profile;
-
-    handleApiRequest(
-      router,
-      () =>
-        UserController.updateProfile({
-          sport,
-          level,
-          gender,
-          profileImageUrl,
-          firstName,
-          lastName,
-          phone,
-          birthDate,
-          userId: profile.id,
-        }),
-      (_) => {
-        refetchMembers();
-        toast.success('Athlete updated successfully');
-      },
-      undefined,
-      'Failed to update athlete'
-    );
   }
 
   return (
@@ -212,7 +175,7 @@ export default function DashboardEditAthleteModal(
           </FormControl>
 
           {/* Date of Birth (Ensuring Full Width) */}
-          <LocalizationProvider dateAdapter={AdapterDayjs as any}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               label="Date of Birth"
               value={profile?.birthDate ? dayjs(profile?.birthDate) : null}
