@@ -1,13 +1,14 @@
-import { Stack, FormControl, Select, MenuItem, TextField } from '@mui/material';
+import { FormControl, MenuItem, Select, Stack, TextField } from '@mui/material';
+import { useTheme } from '@mui/material';
+
 import {
   disableBorder,
   exerciseCardSetAttributeSx,
 } from '../trainer-day-view/style';
-import { SetState } from '@/common/type/state.type';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useTheme } from '@mui/material';
+import type { SetState } from '@/common/type/state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
 
 interface Props {
@@ -48,11 +49,7 @@ export function ExerciseParam(props: Props) {
     athleteView,
   } = props;
 
-  const { setDetectedChanges } =
-    athleteView || !useGroup()
-      ? { setDetectedChanges: undefined }
-      : (useGroup() ?? {});
-
+  const { setDetectedChanges } = useGroup();
   const nestedOption = param.options?.find((o) =>
     value.selected.includes(o.field)
   );
@@ -215,7 +212,7 @@ export function ExerciseParam(props: Props) {
               onSubOptionChange(e.target.value as string);
               if (!athleteView && setDetectedChanges) setDetectedChanges(true);
             }}
-            onBlur={(e) => {
+            onBlur={() => {
               if (
                 value.field === 'volWorkSets' &&
                 setsNumbers !== undefined &&

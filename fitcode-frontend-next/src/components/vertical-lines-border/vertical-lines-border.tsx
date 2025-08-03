@@ -1,9 +1,10 @@
 import { Divider } from '@mui/material';
+
 import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function VerticalLinesBorder() {
   const screenSize = useScreenSize();
-  
+
   return !screenSize.isSmallerThanLaptop ? (
     <>
       <Divider

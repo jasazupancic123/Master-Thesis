@@ -1,16 +1,7 @@
 'use client';
 
-import { SPORTS } from '@/common/constant/sport.constant';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import FileUpload from '@/components/file-upload/file-upload';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Gender } from '@/controller/user/enum/gender.enum';
-import { SportLevel } from '@/controller/user/enum/sport-level.enum';
-import { UserEntity } from '@/controller/user/type/user.type';
-import { UserController } from '@/controller/user/user.controller';
+import { ArrowBack } from '@mui/icons-material';
 import {
-  Avatar,
   Box,
   Button,
   FormControl,
@@ -28,8 +19,17 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+
+import { SPORTS } from '@/common/constant/sport.constant';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import { handleApiRequest } from '@/common/type/state.type';
+import FileUpload from '@/components/file-upload/file-upload';
+import { Gender } from '@/controller/user/enum/gender.enum';
+import { SportLevel } from '@/controller/user/enum/sport-level.enum';
+import type { UserEntity } from '@/controller/user/type/user.type';
+import { UserController } from '@/controller/user/user.controller';
 import { useAuth } from '@/store/auth-provider';
-import { ArrowBack } from '@mui/icons-material';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const DEFAULT_MARGIN = 1;
 
@@ -196,7 +196,7 @@ export default function ProfilePage() {
           </FormControl>
 
           {/* Date of Birth (Ensuring Full Width) */}
-          <LocalizationProvider dateAdapter={AdapterDayjs as any}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
               label="Date of Birth"
               value={profile?.birthDate ? dayjs(profile?.birthDate) : null}

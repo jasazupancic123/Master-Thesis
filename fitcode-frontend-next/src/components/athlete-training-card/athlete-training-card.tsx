@@ -1,22 +1,23 @@
-import { useTraining } from '@/store/training-provider';
-import { Avatar, Box, Divider, IconButton } from '@mui/material';
-import Typography from '@mui/material/Typography';
-import React, { useEffect, useState } from 'react';
-import { Training } from '@/controller/training/type/training.type';
-import AthleteTrainingComponents from '../athlete-training-components/athlete-training-components';
-import { useMain } from '@/store/main-provider';
-import { useTheme } from '@mui/material';
 import {
   ArrowDropDown,
   ArrowDropUp,
   ArrowForwardRounded,
   MoreVert,
 } from '@mui/icons-material';
-import { useAuth } from '@/store/auth-provider';
+import { Avatar, Box, Divider, IconButton } from '@mui/material';
+import { useTheme } from '@mui/material';
+import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Superset } from '@/controller/training/type/superset.type';
+import React, { useEffect, useState } from 'react';
+
+import AthleteTrainingComponents from '../athlete-training-components/athlete-training-components';
 import { TrainingService } from '@/controller/training/training.service';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useAuth } from '@/store/auth-provider';
+import { useMain } from '@/store/main-provider';
+import { useTraining } from '@/store/training-provider';
 
 type AthleteTrainingCardProps = {
   training: Training;
@@ -34,10 +35,10 @@ export default function AthleteTrainingCard(props: AthleteTrainingCardProps) {
   const { training } = props;
 
   const [modal, setModal] = useState(false);
-  const [supersets, setSupersets] = useState<Superset[]>();
+  const [_supersets, setSupersets] = useState<Superset[]>();
   const [selectedComponent, setSelectedComponent] =
     useState<TrainingComponent | null>(null);
-  const [components, setComponents] = useState<TrainingComponent[]>([
+  const [components, _setComponents] = useState<TrainingComponent[]>([
     training.warmup,
     ...training.components,
     training.cooldown,

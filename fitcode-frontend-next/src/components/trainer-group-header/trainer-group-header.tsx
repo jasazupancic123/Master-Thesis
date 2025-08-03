@@ -1,10 +1,11 @@
 'use client';
 
-import { GroupDateFilter } from '@/common/type/filter.type';
-import { SetState } from '@/common/type/state.type';
-import FilterButton from '@/components/filter-button/filter-button';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import {
+  KeyboardArrowDownTwoTone,
+  KeyboardArrowUpTwoTone,
+  Menu,
+  Settings,
+} from '@mui/icons-material';
 import {
   Avatar,
   Box,
@@ -16,26 +17,26 @@ import {
   ToggleButtonGroup,
   Tooltip,
 } from '@mui/material';
-import toast from 'react-hot-toast';
 import { useTheme } from '@mui/material';
-import {
-  KeyboardArrowDownTwoTone,
-  KeyboardArrowUpTwoTone,
-  Menu,
-  Settings,
-} from '@mui/icons-material';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
+
+import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 import {
   LINK_DASHBOARD,
   LINK_PROFILE,
   LINK_SETTINGS,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
-import Link from 'next/link';
+import type { GroupDateFilter } from '@/common/type/filter.type';
+import type { SetState } from '@/common/type/state.type';
+import FilterButton from '@/components/filter-button/filter-button';
 import { useAuth } from '@/store/auth-provider';
-import { useRouter } from 'next/navigation';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
-import ProfileHeaderMenu from '../profile-header-menu/profile-header-menu';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export interface TrainerGroupHeaderProps {
   filter: GroupDateFilter;

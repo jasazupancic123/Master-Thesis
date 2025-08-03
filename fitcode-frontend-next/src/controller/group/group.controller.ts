@@ -1,11 +1,10 @@
-import { CommonService } from '@/common/service/common.service';
-import { Cycle } from './type/cycle.type';
-import {
+import type {
   BatchUpdateGroups,
   CreateGroup,
   Group,
   UpdateGroup,
 } from './type/group.type';
+import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
 
@@ -35,6 +34,6 @@ export class GroupController {
   }
 
   static async delete(groupId: string) {
-    return api.delete<{}>(`/group/${groupId}`);
+    return api.delete<void>(`/group/${groupId}`);
   }
 }

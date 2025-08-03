@@ -1,16 +1,17 @@
 'use client';
 
+import { Box } from '@mui/material';
+import type { ReactNode } from 'react';
+
+import type { GroupDateFilter } from '@/common/type/filter.type';
+import GroupSidebar from '@/components/group-sidebar/group-sidebar';
 import TrainerCycleView from '@/components/trainer-group-cycle-view/trainer-group-cycle-view';
 import TrainerDayView from '@/components/trainer-group-day-view/trainer-group-day-view';
 import TrainerWeekView from '@/components/trainer-group-week-view/trainer-group-week-view';
 import TrainerYearView from '@/components/trainer-group-year-view/trainer-group-year-view';
-import { GroupDateFilter } from '@/common/type/filter.type';
 import { useGroup } from '@/store/group-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { TrainerDayViewProvider } from '@/store/trainer-day-view-provider';
-import { Box } from '@mui/material';
-import { ReactNode } from 'react';
-import GroupSidebar from '@/components/group-sidebar/group-sidebar';
 
 export default function TrainerGroupPage() {
   const screenSize = useScreenSize();

@@ -1,4 +1,4 @@
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 export interface ExerciseSet {
   setNumber: number;

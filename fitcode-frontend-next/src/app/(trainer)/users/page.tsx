@@ -1,39 +1,31 @@
 'use client';
 
-import { ALL_LEVELS, ALL_ROLES } from '@/common/constant/user.constant';
-import { CustomClaims } from '@/controller/user/type/custom-claims.type';
-import { User } from '@/controller/user/type/user.type';
 import CancelIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
+import type {
+  GridColDef,
+  GridRowModel,
+  GridRowModesModel,
+} from '@mui/x-data-grid';
 import {
   DataGrid,
   GridActionsCellItem,
-  GridColDef,
   GridRowEditStopReasons,
-  GridRowModel,
   GridRowModes,
-  GridRowModesModel,
 } from '@mui/x-data-grid';
 import React, { useState } from 'react';
-import toast from 'react-hot-toast';
-import { useTheme } from '@mui/material';
+
+import { ALL_ROLES } from '@/common/constant/user.constant';
+import type { User } from '@/controller/user/type/user.type';
 
 export default function Page() {
   // const users = useFetch<User[]>('user');
   const theme = useTheme();
   const users: User[] = [];
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-
-  async function updateUserClaims(uid: string, claims: Partial<CustomClaims>) {
-    try {
-      // await UserController.updateUserClaims(uid, claims);
-      toast.success('Successfully updated user role');
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  }
 
   const columns: GridColDef<User>[] = [
     { field: 'uid', headerName: 'ID', width: 280 },
@@ -142,8 +134,7 @@ export default function Page() {
           }}
           processRowUpdate={async (newRow: GridRowModel<User>) => {
             const updatedRow = { ...newRow, isNew: false };
-            const userId = updatedRow.uid;
-            await updateUserClaims(userId, updatedRow.customClaims);
+            // const userId = updatedRow.uid;
             return updatedRow;
           }}
         />

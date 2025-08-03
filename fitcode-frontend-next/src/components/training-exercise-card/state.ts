@@ -1,18 +1,18 @@
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import ReactDOM from 'react-dom';
-import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
-import { Training } from '@/controller/training/type/training.type';
-import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { User } from '@/controller/user/type/user.type';
-import { Workload } from '@/controller/training/type/workload.type';
-import { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
 import toast from 'react-hot-toast';
-import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { Workload } from '@/controller/training/type/workload.type';
+import type { User } from '@/controller/user/type/user.type';
 
 export function handleAthleteWorkloadsChange(
   input: {
@@ -213,14 +213,14 @@ export function updateTraining(
     return;
   }
 
-  let newSupersets = [...supersets];
+  const newSupersets = [...supersets];
   let updatedSubgroup = selectedSubgroup?.subgroup
     ? { ...selectedSubgroup.subgroup }
     : undefined;
   let updatedComponent = { ...component };
-  let newAvgFutureWorkloadValues = selectedSubgroup?.subgroup
-    ? [...selectedSubgroup.subgroup.futureStats]
-    : [...training.futureStats];
+  const newAvgFutureWorkloadValues = selectedSubgroup?.subgroup
+    ? [...selectedSubgroup.subgroup.prescribedStats]
+    : [...training.prescribedStats];
   let detectedChanges = false;
 
   for (let i = 0; i < exercises.length; i++) {
@@ -284,7 +284,7 @@ export function updateTraining(
       updatedSubgroup = {
         ...updatedSubgroup!,
         supersets: newSupersets,
-        futureStats: newAvgFutureWorkloadValues,
+        prescribedStats: newAvgFutureWorkloadValues,
       };
 
       updatedComponent = {
@@ -323,7 +323,7 @@ export function updateTraining(
       const newTraining = {
         ...training,
         components: updatedComponents,
-        futureStats: newAvgFutureWorkloadValues,
+        prescribedStats: newAvgFutureWorkloadValues,
       };
 
       if (setSupersets) {
@@ -338,7 +338,7 @@ export function updateTraining(
 export const getPerscribedFieldName = (
   param: Attribute,
   leftOrRight: 'L' | 'R'
-) => {
+): keyof Workload => {
   let perscribedFieldName;
   switch (param.field) {
     case 'int1':
@@ -381,7 +381,7 @@ export const getPerscribedFieldName = (
       break;
   }
 
-  return perscribedFieldName;
+  return perscribedFieldName as keyof Workload;
 };
 
 export const getLAndRValues = (
@@ -418,14 +418,6 @@ export const getLAndRValues = (
       cw.setNumber === set.setNumber &&
       cw.userId === selectedAthlete?.uid
   );
-  //  ||
-  // customAthleteWorkloads.find(
-  //   (cw) =>
-  //     cw.trainingId === training.id &&
-  //     cw.exerciseId === exercise.id &&
-  //     cw.setNumber === set.setNumber &&
-  //     cw.userId === previousSelectedAthlete.current?.uid
-  // );
 
   // find the future workload for the selected athlete, not yet custom/modified
   const foundFutureWorkload = selectedAthleteWorkloads.futureWorkloads.find(
@@ -435,14 +427,6 @@ export const getLAndRValues = (
       fw.setNumber === set.setNumber &&
       fw.userId === selectedAthlete?.uid
   );
-  //  ||
-  // selectedAthleteWorkloads.futureWorkloads.find(
-  //   (fw) =>
-  //     fw.trainingId === training.id &&
-  //     fw.exerciseId === exercise.id &&
-  //     fw.setNumber === set.setNumber &&
-  //     fw.userId === previousSelectedAthlete.current?.uid
-  // );
 
   if (
     (foundCustomFutureWorkload || foundFutureWorkload) &&
@@ -461,17 +445,19 @@ export const getLAndRValues = (
     valueL = {
       field: param.field,
       selected: selected,
-      value: ((foundCustomFutureWorkload || foundFutureWorkload) as any)[
-        perscribedFieldNameL
-      ].toString(),
+      value:
+        (foundCustomFutureWorkload || foundFutureWorkload)?.[
+          perscribedFieldNameL
+        ]?.toString() || '',
     };
 
     valueR = {
       field: param.field,
       selected: selected,
-      value: ((foundCustomFutureWorkload || foundFutureWorkload) as any)[
-        perscribedFieldNameR
-      ].toString(),
+      value:
+        (foundCustomFutureWorkload || foundFutureWorkload)?.[
+          perscribedFieldNameR
+        ]?.toString() || '',
     };
   } else {
     valueL = exercise.sets[setIndex].paramValuesL.find(

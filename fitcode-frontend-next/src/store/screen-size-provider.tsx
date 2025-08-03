@@ -1,8 +1,9 @@
 'use client';
 
-import { ChildrenProps } from '@/common/type/props.type';
 import { useMediaQuery } from '@mui/material';
 import React, { createContext, useContext } from 'react';
+
+import type { ChildrenProps } from '@/common/type/props.type';
 
 interface ScreenSizeContextType {
   isGigaSmall: boolean;

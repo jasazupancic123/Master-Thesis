@@ -1,4 +1,4 @@
-import { User } from '@/controller/user/type/user.type';
+import type { User } from '@/controller/user/type/user.type';
 
 let cachedProfile: User | null = null;
 

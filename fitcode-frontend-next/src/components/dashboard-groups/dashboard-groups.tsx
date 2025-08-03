@@ -1,21 +1,22 @@
 'use client';
 
-import { useScreenSize } from '@/store/screen-size-provider';
 import { MoreVert } from '@mui/icons-material';
 import { IconButton, Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { GroupController } from '@/controller/group/group.controller';
+
+import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
 import { MAX_WIDTH } from '../trainer-day-view/constant';
-import { useMain } from '@/store/main-provider';
-import { isManager } from '@/common/service/util/firebase-auth.util';
 import { ADD_GROUP } from '@/common/constant/add-group.constant';
-import { SetState } from '@/common/type/state.type';
+import { isManager } from '@/common/service/util/firebase-auth.util';
+import type { SetState } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
-import DashboardGroupsMembers from '../dashboard-groups-members/dashboard-groups-members';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import { useDashboard } from '@/store/dashboard-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface DashboardGroupsProps {
   modal: {
@@ -46,13 +47,11 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
 
   const roles = profile.customClaims.role || [];
 
-  const [selectedCycle, setSelectedCycle] = useState<Cycle | null>(
+  const [_selectedCycle, setSelectedCycle] = useState<Cycle | null>(
     selectedGroup?.cycles[0] || null
   );
 
   const scrollHorizontalListLeftRef = useRef(0);
-
-  if (!selectedInstitution) return null;
 
   useEffect(() => {
     async function fetchGroups() {
@@ -77,6 +76,8 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
 
     fetchGroups().then();
   }, [selectedInstitution]);
+
+  if (!selectedInstitution) return null;
 
   const HorizontalInput = () => {
     return (
@@ -114,7 +115,7 @@ export default function DashboardGroups(props: DashboardGroupsProps) {
         checkIsSameValue={(value: string) => {
           return selectedGroup?.id === value;
         }}
-        onArrowClick={(direction) => {}}
+        onArrowClick={() => {}}
       />
     );
   };

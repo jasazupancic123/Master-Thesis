@@ -1,4 +1,5 @@
 import { alpha, InputBase, styled } from '@mui/material';
+
 import { useScreenSize } from '@/store/screen-size-provider';
 
 export const Search = styled('div', {

@@ -1,11 +1,5 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgl';
-import '@tensorflow/tfjs-backend-wasm';
-import '@tensorflow/tfjs-backend-webgpu';
-import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
 import {
   Box,
   Button,
@@ -15,7 +9,14 @@ import {
   MenuItem,
   Select,
 } from '@mui/material';
-import toast, { ToastBar } from 'react-hot-toast';
+import * as tf from '@tensorflow/tfjs';
+import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
+import React, { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+
+import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs-backend-wasm';
+import '@tensorflow/tfjs-backend-webgpu';
 
 setWasmPaths({
   'tfjs-backend-wasm.wasm': '/tfjs/tfjs-backend-wasm.wasm',

@@ -1,9 +1,11 @@
-import { useScreenSize } from '@/store/screen-size-provider';
 import { FormControl, InputAdornment } from '@mui/material';
+import { useTheme } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import React, { ReactNode } from 'react';
-import { useTheme } from '@mui/material';
+import type { ReactNode } from 'react';
+import React from 'react';
+
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface Props<T> {
   icon: ReactNode;

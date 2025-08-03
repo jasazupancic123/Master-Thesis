@@ -2,20 +2,13 @@
 
 //OG URL: https://codepen.io/mediapipe-preview/pen/abRLMxN
 
-import { useEffect, useRef, useState } from 'react';
 import {
-  Box,
-  Button,
-  Input,
-  InputLabel,
-  MenuItem,
-  Select,
-} from '@mui/material';
-import {
-  PoseLandmarker,
-  FilesetResolver,
   DrawingUtils,
+  FilesetResolver,
+  PoseLandmarker,
 } from '@mediapipe/tasks-vision';
+import { Box, Button, InputLabel, MenuItem, Select } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function Mediapipe() {
@@ -115,7 +108,7 @@ export default function Mediapipe() {
     const ctx = canvasCtxRef.current;
     const drawingUtils = drawingUtilsRef.current;
 
-    const fullStringForAlert = `video: ${video!!.videoWidth}, ${video!!.videoHeight}, canvas: ${canvas!!.width}, ${canvas!!.height}`;
+    const fullStringForAlert = `video: ${video!.videoWidth}, ${video!.videoHeight}, canvas: ${canvas!.width}, ${canvas!.height}`;
 
     if (!video || !canvas || !ctx || !poseLandmarker || !drawingUtils) return;
 

@@ -1,12 +1,13 @@
-import { SetState } from '@/common/type/state.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Dayjs } from 'dayjs';
-import { AddTrainingComponents } from '../trainer-cycle-view/type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Target } from '@/controller/target/type/target.type';
-import { TrainingInfo } from '@/controller/training/type/training.type';
-import { Day } from '@/common/service/util/date.util';
+import type { Dayjs } from 'dayjs';
+
+import type { AddTrainingComponents } from '../trainer-cycle-view/type';
+import type { Day } from '@/common/service/util/date.util';
+import type { SetState } from '@/common/type/state.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Target } from '@/controller/target/type/target.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export type TrainingCycleViewWeekProps = TrainingCycleViewCommonProps & {
   index: number;

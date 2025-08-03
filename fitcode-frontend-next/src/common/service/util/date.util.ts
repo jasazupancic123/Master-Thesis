@@ -1,9 +1,8 @@
-import dayjs, { Dayjs } from 'dayjs';
-import { Day as DayDateFns, isBefore, startOfWeek } from 'date-fns';
-import { getWeekStartByLocale } from 'weekstart';
+import type { Day as DayDateFns } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { ConstructionOutlined } from '@mui/icons-material';
-import { endOf } from 'date-arithmetic';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import { getWeekStartByLocale } from 'weekstart';
 
 export type Day = {
   label: string;

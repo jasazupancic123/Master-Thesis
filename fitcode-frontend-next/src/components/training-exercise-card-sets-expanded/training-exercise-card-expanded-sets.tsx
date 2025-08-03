@@ -1,20 +1,21 @@
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Box, Grid2, IconButton } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { ExerciseParam } from '../exercise-param/exercise-param';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useGroup } from '@/store/group-provider';
-import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
+import { Box, Grid2, IconButton } from '@mui/material';
 import toast from 'react-hot-toast';
+import { v4 } from 'uuid';
+
+import { ExerciseParam } from '../exercise-param/exercise-param';
+import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import { getLAndRValues } from '../training-exercise-card/state';
-import { SetState } from '@/common/type/state.type';
 import { updateExerciseAttributeValues } from './state';
+import type { SetState } from '@/common/type/state.type';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
 import { TrainingService } from '@/controller/training/training.service';
-import { v4 } from 'uuid';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingExerciseCarExpandedSetsProps {
   component: TrainingComponent;

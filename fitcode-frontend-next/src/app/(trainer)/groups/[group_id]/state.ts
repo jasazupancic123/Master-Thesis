@@ -1,9 +1,11 @@
-import { SetState, handleApiRequest } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import { GroupController } from '@/controller/group/group.controller';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
 
 export async function handleSaveGroup(
   selectedGroup: Group,

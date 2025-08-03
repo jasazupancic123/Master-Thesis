@@ -78,7 +78,7 @@ export class Training extends BaseEntity {
   @Type(() => TrainingExerciseAverageStats)
   @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
   @Expose()
-  stats: TrainingExerciseAverageStats[]; // average intensity and volume stats for each exercise in the training
+  stats: TrainingExerciseAverageStats[]; // completed stats for each exercise for this training
 
   @ValidateNested()
   @Type(() => TrainingComponent)

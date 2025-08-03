@@ -1,18 +1,19 @@
-import { CommonService } from '@/common/service/common.service';
-import { Day } from '@/common/service/util/date.util';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
+import { MoreVert } from '@mui/icons-material';
 import { IconButton, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import React from 'react';
-import { useTheme } from '@mui/material';
-import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
-import { MoreVert } from '@mui/icons-material';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
 import toast from 'react-hot-toast';
+
+import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { CommonService } from '@/common/service/common.service';
+import type { Day } from '@/common/service/util/date.util';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 dayjs.extend(weekOfYear);
 

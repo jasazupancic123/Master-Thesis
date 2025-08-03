@@ -33,6 +33,7 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
 
+import { DEFAULT_WARMUP_AND_COOLDOWN_DURATION } from '../constant/training-component-duration.constant';
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
 import { Subgroup } from '../entity/subgroup.entity';
@@ -90,7 +91,9 @@ export class TrainingPlanService {
 
     const query: Update<Training> = {
       components: [
-        ...training.components,
+        ...training.components.filter(
+          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+        ),
         ...input.map((c) => ({
           id: c.id,
           color: c.color,
@@ -243,7 +246,7 @@ export class TrainingPlanService {
 
   validateTrainingComponents(
     existingTraining: Training | null,
-    newTrainingComponents: UpdateTrainingComponent[],
+    newTrainingComponents: UpdateTrainingComponent[], // with warmup and cooldown
     trainingMemberIds: string[],
     data: {
       exercises: Exercise[];
@@ -253,15 +256,6 @@ export class TrainingPlanService {
     },
   ): TrainingComponent[] {
     const { components, methods } = data;
-
-    if (!newTrainingComponents.map((tc) => tc.id).includes(WARMUP_COMPONENT_ID))
-      throw new BadRequestException('Training must have warmup component');
-
-    if (
-      !newTrainingComponents.map((tc) => tc.id).includes(COOLDOWN_COMPONENT_ID)
-    )
-      throw new BadRequestException('Training must have cooldown component');
-
     const validTrainingComponents: TrainingComponent[] = [];
     const duplicates = new Set<string>();
 
@@ -308,17 +302,17 @@ export class TrainingPlanService {
       const supersets = this.validateSupersets(curr, curr.supersets, data);
       const subgroups = this.validateSubgroups(curr, trainingMemberIds, data);
 
-      if (![WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(curr.id))
-        validTrainingComponents.push({
-          ...curr,
-          supersets,
-          subgroups,
-          completedMembersIds:
-            existingTrainingComponent?.completedMembersIds || [],
-        });
+      validTrainingComponents.push({
+        ...curr,
+        supersets,
+        subgroups,
+        completedMembersIds:
+          existingTrainingComponent?.completedMembersIds || [],
+      });
     }
 
-    if (validTrainingComponents.length > 5)
+    if (validTrainingComponents.length > 7)
+      // warmup and cooldown are already included in the count
       throw new ConflictException(
         'You can only have up to 5 components per training',
       );
@@ -638,24 +632,29 @@ export class TrainingPlanService {
     return validSets;
   }
 
-  createWarmupAndCooldown(
-    from: Date,
-    to: Date,
-    components: Pick<TrainingComponent, 'from' | 'to'>[],
-  ): { warmup: TrainingComponent; cooldown: TrainingComponent } {
-    let cooldownFrom = to;
-    if (components.length) {
-      cooldownFrom = components
-        .map((c) => c.to)
-        .sort((a: Date, b: Date) => {
-          return new Date(b).getTime() - new Date(a).getTime();
-        })[0];
-    }
+  /**
+   * Generates warmup and cooldown components based on the provided training components.
+   *
+   * @param components - Array of training components (without warmup and cooldown) to determine the warmup and cooldown times.
+   */
+  getWarmupAndCooldown(components: Pick<TrainingComponent, 'from' | 'to'>[]): {
+    warmup: TrainingComponent;
+    cooldown: TrainingComponent;
+  } {
+    const sorted = components.sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    );
+
+    if (sorted.length === 0)
+      throw new BadRequestException('Training must have atleast one component');
+
+    const startTime = new Date(sorted[0].from);
+    const endTime = new Date(sorted[sorted.length - 1].to);
 
     const warmup: TrainingComponent = {
       id: WARMUP_COMPONENT_ID,
-      from: subMinutes(from, 5),
-      to: from,
+      from: subMinutes(startTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
+      to: startTime,
       supersets: [],
       subgroups: [],
       completedMembersIds: [],
@@ -663,33 +662,14 @@ export class TrainingPlanService {
 
     const cooldown: TrainingComponent = {
       id: COOLDOWN_COMPONENT_ID,
-      from: cooldownFrom,
-      to: addMinutes(cooldownFrom, 5),
+      from: endTime,
+      to: addMinutes(endTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
       supersets: [],
       subgroups: [],
       completedMembersIds: [],
     };
 
     return { warmup, cooldown };
-  }
-
-  updateWarmupAndCooldownTimes(
-    warmup: Pick<TrainingComponent, 'from' | 'to'>,
-    cooldown: Pick<TrainingComponent, 'from' | 'to'>,
-    trainingComponents: Pick<TrainingComponent, 'from' | 'to'>[],
-  ): void {
-    let cooldownFrom = trainingComponents[trainingComponents.length - 1].to;
-    if (trainingComponents.length)
-      cooldownFrom = trainingComponents
-        .map((c) => c.to)
-        .sort((a: Date, b: Date) => {
-          return new Date(b).getTime() - new Date(a).getTime();
-        })[0];
-
-    warmup.from = subMinutes(trainingComponents[0].from, 5);
-    warmup.to = trainingComponents[0].from;
-    cooldown.from = cooldownFrom;
-    cooldown.to = addMinutes(cooldownFrom, 5);
   }
 
   private validateMethodParamValues(

@@ -1,9 +1,10 @@
-import { LINK_PROFILE } from '@/common/constant/navigation.constant';
-import { SetState } from '@/common/type/state.type';
-import { useAuth } from '@/store/auth-provider';
 import { Logout } from '@mui/icons-material';
-import { Menu, MenuItem, Box, Avatar, Typography } from '@mui/material';
+import { Avatar, Box, Menu, MenuItem, Typography } from '@mui/material';
 import Link from 'next/link';
+
+import { LINK_PROFILE } from '@/common/constant/navigation.constant';
+import type { SetState } from '@/common/type/state.type';
+import { useAuth } from '@/store/auth-provider';
 
 interface ProfileHeaderMenuProps {
   anchorEl: HTMLElement | null;

@@ -1,25 +1,25 @@
-import {
+import { useRouter } from 'next/navigation';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+
+import { useMain } from './main-provider';
+import type {
   GroupContextProps,
   TrainerDayViewContextProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
-import { Pagination } from '@/common/type/paginate.type';
-import { ChildrenProps } from '@/common/type/props.type';
+import type { Pagination } from '@/common/type/paginate.type';
+import type { ChildrenProps } from '@/common/type/props.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { GroupController } from '@/controller/group/group.controller';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { InstitutionController } from '@/controller/institution/institution.controller';
-import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Workload } from '@/controller/training/type/workload.type';
-import { User, UserEntity } from '@/controller/user/type/user.type';
-import { useRouter } from 'next/navigation';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { useMain } from './main-provider';
+import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { Workload } from '@/controller/training/type/workload.type';
+import type { User, UserEntity } from '@/controller/user/type/user.type';
 
 export const TrainerDayViewContext =
   createContext<TrainerDayViewContextProps | null>(null);

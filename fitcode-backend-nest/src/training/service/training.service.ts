@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import {
   addMinutes,
+  differenceInMinutes,
   endOfDay,
   isBefore,
   startOfDay,
@@ -181,35 +182,34 @@ export class TrainingService implements Permission<Training, Institution> {
     if (groupId) {
       group = await this.groupService.findOneByIdOrFail(user, { groupId });
       this.validateCanAdd(user, group.institution);
-
       if (cycleId) cycle = this.groupService.findCycleOrFail(cycleId, group);
     }
 
-    const { from, to } = this.getFromAndToDates(input.components);
-    this.validateIsDateInCycle(from, cycle);
-    this.validateIsDateInFuture(from);
+    const inputComponents: TrainingComponent[] = input.components.map((c) => ({
+      id: c.id,
+      from: new Date(c.from),
+      to: new Date(c.to),
+      supersets: [],
+      subgroups: [],
+      completedMembersIds: [],
+    }));
+
+    // add warmup and cooldown components
+    const { warmup, cooldown } =
+      this.trainingPlanService.getWarmupAndCooldown(inputComponents);
+
+    inputComponents.unshift(warmup);
+    inputComponents.push(cooldown);
+
+    this.updateTrainingTimes(inputComponents);
+    this.validateIsDateInCycle(warmup.from, cycle);
+    this.validateIsDateInFuture(warmup.from);
     await this.validateOverlap(
       user,
       { groupId, cycleId, trainingId: null }, // no trainingId for new training
-      from,
-      to,
+      warmup.from,
+      cooldown.to,
     );
-
-    const inputComponents = input.components.map((c) => ({
-      id: c.id,
-      from: c.from,
-      to: c.to,
-      supersets: [],
-      subgroups: [],
-    }));
-
-    // warmup and cooldown components
-    const { warmup, cooldown } =
-      this.trainingPlanService.createWarmupAndCooldown(
-        from,
-        to,
-        inputComponents,
-      );
 
     const components = await this.componentService.findAllFlat();
     const methods = await this.methodService.findAll();
@@ -218,7 +218,7 @@ export class TrainingService implements Permission<Training, Institution> {
     const trainingComponents =
       this.trainingPlanService.validateTrainingComponents(
         null,
-        [warmup, ...inputComponents, cooldown],
+        inputComponents,
         membersIds,
         {
           components,
@@ -235,25 +235,29 @@ export class TrainingService implements Permission<Training, Institution> {
       cycleId: input.cycleId,
       ownerId: user.uid,
       copiedFromId: input.copiedFromId || null,
-      from,
-      to,
+      from: warmup.from,
+      to: cooldown.to,
       membersIds,
       completedMembersIds: [],
       stats: [],
       // futureStats: input.futureStats || [],
       warmup,
       cooldown,
-      components: trainingComponents.map((c) => ({
-        id: c.id,
-        from: c.from,
-        to: c.to,
-        target: c.target,
-        methodId: c.methodId,
-        copiedFrom: c.copiedFrom,
-        subgroups: [],
-        supersets: [],
-        completedMembersIds: [],
-      })),
+      components: trainingComponents
+        .filter(
+          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+        )
+        .map((c) => ({
+          id: c.id,
+          from: c.from,
+          to: c.to,
+          target: c.target,
+          methodId: c.methodId,
+          copiedFrom: c.copiedFrom,
+          subgroups: [],
+          supersets: [],
+          completedMembersIds: [],
+        })),
     };
 
     const id = await this.trainingRepository.addDoc(data);
@@ -468,7 +472,13 @@ export class TrainingService implements Permission<Training, Institution> {
       };
     }
 
-    const { from, to } = this.getFromAndToDates(input.components);
+    input.components.unshift(input.warmup);
+    input.components.push(input.cooldown);
+
+    this.updateTrainingTimes(input.components);
+    const from = input.warmup.from;
+    const to = input.cooldown.to;
+
     if (cycle) this.validateIsDateInCycle(from, cycle);
     this.validateIsDateInFuture(from);
     await this.validateOverlap(
@@ -491,37 +501,20 @@ export class TrainingService implements Permission<Training, Institution> {
       input.components,
     );
 
-    if (!input.warmup) input.warmup = training.warmup;
-    if (!input.cooldown) input.cooldown = training.cooldown;
-
-    this.trainingPlanService.updateWarmupAndCooldownTimes(
-      input.warmup,
-      input.cooldown,
-      input.components,
-    );
-
     const trainingComponents =
       this.trainingPlanService.validateTrainingComponents(
         training,
-        [input.warmup, ...input.components, input.cooldown],
+        input.components,
         membersIds,
         { exercises, components, methods, attributes },
       );
-
-    // populate exercise params from components
-    /* this.trainingPlanService.populateTrainingExerciseParams(
-      input.components,
-      components,
-      exercises,
-      attributes,
-    ); */
 
     // validate custom workloads
     if (input.workloads) {
       const inputWorkloads = await this.workloadService.validateWorkloads(
         training.id,
         input.workloads,
-        [input.warmup, ...trainingComponents, input.cooldown],
+        trainingComponents,
       );
 
       const operations: BatchWriteOperation<Workload>[] = [];
@@ -545,19 +538,16 @@ export class TrainingService implements Permission<Training, Institution> {
       from,
       to,
       membersIds,
-      components: trainingComponents,
+      components: trainingComponents.filter(
+        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+      ),
+      warmup: input.warmup,
+      cooldown: input.cooldown,
       completedMembersIds: training.completedMembersIds,
     };
 
     await this.trainingRepository.updateDoc(ref.trainingId, updateTraining);
-    return {
-      ...training,
-      ...updateTraining,
-      /* futureStats: this.trainingPlanService.calculatePrescribedTrainingStats(
-        trainingComponents,
-        membersIds.length,
-      ), */
-    };
+    return { ...training, ...updateTraining };
   }
 
   @LogMethod()
@@ -879,17 +869,13 @@ export class TrainingService implements Permission<Training, Institution> {
     return updatedTraining;
   }
 
+  @LogMethod()
   async addComponents(
     user: User,
     ref: TrainingRef,
     input: TrainingComponent[],
   ): Promise<Training> {
-    this.logger.log(
-      `User ${user.uid} is adding component to training ${ref.trainingId}: ${JSON.stringify(input)}`,
-    );
-
     const training = await this.findOneByIdOrFail(user, ref);
-
     this.validateCanEdit(user, training, training.institution);
     this.validateIsDateInFuture(training.from);
 
@@ -901,16 +887,14 @@ export class TrainingService implements Permission<Training, Institution> {
     const exercises =
       await this.trainingPlanService.getAllTrainingExercises(input);
 
-    this.trainingPlanService.updateWarmupAndCooldownTimes(
-      training.warmup,
-      training.cooldown,
-      input,
-    );
+    const trainingComponents = [training.warmup, ...input, training.cooldown];
+
+    this.updateTrainingTimes(trainingComponents);
 
     const validTrainingComponents =
       this.trainingPlanService.validateTrainingComponents(
         training,
-        [training.warmup, ...input, training.cooldown],
+        trainingComponents,
         training.membersIds,
         { exercises, components, methods, attributes },
       );
@@ -919,7 +903,9 @@ export class TrainingService implements Permission<Training, Institution> {
     const [query, updatedTraining] =
       this.trainingPlanService.getAddComponentsQuery(
         training,
-        validTrainingComponents,
+        validTrainingComponents.filter(
+          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+        ),
       );
 
     // add components
@@ -945,23 +931,25 @@ export class TrainingService implements Permission<Training, Institution> {
       (c) => c.id !== ref.componentId,
     );
 
-    if (filtered.length > 0)
-      this.trainingPlanService.updateWarmupAndCooldownTimes(
-        training.warmup,
-        training.cooldown,
-        filtered,
-      );
+    if (filtered.length === 0) {
+      await this.trainingRepository.deleteDoc(ref.trainingId);
+      return { ...training, components: [] };
+    }
+
+    filtered.unshift(training.warmup);
+    filtered.push(training.cooldown);
+    this.updateTrainingTimes(filtered);
+
+    training.components = filtered.filter(
+      (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+    );
 
     // get query for training
     const [query, updatedTraining] =
       this.trainingPlanService.getDeleteComponentQuery(training, ref);
 
     // delete component
-    if (query.components.length === 0) {
-      this.logger.log('No components left, deleting training');
-      await this.trainingRepository.deleteDoc(ref.trainingId);
-    } else await this.trainingRepository.updateDoc(ref.trainingId, query);
-
+    await this.trainingRepository.updateDoc(ref.trainingId, query);
     return updatedTraining;
   }
 
@@ -1057,70 +1045,6 @@ export class TrainingService implements Permission<Training, Institution> {
     };
   }
 
-  merge(existingTraining: Training, newTraining: Update<Training>): Training {
-    return {
-      id: existingTraining.id,
-      createdAt: existingTraining.createdAt,
-      updatedAt: new Date(),
-      deletedAt: undefined,
-      institutionId: existingTraining.institutionId,
-      groupId: existingTraining.groupId,
-      cycleId: existingTraining.cycleId,
-      ownerId: existingTraining.ownerId,
-      membersIds: newTraining.membersIds || existingTraining.membersIds,
-      completedMembersIds: existingTraining.completedMembersIds, // must be updated separately
-      copiedFromId: existingTraining.copiedFromId,
-      from: newTraining.from || existingTraining.from,
-      to: newTraining.to || existingTraining.to,
-      stats: existingTraining.stats, // must be updated separately
-      warmup: {
-        id: WARMUP_COMPONENT_ID,
-        from: newTraining.warmup?.from || existingTraining.warmup.from,
-        to: newTraining.warmup?.to || existingTraining.warmup.to,
-        target: undefined,
-        periodizationType: PeriodizationType.REPLICATE, // always replicate for warmup
-        methodId: undefined,
-        copiedFrom: newTraining.warmup?.copiedFrom
-          ? {
-              rootCopiedFromTrainingId:
-                newTraining.warmup.copiedFrom.rootCopiedFromTrainingId,
-              lastCopiedFromTrainingId:
-                newTraining.warmup.copiedFrom.lastCopiedFromTrainingId,
-            }
-          : existingTraining.warmup.copiedFrom,
-        completedMembersIds: existingTraining.warmup.completedMembersIds,
-        color: newTraining.warmup?.color || existingTraining.warmup.color,
-        subgroups:
-          newTraining.warmup?.subgroups || existingTraining.warmup.subgroups,
-        supersets:
-          newTraining.warmup?.supersets || existingTraining.warmup.supersets,
-      },
-      cooldown: {
-        id: COOLDOWN_COMPONENT_ID,
-        from: newTraining.cooldown?.from || existingTraining.cooldown.from,
-        to: newTraining.cooldown?.to || existingTraining.cooldown.to,
-        target: undefined,
-        periodizationType: PeriodizationType.REPLICATE, // always replicate for cooldown
-        methodId: undefined,
-        copiedFrom: newTraining.cooldown?.copiedFrom
-          ? {
-              rootCopiedFromTrainingId:
-                newTraining.cooldown.copiedFrom.rootCopiedFromTrainingId,
-              lastCopiedFromTrainingId:
-                newTraining.cooldown.copiedFrom.lastCopiedFromTrainingId,
-            }
-          : existingTraining.cooldown.copiedFrom,
-        completedMembersIds: existingTraining.cooldown.completedMembersIds,
-        color: newTraining.cooldown?.color || existingTraining.cooldown.color,
-        subgroups:
-          newTraining.cooldown?.subgroups ||
-          existingTraining.cooldown.subgroups,
-        supersets: [],
-      },
-      components: newTraining.components || existingTraining.components,
-    };
-  }
-
   /**
    * Returns athlete user. If current user is athlete, it returns itself,
    * else if current user is trainer or manager, it returns found athlete
@@ -1146,29 +1070,59 @@ export class TrainingService implements Permission<Training, Institution> {
     return found;
   }
 
-  private getFromAndToDates(
-    components: Pick<TrainingComponent, 'from' | 'to'>[],
-  ): {
-    from: Date;
-    to: Date;
-  } {
-    let from: Date;
-    let to: Date;
+  private updateTrainingTimes(
+    newComponents: Pick<TrainingComponent, 'id' | 'from' | 'to'>[], // with warmup and cooldown
+  ) {
+    // sort new components by from date
+    const sorted = newComponents
+      .filter(
+        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+      ) // remove warmup and cooldown components for sorting
+      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
 
-    if (components.length === 0)
-      throw new BadRequestException('Training must have atleast one component');
+    if (sorted.length < 1)
+      // 2 are reserved for warmup and cooldown
+      throw new BadRequestException(
+        'Training must have at least one component',
+      );
 
-    if (components.length === 1) {
-      from = components[0].from;
-      to = components[0].to;
+    const warmup = newComponents.find((c) => c.id === WARMUP_COMPONENT_ID);
+    const cooldown = newComponents.find((c) => c.id === COOLDOWN_COMPONENT_ID);
+
+    const warmupDurationMin = differenceInMinutes(warmup!.to, warmup!.from);
+    const cooldownDurationMin = differenceInMinutes(
+      cooldown!.to,
+      cooldown!.from,
+    );
+
+    // update warmup and cooldown times
+    warmup!.from = subMinutes(sorted[0].from, warmupDurationMin);
+    warmup!.to = sorted[0].from;
+
+    cooldown!.from = sorted[sorted.length - 1].to;
+    cooldown!.to = addMinutes(
+      sorted[sorted.length - 1].to,
+      cooldownDurationMin,
+    );
+
+    sorted.unshift(warmup!);
+    sorted.push(cooldown!);
+
+    const duration = differenceInMinutes(
+      sorted[0].to,
+      sorted[sorted.length - 1].from,
+    );
+
+    const maxDuration = 4 * 60; // 4 hours in minutes
+    if (duration > maxDuration)
+      throw new BadRequestException('Training cannot last more than 4 hours');
+
+    // make sure that new components' times are continuous
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const curr = sorted[i];
+      const next = sorted[i + 1];
+      curr.to = next.from;
     }
-
-    if (components.length > 1) {
-      from = components[0].from;
-      to = components[components.length - 1].to;
-    }
-
-    return { from, to };
   }
 
   private async validateOverlap(

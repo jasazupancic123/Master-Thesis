@@ -1,14 +1,15 @@
 'use client';
 
-import SelectInput from '@/components/select-input/select-input';
-import { Component } from '@/controller/component/type/component.type';
 import { Box, Slider, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { useMain } from '@/store/main-provider';
 import { useTheme } from '@mui/material';
+import { useState } from 'react';
+import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
+
+import SelectInput from '@/components/select-input/select-input';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const data = [
   { name: 'A', intensity: 50, volume: 80 },

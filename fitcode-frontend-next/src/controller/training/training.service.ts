@@ -1,27 +1,26 @@
+import type { Attribute } from '../attribute/type/attribute.type';
+import type { AttributeValue } from '../attribute/type/attribute-value.type';
+import type { IntType, VolType } from '../component/enum/param.enum';
+import { ParamType } from '../component/enum/param.enum';
+import type { Component } from '../component/type/component.type';
+import type { Exercise } from '../exercise/type/exercise.type';
+import type { Method } from '../method/type/method.type';
+import type { User } from '../user/type/user.type';
+import type { ExerciseSet } from './type/exercise-set.type';
+import type { IntensityVolumeValues } from './type/intensity-volume-values.type';
+import type { Subgroup } from './type/subgroup.type';
+import type { SubgroupInfo } from './type/subgroup.type';
+import type { Superset } from './type/superset.type';
+import type { Training } from './type/training.type';
+import type { TrainingInfo } from './type/training.type';
+import type { TrainingComponentInfo } from './type/training-component.type';
+import type { TrainingComponent } from './type/training-component.type';
+import type { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
+import type { PrescribedWorkload } from './type/workload-value.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { Component } from '../component/type/component.type';
-import { Exercise } from '../exercise/type/exercise.type';
-import { User } from '../user/type/user.type';
-import { Training } from './type/training.type';
-import { TrainingComponentInfo } from './type/training-component.type';
-import { TrainingComponent } from './type/training-component.type';
-import { ExerciseSet } from './type/exercise-set.type';
-import { IntensityVolumeValues } from './type/intensity-volume-values.type';
-import { Target } from '../target/type/target.type';
-import { Method } from '../method/type/method.type';
-import { TrainingInfo } from './type/training.type';
-import { Subgroup } from './type/subgroup.type';
-import { SubgroupInfo } from './type/subgroup.type';
-import { PrescribedWorkload } from './type/workload-value.type';
-import { IntType, ParamType, VolType } from '../component/enum/param.enum';
-import { AttributeValue } from '../attribute/type/attribute-value.type';
-import { Attribute } from '../attribute/type/attribute.type';
-import { TrainingExerciseAverageStats } from './type/training-exercise-average-stats.type';
-import { TrainingExercise } from './type/training-exercise.type';
-import { Superset } from './type/superset.type';
 
 function isTrainingComponent(
   item: TrainingComponent | TrainingComponentInfo
@@ -160,7 +159,7 @@ export class TrainingService {
         this.componentToInfo(component)
       ),
       stats: training.stats,
-      futureStats: training.futureStats,
+      prescribedStats: training.prescribedStats,
       createdAt: training.createdAt,
       updatedAt: training.updatedAt,
     };
@@ -188,7 +187,7 @@ export class TrainingService {
   ): SubgroupInfo {
     return {
       id: subgroup.id,
-      futureStats: subgroup.futureStats,
+      prescribedStats: subgroup.prescribedStats,
     };
   }
 
@@ -361,7 +360,7 @@ export class TrainingService {
           }
         }
 
-        subgroup.futureStats = subgroupStats.map((s) => {
+        subgroup.prescribedStats = subgroupStats.map((s) => {
           const intensity = s.intensity / s.numMembers;
           const volume = s.volume / s.numMembers;
           return { ...s, intensity, volume };
@@ -369,7 +368,7 @@ export class TrainingService {
       }
     }
 
-    training.futureStats = stats.map((s) => {
+    training.prescribedStats = stats.map((s) => {
       const intensity = s.intensity / s.numMembers; // average intensity
       const volume = s.volume / s.numMembers; // average volume
       return { ...s, intensity, volume };
@@ -412,8 +411,15 @@ export class TrainingService {
   private static calculateParamTypeAverages(
     sets: ExerciseSet[]
   ): Record<ParamType, number> {
-    const sums: Record<ParamType, number> = {} as any;
-    const counts: Record<ParamType, number> = {} as any;
+    const sums: Record<ParamType, number> = {} as unknown as Record<
+      ParamType,
+      number
+    >;
+
+    const counts: Record<ParamType, number> = {} as unknown as Record<
+      ParamType,
+      number
+    >;
 
     // initialize sums and counts for each ParamType
     Object.values(ParamType).forEach((param) => {
@@ -434,7 +440,11 @@ export class TrainingService {
     }
 
     // calculate averages
-    const averages: Record<ParamType, number> = {} as any;
+    const averages: Record<ParamType, number> = {} as unknown as Record<
+      ParamType,
+      number
+    >;
+
     Object.keys(sums).forEach((field) => {
       averages[field as ParamType] = counts[field as ParamType]
         ? sums[field as ParamType] / counts[field as ParamType]

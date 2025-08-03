@@ -1,16 +1,16 @@
-import { handleApiRequest, SetState } from '@/common/type/state.type';
-import { Superset } from '@/controller/training/type/superset.type';
-import { Training } from '@/controller/training/type/training.type';
+import type { User } from '@firebase/auth';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import {
-  ExerciseOrTraining,
-  ExerciseTrainingView,
-} from '@/common/type/exercise-or-training.type';
-import { User } from '@firebase/auth';
-import { CompletedTrainingExercise } from '@/controller/training/type/completed-training.entity';
+import type { CompletedTrainingExercise } from '@/controller/training/type/completed-training.entity';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 export const handleFinishTraining = async (state: {
   trainingInProgress: TrainingInProgress | null;

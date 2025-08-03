@@ -1,4 +1,3 @@
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { ArrowLeft, ArrowRight } from '@mui/icons-material';
 import {
   Box,
@@ -10,16 +9,18 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { SearchBar } from '../search-bar/search-bar';
-import { AddExerciseFormProps } from '../trainer-day-view/props';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useEffect, useState } from 'react';
+
+import { SearchBar } from '../search-bar/search-bar';
+import type { AddExerciseFormProps } from '../trainer-day-view/props';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 export default function AddExerciseForm(props: AddExerciseFormProps) {
   const screenSize = useScreenSize();

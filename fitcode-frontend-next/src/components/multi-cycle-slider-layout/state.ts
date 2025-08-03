@@ -1,10 +1,11 @@
-import { SetState } from '@/common/type/state.type';
-import { Cycle, Week } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
 import dayjs from 'dayjs';
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
 import toast from 'react-hot-toast';
 import { v4 } from 'uuid';
+
+import type { SetState } from '@/common/type/state.type';
+import type { Cycle, Week } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
 
 type AddCycleInput = Pick<Cycle, 'name' | 'from' | 'to' | 'description'>;
 

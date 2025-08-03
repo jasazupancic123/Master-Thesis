@@ -1,10 +1,6 @@
-import { CommonService } from '@/common/service/common.service';
-import { DateRange } from '@/common/type/date-range.type';
-import {
-  CopyComponent,
-  TrainingComponent,
-} from './type/training-component.type';
-import {
+import type { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
+import type { CompletedTrainingComponent } from './type/completed-training.entity';
+import type {
   CopyTraining,
   CreateTraining,
   FilterTrainings,
@@ -12,10 +8,11 @@ import {
   Training,
   UpdateTraining,
 } from './type/training.type';
-import { Workload } from './type/workload.type';
-import { CompletedFutureWorkloads } from './type/completed-future-workloads.type';
-import { PeriodizationType } from './enum/periodization-type.enum';
-import { CompletedTrainingComponent } from './type/completed-training.entity';
+import type {
+  CopyComponent,
+  TrainingComponent,
+} from './type/training-component.type';
+import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
 

@@ -1,4 +1,4 @@
-import { IdEntity } from '@/common/type/entity.type';
+import type { IdEntity } from '@/common/type/entity.type';
 
 export interface Target extends IdEntity {
   name: string;

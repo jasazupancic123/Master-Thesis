@@ -1,11 +1,11 @@
-import { CommonService } from '@/common/service/common.service';
-import {
+import type {
   CreateExercise,
   CreateExercises,
   Exercise,
   FilterExercises,
   UpdateExercise,
 } from './type/exercise.type';
+import { CommonService } from '@/common/service/common.service';
 
 const api = CommonService.instance.api;
 

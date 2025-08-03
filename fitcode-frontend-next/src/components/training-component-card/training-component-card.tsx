@@ -1,12 +1,12 @@
+import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
+
+import type { SetState } from '@/common/type/state.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
-import { useTheme } from '@mui/material';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { SetState } from '@/common/type/state.type';
-import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
-import { preconnect } from 'react-dom';
 
 interface TrainingComponentProps {
   trainingComponent: TrainingComponent;

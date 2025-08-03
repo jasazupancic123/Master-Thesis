@@ -180,7 +180,7 @@ describe('Create Training (e2e)', () => {
       const training = generateTrainingStub({
         groupId: group.id,
         cycleId: group.cycles[1].id,
-        date: subDays(new Date(), 2),
+        date: subDays(new Date(), 1),
         components: [generateTrainingComponent()],
       });
 
@@ -432,17 +432,21 @@ describe('Create Training (e2e)', () => {
         componentService.create(generateComponentStub()),
       ]);
 
-      const training = generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({ id: components[0].id }),
-          generateTrainingComponent({ id: components[1].id }),
-        ],
-      });
+      const training = generateTrainingStub(
+        {
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          date: getTime(addDays(new Date(), 2), 8, 0),
+          components: [
+            generateTrainingComponent({ id: components[0].id }),
+            generateTrainingComponent({ id: components[1].id }),
+          ],
+        },
+        { disableAutomaticallySetComponentsDates: true },
+      );
 
       training.components[0].from = getTime(addDays(new Date(), 2), 8, 0);
-      training.components[0].to = getTime(addDays(new Date(), 2), 9, 0);
+      training.components[0].to = getTime(addDays(new Date(), 2), 8, 30);
 
       const response = await request(app.getHttpServer())
         .post('/training')
@@ -605,100 +609,121 @@ describe('Create Training (e2e)', () => {
 
       await deleteDoc(firebase, 'TRAINING', training.id);
     });
-  });
 
-  it('should successfully add training components', async () => {
-    const newComponent = await componentService.create(generateComponentStub());
-    const training = await trainingService.create(
-      global.trainer,
-      generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [generateTrainingComponent({ id: component.id })],
-      }),
-    );
+    it('should successfully add training components', async () => {
+      const newComponent = await componentService.create(
+        generateComponentStub(),
+      );
 
-    const response = await request(app.getHttpServer())
-      .post(`/training/${training.id}/component`)
-      .set('Authorization', `Bearer ${global.trainer.token}`)
-      .send({
-        components: [generateTrainingComponent({ id: newComponent.id })],
-      });
+      const training = await trainingService.create(
+        global.trainer,
+        generateTrainingStub(
+          {
+            groupId: group.id,
+            cycleId: group.cycles[1].id,
+            components: [
+              generateTrainingComponent({
+                id: component.id,
+                from: getTime(addDays(new Date(), 2), 8, 0),
+                to: getTime(addDays(new Date(), 2), 9, 0),
+              }),
+            ],
+          },
+          { disableAutomaticallySetComponentsDates: true },
+        ),
+      );
 
-    expect(response.status).toBe(201);
-    expect(response.body.id).toBe(training.id);
-    expect(response.body.components).toHaveLength(2);
+      const response = await request(app.getHttpServer())
+        .post(`/training/${training.id}/component`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          components: [
+            generateTrainingComponent({
+              id: newComponent.id,
+              from: getTime(addDays(new Date(), 2), 9, 0),
+              to: getTime(addDays(new Date(), 2), 10, 0),
+            }),
+          ],
+        });
 
-    await Promise.all([
-      deleteDoc(firebase, 'COMPONENT', newComponent.id),
-      deleteDocs(firebase, 'TRAINING', [training.id, response.body.id]),
-    ]);
-  });
+      expect(response.status).toBe(201);
+      expect(response.body.id).toBe(training.id);
+      expect(response.body.components).toHaveLength(2);
 
-  it('should successfully delete training component', async () => {
-    const newComponent = await componentService.create(generateComponentStub());
-    const training = await trainingService.create(
-      global.trainer,
-      generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [generateSuperset()],
-            from: getTime(addDays(new Date(), 2), 8, 0),
-            to: getTime(addDays(new Date(), 2), 9, 0),
-          }),
-          generateTrainingComponent({
-            id: newComponent.id,
-            supersets: [generateSuperset()],
-            from: getTime(addDays(new Date(), 2), 9, 0),
-            to: getTime(addDays(new Date(), 2), 10, 0),
-          }),
-        ],
-      }),
-    );
+      await Promise.all([
+        deleteDoc(firebase, 'COMPONENT', newComponent.id),
+        deleteDocs(firebase, 'TRAINING', [training.id, response.body.id]),
+      ]);
+    });
 
-    const response = await request(app.getHttpServer())
-      .delete(`/training/${training.id}/component/${newComponent.id}`)
-      .set('Authorization', `Bearer ${global.trainer.token}`);
+    it('should successfully delete training component', async () => {
+      const newComponent = await componentService.create(
+        generateComponentStub(),
+      );
 
-    expect(response.status).toBe(200);
-    expect(response.body.id).toBe(training.id);
-    expect(response.body.components).toHaveLength(1);
+      const training = await trainingService.create(
+        global.trainer,
+        generateTrainingStub({
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              supersets: [generateSuperset()],
+              from: getTime(addDays(new Date(), 2), 8, 0),
+              to: getTime(addDays(new Date(), 2), 9, 0),
+            }),
+            generateTrainingComponent({
+              id: newComponent.id,
+              supersets: [generateSuperset()],
+              from: getTime(addDays(new Date(), 2), 9, 0),
+              to: getTime(addDays(new Date(), 2), 10, 0),
+            }),
+          ],
+        }),
+      );
 
-    await Promise.all([
-      deleteDoc(firebase, 'COMPONENT', newComponent.id),
-      deleteDocs(firebase, 'TRAINING', [training.id, response.body.id]),
-    ]);
-  });
+      const response = await request(app.getHttpServer())
+        .delete(`/training/${training.id}/component/${newComponent.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`);
 
-  it('should delete training when training has no more components', async () => {
-    const training = await trainingService.create(
-      global.trainer,
-      generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            supersets: [generateSuperset()],
-          }),
-        ],
-      }),
-    );
+      expect(response.status).toBe(200);
+      expect(response.body.id).toBe(training.id);
+      expect(response.body.components).toHaveLength(1);
 
-    const response = await request(app.getHttpServer())
-      .delete(`/training/${training.id}/component/${component.id}`)
-      .set('Authorization', `Bearer ${global.trainer.token}`);
+      await Promise.all([
+        deleteDoc(firebase, 'COMPONENT', newComponent.id),
+        deleteDocs(firebase, 'TRAINING', [training.id, response.body.id]),
+      ]);
+    });
 
-    expect(response.status).toBe(200);
-    expect(response.body.id).toBe(training.id);
-    expect(response.body.components).toHaveLength(0);
+    it('should delete training when training has no more components', async () => {
+      const training = await trainingService.create(
+        global.trainer,
+        generateTrainingStub({
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              supersets: [generateSuperset()],
+            }),
+          ],
+        }),
+      );
 
-    const trainings = await db.trainings.getAll();
-    expect(trainings).toHaveLength(0);
+      const response = await request(app.getHttpServer())
+        .delete(`/training/${training.id}/component/${component.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`);
 
-    await Promise.all([deleteDoc(firebase, 'TRAINING', training.id)]);
+      expect(response.status).toBe(200);
+      expect(response.body.id).toBe(training.id);
+      expect(response.body.components).toHaveLength(0);
+
+      const trainings = await db.trainings.getAll();
+      expect(trainings).toHaveLength(0);
+
+      await Promise.all([deleteDoc(firebase, 'TRAINING', training.id)]);
+    });
   });
 });

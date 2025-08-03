@@ -1,21 +1,21 @@
-import { GroupDateFilter } from '@/common/type/filter.type';
-import { Pagination } from '@/common/type/paginate.type';
-import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
-import { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Workload } from '@/controller/training/type/workload.type';
-import { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
-import { User, UserEntity } from '@/controller/user/type/user.type';
-import { Dayjs } from 'dayjs';
-import { TrainingInfo } from '@/controller/training/type/training.type';
-import { Institution } from '@/controller/institution/type/institution.type';
+import type { Dayjs } from 'dayjs';
+
+import type { GroupDateFilter } from '@/common/type/filter.type';
+import type { Pagination } from '@/common/type/paginate.type';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Institution } from '@/controller/institution/type/institution.type';
+import type { CompletedFutureWorkloads } from '@/controller/training/type/completed-future-workloads.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { Workload } from '@/controller/training/type/workload.type';
+import type { User, UserEntity } from '@/controller/user/type/user.type';
 
 export type GroupIdPageParams = { params: Promise<{ group_id: string }> };
 

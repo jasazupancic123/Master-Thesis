@@ -1,19 +1,20 @@
 'use client';
 
-import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
-import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
-import { useGroup } from '@/store/group-provider';
-import { Cycle } from '@/controller/group/type/cycle.type';
+import Save from '@mui/icons-material/Save';
+import { IconButton, Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { IconButton, Tooltip } from '@mui/material';
-import Save from '@mui/icons-material/Save';
-import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
+
 import { MAX_WIDTH } from '../trainer-day-view/constant';
 import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import { handleSaveGroup } from '@/app/(trainer)/groups/[group_id]/state';
+import MultiCycleSliderLayout from '@/components/multi-cycle-slider-layout/multi-cycle-slider.layout';
+import CycleComponents from '@/components/training-year-cycle-components/training-year-cycle-components';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function TrainerYearView() {
   const screenSize = useScreenSize();

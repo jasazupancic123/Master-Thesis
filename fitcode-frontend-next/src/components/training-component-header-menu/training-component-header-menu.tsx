@@ -1,28 +1,29 @@
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { AfterSet } from '@/controller/component/type/after-set.type';
-import { MainSet } from '@/controller/component/type/main-set.type';
 import { Box, Tooltip, Typography } from '@mui/material';
+import { isBefore } from 'date-fns';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
+
+import MyModal from '../modal/modal';
 import SelectInput from '../select-input/select-input';
 import { AFTER_SETS, MAIN_SETS } from '../trainer-day-view/constant';
-import { Training } from '@/controller/training/type/training.type';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import { Method } from '@/controller/method/type/method.type';
-import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
-import MyModal from '../modal/modal';
 import { handleApiRequest } from '@/common/type/state.type';
+import type { AfterSet } from '@/controller/component/type/after-set.type';
+import type { MainSet } from '@/controller/component/type/main-set.type';
+import type { Method } from '@/controller/method/type/method.type';
+import { PeriodizationType } from '@/controller/training/enum/periodization-type.enum';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { isBefore } from 'date-fns';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingComponentExpandedProps {
   training: Training;

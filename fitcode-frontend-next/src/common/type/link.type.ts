@@ -1,8 +1,8 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export type ILink = {
   id: string;
   href: string;
   label: string;
   icon?: ReactNode;
-}
+};

@@ -1,19 +1,19 @@
-import { DateRange } from '@/common/type/date-range.type';
-import { BaseEntity } from '@/common/type/entity.type';
-import { Wellness } from '@/controller/user/type/wellness.type';
-import { User } from '@/controller/user/type/user.type';
-import {
+import type { PeriodizationType } from '../enum/periodization-type.enum';
+import type {
   CreateTrainingComponent,
   TrainingComponent,
   TrainingComponentInfo,
   UpdateTrainingComponent,
 } from './training-component.type';
-import { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
-import { Institution } from '@/controller/institution/type/institution.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
-import { CreatePrescribedWorkload } from './workload.type';
-import { PeriodizationType } from '../enum/periodization-type.enum';
+import type { TrainingExerciseAverageStats } from './training-exercise-average-stats.type';
+import type { CreatePrescribedWorkload } from './workload.type';
+import type { DateRange } from '@/common/type/date-range.type';
+import type { BaseEntity } from '@/common/type/entity.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Institution } from '@/controller/institution/type/institution.type';
+import type { User } from '@/controller/user/type/user.type';
+import type { Wellness } from '@/controller/user/type/wellness.type';
 
 export type Training = BaseEntity &
   Required<DateRange> & {
@@ -28,7 +28,7 @@ export type Training = BaseEntity &
     cooldown: TrainingComponent;
     components: TrainingComponent[];
     stats: TrainingExerciseAverageStats[];
-    futureStats: TrainingExerciseAverageStats[];
+    prescribedStats: TrainingExerciseAverageStats[];
     wellness: Wellness[];
 
     // mapped properties
@@ -48,7 +48,7 @@ export type TrainingInfo = BaseEntity &
     cooldown: TrainingComponentInfo;
     components: TrainingComponentInfo[];
     stats: TrainingExerciseAverageStats[];
-    futureStats: TrainingExerciseAverageStats[];
+    prescribedStats: TrainingExerciseAverageStats[];
   };
 
 export type CreateTraining = Pick<

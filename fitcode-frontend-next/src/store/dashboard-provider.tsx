@@ -1,19 +1,20 @@
 'use client';
 
+import { createContext, useContext, useEffect, useState } from 'react';
+
+import { useMain } from './main-provider';
 import { BACKEND_API_BASE_URL } from '@/common/constant/api.constant';
 import {
   LINK_DASHBOARD_HOME,
   LINKS_DASHBOARD_SIDEBAR_MAIN_ITEMS,
 } from '@/common/constant/navigation.constant';
 import { useFetch } from '@/common/hooks/use-fetch.hook';
-import { ILink } from '@/common/type/link.type';
-import { ChildrenProps } from '@/common/type/props.type';
-import { SetState } from '@/common/type/state.type';
-import { Group } from '@/controller/group/type/group.type';
-import { Institution } from '@/controller/institution/type/institution.type';
-import { User, UserEntity } from '@/controller/user/type/user.type';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useMain } from './main-provider';
+import type { ILink } from '@/common/type/link.type';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Institution } from '@/controller/institution/type/institution.type';
+import type { User, UserEntity } from '@/controller/user/type/user.type';
 
 interface DashboardContextProps {
   filter: ILink;
@@ -78,13 +79,10 @@ export function DashboardProvider(props: DashboardPageProps & ChildrenProps) {
 
   const { setUsers } = useMain();
 
-  const {
-    data: fetchedUsers,
-    refetch,
-    setData,
-  } = useFetch<User[]>(`${BACKEND_API_BASE_URL}/user`, {
-    method: 'GET',
-  });
+  const { data: fetchedUsers, refetch } = useFetch<User[]>(
+    `${BACKEND_API_BASE_URL}/user`,
+    { method: 'GET' }
+  );
 
   useEffect(() => {
     if (fetchedUsers) {

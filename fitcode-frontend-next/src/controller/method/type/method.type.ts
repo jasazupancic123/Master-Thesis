@@ -1,5 +1,5 @@
-import { IdEntity } from '@/common/type/entity.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { IdEntity } from '@/common/type/entity.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
 
 export interface Method extends IdEntity {
   name: string;

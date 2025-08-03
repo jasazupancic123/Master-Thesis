@@ -1,11 +1,12 @@
-import { GroupDateFilter } from '@/common/type/filter.type';
-import { Box, IconButton, ToggleButton, Typography } from '@mui/material';
-import React from 'react';
+import { Box, ToggleButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useGroup } from '@/store/group-provider';
+import React from 'react';
+
+import type { GroupDateFilter } from '@/common/type/filter.type';
+import type { ILink } from '@/common/type/link.type';
 import { useDashboard } from '@/store/dashboard-provider';
-import { ILink } from '@/common/type/link.type';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface Props {
   value: GroupDateFilter | ILink;
@@ -21,7 +22,7 @@ export default function FilterButton(props: Props) {
   const theme = useTheme();
   const screenSize = useScreenSize();
 
-  const isILink = (val: any): val is ILink => {
+  const isILink = (val: GroupDateFilter | ILink): val is ILink => {
     return val && typeof val === 'object' && 'href' in val && 'label' in val;
   };
 

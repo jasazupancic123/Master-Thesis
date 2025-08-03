@@ -1,19 +1,20 @@
 'use client';
 
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { useEffect, useState } from 'react';
-import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
-import { useGroup } from '@/store/group-provider';
-import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
-import {
-  prepareSelectedAthleteAvgWorkloadsForChart,
-  prepareGroupAvgWorkloadsForChart,
-} from '../trainer-day-view/state';
 import { isBefore } from 'date-fns';
-import { Dimensions } from '@/common/type/dimensions.type';
+import { useEffect, useState } from 'react';
+
+import {
+  prepareGroupAvgWorkloadsForChart,
+  prepareSelectedAthleteAvgWorkloadsForChart,
+} from '../trainer-day-view/state';
+import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
 import TrainignExerciseSelected from '../training-exercise-selected/training-exercise-selected';
+import type { Dimensions } from '@/common/type/dimensions.type';
+import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group-provider';
 import { useSupersets } from '@/store/supersets-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingExerciseCardContainerProps {
   supersetIndex: number;

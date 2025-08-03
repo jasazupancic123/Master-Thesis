@@ -1,9 +1,11 @@
-import { SetState } from '@/common/type/state.type';
-import { TreeComponent } from '@/controller/component/type/component.type';
 import { FormControl } from '@mui/material';
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
+
+import type { SetState } from '@/common/type/state.type';
+import type { TreeComponent } from '@/controller/component/type/component.type';
 
 interface Props {
   selectedComponents: { [key: number]: string };

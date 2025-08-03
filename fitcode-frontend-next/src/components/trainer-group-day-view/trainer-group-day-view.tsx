@@ -1,32 +1,31 @@
-import { CommonService } from '@/common/service/common.service';
-import { Day } from '@/common/service/util/date.util';
-import { handleApiRequest } from '@/common/type/state.type';
-import TrainingMembers from '@/components/training-members/training-members';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
 import { CopyAll, Delete, Save } from '@mui/icons-material';
-import { Divider, IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
-import { useTheme } from '@mui/material';
-import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
+
+import { MAX_WIDTH } from '../trainer-day-view/constant';
 import GroupTrainerDayViewHeader from '../trainer-group-day-view-header/trainer-group-day-view-header';
 import GroupTrainerDayViewTrainings from '../trainer-group-day-view-trainings/group-trainer-day-view-trainings';
+import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
 import {
   deleteSelectedExercises,
   handleUpdateMultipleTrainings,
 } from './state';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
+import { CommonService } from '@/common/service/common.service';
+import type { Day } from '@/common/service/util/date.util';
+import { handleApiRequest } from '@/common/type/state.type';
+import TrainingMembers from '@/components/training-members/training-members';
+import { COMPLETED_FUTURE_WORKLOADS_DEFAULT_VALUE } from '@/controller/training/constant/completed-future-workloads-default-value.constant';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
-import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
-import { Training } from '@/controller/training/type/training.type';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 dayjs.extend(weekOfYear);
 

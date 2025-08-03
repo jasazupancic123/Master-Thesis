@@ -1,4 +1,4 @@
-import { PaginateOptions } from '@/common/type/paginate.type';
+import type { PaginateOptions } from '@/common/type/paginate.type';
 
 export class GenericUtil {
   sleep(s: number): Promise<void> {

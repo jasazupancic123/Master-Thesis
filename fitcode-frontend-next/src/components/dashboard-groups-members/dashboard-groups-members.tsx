@@ -1,17 +1,18 @@
-import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
-import { SearchBar } from '../search-bar/search-bar';
-import { useEffect, useState } from 'react';
-import { User } from '@/controller/user/type/user.type';
-import { useDashboard } from '@/store/dashboard-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTheme } from '@mui/material';
-import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
 import { Add, Remove } from '@mui/icons-material';
-import MyModal from '../modal/modal';
+import { Avatar, Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
+import { useEffect, useState } from 'react';
+
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
-import { SetState } from '@/common/type/state.type';
-import { useMain } from '@/store/main-provider';
 import DashboardEditAthleteModal from '../dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
+import MyModal from '../modal/modal';
+import { SearchBar } from '../search-bar/search-bar';
+import { isManager, isTrainer } from '@/common/service/util/firebase-auth.util';
+import type { SetState } from '@/common/type/state.type';
+import type { User } from '@/controller/user/type/user.type';
+import { useDashboard } from '@/store/dashboard-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface DashboardGroupsMembersProps {
   modal: {
@@ -38,7 +39,6 @@ export default function DashboardGroupsMembers(
     setSelectedInstitution,
     selectedGroup,
     members,
-    refetchMembers,
     setDetectedChanges,
   } = useDashboard();
   const { profile } = useMain();

@@ -1,5 +1,5 @@
-import { User } from '../user/type/user.type';
-import { Institution } from './type/institution.type';
+import type { User } from '../user/type/user.type';
+import type { Institution } from './type/institution.type';
 
 export class InstitutionService {
   static mapUsers(items: Institution[], users: User[]): Institution[] {

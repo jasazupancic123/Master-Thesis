@@ -1,27 +1,28 @@
 'use client';
 
-import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-group-modal';
-import MyModal from '@/components/modal/modal';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { User } from '@/controller/user/type/user.type';
-import { ArrowForward, Save } from '@mui/icons-material';
+import { ArrowForward } from '@mui/icons-material';
 import { Fab, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/material';
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { redirect } from 'next/navigation';
-import { useDashboard } from '@/store/dashboard-provider';
-import { handleApiRequest } from '@/common/type/state.type';
-import { GroupController } from '@/controller/group/group.controller';
-import { Institution } from '@/controller/institution/type/institution.type';
-import DashboardGroups from '@/components/dashboard-groups/dashboard-groups';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+
+import { LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS } from '@/common/constant/navigation.constant';
 import { isTrainer } from '@/common/service/util/firebase-auth.util';
+import { handleApiRequest } from '@/common/type/state.type';
+import AddGroupModal from '@/components/dashboard-add-group-modal/dashboard-add-group-modal';
+import DashboardGroups from '@/components/dashboard-groups/dashboard-groups';
 import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import { useMain } from '@/store/main-provider';
+import MyModal from '@/components/modal/modal';
+import { GroupController } from '@/controller/group/group.controller';
 import { GroupService } from '@/controller/group/group.service';
+import type { Institution } from '@/controller/institution/type/institution.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { User } from '@/controller/user/type/user.type';
+import { useDashboard } from '@/store/dashboard-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function DashboardPage() {
   const screenSize = useScreenSize();

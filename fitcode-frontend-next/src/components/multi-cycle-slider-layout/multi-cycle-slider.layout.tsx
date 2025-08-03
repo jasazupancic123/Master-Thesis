@@ -1,19 +1,20 @@
 'use client';
 
-import { SetState } from '@/common/type/state.type';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
 import { Add } from '@mui/icons-material';
 import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useEffect, useRef, useState } from 'react';
-import { handleAddCycle } from './state';
-import MultiCycleSlider from '../multi-cycle-slider/multi-cycle-slider';
-import { useTheme } from '@mui/material';
+
 import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import MultiCycleSlider from '../multi-cycle-slider/multi-cycle-slider';
+import { handleAddCycle } from './state';
+import type { SetState } from '@/common/type/state.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 dayjs.extend(dayOfYear);
 

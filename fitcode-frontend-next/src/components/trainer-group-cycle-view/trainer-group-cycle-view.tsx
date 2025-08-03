@@ -1,27 +1,28 @@
-import {
-  handleAddTrainingComponents,
-  handleDeleteTrainingComponent,
-} from '@/components/trainer-cycle-view/state';
-import TrainingWeek from '@/components/training-week/training-week';
-import { useGroup } from '@/store/group-provider';
-import { ComponentService } from '@/controller/component/component.service';
-import { Component } from '@/controller/component/type/component.type';
-import { TrainingService } from '@/controller/training/training.service';
-import { Divider, IconButton, Typography, useTheme } from '@mui/material';
+import { MoreVert } from '@mui/icons-material';
+import { IconButton, Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Target } from '@/controller/target/type/target.type';
-import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
-import { GroupService } from '@/controller/group/group.service';
-import { MoreVert } from '@mui/icons-material';
-import { MAX_WIDTH } from '../trainer-day-view/constant';
-import { useMain } from '@/store/main-provider';
-import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+
 import ExerciseChips from '../exercise-chips/exercise-chips';
+import HorizontalItemsList from '../horizontal-items-list/horizontal-items-list';
+import { MAX_WIDTH } from '../trainer-day-view/constant';
+import VerticalLinesBorder from '../vertical-lines-border/vertical-lines-border';
+import {
+  handleAddTrainingComponents,
+  handleDeleteTrainingComponent,
+} from '@/components/trainer-cycle-view/state';
+import TrainingWeek from '@/components/training-week/training-week';
+import { ComponentService } from '@/controller/component/component.service';
+import type { Component } from '@/controller/component/type/component.type';
+import { GroupService } from '@/controller/group/group.service';
+import type { Target } from '@/controller/target/type/target.type';
+import { TrainingService } from '@/controller/training/training.service';
+import { useGroup } from '@/store/group-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function TrainerCycleView() {
   const { components, exercises: allExercises, methods } = useMain();

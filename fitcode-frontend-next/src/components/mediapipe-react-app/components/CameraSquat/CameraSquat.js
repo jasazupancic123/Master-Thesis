@@ -1,25 +1,27 @@
 // TestSquat.js
 import React, {
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
-  useMemo,
-  useCallback,
 } from 'react';
+
+import './CameraSquat.css';
+
+import { Thresholds } from '../../thresholds/Squat';
 import {
-  calculate3DDistance,
   calculate2DDistance,
-  calculateStandardDeviation,
-  calculateAngles,
   calculate3DCoM,
+  calculate3DDistance,
+  calculateAngles,
+  calculateStandardDeviation,
   calculateTrunkAngle,
 } from '../../utils/Calculations';
-import { Thresholds } from '../../thresholds/Squat';
 // import { SquatTimesBar } from '../Charts/SquatTimesBar/SquatTimesBar'
 // import { SquatUpTimeGraph } from '../Charts/SquatUpTimes/SquatUpTimes';
 import { FeedbackGenerator } from '../FeedbackGenerator/FeedbackGenerator';
 import { SquatMetrics } from './SquatMetrics';
-import './CameraSquat.css';
 
 const CameraSquat = ({ poseResults, videoRef, canvasRef, poseLandmarks }) => {
   const POSE_LANDMARKS = poseLandmarks;
@@ -43,8 +45,6 @@ const CameraSquat = ({ poseResults, videoRef, canvasRef, poseLandmarks }) => {
   const MOVEMENT_THRESHOLD = 0.01; // Adjust based on testing to find a suitable threshold
   const prevIsInSquatRef = useRef(false);
   const movementDetectedRef = useRef(false);
-
-  /* eslint-disable no-unused-vars */
 
   const [isStill, setIsStill] = useState(false);
   const isReadyRef = useRef(false);
@@ -89,8 +89,6 @@ const CameraSquat = ({ poseResults, videoRef, canvasRef, poseLandmarks }) => {
   const comExtremeRef = useRef(0);
   const kneeDistExtremeRef = useRef(0);
   const [feedbackType, setFeedbackType] = useState('Boolean');
-
-  /* eslint-enable no-unused-vars */
 
   // Navigate to the previous frame within the current squat
   const showPreviousFrame = () => {
@@ -574,7 +572,10 @@ const CameraSquat = ({ poseResults, videoRef, canvasRef, poseLandmarks }) => {
         setLeftHipAngle(newLeftHipAngle);
         setRightHipAngle(newRightHipAngle);
         // Calculate CoM
-        const currentCoM = calculate3DCoM(poseResults.poseWorldLandmarks, POSE_LANDMARKS);
+        const currentCoM = calculate3DCoM(
+          poseResults.poseWorldLandmarks,
+          POSE_LANDMARKS
+        );
         setCoM(currentCoM);
 
         // Calculate the midpoint of the ankles in 3D
