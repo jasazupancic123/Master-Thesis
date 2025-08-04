@@ -11,8 +11,6 @@ import type { Pagination } from '@/common/type/paginate.type';
 import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
 import type { Training } from '@/controller/training/type/training.type';
-import { useAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
 
 const PAGE_SIZE = 3;
@@ -20,7 +18,6 @@ const commonService = CommonService.instance;
 
 export default function TrainingPage() {
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const {
     view,
@@ -31,8 +28,6 @@ export default function TrainingPage() {
     trainingInProgress,
     isLoaded,
   } = useTraining();
-
-  const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
 
   const [filteredPlannedTrainings, setFilteredPlannedTrainings] = useState<
     Training[]

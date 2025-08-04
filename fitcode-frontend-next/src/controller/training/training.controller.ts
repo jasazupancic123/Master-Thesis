@@ -57,7 +57,7 @@ export class TrainingController {
   }
 
   static async delete(trainingId: string) {
-    await api.delete<{}>(`/training/${trainingId}`);
+    await api.delete<null>(`/training/${trainingId}`);
     return null;
   }
 
