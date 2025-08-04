@@ -1,9 +1,11 @@
 'use client';
 
-import { Box, IconButton } from '@mui/material';
-import '@mediapipe/pose';
 import { Close } from '@mui/icons-material';
-import { SetState } from '@/common/type/state.type';
+import { Box, IconButton } from '@mui/material';
+
+import '@mediapipe/pose';
+
+import type { SetState } from '@/common/type/state.type';
 
 interface MediapipePoseDetectionProps {
   setOpenPoseDetection: SetState<boolean>;

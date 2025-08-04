@@ -1,16 +1,17 @@
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { TrainingService } from '@/controller/training/training.service';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { SetStateAction } from 'react';
+
 import { updateTraining } from '../training-exercise-card/state';
-import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
-import { Training } from '@/controller/training/type/training.type';
-import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { SetStateAction } from 'react';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { TrainingService } from '@/controller/training/training.service';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 export function updateExerciseAttributeValues(
   input: {

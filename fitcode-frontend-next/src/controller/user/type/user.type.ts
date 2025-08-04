@@ -1,7 +1,8 @@
-import { BaseEntity } from '@/common/type/entity.type';
-import { Gender } from '../enum/gender.enum';
-import { SportLevel } from '../enum/sport-level.enum';
-import { CustomClaims } from './custom-claims.type';
+import type { Gender } from '../enum/gender.enum';
+import type { SportLevel } from '../enum/sport-level.enum';
+import type { UserRole } from '../enum/user-role.enum';
+import type { CustomClaims } from './custom-claims.type';
+import type { BaseEntity } from '@/common/type/entity.type';
 
 // Firestore Database User
 export type UserEntity = BaseEntity & {
@@ -23,3 +24,27 @@ export interface User {
   displayName?: string;
   customClaims: CustomClaims;
 }
+
+export type AddAthlete = {
+  email: string;
+  displayName: string;
+  password: string;
+};
+
+export type FilterUsers = {
+  ids?: string[];
+  emails?: string[];
+  role?: UserRole;
+};
+
+export type UpdateProfile = Pick<
+  UserEntity,
+  | 'sport'
+  | 'level'
+  | 'gender'
+  | 'profileImageUrl'
+  | 'firstName'
+  | 'lastName'
+  | 'phone'
+  | 'birthDate'
+> & { userId: string };

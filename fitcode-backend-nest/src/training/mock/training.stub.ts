@@ -31,13 +31,19 @@ import { generateParamAttributeValuesFromComponentParams } from './param-values.
  */
 export function generateTrainingStub(
   data?: Partial<Training> & { date?: Date },
+  options?: {
+    disableAutomaticallySetComponentsDates?: boolean;
+  },
 ): Training {
   // evenly space components in between training's from and to dates
   const from = data?.from || data?.date || new Date();
   const to = data?.to || addHours(from, 2);
 
   const components: TrainingComponent[] = data?.components || [];
-  if (components.length) {
+  if (
+    components.length > 0 &&
+    !options?.disableAutomaticallySetComponentsDates
+  ) {
     const duration = (to.getTime() - from.getTime()) / components.length;
 
     components.forEach((c, i) => {
@@ -58,7 +64,6 @@ export function generateTrainingStub(
     ownerId: data?.ownerId || global.trainer.uid,
     membersIds: data?.membersIds || [global.athlete.uid],
     stats: data?.stats || [],
-    futureStats: data?.futureStats || [],
     copiedFromId: data?.copiedFromId || null,
     from,
     to,
@@ -68,7 +73,6 @@ export function generateTrainingStub(
       data?.cooldown ||
       generateTrainingComponent({ id: COOLDOWN_COMPONENT_ID }),
     components,
-    wellness: data?.wellness || [],
   };
 }
 
@@ -81,7 +85,7 @@ export function generateTrainingComponent(
     id: data?.id ?? v4(),
     color: data?.color || generateRandomColor(),
     from: data?.from || getTime(addDays(new Date(), 2), 8, 0),
-    to: addHours(from, 1),
+    to: data?.to || addHours(from, 1),
     target: data?.target || null,
     periodizationType: data?.periodizationType || null,
     methodId: data?.methodId || null,
@@ -106,7 +110,6 @@ export function generateSubgroup(data?: Partial<Subgroup>): Subgroup {
     periodizationType: data?.periodizationType || null,
     membersIds: data?.membersIds || [],
     supersets: data?.supersets || [],
-    futureStats: data?.futureStats || [],
   };
 }
 
@@ -118,7 +121,6 @@ export function generateTrainingExercise(
     color: data?.color || generateRandomColor(),
     params: data?.params || [],
     sets: data?.sets || [],
-    attributes: data?.attributes || [],
   };
 }
 

@@ -1,6 +1,6 @@
-import { DateRange } from '@/common/type/date-range.type';
-import { BaseEntity, ColorEntity } from '@/common/type/entity.type';
-import { SelectedTarget } from './selected-target.type';
+import type { SelectedTarget } from './selected-target.type';
+import type { DateRange } from '@/common/type/date-range.type';
+import type { BaseEntity, ColorEntity } from '@/common/type/entity.type';
 
 export type Cycle = BaseEntity &
   ColorEntity &

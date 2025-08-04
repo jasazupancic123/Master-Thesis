@@ -1,5 +1,5 @@
-import { IdEntity } from '@/common/type/entity.type';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { IdEntity } from '@/common/type/entity.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 
 export type ExerciseAttributeValue = IdEntity &
   AttributeValue & {

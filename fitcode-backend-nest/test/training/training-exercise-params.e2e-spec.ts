@@ -33,11 +33,11 @@ import { FirebaseService } from '@src/firebase/firebase.service';
 import type { Group } from '@src/group/entity/group.entity';
 import { GroupService } from '@src/group/group.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import { TestDbService } from '@src/test-db/test-db.service';
 import {
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
-  generateTrainingStub,
 } from '@src/training/mock/training.stub';
 import { TrainingService } from '@src/training/service/training.service';
 
@@ -47,6 +47,7 @@ import type { TestInstitution } from '../common/type/entity.type';
 
 describe('Training Exercise Params (e2e)', () => {
   let app: INestApplication;
+  let db: TestDbService;
   let firebase: FirebaseService;
   let componentService: ComponentService;
   let attributeService: AttributeService;
@@ -68,6 +69,7 @@ describe('Training Exercise Params (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
+    db = moduleFixture.get(TestDbService);
     firebase = moduleFixture.get(FirebaseService);
     attributeService = moduleFixture.get(AttributeService);
     componentService = moduleFixture.get(ComponentService);
@@ -104,13 +106,47 @@ describe('Training Exercise Params (e2e)', () => {
   }
 
   async function createTraining(exerciseId: string) {
-    return await trainingService.create(
+    const training = await db.trainings.create({
+      ownerId: global.trainer.id,
+      membersIds: [global.athlete.id],
+      institutionId: institution.id,
+      groupId: group.id,
+      cycleId: group.cycles[1].id,
+      date: addDays(new Date(), 2),
+      components: [
+        generateTrainingComponent({
+          id: COMPONENT_ENDURANCE.id,
+          supersets: [
+            generateSuperset({
+              exercises: [generateTrainingExercise({ id: exerciseId })],
+            }),
+          ],
+        }),
+      ],
+      warmup: generateTrainingComponent({
+        id: WARMUP_COMPONENT_ID,
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: exerciseId })],
+          }),
+        ],
+      }),
+      cooldown: generateTrainingComponent({
+        id: COOLDOWN_COMPONENT_ID,
+        supersets: [
+          generateSuperset({
+            exercises: [generateTrainingExercise({ id: exerciseId })],
+          }),
+        ],
+      }),
+    });
+
+    // populate params through service
+    return await trainingService.update(
       global.trainer,
-      generateTrainingStub({
-        institutionId: institution.id,
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        date: addDays(new Date(), 2),
+      { trainingId: training.id },
+      {
+        ...training,
         components: [
           generateTrainingComponent({
             id: COMPONENT_ENDURANCE.id,
@@ -121,7 +157,7 @@ describe('Training Exercise Params (e2e)', () => {
             ],
           }),
         ],
-      }),
+      },
     );
   }
 
@@ -175,7 +211,6 @@ describe('Training Exercise Params (e2e)', () => {
     it('should keep default params since no attribute values are passed to exercise', async () => {
       const exercise = await createExercise([]);
       const training = await createTraining(exercise.id);
-
       const params = training.components[0].supersets[0].exercises[0].params;
 
       // only vol1 (time, dist) and int1 (mas, hrmax, eff)
@@ -212,7 +247,6 @@ describe('Training Exercise Params (e2e)', () => {
       ]);
 
       const training = await createTraining(exercise.id);
-
       const params = training.components[0].supersets[0].exercises[0].params;
 
       // only vol1 (time, dist) and int1 (mas, hrmax, eff)

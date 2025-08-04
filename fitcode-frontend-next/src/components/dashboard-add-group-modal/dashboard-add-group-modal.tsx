@@ -1,10 +1,11 @@
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
-import MyModal from '../modal/modal';
+
 import { AddMembersModal } from '../add-members-modal/add-members-modal';
-import { User } from '@/controller/user/type/user.type';
+import MyModal from '../modal/modal';
+import type { SetState } from '@/common/type/state.type';
+import type { User } from '@/controller/user/type/user.type';
 import { useDashboard } from '@/store/dashboard-provider';
-import { SetState } from '@/common/type/state.type';
 import { useMain } from '@/store/main-provider';
 
 interface AddGroupModalProps {
@@ -20,7 +21,7 @@ export default function AddGroupModal(props: AddGroupModalProps) {
 
   const { owner, setOwner, groupName, setGroupName } = props;
   const [openModal, setOpenModal] = useState(false);
-  const [allTrainers, setAllTrainers] = useState(
+  const [allTrainers, _setAllTrainers] = useState(
     (users || []).filter((user) =>
       selectedInstitution?.trainerIds.includes(user.uid)
     )

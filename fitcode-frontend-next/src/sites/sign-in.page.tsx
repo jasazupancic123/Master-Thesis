@@ -1,27 +1,28 @@
 'use client';
 
-import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
-import {
-  LINK_TRAININGS,
-  LINK_USERS,
-  LINKS_AUTH,
-  LINK_DASHBOARD,
-} from '@/common/constant/navigation.constant';
-import { CommonService } from '@/common/service/common.service';
-import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
-import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Grid2, TextField } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { FormEvent } from 'react';
+import type { FormEvent } from 'react';
+import React from 'react';
 import toast from 'react-hot-toast';
-import { useTheme } from '@mui/material';
+
+import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
+import {
+  LINK_DASHBOARD,
+  LINK_TRAININGS,
+  LINKS_AUTH,
+} from '@/common/constant/navigation.constant';
+import { CommonService } from '@/common/service/common.service';
+import { FirebaseAuthUtil } from '@/common/service/util/firebase-auth.util';
+import HeroNavbar from '@/components/hero-navbar/hero-navbar';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 const mapper = {
   [UserRole.ATHLETE]: LINK_TRAININGS,

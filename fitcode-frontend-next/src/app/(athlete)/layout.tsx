@@ -1,10 +1,13 @@
+import { cookies } from 'next/headers';
+import { notFound } from 'next/navigation';
+
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import {
   isAdmin,
   isAthlete,
   isManager,
 } from '@/common/service/util/firebase-auth.util';
-import { ChildrenProps } from '@/common/type/props.type';
+import type { ChildrenProps } from '@/common/type/props.type';
 import Alert from '@/components/alert/alert';
 import { AttributeController } from '@/controller/attribute/attribute.controller';
 import { ComponentController } from '@/controller/component/component.controller';
@@ -12,9 +15,8 @@ import { ExerciseController } from '@/controller/exercise/exercise.controller';
 import { MethodController } from '@/controller/method/method.controller';
 import { UserController } from '@/controller/user/user.controller';
 import { AthleteProvider } from '@/store/athlete-provider';
-import { MainProvider, MainProviderProps } from '@/store/main-provider';
-import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
+import type { MainProviderProps } from '@/store/main-provider';
+import { MainProvider } from '@/store/main-provider';
 
 export default async function Layout({ children }: ChildrenProps) {
   const cookieStore = await cookies();

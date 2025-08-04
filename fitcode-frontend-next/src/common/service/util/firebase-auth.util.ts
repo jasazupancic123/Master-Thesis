@@ -1,11 +1,12 @@
+import { FirebaseError } from 'firebase/app';
+import type { UserCredential } from 'firebase/auth';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  UserCredential,
 } from 'firebase/auth';
+
 import { auth } from '@/common/config/firebase.config';
-import { FirebaseError } from 'firebase/app';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export const isAdmin = (role: UserRole[]) => role.includes(UserRole.ADMIN);
@@ -17,7 +18,7 @@ export class FirebaseAuthUtil {
   static async login(email: string, password: string): Promise<UserCredential> {
     try {
       return await signInWithEmailAndPassword(auth, email, password);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof FirebaseError) {
         switch (e.code) {
           case 'auth/invalid-credential':
@@ -55,7 +56,7 @@ export class FirebaseAuthUtil {
       if (displayName) await updateProfile(result.user, { displayName });
 
       return result;
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e instanceof FirebaseError) {
         switch (e.code) {
           case 'auth/email-already-in-use':

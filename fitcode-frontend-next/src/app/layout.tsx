@@ -1,12 +1,13 @@
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import React from 'react';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { Toaster } from 'react-hot-toast';
+
+import type { ChildrenProps } from '@/common/type/props.type';
 import { AuthProvider } from '@/store/auth-provider';
-import ThemeRegistry from '@/store/theme-registry';
 import { ScreenSizeProvider } from '@/store/screen-size-provider';
-import { ChildrenProps } from '@/common/type/props.type';
+import ThemeRegistry from '@/store/theme-registry';
 
 const inter = Inter({ subsets: ['latin'] });
 

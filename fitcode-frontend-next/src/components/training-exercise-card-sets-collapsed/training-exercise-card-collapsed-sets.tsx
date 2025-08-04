@@ -1,32 +1,35 @@
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Box, Grid2, IconButton } from '@mui/material';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { ExerciseParam } from '../exercise-param/exercise-param';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
-import { useGroup } from '@/store/group-provider';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { TrainingService } from '@/controller/training/training.service';
-import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
+import { Box, Grid2, IconButton } from '@mui/material';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import {
-  ParamType,
-  VolWorkSetType,
-} from '@/controller/component/enum/param.enum';
+import { v4 } from 'uuid';
+
+import { ExerciseParam } from '../exercise-param/exercise-param';
+import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
 import {
   getLAndRValues,
   updateTraining,
 } from '../training-exercise-card/state';
-import { SetState } from '@/common/type/state.type';
-import { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
-import { useEffect, useState } from 'react';
-import { useSupersets } from '@/store/supersets-provider';
-import { PrescribedWorkload } from '@/controller/training/type/workload-value.type';
+import type { SetState } from '@/common/type/state.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import {
+  ParamType,
+  VolWorkSetType,
+} from '@/controller/component/enum/param.enum';
 import { SetStatus } from '@/controller/training/enum/set-status.enum';
-import { v4 } from 'uuid';
+import { TrainingService } from '@/controller/training/training.service';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { IntensityVolumeValues } from '@/controller/training/type/intensity-volume-values.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useSupersets } from '@/store/supersets-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainingExerciseCardCollapsedSetsProps {
+  component: TrainingComponent;
   exercise: TrainingExercise;
   expandedSetsView: boolean;
   setExpandedSetsView: SetState<boolean>;
@@ -43,6 +46,8 @@ export default function TrainingExerciseCardCollapsedSets(
     props;
 
   const { setsNumbers, setSetsNumbers } = useSupersets();
+
+  const { methods } = useMain();
 
   const {
     training,
@@ -158,13 +163,17 @@ export default function TrainingExerciseCardCollapsedSets(
 
               let min: number | undefined;
               let max: number | undefined;
-              const attributeRange = exercise.attributes.find(
-                (ar) => ar.field === param.field
+
+              const method = methods.find((m) => m.id === component.methodId);
+              const attributeRange = method?.attributes.find(
+                (a) => a.field === param.field
               );
+
               if (attributeRange) {
                 const foundInOptions = attributeRange.options?.find(
                   (option) => option.field === valueL.selected
                 );
+
                 if (foundInOptions) {
                   if (foundInOptions.field === VolWorkSetType.Set) {
                     if (

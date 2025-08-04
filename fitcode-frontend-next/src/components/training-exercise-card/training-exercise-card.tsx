@@ -1,17 +1,18 @@
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import { Box, Tooltip } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useEffect, useRef, useState } from 'react';
-import { TrainingExerciseCardProps } from '../trainer-day-view/props';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useGroup } from '@/store/group-provider';
-import { updateTraining } from './state';
+
+import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
-import { useTheme } from '@mui/material';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { updateTraining } from './state';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
@@ -256,6 +257,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           <></>
         ) : !expandedSetsView ? (
           <TrainingExerciseCardCollapsedSets
+            component={component}
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}
@@ -264,6 +266,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
           />
         ) : (
           <TrainingExerciseCardExpandedSets
+            component={component}
             exercise={exercise}
             expandedSetsView={expandedSetsView}
             setExpandedSetsView={setExpandedSetsView}

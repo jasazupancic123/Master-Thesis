@@ -1,21 +1,23 @@
-import { useTraining } from '@/store/training-provider';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Box, IconButton, Collapse } from '@mui/material';
-import Typography from '@mui/material/Typography';
+import { Check } from '@mui/icons-material';
+import { Box, Collapse, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { SetState } from '@/common/type/state.type';
-import { Training } from '@/controller/training/type/training.type';
-import { CommonService } from '@/common/service/common.service';
+import Typography from '@mui/material/Typography';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+
 import AthleteSuperset from '../athlete-superset/athlete-superset';
 import MyModal from '../modal/modal';
-import toast from 'react-hot-toast';
+import { CommonService } from '@/common/service/common.service';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
 import { TrainingController } from '@/controller/training/training.controller';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import { useRouter } from 'next/navigation';
+import { TrainingService } from '@/controller/training/training.service';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAuth } from '@/store/auth-provider';
-import { Check } from '@mui/icons-material';
+import { useTraining } from '@/store/training-provider';
 
 const commonService = CommonService.instance;
 
@@ -51,6 +53,14 @@ export default function AthleteTrainingComponents(
 
   const theme = useTheme();
   const router = useRouter();
+
+  if (!user) {
+    return (
+      <Typography textAlign="center" sx={{ fontSize: 12 }}>
+        Please log in to view training components.
+      </Typography>
+    );
+  }
 
   return (
     <Box
@@ -148,7 +158,10 @@ export default function AthleteTrainingComponents(
               No supersets available
             </Typography>
           ) : (
-            selectedComponent.supersets.map((superset, i) => (
+            TrainingService.getPrescribedSupersetsByUser(
+              user.uid,
+              selectedComponent
+            ).map((superset, i) => (
               <AthleteSuperset
                 superset={superset}
                 supersetIndex={i}
@@ -189,6 +202,7 @@ export default function AthleteTrainingComponents(
                 selectedComponent: selectedComponent,
                 userId: user.uid,
               } as TrainingInProgress);
+
               setView(ExerciseTrainingView.TrainingView);
               setModal(false);
             },

@@ -1,16 +1,7 @@
 'use client';
 
-import {
-  LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS,
-  LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS,
-} from '@/common/constant/navigation.constant';
-import { useAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Group } from '@/controller/group/type/group.type';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import GroupsIcon from '@mui/icons-material/Groups';
-import MenuIcon from '@mui/icons-material/Menu';
 import { Tooltip } from '@mui/material';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -20,17 +11,21 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import { useTheme } from '@mui/material/styles';
-import Toolbar from '@mui/material/Toolbar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Logo from '../logo/logo';
-import { AppBar, Drawer, DrawerHeader } from './style';
 import toast from 'react-hot-toast';
+
 import TrainerGroupHeader from '../trainer-group-header/trainer-group-header';
-import { GroupDateFilter } from '@/common/type/filter.type';
-import { SetState } from '@/common/type/state.type';
+import { AppBar, Drawer, DrawerHeader } from './style';
+import {
+  LINKS_TRAINER_GROUP_SIDEBAR_MAIN_ITEMS,
+  LINKS_TRAINER_GROUP_SIDEBAR_SUB_ITEMS,
+} from '@/common/constant/navigation.constant';
+import type { Group } from '@/controller/group/type/group.type';
+import { useAuth } from '@/store/auth-provider';
 import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export interface TrainerGroupSidebarProps {
   group: Group | null; // selected group

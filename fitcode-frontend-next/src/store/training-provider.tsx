@@ -1,15 +1,14 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+
 import { useAuth } from './auth-provider';
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { SetState } from '@/common/type/state.type';
-import {
-  ExerciseOrTraining,
-  ExerciseTrainingView,
-} from '@/common/type/exercise-or-training.type';
-import { Training } from '@/controller/training/type/training.type';
-import { ChildrenProps } from '@/common/type/props.type';
+import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 
 interface TrainingContextType extends TrainingProviderProps {
   clearTrainingState: () => void;
@@ -55,12 +54,14 @@ export const TrainingProvider = (
       const parsedTrainingInProgress = JSON.parse(
         storedTrainingInProgress
       ) as TrainingInProgress;
+
       if (parsedTrainingInProgress.userId !== user?.uid) {
         clearTrainingState();
         setIsLoaded(true);
         return;
       }
-      setTrainingInProgress(parsedTrainingInProgress);
+
+      setTrainingInProgress({ ...parsedTrainingInProgress });
     }
 
     setIsLoaded(true);

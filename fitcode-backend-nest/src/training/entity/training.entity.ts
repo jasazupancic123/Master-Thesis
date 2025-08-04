@@ -10,7 +10,6 @@ import {
 
 import { BaseEntity } from '@src/common/entity/base.entity';
 import { Institution } from '@src/institution/entity/institution.entity';
-import { Wellness } from '@src/user/entity/wellness.entity';
 
 import { TrainingComponent } from './training-component.entity';
 import { TrainingExerciseAverageStats } from './training-exercise-average-stats.entity';
@@ -51,6 +50,8 @@ export class Training extends BaseEntity {
   membersIds: string[]; // all members of the group
 
   @ApiProperty()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
   @Expose()
   completedMembersIds: string[]; // members who completed the training
 
@@ -60,18 +61,6 @@ export class Training extends BaseEntity {
   @ApiPropertyOptional()
   @Expose()
   copiedFromId?: string; // if this training is copied from another training
-
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
-  @Expose()
-  stats: TrainingExerciseAverageStats[]; // average intensity and volume stats for each exercise in the training
-
-  @ValidateNested({ each: true })
-  @Type(() => TrainingExerciseAverageStats)
-  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
-  @Expose()
-  futureStats: TrainingExerciseAverageStats[]; // average future group workload stats
 
   @IsDate()
   @ApiProperty()
@@ -84,6 +73,12 @@ export class Training extends BaseEntity {
   @Expose()
   @Transform(({ value }) => new Date(value))
   to: Date;
+
+  @ValidateNested({ each: true })
+  @Type(() => TrainingExerciseAverageStats)
+  @ApiProperty({ type: () => TrainingExerciseAverageStats, isArray: true })
+  @Expose()
+  stats: TrainingExerciseAverageStats[]; // completed stats for each exercise for this training
 
   @ValidateNested()
   @Type(() => TrainingComponent)
@@ -102,10 +97,4 @@ export class Training extends BaseEntity {
   @ApiProperty({ type: () => TrainingComponent, isArray: true })
   @Expose()
   components: TrainingComponent[];
-
-  @ValidateNested({ each: true })
-  @Type(() => Wellness)
-  @ApiProperty({ type: () => Wellness, isArray: true })
-  @Expose()
-  wellness: Wellness[]; // members' wellness info used to calculate workloads
 }

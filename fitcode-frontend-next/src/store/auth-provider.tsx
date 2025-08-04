@@ -1,19 +1,19 @@
 'use client';
 
+import type { User } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { createContext, useContext, useEffect, useState } from 'react';
+
 import { auth } from '@/common/config/firebase.config';
 import { FIREBASE_COOKIE_NAME } from '@/common/constant/browser.constant';
 import { LINK_INDEX } from '@/common/constant/navigation.constant';
 import { CommonService } from '@/common/service/common.service';
-import { AuthContextType } from '@/common/type/context.type';
-import { ChildrenProps } from '@/common/type/props.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { CustomClaims } from '@/controller/user/type/custom-claims.type';
-import { UserEntity } from '@/controller/user/type/user.type';
+import type { AuthContextType } from '@/common/type/context.type';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { CustomClaims } from '@/controller/user/type/custom-claims.type';
+import type { UserEntity } from '@/controller/user/type/user.type';
 import { UserController } from '@/controller/user/user.controller';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useLocalStorage } from 'usehooks-ts';
 
 const commonService = CommonService.instance;
 

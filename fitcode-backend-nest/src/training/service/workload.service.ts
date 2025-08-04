@@ -676,7 +676,7 @@ export class WorkloadService {
     };
   }
 
-  getExerciseSet(workload: Workload) {
+  getExerciseSet(workload: Workload): ExerciseSet {
     const set: ExerciseSet = {
       setNumber: workload.setNumber,
       paramValuesL: [],

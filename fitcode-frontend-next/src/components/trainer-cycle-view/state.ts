@@ -1,24 +1,22 @@
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import toast from 'react-hot-toast';
+
+import type { AddTrainingComponents } from './type';
 import { CommonService } from '@/common/service/common.service';
-import {
-  handleApiRequest,
-  SetState,
-  SetStateNullable,
-} from '@/common/type/state.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Method } from '@/controller/method/type/method.type';
+import type { Target } from '@/controller/target/type/target.type';
 import { TrainingController } from '@/controller/training/training.controller';
 import { TrainingService } from '@/controller/training/training.service';
-import { Training } from '@/controller/training/type/training.type';
-import dayjs, { Dayjs } from 'dayjs';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import toast from 'react-hot-toast';
-import { AddTrainingComponents } from './type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Target } from '@/controller/target/type/target.type';
-import { Method } from '@/controller/method/type/method.type';
-import { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleCreateTraining(
   input: {
@@ -81,17 +79,15 @@ export async function handleCreateTraining(
         cycleId: cycle.id,
         components: selectedComponents,
         membersIds: [],
-        stats: [],
-        futureStats: [],
       }),
     (training) => {
-      const mapped = TrainingService.mapComponentsExercisesMethods(
-        training,
+      TrainingService.mapData(training, {
         components,
         exercises,
-        methods
-      );
-      setTrainings((prev) => [...prev, mapped]);
+        methods,
+      });
+
+      setTrainings((prev) => [...prev, training]);
       toast.success('Training created successfully');
     },
     undefined,
@@ -144,15 +140,14 @@ export async function handleAddTrainingComponents(
       }
 
       // add components to training
-      const mapped = TrainingService.mapComponentsExercisesMethods(
-        training,
+      TrainingService.mapData(training, {
         components,
         exercises,
-        methods
-      );
+        methods,
+      });
 
       setTrainings((prev) =>
-        prev.map((t) => (t.id === mapped.id ? mapped : t))
+        prev.map((t) => (t.id === training.id ? training : t))
       );
 
       toast.success(
@@ -186,19 +181,18 @@ export async function handleDeleteTrainingComponent(
     router,
     () => TrainingController.deleteComponent(trainingId, componentId),
     (training) => {
-      const mapped = TrainingService.mapComponentsExercisesMethods(
-        training,
+      TrainingService.mapData(training, {
         components,
         exercises,
-        methods
-      );
+        methods,
+      });
 
-      if (mapped.components.length === 0) {
+      if (training.components.length === 0) {
         // traning was deleted
         setTrainings((prev) => prev.filter((t) => t.id !== training.id));
       } else {
         setTrainings((prev) =>
-          prev.map((t) => (t.id === trainingId ? mapped : t))
+          prev.map((t) => (t.id === trainingId ? training : t))
         );
       }
     },

@@ -1,5 +1,6 @@
-import { storage } from '@/common/config/firebase.config';
 import { getDownloadURL, ref, uploadBytes } from '@firebase/storage';
+
+import { storage } from '@/common/config/firebase.config';
 
 export class FirebaseStorageUtil {
   static async uploadFile(file: File, path: string) {

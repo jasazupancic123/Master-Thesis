@@ -1,17 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
-import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
-import toast from 'react-hot-toast';
-import Button from '@mui/material/Button';
-import MyModal from '@/components/modal/modal';
 import { TextField } from '@mui/material';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Tree, { TreeItem } from '@/components/tree/tree';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
+
 import { CommonService } from '@/common/service/common.service';
-import {
+import MyModal from '@/components/modal/modal';
+import type { TreeItem } from '@/components/tree/tree';
+import Tree from '@/components/tree/tree';
+import type {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
@@ -38,12 +41,12 @@ export default function Page() {
   const [modal, setModal] = useState({ edit: false });
   const [isTreeView, setIsTreeView] = useState(false);
 
-  async function editComponent(id: string) {
+  async function editComponent() {
     try {
       // await ComponentController.update(token, id, component);
       toast.success('Successfully edited components');
       setModal((prev) => ({ ...prev, edit: false }));
-    } catch (e) {
+    } catch (_e: unknown) {
       toast.error('Failed to edit components');
     }
   }
@@ -109,10 +112,7 @@ export default function Page() {
         setIsOpen={() => setModal((prev) => ({ ...prev, edit: false }))}
         actions={
           <>
-            <Button
-              onClick={() => editComponent(component.id as string)}
-              color="primary"
-            >
+            <Button onClick={() => editComponent()} color="primary">
               Edit
             </Button>
             <Button

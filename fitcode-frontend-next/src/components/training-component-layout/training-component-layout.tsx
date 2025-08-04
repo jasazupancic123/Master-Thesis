@@ -1,27 +1,27 @@
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Box, Stack, Collapse, Divider } from '@mui/material';
-import { useState } from 'react';
-import { TrainingComponentProps } from '../trainer-day-view/props';
-import Supersets from '../supersets/supersets';
-import MyModal from '../modal/modal';
+import { Box, Collapse, Divider, Stack } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import MuscleHeatmapView from '../muscle-heatmap-view/muscle-heatmap-view';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { handleCopyComponentApiRequest } from './state';
-import TrainingComponentCard from '../training-component-card/training-component-card';
-import TrainingComponentMenu from '../training-component-menu/training-component-menu';
-import { TrainingInfo } from '@/controller/training/type/training.type';
+
 import ComponentActionsModal from '../component-actions-modal/component-actions-modal';
+import MyModal from '../modal/modal';
+import MuscleHeatmapView from '../muscle-heatmap-view/muscle-heatmap-view';
+import Supersets from '../supersets/supersets';
+import type { TrainingComponentProps } from '../trainer-day-view/props';
+import TrainingComponentCard from '../training-component-card/training-component-card';
+import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
+import TrainingComponentMenu from '../training-component-menu/training-component-menu';
+import { handleCopyComponentApiRequest } from './state';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
-import TrainingComponentHeaderMenu from '../training-component-header-menu/training-component-header-menu';
-import { useTheme } from '@mui/material';
-import { SupersetsProvider } from '@/store/supersets-provider';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 export default function TrainingComponentLayout(props: TrainingComponentProps) {
   const screenSize = useScreenSize();

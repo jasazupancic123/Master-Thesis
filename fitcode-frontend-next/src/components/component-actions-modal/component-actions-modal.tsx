@@ -1,14 +1,15 @@
-import { ComponentModalAction } from '@/common/enum/component-modal-action.constant';
-import { Box, Typography } from '@mui/material';
-import { useState } from 'react';
-import TrainingComponentCalendar from '../training-component-calendar/training-component-calendar';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Day } from '@/common/service/util/date.util';
-import { SetState } from '@/common/type/state.type';
-import { TrainingInfo } from '@/controller/training/type/training.type';
-import ComponentPeriodization from '../component-periodization/component-periodization';
+import { Box } from '@mui/material';
 import { useTheme } from '@mui/material';
+import { useState } from 'react';
+
+import ComponentPeriodization from '../component-periodization/component-periodization';
+import TrainingComponentCalendar from '../training-component-calendar/training-component-calendar';
+import { ComponentModalAction } from '@/common/enum/component-modal-action.constant';
+import type { Day } from '@/common/service/util/date.util';
+import type { SetState } from '@/common/type/state.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 interface ComponentActionsModalProps {
   trainingComponent: TrainingComponent; // Replace with actual type

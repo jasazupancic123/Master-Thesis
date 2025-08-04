@@ -1,4 +1,4 @@
-import { Wellness } from '@/controller/user/type/wellness.type';
+import type { Wellness } from '@/controller/user/type/wellness.type';
 
 let cachedWellness: Wellness | null = null;
 

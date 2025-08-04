@@ -1,17 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { UserController } from '@/controller/user/user.controller';
+
 import Alert from '../components/alert/alert';
-import { ChildrenProps } from '@/common/type/props.type';
-import { WellnessProvider } from '@/store/wellness-provider';
 import {
   getCachedWellness,
   setCachedWellness,
 } from '../session-cache/wellness.session-cache';
-import { Wellness } from '@/controller/user/type/wellness.type';
-import { useMain } from '@/store/main-provider';
+import type { ChildrenProps } from '@/common/type/props.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { Wellness } from '@/controller/user/type/wellness.type';
+import { UserController } from '@/controller/user/user.controller';
+import { useMain } from '@/store/main-provider';
+import { WellnessProvider } from '@/store/wellness-provider';
 
 export default function WellnessInitializer({ children }: ChildrenProps) {
   const [wellness, setWellness] = useState<Wellness | null>(

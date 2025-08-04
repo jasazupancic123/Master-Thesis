@@ -1,16 +1,18 @@
-import { SetState, handleApiRequest } from '@/common/type/state.type';
-import { ExerciseController } from '@/controller/exercise/exercise.controller';
-import { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
+
 import { CommonService } from '@/common/service/common.service';
-import { Pagination } from '@/common/type/paginate.type';
-import { Component } from '@/controller/component/type/component.type';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { DEFAULT_EXERCISE } from '../../../../sites/exercises.page';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { Pagination } from '@/common/type/paginate.type';
+import type { SetState } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { Component } from '@/controller/component/type/component.type';
+import { ExerciseController } from '@/controller/exercise/exercise.controller';
+import { ExerciseService } from '@/controller/exercise/exercise.service';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { ExerciseAttributeValue } from '@/controller/exercise/type/exercise-attribute-value.type';
+import { DEFAULT_EXERCISE } from '@/sites/exercises.page';
 
 const commonService = CommonService.instance;
 
@@ -333,7 +335,7 @@ export async function handleCsvFileUpload(
       videoUrl,
       instruction: undefined,
       attributeValues: [] as ExerciseAttributeValue[],
-      valuesObject: {} as Record<string, any>,
+      valuesObject: {} as Record<string, unknown>,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as Exercise;

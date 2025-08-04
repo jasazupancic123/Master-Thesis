@@ -1,6 +1,6 @@
+import { connectStorageEmulator, getStorage } from '@firebase/storage';
 import { getApps, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
-import { connectStorageEmulator, getStorage } from '@firebase/storage';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
 const config = {
@@ -29,4 +29,4 @@ if (isDev) connectStorageEmulator(storage, 'localhost', 9199);
 const functions = getFunctions(app);
 if (isDev) connectFunctionsEmulator(functions, 'localhost', 5001);
 
-export { auth, storage, functions };
+export { auth, functions, storage };

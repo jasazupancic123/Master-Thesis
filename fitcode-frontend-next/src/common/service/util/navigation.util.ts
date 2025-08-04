@@ -1,21 +1,22 @@
+import type { SvgIconComponent } from '@mui/icons-material';
+import AccessibilityIcon from '@mui/icons-material/Accessibility';
+import AcUnit from '@mui/icons-material/AcUnit';
+import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import LocalFireDepartment from '@mui/icons-material/LocalFireDepartment';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
+import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
+import TimerIcon from '@mui/icons-material/Timer';
+import { redirect } from 'next/navigation';
+
 import {
   LINK_SIGN_IN,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
 import { REDIRECT_TO_SIGN_IN } from '@/common/error/redirect.error';
-import { ILink } from '@/common/type/link.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { SvgIconComponent } from '@mui/icons-material';
-import AccessibilityIcon from '@mui/icons-material/Accessibility';
-import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
-import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
-import SportsMartialArtsIcon from '@mui/icons-material/SportsMartialArts';
-import TimerIcon from '@mui/icons-material/Timer';
-import LocalFireDepartment from '@mui/icons-material/LocalFireDepartment';
-import AcUnit from '@mui/icons-material/AcUnit';
-import { redirect } from 'next/navigation';
+import type { ILink } from '@/common/type/link.type';
+import type { UserRole } from '@/controller/user/enum/user-role.enum';
 
 export class NavigationUtil {
   getSidebarLinksByUserRole(role: UserRole): ILink[] {

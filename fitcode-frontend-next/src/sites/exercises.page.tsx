@@ -1,15 +1,6 @@
 'use client';
 
-import { Pagination as PaginationType } from '@/common/type/paginate.type';
-import { ExerciseCard } from '@/components/exercise-card/exercise-card';
-import ExerciseChips from '@/components/exercise-chips/exercise-chips';
-import ExerciseModal from '@/components/exercise-modal/exercise-modal';
-import PageTitle from '@/components/page-title/page-title';
-import { SearchBar } from '@/components/search-bar/search-bar';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { ComponentService } from '@/controller/component/component.service';
-import { Component } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
+import { Publish } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/AddOutlined';
 import { Pagination, Tooltip, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
@@ -18,24 +9,34 @@ import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import MyModal from '@/components/modal/modal';
+
 import {
+  handleAddExercise,
   handleCreateManyExercises,
   handleCsvFileUpload,
-  handleAddExercise,
   handleDeleteExercise,
   handlePaginateExercises,
   handleUpdateExercise,
 } from '@/app/(trainer)/dashboard/exercises/state';
-import FileUpload from '@/components/file-upload/file-upload';
-import { Publish } from '@mui/icons-material';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { isAdmin } from '@/common/service/util/firebase-auth.util';
-import { useMain } from '@/store/main-provider';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import { isAdmin } from '@/common/service/util/firebase-auth.util';
+import type { Pagination as PaginationType } from '@/common/type/paginate.type';
+import { ExerciseCard } from '@/components/exercise-card/exercise-card';
+import ExerciseChips from '@/components/exercise-chips/exercise-chips';
+import ExerciseModal from '@/components/exercise-modal/exercise-modal';
+import FileUpload from '@/components/file-upload/file-upload';
+import MyModal from '@/components/modal/modal';
+import PageTitle from '@/components/page-title/page-title';
+import { SearchBar } from '@/components/search-bar/search-bar';
+import { ComponentService } from '@/controller/component/component.service';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export const DEFAULT_EXERCISE: Partial<Exercise> = {
   name: '',

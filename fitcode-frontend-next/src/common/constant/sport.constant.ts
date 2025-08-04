@@ -1,7 +1,7 @@
 export const SPORTS = [
-    'Football',
-    'Basketball',
-    'Tennis',
-    'Swimming',
-    'Athletics',
-]
+  'Football',
+  'Basketball',
+  'Tennis',
+  'Swimming',
+  'Athletics',
+];

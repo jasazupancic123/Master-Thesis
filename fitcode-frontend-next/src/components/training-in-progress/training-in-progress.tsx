@@ -1,23 +1,24 @@
-import { SetState } from '@/common/type/state.type';
-import { useAuth } from '@/store/auth-provider';
-import { useTraining } from '@/store/training-provider';
-import { Superset } from '@/controller/training/type/superset.type';
-import { Training } from '@/controller/training/type/training.type';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
-import { Box, Fab, Typography, Menu, MenuItem } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
 import Animation from '../animation/animation';
 import MyModal from '../modal/modal';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import dayjs from 'dayjs';
-import { useTheme } from '@mui/material';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import { handleFinishTraining } from './state';
 import TrainingInProgressSuperset from '../training-in-progress-superset/training-in-progress-superset';
-import { useMain } from '@/store/main-provider';
+import { handleFinishTraining } from './state';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { SetState } from '@/common/type/state.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useAuth } from '@/store/auth-provider';
+import { useMain } from '@/store/main-provider';
+import { useTraining } from '@/store/training-provider';
 
 interface TrainingInProgressProps {
   setTrainings: SetState<Training[]>;
@@ -27,14 +28,14 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const theme = useTheme();
   const router = useRouter();
 
-  const { profile } = useMain();
-
   const {
     clearTrainingState,
     trainingInProgress,
     setTrainingInProgress,
     setView,
   } = useTraining();
+
+  const { exercises } = useMain();
 
   const { setTrainings } = props;
 
@@ -54,18 +55,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
 
     const newTrainingInProgress = { ...trainingInProgress };
     if (!newTrainingInProgress.supersets) {
-      let usersSupersets = undefined;
-      for (const subgroup of newTrainingInProgress.selectedComponent
-        .subgroups) {
-        if (subgroup.membersIds.includes(profile.uid)) {
-          usersSupersets = subgroup.supersets;
-          break;
-        }
-      }
-      if (!usersSupersets)
-        usersSupersets = newTrainingInProgress.selectedComponent.supersets; //default group
-
-      newTrainingInProgress.supersets = usersSupersets;
+      newTrainingInProgress.supersets =
+        newTrainingInProgress.selectedComponent.supersets;
     }
 
     if (!newTrainingInProgress.startOfTraining) {
@@ -82,11 +73,19 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
         ]
       );
 
+    const componentIndex = newTrainingInProgress.training.components.findIndex(
+      (c) => c.id === newTrainingInProgress.selectedComponent?.id
+    );
+
+    if (componentIndex === -1) return;
+    const component = newTrainingInProgress.training.components[componentIndex];
+
     setTrainingInProgress(
       (prev) =>
         ({
           ...prev,
-          supersets: newTrainingInProgress.supersets,
+          selectedComponent: component,
+          supersets: component.supersets,
           startOfTraining: newTrainingInProgress.startOfTraining,
           supersetIndex: newTrainingInProgress.supersetIndex,
         }) as TrainingInProgress
@@ -124,6 +123,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenMenu = (event: any) => {
     setAnchorEl(event.currentTarget);
   };
@@ -209,6 +209,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                   clearTrainingState,
                   setSelectedSuperset,
                   setView,
+                  exercises,
                 })
               }
             >
@@ -237,6 +238,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             clearTrainingState,
             setSelectedSuperset,
             setView,
+            exercises,
           });
           setOpenFinishTrainingModal(false);
         }}

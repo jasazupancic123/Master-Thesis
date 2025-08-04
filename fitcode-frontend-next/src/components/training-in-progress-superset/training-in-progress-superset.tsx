@@ -1,17 +1,18 @@
-import { SetState } from '@/common/type/state.type';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTraining } from '@/store/training-provider';
-import { Superset } from '@/controller/training/type/superset.type';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
-import { Box, Fab, Typography, Menu, MenuItem } from '@mui/material';
-import { useRef, useState } from 'react';
-import MyModal from '../modal/modal';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useRef, useState } from 'react';
+
+import MyModal from '../modal/modal';
 import TrainingInProgressExercises from '../training-in-progress-exercises/training-in-progress-exercises';
+import type { SetState } from '@/common/type/state.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTraining } from '@/store/training-provider';
 
 interface TrainingInProgressSupersetProps {
   selectedSuperset: Superset;

@@ -1,15 +1,16 @@
 'use client';
 
-import { ChildrenProps } from '@/common/type/props.type';
-import { Wellness } from '@/controller/user/type/wellness.type';
 import { createContext, useContext, useMemo, useState } from 'react';
+
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { Wellness } from '@/controller/user/type/wellness.type';
 
 export interface WellnessProviderProps {
   wellness: Wellness;
 }
 
 interface WellnessContextProps extends WellnessProviderProps {
-  setWellness: (wellness: Wellness) => void;
+  setWellness: (_wellness: Wellness) => void;
 }
 
 const WellnessContext = createContext<WellnessContextProps | null>(null);

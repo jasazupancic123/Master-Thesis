@@ -1,13 +1,14 @@
-import { SetState } from '@/common/type/state.type';
-import { useTraining } from '@/store/training-provider';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { ExerciseSet } from '@/controller/training/type/exercise-set.type';
 import { Box } from '@mui/material';
+
 import { ExerciseParam } from '../exercise-param/exercise-param';
-import { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
 import LeftRightExerciseText from '../left-right-exercise-text/left-right-exercise-text';
+import type { SetState } from '@/common/type/state.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { ExerciseSet } from '@/controller/training/type/exercise-set.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
+import { useTraining } from '@/store/training-provider';
 
 interface TrainingInProgressExerciseSetProps {
   set: ExerciseSet;

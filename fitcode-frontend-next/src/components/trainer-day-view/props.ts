@@ -1,12 +1,10 @@
-import { Day } from '@/common/service/util/date.util';
-import { SetState } from '@/common/type/state.type';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { Training } from '@/controller/training/type/training.type';
-import { Dispatch, SetStateAction } from 'react';
+import type { Day } from '@/common/service/util/date.util';
+import type { SetState } from '@/common/type/state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 export interface TrainingCardProps {
   day: Day;

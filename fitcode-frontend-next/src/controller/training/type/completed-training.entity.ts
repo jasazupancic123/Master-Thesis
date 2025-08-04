@@ -1,4 +1,4 @@
-import { TrainingExercise } from './training-exercise.type';
+import type { TrainingExercise } from './training-exercise.type';
 
 export type CompletedTrainingExercise = Pick<
   TrainingExercise,

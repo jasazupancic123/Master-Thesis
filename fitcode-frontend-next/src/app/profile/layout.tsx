@@ -1,6 +1,7 @@
-import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
-import { ChildrenProps } from '@/common/type/props.type';
+import Container from '@mui/material/Container';
+
+import type { ChildrenProps } from '@/common/type/props.type';
 import ProfileInitializer from '@/initializers/profile.initializer';
 
 export default function Layout({ children }: ChildrenProps) {

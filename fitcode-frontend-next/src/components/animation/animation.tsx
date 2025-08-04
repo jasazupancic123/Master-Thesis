@@ -1,8 +1,9 @@
 import { Box, LinearProgress } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
-import { useScreenSize } from '@/store/screen-size-provider';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+
 import Logo from '../logo/logo';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface AnimationProps {
   text: string;
@@ -13,12 +14,11 @@ interface AnimationProps {
 export default function Animation(props: AnimationProps) {
   const screenSize = useScreenSize();
   const [progress, setProgress] = useState(0);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((prevProgress) =>
-        prevProgress >= 100 ? 10 : prevProgress + 1
+        prevProgress >= 100 ? 10 : prevProgress + 10
       );
     }, 50);
 

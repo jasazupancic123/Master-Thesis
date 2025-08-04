@@ -1,6 +1,7 @@
+import { Box, Typography } from '@mui/material';
+
 import { theme } from '@/app/style';
 import { useScreenSize } from '@/store/screen-size-provider';
-import { Box, Typography } from '@mui/material';
 
 export default function PageTitle({ title }: { title: string }) {
   const screenSize = useScreenSize();

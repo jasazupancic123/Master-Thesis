@@ -1,12 +1,12 @@
-import { DateRange } from '@/common/type/date-range.type';
-import { IdEntity, ColorEntity } from '@/common/type/entity.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Method } from '@/controller/method/type/method.type';
-import { Target } from '@/controller/target/type/target.type';
-import { PeriodizationType } from '../enum/periodization-type.enum';
-import { CopiedFrom } from './copied-from.type';
-import { Subgroup, SubgroupInfo } from './subgroup.type';
-import { Superset } from './superset.type';
+import type { PeriodizationType } from '../enum/periodization-type.enum';
+import type { CopiedFrom } from './copied-from.type';
+import type { Subgroup, SubgroupInfo, UpdateSubgroup } from './subgroup.type';
+import type { Superset, UpdateSuperset } from './superset.type';
+import type { DateRange } from '@/common/type/date-range.type';
+import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Method } from '@/controller/method/type/method.type';
+import type { Target } from '@/controller/target/type/target.type';
 
 export type TrainingComponent = IdEntity &
   ColorEntity &
@@ -36,3 +36,22 @@ export type TrainingComponentInfo = IdEntity &
     component?: Component;
     copiedFrom?: CopiedFrom; // used for copying components from other trainings
   };
+
+export type CreateTrainingComponent = Pick<
+  TrainingComponent,
+  'id' | 'from' | 'to' | 'target' | 'methodId'
+>;
+
+export type UpdateTrainingComponent = Pick<
+  TrainingComponent,
+  'id' | 'color' | 'from' | 'to' | 'target' | 'periodizationType' | 'methodId'
+> & {
+  supersets: UpdateSuperset[];
+  subgroups: UpdateSubgroup[];
+};
+
+export type CopyComponent = Pick<DateRange, 'from'> & {
+  componentId: string;
+  copyFromTrainingId: string;
+  copyToTrainingId?: string;
+};

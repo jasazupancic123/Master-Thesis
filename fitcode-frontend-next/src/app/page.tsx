@@ -1,8 +1,6 @@
 'use client';
 
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import {
   Card,
   CardContent,
@@ -11,7 +9,16 @@ import {
   Grid,
   Paper,
 } from '@mui/material';
-import Footer from '@/components/footer/footer';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
+import Link from '@mui/material/Link';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import React from 'react';
+
+import { buttonStyle, theme, titleStyle } from '@/app/style';
 import {
   features,
   highlights,
@@ -19,17 +26,10 @@ import {
   team,
   trademark,
 } from '@/common/constant/hero-data.constant';
-import Stack from '@mui/material/Stack';
-import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import Button from '@mui/material/Button';
-import React, { ReactNode } from 'react';
-import Avatar from '@mui/material/Avatar';
-import Link from '@mui/material/Link';
 import { LINKS_NAVBAR } from '@/common/constant/navigation.constant';
+import type { ChildrenProps } from '@/common/type/props.type';
+import Footer from '@/components/footer/footer';
 import HeroNavbar from '@/components/hero-navbar/hero-navbar';
-import { buttonStyle, theme, titleStyle } from '@/app/style';
-import { useTheme } from '@mui/material';
-import { ChildrenProps } from '@/common/type/props.type';
 
 export type AppPageProps = ChildrenProps & {
   title: string;
@@ -38,7 +38,6 @@ export type AppPageProps = ChildrenProps & {
 };
 
 function Section(props: AppPageProps) {
-  const theme = useTheme();
   const { title, description, id, children } = props;
 
   return (

@@ -1,13 +1,15 @@
-import { useScreenSize } from '@/store/screen-size-provider';
+import type { SxProps } from '@mui/material';
 import {
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  SxProps,
 } from '@mui/material';
 import Button from '@mui/material/Button';
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
+
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export interface Props {
   isOpen: boolean;

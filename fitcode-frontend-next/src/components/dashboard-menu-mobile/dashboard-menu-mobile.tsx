@@ -1,33 +1,34 @@
 import {
-  LINKS_SIDEBAR,
-  LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS,
-  LINK_DASHBOARD,
-  LINK_PROFILE,
-  LINK_SETTINGS,
-} from '@/common/constant/navigation.constant';
-import { Institution } from '@/controller/institution/type/institution.type';
-import {
   Groups,
-  Settings,
   Logout,
   Menu as MenuIcon,
+  Settings,
 } from '@mui/icons-material';
 import {
-  IconButton,
-  Drawer,
-  List,
-  Box,
-  ListItem,
   Avatar,
+  Box,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
   ListItemText,
   Tooltip,
 } from '@mui/material';
 import Link from 'next/link';
-import SelectInputHorizontal from '../select-input-horizontal/select-input-horizontal';
 import { useState } from 'react';
+
+import SelectInputHorizontal from '../select-input-horizontal/select-input-horizontal';
+import {
+  LINK_DASHBOARD,
+  LINK_PROFILE,
+  LINK_SETTINGS,
+  LINKS_DASHBOARD_SIDEBAR_SUB_ITEMS,
+  LINKS_SIDEBAR,
+} from '@/common/constant/navigation.constant';
+import type { Institution } from '@/controller/institution/type/institution.type';
+import { useAuth } from '@/store/auth-provider';
 import { useDashboard } from '@/store/dashboard-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
-import { useAuth } from '@/store/auth-provider';
 
 export default function DashboardMenuMobile() {
   const { institutions, selectedInstitution, setSelectedInstitution } =

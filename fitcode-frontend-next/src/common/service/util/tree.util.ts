@@ -5,6 +5,7 @@ interface TreeOptions<T> {
   rootId?: string | null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TreeItem = Record<string, any>;
 
 export class TreeUtil {
@@ -16,7 +17,7 @@ export class TreeUtil {
       rootId = null,
     } = options;
 
-    const map = new Map<any, T & TreeItem>();
+    const map = new Map<unknown, T & TreeItem>();
     const roots: T[] = [];
 
     // Initialize the map and add the children array to each item
@@ -38,7 +39,7 @@ export class TreeUtil {
     return roots;
   }
 
-  forEach<T extends TreeItem = any, Result = any>(
+  forEach<T extends TreeItem, Result = unknown>(
     items: T[],
     childrenPropertyName: keyof T,
     callback: (

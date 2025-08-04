@@ -1,25 +1,23 @@
 'use client';
 
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+
+import { CompletedPlanned } from '@/common/enum/past-future.enum';
 import { CommonService } from '@/common/service/common.service';
+import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
+import type { Pagination } from '@/common/type/paginate.type';
 import AthleteTrainingCard from '@/components/athlete-training-card/athlete-training-card';
 import TrainingInProgress from '@/components/training-in-progress/training-in-progress';
-import { useAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
+import type { Training } from '@/controller/training/type/training.type';
 import { useTraining } from '@/store/training-provider';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
-import { useTheme } from '@mui/material';
-import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
-import { CompletedPlanned } from '@/common/enum/past-future.enum';
-import { Pagination } from '@/common/type/paginate.type';
-import { Training } from '@/controller/training/type/training.type';
 
 const PAGE_SIZE = 3;
 const commonService = CommonService.instance;
 
 export default function TrainingPage() {
   const theme = useTheme();
-  const screenSize = useScreenSize();
 
   const {
     view,
@@ -30,8 +28,6 @@ export default function TrainingPage() {
     trainingInProgress,
     isLoaded,
   } = useTraining();
-
-  const { hasJustLoggedIn, setHasJustLoggedIn } = useAuth();
 
   const [filteredPlannedTrainings, setFilteredPlannedTrainings] = useState<
     Training[]

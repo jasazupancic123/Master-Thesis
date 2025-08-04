@@ -1,16 +1,15 @@
-import { SetState } from '@/common/type/state.type';
+import { CameraAlt } from '@mui/icons-material';
+import { Box, Grid2, IconButton, Typography } from '@mui/material';
+import Image from 'next/image';
+import { useState } from 'react';
+
+import MediapipePoseDetection from '../mediapipe-pose-detection/mediapipe-pose-detection';
+import TrainingInProgressExerciseSet from '../training-in-progress-exercise-set/training-in-progress-exercise-set';
+import type { SetState } from '@/common/type/state.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useTraining } from '@/store/training-provider';
-import { Superset } from '@/controller/training/type/superset.type';
-import { Box, Grid2, Typography, IconButton } from '@mui/material';
-import Image from 'next/image';
-import { CameraAlt } from '@mui/icons-material';
-import TrainingInProgressExerciseSet from '../training-in-progress-exercise-set/training-in-progress-exercise-set';
-import { useState } from 'react';
-import MediapipePoseDetection from '../mediapipe-pose-detection/mediapipe-pose-detection';
-import { ExerciseService } from '@/controller/exercise/exercise.service';
-import { TrainingService } from '@/controller/training/training.service';
-import { useMain } from '@/store/main-provider';
 
 interface TrainingInProgressExercisesProps {
   selectedSuperset: Superset;

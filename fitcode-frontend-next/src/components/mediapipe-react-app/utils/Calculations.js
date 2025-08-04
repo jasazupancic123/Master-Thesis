@@ -1,4 +1,4 @@
-import { Thresholds, CoMWeights } from '../thresholds/Squat';
+import { CoMWeights, Thresholds } from '../thresholds/Squat';
 
 export function denormalizeCoordinates(landmark, frameWidth, frameHeight) {
   return {

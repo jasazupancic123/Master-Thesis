@@ -1,5 +1,6 @@
-import { ChildrenProps } from '@/common/type/props.type';
 import { Box, Container } from '@mui/material';
+
+import type { ChildrenProps } from '@/common/type/props.type';
 
 export default function Layout({ children }: ChildrenProps) {
   const styles = {
