@@ -10,7 +10,6 @@ import {
   MenuItem,
   Select,
   TextField,
-  useTheme,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -42,7 +41,6 @@ export default function ProfilePage() {
 
   const router = useRouter();
   const screenSize = useScreenSize();
-  const theme = useTheme();
 
   const [profile, setProfile] = useState<UserEntity>({
     ...profileGlobal,

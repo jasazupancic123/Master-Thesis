@@ -6,7 +6,9 @@ import type { ExerciseOrTraining } from '@/common/type/exercise-or-training.type
 import { ExerciseTrainingView } from '@/common/type/exercise-or-training.type';
 import type { SetState } from '@/common/type/state.type';
 import { handleApiRequest } from '@/common/type/state.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
 import type { CompletedTrainingExercise } from '@/controller/training/type/completed-training.entity';
 import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
@@ -21,6 +23,7 @@ export const handleFinishTraining = async (state: {
   clearTrainingState: () => void;
   setSelectedSuperset: SetState<Superset | undefined>;
   setView: SetState<ExerciseOrTraining>;
+  exercises: Exercise[];
 }) => {
   const {
     trainingInProgress,
@@ -31,6 +34,7 @@ export const handleFinishTraining = async (state: {
     clearTrainingState,
     setView,
     setSelectedSuperset,
+    exercises,
   } = state;
 
   if (!trainingInProgress || !user || !trainingInProgress.selectedComponent)
@@ -56,6 +60,8 @@ export const handleFinishTraining = async (state: {
       );
     },
     (training) => {
+      TrainingService.mapData(training, { exercises });
+
       toast.success('Training data updated successfully');
       clearTrainingState();
       setView(ExerciseTrainingView.ExerciseView);

@@ -5,7 +5,7 @@ import { Box, Fab, Menu, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Animation from '../animation/animation';
 import MyModal from '../modal/modal';
@@ -17,6 +17,7 @@ import type { Superset } from '@/controller/training/type/superset.type';
 import type { Training } from '@/controller/training/type/training.type';
 import type { TrainingInProgress } from '@/controller/training/type/training-in-progress.type';
 import { useAuth } from '@/store/auth-provider';
+import { useMain } from '@/store/main-provider';
 import { useTraining } from '@/store/training-provider';
 
 interface TrainingInProgressProps {
@@ -33,6 +34,8 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
     setTrainingInProgress,
     setView,
   } = useTraining();
+
+  const { exercises } = useMain();
 
   const { setTrainings } = props;
 
@@ -120,6 +123,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenMenu = (event: any) => {
     setAnchorEl(event.currentTarget);
   };
@@ -205,6 +209,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
                   clearTrainingState,
                   setSelectedSuperset,
                   setView,
+                  exercises,
                 })
               }
             >
@@ -233,6 +238,7 @@ export default function TrainingInProgress(props: TrainingInProgressProps) {
             clearTrainingState,
             setSelectedSuperset,
             setView,
+            exercises,
           });
           setOpenFinishTrainingModal(false);
         }}

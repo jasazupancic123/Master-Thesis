@@ -10,14 +10,12 @@ import TrainerDayView from '@/components/trainer-group-day-view/trainer-group-da
 import TrainerWeekView from '@/components/trainer-group-week-view/trainer-group-week-view';
 import TrainerYearView from '@/components/trainer-group-year-view/trainer-group-year-view';
 import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { TrainerDayViewProvider } from '@/store/trainer-day-view-provider';
 
 export default function TrainerGroupPage() {
-  const screenSize = useScreenSize();
   const context = useGroup();
 
-  const { group, groups, filter, setFilter } = context;
+  const { group, groups, filter } = context;
 
   const mapper: Record<GroupDateFilter, ReactNode> = {
     day: (

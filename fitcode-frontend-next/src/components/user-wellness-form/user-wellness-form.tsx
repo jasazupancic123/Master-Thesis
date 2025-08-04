@@ -19,7 +19,7 @@ interface Props {
 }
 
 export default function UserWellnessForm(props: Props) {
-  const { wellness, setWellness } = useWellness();
+  const { wellness } = useWellness();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
