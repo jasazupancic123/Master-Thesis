@@ -1,15 +1,17 @@
 'use client';
 
-import dayjs, { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { createContext, useContext, useState } from 'react';
-import { ChildrenProps } from '@/common/type/props.type';
-import { ILink } from '@/common/type/link.type';
+
 import {
   LINK_TRAININGS,
   LINKS_SIDEBAR,
 } from '@/common/constant/navigation.constant';
+import type { ILink } from '@/common/type/link.type';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { SetState } from '@/common/type/state.type';
 import { UserRole } from '@/controller/user/enum/user-role.enum';
-import { SetState } from '@/common/type/state.type';
 
 interface AthleteContextProps {
   selectedDate: Dayjs;

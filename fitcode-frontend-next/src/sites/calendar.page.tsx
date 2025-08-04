@@ -1,22 +1,25 @@
 'use client';
 
-import { CommonService } from '@/common/service/common.service';
-import { useScreenSize } from '@/store/screen-size-provider';
 import { Box, Paper } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import dayjs from 'dayjs';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { Calendar, momentLocalizer, ToolbarProps } from 'react-big-calendar';
+import type { ToolbarProps } from 'react-big-calendar';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import CustomToolbar from '../components/calendar-custom-toolbar/calendar-custom-toolbar';
+import '@/app/(athlete)/calendar/styles.css';
+
 import {
   fetchAthleteTrainings,
   handleNavigate,
 } from '../app/(athlete)/calendar/state';
-import '@/app/(athlete)/calendar/styles.css';
-import { CalendarEvent } from '../common/type/calendar-event-type';
+import type { CalendarEvent } from '../common/type/calendar-event-type';
+import CustomToolbar from '../components/calendar-custom-toolbar/calendar-custom-toolbar';
+import { CommonService } from '@/common/service/common.service';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const commonService = CommonService.instance;
 

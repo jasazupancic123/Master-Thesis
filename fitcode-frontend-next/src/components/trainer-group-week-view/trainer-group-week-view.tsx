@@ -1,12 +1,6 @@
 'use client';
 
-import { CommonService } from '@/common/service/common.service';
-import { handleApiRequest } from '@/common/type/state.type';
-import Circles from '@/components/circles/circles';
-import TrainingItem from '@/components/training-week-view-item/training-week-view-item';
-import { useGroup } from '@/store/group-provider';
-import { TrainingController } from '@/controller/training/training.controller';
-import { TrainingService } from '@/controller/training/training.service';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
@@ -14,8 +8,14 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { useTheme } from '@mui/material';
-import { addMinutes } from 'date-fns';
+
+import { CommonService } from '@/common/service/common.service';
+import { handleApiRequest } from '@/common/type/state.type';
+import Circles from '@/components/circles/circles';
+import TrainingItem from '@/components/training-week-view-item/training-week-view-item';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
 
 const commonService = CommonService.instance;
@@ -158,17 +158,16 @@ export default function TrainerWeekView() {
                                 workloads: [],
                               }),
                             (training) => {
-                              const mapped =
-                                TrainingService.mapComponentsExercisesMethods(
-                                  training,
-                                  components,
-                                  exercises,
-                                  methods
-                                );
+                              TrainingService.mapData(training, {
+                                components,
+                                exercises,
+                                methods,
+                                prescribedStats: true,
+                              });
 
                               setTrainings((prev) =>
                                 prev.map((t) =>
-                                  t.id === training.id ? mapped : t
+                                  t.id === training.id ? training : t
                                 )
                               );
 

@@ -1,7 +1,8 @@
-import { BaseEntity } from '@/common/type/entity.type';
-import { ExerciseAttributeValue } from './exercise-attribute-value.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { ExerciseAttributeValue } from './exercise-attribute-value.type';
+import type { BaseEntity } from '@/common/type/entity.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { Component } from '@/controller/component/type/component.type';
 
 export type Exercise = BaseEntity & {
   ownerId: string;
@@ -18,3 +19,22 @@ export type Exercise = BaseEntity & {
   components?: Component[];
   rootComponents?: Component[];
 };
+
+export type FilterExercises = Partial<Pick<Exercise, 'componentIds'>> &
+  Partial<AttributeValue>;
+
+export type CreateExercise = Pick<
+  Exercise,
+  | 'name'
+  | 'componentIds'
+  | 'imageUrl'
+  | 'videoUrl'
+  | 'instruction'
+  | 'attributeValues'
+>;
+
+export type CreateExercises = {
+  exercises: CreateExercise[];
+};
+
+export type UpdateExercise = CreateExercise;

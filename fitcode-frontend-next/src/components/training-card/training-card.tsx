@@ -1,6 +1,3 @@
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import {
   Box,
@@ -10,28 +7,32 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material';
 import {
   DatePicker,
   DesktopDatePicker,
   LocalizationProvider,
 } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 import MyModal from '../modal/modal';
-import { TrainingCardProps } from '../trainer-day-view/props';
+import type { TrainingCardProps } from '../trainer-day-view/props';
 import { handleCopyTraining } from '../trainer-day-view/state';
 import TrainingComponentLayout from '../training-component-layout/training-component-layout';
-import { useTheme } from '@mui/material';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 export default function TrainingCard(props: TrainingCardProps) {
   const { components, exercises, methods } = useMain();
   const { trainings, cycle, setTrainings } = useGroup();
 
   const {
-    training: selectedTraining,
     setTraining,
     selectedPeriod,
     setSelectedPeriod,
@@ -271,7 +272,9 @@ export default function TrainingCard(props: TrainingCardProps) {
           <Typography variant="h6">Select Training Period</Typography>
           <Select
             value={selectedPeriod}
-            onChange={(event) => setSelectedPeriod(event.target.value as any)}
+            onChange={(event) =>
+              setSelectedPeriod(event.target.value as 'AM' | 'PM')
+            }
             fullWidth
           >
             <MenuItem value="AM">AM</MenuItem>

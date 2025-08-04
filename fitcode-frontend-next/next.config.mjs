@@ -27,6 +27,9 @@ const nextConfig = {
       'img.sofascore.com',
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

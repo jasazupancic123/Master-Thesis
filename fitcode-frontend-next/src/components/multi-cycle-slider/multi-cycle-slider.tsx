@@ -1,22 +1,23 @@
 'use client';
 
-import { SetState } from '@/common/type/state.type';
-import { useGroup } from '@/store/group-provider';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
 import { Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { useState } from 'react';
 import { Range } from 'react-range';
+
+import EditCycleForm from '../edit-cycle-form/edit-cycle-form';
+import MyModal from '../modal/modal';
 import {
-  handleDrag,
   handleChange,
+  handleDrag,
   handleDragEnd,
 } from '../multi-cycle-slider-layout/state';
-import { useTheme } from '@mui/material';
-import MyModal from '../modal/modal';
-import EditCycleForm from '../edit-cycle-form/edit-cycle-form';
+import type { SetState } from '@/common/type/state.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import { useGroup } from '@/store/group-provider';
 
 dayjs.extend(dayOfYear);
 

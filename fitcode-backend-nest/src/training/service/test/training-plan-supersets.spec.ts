@@ -7,13 +7,19 @@ import { AttributeService } from '@src/attribute/service/attribute.service';
 import { CacheManagerService } from '@src/cache-manager/cache-manager.service';
 import { CommonModule } from '@src/common/common.module';
 import { ComponentService } from '@src/component/component.service';
+import { PARAMS } from '@src/component/constant/param.constant';
+import { IntType, ParamType, VolType } from '@src/component/enum/param.enum';
+import { generateComponentStub } from '@src/component/mock/component.stub';
+import { generateComponentParamsStub } from '@src/component/mock/component-param.stub';
 import { validationSchema } from '@src/config/environment-validation-schema';
 import { generateExerciseStub } from '@src/exercise/mock/exercise.stub';
 import { ExerciseAttributeValueRepository } from '@src/exercise/repository/exercise-attribute-value.repository';
 import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { FirebaseService } from '@src/firebase/firebase.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
+import type { Method } from '@src/method/entity/method.entity';
 import {
+  generateExerciseSet,
   generateSubgroup,
   generateSuperset,
   generateTrainingComponent,
@@ -80,12 +86,15 @@ describe('validateSupersets', () => {
     componentService = moduleRef.get(ComponentService);
   });
 
+  const root = generateComponentStub({ id: 'c1' });
   beforeEach(() => {
+    jest.spyOn(componentService, 'getRoot').mockImplementation(() => root);
     jest
-      .spyOn(componentService, 'getRoot')
-      .mockImplementation((leaf, allComponents) => {
-        return allComponents.find((c) => c.id === leaf.parentId) || leaf;
-      });
+      .spyOn(componentService, 'getComponentParamAttributes')
+      .mockReturnValue(
+        generateComponentParamsStub([ParamType.VolWork1, ParamType.IntWork1]),
+      );
+    jest.spyOn(componentService, 'getParamAttributes').mockReturnValue(PARAMS);
   });
 
   const exercises = [
@@ -100,6 +109,13 @@ describe('validateSupersets', () => {
     generateExerciseStub({ id: 'e9', componentIds: ['leaf3'] }),
   ];
 
+  const data = {
+    exercises,
+    components: [root],
+    methods: [],
+    attributes: [],
+  };
+
   it('should throw error if there are more than 8 supersets in a training component', () => {
     const trainingComponent = generateTrainingComponent({
       id: 'c1',
@@ -109,8 +125,13 @@ describe('validateSupersets', () => {
         }),
       ),
     });
+
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises),
+      service.validateSupersets(
+        trainingComponent,
+        trainingComponent.supersets,
+        data,
+      ),
     ).toThrow('You can only have up to 8 supersets per training component');
   });
 
@@ -125,8 +146,13 @@ describe('validateSupersets', () => {
         }),
       ],
     });
+
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises),
+      service.validateSupersets(
+        trainingComponent,
+        trainingComponent.supersets,
+        data,
+      ),
     ).toThrow('You can only have up to 4 exercises per superset');
   });
 
@@ -145,8 +171,145 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises),
+      service.validateSupersets(
+        trainingComponent,
+        trainingComponent.supersets,
+        data,
+      ),
     ).toThrow('Training exercise not found');
+  });
+
+  describe('validateSupersets with methods', () => {
+    const MIN_SET = 5;
+    const MAX_SET = 10;
+    const MIN_REP = 15;
+    const MAX_REP = 12;
+
+    const trainingComponent = generateTrainingComponent({
+      id: 'c1',
+      methodId: 'm1',
+      supersets: [
+        generateSuperset({
+          exercises: [
+            generateTrainingExercise({
+              id: 'e1',
+              sets: [
+                generateExerciseSet(1, [
+                  {
+                    field: ParamType.VolWork1,
+                    selected: VolType.Rep,
+                    value: '12',
+                  },
+                  {
+                    field: ParamType.IntWork1,
+                    selected: IntType.Kg,
+                    value: '20',
+                  },
+                ]),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    const methods = [
+      {
+        id: 'm1',
+        name: 'Method1',
+        ability: 'Ability1',
+        attributes: [
+          {
+            field: 'vol1',
+            defaultValue: 'rep',
+            options: [
+              { field: 'rep', defaultValue: '12', min: MIN_REP, max: MAX_REP },
+            ],
+          },
+          {
+            field: 'volWorkSets',
+            defaultValue: 'set',
+            options: [
+              { field: 'set', defaultValue: 5, min: MIN_SET, max: MAX_SET },
+            ],
+          },
+        ],
+        intensity: '100%',
+        tempo: '1',
+        recovery: '60',
+        targetId: 'power',
+      },
+      {
+        id: 'm2',
+        name: 'Method2',
+        ability: 'Ability2',
+        attributes: [
+          {
+            field: 'vol1',
+            defaultValue: 'rep',
+            options: [{ field: 'rep', defaultValue: '12', min: 5, max: 12 }],
+          },
+          {
+            field: 'volWorkSets',
+            defaultValue: 'set',
+            options: [{ field: 'set', defaultValue: 5, min: 1, max: 10 }],
+          },
+        ],
+        intensity: '100%',
+        tempo: '1',
+        recovery: '60',
+        targetId: 'power',
+      },
+    ] as Method[];
+
+    it('should not throw error if no method is on training component', () => {
+      const copyTrainingComponent = { ...trainingComponent };
+      copyTrainingComponent.methodId = undefined;
+
+      expect(() =>
+        service.validateSupersets(
+          copyTrainingComponent,
+          copyTrainingComponent.supersets,
+          { ...data, methods },
+        ),
+      ).not.toThrow(); // If no error is thrown, the test passes
+    });
+
+    it('should throw error if invalid method is provided', () => {
+      const copyTrainingComponent = { ...trainingComponent };
+      copyTrainingComponent.methodId = 'invalidMethodId';
+
+      expect(() => {
+        service.validateSupersets(
+          copyTrainingComponent,
+          copyTrainingComponent.supersets,
+          { ...data, methods },
+        );
+      }).toThrow('Method not found for training component');
+    });
+
+    it('should throw error if attribute value is out of range', () => {
+      expect(() => {
+        service.validateSupersets(
+          trainingComponent,
+          trainingComponent.supersets,
+          { ...data, methods },
+        );
+      }).toThrow(`Value for vol1 cannot be less than ${MIN_REP}`);
+    });
+
+    it('should successfully validate exercise values', () => {
+      const copyTrainingComponent = { ...trainingComponent };
+      copyTrainingComponent.methodId = 'm2';
+
+      expect(() =>
+        service.validateSupersets(
+          copyTrainingComponent,
+          copyTrainingComponent.supersets,
+          { ...data, methods },
+        ),
+      ).not.toThrow(); // If no error is thrown, the test passes
+    });
   });
 
   it('should successfuly validate supersets', () => {
@@ -181,7 +344,11 @@ describe('validateSupersets', () => {
     });
 
     expect(() =>
-      service.validateSupersets(trainingComponent, exercises),
+      service.validateSupersets(
+        trainingComponent,
+        trainingComponent.supersets,
+        data,
+      ),
     ).not.toThrow();
   });
 });

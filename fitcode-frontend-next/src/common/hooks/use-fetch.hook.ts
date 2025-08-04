@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
 import { ApiUtil } from '../service/util/api.util';
 
 type UseFetchOptions = RequestInit & {
@@ -19,15 +20,14 @@ export function useFetch<T = unknown>(url: string, options?: UseFetchOptions) {
         const token = await ApiUtil.getFreshIdToken();
         if (!token) throw new Error('Unauthorized');
 
-        // add headers to options
-        options = {
+        const response = await fetch(providedUrl || url, {
           ...options,
           headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...options?.headers,
+            Authorization: `Bearer ${token}`,
           },
-        };
+        });
 
-        const response = await fetch(providedUrl || url, options);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -40,12 +40,12 @@ export function useFetch<T = unknown>(url: string, options?: UseFetchOptions) {
         setLoading(false);
       }
     },
-    [url, JSON.stringify(options)]
-  ); // JSON.stringify ensures proper memoization
+    [url]
+  );
 
   useEffect(() => {
     if (!options?.skip) fetchData();
-  }, [fetchData]);
+  }, [fetchData, options?.skip]);
 
   return { data, setData, error, loading, refetch: fetchData };
 }

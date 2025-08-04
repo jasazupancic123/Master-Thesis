@@ -1,15 +1,24 @@
 'use client';
 
-import { useGroup } from '@/store/group-provider';
 import { Save } from '@mui/icons-material';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { TrainingWeekViewItemProps } from '../trainer-week-view/type';
+
 import TrainerWeekComponentItem from '../training-week-component-item/training-week-component-item';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import type {
+  Training,
+  UpdateTraining,
+} from '@/controller/training/type/training.type';
+import { useGroup } from '@/store/group-provider';
+
+export type TrainingWeekViewItemProps = {
+  training: Training;
+  updateTraining: (training: Training, input: UpdateTraining) => Promise<void>;
+};
 
 export default function TrainingItem(props: TrainingWeekViewItemProps) {
   const { training, updateTraining } = props;

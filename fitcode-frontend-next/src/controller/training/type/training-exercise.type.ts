@@ -1,7 +1,7 @@
-import { IdEntity, ColorEntity } from '@/common/type/entity.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { ExerciseSet } from './exercise-set.type';
+import type { ExerciseSet } from './exercise-set.type';
+import type { ColorEntity, IdEntity } from '@/common/type/entity.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 
 export type TrainingExercise = IdEntity &
   ColorEntity & {
@@ -12,3 +12,8 @@ export type TrainingExercise = IdEntity &
     // mapped properties
     exercise?: Exercise;
   };
+
+export type UpdateTrainingExercise = Pick<
+  TrainingExercise,
+  'id' | 'color' | 'sets'
+>;

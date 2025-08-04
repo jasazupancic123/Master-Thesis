@@ -13,6 +13,7 @@ import { Institution } from '@src//institution/entity/institution.entity';
 import { Attribute } from '@src/attribute/entity/attribute.entity';
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 import { AttributeService } from '@src/attribute/service/attribute.service';
+import { DeepPick } from '@src/common/interface/deep-pick.interface';
 import { CommonService } from '@src/common/service/common.service';
 import { Update } from '@src/common/type/entity.type';
 import { User } from '@src/common/type/firebase-auth.type';
@@ -32,13 +33,20 @@ import { ExerciseService } from '@src/exercise/service/exercise.service';
 import { InstitutionService } from '@src/institution/service/institution.service';
 import { Method } from '@src/method/entity/method.entity';
 
+import { DEFAULT_WARMUP_AND_COOLDOWN_DURATION } from '../constant/training-component-duration.constant';
 import { CompletedTrainingExercise } from '../entity/completed-training.entity';
 import { ExerciseSet } from '../entity/exercise-set.entity';
+import { Subgroup } from '../entity/subgroup.entity';
+import { Superset } from '../entity/superset.entity';
 import { Training } from '../entity/training.entity';
 import { TrainingComponent } from '../entity/training-component.entity';
 import { TrainingExercise } from '../entity/training-exercise.entity';
 import { TrainingExerciseAverageStats } from '../entity/training-exercise-average-stats.entity';
 import { PeriodizationType } from '../enum/periodization-type.enum';
+import {
+  UpdateSuperset,
+  UpdateTrainingComponent,
+} from '../interface/update-training.interface';
 
 @Injectable()
 export class TrainingPlanService {
@@ -83,7 +91,9 @@ export class TrainingPlanService {
 
     const query: Update<Training> = {
       components: [
-        ...training.components,
+        ...training.components.filter(
+          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+        ),
         ...input.map((c) => ({
           id: c.id,
           color: c.color,
@@ -148,7 +158,10 @@ export class TrainingPlanService {
   }
 
   async getAllTrainingExercises(
-    trainingComponents: TrainingComponent[],
+    trainingComponents: DeepPick<
+      TrainingComponent,
+      'supersets.exercises.id' | 'subgroups.supersets.exercises.id'
+    >[],
   ): Promise<Exercise[]> {
     const trainingExercises = trainingComponents.flatMap((c) => [
       ...c.supersets.flatMap((s) => s.exercises),
@@ -183,179 +196,46 @@ export class TrainingPlanService {
   }
 
   /**
-   * Used to create future training stats for upcoming training components
+   * Called when athlete completes training component, used to recalculate average
+   * stats for exercises.
    */
-  createFutureTrainingStats(
-    components: TrainingComponent[],
-    numTotalTrainingMembers: number,
-  ): TrainingExerciseAverageStats[] {
-    const createdFutureStats = [] as {
-      totalIntensity: number;
-      totalVolume: number;
-      totalNumMembers: number;
-      exerciseId: string;
-      rootComponentId: string;
-    }[];
-
-    for (const component of components) {
-      const numMembersInSubgroups = component.subgroups.reduce(
-        (sum, subgroup) => sum + subgroup.membersIds.length,
-        0,
-      );
-      const numMainGroupMembers =
-        numTotalTrainingMembers - numMembersInSubgroups;
-
-      for (const superset of component.supersets) {
-        for (const exercise of superset.exercises) {
-          if (!exercise.sets.length) continue;
-
-          const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
-
-          createdFutureStats.push({
-            totalIntensity: avgInt * numMainGroupMembers,
-            totalVolume: avgVol * numMainGroupMembers,
-            totalNumMembers: numMainGroupMembers,
-            exerciseId: exercise.id,
-            rootComponentId: component.id,
-          });
-        }
-      }
-
-      for (const subgroup of component.subgroups) {
-        for (const superset of subgroup.supersets) {
-          for (const exercise of superset.exercises) {
-            if (!exercise.sets.length) continue;
-
-            const { avgInt, avgVol } = this.getAvgIntVolValues(exercise);
-
-            const foundFutureStat = createdFutureStats.find(
-              (fs) => fs.exerciseId === exercise.id,
-            );
-
-            if (foundFutureStat) {
-              foundFutureStat.totalIntensity +=
-                avgInt * subgroup.membersIds.length;
-              foundFutureStat.totalVolume +=
-                avgVol * subgroup.membersIds.length;
-              foundFutureStat.totalNumMembers += subgroup.membersIds.length;
-            } else {
-              createdFutureStats.push({
-                totalIntensity: avgInt * subgroup.membersIds.length,
-                totalVolume: avgVol * subgroup.membersIds.length,
-                totalNumMembers: subgroup.membersIds.length,
-                exerciseId: exercise.id,
-                rootComponentId: component.id,
-              });
-            }
-          }
-        }
-      }
-    }
-
-    return createdFutureStats.map((fs) => {
-      const avgIntensity = fs.totalIntensity / fs.totalNumMembers;
-      const avgVolume = fs.totalVolume / fs.totalNumMembers;
-
-      return {
-        exerciseId: fs.exerciseId,
-        rootComponentId: fs.rootComponentId,
-        numMembers: fs.totalNumMembers,
-        intensity: avgIntensity,
-        volume: avgVolume,
-      };
-    });
-  }
-
-  private getAvgIntVolValues(exercise: TrainingExercise) {
-    let avgInt = 0;
-    let avgVol = 0;
-    for (const exerciseSet of exercise.sets) {
-      const intL = exerciseSet.paramValuesL.find(
-        (p) => p.field === ParamType.IntWork1,
-      );
-      const intR = exerciseSet.paramValuesR.find(
-        (p) => p.field === ParamType.IntWork1,
-      );
-
-      const volL = exerciseSet.paramValuesL.find(
-        (p) => p.field === ParamType.VolWork1,
-      );
-      const volR = exerciseSet.paramValuesR.find(
-        (p) => p.field === ParamType.VolWork1,
-      );
-
-      if (!intL || !intR || !volL || !volR) continue;
-
-      avgInt += (parseFloat(intL.value) + parseFloat(intR.value)) / 2;
-      avgVol += (parseFloat(volL.value) + parseFloat(volR.value)) / 2;
-    }
-
-    return {
-      avgInt: avgInt / exercise.sets.length,
-      avgVol: avgVol / exercise.sets.length,
-    };
-  }
-
-  /**
-   * Used to calculate average stats for completed training component exercises,
-   * by athletes, like intensity and volume.
-   */
-  calculateTrainingStats(
+  recalculateCompletedTrainingStats(
     trainingComponentId: string,
-    completedStats: TrainingExerciseAverageStats[],
-    completedExercises: CompletedTrainingExercise[],
+    completedStats: TrainingExerciseAverageStats[], // existing training stats
+    completedExercises: CompletedTrainingExercise[], // completed exercises by athlete
   ) {
     const stats: TrainingExerciseAverageStats[] = completedStats.filter(
       (s) => s.rootComponentId === trainingComponentId,
     );
 
-    for (const completedExercise of completedExercises) {
-      const trainingExerciseAverageStats: TrainingExerciseAverageStats =
-        stats.find((avg) => avg.exerciseId === completedExercise.id) || {
-          exerciseId: completedExercise.id,
+    for (const { id, sets } of completedExercises) {
+      const { intensity, volume } = this.getAverageIntVol(sets);
+      const foundStat =
+        stats.find((s) => s.exerciseId === id) ||
+        completedStats.find((s) => s.exerciseId === id); // it's possible that one exercise is completed in multiple supersets
+
+      if (foundStat) {
+        // update existing stat
+        foundStat.intensity += intensity;
+        foundStat.volume += volume;
+        foundStat.numMembers += 1;
+      } else {
+        // create new stat for completed exercise
+        completedStats.push({
+          intensity,
+          volume,
+          numMembers: 1,
+          exerciseId: id,
           rootComponentId: trainingComponentId,
-          numMembers: 0,
-          intensity: 0,
-          volume: 0,
-        };
-
-      trainingExerciseAverageStats.intensity = this.calculateFieldAverage(
-        ParamType.IntWork1,
-        completedExercise.sets,
-      );
-
-      trainingExerciseAverageStats.volume = this.calculateFieldAverage(
-        ParamType.VolWork1,
-        completedExercise.sets,
-      );
-
-      trainingExerciseAverageStats.numMembers += 1;
-
-      const existingStatIndex = completedStats.findIndex(
-        (s) => s.exerciseId === completedExercise.id,
-      );
-
-      if (existingStatIndex !== -1)
-        completedStats[existingStatIndex] = trainingExerciseAverageStats;
-      else completedStats.push(trainingExerciseAverageStats);
+        });
+      }
     }
 
-    return completedStats.map((s) => ({
-      ...s,
-      intensity: parseFloat(s.intensity.toFixed(2)),
-      volume: parseFloat(s.volume.toFixed(2)),
-    }));
-  }
-
-  private calculateFieldAverage(field: ParamType, sets: ExerciseSet[]): number {
-    const values = sets.flatMap((s) =>
-      s.paramValuesL.concat(s.paramValuesR).filter((p) => p.field === field),
-    );
-
-    if (!values.length) return 0;
-
-    const sum = values.reduce((acc, curr) => acc + parseFloat(curr.value), 0);
-    return sum / values.length;
+    return completedStats.map((s) => {
+      const intensity = parseFloat(s.intensity.toFixed(2));
+      const volume = parseFloat(s.volume.toFixed(2));
+      return { ...s, intensity, volume };
+    });
   }
 
   isTrainingCompleted(training: Training, userId: string) {
@@ -365,22 +245,26 @@ export class TrainingPlanService {
   }
 
   validateTrainingComponents(
-    exercises: Exercise[],
+    existingTraining: Training | null,
+    newTrainingComponents: UpdateTrainingComponent[], // with warmup and cooldown
     trainingMemberIds: string[],
-    trainingComponents: TrainingComponent[],
-    allComponents: Component[],
-    allMethods: Method[],
-  ) {
-    if (!trainingComponents.map((tc) => tc.id).includes(WARMUP_COMPONENT_ID))
-      throw new BadRequestException('Training must have warmup component');
-
-    if (!trainingComponents.map((tc) => tc.id).includes(COOLDOWN_COMPONENT_ID))
-      throw new BadRequestException('Training must have cooldown component');
-
+    data: {
+      exercises: Exercise[];
+      components: Component[];
+      methods: Method[];
+      attributes: Attribute[];
+    },
+  ): TrainingComponent[] {
+    const { components, methods } = data;
+    const validTrainingComponents: TrainingComponent[] = [];
     const duplicates = new Set<string>();
-    for (let i = 0; i < trainingComponents.length; i++) {
-      const curr = trainingComponents[i];
-      const component = allComponents.find((c) => c.id === curr.id);
+
+    for (let i = 0; i < newTrainingComponents.length; i++) {
+      const curr = newTrainingComponents[i];
+      const component = components.find((c) => c.id === curr.id);
+      const existingTrainingComponent = existingTraining?.components?.find(
+        (c) => c.id === curr.id,
+      );
 
       // validate components are valid
       if (!component) throw new NotFoundException('Component does not exist');
@@ -391,7 +275,7 @@ export class TrainingPlanService {
 
       // validate method
       if (curr.methodId) {
-        const method = allMethods.find((m) => m.id === curr.methodId);
+        const method = methods.find((m) => m.id === curr.methodId);
         if (!method)
           throw new NotFoundException(
             'Method not found for training component',
@@ -404,10 +288,10 @@ export class TrainingPlanService {
       duplicates.add(component.id);
 
       // validate training component times
-      const next = trainingComponents[i + 1];
+      const next = newTrainingComponents[i + 1];
       if (next) {
-        const nextComponent = allComponents.find((c) => c.id === next.id);
-        if (i < trainingComponents.length - 1 && nextComponent)
+        const nextComponent = components.find((c) => c.id === next.id);
+        if (i < newTrainingComponents.length - 1 && nextComponent)
           if (curr.from >= next.from)
             throw new BadRequestException(
               `Component ${component.name} has to start before ${nextComponent.name}`,
@@ -415,42 +299,25 @@ export class TrainingPlanService {
       }
 
       // validate supersets and subgroups
-      this.validateSupersets(curr, exercises);
-      this.validateSubgroups(trainingMemberIds, curr);
-      this.validateTrainingExerciseValues(curr, allMethods);
+      const supersets = this.validateSupersets(curr, curr.supersets, data);
+      const subgroups = this.validateSubgroups(curr, trainingMemberIds, data);
+
+      validTrainingComponents.push({
+        ...curr,
+        supersets,
+        subgroups,
+        completedMembersIds:
+          existingTrainingComponent?.completedMembersIds || [],
+      });
     }
 
-    if (
-      trainingComponents.filter(
-        (tc) => ![WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(tc.id),
-      ).length > 5
-    )
+    if (validTrainingComponents.length > 7)
+      // warmup and cooldown are already included in the count
       throw new ConflictException(
         'You can only have up to 5 components per training',
       );
-  }
 
-  validateTrainingExerciseValues(
-    trainingComponent: TrainingComponent,
-    methods: Method[],
-  ) {
-    if (!trainingComponent.methodId) return; // no method to validate
-
-    const method = methods.find((m) => m.id === trainingComponent.methodId);
-    if (!method)
-      throw new NotFoundException('Method not found for training component');
-
-    if (!method.attributes.length) return; // no values to validate
-
-    const exercises = trainingComponent.supersets.flatMap((s) => s.exercises);
-    const sets = exercises.flatMap(
-      (e: TrainingExercise | CompletedTrainingExercise) => e.sets,
-    );
-
-    for (const set of sets) {
-      this.validateMethodParamValues(method, set.paramValuesL);
-      this.validateMethodParamValues(method, set.paramValuesR);
-    }
+    return validTrainingComponents;
   }
 
   /**
@@ -523,36 +390,11 @@ export class TrainingPlanService {
       );
   }
 
-  private validateMethodParamValues(
-    method: Method,
-    paramValues: AttributeValue[],
-  ) {
-    for (const { field, value, selected } of paramValues) {
-      let attribute = method.attributes.find((a) => a.field === field);
-      if (!attribute) continue;
-
-      const foundInOptions = attribute.options.find(
-        (o) => o.field === selected,
-      );
-
-      if (foundInOptions) attribute = foundInOptions;
-
-      if (!this.commonService.object.isEmpty(attribute.min))
-        if (parseFloat(value) < attribute.min)
-          throw new BadRequestException(
-            `Value for ${field} cannot be less than ${attribute.min}`,
-          );
-
-      if (!this.commonService.object.isEmpty(attribute.max))
-        if (parseFloat(value) > attribute.max)
-          throw new BadRequestException(
-            `Value for ${field} cannot be greater than ${attribute.max}`,
-          );
-    }
-  }
-
   populateTrainingExerciseParams(
-    trainingComponents: TrainingComponent[],
+    trainingComponents: DeepPick<
+      TrainingComponent,
+      'id' | 'supersets.exercises' | 'subgroups.supersets.exercises'
+    >[],
     components: Component[],
     exercises: Exercise[], // populate exercise attributes
     attributes: Attribute[],
@@ -598,32 +440,81 @@ export class TrainingPlanService {
     }
   }
 
-  validateSupersets(component: TrainingComponent, exercises: Exercise[]) {
-    if (component.supersets.length > 8)
+  validateSupersets(
+    trainingComponent: UpdateTrainingComponent,
+    newSupersets: UpdateSuperset[],
+    data: {
+      components: Component[];
+      exercises: Exercise[];
+      attributes: Attribute[];
+      methods: Method[];
+    },
+  ): Superset[] {
+    const { components, exercises, attributes, methods } = data;
+
+    if (newSupersets.length > 8)
       throw new ConflictException(
         'You can only have up to 8 supersets per training component',
       );
 
-    const supersets = [
-      ...component.supersets,
-      ...component.subgroups.flatMap((s) => s.supersets),
-    ];
+    const component = components.find((c) => c.id === trainingComponent.id)!;
+    const root = this.componentService.getRoot(component, components);
+    const componentParams = root.params || { [DEFAULT_PARAMS_KEY]: [] };
 
-    for (const superset of supersets) {
+    const validSupersets: Superset[] = [];
+    for (const superset of newSupersets) {
       if (superset.exercises.length > 4)
         throw new ConflictException(
           'You can only have up to 4 exercises per superset',
         );
 
       // don't check exercises for warmup and cooldown
-      if ([WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(component.id))
+      if (
+        [WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(
+          trainingComponent.id,
+        )
+      )
         continue;
 
       // validate exercises
+      const validTrainingExercises: TrainingExercise[] = [];
       for (const trainingExercise of superset.exercises) {
         const exercise = exercises.find((e) => e.id === trainingExercise.id);
         if (!exercise)
           throw new NotFoundException('Training exercise not found');
+
+        // first time, populate training exercise params and sets
+        const params = this.componentService.getComponentParamAttributes(
+          componentParams,
+          exercise.attributeValues,
+          attributes,
+        );
+
+        const paramAttributes =
+          this.componentService.getParamAttributes(params);
+
+        const sets = this.getSets(paramAttributes, trainingExercise.sets);
+        const method = methods.find(
+          (m) => m.id === trainingComponent.methodId,
+        )!;
+
+        if (trainingComponent.methodId && !method)
+          throw new NotFoundException(
+            'Method not found for training component',
+          );
+
+        if (method?.attributes?.length > 0)
+          for (const set of sets) {
+            this.validateMethodParamValues(method, set.paramValuesL);
+            this.validateMethodParamValues(method, set.paramValuesR);
+          }
+
+        validTrainingExercises.push({
+          id: trainingExercise.id,
+          color: trainingExercise.color,
+          params: paramAttributes,
+          sets,
+        });
 
         // NOTE - currently disabled, as we can add exercises to any component
         /* const exerciseComponentLeaf = allComponents.find(
@@ -640,15 +531,33 @@ export class TrainingPlanService {
             `Exercise ${exercise.name} cannot be part of selected component`,
           ); */
       }
+
+      validSupersets.push({
+        color: superset.color,
+        exercises: validTrainingExercises,
+      });
     }
+
+    return validSupersets;
   }
 
-  validateSubgroups(trainingMemberIds: string[], component: TrainingComponent) {
+  validateSubgroups(
+    trainingComponent: UpdateTrainingComponent,
+    trainingMemberIds: string[],
+    data: {
+      components: Component[];
+      exercises: Exercise[];
+      attributes: Attribute[];
+      methods: Method[];
+    },
+  ): Subgroup[] {
     // validate all subgroups have unique members (one member cannot be in multiple subgroups)
     const trainingMemberIdsSet = new Set(trainingMemberIds);
     const membersIdsSet = new Set<string>();
 
-    for (const subgroup of component.subgroups)
+    const validSubgroups: Subgroup[] = [];
+    for (const subgroup of trainingComponent.subgroups) {
+      // validate members
       for (const userId of subgroup.membersIds) {
         if (!trainingMemberIdsSet.has(userId))
           throw new ConflictException('Invalid member');
@@ -660,6 +569,23 @@ export class TrainingPlanService {
 
         membersIdsSet.add(userId);
       }
+
+      // validate supersets
+      const validSupersets = this.validateSupersets(
+        trainingComponent,
+        subgroup.supersets,
+        data,
+      );
+
+      validSubgroups.push({
+        id: subgroup.id,
+        name: subgroup.name,
+        membersIds: subgroup.membersIds,
+        supersets: validSupersets,
+      });
+    }
+
+    return validSubgroups;
   }
 
   getSets(params: Attribute[], existingSets?: ExerciseSet[]): ExerciseSet[] {
@@ -706,24 +632,29 @@ export class TrainingPlanService {
     return validSets;
   }
 
-  createWarmupAndCooldown(
-    from: Date,
-    to: Date,
-    components: TrainingComponent[],
-  ): { warmup: TrainingComponent; cooldown: TrainingComponent } {
-    let cooldownFrom = to;
-    if (components.length) {
-      cooldownFrom = components
-        .map((c) => c.to)
-        .sort((a: Date, b: Date) => {
-          return new Date(b).getTime() - new Date(a).getTime();
-        })[0];
-    }
+  /**
+   * Generates warmup and cooldown components based on the provided training components.
+   *
+   * @param components - Array of training components (without warmup and cooldown) to determine the warmup and cooldown times.
+   */
+  getWarmupAndCooldown(components: Pick<TrainingComponent, 'from' | 'to'>[]): {
+    warmup: TrainingComponent;
+    cooldown: TrainingComponent;
+  } {
+    const sorted = components.sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
+    );
+
+    if (sorted.length === 0)
+      throw new BadRequestException('Training must have atleast one component');
+
+    const startTime = new Date(sorted[0].from);
+    const endTime = new Date(sorted[sorted.length - 1].to);
 
     const warmup: TrainingComponent = {
       id: WARMUP_COMPONENT_ID,
-      from: subMinutes(from, 5),
-      to: from,
+      from: subMinutes(startTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
+      to: startTime,
       supersets: [],
       subgroups: [],
       completedMembersIds: [],
@@ -731,8 +662,8 @@ export class TrainingPlanService {
 
     const cooldown: TrainingComponent = {
       id: COOLDOWN_COMPONENT_ID,
-      from: cooldownFrom,
-      to: addMinutes(cooldownFrom, 5),
+      from: endTime,
+      to: addMinutes(endTime, DEFAULT_WARMUP_AND_COOLDOWN_DURATION),
       supersets: [],
       subgroups: [],
       completedMembersIds: [],
@@ -741,22 +672,85 @@ export class TrainingPlanService {
     return { warmup, cooldown };
   }
 
-  updateWarmupAndCooldownTimes(
-    warmup: TrainingComponent,
-    cooldown: TrainingComponent,
-    trainingComponents: TrainingComponent[],
-  ): void {
-    let cooldownFrom = trainingComponents[trainingComponents.length - 1].to;
-    if (trainingComponents.length)
-      cooldownFrom = trainingComponents
-        .map((c) => c.to)
-        .sort((a: Date, b: Date) => {
-          return new Date(b).getTime() - new Date(a).getTime();
-        })[0];
+  private validateMethodParamValues(
+    method: Method,
+    paramValues: AttributeValue[],
+  ) {
+    for (const { field, value, selected } of paramValues) {
+      let attribute = method.attributes.find((a) => a.field === field);
+      if (!attribute) continue;
 
-    warmup.from = subMinutes(trainingComponents[0].from, 5);
-    warmup.to = trainingComponents[0].from;
-    cooldown.from = cooldownFrom;
-    cooldown.to = addMinutes(cooldownFrom, 5);
+      const foundInOptions = attribute.options.find(
+        (o) => o.field === selected,
+      );
+
+      if (foundInOptions) attribute = foundInOptions;
+
+      if (!this.commonService.object.isEmpty(attribute.min))
+        if (parseFloat(value) < attribute.min)
+          throw new BadRequestException(
+            `Value for ${field} cannot be less than ${attribute.min}`,
+          );
+
+      if (!this.commonService.object.isEmpty(attribute.max))
+        if (parseFloat(value) > attribute.max)
+          throw new BadRequestException(
+            `Value for ${field} cannot be greater than ${attribute.max}`,
+          );
+    }
+  }
+
+  /**
+   * Calculates average intensity and volume for a list of sets.
+   * It takes into account both left and right param values.
+   * If there are no sets, it returns 0 for both intensity and volume.
+   */
+  private getAverageIntVol(
+    sets: ExerciseSet[],
+  ): Pick<TrainingExerciseAverageStats, 'intensity' | 'volume'> {
+    const averages = this.calculateParamTypeAverages(sets);
+
+    const intensity = parseFloat(averages[ParamType.IntWork1].toFixed(2));
+    const volume = parseFloat(averages[ParamType.VolWork1].toFixed(2));
+
+    return { intensity, volume };
+  }
+
+  private calculateParamTypeAverages(
+    sets: ExerciseSet[],
+  ): Record<ParamType, number> {
+    const sums: Record<ParamType, number> = {} as any;
+    const counts: Record<ParamType, number> = {} as any;
+
+    // initialize sums and counts for each ParamType
+    Object.values(ParamType).forEach((param) => {
+      sums[param] = 0;
+      counts[param] = 0;
+    });
+
+    // iterate through sets and calculate sums and counts
+    for (const set of sets) {
+      for (const { field, value } of set.paramValuesL.concat(
+        set.paramValuesR,
+      )) {
+        if (sums.hasOwnProperty(field)) {
+          sums[field] += parseFloat(value);
+          counts[field] += 1;
+        }
+      }
+    }
+
+    // calculate averages
+    const averages: Record<ParamType, number> = {} as any;
+    Object.keys(sums).forEach((field: ParamType) => {
+      averages[field] = counts[field] ? sums[field] / counts[field] : 0;
+    });
+
+    // round averages to 2 decimal places
+    Object.keys(averages).forEach((field: ParamType) => {
+      averages[field] = parseFloat(averages[field].toFixed(2));
+    });
+
+    return averages;
   }
 }

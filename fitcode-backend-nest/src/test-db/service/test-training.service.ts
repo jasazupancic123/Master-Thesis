@@ -11,11 +11,14 @@ import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
+import { AbstractTestChangeLogService } from './abstract-test-change-log.service';
+
 @Injectable()
-export class TestTrainingService {
+export class TestTrainingService extends AbstractTestChangeLogService<Training> {
   readonly collection: CollectionReference;
 
-  constructor(private readonly firebase: FirebaseService) {
+  constructor(protected readonly firebase: FirebaseService) {
+    super(firebase);
     this.collection = this.firebase.firestore.collection(
       FirestoreCollection.TRAINING,
     );
@@ -29,6 +32,13 @@ export class TestTrainingService {
         if (!doc.exists) return null;
         return this.firebase.serialize(doc.data() as FirestoreEntity<Training>);
       });
+  }
+
+  async getAll(): Promise<Training[]> {
+    const snapshot = await this.collection.get();
+    return snapshot.docs.map((doc) =>
+      this.firebase.serialize(doc.data() as FirestoreEntity<Training>),
+    );
   }
 
   async create(
@@ -51,6 +61,7 @@ export class TestTrainingService {
     );
 
     await docRef.set(data);
+    await this.trackCreate(docRef);
 
     return this.firebase.serialize(
       (await docRef.get()).data() as FirestoreEntity<Training>,
@@ -61,8 +72,15 @@ export class TestTrainingService {
     if (!trainingId)
       return this.firebase.firestore.recursiveDelete(this.collection);
 
-    const docRef = this.collection.doc(trainingId);
-    await docRef.delete();
+    // delete workloads
+    await this.firebase.firestore.recursiveDelete(
+      this.collection
+        .doc(trainingId)
+        .collection(FirestoreCollection.TRAINING_WORKLOAD),
+    );
+
+    // delete training document
+    await this.collection.doc(trainingId).delete();
   }
 
   async deleteCollection(): Promise<void> {

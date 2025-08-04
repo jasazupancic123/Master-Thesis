@@ -1,14 +1,3 @@
-import { CommonService } from '@/common/service/common.service';
-import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
-import { SetState } from '@/common/type/state.type';
-import FileUpload from '@/components/file-upload/file-upload';
-import MyModal from '@/components/modal/modal';
-import { useScreenSize } from '@/store/screen-size-provider';
-import {
-  Component,
-  TreeComponent,
-} from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
 import { Checkbox, Divider, FormControlLabel, InputLabel } from '@mui/material';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
@@ -16,10 +5,22 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import React, { useEffect, useState } from 'react';
+
 import SelectAttribute from '../select-attribute/select-attribute';
 import SelectComponent from '../select-component/select-component';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
+import { CommonService } from '@/common/service/common.service';
+import { FirebaseStorageUtil } from '@/common/service/util/firebase-storage.util';
+import type { SetState } from '@/common/type/state.type';
+import FileUpload from '@/components/file-upload/file-upload';
+import MyModal from '@/components/modal/modal';
 import { AttributeType } from '@/controller/attribute/enum/attribute-value.enum';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type {
+  Component,
+  TreeComponent,
+} from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface Props {
   data: Partial<Exercise>;
@@ -252,7 +253,7 @@ export default function ExerciseModal(props: Props) {
                           onChange={(e) =>
                             handleSelectChange(
                               attribute.field,
-                              e.target.checked as any
+                              e.target.checked ? 'true' : 'false'
                             )
                           }
                         />

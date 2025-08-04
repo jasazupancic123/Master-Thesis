@@ -1,24 +1,25 @@
-import { COLOR } from '@/common/constant/browser.constant';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
 import toast from 'react-hot-toast';
+
 import {
   NUM_MAX_EXERCISES_PER_SUPERSET,
   NUM_MAX_SUPERSETS,
 } from '../trainer-day-view/constant';
-import { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import { COLOR } from '@/common/constant/browser.constant';
 import {
   COOLDOWN_ID,
   WARMUP_ID,
 } from '@/common/constant/warmup-cooldown-ids-constants';
+import type { Pagination } from '@/common/type/paginate.type';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import type { AttributeValue } from '@/controller/attribute/type/attribute-value.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 import { TrainingService } from '@/controller/training/training.service';
-import { Training } from '@/controller/training/type/training.type';
-import { Subgroup } from '@/controller/training/type/subgroup.type';
-import { SetState, SetStateNullable } from '@/common/type/state.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Pagination } from '@/common/type/paginate.type';
-import { TrainingInfo } from '@/controller/training/type/training.type';
+import type { Subgroup } from '@/controller/training/type/subgroup.type';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 
 export function handleAddExerciseToSupersetComponent(
   input: {
@@ -167,13 +168,12 @@ export function handleAddExerciseToSupersetComponent(
         supersets: [...supersets],
       };
 
-      let updatedTraining =
+      const updatedTraining =
         component.id === WARMUP_ID
           ? { ...training, warmup: updatedWOrC }
           : { ...training, cooldown: updatedWOrC };
 
-      const minimalTraining =
-        TrainingService.convertFromTrainingToTrainingMinimal(updatedTraining);
+      const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
 
       setComponent(updatedWOrC);
       setTraining(updatedTraining);
@@ -196,13 +196,12 @@ export function handleAddExerciseToSupersetComponent(
         subgroups: updatedSubgroups,
       };
 
-      let updatedTraining =
+      const updatedTraining =
         component.id === WARMUP_ID
           ? { ...training, warmup: updatedWOrC }
           : { ...training, cooldown: updatedWOrC };
 
-      const minimalTraining =
-        TrainingService.convertFromTrainingToTrainingMinimal(updatedTraining);
+      const minimalTraining = TrainingService.trainingToInfo(updatedTraining);
 
       setComponent(updatedWOrC);
       setTraining(updatedTraining);
@@ -285,19 +284,19 @@ export function handleAddExerciseToSupersetComponent(
       );
 
     // insert future workload data
-    const futureStats = [...training.futureStats];
+    const prescribedStats = [...training.prescribedStats];
     supersets.map((s) =>
       s.exercises.map((e) => {
         const { intensity, volume } = TrainingService.getIntensityVolumeValues(
           e.sets
         );
-        const found = futureStats.find((v) => v.exerciseId === e.id);
+        const found = prescribedStats.find((v) => v.exerciseId === e.id);
         if (found) {
           found.numMembers = numberOfAvailableMembers;
           found.intensity = intensity;
           found.volume = volume;
         } else {
-          futureStats.push({
+          prescribedStats.push({
             exerciseId: e.id,
             rootComponentId: component.component?.id || '',
             numMembers: numberOfAvailableMembers,
@@ -312,11 +311,10 @@ export function handleAddExerciseToSupersetComponent(
     const newTraining: Training = {
       ...training,
       components: updatedComponents,
-      futureStats,
+      prescribedStats,
     };
 
-    const minimalTraining =
-      TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+    const minimalTraining = TrainingService.trainingToInfo(newTraining);
 
     setTraining(newTraining);
     setTrainings((prev) =>
@@ -325,19 +323,19 @@ export function handleAddExerciseToSupersetComponent(
     setOpenAddExerciseModal(false);
   } else {
     // update subgroup's future workload values
-    const futureStats = [...selectedSubgroup.subgroup.futureStats];
+    const prescribedStats = [...selectedSubgroup.subgroup.prescribedStats];
     supersets.map((s) =>
       s.exercises.map((e) => {
         const { intensity, volume } = TrainingService.getIntensityVolumeValues(
           e.sets
         );
-        const found = futureStats.find((v) => v.exerciseId === e.id);
+        const found = prescribedStats.find((v) => v.exerciseId === e.id);
         if (found) {
           found.numMembers = selectedSubgroup.subgroup!.membersIds.length;
           found.intensity = intensity;
           found.volume = volume;
         } else {
-          futureStats.push({
+          prescribedStats.push({
             exerciseId: e.id,
             rootComponentId: component.component?.id || '',
             numMembers: selectedSubgroup.subgroup!.membersIds.length,
@@ -352,7 +350,7 @@ export function handleAddExerciseToSupersetComponent(
     const updatedSubgroup = {
       ...selectedSubgroup.subgroup,
       supersets: [...supersets],
-      futureStats,
+      prescribedStats,
     };
 
     const updatedSubgroups = [...component.subgroups];

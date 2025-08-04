@@ -1,5 +1,5 @@
+import type { Component, TreeComponent } from './type/component.type';
 import { CommonService } from '@/common/service/common.service';
-import { Component, TreeComponent } from './type/component.type';
 
 export class ComponentService {
   static toTree(components: Component[]): TreeComponent[] {

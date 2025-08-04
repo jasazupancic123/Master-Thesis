@@ -1,10 +1,16 @@
+import type {
+  CreateExercise,
+  CreateExercises,
+  Exercise,
+  FilterExercises,
+  UpdateExercise,
+} from './type/exercise.type';
 import { CommonService } from '@/common/service/common.service';
-import { Exercise } from './type/exercise.type';
 
 const api = CommonService.instance.api;
 
 export class ExerciseController {
-  static async findAllGlobal(token?: string, query?: Record<string, string>) {
+  static async findAllGlobal(token?: string, query?: FilterExercises) {
     return api.get<Exercise[]>('/exercise/global', {
       token,
       query,
@@ -13,48 +19,22 @@ export class ExerciseController {
 
   static async findAllByInstitution(
     institutionId: string,
-    query?: Record<string, string>
+    query?: FilterExercises
   ) {
     return api.get<Exercise[]>(`/exercise/institution/${institutionId}`, {
       query,
     });
   }
 
-  static async create(body: {
-    name: string;
-    componentIds: string[];
-    imageUrl?: string;
-    videoUrl?: string;
-    instruction?: string;
-    attributeValues: Record<string, any>;
-  }) {
+  static async create(body: CreateExercise) {
     return api.post<Exercise>(`/exercise`, body);
   }
 
-  static async createMany(body: {
-    exercises: {
-      name: string;
-      componentIds: string[];
-      imageUrl?: string;
-      videoUrl?: string;
-      instruction?: string;
-      attributeValues: Record<string, any>;
-    }[];
-  }) {
+  static async createMany(body: CreateExercises) {
     return api.post<Exercise[]>(`/exercise/many`, body);
   }
 
-  static async update(
-    exerciseId: string,
-    body: {
-      name: string;
-      componentIds: string[];
-      imageUrl?: string;
-      videoUrl?: string;
-      instruction?: string;
-      attributeValues: Record<string, any>;
-    }
-  ) {
+  static async update(exerciseId: string, body: UpdateExercise) {
     return api.patch<Exercise>(`/exercise/${exerciseId}`, body);
   }
 

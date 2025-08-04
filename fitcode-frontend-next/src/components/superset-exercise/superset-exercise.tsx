@@ -1,14 +1,15 @@
 'use client';
 
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Superset } from '@/controller/training/type/superset.type';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { Box, Checkbox, Grid2, IconButton, Typography } from '@mui/material';
-import { Draggable } from 'react-beautiful-dnd';
-import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';
 import { useTheme } from '@mui/material';
+import { Draggable } from 'react-beautiful-dnd';
+
+import TrainingExerciseCardContainer from '../training-exercise-card-container/training-exercise-card-container';
+import type { Superset } from '@/controller/training/type/superset.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface SupersetExerciseProps {
   exercise: TrainingExercise;

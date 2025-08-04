@@ -1,8 +1,10 @@
-import { SxProps } from '@mui/material';
+import type { SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { Accept, useDropzone } from 'react-dropzone';
+import type { ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { Accept } from 'react-dropzone';
+import { useDropzone } from 'react-dropzone';
 
 interface Props {
   label: string;

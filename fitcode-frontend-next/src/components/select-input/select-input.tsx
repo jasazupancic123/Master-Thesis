@@ -1,14 +1,10 @@
-import {
-  FormControl,
-  InputAdornment,
-  InputLabel,
-  SxProps,
-  Theme,
-} from '@mui/material';
+import type { SxProps, Theme } from '@mui/material';
+import { FormControl, InputAdornment, InputLabel } from '@mui/material';
+import { useTheme } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import React, { ReactNode } from 'react';
-import { useTheme } from '@mui/material';
+import type { ReactNode } from 'react';
+import React from 'react';
 
 interface Props<T> {
   icon: ReactNode;

@@ -1,8 +1,7 @@
-import { SetState } from '@/common/type/state.type';
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { User } from '@/controller/user/type/user.type';
+import type { SetState } from '@/common/type/state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
 
 export interface ExercisePageProps {
   exercises: Exercise[];

@@ -297,8 +297,6 @@ export class GroupService implements Permission<Group, Institution> {
   private isCycleOverlap(cycles: Cycle[]): boolean {
     if (!cycles || cycles.length < 2) return false;
 
-    // console.log('checking overlap:', cycles);
-
     const sortedCycles = [...cycles].sort(
       (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime(),
     );

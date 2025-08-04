@@ -1,28 +1,27 @@
-import { CommonService } from '@/common/service/common.service';
-import dayjs, { Dayjs } from 'dayjs';
-import { handleCreateTraining } from '../trainer-cycle-view/state';
-import { Training } from '@/controller/training/type/training.type';
 import { addMinutes, setHours, setMinutes } from 'date-fns';
-import {
-  handleApiRequest,
-  SetState,
-  SetStateNullable,
-} from '@/common/type/state.type';
-import { TrainingController } from '@/controller/training/training.controller';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import toast from 'react-hot-toast';
-import { TrainingService } from '@/controller/training/training.service';
-import { COLORS } from '@/common/constant/color.constant';
+
+import { handleCreateTraining } from '../trainer-cycle-view/state';
 import { handleCopyComponentApiRequest } from '../training-component-layout/state';
-import { Group } from '@/controller/group/type/group.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { TrainingComponent } from '@/controller/training/type/training-component.type';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { Method } from '@/controller/method/type/method.type';
-import { Target } from '@/controller/target/type/target.type';
-import { Component } from '@/controller/component/type/component.type';
-import { Day } from '@/common/service/util/date.util';
-import { TrainingInfo } from '@/controller/training/type/training.type';
+import { COLORS } from '@/common/constant/color.constant';
+import { CommonService } from '@/common/service/common.service';
+import type { Day } from '@/common/service/util/date.util';
+import type { SetState, SetStateNullable } from '@/common/type/state.type';
+import { handleApiRequest } from '@/common/type/state.type';
+import type { Component } from '@/controller/component/type/component.type';
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Method } from '@/controller/method/type/method.type';
+import type { Target } from '@/controller/target/type/target.type';
+import { TrainingController } from '@/controller/training/training.controller';
+import { TrainingService } from '@/controller/training/training.service';
+import type { Training } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingComponent } from '@/controller/training/type/training-component.type';
 
 export async function handleClickDateCell(
   input: {
@@ -149,15 +148,13 @@ export async function handleClickDateCell(
             from,
           }),
         (training_) => {
-          const newTraining = TrainingService.mapComponentsExercisesMethods(
-            training_,
+          TrainingService.mapData(training_, {
             components,
-            allExercises,
-            methods
-          );
+            exercises: allExercises,
+            methods,
+          });
 
-          const minimalTraining =
-            TrainingService.convertFromTrainingToTrainingMinimal(newTraining);
+          const minimalTraining = TrainingService.trainingToInfo(training_);
 
           const sortedTrainings = [...trainings, minimalTraining].sort(
             (a, b) => {
@@ -221,8 +218,6 @@ export function getFilteredTrainings(
     trainingComponent,
     trainings,
     selectedTrainings,
-    date: inputDate,
-    selected,
     period,
   } = state;
 
@@ -342,7 +337,7 @@ function handleAddTraining(
     return;
   }
 
-  let from = setMinutes(setHours(date.toDate(), period === 'AM' ? 8 : 14), 0);
+  const from = setMinutes(setHours(date.toDate(), period === 'AM' ? 8 : 14), 0);
 
   handleCreateTraining(
     {

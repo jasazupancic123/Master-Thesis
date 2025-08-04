@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import * as ort from 'onnxruntime-web';
 import {
   Box,
-  Select,
-  MenuItem,
-  Input,
-  FormControl,
-  InputLabel,
   Button,
+  FormControl,
+  Input,
+  InputLabel,
+  MenuItem,
+  Select,
 } from '@mui/material';
+import * as ort from 'onnxruntime-web';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 const MODEL_WIDTH = 192;

@@ -1,4 +1,5 @@
-import { POSE_LANDMARKS } from "@mediapipe/pose";
+import { POSE_LANDMARKS } from '@mediapipe/pose';
+
 import { Thresholds } from '../../thresholds/Squat';
 
 export const ESSENTIAL_SQUAT_LANDMARKS = [

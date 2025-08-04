@@ -9,7 +9,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
@@ -21,9 +20,7 @@ import { CopyComponentDto } from './dto/copy-component.dto';
 import { CopyTrainingDto } from './dto/copy-training.dto';
 import { CreateTrainingDto } from './dto/create-training.dto';
 import { FilterTrainingQueryDto } from './dto/filter-training-query.dto';
-import { FindByDayAndPeriodDto } from './dto/find-by-day-period-dto';
 import { PeriodizeTrainingsDto } from './dto/periodize-training.dto';
-import { TrainingInfoDto } from './dto/training-info.dto';
 import { UpdateTrainingDto } from './dto/update-training.dto';
 import { CompletedTrainingComponent } from './entity/completed-training.entity';
 import { TrainingService } from './service/training.service';
@@ -44,30 +41,12 @@ export class TrainingController {
   ) {
     filter = this.commonService.object.clean(filter);
 
-    const trainings = await this.trainingService.findAll(user, {
+    return await this.trainingService.findAll(user, {
       groupId: filter.groupId,
       cycleId: filter.cycleId,
       ...(filter.from && { from: filter.from }),
       ...(filter.to && { to: filter.to }),
     });
-
-    return filter.minimal
-      ? plainToInstance(TrainingInfoDto, trainings)
-      : trainings;
-  }
-
-  @Post('/:groupId/day-period')
-  @Auth()
-  async findByDayAndPeriod(
-    @RequestUser() user: User,
-    @Param('groupId') groupId: string,
-    @Body() body: FindByDayAndPeriodDto,
-  ) {
-    return await this.trainingService.findByDayAndPeriod(
-      user,
-      { groupId },
-      body,
-    );
   }
 
   @Get(':trainingId/athlete/:athleteId/prescribed')

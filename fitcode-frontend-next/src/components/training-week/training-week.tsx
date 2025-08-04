@@ -1,15 +1,16 @@
-import { useScreenSize } from '@/store/screen-size-provider';
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-import { TrainingCycleViewWeekProps } from '../training-cycle-view-week/type';
+
 import MyModal from '../modal/modal';
-import { useTheme } from '@mui/material';
+import type { TrainingCycleViewWeekProps } from '../training-cycle-view-week/type';
 import TrainingWeekDates from '../training-week-date/training-week-date';
-import { TrainingInfo } from '@/controller/training/type/training.type';
+import type { TrainingInfo } from '@/controller/training/type/training.type';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function TrainingWeek(props: TrainingCycleViewWeekProps) {
   const theme = useTheme();

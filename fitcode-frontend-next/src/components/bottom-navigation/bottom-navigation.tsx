@@ -1,16 +1,17 @@
-import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
-import { useAuth } from '@/store/auth-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { LogoutRounded } from '@mui/icons-material';
 import {
   BottomNavigation as BN,
   BottomNavigationAction as BNAction,
 } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
-import { useTheme } from '@mui/material';
+
+import { LINKS_SIDEBAR } from '@/common/constant/navigation.constant';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
 import { useAthlete } from '@/store/athlete-provider';
+import { useAuth } from '@/store/auth-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 export default function BottomNavigation() {
   const { filter, setFilter } = useAthlete();

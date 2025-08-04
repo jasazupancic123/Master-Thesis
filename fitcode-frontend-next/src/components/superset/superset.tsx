@@ -1,16 +1,17 @@
 'use client';
 
-import { COLOR } from '@/common/constant/browser.constant';
-import BorderColor from '@/components/border-color/border-color';
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { Superset as SupersetClass } from '@/controller/training/type/superset.type';
 import { Box, Grid2, Stack, Typography } from '@mui/material';
 import { Droppable } from 'react-beautiful-dnd';
-import { handleDeleteSuperset } from '../trainer-day-view/state';
+
 import SupersetExercise from '../superset-exercise/superset-exercise';
+import { handleDeleteSuperset } from '../trainer-day-view/state';
+import { COLOR } from '@/common/constant/browser.constant';
+import BorderColor from '@/components/border-color/border-color';
+import type { Superset as SupersetClass } from '@/controller/training/type/superset.type';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface SupersetComponentProps {
   superset: SupersetClass;

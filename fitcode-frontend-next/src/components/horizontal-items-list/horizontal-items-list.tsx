@@ -1,12 +1,14 @@
-import { useGroup } from '@/store/group-provider';
 import { Add, ArrowLeft, ArrowRight } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material';
 import dayjs from 'dayjs';
+import type { RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { RefObject, useEffect, useLayoutEffect, useRef } from 'react';
+
 import { useDashboard } from '@/store/dashboard-provider';
+import { useGroup } from '@/store/group-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 interface HorizontalItemsListProps {
   items: { label: string; value: string; sublabel?: string }[];
@@ -59,7 +61,7 @@ export default function HorizontalItemsList(props: HorizontalItemsListProps) {
   }, [scrollContainerRef.current]);
 
   const getShortGroupName = (name: string) => {
-    let finalName = name.length >= 2 ? name.slice(0, 3) : name;
+    const finalName = name.length >= 2 ? name.slice(0, 3) : name;
 
     return finalName.toUpperCase().trim();
   };

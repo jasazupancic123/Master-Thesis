@@ -31,7 +31,7 @@ export const theme = createTheme({
     },
     text: {
       primary: '#D9D9D9', // Replace with your desired color
-    }
+    },
   },
   typography: {
     allVariants: {

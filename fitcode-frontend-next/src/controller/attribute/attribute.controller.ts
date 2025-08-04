@@ -1,5 +1,5 @@
+import type { Attribute } from './type/attribute.type';
 import { CommonService } from '@/common/service/common.service';
-import { Attribute } from './type/attribute.type';
 
 const api = CommonService.instance.api;
 

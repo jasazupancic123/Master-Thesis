@@ -210,18 +210,19 @@ describe('Update Training (e2e)', () => {
         .set('Authorization', `Bearer ${global.trainer.token}`)
         .send({
           ...training,
+          cycleId: group.cycles[1].id,
           components: [
             generateTrainingComponent({
               id: component1.id,
-              from: getTime(subDays(new Date(), 2), 8, 0),
-              to: getTime(subDays(new Date(), 2), 8, 30),
+              from: getTime(subDays(new Date(), 1), 8, 0),
+              to: getTime(subDays(new Date(), 1), 8, 30),
             }),
           ],
         });
 
       expect(response.status).toBe(400);
       expect(response.body.message).toBe(
-        'Training falls outside of the selected cycle',
+        'You cannot add or update trainings in the past',
       );
     });
 

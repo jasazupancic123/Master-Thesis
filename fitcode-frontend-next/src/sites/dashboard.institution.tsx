@@ -1,9 +1,5 @@
 'use client';
 
-import { theme } from '@/app/style';
-import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
-import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
-import { useDashboard } from '@/store/dashboard-provider';
 import { Add, FileUploadOutlined, MoreVert, Remove } from '@mui/icons-material';
 import {
   Avatar,
@@ -12,23 +8,28 @@ import {
   IconButton,
   Typography,
 } from '@mui/material';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { SearchBar } from '@/components/search-bar/search-bar';
-import { User } from '@/controller/user/type/user.type';
-import MyModal from '@/components/modal/modal';
-import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
+import toast from 'react-hot-toast';
+
+import { theme } from '@/app/style';
+import { AthletesTrainers } from '@/common/enum/athletes-trainer.enum';
+import { CommonService } from '@/common/service/common.service';
 import { isManager } from '@/common/service/util/firebase-auth.util';
 import { handleApiRequest } from '@/common/type/state.type';
-import { InstitutionController } from '@/controller/institution/institution.controller';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { useMain } from '@/store/main-provider';
 import DashboardEditAthleteModal from '@/components/dashboard-edit-athlete-modal/dashboard-edit-athlete-modal';
+import RegisterUsersDashboard from '@/components/dashboard-register-users-modal/dashboard-register-users-modal';
 import FileUpload from '@/components/file-upload/file-upload';
-import { CommonService } from '@/common/service/common.service';
+import HorizontalItemsList from '@/components/horizontal-items-list/horizontal-items-list';
+import MyModal from '@/components/modal/modal';
+import { SearchBar } from '@/components/search-bar/search-bar';
+import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
+import { InstitutionController } from '@/controller/institution/institution.controller';
+import { UserRole } from '@/controller/user/enum/user-role.enum';
+import type { User } from '@/controller/user/type/user.type';
+import { useDashboard } from '@/store/dashboard-provider';
+import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
 
 const commonService = CommonService.instance;
 const firebaseService = commonService.firebase;

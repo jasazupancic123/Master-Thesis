@@ -1,7 +1,8 @@
 import SearchIcon from '@mui/icons-material/Search';
+import type { SxProps } from '@mui/material';
+
 import { Search, SearchIconWrapper, StyledInputBase } from './style';
-import { SxProps } from '@mui/material';
-import { ChildrenProps } from '@/common/type/props.type';
+import type { ChildrenProps } from '@/common/type/props.type';
 
 export type SearchBarProps = {
   placeholder: string;

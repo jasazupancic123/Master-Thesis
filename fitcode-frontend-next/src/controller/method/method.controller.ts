@@ -1,5 +1,5 @@
+import type { Method } from './type/method.type';
 import { CommonService } from '@/common/service/common.service';
-import { Method } from './type/method.type';
 
 const api = CommonService.instance.api;
 

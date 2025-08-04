@@ -1,4 +1,4 @@
-import { VolType, IntType } from '@/controller/component/enum/param.enum';
+import type { IntType, VolType } from '@/controller/component/enum/param.enum';
 
 export type WorkloadValue = PrescribedWorkload & CompletedWorkload;
 

@@ -1,18 +1,19 @@
 'use client';
 
-import {
+import dayjs from 'dayjs';
+import { createContext, useContext, useState } from 'react';
+
+import { useMain } from './main-provider';
+import type {
   GroupContextProps,
   GroupIdPageProps,
 } from '@/app/(trainer)/groups/[group_id]/props';
 import { CommonService } from '@/common/service/common.service';
-import { GroupDateFilter } from '@/common/type/filter.type';
-import { ChildrenProps } from '@/common/type/props.type';
-import { Cycle } from '@/controller/group/type/cycle.type';
-import { Group } from '@/controller/group/type/group.type';
-import { Institution } from '@/controller/institution/type/institution.type';
-import dayjs from 'dayjs';
-import { createContext, useContext, useState } from 'react';
-import { useMain } from './main-provider';
+import type { GroupDateFilter } from '@/common/type/filter.type';
+import type { ChildrenProps } from '@/common/type/props.type';
+import type { Cycle } from '@/controller/group/type/cycle.type';
+import type { Group } from '@/controller/group/type/group.type';
+import type { Institution } from '@/controller/institution/type/institution.type';
 
 const dateService = CommonService.instance.date;
 

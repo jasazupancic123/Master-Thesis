@@ -1,8 +1,9 @@
 import Box from '@mui/material/Box/Box';
+
+import AthleteTrainingExerciseCollapsed from '../athlete-training-exercise-collapsed/athlete-training-exercise-collapsed';
 import BorderColor from '../border-color/border-color';
 import { COLOR } from '@/common/constant/browser.constant';
-import AthleteTrainingExerciseCollapsed from '../athlete-training-exercise-collapsed/athlete-training-exercise-collapsed';
-import { Superset } from '@/controller/training/type/superset.type';
+import type { Superset } from '@/controller/training/type/superset.type';
 
 interface AthleteSupersetProps {
   superset: Superset;
@@ -18,7 +19,7 @@ export default function AthleteSuperset(props: AthleteSupersetProps) {
         applyMargin
         marginValue={superset.exercises.length === 0 ? '3px' : '5px'}
       />
-      {superset.exercises.map((exercise, i) => (
+      {superset.exercises.map((exercise) => (
         <AthleteTrainingExerciseCollapsed
           key={exercise.id}
           exercise={exercise}

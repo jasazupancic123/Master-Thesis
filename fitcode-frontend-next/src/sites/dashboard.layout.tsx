@@ -1,7 +1,8 @@
-import { ChildrenProps } from '@/common/type/props.type';
-import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 import { Box, Container } from '@mui/material';
+
+import type { ChildrenProps } from '@/common/type/props.type';
 import DashboardHeader from '@/components/dashboard-header/dashboard-header';
+import { MAX_WIDTH } from '@/components/trainer-day-view/constant';
 
 export default function DashboardLayout({ children }: ChildrenProps) {
   const styles = {

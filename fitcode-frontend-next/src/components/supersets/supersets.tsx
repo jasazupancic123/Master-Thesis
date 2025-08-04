@@ -1,22 +1,23 @@
 'use client';
 
-import { useGroup } from '@/store/group-provider';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { Box, Grid2, Typography } from '@mui/material';
+import { useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import MyModal from '../modal/modal';
+
 import AddExerciseForm from '../add-exercise-form/add-exercise-form';
+import MyModal from '../modal/modal';
+import Superset from '../superset/superset';
 import { NUM_MAX_SUPERSETS } from '../trainer-day-view/constant';
 import { onDragEnd } from '../trainer-day-view/state';
-import Superset from '../superset/superset';
 import { handleAddExerciseToSupersetComponent } from './state';
-import { useTheme } from '@mui/material';
-import { SupersetsProvider, useSupersets } from '@/store/supersets-provider';
-import { SetState } from '@/common/type/state.type';
+import type { SetState } from '@/common/type/state.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
+import { useGroup } from '@/store/group-provider';
 import { useMain } from '@/store/main-provider';
+import { useScreenSize } from '@/store/screen-size-provider';
+import { SupersetsProvider } from '@/store/supersets-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface SupersetsProps {
   openAddExerciseModal: boolean;

@@ -1,16 +1,17 @@
-import { Attribute } from '@/controller/attribute/type/attribute.type';
-import {
+import type { User } from 'firebase/auth';
+
+import type { SetState } from './state.type';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
+import type {
   Component,
   TreeComponent,
 } from '@/controller/component/type/component.type';
-import { Exercise } from '@/controller/exercise/type/exercise.type';
-import { UserRole } from '@/controller/user/enum/user-role.enum';
-import {
-  UserEntity,
+import type { Exercise } from '@/controller/exercise/type/exercise.type';
+import type { UserRole } from '@/controller/user/enum/user-role.enum';
+import type {
   User as CustomUser,
+  UserEntity,
 } from '@/controller/user/type/user.type';
-import { User } from 'firebase/auth';
-import { SetState } from './state.type';
 
 export type CommonContextType = {
   user: CustomUser;

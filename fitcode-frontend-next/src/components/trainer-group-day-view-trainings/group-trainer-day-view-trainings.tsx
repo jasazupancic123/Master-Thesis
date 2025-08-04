@@ -1,9 +1,10 @@
-import TrainingCard from '@/components/training-card/training-card';
-import { useGroup } from '@/store/group-provider';
 import { Typography } from '@mui/material';
 import Box from '@mui/material/Box';
-import { Day } from '@/common/service/util/date.util';
 import React from 'react';
+
+import type { Day } from '@/common/service/util/date.util';
+import TrainingCard from '@/components/training-card/training-card';
+import { useGroup } from '@/store/group-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface GroupTrainerDayViewTrainingsProps {

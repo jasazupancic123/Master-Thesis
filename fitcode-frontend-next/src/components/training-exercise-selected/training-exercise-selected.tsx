@@ -1,10 +1,8 @@
 'use client';
 
-import { useScreenSize } from '@/store/screen-size-provider';
-import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
-import { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Box, Grid2, IconButton, Slider, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   Line,
   LineChart,
@@ -13,13 +11,16 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import TrainingExerciseCard from '../training-exercise-card/training-exercise-card';
+import type { Dimensions } from '@/common/type/dimensions.type';
+import type { SetState } from '@/common/type/state.type';
+import type { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
+import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
-import { useTheme } from '@mui/material/styles';
-import { ChartWorkloadData } from '@/controller/training/type/chart-workload-data.type';
-import { Dimensions } from '@/common/type/dimensions.type';
-import { SetState } from '@/common/type/state.type';
+import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
+import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 
 interface TrainignExerciseSelectedProps {
   supersetIndex: number;

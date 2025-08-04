@@ -1,19 +1,20 @@
+import { Close } from '@mui/icons-material';
 import { Box, Grid2, IconButton, TextField } from '@mui/material';
 import { useTheme } from '@mui/material';
+import Image from 'next/image';
 import {
-  AreaChart,
   Area,
-  Line,
-  XAxis,
-  YAxis,
+  AreaChart,
   CartesianGrid,
-  Tooltip,
+  Line,
   ResponsiveContainer,
   Scatter,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
-import Image from 'next/image';
+
 import { useScreenSize } from '@/store/screen-size-provider';
-import { Close } from '@mui/icons-material';
 
 const data = [
   { time: '', value: 0 },

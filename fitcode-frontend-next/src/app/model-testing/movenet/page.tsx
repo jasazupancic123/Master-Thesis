@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -10,12 +9,14 @@ import {
   Typography,
 } from '@mui/material';
 import * as tf from '@tensorflow/tfjs';
+import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
+import * as posedetection from '@tensorflow-models/pose-detection';
+import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
+
 import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-wasm';
 import '@tensorflow/tfjs-backend-webgpu';
-import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
-import * as posedetection from '@tensorflow-models/pose-detection';
-import toast from 'react-hot-toast';
 
 setWasmPaths({
   'tfjs-backend-wasm.wasm': '/tfjs/tfjs-backend-wasm.wasm',

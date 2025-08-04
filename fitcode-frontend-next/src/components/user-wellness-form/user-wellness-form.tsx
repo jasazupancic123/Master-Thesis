@@ -1,24 +1,25 @@
-import { SetState } from '@/common/type/state.type';
-import { useScreenSize } from '@/store/screen-size-provider';
-import { Wellness } from '@/controller/user/type/wellness.type';
 import { Chip, Slider } from '@mui/material';
+import { useTheme } from '@mui/material';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { useTheme } from '@mui/material';
+
+import type { SetState } from '@/common/type/state.type';
+import type { Wellness } from '@/controller/user/type/wellness.type';
+import { useScreenSize } from '@/store/screen-size-provider';
 import { useWellness } from '@/store/wellness-provider';
 
 interface Props {
-  onSubmit: (data: Partial<Wellness>) => void | Promise<void>;
+  onSubmit: (_data: Partial<Wellness>) => void | Promise<void>;
   disabled: boolean;
   setDisabled: SetState<boolean>;
 }
 
 export default function UserWellnessForm(props: Props) {
-  const { wellness, setWellness } = useWellness();
+  const { wellness } = useWellness();
 
   const theme = useTheme();
   const screenSize = useScreenSize();
