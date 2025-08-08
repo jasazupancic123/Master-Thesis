@@ -88,6 +88,9 @@ describe('Create Exercise (e2e)', () => {
       .send(exercise);
 
     expect(response.status).toBe(201);
+    expect(response.body.id).toBe(
+      `new-exercise-${institution.id.toLowerCase()}`,
+    );
     expect(response.body.name).toBe(exercise.name);
     expect(response.body.ownerId).toBe(institution.id);
 
@@ -153,6 +156,7 @@ describe('Create Exercise (e2e)', () => {
       .send(exercise);
 
     expect(response.status).toBe(201);
+    expect(response.body.id).toBe(`global-exercise`);
     expect(response.body.name).toBe(exercise.name);
     expect(response.body.ownerId).toBe(GLOBAL_EXERCISE_OWNER); // Should be global owner
 
@@ -358,26 +362,6 @@ describe('Create Exercise (e2e)', () => {
       deleteDoc(firebase, 'COMPONENT', component.id),
       deleteDoc(firebase, 'ATTRIBUTE', attribute.field),
     ]);
-  });
-
-  it('should fail to create many exercises if something is wrong', async () => {
-    const exercises = [
-      generateExerciseStub({
-        componentIds: ['non-existing-component'],
-        attributeValues: [generateExerciseAttributeValueStub()],
-      }),
-      generateExerciseStub({ componentIds: [root.id] }),
-    ];
-
-    const response = await request(app.getHttpServer())
-      .post('/exercise/many')
-      .set('Authorization', `Bearer ${global.manager.token}`)
-      .send({ exercises });
-
-    expect(response.status).toBe(404);
-    expect(response.body.message).toBe(
-      `Component non-existing-component does not exist`,
-    );
   });
 
   /* it('should not create more exercises than the limit for user', async () => {

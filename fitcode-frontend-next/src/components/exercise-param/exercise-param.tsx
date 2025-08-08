@@ -13,7 +13,7 @@ import { useGroup } from '@/store/group-provider';
 
 interface Props {
   param: Attribute;
-  value: AttributeValue;
+  value?: AttributeValue;
   onOptionChange: SetState<string>;
   onSubOptionChange: SetState<string>;
   showOptions?: boolean;
@@ -53,6 +53,8 @@ export function ExerciseParam(props: Props) {
     athleteView || !useGroup()
       ? { setDetectedChanges: undefined }
       : (useGroup() ?? {});
+
+  if (!value) return null;
 
   const nestedOption = param.options?.find((o) =>
     value.selected.includes(o.field)

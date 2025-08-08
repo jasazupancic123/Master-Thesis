@@ -8,6 +8,7 @@ import {
   deleteDocs,
   deleteInstitution,
 } from '@test/common/utils/data.util';
+import { expectDatesToMatchUpToMinute } from '@test/common/utils/date.util';
 import { addDays, addHours, subDays, subHours } from 'date-fns';
 import * as request from 'supertest';
 
@@ -610,7 +611,45 @@ describe('Create Training (e2e)', () => {
       await deleteDoc(firebase, 'TRAINING', training.id);
     });
 
+    it('should fail to add components if there are duplicate components', async () => {
+      const training = await trainingService.create(
+        global.trainer,
+        generateTrainingStub({
+          groupId: group.id,
+          cycleId: group.cycles[1].id,
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              from: getTime(addDays(new Date(), 2), 8, 0),
+              to: getTime(addDays(new Date(), 2), 9, 0),
+            }),
+          ],
+        }),
+      );
+
+      const response = await request(app.getHttpServer())
+        .post(`/training/${training.id}/component`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          components: [
+            generateTrainingComponent({
+              id: component.id,
+              from: getTime(addDays(new Date(), 2), 9, 0),
+              to: getTime(addDays(new Date(), 2), 10, 0),
+            }),
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Duplicate component ${component.name}`,
+      );
+
+      await deleteDoc(firebase, 'TRAINING', training.id);
+    });
+
     it('should successfully add training components', async () => {
+      const d = addDays(new Date(), 2);
       const newComponent = await componentService.create(
         generateComponentStub(),
       );
@@ -624,8 +663,8 @@ describe('Create Training (e2e)', () => {
             components: [
               generateTrainingComponent({
                 id: component.id,
-                from: getTime(addDays(new Date(), 2), 8, 0),
-                to: getTime(addDays(new Date(), 2), 9, 0),
+                from: getTime(d, 8, 0),
+                to: getTime(d, 9, 0),
               }),
             ],
           },
@@ -640,8 +679,8 @@ describe('Create Training (e2e)', () => {
           components: [
             generateTrainingComponent({
               id: newComponent.id,
-              from: getTime(addDays(new Date(), 2), 9, 0),
-              to: getTime(addDays(new Date(), 2), 10, 0),
+              from: getTime(d, 9, 0),
+              to: getTime(d, 10, 0),
             }),
           ],
         });
@@ -649,6 +688,36 @@ describe('Create Training (e2e)', () => {
       expect(response.status).toBe(201);
       expect(response.body.id).toBe(training.id);
       expect(response.body.components).toHaveLength(2);
+
+      // should update training times correctly
+      const trainingFrom = new Date(response.body.from);
+      const trainingTo = new Date(response.body.to);
+
+      const warmupFrom = new Date(response.body.warmup.from);
+      const warmupTo = new Date(response.body.warmup.to);
+      const cooldownFrom = new Date(response.body.cooldown.from);
+      const cooldownTo = new Date(response.body.cooldown.to);
+
+      const c1From = new Date(response.body.components[0].from);
+      const c1To = new Date(response.body.components[0].to);
+      const c2From = new Date(response.body.components[1].from);
+      const c2To = new Date(response.body.components[1].to);
+
+      // should update training times correctly
+      expectDatesToMatchUpToMinute(trainingFrom, getTime(d, 7, 45)); // 15 minutes before first component (warmup)
+      expectDatesToMatchUpToMinute(trainingTo, getTime(d, 10, 15)); // 15 minutes after last component (cooldown)
+
+      // should update warmup and cooldown times correctly
+      expectDatesToMatchUpToMinute(warmupFrom, getTime(d, 7, 45));
+      expectDatesToMatchUpToMinute(warmupTo, getTime(d, 8));
+      expectDatesToMatchUpToMinute(cooldownFrom, getTime(d, 10, 0));
+      expectDatesToMatchUpToMinute(cooldownTo, getTime(d, 10, 15));
+
+      // should update components times correctly
+      expectDatesToMatchUpToMinute(c1From, getTime(d, 8, 0));
+      expectDatesToMatchUpToMinute(c1To, getTime(d, 9, 0));
+      expectDatesToMatchUpToMinute(c2From, getTime(d, 9, 0));
+      expectDatesToMatchUpToMinute(c2To, getTime(d, 10, 0));
 
       await Promise.all([
         deleteDoc(firebase, 'COMPONENT', newComponent.id),

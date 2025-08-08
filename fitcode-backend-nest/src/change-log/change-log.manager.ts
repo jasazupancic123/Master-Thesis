@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import type {
   DocumentData,
   DocumentReference,
@@ -20,19 +21,19 @@ type FirestoreChange<T> =
       deletedData: FirestoreEntity<T>;
     };
 
-export abstract class AbstractChangeLogService<T> {
-  protected changeLog: FirestoreChange<T>[] = [];
+@Injectable()
+export class ChangeLogManager<T> {
+  private changeLog: FirestoreChange<T>[] = [];
   private checkpointIndex: number | null = null;
 
-  constructor(protected readonly firebase: FirebaseService) {}
+  constructor(private readonly firebase: FirebaseService) {}
 
-  protected trackCreate(ref: DocumentReference) {
+  trackCreate(ref: DocumentReference) {
     this.changeLog.push({ type: 'create', ref });
   }
 
-  protected async trackUpdate(ref: DocumentReference) {
+  async trackUpdate(ref: DocumentReference) {
     const snapshot = await ref.get();
-
     this.changeLog.push({
       type: 'update',
       ref,
@@ -40,14 +41,28 @@ export abstract class AbstractChangeLogService<T> {
     });
   }
 
-  protected async trackDelete(ref: DocumentReference) {
+  async trackDelete(ref: DocumentReference) {
     const snapshot = await ref.get();
+    if (!snapshot.exists) return;
 
     this.changeLog.push({
       type: 'delete',
       ref,
       deletedData: snapshot.data() as FirestoreEntity<T>,
     });
+  }
+
+  checkpoint() {
+    this.checkpointIndex = this.changeLog.length;
+  }
+
+  clearCheckpoint() {
+    this.checkpointIndex = null;
+  }
+
+  clearChangeLog() {
+    this.changeLog.length = 0;
+    this.clearCheckpoint();
   }
 
   async cleanup(
@@ -62,6 +77,7 @@ export abstract class AbstractChangeLogService<T> {
         : 0;
 
     const logToRevert = this.changeLog.slice(startIndex).reverse();
+
     for (const change of logToRevert) {
       const ref = change.ref as DocumentReference<T, DocumentData>;
 
@@ -79,24 +95,8 @@ export abstract class AbstractChangeLogService<T> {
     }
 
     if (!batch) await localBatch.commit();
+
     this.changeLog = this.changeLog.slice(0, startIndex);
     if (!fromCheckpointOnly) this.clearCheckpoint();
-  }
-
-  /**
-   * Creates a checkpoint in the change log. All changes after this point can be
-   * reverted by calling `cleanup()`.
-   */
-  checkpoint() {
-    this.checkpointIndex = this.changeLog.length;
-  }
-
-  protected clearCheckpoint() {
-    this.checkpointIndex = null;
-  }
-
-  protected clearChangeLog() {
-    this.changeLog.length = 0;
-    this.clearCheckpoint();
   }
 }

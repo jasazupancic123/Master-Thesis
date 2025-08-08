@@ -287,6 +287,44 @@ describe('Update Training (e2e)', () => {
 
       training = await createTraining();
     });
+
+    it('should fail if input has bilateral exercise with only one side set', async () => {
+      const exercise = await db.exercises.create({
+        name: 'Bilateral Exercise',
+        ownerId: global.trainer.uid,
+        componentIds: [component1.id],
+        isBilateral: true,
+      });
+
+      const sets = [generateExerciseSet(1, COMPONENT_PARAMS_OPT1)];
+      sets[0].paramValuesR = undefined; // Only left side set
+
+      const response = await request(app.getHttpServer())
+        .patch(`/training/${training.id}`)
+        .set('Authorization', `Bearer ${global.trainer.token}`)
+        .send({
+          ...training,
+          components: [
+            generateTrainingComponent({
+              id: component1.id,
+              supersets: [
+                generateSuperset({
+                  exercises: [
+                    generateTrainingExercise({ id: exercise.id, sets }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe(
+        `Bilateral exercise ${exercise.name} must have both left and right side sets`,
+      );
+
+      await db.exercises.delete(exercise.id);
+    });
   });
 
   describe('Copy training', () => {

@@ -90,6 +90,7 @@ export class TrainingPlanService {
     const lastComponent = training.components[training.components.length - 1];
 
     const query: Update<Training> = {
+      to: training.cooldown.to,
       components: [
         ...training.components.filter(
           (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
@@ -109,6 +110,7 @@ export class TrainingPlanService {
       ],
     };
 
+    training.to = query.to;
     training.components = query.components;
     return [query, training];
   }
@@ -419,7 +421,11 @@ export class TrainingPlanService {
           );
 
           tExercise.params = this.componentService.getParamAttributes(params);
-          tExercise.sets = this.getSets(tExercise.params, tExercise.sets);
+          tExercise.sets = this.getSets(
+            exercise.isBilateral,
+            tExercise.params,
+            tExercise.sets,
+          );
         }
 
       for (const subgroup of tComponent.subgroups)
@@ -435,7 +441,11 @@ export class TrainingPlanService {
             );
 
             tExercise.params = this.componentService.getParamAttributes(params);
-            tExercise.sets = this.getSets(tExercise.params, tExercise.sets);
+            tExercise.sets = this.getSets(
+              exercise.isBilateral,
+              tExercise.params,
+              tExercise.sets,
+            );
           }
     }
   }
@@ -468,13 +478,13 @@ export class TrainingPlanService {
           'You can only have up to 4 exercises per superset',
         );
 
-      // don't check exercises for warmup and cooldown
+      /* // don't check exercises for warmup and cooldown
       if (
         [WARMUP_COMPONENT_ID, COOLDOWN_COMPONENT_ID].includes(
           trainingComponent.id,
         )
       )
-        continue;
+        continue; */
 
       // validate exercises
       const validTrainingExercises: TrainingExercise[] = [];
@@ -483,7 +493,15 @@ export class TrainingPlanService {
         if (!exercise)
           throw new NotFoundException('Training exercise not found');
 
-        // first time, populate training exercise params and sets
+        if (
+          exercise.isBilateral &&
+          !trainingExercise.sets.every((s) => s.paramValuesR)
+        )
+          throw new BadRequestException(
+            `Bilateral exercise ${exercise.name} must have both left and right side sets`,
+          );
+
+        // populate training exercise params and sets
         const params = this.componentService.getComponentParamAttributes(
           componentParams,
           exercise.attributeValues,
@@ -493,7 +511,12 @@ export class TrainingPlanService {
         const paramAttributes =
           this.componentService.getParamAttributes(params);
 
-        const sets = this.getSets(paramAttributes, trainingExercise.sets);
+        const sets = this.getSets(
+          exercise.isBilateral,
+          paramAttributes,
+          trainingExercise.sets,
+        );
+
         const method = methods.find(
           (m) => m.id === trainingComponent.methodId,
         )!;
@@ -506,7 +529,9 @@ export class TrainingPlanService {
         if (method?.attributes?.length > 0)
           for (const set of sets) {
             this.validateMethodParamValues(method, set.paramValuesL);
-            this.validateMethodParamValues(method, set.paramValuesR);
+
+            if (exercise.isBilateral && set.paramValuesR)
+              this.validateMethodParamValues(method, set.paramValuesR);
           }
 
         validTrainingExercises.push({
@@ -588,7 +613,11 @@ export class TrainingPlanService {
     return validSubgroups;
   }
 
-  getSets(params: Attribute[], existingSets?: ExerciseSet[]): ExerciseSet[] {
+  getSets(
+    bilateral: boolean,
+    params: Attribute[],
+    existingSets?: ExerciseSet[],
+  ): ExerciseSet[] {
     const sets = +(
       params
         .find((p) => p.field === ParamType.VolWorkSets)
@@ -605,7 +634,7 @@ export class TrainingPlanService {
       return Array.from({ length: sets }).map((_, i) => ({
         setNumber: i + 1,
         paramValuesL: generatedParamValues,
-        paramValuesR: generatedParamValues,
+        ...(bilateral && { paramValuesR: generatedParamValues }),
       }));
     }
 
@@ -617,16 +646,22 @@ export class TrainingPlanService {
         params,
       );
 
-      const validParamValuesR = this.attributeService.validate(
-        existingSet.paramValuesR,
-        params,
-      );
+      if (bilateral) {
+        if (!existingSet.paramValuesR)
+          existingSet.paramValuesR = existingSet.paramValuesL;
 
-      validSets.push({
-        ...existingSet,
-        paramValuesL: validParamValuesL,
-        paramValuesR: validParamValuesR,
-      });
+        const validParamValuesR = this.attributeService.validate(
+          existingSet.paramValuesR,
+          params,
+        );
+
+        validSets.push({
+          ...existingSet,
+          paramValuesL: validParamValuesL,
+          paramValuesR: validParamValuesR,
+        });
+      } else
+        validSets.push({ ...existingSet, paramValuesL: validParamValuesL });
     }
 
     return validSets;
@@ -731,7 +766,7 @@ export class TrainingPlanService {
     // iterate through sets and calculate sums and counts
     for (const set of sets) {
       for (const { field, value } of set.paramValuesL.concat(
-        set.paramValuesR,
+        set.paramValuesR || [],
       )) {
         if (sums.hasOwnProperty(field)) {
           sums[field] += parseFloat(value);
