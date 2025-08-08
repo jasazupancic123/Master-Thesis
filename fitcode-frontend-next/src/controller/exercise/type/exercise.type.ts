@@ -8,6 +8,7 @@ export type Exercise = BaseEntity & {
   ownerId: string;
   name: string;
   componentIds: string[];
+  isBilateral: boolean;
   imageUrl?: string;
   videoUrl?: string;
   instruction?: string;
@@ -15,6 +16,7 @@ export type Exercise = BaseEntity & {
   defaultParams?: Attribute[];
 
   // mapped properties
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valuesObject: Record<string, any>;
   components?: Component[];
   rootComponents?: Component[];
@@ -27,14 +29,17 @@ export type CreateExercise = Pick<
   Exercise,
   | 'name'
   | 'componentIds'
+  | 'isBilateral'
   | 'imageUrl'
   | 'videoUrl'
   | 'instruction'
   | 'attributeValues'
 >;
 
-export type CreateExercises = {
+export type CreateExerciseAttributeValue = AttributeValue;
+
+export type UpsertManyExercises = {
   exercises: CreateExercise[];
 };
 
-export type UpdateExercise = CreateExercise;
+export type UpdateExercise = Omit<CreateExercise, 'isBilateral'>;

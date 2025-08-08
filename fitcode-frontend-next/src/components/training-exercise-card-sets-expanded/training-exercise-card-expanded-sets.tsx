@@ -106,8 +106,14 @@ export default function TrainingExerciseCardExpandedSets(
                   flexDirection="column"
                   gap={0.9}
                 >
-                  <LeftRightExerciseText key="L" title="L" />
-                  <LeftRightExerciseText key="R" title="R" />
+                  {exercise.exercise?.isBilateral ? (
+                    <>
+                      <LeftRightExerciseText title="L" />
+                      <LeftRightExerciseText title="R" />
+                    </>
+                  ) : (
+                    <LeftRightExerciseText title="" />
+                  )}
                 </Box>
               </Box>
             </Grid2>
@@ -139,10 +145,10 @@ export default function TrainingExerciseCardExpandedSets(
                     }
                   );
 
-                  if (!valueL || !valueR) {
-                    toast.error(`Invalid parameter field: ${param.field}`);
-                    return null;
-                  }
+                  if (!valueL || (exercise.exercise?.isBilateral && !valueR))
+                    return toast.error(
+                      `Invalid parameter field: ${param.field}`
+                    );
 
                   let min: number | undefined;
                   let max: number | undefined;
@@ -176,121 +182,129 @@ export default function TrainingExerciseCardExpandedSets(
                         (100 / exercise.params.length).toString() + '%'
                       }
                     >
-                      {['L', 'R'].map((lOrR) => (
-                        <ExerciseParam
-                          key={`${param.field}-${lOrR}`}
-                          showOptions={set.setNumber === 1 && lOrR === 'L'}
-                          disableOptions
-                          disableSets
-                          param={param}
-                          value={lOrR === 'L' ? valueL : valueR}
-                          onOptionChange={(newValue) => {}}
-                          min={min}
-                          max={max}
-                          onSubOptionChange={(newValue) => {
-                            if (+newValue < 0) return;
-
-                            // update only selected athletes workloads
-                            if (selectedAthlete) {
-                              const existingWorkload =
-                                selectedAthleteWorkloads.futureWorkloads.find(
-                                  (w) =>
-                                    w.componentId === component.id &&
-                                    w.exerciseId === exercise.id &&
-                                    w.supersetIndex === supersetIndex &&
-                                    w.setNumber === set.setNumber &&
-                                    w.userId === selectedAthlete.uid
-                                );
-
-                              const newCustomWorkload =
-                                existingWorkload ||
-                                TrainingService.getPrescribedWorkload(set);
-
-                              const fieldName =
-                                TrainingService.getPerscribedFieldName(
-                                  param,
-                                  lOrR as 'L' | 'R'
-                                );
-
-                              // edit the field that was changed
-                              newCustomWorkload[fieldName] =
-                                +newValue as unknown as undefined;
-
-                              // add the new workload to the custom athlete workloads
-                              setCustomAthleteWorkloads((prev) => {
-                                const existingIndex = prev.findIndex(
-                                  (w) =>
-                                    w.componentId === component.id &&
-                                    w.exerciseId === exercise.id &&
-                                    w.supersetIndex === supersetIndex &&
-                                    w.setNumber === set.setNumber &&
-                                    w.userId === selectedAthlete.uid
-                                );
-
-                                if (existingIndex !== -1) {
-                                  const newWorkloads = [...prev];
-                                  newWorkloads[existingIndex] = {
-                                    ...newWorkloads[existingIndex],
-                                    [fieldName]:
-                                      +newValue as unknown as undefined,
-                                  };
-
-                                  return newWorkloads;
-                                }
-
-                                // if not found, add a new workload
-                                return [
-                                  ...prev,
-                                  {
-                                    ...newCustomWorkload,
-                                    id: v4(),
-                                    componentId: component.id,
-                                    exerciseId: exercise.id,
-                                    supersetIndex: supersetIndex,
-                                    setNumber: set.setNumber,
-                                    userId: selectedAthlete.uid,
-                                    institutionId: undefined,
-                                    groupId: undefined,
-                                    cycleId: undefined,
-                                    trainingId: training.id,
-                                    status: SetStatus.NOT_STARTED,
-                                    notes: '',
-                                    createdAt: new Date(),
-                                    updatedAt: new Date(),
-                                    plannedAt: component.from,
-                                    deletedAt: undefined,
-                                  },
-                                ];
-                              });
-
-                              return;
+                      {['L']
+                        .concat(exercise.exercise?.isBilateral ? ['R'] : [])
+                        .map((lOrR) => (
+                          <ExerciseParam
+                            key={`${param.field}-${lOrR}`}
+                            showOptions={set.setNumber === 1 && lOrR === 'L'}
+                            disableOptions
+                            disableSets
+                            param={param}
+                            value={
+                              lOrR === 'L'
+                                ? valueL
+                                : valueR
+                                  ? valueR
+                                  : undefined
                             }
+                            onOptionChange={(_newValue) => {}}
+                            min={min}
+                            max={max}
+                            onSubOptionChange={(newValue) => {
+                              if (+newValue < 0) return;
 
-                            // update only the changed exercise
-                            updateExerciseAttributeValues(
-                              {
-                                newValue,
-                                i,
-                                set,
-                                lOrR: lOrR as 'L' | 'R',
-                              },
-                              {
-                                selectedExercises,
-                                exercise,
-                                param,
-                                training,
-                                component,
-                                setTraining,
-                                supersets,
-                                setDetectedChanges,
-                                selectedSubgroup,
-                                setSelectedSubgroup,
-                                supersetIndex,
+                              // update only selected athletes workloads
+                              if (selectedAthlete) {
+                                const existingWorkload =
+                                  selectedAthleteWorkloads.futureWorkloads.find(
+                                    (w) =>
+                                      w.componentId === component.id &&
+                                      w.exerciseId === exercise.id &&
+                                      w.supersetIndex === supersetIndex &&
+                                      w.setNumber === set.setNumber &&
+                                      w.userId === selectedAthlete.uid
+                                  );
+
+                                const newCustomWorkload =
+                                  existingWorkload ||
+                                  TrainingService.getPrescribedWorkload(set);
+
+                                const fieldName =
+                                  TrainingService.getPerscribedFieldName(
+                                    param,
+                                    lOrR as 'L' | 'R'
+                                  );
+
+                                // edit the field that was changed
+                                newCustomWorkload[fieldName] =
+                                  +newValue as unknown as undefined;
+
+                                // add the new workload to the custom athlete workloads
+                                setCustomAthleteWorkloads((prev) => {
+                                  const existingIndex = prev.findIndex(
+                                    (w) =>
+                                      w.componentId === component.id &&
+                                      w.exerciseId === exercise.id &&
+                                      w.supersetIndex === supersetIndex &&
+                                      w.setNumber === set.setNumber &&
+                                      w.userId === selectedAthlete.uid
+                                  );
+
+                                  if (existingIndex !== -1) {
+                                    const newWorkloads = [...prev];
+                                    newWorkloads[existingIndex] = {
+                                      ...newWorkloads[existingIndex],
+                                      [fieldName]:
+                                        +newValue as unknown as undefined,
+                                    };
+
+                                    return newWorkloads;
+                                  }
+
+                                  // if not found, add a new workload
+                                  return [
+                                    ...prev,
+                                    {
+                                      ...newCustomWorkload,
+                                      id: v4(),
+                                      componentId: component.id,
+                                      exerciseId: exercise.id,
+                                      supersetIndex: supersetIndex,
+                                      setNumber: set.setNumber,
+                                      userId: selectedAthlete.uid,
+                                      institutionId: undefined,
+                                      groupId: undefined,
+                                      cycleId: undefined,
+                                      trainingId: training.id,
+                                      status: SetStatus.NOT_STARTED,
+                                      notes: '',
+                                      createdAt: new Date(),
+                                      updatedAt: new Date(),
+                                      plannedAt: component.from,
+                                      deletedAt: undefined,
+                                    },
+                                  ];
+                                });
+
+                                return;
                               }
-                            );
-                          }}
-                        />
-                      ))}
+
+                              // update only the changed exercise
+                              updateExerciseAttributeValues(
+                                {
+                                  newValue,
+                                  i,
+                                  set,
+                                  lOrR: lOrR as 'L' | 'R',
+                                },
+                                {
+                                  selectedExercises,
+                                  exercise,
+                                  param,
+                                  training,
+                                  component,
+                                  setTraining,
+                                  supersets,
+                                  setDetectedChanges,
+                                  selectedSubgroup,
+                                  setSelectedSubgroup,
+                                  supersetIndex,
+                                }
+                              );
+                            }}
+                          />
+                        ))}
                     </Box>
                   );
                 })}

@@ -10,11 +10,15 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { UserRole } from '@src/user/enum/user-role.enum';
+
 import { Auth } from '../common/decorator/auth.decorator';
 import { RequestUser } from '../common/decorator/request-user.decorator';
 import { User } from '../common/type/firebase-auth.type';
-import { CreateExerciseDto } from './dto/create-exercise.dto';
-import { CreateExercisesDto } from './dto/create-exercises.dto';
+import {
+  CreateExerciseDto,
+  UpsertManyExercisesDto,
+} from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { ExerciseService } from './service/exercise.service';
 
@@ -39,18 +43,18 @@ export class ExerciseController {
   }
 
   @Post()
-  @Auth()
+  @Auth([UserRole.ADMIN, UserRole.MANAGER])
   async create(@RequestUser() user: User, @Body() data: CreateExerciseDto) {
     return this.exerciseService.create(user, data);
   }
 
   @Post('many')
   @Auth()
-  async createMany(
+  async upsertMany(
     @RequestUser() user: User,
-    @Body() data: CreateExercisesDto,
+    @Body() data: UpsertManyExercisesDto,
   ) {
-    return this.exerciseService.createMany(
+    return this.exerciseService.upsertMany(
       user,
       data.exercises.map((e) => ({ ...e, ownerId: user.uid })),
     );

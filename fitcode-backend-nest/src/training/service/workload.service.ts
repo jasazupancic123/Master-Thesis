@@ -579,15 +579,7 @@ export class WorkloadService {
       (p) => p.field === ParamType.VolWork1,
     );
 
-    const volWork1ValueR = paramValuesR.find(
-      (p) => p.field === ParamType.VolWork1,
-    );
-
     const volWork2ValueL = paramValuesL.find(
-      (p) => p.field === ParamType.VolWork2,
-    );
-
-    const volWork2ValueR = paramValuesR.find(
       (p) => p.field === ParamType.VolWork2,
     );
 
@@ -595,15 +587,7 @@ export class WorkloadService {
       (p) => p.field === ParamType.VolRec1,
     );
 
-    const volRecValueR = paramValuesR.find(
-      (p) => p.field === ParamType.VolRec1,
-    );
-
     const intWork1ValueL = paramValuesL.find(
-      (p) => p.field === ParamType.IntWork1,
-    );
-
-    const intWork1ValueR = paramValuesR.find(
       (p) => p.field === ParamType.IntWork1,
     );
 
@@ -611,69 +595,122 @@ export class WorkloadService {
       (p) => p.field === ParamType.IntWork2,
     );
 
-    const intWork2ValueR = paramValuesR.find(
-      (p) => p.field === ParamType.IntWork2,
-    );
-
     const intRecValueL = paramValuesL.find(
       (p) => p.field === ParamType.IntRec1,
     );
 
-    const intRecValueR = paramValuesR.find(
-      (p) => p.field === ParamType.IntRec1,
-    );
-
-    return {
+    const workloadValue: WorkloadValue = {
       volWork1ValueL: this.parseValue(volWork1ValueL),
-      volWork1ValueR: this.parseValue(volWork1ValueR),
       volWork2ValueL: this.parseValue(volWork2ValueL),
-      volWork2ValueR: this.parseValue(volWork2ValueR),
       volRecValueL: this.parseValue(volRecValueL),
-      volRecValueR: this.parseValue(volRecValueR),
       intWork1ValueL: this.parseValue(intWork1ValueL),
-      intWork1ValueR: this.parseValue(intWork1ValueR),
       intWork2ValueL: this.parseValue(intWork2ValueL),
-      intWork2ValueR: this.parseValue(intWork2ValueR),
       intRecValueL: this.parseValue(intRecValueL),
-      intRecValueR: this.parseValue(intRecValueR),
     };
+
+    if (paramValuesR) {
+      const volWork1ValueR = paramValuesR.find(
+        (p) => p.field === ParamType.VolWork1,
+      );
+
+      const volWork2ValueR = paramValuesR.find(
+        (p) => p.field === ParamType.VolWork2,
+      );
+
+      const volRecValueR = paramValuesR.find(
+        (p) => p.field === ParamType.VolRec1,
+      );
+
+      const intWork1ValueR = paramValuesR.find(
+        (p) => p.field === ParamType.IntWork1,
+      );
+
+      const intWork2ValueR = paramValuesR.find(
+        (p) => p.field === ParamType.IntWork2,
+      );
+
+      const intRecValueR = paramValuesR.find(
+        (p) => p.field === ParamType.IntRec1,
+      );
+
+      workloadValue.volWork1ValueR = this.parseValue(volWork1ValueR);
+      workloadValue.volWork2ValueR = this.parseValue(volWork2ValueR);
+      workloadValue.volRecValueR = this.parseValue(volRecValueR);
+      workloadValue.intWork1ValueR = this.parseValue(intWork1ValueR);
+      workloadValue.intWork2ValueR = this.parseValue(intWork2ValueR);
+      workloadValue.intRecValueR = this.parseValue(intRecValueR);
+    }
+
+    return workloadValue;
   }
 
   getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
     const { paramValuesL, paramValuesR } = prescribedSet;
-    const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
-    const volWork1R = paramValuesR.find((p) => p.field === ParamType.VolWork1);
-    const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
-    const volWork2R = paramValuesR.find((p) => p.field === ParamType.VolWork2);
-    const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
-    const volRecR = paramValuesR.find((p) => p.field === ParamType.VolRec1);
-    const intWork1L = paramValuesL.find((p) => p.field === ParamType.IntWork1);
-    const intWork1R = paramValuesR.find((p) => p.field === ParamType.IntWork1);
-    const intWork2L = paramValuesL.find((p) => p.field === ParamType.IntWork2);
-    const intWork2R = paramValuesR.find((p) => p.field === ParamType.IntWork2);
-    const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
-    const intRecR = paramValuesR.find((p) => p.field === ParamType.IntRec1);
 
-    return {
+    const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
+    const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
+    const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
+    const intWork1L = paramValuesL.find((p) => p.field === ParamType.IntWork1);
+    const intWork2L = paramValuesL.find((p) => p.field === ParamType.IntWork2);
+    const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
+
+    const prescribedWorkload: PrescribedWorkload = {
       volWork1Type: this.parseSelected<VolType>(volWork1L),
       prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
-      prescribedVolWork1ValueR: this.parseValue(volWork1R) as number,
       volWork2Type: this.parseSelected<VolType>(volWork2L),
       prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
-      prescribedVolWork2ValueR: this.parseValue(volWork2R) as number,
       volRecType: this.parseSelected<VolType>(volRecL),
       prescribedVolRecValueL: this.parseValue(volRecL) as number,
-      prescribedVolRecValueR: this.parseValue(volRecR) as number,
       intWork1Type: this.parseSelected<IntType>(intWork1L),
       prescribedIntWork1ValueL: this.parseValue(intWork1L),
-      prescribedIntWork1ValueR: this.parseValue(intWork1R),
       intWork2Type: this.parseSelected<IntType>(intWork2L),
       prescribedIntWork2ValueL: this.parseValue(intWork2L),
-      prescribedIntWork2ValueR: this.parseValue(intWork2R),
       intRecType: this.parseSelected<IntType>(intRecL),
       prescribedIntRecValueL: this.parseValue(intRecL),
-      prescribedIntRecValueR: this.parseValue(intRecR),
     };
+
+    if (prescribedSet.paramValuesR) {
+      const volWork1R = paramValuesR.find(
+        (p) => p.field === ParamType.VolWork1,
+      );
+
+      const volWork2R = paramValuesR.find(
+        (p) => p.field === ParamType.VolWork2,
+      );
+
+      const volRecR = paramValuesR.find((p) => p.field === ParamType.VolRec1);
+
+      const intWork1R = paramValuesR.find(
+        (p) => p.field === ParamType.IntWork1,
+      );
+
+      const intWork2R = paramValuesR.find(
+        (p) => p.field === ParamType.IntWork2,
+      );
+
+      const intRecR = paramValuesR.find((p) => p.field === ParamType.IntRec1);
+
+      prescribedWorkload.volWork1Type = this.parseSelected<VolType>(volWork1R);
+      prescribedWorkload.prescribedVolWork1ValueR = this.parseValue(
+        volWork1R,
+      ) as number;
+      prescribedWorkload.volWork2Type = this.parseSelected<VolType>(volWork2R);
+      prescribedWorkload.prescribedVolWork2ValueR = this.parseValue(
+        volWork2R,
+      ) as number;
+      prescribedWorkload.volRecType = this.parseSelected<VolType>(volRecR);
+      prescribedWorkload.prescribedVolRecValueR = this.parseValue(
+        volRecR,
+      ) as number;
+      prescribedWorkload.intWork1Type = this.parseSelected<IntType>(intWork1R);
+      prescribedWorkload.prescribedIntWork1ValueR = this.parseValue(intWork1R);
+      prescribedWorkload.intWork2Type = this.parseSelected<IntType>(intWork2R);
+      prescribedWorkload.prescribedIntWork2ValueR = this.parseValue(intWork2R);
+      prescribedWorkload.intRecType = this.parseSelected<IntType>(intRecR);
+      prescribedWorkload.prescribedIntRecValueR = this.parseValue(intRecR);
+    }
+
+    return prescribedWorkload;
   }
 
   getExerciseSet(workload: Workload): ExerciseSet {
@@ -684,87 +721,99 @@ export class WorkloadService {
     };
 
     if (workload.volWork1Type) {
-      set.paramValuesL.push({
-        field: ParamType.VolWork1,
-        value: workload.prescribedVolWork1ValueL?.toString(),
-        selected: workload.volWork1Type,
-      });
+      if (workload.prescribedVolWork1ValueL)
+        set.paramValuesL.push({
+          field: ParamType.VolWork1,
+          value: workload.prescribedVolWork1ValueL.toString(),
+          selected: workload.volWork1Type,
+        });
 
-      set.paramValuesR.push({
-        field: ParamType.VolWork1,
-        value: workload.prescribedVolWork1ValueR?.toString(),
-        selected: workload.volWork1Type,
-      });
+      if (workload.prescribedVolWork1ValueR)
+        set.paramValuesR.push({
+          field: ParamType.VolWork1,
+          value: workload.prescribedVolWork1ValueR.toString(),
+          selected: workload.volWork1Type,
+        });
     }
 
     if (workload.volWork2Type) {
-      set.paramValuesL.push({
-        field: ParamType.VolWork2,
-        value: workload.prescribedVolWork2ValueL?.toString(),
-        selected: workload.volWork2Type,
-      });
+      if (workload.prescribedVolWork2ValueL)
+        set.paramValuesL.push({
+          field: ParamType.VolWork2,
+          value: workload.prescribedVolWork2ValueL.toString(),
+          selected: workload.volWork2Type,
+        });
 
-      set.paramValuesR.push({
-        field: ParamType.VolWork2,
-        value: workload.prescribedVolWork2ValueR?.toString(),
-        selected: workload.volWork2Type,
-      });
+      if (workload.prescribedVolWork2ValueR)
+        set.paramValuesR.push({
+          field: ParamType.VolWork2,
+          value: workload.prescribedVolWork2ValueR.toString(),
+          selected: workload.volWork2Type,
+        });
     }
 
     if (workload.volRecType) {
-      set.paramValuesL.push({
-        field: ParamType.VolRec1,
-        value: workload.prescribedVolRecValueL?.toString(),
-        selected: workload.volRecType,
-      });
+      if (workload.prescribedVolRecValueL)
+        set.paramValuesL.push({
+          field: ParamType.VolRec1,
+          value: workload.prescribedVolRecValueL.toString(),
+          selected: workload.volRecType,
+        });
 
-      set.paramValuesR.push({
-        field: ParamType.VolRec1,
-        value: workload.prescribedVolRecValueR?.toString(),
-        selected: workload.volRecType,
-      });
+      if (workload.prescribedVolRecValueR)
+        set.paramValuesR.push({
+          field: ParamType.VolRec1,
+          value: workload.prescribedVolRecValueR.toString(),
+          selected: workload.volRecType,
+        });
     }
 
     if (workload.intWork1Type) {
-      set.paramValuesL.push({
-        field: ParamType.IntWork1,
-        value: workload.prescribedIntWork1ValueL?.toString(),
-        selected: workload.intWork1Type,
-      });
+      if (workload.prescribedIntWork1ValueL)
+        set.paramValuesL.push({
+          field: ParamType.IntWork1,
+          value: workload.prescribedIntWork1ValueL.toString(),
+          selected: workload.intWork1Type,
+        });
 
-      set.paramValuesR.push({
-        field: ParamType.IntWork1,
-        value: workload.prescribedIntWork1ValueR?.toString(),
-        selected: workload.intWork1Type,
-      });
+      if (workload.prescribedIntWork1ValueR)
+        set.paramValuesR.push({
+          field: ParamType.IntWork1,
+          value: workload.prescribedIntWork1ValueR.toString(),
+          selected: workload.intWork1Type,
+        });
     }
 
     if (workload.intWork2Type) {
-      set.paramValuesL.push({
-        field: ParamType.IntWork2,
-        value: workload.prescribedIntWork2ValueL?.toString(),
-        selected: workload.intWork2Type,
-      });
+      if (workload.prescribedIntWork2ValueL)
+        set.paramValuesL.push({
+          field: ParamType.IntWork2,
+          value: workload.prescribedIntWork2ValueL.toString(),
+          selected: workload.intWork2Type,
+        });
 
-      set.paramValuesR.push({
-        field: ParamType.IntWork2,
-        value: workload.prescribedIntWork2ValueR?.toString(),
-        selected: workload.intWork2Type,
-      });
+      if (workload.prescribedIntWork2ValueR)
+        set.paramValuesR.push({
+          field: ParamType.IntWork2,
+          value: workload.prescribedIntWork2ValueR.toString(),
+          selected: workload.intWork2Type,
+        });
     }
 
     if (workload.intRecType) {
-      set.paramValuesL.push({
-        field: ParamType.IntRec1,
-        value: workload.prescribedIntRecValueL?.toString(),
-        selected: workload.intRecType,
-      });
+      if (workload.prescribedIntRecValueL)
+        set.paramValuesL.push({
+          field: ParamType.IntRec1,
+          value: workload.prescribedIntRecValueL.toString(),
+          selected: workload.intRecType,
+        });
 
-      set.paramValuesR.push({
-        field: ParamType.IntRec1,
-        value: workload.prescribedIntRecValueR?.toString(),
-        selected: workload.intRecType,
-      });
+      if (workload.prescribedIntRecValueR)
+        set.paramValuesR.push({
+          field: ParamType.IntRec1,
+          value: workload.prescribedIntRecValueR.toString(),
+          selected: workload.intRecType,
+        });
     }
 
     return set;

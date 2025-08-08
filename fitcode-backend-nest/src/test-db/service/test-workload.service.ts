@@ -16,10 +16,10 @@ import { Workload, WorkloadMeta } from '@src/training/entity/workload.entity';
 import { WorkloadValue } from '@src/training/entity/workload-value.entity';
 import { generateWorkloadStub } from '@src/training/mock/workload.stub';
 
-import { AbstractTestChangeLogService } from './abstract-test-change-log.service';
+import { AbstractChangeLogService } from './abstract-test-change-log.service';
 
 @Injectable()
-export class TestWorkloadService extends AbstractTestChangeLogService<Workload> {
+export class TestWorkloadService extends AbstractChangeLogService<Workload> {
   readonly collectionGroup: CollectionGroup;
 
   constructor(protected readonly firebase: FirebaseService) {

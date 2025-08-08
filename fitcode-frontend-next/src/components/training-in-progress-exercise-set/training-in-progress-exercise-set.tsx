@@ -66,13 +66,14 @@ export default function TrainingInProgressExerciseSet(
             selected: 'set',
             value: (i + 1).toString(),
           };
-          const valueR = set.paramValuesR.find(
-            (pv) => pv.field === param.field
-          ) || {
-            field: param.field,
-            selected: 'set',
-            value: (i + 1).toString(),
-          };
+
+          const valueR = set.paramValuesR
+            ? set.paramValuesR.find((pv) => pv.field === param.field) || {
+                field: param.field,
+                selected: 'set',
+                value: (i + 1).toString(),
+              }
+            : undefined;
 
           const value = valueL;
 
@@ -97,29 +98,24 @@ export default function TrainingInProgressExerciseSet(
                   const newExercise = { ...exercise };
 
                   const updatedSets: ExerciseSet[] = newExercise.sets.map(
-                    (set, j) => {
-                      if (i !== j) return set;
-                      return {
-                        setNumber: set.setNumber,
-                        paramValuesL: [...set.paramValuesL].map(
-                          (param, index) => {
-                            if (index === paramIndex) {
-                              return {
-                                field: param.field,
-                                selected: param.selected,
-                                value: newValue as string,
-                              } as AttributeValue;
-                            }
-                            return {
-                              field: param.field,
-                              selected: param.selected,
-                              value: param.value,
-                            } as AttributeValue;
+                    (set, j) =>
+                      i !== j
+                        ? set
+                        : {
+                            setNumber: set.setNumber,
+                            paramValuesL: [...set.paramValuesL].map(
+                              (param, index) =>
+                                ({
+                                  field: param.field,
+                                  selected: param.selected,
+                                  value:
+                                    index === paramIndex
+                                      ? (newValue as string)
+                                      : param.value,
+                                }) as AttributeValue
+                            ),
+                            paramValuesR: set.paramValuesR,
                           }
-                        ),
-                        paramValuesR: set.paramValuesR,
-                      };
-                    }
                   );
 
                   newExercise.sets = [...updatedSets];
@@ -142,101 +138,93 @@ export default function TrainingInProgressExerciseSet(
                   });
 
                   const newSupersets = trainingInProgress.supersets.map(
-                    (superset, j) => {
-                      if (j === trainingInProgress.supersetIndex) {
-                        return newSuperset;
-                      }
-                      return superset;
-                    }
+                    (superset, j) =>
+                      j === trainingInProgress.supersetIndex
+                        ? newSuperset
+                        : superset
                   );
 
                   setTrainingInProgress((prev) => {
                     if (!prev) return null;
-                    return {
-                      ...prev,
-                      supersets: newSupersets,
-                    } as TrainingInProgress;
+                    return { ...prev, supersets: newSupersets };
                   });
                 }}
               />
-              <ExerciseParam
-                showOptions={false}
-                disableSets
-                param={param}
-                value={valueR}
-                onOptionChange={(newValue) => {}}
-                onSubOptionChange={(newValue) => {
-                  if (+newValue < 0 || param.field === 'volWorkSets') return;
 
-                  const paramIndex = exercise.sets[0].paramValuesL.findIndex(
-                    (pv) => pv.field === param.field
-                  );
+              {isBilateral && valueR && (
+                <ExerciseParam
+                  showOptions={false}
+                  disableSets
+                  param={param}
+                  value={valueR}
+                  onOptionChange={(newValue) => {}}
+                  onSubOptionChange={(newValue) => {
+                    if (+newValue < 0 || param.field === 'volWorkSets') return;
 
-                  const newExercise = { ...exercise };
+                    const paramIndex = exercise.sets[0].paramValuesL.findIndex(
+                      (pv) => pv.field === param.field
+                    );
 
-                  const updatedSets: ExerciseSet[] = newExercise.sets.map(
-                    (set, j) => {
-                      if (i !== j) return set;
-                      return {
-                        setNumber: set.setNumber,
-                        paramValuesL: set.paramValuesL,
-                        paramValuesR: [...set.paramValuesR].map(
-                          (param, index) => {
-                            if (index === paramIndex) {
-                              return {
-                                field: param.field,
-                                selected: param.selected,
-                                value: newValue as string,
-                              } as AttributeValue;
-                            }
-                            return {
-                              field: param.field,
-                              selected: param.selected,
-                              value: param.value,
-                            } as AttributeValue;
-                          }
-                        ),
-                      };
-                    }
-                  );
+                    const newExercise = { ...exercise };
 
-                  newExercise.sets = [...updatedSets];
-
-                  const newExercises = selectedSuperset.exercises.map((ex) => {
-                    if (ex.id === exercise.id) {
-                      return newExercise;
-                    }
-                    return ex;
-                  });
-
-                  const newSuperset = {
-                    ...selectedSuperset,
-                    exercises: newExercises,
-                  };
-
-                  setSelectedSuperset((prev) => {
-                    if (!prev) return undefined;
-                    return newSuperset;
-                  });
-
-                  const newSupersets = trainingInProgress.supersets.map(
-                    (superset, j) => {
-                      if (j === trainingInProgress.supersetIndex) {
-                        return newSuperset;
+                    const updatedSets: ExerciseSet[] = newExercise.sets.map(
+                      (set, j) => {
+                        if (i !== j) return set;
+                        return {
+                          setNumber: set.setNumber,
+                          paramValuesL: set.paramValuesL,
+                          paramValuesR: set.paramValuesR
+                            ? [...set.paramValuesR].map(
+                                (param, index) =>
+                                  ({
+                                    field: param.field,
+                                    selected: param.selected,
+                                    value:
+                                      index === paramIndex
+                                        ? (newValue as string)
+                                        : param.value,
+                                  }) as AttributeValue
+                              )
+                            : undefined,
+                        };
                       }
-                      return superset;
-                    }
-                  );
+                    );
 
-                  setTrainingInProgress((prev) => {
-                    if (!prev) return null;
-                    return {
-                      ...prev,
-                      supersets: newSupersets,
-                    } as TrainingInProgress;
-                  });
-                }}
-              />
+                    newExercise.sets = [...updatedSets];
+
+                    const newExercises = selectedSuperset.exercises.map(
+                      (ex) => {
+                        if (ex.id === exercise.id) {
+                          return newExercise;
+                        }
+                        return ex;
+                      }
+                    );
+
+                    const newSuperset = {
+                      ...selectedSuperset,
+                      exercises: newExercises,
+                    };
+
+                    setSelectedSuperset((prev) => {
+                      if (!prev) return undefined;
+                      return newSuperset;
+                    });
+
+                    const newSupersets = trainingInProgress.supersets.map(
+                      (superset, j) =>
+                        j === trainingInProgress.supersetIndex
+                          ? newSuperset
+                          : superset
+                    );
+
+                    setTrainingInProgress((prev) => {
+                      if (!prev) return null;
+                      return { ...prev, supersets: newSupersets };
+                    });
+                  }}
+                />
+              )}
             </Box>
           ) : (
             <Box
@@ -264,37 +252,26 @@ export default function TrainingInProgressExerciseSet(
                       return {
                         setNumber: set.setNumber,
                         paramValuesL: [...set.paramValuesL].map(
-                          (param, index) => {
-                            if (index === paramIndex) {
-                              return {
-                                field: param.field,
-                                selected: param.selected,
-                                value: newValue as string,
-                              } as AttributeValue;
-                            }
-                            return {
+                          (param, index) =>
+                            ({
                               field: param.field,
                               selected: param.selected,
-                              value: param.value,
-                            } as AttributeValue;
-                          }
+                              value:
+                                index === paramIndex
+                                  ? (newValue as string)
+                                  : param.value,
+                            }) as AttributeValue
                         ),
-                        paramValuesR: [...set.paramValuesR].map(
-                          (param, index) => {
-                            if (index === paramIndex) {
-                              return {
-                                field: param.field,
-                                selected: param.selected,
-                                value: newValue as string,
-                              } as AttributeValue;
-                            }
-                            return {
+                        paramValuesR: set.paramValuesR
+                          ? [...set.paramValuesR].map((param, index) => ({
                               field: param.field,
                               selected: param.selected,
-                              value: param.value,
-                            } as AttributeValue;
-                          }
-                        ),
+                              value:
+                                index === paramIndex
+                                  ? (newValue as string)
+                                  : param.value,
+                            }))
+                          : undefined,
                       };
                     }
                   );

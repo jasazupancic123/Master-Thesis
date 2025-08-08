@@ -38,6 +38,7 @@ import type { Training } from '@src/training/entity/training.entity';
 import { SetStatus } from '@src/training/enum/set-status.enum';
 import { generateCompletedTrainingExerciseStub } from '@src/training/mock/completed-training.stub';
 import {
+  generateExerciseSet,
   generateSuperset,
   generateTrainingComponent,
   generateTrainingExercise,
@@ -130,7 +131,7 @@ describe('Complete training component (e2e)', () => {
 
     group = await createGroupWithCycles(groupService, institution);
 
-    exercises = await exerciseService.createMany(global.admin, [
+    exercises = await exerciseService.upsertMany(global.admin, [
       generateExerciseStub({ name: 'Squat L1', componentIds: [component1.id] }),
       generateExerciseStub({ name: 'Bench L1', componentIds: [component1.id] }),
       generateExerciseStub({
@@ -178,6 +179,18 @@ describe('Complete training component (e2e)', () => {
       }),
     );
 
+    const sets1 = [
+      generateExerciseSet(1, COMPONENT_PARAMS_OPT1),
+      generateExerciseSet(2, COMPONENT_PARAMS_OPT1),
+      generateExerciseSet(3, COMPONENT_PARAMS_OPT1),
+    ];
+
+    const sets2 = [
+      generateExerciseSet(1, COMPONENT_PARAMS_OPT2),
+      generateExerciseSet(2, COMPONENT_PARAMS_OPT2),
+      generateExerciseSet(3, COMPONENT_PARAMS_OPT2),
+    ];
+
     return await trainingService.update(
       global.trainer,
       { trainingId: newTraining.id },
@@ -192,14 +205,26 @@ describe('Complete training component (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[1].id }),
+                  generateTrainingExercise({
+                    id: exercises[0].id,
+                    sets: sets1,
+                  }),
+                  generateTrainingExercise({
+                    id: exercises[1].id,
+                    sets: sets1,
+                  }),
                 ],
               }),
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[0].id }),
-                  generateTrainingExercise({ id: exercises[2].id }),
+                  generateTrainingExercise({
+                    id: exercises[0].id,
+                    sets: sets1,
+                  }),
+                  generateTrainingExercise({
+                    id: exercises[2].id,
+                    sets: sets1,
+                  }),
                 ],
               }),
             ],
@@ -210,12 +235,23 @@ describe('Complete training component (e2e)', () => {
             supersets: [
               generateSuperset({
                 exercises: [
-                  generateTrainingExercise({ id: exercises[4].id }),
-                  generateTrainingExercise({ id: exercises[5].id }),
+                  generateTrainingExercise({
+                    id: exercises[4].id,
+                    sets: sets2,
+                  }),
+                  generateTrainingExercise({
+                    id: exercises[5].id,
+                    sets: sets2,
+                  }),
                 ],
               }),
               generateSuperset({
-                exercises: [generateTrainingExercise({ id: exercises[3].id })],
+                exercises: [
+                  generateTrainingExercise({
+                    id: exercises[3].id,
+                    sets: sets2,
+                  }),
+                ],
               }),
             ],
           }),

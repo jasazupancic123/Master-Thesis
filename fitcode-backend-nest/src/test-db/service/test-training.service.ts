@@ -11,10 +11,10 @@ import { Training } from '@src/training/entity/training.entity';
 import { TrainingComponent } from '@src/training/entity/training-component.entity';
 import { generateTrainingStub } from '@src/training/mock/training.stub';
 
-import { AbstractTestChangeLogService } from './abstract-test-change-log.service';
+import { AbstractChangeLogService } from './abstract-test-change-log.service';
 
 @Injectable()
-export class TestTrainingService extends AbstractTestChangeLogService<Training> {
+export class TestTrainingService extends AbstractChangeLogService<Training> {
   readonly collection: CollectionReference;
 
   constructor(protected readonly firebase: FirebaseService) {

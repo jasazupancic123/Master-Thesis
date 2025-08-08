@@ -216,6 +216,23 @@ export default function ExerciseModal(props: Props) {
             </Stack>
           </Grid>
 
+          <Grid size={{ xs: 6 }}>
+            <FormControlLabel
+              label={'Bilateral'}
+              control={
+                <Checkbox
+                  checked={data.isBilateral || false}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      isBilateral: e.target.checked,
+                    }))
+                  }
+                />
+              }
+            />
+          </Grid>
+
           <Grid size={{ xs: 12 }}>
             <Divider>Other</Divider>
           </Grid>

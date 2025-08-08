@@ -30,5 +30,6 @@ export function generateExerciseAttributeValueStub(
     value: value,
     selected: data?.selected || value,
     componentIds: data?.componentIds || ['other'],
+    isBilateral: data?.isBilateral || false,
   };
 }
