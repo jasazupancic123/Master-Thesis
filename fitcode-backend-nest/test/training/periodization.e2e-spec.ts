@@ -203,7 +203,7 @@ describe('Periodization functions (e2e)', () => {
       cycleLengthInWeeks: 60,
     });
 
-    exercises = await exerciseService.createMany(global.admin, [
+    exercises = await exerciseService.upsertMany(global.admin, [
       generateExerciseStub({ id: 'deadlift', componentIds: [component.id] }),
       generateExerciseStub({ id: 'squat', componentIds: [component.id] }),
       generateExerciseStub({ id: 'bench', componentIds: [component.id] }),

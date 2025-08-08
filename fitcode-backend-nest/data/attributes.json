@@ -637,11 +637,6 @@
     "type": "string"
   },
   {
-    "field": "instr",
-    "name": "Instruction",
-    "type": "string"
-  },
-  {
     "field": "diagnosis",
     "name": "Diagnosis",
     "type": "multiselect",

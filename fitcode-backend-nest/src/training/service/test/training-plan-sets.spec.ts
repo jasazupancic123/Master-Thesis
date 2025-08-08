@@ -86,26 +86,16 @@ describe('getSetData', () => {
     const componentParams: ComponentParam[] = [
       {
         field: ParamType.VolWorkSets,
-        options: [
-          {
-            field: VolWorkSetType.Set,
-            defaultValue: '3',
-          },
-        ],
+        options: [{ field: VolWorkSetType.Set, defaultValue: '3' }],
       },
       {
         field: ParamType.IntWork1,
-        options: [
-          {
-            field: IntType.Kg,
-            defaultValue: '20',
-          },
-        ],
+        options: [{ field: IntType.Kg, defaultValue: '20' }],
       },
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(params);
+    const result = service.getSets(false, params);
 
     expect(result.length).toBe(3);
     expect(result[0].setNumber).toBe(1);
@@ -114,10 +104,10 @@ describe('getSetData', () => {
 
     // Each set should have the correct param values
     result.forEach((set) => {
-      for (const paramValues of [set.paramValuesL, set.paramValuesR])
-        expect(paramValues).toEqual([
-          { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
-        ]);
+      expect(set.paramValuesL).toEqual([
+        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+      ]);
+      expect(set.paramValuesR).toBeUndefined(); // No right params by default
     });
   });
 
@@ -135,7 +125,7 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(params);
+    const result = service.getSets(false, params);
 
     expect(result.length).toBe(1);
     expect(result[0].setNumber).toBe(1);
@@ -144,30 +134,18 @@ describe('getSetData', () => {
       { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
     ]);
 
-    expect(result[0].paramValuesR).toEqual([
-      { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
-    ]);
+    expect(result[0].paramValuesR).toBeUndefined(); // No right params by default
   });
 
   it('should create sets with provided paramValues when available', () => {
     const componentParams: ComponentParam[] = [
       {
         field: ParamType.VolWorkSets,
-        options: [
-          {
-            field: VolWorkSetType.Set,
-            defaultValue: '2',
-          },
-        ],
+        options: [{ field: VolWorkSetType.Set, defaultValue: '2' }],
       },
       {
         field: ParamType.IntWork1,
-        options: [
-          {
-            field: IntType.Kg,
-            defaultValue: '20',
-          },
-        ],
+        options: [{ field: IntType.Kg, defaultValue: '20' }],
       },
     ];
 
@@ -180,20 +158,17 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(params, [
-      {
-        setNumber: 1,
-        paramValuesL: paramValues,
-        paramValuesR: paramValues,
-      },
+    const result = service.getSets(false, params, [
+      { setNumber: 1, paramValuesL: paramValues },
     ]);
 
     expect(result.length).toBe(1);
     result.forEach((set) => {
-      for (const paramValues of [set.paramValuesL, set.paramValuesR])
-        expect(paramValues).toEqual([
-          { field: ParamType.IntWork1, selected: IntType.Kg, value: '25' },
-        ]);
+      expect(set.paramValuesL).toEqual([
+        { field: ParamType.IntWork1, selected: IntType.Kg, value: '25' },
+      ]);
+
+      expect(set.paramValuesR).toBeUndefined(); // No right params in this case
     });
   });
 
@@ -201,83 +176,68 @@ describe('getSetData', () => {
     const componentParams: ComponentParam[] = [
       {
         field: ParamType.VolWorkSets,
-        options: [
-          {
-            field: VolWorkSetType.Set,
-            defaultValue: '1',
-          },
-        ],
+        options: [{ field: VolWorkSetType.Set, defaultValue: '1' }],
       },
       {
         field: ParamType.IntWork1,
         options: [
-          {
-            field: IntType.Eff,
-            options: [{ field: '2', defaultValue: '2' }],
-          },
+          { field: IntType.Eff, options: [{ field: '2', defaultValue: '2' }] },
         ],
       },
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(params);
+    const result = service.getSets(false, params);
 
     expect(result.length).toBe(1);
-
-    for (const paramValues of [result[0].paramValuesL, result[0].paramValuesR])
-      expect(paramValues).toEqual([
-        {
-          field: ParamType.IntWork1,
-          selected: `${IntType.Eff}:2`,
-          value: '2',
-        },
-      ]);
+    expect(result[0].paramValuesL).toEqual([
+      {
+        field: ParamType.IntWork1,
+        selected: `${IntType.Eff}:2`,
+        value: '2',
+      },
+    ]);
+    expect(result[0].paramValuesR).toBeUndefined();
   });
 
   it('should filter out VolWorkSets from the param values', () => {
     const componentParams: ComponentParam[] = [
       {
         field: ParamType.VolWorkSets,
-        options: [
-          {
-            field: VolWorkSetType.Set,
-            defaultValue: '1',
-          },
-        ],
+        options: [{ field: VolWorkSetType.Set, defaultValue: '1' }],
       },
       {
         field: ParamType.IntWork1,
-        options: [
-          {
-            field: IntType.Kg,
-            defaultValue: '20',
-          },
-        ],
+        options: [{ field: IntType.Kg, defaultValue: '20' }],
       },
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(params);
+    const result = service.getSets(false, params);
 
-    for (const paramValues of [
-      result[0].paramValuesL,
-      result[0].paramValuesR,
-    ]) {
-      expect(paramValues).not.toContainEqual(
-        expect.objectContaining({ field: ParamType.VolWorkSets }),
-      );
+    expect(result.length).toBe(1);
 
-      expect(paramValues).toEqual([
-        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
-      ]);
-    }
+    expect(result[0].paramValuesL).not.toContainEqual(
+      expect.objectContaining({ field: ParamType.VolWorkSets }),
+    );
+
+    expect(result[0].paramValuesL).toEqual([
+      { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+    ]);
+
+    expect(result[0].paramValuesR).toBeUndefined();
   });
 
   it('should handle empty params array', () => {
-    const result = service.getSets([]);
-    expect(result.length).toBe(1); // Default 1 set
-    expect(result[0].paramValuesL).toEqual([]); // No params to include
-    expect(result[0].paramValuesR).toEqual([]); // No params to include
+    const result1 = service.getSets(false, []);
+    expect(result1.length).toBe(1); // Default 1 set
+    expect(result1[0].paramValuesL).toEqual([]); // No params to include
+    expect(result1[0].paramValuesR).toBeUndefined(); // No right params
+
+    const result2 = service.getSets(true, []);
+    expect(result2.length).toBe(1);
+    expect(result2[0].paramValuesL).toEqual([]); // No params to include
+    expect(result2[0].paramValuesR).toEqual([]); // Bilateral, so empty right params
   });
 
   it('should handle params without options', () => {
@@ -289,12 +249,11 @@ describe('getSetData', () => {
     ];
 
     const params = componentService.getParamAttributes(componentParams);
-    const result = service.getSets(params);
+    const result = service.getSets(false, params);
 
     expect(result.length).toBe(1);
-    for (const paramValues of [result[0].paramValuesL, result[0].paramValuesR])
-      expect(paramValues).toEqual([
-        { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
-      ]);
+    expect(result[0].paramValuesL).toEqual([
+      { field: ParamType.IntWork1, selected: IntType.Kg, value: '20' },
+    ]);
   });
 });

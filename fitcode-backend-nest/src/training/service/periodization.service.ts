@@ -80,21 +80,24 @@ export class PeriodizationService {
 
           const readinessFactor = Math.random() * 0.2 + 0.9; // Simulate readiness factor between 0.9 and 1.1
           for (const set of baseExercise.sets) {
-            for (const paramValues of [set.paramValuesL, set.paramValuesR]) {
+            for (const paramValues of [
+              set.paramValuesL,
+              set.paramValuesR || [],
+            ]) {
               const leftOrRight =
                 paramValues === set.paramValuesL ? 'L' : ('R' as 'L' | 'R');
 
               const baseInt =
                 paramValues === set.paramValuesL
                   ? set.paramValuesL.find((p) => p.field === ParamType.IntWork1)
-                  : set.paramValuesR.find(
+                  : set.paramValuesR?.find(
                       (p) => p.field === ParamType.IntWork1,
                     );
 
               const baseVol =
                 paramValues === set.paramValuesL
                   ? set.paramValuesL.find((p) => p.field === ParamType.VolWork1)
-                  : set.paramValuesR.find(
+                  : set.paramValuesR?.find(
                       (p) => p.field === ParamType.VolWork1,
                     );
 
@@ -137,7 +140,7 @@ export class PeriodizationService {
                     ].paramValuesL.find((p) => p.field === ParamType.IntWork1)
                   : exerciseToPeriodize.sets[
                       baseExercise.sets.indexOf(set)
-                    ].paramValuesR.find((p) => p.field === ParamType.IntWork1);
+                    ].paramValuesR?.find((p) => p.field === ParamType.IntWork1);
 
               const periodizedVol =
                 paramValues === set.paramValuesL
@@ -146,7 +149,7 @@ export class PeriodizationService {
                     ].paramValuesL.find((p) => p.field === ParamType.VolWork1)
                   : exerciseToPeriodize.sets[
                       baseExercise.sets.indexOf(set)
-                    ].paramValuesR.find((p) => p.field === ParamType.VolWork1);
+                    ].paramValuesR?.find((p) => p.field === ParamType.VolWork1);
 
               if (!periodizedInt || !periodizedVol) continue;
 
@@ -164,7 +167,7 @@ export class PeriodizationService {
                       (e) => e.setIndex === baseExercise.sets.indexOf(set),
                     )?.value ||
                     parseFloat(
-                      set.paramValuesR.find(
+                      set.paramValuesR?.find(
                         (p) => p.field === ParamType.IntWork1,
                       )?.value,
                     );
@@ -183,7 +186,7 @@ export class PeriodizationService {
                       (e) => e.setIndex === baseExercise.sets.indexOf(set),
                     )?.value ||
                     parseFloat(
-                      set.paramValuesR.find(
+                      set.paramValuesR?.find(
                         (p) => p.field === ParamType.VolWork1,
                       )?.value,
                     );

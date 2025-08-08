@@ -8,8 +8,10 @@ import type { TrainingExerciseCardProps } from '../trainer-day-view/props';
 import TrainingExerciseCardCollapsedSets from '../training-exercise-card-sets-collapsed/training-exercise-card-collapsed-sets';
 import TrainingExerciseCardExpandedSets from '../training-exercise-card-sets-expanded/training-exercise-card-expanded-sets';
 import { updateTraining } from './state';
+import type { Attribute } from '@/controller/attribute/type/attribute.type';
 import type { TrainingExercise } from '@/controller/training/type/training-exercise.type';
 import { useGroup } from '@/store/group-provider';
+import { useMain } from '@/store/main-provider';
 import { useScreenSize } from '@/store/screen-size-provider';
 import { useSupersets } from '@/store/supersets-provider';
 import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
@@ -17,6 +19,8 @@ import { useTrainerDayViewContext } from '@/store/trainer-day-view-provider';
 export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
   const screenSize = useScreenSize();
   const theme = useTheme();
+
+  const { exercises } = useMain();
 
   const {
     setSelectedExercise,
@@ -59,7 +63,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
     currentExercise?.sets?.[0]?.paramValuesL?.map((pv) =>
       Array.isArray(exercise.params)
         ? exercise?.params?.find((p) => p.field === pv.field)
-        : Object.values(exercise.params).find((p: any) => p.field === pv.field)
+        : Object.values(exercise.params).find(
+            (p) => (p as Attribute).field === pv.field
+          )
     ) ||
     []?.filter((p) => p) ||
     [];
@@ -71,6 +77,9 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
       isSetNumberInitedRef.current = true;
       return;
     }
+
+    const foundExercise = exercises.find((e) => e.id === exercise.id);
+    if (!foundExercise) return;
 
     if (
       selectedExercises.length &&
@@ -109,7 +118,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
               ...Array.from({ length: newSets - prevSets }, (_, i) => ({
                 setNumber: prevSets + i + 1,
                 paramValuesL: paramValues,
-                paramValuesR: paramValues,
+                ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
               })),
             ],
           };
@@ -143,7 +152,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
 
       const prevSets = exercise.sets.length;
 
-      let newExercise;
+      let newExercise: TrainingExercise;
       if (prevSets > newSets) {
         // remove sets
         newExercise = {
@@ -164,7 +173,7 @@ export default function TrainingExerciseCard(props: TrainingExerciseCardProps) {
             ...Array.from({ length: newSets - prevSets }, (_, i) => ({
               setNumber: prevSets + i + 1,
               paramValuesL: paramValues,
-              paramValuesR: paramValues,
+              ...(foundExercise.isBilateral && { paramValuesR: paramValues }),
             })),
           ],
         };

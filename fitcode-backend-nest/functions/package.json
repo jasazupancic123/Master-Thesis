@@ -1,7 +1,7 @@
 {
   "name": "functions",
   "scripts": {
-    "lint": "eslint --ext .js,.ts ",
+    "lint": "eslint",
     "build": "rimraf lib && tsc",
     "build:watch": "rimraf lib && tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",

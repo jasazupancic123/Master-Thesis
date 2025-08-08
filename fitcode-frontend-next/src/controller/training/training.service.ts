@@ -7,7 +7,6 @@ import type { Exercise } from '../exercise/type/exercise.type';
 import type { Method } from '../method/type/method.type';
 import type { User } from '../user/type/user.type';
 import type { ExerciseSet } from './type/exercise-set.type';
-import type { IntensityVolumeValues } from './type/intensity-volume-values.type';
 import type { Subgroup } from './type/subgroup.type';
 import type { SubgroupInfo } from './type/subgroup.type';
 import type { Superset } from './type/superset.type';
@@ -119,30 +118,6 @@ export class TrainingService {
     return component.supersets; // default group
   }
 
-  static getIntensityVolumeValues(sets: ExerciseSet[]): IntensityVolumeValues {
-    const intensitySum = sets.reduce((sum, set) => {
-      const intensityValue = set.paramValuesL.find(
-        (pv) => pv.field === 'int1'
-      )?.value;
-      return sum + (intensityValue ? +intensityValue : 0);
-    }, 0);
-
-    const avgIntensity = intensitySum / sets.length;
-
-    const volumeSum = sets.reduce((sum, set) => {
-      const volumeValue = set.paramValuesL.find(
-        (pv) => pv.field === 'vol1'
-      )?.value;
-      return sum + (volumeValue ? +volumeValue : 0);
-    }, 0);
-
-    const avgVolume = volumeSum / sets.length;
-    return {
-      intensity: avgIntensity,
-      volume: avgVolume,
-    };
-  }
-
   static trainingToInfo(training: Training): TrainingInfo {
     this.mapPrescribedStats(training, training.membersIds.length);
 
@@ -172,7 +147,7 @@ export class TrainingService {
       from: component.from,
       to: component.to,
       subgroups: component.subgroups.map((subgroup) =>
-        this.convertFromSubgroupToSubgroupMinimal(subgroup)
+        this.subgroupToInfo(subgroup)
       ),
       methodId: component.methodId,
       method: component.method,
@@ -182,9 +157,7 @@ export class TrainingService {
     };
   }
 
-  static convertFromSubgroupToSubgroupMinimal(
-    subgroup: Subgroup
-  ): SubgroupInfo {
+  static subgroupToInfo(subgroup: Subgroup): SubgroupInfo {
     return {
       id: subgroup.id,
       prescribedStats: subgroup.prescribedStats,
@@ -194,37 +167,47 @@ export class TrainingService {
   static getPrescribedWorkload(prescribedSet: ExerciseSet): PrescribedWorkload {
     const { paramValuesL, paramValuesR } = prescribedSet;
     const volWork1L = paramValuesL.find((p) => p.field === ParamType.VolWork1);
-    const volWork1R = paramValuesR.find((p) => p.field === ParamType.VolWork1);
+    const volWork1R = paramValuesR?.find((p) => p.field === ParamType.VolWork1);
     const volWork2L = paramValuesL.find((p) => p.field === ParamType.VolWork2);
-    const volWork2R = paramValuesR.find((p) => p.field === ParamType.VolWork2);
+    const volWork2R = paramValuesR?.find((p) => p.field === ParamType.VolWork2);
     const volRecL = paramValuesL.find((p) => p.field === ParamType.VolRec1);
-    const volRecR = paramValuesR.find((p) => p.field === ParamType.VolRec1);
+    const volRecR = paramValuesR?.find((p) => p.field === ParamType.VolRec1);
     const intWork1L = paramValuesL.find((p) => p.field === ParamType.IntWork1);
-    const intWork1R = paramValuesR.find((p) => p.field === ParamType.IntWork1);
+    const intWork1R = paramValuesR?.find((p) => p.field === ParamType.IntWork1);
     const intWork2L = paramValuesL.find((p) => p.field === ParamType.IntWork2);
-    const intWork2R = paramValuesR.find((p) => p.field === ParamType.IntWork2);
+    const intWork2R = paramValuesR?.find((p) => p.field === ParamType.IntWork2);
     const intRecL = paramValuesL.find((p) => p.field === ParamType.IntRec1);
-    const intRecR = paramValuesR.find((p) => p.field === ParamType.IntRec1);
+    const intRecR = paramValuesR?.find((p) => p.field === ParamType.IntRec1);
 
     return {
       volWork1Type: this.parseSelected<VolType>(volWork1L),
       prescribedVolWork1ValueL: this.parseValue(volWork1L) as number,
-      prescribedVolWork1ValueR: this.parseValue(volWork1R) as number,
+      prescribedVolWork1ValueR: volWork1R
+        ? (this.parseValue(volWork1R) as number)
+        : undefined,
       volWork2Type: this.parseSelected<VolType>(volWork2L),
       prescribedVolWork2ValueL: this.parseValue(volWork2L) as number,
-      prescribedVolWork2ValueR: this.parseValue(volWork2R) as number,
+      prescribedVolWork2ValueR: volWork2R
+        ? (this.parseValue(volWork2R) as number)
+        : undefined,
       volRecType: this.parseSelected<VolType>(volRecL),
       prescribedVolRecValueL: this.parseValue(volRecL) as number,
-      prescribedVolRecValueR: this.parseValue(volRecR) as number,
+      prescribedVolRecValueR: volRecR
+        ? (this.parseValue(volRecR) as number)
+        : undefined,
       intWork1Type: this.parseSelected<IntType>(intWork1L),
       prescribedIntWork1ValueL: this.parseValue(intWork1L),
-      prescribedIntWork1ValueR: this.parseValue(intWork1R),
+      prescribedIntWork1ValueR: intWork1R
+        ? this.parseValue(intWork1R)
+        : undefined,
       intWork2Type: this.parseSelected<IntType>(intWork2L),
       prescribedIntWork2ValueL: this.parseValue(intWork2L),
-      prescribedIntWork2ValueR: this.parseValue(intWork2R),
+      prescribedIntWork2ValueR: intWork2R
+        ? this.parseValue(intWork2R)
+        : undefined,
       intRecType: this.parseSelected<IntType>(intRecL),
       prescribedIntRecValueL: this.parseValue(intRecL),
-      prescribedIntRecValueR: this.parseValue(intRecR),
+      prescribedIntRecValueR: intRecR ? this.parseValue(intRecR) : undefined,
     };
   }
 
@@ -397,7 +380,7 @@ export class TrainingService {
    * It takes into account both left and right param values.
    * If there are no sets, it returns 0 for both intensity and volume.
    */
-  private static getAverageIntVol(
+  static getAverageIntVol(
     sets: ExerciseSet[]
   ): Pick<TrainingExerciseAverageStats, 'intensity' | 'volume'> {
     const averages = this.calculateParamTypeAverages(sets);
@@ -430,7 +413,7 @@ export class TrainingService {
     // iterate through sets and calculate sums and counts
     for (const set of sets) {
       for (const { field, value } of set.paramValuesL.concat(
-        set.paramValuesR
+        set.paramValuesR || []
       )) {
         if (sums.hasOwnProperty(field)) {
           sums[field as ParamType] += parseFloat(value);
