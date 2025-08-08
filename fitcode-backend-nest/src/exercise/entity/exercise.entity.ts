@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -29,6 +30,12 @@ export class Exercise extends BaseEntity {
   @Expose()
   @ApiProperty()
   componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
+
+  @IsBoolean()
+  @IsOptional()
+  @Expose()
+  @ApiProperty()
+  isBilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
 
   @IsString()
   @IsOptional()

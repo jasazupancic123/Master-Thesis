@@ -50,6 +50,7 @@ export class ExerciseRepository
         ownerId: input.ownerId,
         name: input.name,
         componentIds: input.componentIds,
+        isBilateral: input.isBilateral || false,
         imageUrl: input.imageUrl,
         videoUrl: input.videoUrl,
         instruction: input.instruction || '',
@@ -86,17 +87,14 @@ export class ExerciseRepository
     );
   }
 
-  async slug(name: string): Promise<string> {
-    const slug = this.commonService.string.slug(name);
-    const snapshot = await this.getDoc(slug);
+  slug(name: string, institutionTitle?: string): string {
+    const nameSlug = this.commonService.string.slug(name).toLowerCase();
+    if (!institutionTitle) return nameSlug;
 
-    if (snapshot) {
-      // slug already exists, add number to the end
-      const lastNumberMatch = slug.match(/\d+$/);
-      const number = lastNumberMatch ? +lastNumberMatch[0] : 0;
-      return `${slug}-${number + 1}`;
-    }
+    const institutionSlug = this.commonService.string
+      .slug(institutionTitle)
+      .toLowerCase();
 
-    return slug;
+    return `${nameSlug}-${institutionSlug}`;
   }
 }

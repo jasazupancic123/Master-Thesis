@@ -7,6 +7,25 @@ export type WithNull<T> = {
 };
 
 export class ObjectUtil {
+  toBoolean<T>(value: T): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string')
+      return value.toLowerCase() === 'true' || value === '1';
+
+    return false;
+  }
+
+  toNumber<T>(value: T): number {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    return 0; // Default to 0 for other types
+  }
+
   /**
    * Nests the object to a nested object.
    *

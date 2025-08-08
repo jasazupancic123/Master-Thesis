@@ -72,7 +72,7 @@ describe('Get prescribed training (e2e)', () => {
       }),
     );
 
-    exercises = await exerciseService.createMany(global.admin, [
+    exercises = await exerciseService.upsertMany(global.admin, [
       generateExerciseStub({ name: 'Squat', componentIds: [component.id] }),
       generateExerciseStub({ name: 'Bench', componentIds: [component.id] }),
       generateExerciseStub({ name: 'Deadlift', componentIds: [component.id] }),
@@ -87,8 +87,7 @@ describe('Get prescribed training (e2e)', () => {
 
   afterAll(async () => {
     await Promise.all([
-      db.exercises.delete(),
-      deleteCollection(firebase, 'EXERCISE'),
+      db.exercises.clear(),
       deleteDoc(firebase, 'GROUP', group.id),
       deleteDoc(firebase, 'INSTITUTION', institution.id),
       deleteCollection(firebase, 'COMPONENT'),
@@ -169,55 +168,6 @@ describe('Get prescribed training (e2e)', () => {
   });
 
   it('should get prescribed training for athlete for subgroup', async () => {
-    /* let training = await trainingService.create(
-      global.trainer,
-      generateTrainingStub({
-        groupId: group.id,
-        cycleId: group.cycles[1].id,
-        membersIds: [global.athlete.uid],
-        date: new Date(),
-        components: [generateTrainingComponent({ id: component.id })],
-      }),
-    );
-
-    training = await trainingService.update(
-      global.trainer,
-      { trainingId: training.id },
-      {
-        components: [
-          generateTrainingComponent({
-            id: component.id,
-            from: new Date(),
-            supersets: [
-              // main group only 1 superset and 1 exercise
-              generateSuperset({
-                exercises: [generateTrainingExercise({ id: exercises[0].id })],
-              }),
-            ],
-            subgroups: [
-              generateSubgroup({
-                membersIds: [global.athlete.uid],
-                supersets: [
-                  // subgroup has 2 supersets and 3 exercises
-                  generateSuperset({
-                    exercises: [
-                      generateTrainingExercise({ id: exercises[0].id }),
-                    ],
-                  }),
-                  generateSuperset({
-                    exercises: [
-                      generateTrainingExercise({ id: exercises[1].id }),
-                      generateTrainingExercise({ id: exercises[2].id }),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      },
-    ); */
-
     const sets = [
       generateExerciseSet(1, COMPONENT_PARAMS_OPT1),
       generateExerciseSet(2, COMPONENT_PARAMS_OPT1),

@@ -466,10 +466,7 @@ export class TrainingService implements Permission<Training, Institution> {
     // if no components, delete training
     if (input.components.length === 0) {
       await this.trainingRepository.deleteDoc(ref.trainingId);
-      return {
-        ...training,
-        completedMembersIds: [],
-      };
+      return { ...training, completedMembersIds: [] };
     }
 
     input.components.unshift(input.warmup);
@@ -887,7 +884,12 @@ export class TrainingService implements Permission<Training, Institution> {
     const exercises =
       await this.trainingPlanService.getAllTrainingExercises(input);
 
-    const trainingComponents = [training.warmup, ...input, training.cooldown];
+    const trainingComponents = [
+      training.warmup,
+      ...training.components,
+      ...input,
+      training.cooldown,
+    ];
 
     this.updateTrainingTimes(trainingComponents);
 
@@ -899,13 +901,17 @@ export class TrainingService implements Permission<Training, Institution> {
         { exercises, components, methods, attributes },
       );
 
+    const inputTrainingComponents = validTrainingComponents
+      .filter(
+        (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
+      )
+      .filter((c) => input.some((ic) => ic.id === c.id));
+
     // get query for training
     const [query, updatedTraining] =
       this.trainingPlanService.getAddComponentsQuery(
         training,
-        validTrainingComponents.filter(
-          (c) => c.id !== WARMUP_COMPONENT_ID && c.id !== COOLDOWN_COMPONENT_ID,
-        ),
+        inputTrainingComponents,
       );
 
     // add components

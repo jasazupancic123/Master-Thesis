@@ -15,6 +15,9 @@ export function generateAttributeStub(data?: Partial<Attribute>): Attribute {
     required: data?.required || false,
     unit: data?.unit || '',
     defaultValue: data?.defaultValue,
+    description: data?.description || '',
+    min: data?.min,
+    max: data?.max,
   };
 }
 

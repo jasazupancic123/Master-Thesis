@@ -1,7 +1,7 @@
 import { IntersectionType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 
@@ -32,4 +32,10 @@ export class ExerciseAttributeValue extends IntersectionType(AttributeValue) {
   @Expose()
   @ApiProperty()
   componentIds: string[]; // first component is necessary and cannot be changed, others are for "tags"
+
+  @IsBoolean()
+  @IsOptional()
+  @Expose()
+  @ApiProperty()
+  isBilateral: boolean; // exercise can be performed with both sides of the body separately, like a single arm row
 }

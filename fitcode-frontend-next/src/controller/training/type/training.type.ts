@@ -28,10 +28,10 @@ export type Training = BaseEntity &
     cooldown: TrainingComponent;
     components: TrainingComponent[];
     stats: TrainingExerciseAverageStats[];
-    prescribedStats: TrainingExerciseAverageStats[];
     wellness: Wellness[];
 
     // mapped properties
+    prescribedStats: TrainingExerciseAverageStats[];
     institution?: Institution;
     group?: Group;
     cycle?: Cycle;

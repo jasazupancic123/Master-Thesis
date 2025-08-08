@@ -1,153 +1,249 @@
 [
-    {
-      "name": "Squats",
-      "componentIds": ["concentric"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "pattern", "selected": "pattA", "value": "pattA" },
-        { "field": "pattern", "selected": "pattB", "value": "pattB" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "prescr", "selected": "elbil", "value": "elbil" },
-        { "field": "priority", "selected": "main", "value": "main" },
-        { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
-      ]
-    },
-    {
-      "name": "Deadlifts",
-      "componentIds": ["concentric"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "pattern", "selected": "pattA", "value": "pattA" },
-        { "field": "pattern", "selected": "pattB", "value": "pattB" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "prescr", "selected": "elbil", "value": "elbil" },
-        { "field": "priority", "selected": "main", "value": "main" },
-        { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
-      ]
-    },
-    {
-      "name": "Bench Press",
-      "componentIds": ["concentric"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "pattern", "selected": "pattA", "value": "pattA" },
-        { "field": "pattern", "selected": "pattB", "value": "pattB" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "prescr", "selected": "elbil", "value": "elbil" },
-        { "field": "priority", "selected": "main", "value": "main" },
-        { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
-      ]
-    },
-    {
-      "name": "High Plank Reach",
-      "componentIds": ["concentric"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "pattern", "selected": "pattA", "value": "pattA" },
-        { "field": "pattern", "selected": "pattB", "value": "pattB" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "prescr", "selected": "elbil", "value": "elbil" },
-        { "field": "priority", "selected": "main", "value": "main" },
-        { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
-      ]
-    },
-    {
-      "name": "Power Clean",
-      "componentIds": ["concentric"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "pattern", "selected": "pattA", "value": "pattA" },
-        { "field": "pattern", "selected": "pattB", "value": "pattB" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "prescr", "selected": "elbil", "value": "elbil" },
-        { "field": "priority", "selected": "main", "value": "main" },
-        { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
-      ]
-    },
-    {
-      "name": "Sprint",
-      "componentIds": ["peak-speed"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "pattern", "selected": "pattA", "value": "pattA" },
-        { "field": "pattern", "selected": "pattB", "value": "pattB" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "prescr", "selected": "elbil", "value": "elbil" },
-        { "field": "priority", "selected": "main", "value": "main" },
-        { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
-      ]
-    },
-    {
-      "name": "Sleed Acceleration",
-      "componentIds": ["resisted"],
-      "instruction": "",
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "pattern", "selected": "pattC", "value": "pattC" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "prescr", "selected": "elbil", "value": "elbil" },
-        { "field": "sportTask", "selected": "My Fast Sport", "value": "My Fast Sport" }
-      ]
-    },
-    {
-      "name": "Jogging",
-      "componentIds": ["aerobic-capacity"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "pattern", "selected": "pattC", "value": "pattC" },
-        { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
-        { "field": "movDir", "selected": "lin", "value": "lin" },
-        { "field": "coeff", "selected": "1.5", "value": "1.5" },
-        { "field": "method", "selected": "methodA", "value": "methodA" },
-        { "field": "sportTask", "selected": "My Fast Sport", "value": "My Fast Sport" }
-      ]
-    },
-    {
-      "name": "Bicep Stretching",
-      "componentIds": ["passive-stretching"],
-      "attributeValues": [
-        { "field": "equipment", "selected": "strength-training:weight-plates", "value": "standard-weight-plates" },
-        { "field": "equipment", "selected": "strength-training:barbells", "value": "olympic-barbell" },
-        { "field": "coordination", "selected": "false", "value": "false" },
-        { "field": "diagnosis", "selected": "main", "value": "main" },
-        { "field": "diagnosis", "selected": "sup", "value": "sup" },
-        { "field": "muscle", "selected": "frontalis", "value": "frontalis"}
-      ]
-    }
+  {
+    "name": "Squats",
+    "componentIds": ["concentric"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "pattern", "selected": "pattA", "value": "pattA" },
+      { "field": "pattern", "selected": "pattB", "value": "pattB" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      { "field": "prescr", "selected": "elbil", "value": "elbil" },
+      { "field": "priority", "selected": "main", "value": "main" },
+      { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
+    ]
+  },
+  {
+    "name": "Deadlifts",
+    "componentIds": ["concentric"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "pattern", "selected": "pattA", "value": "pattA" },
+      { "field": "pattern", "selected": "pattB", "value": "pattB" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      { "field": "prescr", "selected": "elbil", "value": "elbil" },
+      { "field": "priority", "selected": "main", "value": "main" },
+      { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
+    ]
+  },
+  {
+    "name": "Bench Press",
+    "componentIds": ["concentric"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "pattern", "selected": "pattA", "value": "pattA" },
+      { "field": "pattern", "selected": "pattB", "value": "pattB" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      { "field": "prescr", "selected": "elbil", "value": "elbil" },
+      { "field": "priority", "selected": "main", "value": "main" },
+      { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
+    ]
+  },
+  {
+    "name": "High Plank Reach",
+    "componentIds": ["concentric"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "pattern", "selected": "pattA", "value": "pattA" },
+      { "field": "pattern", "selected": "pattB", "value": "pattB" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      { "field": "prescr", "selected": "elbil", "value": "elbil" },
+      { "field": "priority", "selected": "main", "value": "main" },
+      { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
+    ]
+  },
+  {
+    "name": "Power Clean",
+    "componentIds": ["concentric"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "pattern", "selected": "pattA", "value": "pattA" },
+      { "field": "pattern", "selected": "pattB", "value": "pattB" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      { "field": "prescr", "selected": "elbil", "value": "elbil" },
+      { "field": "priority", "selected": "main", "value": "main" },
+      { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
+    ]
+  },
+  {
+    "name": "Sprint",
+    "componentIds": ["peak-speed"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "pattern", "selected": "pattA", "value": "pattA" },
+      { "field": "pattern", "selected": "pattB", "value": "pattB" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      { "field": "prescr", "selected": "elbil", "value": "elbil" },
+      { "field": "priority", "selected": "main", "value": "main" },
+      { "field": "sportTask", "selected": "My Sport", "value": "My Sport" }
+    ]
+  },
+  {
+    "name": "Sleed Acceleration",
+    "componentIds": ["resisted"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "pattern", "selected": "pattC", "value": "pattC" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      { "field": "prescr", "selected": "elbil", "value": "elbil" },
+      {
+        "field": "sportTask",
+        "selected": "My Fast Sport",
+        "value": "My Fast Sport"
+      }
+    ]
+  },
+  {
+    "name": "Jogging",
+    "componentIds": ["aerobic-capacity"],
+    "isBilateral": false,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "pattern", "selected": "pattC", "value": "pattC" },
+      { "field": "loadingSide", "selected": "unilat", "value": "unilat" },
+      { "field": "movDir", "selected": "lin", "value": "lin" },
+      { "field": "coeff", "selected": "1.5", "value": "1.5" },
+      { "field": "method", "selected": "methodA", "value": "methodA" },
+      {
+        "field": "sportTask",
+        "selected": "My Fast Sport",
+        "value": "My Fast Sport"
+      }
+    ]
+  },
+  {
+    "name": "Bicep Stretching",
+    "componentIds": ["passive-stretching"],
+    "isBilateral": true,
+    "attributeValues": [
+      {
+        "field": "equipment",
+        "selected": "strength-training:weight-plates",
+        "value": "standard-weight-plates"
+      },
+      {
+        "field": "equipment",
+        "selected": "strength-training:barbells",
+        "value": "olympic-barbell"
+      },
+      { "field": "coordination", "selected": "false", "value": "false" },
+      { "field": "diagnosis", "selected": "main", "value": "main" },
+      { "field": "diagnosis", "selected": "sup", "value": "sup" },
+      { "field": "muscle", "selected": "frontalis", "value": "frontalis" }
+    ]
+  },
+  {
+    "name": "Bulgarian Split Squat",
+    "componentIds": ["concentric"],
+    "isBilateral": true,
+    "attributeValues": [
+      { "field": "coordination", "selected": "true", "value": "true" }
+    ]
+  }
 ]

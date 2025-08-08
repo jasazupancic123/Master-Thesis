@@ -212,8 +212,8 @@ export function onDragEndSubgroup(
       setChangedSubgroupIds((prev) => [...prev, targetSubgroup.id]);
   }
 
-  setTraining((prev: any) => {
-    if (!prev) return null;
+  setTraining((prev: Training | undefined) => {
+    if (!prev) return undefined;
     return {
       ...prev,
       prescribedStats: newTraining.prescribedStats,
@@ -302,7 +302,7 @@ export async function handleAddSubgroup(state: {
   const stats: TrainingExerciseAverageStats[] = [];
   for (const superset of component.supersets) {
     for (const exercise of superset.exercises) {
-      const intensityVolumeValue = TrainingService.getIntensityVolumeValues(
+      const intensityVolumeValue = TrainingService.getAverageIntVol(
         exercise.sets
       );
 

@@ -136,7 +136,7 @@ export class DataSetup extends BaseSetup {
     const data: Omit<Exercise, 'id' | 'ownerId' | 'attributes'>[] =
       JSON.parse(file);
 
-    await exerciseService.createMany(
+    await exerciseService.upsertMany(
       this.admin,
       data.map((d) => ({ ...d, ownerId: GLOBAL_EXERCISE_OWNER })),
     );

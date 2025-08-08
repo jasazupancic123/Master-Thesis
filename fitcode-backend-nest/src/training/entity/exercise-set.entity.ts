@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsInt, Max, Min, ValidateNested } from 'class-validator';
+import { IsInt, IsOptional, Max, Min, ValidateNested } from 'class-validator';
 
 import { AttributeValue } from '@src/attribute/entity/attribute-value.entity';
 
@@ -18,9 +18,10 @@ export class ExerciseSet {
   @Expose()
   paramValuesL: AttributeValue[];
 
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => AttributeValue)
-  @ApiProperty({ type: () => AttributeValue, isArray: true })
+  @ApiPropertyOptional({ type: () => AttributeValue, isArray: true })
   @Expose()
-  paramValuesR: AttributeValue[];
+  paramValuesR?: AttributeValue[];
 }
